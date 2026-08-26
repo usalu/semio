@@ -984,19 +984,7 @@ fn terminal_command_ingress(cursor: semio_framework::kernel::CommandPageCursor, 
 mod command_ingress_terminal_tests {
     #[test]
     fn accepted_final_page_completes_without_a_follow_up_turn() {
-        let cursor = semio_framework::kernel::CommandPageCursor {
-            owner: 7,
-            generation: 11,
-            command_index: 0,
-            command_count: 1,
-            instance: 13,
-            seq: 17,
-            kind: 19,
-            page_index: 0,
-            page_count: 1,
-            item_count: 0,
-            metadata: 0,
-        };
+        let cursor = semio_framework::kernel::CommandPageCursor { owner: 7, generation: 11, command_index: 0, command_count: 1, instance: 13, seq: 17, kind: 19, page_index: 0, page_count: 1, item_count: 0, metadata: 0 };
 
         assert!(matches!(
             super::terminal_command_ingress(cursor, None),
@@ -1007,25 +995,27 @@ mod command_ingress_terminal_tests {
 
     #[test]
     fn accepted_final_page_preserves_a_terminal_fault() {
-        let cursor = semio_framework::kernel::CommandPageCursor {
-            owner: 7,
-            generation: 11,
-            command_index: 0,
-            command_count: 1,
-            instance: 13,
-            seq: 17,
-            kind: 19,
-            page_index: 0,
-            page_count: 1,
-            item_count: 0,
-            metadata: 0,
-        };
+        let cursor = semio_framework::kernel::CommandPageCursor { owner: 7, generation: 11, command_index: 0, command_count: 1, instance: 13, seq: 17, kind: 19, page_index: 0, page_count: 1, item_count: 0, metadata: 0 };
 
         assert!(matches!(
             super::terminal_command_ingress(cursor, Some(b"rejected".to_vec())),
             semio_framework::kernel::CommandIngressStatus::Fault { cursor: terminal, fault }
                 if terminal.page_index == 1 && fault == b"rejected"
         ));
+    }
+
+    #[test]
+    fn async_actor_poll_awaits_exchange_and_render_work() {
+        let source = include_str!("🦀️component.rs");
+        let start = source.find("pub async fn poll<").expect("async WIT poll");
+        let end = source[start..].find("fn route_exchange_output").map(|offset| start + offset).expect("poll implementation boundary");
+        let poll = &source[start..end];
+        assert!(poll.contains("pub async fn poll_kernel<"));
+        assert!(poll.contains("plugin_exchange(runtime, cursor.instance, None).await"));
+        assert!(poll.contains("plugin_exchange(runtime, cursor.instance, Some((cursor.seq, command))).await"));
+        assert!(poll.contains("plugin_render(runtime, instance, &body_key, \"{}\").await"));
+        assert!(!poll.contains("resolve_ready(crate::plugin_runtime::plugin_exchange"));
+        assert!(!poll.contains("resolve_ready(crate::plugin_runtime::plugin_render"));
     }
 }
 //#endregion 🔁️CommandIngressTerminal
@@ -1116,7 +1106,7 @@ mod wit_bridge {
     /// ▶️ The real `reactor::poll` body — see module doc for the shape. `events`/`budget` are the
     /// WIT-generated types from `exports::semio::framework::reactor`; the return is that same
     /// module's `TurnResult`.
-    pub fn poll<PA: crate::app::PluginApp + 'static>(
+    pub async fn poll<PA: crate::app::PluginApp + 'static>(
         runtime: &crate::plugin_runtime::PluginRuntime<PA>,
         events: Vec<crate::component::component::exports::semio::framework::reactor::Event>,
         command_page: Option<crate::component::component::exports::semio::framework::reactor::CommandIngressPage>,
@@ -1132,14 +1122,14 @@ mod wit_bridge {
         }
         let kernel_budget = semio_framework::kernel::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
         let command_page = command_page.map(wit_command_page_to_kernel).transpose()?;
-        let result = poll_kernel(runtime, kernel_events, command_page, kernel_budget, &close_instances)?;
+        let result = poll_kernel(runtime, kernel_events, command_page, kernel_budget, &close_instances).await?;
         kernel_turn_result_to_wit(result, budget)
     }
 
     /// 🧠️ Repository-owned actor ABI entrypoint. The component-model wrapper above and the native
     /// interpreter both call this exact kernel reducer, so WIT lifting is no longer the production
     /// host's semantic authority.
-    pub fn poll_kernel<PA: crate::app::PluginApp + 'static>(
+    pub async fn poll_kernel<PA: crate::app::PluginApp + 'static>(
         runtime: &crate::plugin_runtime::PluginRuntime<PA>,
         events: Vec<Event>,
         command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
@@ -1156,7 +1146,7 @@ mod wit_bridge {
             begin_reactor_close(*numeric_instance)?;
             PATCHES.with(|patches| patches.begin_close_instance(*numeric_instance));
             PENDING_PATCHES.with(|pending| pending.borrow_mut().begin_close_instance(*numeric_instance));
-            if let Err(error) = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_destroy_app(runtime, *numeric_instance)) {
+            if let Err(error) = crate::plugin_runtime::plugin_destroy_app(runtime, *numeric_instance).await {
                 abort_reactor_close(*numeric_instance);
                 return Err(error);
             }
@@ -1193,13 +1183,13 @@ mod wit_bridge {
                     // real); `resolve_ready` is safe here for the same "world actor has no host-async
                     // import" reason as this file's other WIT-boundary bridges. R13: previously a BARE
                     // dropped future (`let _ = ...`/un-awaited statement) — now genuinely resolved.
-                    if let Err(error) = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_create_app_with_id(runtime, numeric_instance, &app_id.0)) {
+                    if let Err(error) = crate::plugin_runtime::plugin_create_app_with_id(runtime, numeric_instance, &app_id.0).await {
                         INSTANCE_METADATA.with(|metadata| drop(metadata.borrow_mut().remove(numeric_instance)));
                         return Err(error);
                     }
                     // 🪪️ Channel v12 (A4) retired the `AppCommand::Hello` handshake that used to record
                     // this — lifecycle now arrives here as `Event::InstanceOpen` (design-abi.md §4).
-                    if let Err(error) = semio_framework::io::resolve_ready(crate::plugin_runtime::set_instance_actor(runtime, numeric_instance, actor)) {
+                    if let Err(error) = crate::plugin_runtime::set_instance_actor(runtime, numeric_instance, actor).await {
                         INSTANCE_METADATA.with(|metadata| drop(metadata.borrow_mut().remove(numeric_instance)));
                         return Err(error);
                     }
@@ -1291,7 +1281,7 @@ mod wit_bridge {
                 Event::Message { source: MessageEndpoint::Shell { instance }, payload } => {
                     if let Some(token) = crate::app::TypedOperationResultPage::renderer_ack_token(&payload) {
                         if instance.0.parse::<u32>().ok() == Some(token.receiver) {
-                            let _ = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_acknowledge_typed_operation_result(runtime, token))?;
+                            let _ = crate::plugin_runtime::plugin_acknowledge_typed_operation_result(runtime, token).await?;
                         }
                     }
                 }
@@ -1352,17 +1342,10 @@ mod wit_bridge {
         };
         retained = match retained.take() {
             Some(CommandIngressOwner::ReservedPresence { cursor, admission, page }) => {
-                let now_ms = semio_framework::io::resolve_ready(crate::host::now_ms());
-                match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_admit_reserved_presence(
-                    runtime,
-                    cursor.instance,
-                    admission,
-                    cursor.seq,
-                    if cursor.metadata & 0x100 != 0 { Some((cursor.metadata & 0xff) as u8) } else { None },
-                    cursor.item_count,
-                    page,
-                    now_ms,
-                )) {
+                let now_ms = crate::host::now_ms().await;
+                match crate::plugin_runtime::plugin_admit_reserved_presence(runtime, cursor.instance, admission, cursor.seq, if cursor.metadata & 0x100 != 0 { Some((cursor.metadata & 0xff) as u8) } else { None }, cursor.item_count, page, now_ms)
+                    .await
+                {
                     Ok(publication_generation) => {
                         command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor.clone());
                         Some(CommandIngressOwner::Presence { cursor, publication_generation })
@@ -1376,18 +1359,16 @@ mod wit_bridge {
             owner => owner,
         };
         retained = match retained.take() {
-            Some(CommandIngressOwner::PendingPresencePage { cursor, publication_generation, page }) => {
-                match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_push_reserved_presence_page(runtime, cursor.instance, publication_generation, cursor.page_index, page)) {
-                    Ok(()) => {
-                        command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor.clone());
-                        Some(CommandIngressOwner::Presence { cursor, publication_generation })
-                    }
-                    Err((_fault, page)) => {
-                        command_ingress = semio_framework::kernel::CommandIngressStatus::CommandPending(cursor.clone());
-                        Some(CommandIngressOwner::PendingPresencePage { cursor, publication_generation, page })
-                    }
+            Some(CommandIngressOwner::PendingPresencePage { cursor, publication_generation, page }) => match crate::plugin_runtime::plugin_push_reserved_presence_page(runtime, cursor.instance, publication_generation, cursor.page_index, page).await {
+                Ok(()) => {
+                    command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor.clone());
+                    Some(CommandIngressOwner::Presence { cursor, publication_generation })
                 }
-            }
+                Err((_fault, page)) => {
+                    command_ingress = semio_framework::kernel::CommandIngressStatus::CommandPending(cursor.clone());
+                    Some(CommandIngressOwner::PendingPresencePage { cursor, publication_generation, page })
+                }
+            },
             owner => owner,
         };
         if matches!(command_ingress, semio_framework::kernel::CommandIngressStatus::Idle) {
@@ -1397,7 +1378,7 @@ mod wit_bridge {
                     retained = None;
                     command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-cancelled-by-close".to_vec() };
                 } else {
-                    match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, None)) {
+                    match crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, None).await {
                         Ok(output) => {
                             let instance = cursor.instance;
                             if output.presence_terminal == Some(cursor.seq) {
@@ -1427,7 +1408,7 @@ mod wit_bridge {
         }
         if let Some(owner) = retained.take() {
             match owner {
-                CommandIngressOwner::Generic { cursor, command } => match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, command)))) {
+                CommandIngressOwner::Generic { cursor, command } => match crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, command))).await {
                     Ok(mut output) => {
                         match advance_command_cursor(cursor.clone()) {
                             Ok(terminal) => {
@@ -1491,10 +1472,10 @@ mod wit_bridge {
                 };
                 if !matches!(command_ingress, semio_framework::kernel::CommandIngressStatus::Fault { .. }) {
                     if cursor.page_index == 0 && retained.is_none() {
-                        match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_reserve_presence_ingress(runtime, cursor.instance, cursor.seq)) {
+                        match crate::plugin_runtime::plugin_reserve_presence_ingress(runtime, cursor.instance, cursor.seq).await {
                             Ok(admission) => {
-                                let now_ms = semio_framework::io::resolve_ready(crate::host::now_ms());
-                                match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_admit_reserved_presence(runtime, cursor.instance, admission, cursor.seq, own_color, cursor.item_count, page, now_ms)) {
+                                let now_ms = crate::host::now_ms().await;
+                                match crate::plugin_runtime::plugin_admit_reserved_presence(runtime, cursor.instance, admission, cursor.seq, own_color, cursor.item_count, page, now_ms).await {
                                     Ok(publication_generation) => {
                                         retained = Some(CommandIngressOwner::Presence { cursor: cursor.clone(), publication_generation });
                                         command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor);
@@ -1511,7 +1492,7 @@ mod wit_bridge {
                         CommandIngressOwner::Presence { publication_generation, .. } => Some(*publication_generation),
                         _ => None,
                     }) {
-                        match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_push_reserved_presence_page(runtime, cursor.instance, publication_generation, cursor.page_index, page)) {
+                        match crate::plugin_runtime::plugin_push_reserved_presence_page(runtime, cursor.instance, publication_generation, cursor.page_index, page).await {
                             Ok(()) => {
                                 if let Some(CommandIngressOwner::Presence { cursor: active, .. }) = retained.as_mut() {
                                     active.page_index = cursor.page_index;
@@ -1530,7 +1511,7 @@ mod wit_bridge {
                     Ok(mut pages) => match pages.try_push(page) {
                         Err((fault, _page)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
                         Ok(()) if cursor.page_count == 1 => match semio_framework::kernel::PagedCommand::try_from_pages(pages) {
-                            Ok(command) => match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command))))) {
+                            Ok(command) => match crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command)))).await {
                                 Ok(mut output) => {
                                     if let Some((_, command)) = output.retry_command.take() {
                                         retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
@@ -1561,7 +1542,7 @@ mod wit_bridge {
                     match pages.try_push(page) {
                         Err((fault, _page)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
                         Ok(()) if cursor.page_index.checked_add(1) == Some(cursor.page_count) => match semio_framework::kernel::PagedCommand::try_from_pages(pages) {
-                            Ok(command) => match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command))))) {
+                            Ok(command) => match crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command)))).await {
                                 Ok(mut output) => {
                                     if let Some((_, command)) = output.retry_command.take() {
                                         retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
@@ -1605,7 +1586,7 @@ mod wit_bridge {
         for DirtyIntentBatch { instance, intents } in intent_batches {
             // 🚫️async: E5 executor bridge — `plugin_dispatch_intents` stays genuinely `async fn`; safe to
             // resolve synchronously here for the same reason as `plugin_exchange` above.
-            match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_dispatch_intents(runtime, instance, &intents)) {
+            match crate::plugin_runtime::plugin_dispatch_intents(runtime, instance, &intents).await {
                 Ok(output) => {
                     for frame_bytes in output.frames {
                         route_app_frame(instance, &frame_bytes, &mut effects);
@@ -1649,27 +1630,27 @@ mod wit_bridge {
         // 👥️ M2 (ticket 26/08/17 `design-unified.md`): `now_ms` is read ONCE for both `record_peer`'s
         // expiry stamping below and `PRESENCE.expire` at the end of this turn — a single wall-clock
         // reading per poll, not one per presence update.
-        let now_ms = u64::try_from(semio_framework::io::resolve_ready(crate::host::now_ms())).unwrap_or(0);
+        let now_ms = u64::try_from(crate::host::now_ms().await).unwrap_or(0);
 
         for (instance, surface) in dirty.surfaces {
             let body_key = surface_body_key(surface.as_ref()).to_owned();
-            PATCHES.with(|patches| match patches.reserve_mounted(surface) {
-                Ok(grant) => match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_render(runtime, instance, &body_key, "{}")) {
+            match PATCHES.with(|patches| patches.reserve_mounted(surface)) {
+                Ok(grant) => match crate::plugin_runtime::plugin_render(runtime, instance, &body_key, "{}").await {
                     Ok(tree) => {
                         let _ = grant.commit_source(tree.root);
                     }
                     Err(_) => grant.cancel(),
                 },
-                Err(surface) => {
+                Err(surface) => PATCHES.with(|patches| {
                     let _ = patches.defer(surface);
-                }
-            });
+                }),
+            }
             // 👥️ M2: drains this instance's render-plane presence outbox (`VcsArtifactApp::
             // pending_presence`, filled by `stamp_and_cache_interaction_ui` during the render just above)
             // into `PRESENCE` right after its render — the SAME turn that presented the tree also records
             // its presence. NEVER touches `PENDING_PATCHES`/the document store — the whole point of this
             // separate channel (see `PresenceHub`'s own doc: a mouse-move must never bump a revision).
-            match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_take_presence(runtime, instance)) {
+            match crate::plugin_runtime::plugin_take_presence(runtime, instance).await {
                 Ok(updates) => {
                     for update in updates {
                         PRESENCE.with(|hub| {
@@ -1746,10 +1727,7 @@ mod wit_bridge {
 
     fn route_exchange_output(instance: u32, output: crate::plugin_runtime::PluginExchangeOutput, effects: &mut Vec<Effect>) {
         if let Some(page) = output.typed_operation_result.as_ref() {
-            effects.push(Effect::SendMessage {
-                target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) },
-                payload: page.renderer_exchange_bytes(),
-            });
+            effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: page.renderer_exchange_bytes() });
         }
         for frame_bytes in output.frames {
             route_app_frame(instance, &frame_bytes, effects);
@@ -2338,7 +2316,12 @@ mod wit_bridge {
     fn kernel_ui_patch_to_wit(patch: UiPatch) -> crate::component::component::exports::semio::framework::reactor::UiPatch {
         use crate::component::component::exports::semio::framework::reactor as wit;
         let (instance, surface) = patch.surface.0.split_once(':').unwrap_or(("0", patch.surface.0.as_str()));
-        wit::UiPatch { surface: wit_ui::SurfaceRef { instance: instance.parse().unwrap_or(0), surface: surface.to_owned() }, revision: patch.revision.0, base_revision: patch.base_revision.0, ops: patch.ops.into_iter().map(kernel_patch_op_to_wit).collect() }
+        wit::UiPatch {
+            surface: wit_ui::SurfaceRef { instance: instance.parse().unwrap_or(0), surface: surface.to_owned() },
+            revision: patch.revision.0,
+            base_revision: patch.base_revision.0,
+            ops: patch.ops.into_iter().map(kernel_patch_op_to_wit).collect(),
+        }
     }
 
     /// 🩹️ Packs any `Serialize` payload the same way `kernel_effect_to_wit`'s own `pack` helper does —
@@ -2574,19 +2557,19 @@ pub(crate) mod test_support {
     }
 
     /// 🩹️ Test-only completion driver over the same retained mounted authority.
-    pub(crate) async fn patches_diff(surface: &str, tree: &semio_framework_ui_runtime::ComponentTree) -> Option<ui_contract::UiPatch> {
+    pub(crate) async fn patches_diff(surface: &str, tree: semio_framework_ui_runtime::ComponentTree) -> Option<ui_contract::UiPatch> {
         PATCHES.with(|patches| {
             if !patches.can_begin(surface) {
                 return None;
             }
-            if let Err((surface, tree)) = patches.begin(surface.to_string(), tree.clone()) {
+            if let Err((surface, tree)) = patches.begin(surface.to_string(), tree) {
                 let _ = patches.retain_unadmitted(surface, tree);
                 return None;
             }
             for _ in 0..512 {
                 patches.drive_one();
-                if let Some(patch) = patches.take_ready_patch() {
-                    return Some(patch);
+                if let Some(owner) = patches.take_ready_patch() {
+                    return owner.publish().map(|(patch, _)| patch);
                 }
             }
             None
@@ -2596,12 +2579,14 @@ pub(crate) mod test_support {
     /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): the exact `PRESENCE.record_own` call `poll`'s
     /// dirty-render loop makes for each drained `PresenceUpdate`, exposed directly.
     pub(crate) async fn presence_record_own(surface: &str, node_key: &str, own: ui_contract::OwnPresence, ttl_ms: u32) {
-        PRESENCE.with(|hub| hub.borrow_mut().record_own(ui_contract::SurfaceId::from(surface), node_key.to_string(), own, ttl_ms));
+        let surface = ui_contract::SurfaceId::try_from(surface).expect("bounded test surface");
+        PRESENCE.with(|hub| hub.borrow_mut().record_own(surface, node_key.to_string(), own, ttl_ms));
     }
 
     /// 👥️ M2: the exact `PRESENCE.record_peer` call, exposed directly.
     pub(crate) async fn presence_record_peer(surface: &str, node_key: &str, mark: ui_contract::PeerMark, ttl_ms: u32, now_ms: u64) {
-        PRESENCE.with(|hub| hub.borrow_mut().record_peer(ui_contract::SurfaceId::from(surface), node_key.to_string(), mark, ttl_ms, now_ms));
+        let surface = ui_contract::SurfaceId::try_from(surface).expect("bounded test surface");
+        PRESENCE.with(|hub| hub.borrow_mut().record_peer(surface, node_key.to_string(), mark, ttl_ms, now_ms));
     }
 
     /// 👥️ M2: the exact `expire`-then-`flush` sequence `poll` runs once per turn, exposed directly.
@@ -2627,7 +2612,7 @@ mod m1_m2_reactor_tests {
     use semio_framework_ui_runtime::{ComponentTree, TreeNode};
 
     fn leaf(key: &str) -> ComponentTree {
-        ComponentTree::new(TreeNode::new(key, ui_contract::Component::Separator(ui_contract::SeparatorProps {})))
+        ComponentTree { root: TreeNode::try_new(key, ui_contract::Component::Separator(ui_contract::SeparatorProps {})).unwrap_or_else(|_| panic!("bounded test tree")) }
     }
 
     /// 🎯️ M1: `PATCHES.revision` reads 0 for a surface `poll` has never rendered, and
@@ -2647,9 +2632,9 @@ mod m1_m2_reactor_tests {
     /// no command" reduced to the guard `poll` evaluates before ever reaching dispatch.
     #[semio_framework_async_macros::async_test]
     async fn revision_guard_rejects_an_intent_trailing_by_more_than_the_tolerance() {
-        patches_diff("s", &leaf("root")).await;
-        patches_diff("s", &leaf("root2")).await;
-        patches_diff("s", &leaf("root3")).await;
+        patches_diff("s", leaf("root")).await;
+        patches_diff("s", leaf("root2")).await;
+        patches_diff("s", leaf("root3")).await;
         let current = patches_revision("s").await;
         assert_eq!(current, ui_contract::UiRevision(3));
         assert!(!semio_framework_ui_runtime::is_stale_intent(ui_contract::UiRevision(2), current, semio_framework_ui_runtime::DEFAULT_REVISION_TOLERANCE), "trailing by exactly the tolerance must still dispatch");
@@ -2727,7 +2712,7 @@ mod reconcile_budget_tests {
             steps += 1;
             let retained = REACTOR_CLOSES.with(|closes| {
                 let closes = closes.borrow();
-                closes.slots[ReactorCloseRegistry::index(instance)].as_ref().is_some_and(|state| state.instance == instance)
+                closes.slots.get(ReactorCloseRegistry::index(instance)).is_some_and(|state| state.instance == instance)
             });
             if !retained {
                 break;

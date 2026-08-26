@@ -21,7 +21,7 @@ struct WriterEngagementOutcome {
 /// 💬️ Natural-language engagement parsing (premigration `applyEngagement`). Accepts both the spaced
 /// form (wgpu REPL) and the React shell's PascalCased, separator-stripped drafts (e.g. `"Font16"`,
 /// `"LineNumbers"` — see `strip_engagement_prefix`).
-async fn apply_engagement(config: &WriterConfig, current_text: &str, language_id: &str, value: &str) -> WriterEngagementOutcome {
+fn apply_engagement(config: &WriterConfig, current_text: &str, language_id: &str, value: &str) -> WriterEngagementOutcome {
     use crate::artifacts::writer::schema::format_writer_text;
 
     let trimmed = value.trim();
@@ -71,7 +71,7 @@ pub struct EngagementSubmit {
     pub value: Option<String>,
 }
 
-pub async fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
     let document = doc.snapshot;
     let config = cfg.snapshot;
     let value = payload.value.clone().unwrap_or_else(|| config.engagement_input.clone());

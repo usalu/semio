@@ -19,12 +19,12 @@ use crate::artifacts::playbook::op::PlaybookMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `PlaybookMutation` to its binary state-patch form.
-pub async fn encode_op(operation: &PlaybookMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &PlaybookMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `PlaybookMutation` from its binary state-patch form.
-pub async fn decode_op(bytes: &[u8]) -> Result<PlaybookMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<PlaybookMutation, protocol::ProtocolError> {
     PlaybookMutation::decode_op(bytes)
 }
 

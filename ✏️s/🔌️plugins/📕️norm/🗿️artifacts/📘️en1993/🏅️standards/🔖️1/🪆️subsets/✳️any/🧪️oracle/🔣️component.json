@@ -23,6 +23,197 @@
     {
       "id": "en1993-1-any",
       "capability": "en1993-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-annex",
+          "sourceMutationDirectoryName": "🎢change-annex",
+          "mutationDirectoryName": "🎢change-annex",
+          "scenarios": [
+            {
+              "id": "switches-the-national-annex-from-de-to-en",
+              "directoryName": "🧪️switches-the-national-annex-from-de-to-en"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-bolt-inputs",
+          "sourceMutationDirectoryName": "🌞update-bolt-inputs",
+          "mutationDirectoryName": "🌞update-bolt-inputs",
+          "scenarios": [
+            {
+              "id": "moves-the-connection-to-four-m24-grade-10-9-bolts",
+              "directoryName": "🧪️moves-the-connection-to-four-m24-grade-10-9-bolts"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-bridge-inputs",
+          "sourceMutationDirectoryName": "🏗️update-bridge-inputs",
+          "mutationDirectoryName": "🏗️update-bridge-inputs",
+          "scenarios": [
+            {
+              "id": "raises-the-bridge-damage-equivalence-and-dynamic-factors",
+              "directoryName": "🧪️raises-the-bridge-damage-equivalence-and-dynamic-factors"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-cold-formed-inputs",
+          "sourceMutationDirectoryName": "🔥update-cold-formed-inputs",
+          "mutationDirectoryName": "🔥update-cold-formed-inputs",
+          "scenarios": [
+            {
+              "id": "thickens-the-cold-formed-flange-and-reverses-its-stress-gradient",
+              "directoryName": "🧪️thickens-the-cold-formed-flange-and-reverses-its-stress-gradient"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-crane-inputs",
+          "sourceMutationDirectoryName": "🌡️update-crane-inputs",
+          "mutationDirectoryName": "🌡️update-crane-inputs",
+          "scenarios": [
+            {
+              "id": "widens-the-crane-wheel-contact-patch-under-a-heavier-wheel",
+              "directoryName": "🧪️widens-the-crane-wheel-contact-patch-under-a-heavier-wheel"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-fatigue-inputs",
+          "sourceMutationDirectoryName": "❄️update-fatigue-inputs",
+          "mutationDirectoryName": "❄️update-fatigue-inputs",
+          "scenarios": [
+            {
+              "id": "drops-to-detail-category-56-under-a-safe-life-assessment",
+              "directoryName": "🧪️drops-to-detail-category-56-under-a-safe-life-assessment"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-fire-inputs",
+          "sourceMutationDirectoryName": "🔆update-fire-inputs",
+          "mutationDirectoryName": "🔆update-fire-inputs",
+          "scenarios": [
+            {
+              "id": "raises-the-fire-protection-to-r90",
+              "directoryName": "🧪️raises-the-fire-protection-to-r90"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-hss-inputs",
+          "sourceMutationDirectoryName": "💧update-hss-inputs",
+          "mutationDirectoryName": "💧update-hss-inputs",
+          "scenarios": [
+            {
+              "id": "reclassifies-the-hollow-section-to-class-3-in-s355",
+              "directoryName": "🧪️reclassifies-the-hollow-section-to-class-3-in-s355"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-member-properties",
+          "sourceMutationDirectoryName": "🧊update-member-properties",
+          "mutationDirectoryName": "🧊update-member-properties",
+          "scenarios": [
+            {
+              "id": "re-grades-the-base-member-to-s460-under-a-heavier-load",
+              "directoryName": "🧪️re-grades-the-base-member-to-s460-under-a-heavier-load"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-pile-inputs",
+          "sourceMutationDirectoryName": "🗺️update-pile-inputs",
+          "mutationDirectoryName": "🗺️update-pile-inputs",
+          "scenarios": [
+            {
+              "id": "derates-the-driven-pile-for-hard-driving",
+              "directoryName": "🧪️derates-the-driven-pile-for-hard-driving"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-plated-inputs",
+          "sourceMutationDirectoryName": "🧭update-plated-inputs",
+          "mutationDirectoryName": "🧭update-plated-inputs",
+          "scenarios": [
+            {
+              "id": "makes-the-plate-panel-more-slender-and-more-stressed",
+              "directoryName": "🧪️makes-the-plate-panel-more-slender-and-more-stressed"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-silo-shell-inputs",
+          "sourceMutationDirectoryName": "🪟update-silo-shell-inputs",
+          "mutationDirectoryName": "🪟update-silo-shell-inputs",
+          "scenarios": [
+            {
+              "id": "deepens-the-silo-and-thickens-its-shell",
+              "directoryName": "🧪️deepens-the-silo-and-thickens-its-shell"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-stainless-inputs",
+          "sourceMutationDirectoryName": "🎚️update-stainless-inputs",
+          "mutationDirectoryName": "🎚️update-stainless-inputs",
+          "scenarios": [
+            {
+              "id": "upsizes-the-stainless-section-to-a-duplex-grade",
+              "directoryName": "🧪️upsizes-the-stainless-section-to-a-duplex-grade"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-tension-component-inputs",
+          "sourceMutationDirectoryName": "⚡update-tension-component-inputs",
+          "mutationDirectoryName": "⚡update-tension-component-inputs",
+          "scenarios": [
+            {
+              "id": "derates-the-tension-rod-to-a-400-kn-characteristic-strength",
+              "directoryName": "🧪️derates-the-tension-rod-to-a-400-kn-characteristic-strength"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-through-thickness-inputs",
+          "sourceMutationDirectoryName": "🌬️update-through-thickness-inputs",
+          "mutationDirectoryName": "🌬️update-through-thickness-inputs",
+          "scenarios": [
+            {
+              "id": "upgrades-the-subgrade-to-k2-for-a-thicker-plate-at-minus-20c",
+              "directoryName": "🧪️upgrades-the-subgrade-to-k2-for-a-thicker-plate-at-minus-20c"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-tower-inputs",
+          "sourceMutationDirectoryName": "🌗update-tower-inputs",
+          "mutationDirectoryName": "🌗update-tower-inputs",
+          "scenarios": [
+            {
+              "id": "raises-the-tower-wind-factor-and-leg-force",
+              "directoryName": "🧪️raises-the-tower-wind-factor-and-leg-force"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-weld-inputs",
+          "sourceMutationDirectoryName": "🧱update-weld-inputs",
+          "mutationDirectoryName": "🧱update-weld-inputs",
+          "scenarios": [
+            {
+              "id": "lengthens-the-fillet-weld-and-re-grades-it-to-s460",
+              "directoryName": "🧪️lengthens-the-fillet-weld-and-re-grades-it-to-s460"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "change-annex",
         "update-member-properties",

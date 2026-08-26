@@ -2,15 +2,14 @@
 //!
 //! `edit-text` is the ONLY writer mutation that reaches the composed `s.stdio.semio.document`
 //! child: on a real edit it hands off to `diff_set_text`, which mints a fresh content-addressed
-//! handle and seeds the working-scene cache. Its diff oracle guards that with an equality check
+//! handle and attaches its local text owner. Its diff oracle guards that with an equality check
 //! against the CURRENT body (`writer_text(base) == payload.text` ⇒ Warning `mutation.no-op`), and
 //! this case drives exactly that guard: resending the brief's own body must produce an empty diff
 //! and, above all, must NOT re-mint the handle — a spurious re-mint would be invisible in the text
 //! but would rewrite the document's content address on every keystroke-free save.
 //!
-//! 🕸️ Because the handle is content-addressed and writer's working scene is a thread-local scratch
-//! cache, the committed `⬅️before` carries the handle and this file caches that handle's body; the
-//! two together ARE the before-state.
+//! 🕸️ Because the handle is content-addressed and owns its local working text, the committed
+//! `⬅️before` carries the durable identity and this file materializes that exact handle's body.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`); the derived encodings come from `fixtures generate`.
@@ -30,8 +29,8 @@ const OUTCOME: &str = include_str!("🎯️outcome/🔣️component.json");
 const CACHED_BODY: &str = "# Mission Brief\n\nHold the current draft.\n";
 
 fn before() -> WriterSnapshot {
-    let snapshot: WriterSnapshot = serde_json::from_str(BEFORE).expect("before writer document decodes");
-    crate::artifacts::writer::cache_writer_document_text(&snapshot.document.child_id, CACHED_BODY);
+    let mut snapshot: WriterSnapshot = serde_json::from_str(BEFORE).expect("before writer document decodes");
+    crate::artifacts::writer::attach_writer_document_text(&mut snapshot.document, CACHED_BODY);
     snapshot
 }
 fn expected_after() -> WriterSnapshot {
@@ -52,7 +51,7 @@ async fn the_idempotent_edit_leaves_the_document_handle_alone() {
     assert_eq!(snapshot.document.child_id, base.document.child_id, "edit-text/warns-that-the-brief-body-is-unchanged: an unchanged body must not mint a new content address");
 }
 
-/// ↩️ `edit-text`'s inverse reads the body off BASE's own handle through the working-scene cache —
+/// ↩️ `edit-text`'s inverse reads the body off BASE's exact local child owner —
 /// never the diff — so here it hands back the identical body the payload already carried.
 #[semio_framework_async_macros::async_test]
 async fn the_inverse_resends_the_identical_body() {
@@ -62,7 +61,7 @@ async fn the_inverse_resends_the_identical_body() {
     let WriterMutation::EditText(undo) = &inverse[0] else {
         panic!("edit-text/warns-that-the-brief-body-is-unchanged: edit-text's inverse must be an edit-text");
     };
-    assert_eq!(undo.text, CACHED_BODY, "edit-text/warns-that-the-brief-body-is-unchanged: the undo must carry the body cached behind the before-handle");
+    assert_eq!(undo.text, CACHED_BODY, "edit-text/warns-that-the-brief-body-is-unchanged: the undo must carry the body owned by the before-handle");
     let mut snapshot = base.clone();
     apply_writer_mutation(&mut snapshot, &mutation()).expect("forward edit-text applies");
     for step in &inverse {

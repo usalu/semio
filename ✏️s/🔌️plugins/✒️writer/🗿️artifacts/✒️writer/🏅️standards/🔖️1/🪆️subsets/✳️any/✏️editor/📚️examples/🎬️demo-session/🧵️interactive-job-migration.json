@@ -3,6 +3,7 @@
   "payloadSchema": "writer.writer.tool-command.v1",
   "maxRawWireBytes": 4096,
   "maxCurrentTextBytes": 4096,
+  "maxOpenDocumentUriBytes": 1024,
   "maxWorkUnitsPerStep": 1,
   "migrated": [
     { "action": "textEdit", "variants": ["text-edit"] },
@@ -16,6 +17,7 @@
     { "action": "engagementInput", "variants": ["engagement-input"] },
     { "action": "setActiveExample", "variants": ["active-example"] },
     { "action": "setSnapshot", "variants": ["set-snapshot"] },
+    { "action": "openDocument", "variants": ["open-document"] },
     { "action": "setSnapshotJson", "variants": ["document-json"] },
     { "action": "setFixtureJson", "variants": ["fixture-json"] },
     { "action": "formatDocument", "variants": ["format-document"] },
@@ -31,6 +33,11 @@
   "localeAdmissionCases": [
     { "localeBytes": 64, "accepted": true, "fuelDelta": 1, "cursorDelta": 0, "ownersPreserved": true },
     { "localeBytes": 65, "accepted": false, "fuelDelta": 0, "cursorDelta": 0, "ownersPreserved": true }
+  ],
+  "openDocumentAdmissionCases": [
+    { "textBytes": 4096, "uriBytes": 1024, "accepted": true, "fuelDelta": 1, "cursorDelta": 0, "ownersPreserved": true },
+    { "textBytes": 4097, "uriBytes": 1024, "accepted": false, "fuelDelta": 0, "cursorDelta": 0, "ownersPreserved": true },
+    { "textBytes": 4096, "uriBytes": 1025, "accepted": false, "fuelDelta": 0, "cursorDelta": 0, "ownersPreserved": true }
   ],
   "requiredLifecycle": [
     "exact-wire-admission",

@@ -8,7 +8,7 @@ use crate::editor::lowpoly::terminology::LowpolyLabels;
 use semio_framework_plugin::WindowMeasure;
 
 /// 🎛️ The live chrome measure for this option.
-pub async fn measure(config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMeasure {
+pub fn measure(config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMeasure {
     WindowMeasure::Toggle { id: "lowpoly-measure-show-edges".into(), icon_id: "grid-3x3".into(), label: Some(labels.show_edges.into()), pressed: config.show_edges, text: None, on_change: lowpoly_action("toggleShowEdges", None) }
 }
 

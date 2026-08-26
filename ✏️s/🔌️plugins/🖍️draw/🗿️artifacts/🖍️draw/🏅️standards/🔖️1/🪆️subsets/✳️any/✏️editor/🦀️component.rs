@@ -1027,7 +1027,7 @@ impl ArtifactEditor for DrawPlayApp {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.retained-route"), "Draw gesture commands are reachable only through their exact retained factory owner"));
         }
         let mut session = DrawSession::default();
-        session.interaction.ids = interaction.selection(DRAW_INTERACTION_DOMAIN).await.ids.clone();
+        session.interaction.ids = interaction.selection(DRAW_INTERACTION_DOMAIN).ids.clone();
         command.dispatch(doc, cfg, &mut session)
     }
 

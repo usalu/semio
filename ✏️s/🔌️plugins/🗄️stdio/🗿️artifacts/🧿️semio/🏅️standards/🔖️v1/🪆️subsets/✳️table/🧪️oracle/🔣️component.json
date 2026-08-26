@@ -18,6 +18,98 @@
     {
       "id": "semio-v1-table",
       "capability": "semio-v1-table-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️table",
+      "vectors": [
+        {
+          "mutationId": "create-column",
+          "sourceMutationDirectoryName": "🏗️create-column",
+          "mutationDirectoryName": "🏗️create-column",
+          "scenarios": [
+            {
+              "id": "appends-a-float-column-and-null-pads-every-row",
+              "directoryName": "🧪️appends-a-float-column-and-null-pads-every-row"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-column",
+          "sourceMutationDirectoryName": "🗑️delete-column",
+          "mutationDirectoryName": "🗑️delete-column",
+          "scenarios": [
+            {
+              "id": "drops-the-middle-column-and-cascades-into-every-row",
+              "directoryName": "🧪️drops-the-middle-column-and-cascades-into-every-row"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-cell",
+          "sourceMutationDirectoryName": "✏️edit-cell",
+          "mutationDirectoryName": "✏️edit-cell",
+          "scenarios": [
+            {
+              "id": "rewrites-the-population-cell-of-the-second-row",
+              "directoryName": "🧪️rewrites-the-population-cell-of-the-second-row"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-row",
+          "sourceMutationDirectoryName": "📥insert-row",
+          "mutationDirectoryName": "📥insert-row",
+          "scenarios": [
+            {
+              "id": "inserts-a-row-between-the-two-existing-rows",
+              "directoryName": "🧪️inserts-a-row-between-the-two-existing-rows"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-row",
+          "sourceMutationDirectoryName": "➖remove-row",
+          "mutationDirectoryName": "➖remove-row",
+          "scenarios": [
+            {
+              "id": "removes-the-leading-row",
+              "directoryName": "🧪️removes-the-leading-row"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-column",
+          "sourceMutationDirectoryName": "🏷️rename-column",
+          "mutationDirectoryName": "🏷️rename-column",
+          "scenarios": [
+            {
+              "id": "renames-city-to-town-without-touching-any-row",
+              "directoryName": "🧪️renames-city-to-town-without-touching-any-row"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-columns",
+          "sourceMutationDirectoryName": "🔀reorder-columns",
+          "mutationDirectoryName": "🔀reorder-columns",
+          "scenarios": [
+            {
+              "id": "moves-the-area-column-to-the-front-and-realigns-every-row",
+              "directoryName": "🧪️moves-the-area-column-to-the-front-and-realigns-every-row"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-rows",
+          "sourceMutationDirectoryName": "🔃reorder-rows",
+          "mutationDirectoryName": "🔃reorder-rows",
+          "scenarios": [
+            {
+              "id": "moves-the-last-row-to-the-front",
+              "directoryName": "🧪️moves-the-last-row-to-the-front"
+            }
+          ]
+        }
+      ],
       "kinds": ["create-column", "delete-column", "rename-column", "reorder-columns", "insert-row", "remove-row", "reorder-rows", "edit-cell"]
     }
   ]

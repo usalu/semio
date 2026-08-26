@@ -24,6 +24,54 @@
     {
       "id": "writer-1-any",
       "capability": "writer-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-language",
+          "sourceMutationDirectoryName": "🌐change-language",
+          "mutationDirectoryName": "🌐change-language",
+          "scenarios": [
+            {
+              "id": "switches-the-brief-from-plaintext-to-markdown",
+              "directoryName": "🧪️switches-the-brief-from-plaintext-to-markdown"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-uri",
+          "sourceMutationDirectoryName": "🔗change-uri",
+          "mutationDirectoryName": "🔗change-uri",
+          "scenarios": [
+            {
+              "id": "republishes-the-brief-under-a-new-uri",
+              "directoryName": "🧪️republishes-the-brief-under-a-new-uri"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-text",
+          "sourceMutationDirectoryName": "✏️edit-text",
+          "mutationDirectoryName": "✏️edit-text",
+          "scenarios": [
+            {
+              "id": "warns-that-the-brief-body-is-unchanged",
+              "directoryName": "🧪️warns-that-the-brief-body-is-unchanged"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-writer",
+          "sourceMutationDirectoryName": "🏷️rename-writer",
+          "mutationDirectoryName": "🏷️rename-writer",
+          "scenarios": [
+            {
+              "id": "renames-the-document-to-mission-brief",
+              "directoryName": "🧪️renames-the-document-to-mission-brief"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "rename-writer",
         "change-uri",

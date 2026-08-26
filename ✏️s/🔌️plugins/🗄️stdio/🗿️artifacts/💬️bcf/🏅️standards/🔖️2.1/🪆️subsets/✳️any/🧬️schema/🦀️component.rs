@@ -110,27 +110,27 @@ pub mod derived_construction {
         type Snapshot = BcfSnapshot;
         type Mutation = BcfMutation;
         type Diff = BcfDiff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: BcfSnapshot::default(), diagnostics: Vec::new() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<BcfSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<BcfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<BcfSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<BcfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::bcf::schema::mutations::apply_bcf_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <BcfDiff as protocol::MutationDiff<BcfSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -164,7 +164,7 @@ pub mod derived_analysis {
         type Parts = BcfParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bcf", standard: StandardId("2.1"), subset: SubsetId("*") };
 
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             // 🕵️ Real sniff: BCF is a zip container that additionally carries a root `bcf.version`
             // entry. Reuses the zip artifact's own byte-level magic+EOCD check (never reimplemented
             // here) for the base confidence, then cheaply corroborates the `bcf.version` entry name
@@ -194,7 +194,7 @@ pub mod derived_analysis {
             }
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = BcfParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -229,7 +229,7 @@ pub mod derived_analysis {
         async fn sniff_bumps_to_high_when_bcf_version_entry_name_is_present() {
             let snap = BcfSnapshot { schema: "stdio.bcf".into(), version: "2.1".into(), topics: Vec::new(), parts: Vec::new() };
             let bytes = crate::artifacts::bcf::io::encode_bcf(&snap).expect("encode");
-            assert_eq!(BcfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)).await, IoConfidence::High);
+            assert_eq!(BcfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::High);
         }
 
         #[semio_framework_async_macros::async_test]
@@ -240,17 +240,17 @@ pub mod derived_analysis {
                 comment: String::new(),
             };
             let bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&zip_snap).expect("encode plain zip");
-            assert_eq!(BcfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)).await, IoConfidence::Medium);
+            assert_eq!(BcfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::Medium);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn sniff_rejects_non_zip_garbage() {
-            assert_eq!(BcfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a zip at all")).await, IoConfidence::Low);
+            assert_eq!(BcfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a zip at all")), IoConfidence::Low);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn sniff_treats_text_source_as_low() {
-            assert_eq!(BcfAnalyzerAnalysis::sniff(&AnalyzeSource::Text("deadbeef")).await, IoConfidence::Low);
+            assert_eq!(BcfAnalyzerAnalysis::sniff(&AnalyzeSource::Text("deadbeef")), IoConfidence::Low);
         }
     }
     //#endregion 🧪️Tests

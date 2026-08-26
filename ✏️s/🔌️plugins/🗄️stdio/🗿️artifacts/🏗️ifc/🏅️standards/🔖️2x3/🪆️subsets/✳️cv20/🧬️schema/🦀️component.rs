@@ -114,35 +114,35 @@ pub mod derived_construction {
         /// ⚠️ `ArtifactBuilder::empty()` is mandated no-arg by the SDK trait -- falls back to
         /// `Ifc2x3Cv20BuilderConstruction::new()`'s seeded document rather than a truly empty (non-conforming)
         /// one, since `build()` requires conformance regardless.
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self::new()
         }
 
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
 
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_ifc2x3_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
 
         /// 🛡️ The real construction gate: however `self.snapshot` got here, a hard CV2.0 violation
         /// fails `build()`; soft diagnostics pass through as advisory (the `Err` path is not taken).
-        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let Self { snapshot, mut diagnostics } = self;
             diagnostics.extend(check_cv20_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)));
             if diagnostics.is_empty() {
@@ -160,17 +160,17 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn new_builds_clean() {
-            let snapshot = Ifc2x3Cv20BuilderConstruction::new().add_product(2, "IFCWALL", "Wall 1").build().await.expect("conforming construction must build");
+            let snapshot = Ifc2x3Cv20BuilderConstruction::new().add_product(2, "IFCWALL", "Wall 1").build().expect("conforming construction must build");
             assert_eq!(snapshot.document.instances.len(), 4);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let violating = Part21Instance { id: 99, entities: vec![("IFCSTRUCTURALANALYSISMODEL".into(), vec![])] };
-            let mut snapshot = Ifc2x3Cv20BuilderConstruction::new().build().await.unwrap();
+            let mut snapshot = Ifc2x3Cv20BuilderConstruction::new().build().unwrap();
             snapshot.document.instances.push(violating);
-            let (mutated, _diff) = Ifc2x3Cv20BuilderConstruction::from_snapshot(Ifc2x3Snapshot::default()).await.mutate(Ifc2x3Mutation::SetSnapshot { snapshot }).await;
-            let err = mutated.build().await.expect_err("a structural entity must fail build()");
+            let (mutated, _diff) = Ifc2x3Cv20BuilderConstruction::from_snapshot(Ifc2x3Snapshot::default()).mutate(Ifc2x3Mutation::SetSnapshot { snapshot });
+            let err = mutated.build().expect_err("a structural entity must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::ifc::standards::v2x3::subsets::cv20::schema::CODE_STRUCTURAL_ENTITY));
         }
     }
@@ -282,12 +282,12 @@ pub mod derived_analysis {
         type Parts = Ifc2x3Parts;
         const DIALECT: Dialect = DIALECT;
 
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            Ifc2x3AnyAnalyzer::sniff(source).await
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            Ifc2x3AnyAnalyzer::sniff(source)
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = Ifc2x3AnyAnalyzer::analyze(sources).await;
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let inner = Ifc2x3AnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {

@@ -35,7 +35,7 @@ fn expected_after() -> FlowSnapshot {
 /// carrying the layout the committed payload re-applies — the seeded layout entries ARE the mutation
 /// JSON's own entries, so the equality the plural no-op guard tests is structural.
 fn before() -> FlowSnapshot {
-    let snapshot: FlowSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FlowSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let FlowMutation::MoveWidgets(payload) = mutation() else {
         panic!("re-applies-the-current-layout-to-both-widgets' committed mutation must be a move-widgets");
     };
@@ -44,7 +44,7 @@ fn before() -> FlowSnapshot {
     for entry in &payload.entries {
         layout.insert(entry.id.clone(), entry.layout.clone().expect("this case's committed entries all carry a layout"));
     }
-    cache_flow_content(&snapshot.content.child_id, widgets, Vec::new(), layout);
+    cache_flow_content(&mut snapshot.content, widgets, Vec::new(), layout);
     snapshot
 }
 

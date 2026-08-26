@@ -12,7 +12,7 @@ pub const RASTER_PLAY_MASKS_TAB_ID: &str = "raster.panel.masks";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition { kind: PanelTabKind::App(RASTER_PLAY_MASKS_TAB_ID.into()), label: LocalizedLabel::native("Masks", "Masken"), group: PanelGroup::Workbench, body_key: Some(RASTER_PLAY_BODY_MASKS.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
@@ -42,7 +42,7 @@ fn collect_masks(layer: &RasterLayerNode, items: &mut UiFixedList<BuiltNode>, la
 /// document/layers tree's (`layer_row_id`), so the two trees cannot both mirror the same domain
 /// without id collisions — dropped rather than shown stale (matches the acceptance-bar precedent in
 /// lowpoly's inspection panel).
-pub async fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &RasterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &RasterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut items = UiFixedList::default();
     for layer in &document.layers {
         collect_masks(layer, &mut items, labels)?;

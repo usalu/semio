@@ -28,6 +28,21 @@
     {
       "id": "dwg-ac1024-any",
       "capability": "dwg-ac1024-mutate",
+      "standardDirectoryName": "🔖️ac1024",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "retitles-the-summary-and-records-the-last-editor",
+              "directoryName": "🧪️retitles-the-summary-and-records-the-last-editor"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

@@ -21,7 +21,7 @@ pub mod set_camera {
         pub fov: f64,
     }
 
-    pub async fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(Emit::config(vec![LowpolyConfigMutation::SetWorldCamera { position: payload.position, target: payload.target, fov: payload.fov }]))
     }
 }
@@ -36,8 +36,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_camera_updates_config() {
         let mut a = app();
-        dispatch(&mut a, LowpolyCommand::SetCamera(super::set_camera::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 }));
-        assert!(a.dispatch_typed(LowpolyCommand::SetCamera(super::set_camera::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 }), &semio_framework_plugin::testkit::meta("a")).is_ok());
+        dispatch(&mut a, LowpolyCommand::SetCamera(super::set_camera::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 })).await;
+        assert!(a.dispatch_typed(LowpolyCommand::SetCamera(super::set_camera::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 }), &semio_framework_plugin::testkit::meta("a")).await.is_ok());
     }
 }
 //#endregion 🧪️Tests

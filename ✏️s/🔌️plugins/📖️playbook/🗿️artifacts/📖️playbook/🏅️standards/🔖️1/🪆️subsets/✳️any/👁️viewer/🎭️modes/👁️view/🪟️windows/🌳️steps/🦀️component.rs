@@ -23,7 +23,7 @@ pub const PLAYBOOK_VIEW_BODY_STEPS: &str = "playbook.view.steps";
 /// id/body-key (the kit's own id/body-key are a generic `"framework.window.tree"`, shared across every
 /// app that composes it — each composing app restamps both, exactly like `steps::render` below reuses
 /// the kit's `render` unmodified).
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     let mut definition = TreeWindowKit::window_kind();
     definition.id = PLAYBOOK_VIEW_WINDOW_STEPS.into();
     definition.body_key = PLAYBOOK_VIEW_BODY_STEPS.into();
@@ -35,7 +35,7 @@ pub async fn definition() -> WindowKindDefinition {
 /// 🌳️ One root node per step (labeled with the step title, falling back to its id when the title is
 /// empty), one leaf child per block (labeled `"<label> (<kind>)"`) — a faithful, read-only reflection
 /// of the same step/block nesting the editor's block-list builder edits.
-pub async fn render(spec: &PlaybookSnapshot) -> semio_framework_plugin::UiNode {
+pub fn render(spec: &PlaybookSnapshot) -> semio_framework_plugin::UiNode {
     let roots = spec
         .steps()
         .into_iter()
@@ -56,7 +56,7 @@ mod tests {
     use crate::artifacts::playbook::playbook_snapshot_with_steps;
     use crate::playbook::{PlaybookBlock, PlaybookStep};
 
-    async fn sample_block(id: &str, label: &str, kind: &str) -> PlaybookBlock {
+    fn sample_block(id: &str, label: &str, kind: &str) -> PlaybookBlock {
         PlaybookBlock {
             id: id.into(),
             label: label.into(),

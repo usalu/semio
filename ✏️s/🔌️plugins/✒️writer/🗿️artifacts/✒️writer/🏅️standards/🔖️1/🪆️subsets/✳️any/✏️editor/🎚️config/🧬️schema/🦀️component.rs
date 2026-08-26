@@ -27,7 +27,7 @@ pub struct WriterConfig {
 
 //region 📎 App-schema descriptor
 /// 📎 `s.writer.writer`'s config and presence schema, owned by this leaf.
-pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     ::schema::AppSchemaDescriptor {
         id: "s.writer.writer",
         config: ::schema::FacetLeaves {

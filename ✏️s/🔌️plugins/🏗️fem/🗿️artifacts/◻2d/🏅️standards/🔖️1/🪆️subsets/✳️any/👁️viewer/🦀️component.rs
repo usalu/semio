@@ -52,7 +52,7 @@ impl ArtifactViewer for Fem2dViewer {
     /// 🌱️ A real, non-empty default scene: the bundled `fem2d` example DSL, falling back to the empty
     /// document on a parse error (should never trigger — the fixture is asserted parseable by the
     /// sibling editor's own tests — but a viewer must never panic building its initial snapshot).
-    async fn initial_snapshot() -> Fem2dSnapshot {
+    fn initial_snapshot() -> Fem2dSnapshot {
         use store::ArtifactDsl;
         Fem2dSnapshot::parse_dsl(crate::artifacts::fem2d::dsl::FEM2D_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::fem2d::schema::empty_fem2d_snapshot())
     }
@@ -61,15 +61,16 @@ impl ArtifactViewer for Fem2dViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (camera
     /// pan, "jump to region") is a pure addition here, never a signature change.
-    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
-        semio_framework_plugin::built_to_component_tree(match body_key {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        match body_key {
             model::BODY_KEY => model::render(doc.snapshot),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
-        })
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem2d viewer unknown-body label admission failed")),
+        }
+        .map(semio_framework_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️Viewer

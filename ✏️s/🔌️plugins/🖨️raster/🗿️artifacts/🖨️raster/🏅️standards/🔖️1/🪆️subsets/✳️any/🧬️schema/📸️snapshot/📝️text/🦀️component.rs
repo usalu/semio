@@ -12,12 +12,12 @@ use crate::artifacts::raster::RasterSnapshot;
 pub const SEMIO_RASTER_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.raster` DSL text into a `RasterSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<RasterSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<RasterSnapshot, store::TextError> {
     <RasterSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `RasterSnapshot` back to `.raster` DSL text.
-pub async fn print_dsl(document: &RasterSnapshot) -> String {
+pub fn print_dsl(document: &RasterSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -30,7 +30,7 @@ mod tests {
 
     /// 📄️ Handcrafted document exercising every layer kind/field, shared with the `pack`/`op`
     /// taxonomy nodes' own copies (each node keeps its own private copy, per §7 test isolation).
-    async fn representative_raster_document() -> RasterSnapshot {
+    fn representative_raster_document() -> RasterSnapshot {
         let mut assets = RasterOwnedMap::new();
         assets.insert("asset-1".into(), crate::artifacts::raster::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() }));
         let mut params = RasterOwnedMap::new();

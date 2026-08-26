@@ -24,12 +24,12 @@ pub mod derived_composition {
         type Snapshot = PdfSnapshot;
         const WRITES: Dialect = DIALECT_E;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_E, DEP_BINARY, DEP_DEFLATE]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = semio_framework_plugin::resolve_ready(PdfAnyComposer::compose(sources))?;
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = PdfAnyComposer::compose(sources)?;
             let checks = check_e_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -91,16 +91,16 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn conforming_builder_snapshot_composes_and_stamps_e() {
-            let snapshot = PdfEBuilder::new().add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(100.0, 100.0)).build().await.unwrap();
+            let snapshot = PdfEBuilder::new().add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(100.0, 100.0)).build().unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = PdfEComposerComposition::compose(&sources).await.expect("clean document must compose to e");
+            let composed = PdfEComposerComposition::compose(&sources).expect("clean document must compose to e");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_runs_the_same_check() {
-            let snapshot = PdfEBuilder::new().add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(50.0, 50.0)).build().await.unwrap();
+            let snapshot = PdfEBuilder::new().add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(50.0, 50.0)).build().unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let diagnostics = PdfEValidator::validate(&IoPayload::Binary(bytes)).await;
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a builder-clean document: {diagnostics:?}");

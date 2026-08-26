@@ -24,12 +24,12 @@ pub mod derived_composition {
         type Snapshot = PdfSnapshot;
         const WRITES: Dialect = DIALECT_UA;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_UA, DEP_BINARY, DEP_DEFLATE]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = semio_framework_plugin::resolve_ready(PdfAnyComposer::compose(sources))?;
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = PdfAnyComposer::compose(sources)?;
             let checks = check_ua_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -127,7 +127,7 @@ pub mod derived_composition {
             let bytes = minimal_conforming_ua_pdf();
             let hex = hex_encode(&bytes);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
-            let composed = PdfUaComposerComposition::compose(&sources).await.expect("clean document must compose to ua");
+            let composed = PdfUaComposerComposition::compose(&sources).expect("clean document must compose to ua");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
@@ -136,7 +136,7 @@ pub mod derived_composition {
             let snapshot = PdfSnapshot::default();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let err = PdfUaComposerComposition::compose(&sources).await.expect_err("an untagged document must not stamp ua");
+            let err = PdfUaComposerComposition::compose(&sources).expect_err("an untagged document must not stamp ua");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == crate::artifacts::pdf::standards::v1_7::subsets::ua::schema::CODE_MARKINFO), "got {:?}", err.diagnostics);
         }
     }

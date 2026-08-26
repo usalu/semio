@@ -1,0 +1,1 @@
+{"oracle":"ajv-2020","valid":true,"cases":5,"maximumCases":5,"ownedSlots":3}

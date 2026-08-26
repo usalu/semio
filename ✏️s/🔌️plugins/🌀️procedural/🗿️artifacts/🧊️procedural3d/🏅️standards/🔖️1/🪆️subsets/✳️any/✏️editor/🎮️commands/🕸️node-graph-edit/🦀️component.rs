@@ -66,5 +66,5 @@ pub fn apply(
     _session: &mut FlowEvalSession,
 ) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
-    Ok(apply_operations(&doc.snapshot.fixture, &sub_operations, &semio_framework::io::resolve_ready(interaction.selection("graph")).ids))
+    Ok(apply_operations(&doc.snapshot.fixture, &sub_operations, &interaction.selection("graph").ids))
 }

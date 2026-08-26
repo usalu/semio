@@ -23,10 +23,10 @@ pub enum LowpolyViewCommand {
 }
 
 impl protocol::OpBinary for LowpolyViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(LowpolyViewCommand::Noop)
     }
 }
@@ -50,7 +50,7 @@ impl ArtifactViewer for LowpolyViewer {
     const DIALECT: Dialect = LOWPOLY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;
 
-    async fn initial_snapshot() -> LowpolySnapshot {
+    fn initial_snapshot() -> LowpolySnapshot {
         default_snapshot()
     }
 
@@ -58,7 +58,7 @@ impl ArtifactViewer for LowpolyViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (camera
     /// orbit, "jump to object") is a pure addition here, never a signature change.
-    async fn handle(
+    fn handle(
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -68,7 +68,7 @@ impl ArtifactViewer for LowpolyViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             model::BODY_KEY => model::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -78,7 +78,7 @@ impl ArtifactViewer for LowpolyViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_lowpoly_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_lowpoly_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(LOWPOLY_DIALECT).document(["semio", "lowpoly"]).icon_id("shapes").mode_def(view::definition()).default_mode_id(view::LOWPOLY_VIEW_MODE_VIEW).window_kind_def(model::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest

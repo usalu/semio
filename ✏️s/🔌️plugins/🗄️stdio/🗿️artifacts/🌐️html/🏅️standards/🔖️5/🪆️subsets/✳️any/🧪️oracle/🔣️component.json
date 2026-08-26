@@ -38,6 +38,21 @@
     {
       "id": "html-5-any",
       "capability": "html-5-mutate",
+      "standardDirectoryName": "🔖️5",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "declares-the-document-language-on-the-root-html-element",
+              "directoryName": "🧪️declares-the-document-language-on-the-root-html-element"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

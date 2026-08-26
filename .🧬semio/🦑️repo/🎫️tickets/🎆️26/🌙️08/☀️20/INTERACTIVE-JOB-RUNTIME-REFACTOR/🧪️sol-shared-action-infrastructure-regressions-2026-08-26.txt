@@ -1,0 +1,9 @@
+[DEBUG] command=bun test 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts --test-name-pattern 'Nx Unicode project transport|discriminates catalog descendants'
+[DEBUG] exit=0 pass=3 filtered=226 fail=0 expects=5
+[DEBUG] taxonomy=catalog-descendant-discriminated exact-missing-alternatives-diagnosed-no-crash
+[DEBUG] nx=hostile-NX_ISOLATE_PLUGINS-true-forced-in-process describe-graph-no-lossy-duplicate
+[DEBUG] command=bun nx reset && bun nx show projects --with-target describe
+[DEBUG] exit=0 describe_targets=34 repo_test_root=canonical
+[DEBUG] command=bun ./📜️script.ts verify interactivity --self-test
+[DEBUG] exit=0 descriptors=32 apps=101 launch_only=57 surfaces=158 actions=4754 launch_missing=0 findings=1 allowlisted_blocking_bridge=1 deny=clean
+[DEBUG] scratch-hostile=temp/compose/archive/ticket rejected-by-authored-production-roots

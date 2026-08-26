@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 /// 🌱️ The artifact's empty/default snapshot — used as `VcsPlayApp::initial_snapshot()` and by every
 /// test fixture that needs a base document (was: `⚙️engine::empty_vcs_snapshot()`, dissolved per ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-pub async fn empty_vcs_snapshot() -> crate::artifacts::vcs::VcsSnapshot {
+pub fn empty_vcs_snapshot() -> crate::artifacts::vcs::VcsSnapshot {
     crate::artifacts::vcs::VcsSnapshot::default()
 }
 //#endregion 🔖️DocumentHelpers
@@ -48,17 +48,17 @@ impl Default for VcsArtifact {
 
 impl VcsArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> crate::artifacts::vcs::VcsSnapshot {
+    pub fn to_snapshot(&self) -> crate::artifacts::vcs::VcsSnapshot {
         crate::artifacts::vcs::VcsSnapshot { schema: self.schema.clone(), title: self.title.clone(), counter: self.counter, notes: self.notes.clone(), status: self.status.clone(), tags: self.tags.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: crate::artifacts::vcs::VcsSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::artifacts::vcs::VcsSnapshot) -> Self {
         Self { schema: snapshot.schema, title: snapshot.title, counter: snapshot.counter, notes: snapshot.notes, status: snapshot.status, tags: snapshot.tags, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::vcs::VcsSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::vcs::VcsSnapshot) {
         self.schema = snapshot.schema;
         self.title = snapshot.title;
         self.counter = snapshot.counter;
@@ -120,7 +120,7 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn empty_snapshot_matches_schema() {
+    fn empty_snapshot_matches_schema() {
         let snapshot = empty_vcs_snapshot();
         assert_eq!(snapshot.schema, crate::artifacts::vcs::VCS_DOCUMENT_SCHEMA);
         assert_eq!(snapshot.status, "new");

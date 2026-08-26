@@ -24,6 +24,373 @@
     {
       "id": "note-1-any",
       "capability": "note-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-block-font-size",
+          "sourceMutationDirectoryName": "🔤️change-block-font-size",
+          "mutationDirectoryName": "🔤️change-block-font-size",
+          "scenarios": [
+            {
+              "id": "enlarges-the-intro-font",
+              "directoryName": "🧪️enlarges-the-intro-font"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-block-ink-width",
+          "sourceMutationDirectoryName": "🖊️change-block-ink-width",
+          "mutationDirectoryName": "🖊️change-block-ink-width",
+          "scenarios": [
+            {
+              "id": "thickens-the-sketch-stroke",
+              "directoryName": "🧪️thickens-the-sketch-stroke"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-block-locked",
+          "sourceMutationDirectoryName": "🔒️change-block-locked",
+          "mutationDirectoryName": "🔒️change-block-locked",
+          "scenarios": [
+            {
+              "id": "locks-the-callout-group",
+              "directoryName": "🧪️locks-the-callout-group"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-block-visible",
+          "sourceMutationDirectoryName": "👀️change-block-visible",
+          "mutationDirectoryName": "👀️change-block-visible",
+          "scenarios": [
+            {
+              "id": "hides-the-image-block",
+              "directoryName": "🧪️hides-the-image-block"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-eraser-radius",
+          "sourceMutationDirectoryName": "🧽️change-eraser-radius",
+          "mutationDirectoryName": "🧽️change-eraser-radius",
+          "scenarios": [
+            {
+              "id": "enlarges-eraser",
+              "directoryName": "🧪️enlarges-eraser"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-grid-opacity",
+          "sourceMutationDirectoryName": "🌫️change-grid-opacity",
+          "mutationDirectoryName": "🌫️change-grid-opacity",
+          "scenarios": [
+            {
+              "id": "raises-grid-opacity",
+              "directoryName": "🧪️raises-grid-opacity"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-grid-spacing",
+          "sourceMutationDirectoryName": "📏️change-grid-spacing",
+          "mutationDirectoryName": "📏️change-grid-spacing",
+          "scenarios": [
+            {
+              "id": "widens-grid-spacing",
+              "directoryName": "🧪️widens-grid-spacing"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-grid-subdivisions",
+          "sourceMutationDirectoryName": "🔢️change-grid-subdivisions",
+          "mutationDirectoryName": "🔢️change-grid-subdivisions",
+          "scenarios": [
+            {
+              "id": "doubles-grid-subdivisions",
+              "directoryName": "🧪️doubles-grid-subdivisions"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-grid-visible",
+          "sourceMutationDirectoryName": "👁️change-grid-visible",
+          "mutationDirectoryName": "👁️change-grid-visible",
+          "scenarios": [
+            {
+              "id": "hides-the-grid",
+              "directoryName": "🧪️hides-the-grid"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-pencil-width",
+          "sourceMutationDirectoryName": "✏️change-pencil-width",
+          "mutationDirectoryName": "✏️change-pencil-width",
+          "scenarios": [
+            {
+              "id": "thickens-pencil",
+              "directoryName": "🧪️thickens-pencil"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-snap-enabled",
+          "sourceMutationDirectoryName": "🧲️change-snap-enabled",
+          "mutationDirectoryName": "🧲️change-snap-enabled",
+          "scenarios": [
+            {
+              "id": "enables-snap",
+              "directoryName": "🧪️enables-snap"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-snap-grid-spacing",
+          "sourceMutationDirectoryName": "📐️change-snap-grid-spacing",
+          "mutationDirectoryName": "📐️change-snap-grid-spacing",
+          "scenarios": [
+            {
+              "id": "halves-snap-grid-spacing",
+              "directoryName": "🧪️halves-snap-grid-spacing"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-asset",
+          "sourceMutationDirectoryName": "🆕️create-asset",
+          "mutationDirectoryName": "🆕️create-asset",
+          "scenarios": [
+            {
+              "id": "adds-a-second-image-asset",
+              "directoryName": "🧪️adds-a-second-image-asset"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-block",
+          "sourceMutationDirectoryName": "➕️create-block",
+          "mutationDirectoryName": "➕️create-block",
+          "scenarios": [
+            {
+              "id": "inserts-a-photo-block-at-root-index-2",
+              "directoryName": "🧪️inserts-a-photo-block-at-root-index-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-asset",
+          "sourceMutationDirectoryName": "🗑️delete-asset",
+          "mutationDirectoryName": "🗑️delete-asset",
+          "scenarios": [
+            {
+              "id": "removes-the-logo-asset",
+              "directoryName": "🧪️removes-the-logo-asset"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-block",
+          "sourceMutationDirectoryName": "❌️delete-block",
+          "mutationDirectoryName": "❌️delete-block",
+          "scenarios": [
+            {
+              "id": "removes-the-math-block",
+              "directoryName": "🧪️removes-the-math-block"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-blocks",
+          "sourceMutationDirectoryName": "🧺️delete-blocks",
+          "mutationDirectoryName": "🧺️delete-blocks",
+          "scenarios": [
+            {
+              "id": "removes-the-ink-and-image-blocks",
+              "directoryName": "🧪️removes-the-ink-and-image-blocks"
+            }
+          ]
+        },
+        {
+          "mutationId": "drag-blocks",
+          "sourceMutationDirectoryName": "🤏️drag-blocks",
+          "mutationDirectoryName": "🤏️drag-blocks",
+          "scenarios": [
+            {
+              "id": "nudges-ink-and-the-whole-group-subtree",
+              "directoryName": "🧪️nudges-ink-and-the-whole-group-subtree"
+            }
+          ]
+        },
+        {
+          "mutationId": "duplicate-block",
+          "sourceMutationDirectoryName": "🎯️duplicate-block",
+          "mutationDirectoryName": "🎯️duplicate-block",
+          "scenarios": [
+            {
+              "id": "copies-the-math-block-right-after-its-source",
+              "directoryName": "🧪️copies-the-math-block-right-after-its-source"
+            }
+          ]
+        },
+        {
+          "mutationId": "duplicate-blocks",
+          "sourceMutationDirectoryName": "👥️duplicate-blocks",
+          "mutationDirectoryName": "👥️duplicate-blocks",
+          "scenarios": [
+            {
+              "id": "copies-ink-and-table-with-shifting-indices",
+              "directoryName": "🧪️copies-ink-and-table-with-shifting-indices"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-block-ink-stroke",
+          "sourceMutationDirectoryName": "🎨️edit-block-ink-stroke",
+          "mutationDirectoryName": "🎨️edit-block-ink-stroke",
+          "scenarios": [
+            {
+              "id": "redraws-the-sketch-polyline",
+              "directoryName": "🧪️redraws-the-sketch-polyline"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-block-math",
+          "sourceMutationDirectoryName": "🧮️edit-block-math",
+          "mutationDirectoryName": "🧮️edit-block-math",
+          "scenarios": [
+            {
+              "id": "replaces-the-tex-with-pythagoras",
+              "directoryName": "🧪️replaces-the-tex-with-pythagoras"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-block-text",
+          "sourceMutationDirectoryName": "📝️edit-block-text",
+          "mutationDirectoryName": "📝️edit-block-text",
+          "scenarios": [
+            {
+              "id": "replaces-the-intro-paragraphs",
+              "directoryName": "🧪️replaces-the-intro-paragraphs"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-table-column",
+          "sourceMutationDirectoryName": "➡️insert-table-column",
+          "mutationDirectoryName": "➡️insert-table-column",
+          "scenarios": [
+            {
+              "id": "appends-the-lettered-column-c",
+              "directoryName": "🧪️appends-the-lettered-column-c"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-table-row",
+          "sourceMutationDirectoryName": "⬇️insert-table-row",
+          "mutationDirectoryName": "⬇️insert-table-row",
+          "scenarios": [
+            {
+              "id": "appends-a-blank-third-row",
+              "directoryName": "🧪️appends-a-blank-third-row"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-block",
+          "sourceMutationDirectoryName": "📍️move-block",
+          "mutationDirectoryName": "📍️move-block",
+          "scenarios": [
+            {
+              "id": "repositions-the-math-block",
+              "directoryName": "🧪️repositions-the-math-block"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-block-to-container",
+          "sourceMutationDirectoryName": "🚚️move-block-to-container",
+          "mutationDirectoryName": "🚚️move-block-to-container",
+          "scenarios": [
+            {
+              "id": "reparents-ink-into-the-callout-group",
+              "directoryName": "🧪️reparents-ink-into-the-callout-group"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-table-column",
+          "sourceMutationDirectoryName": "⬅️remove-table-column",
+          "mutationDirectoryName": "⬅️remove-table-column",
+          "scenarios": [
+            {
+              "id": "drops-the-trailing-column-b",
+              "directoryName": "🧪️drops-the-trailing-column-b"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-table-row",
+          "sourceMutationDirectoryName": "⬆️remove-table-row",
+          "mutationDirectoryName": "⬆️remove-table-row",
+          "scenarios": [
+            {
+              "id": "drops-the-trailing-blank-row",
+              "directoryName": "🧪️drops-the-trailing-blank-row"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-block",
+          "sourceMutationDirectoryName": "🔖️rename-block",
+          "mutationDirectoryName": "✏️🧱️rename-block",
+          "scenarios": [
+            {
+              "id": "renames-the-table-block",
+              "directoryName": "🧪️renames-the-table-block"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-note",
+          "sourceMutationDirectoryName": "🏷️rename-note",
+          "mutationDirectoryName": "🏷️rename-note",
+          "scenarios": [
+            {
+              "id": "retitles-the-document",
+              "directoryName": "🧪️retitles-the-document"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-asset-payload",
+          "sourceMutationDirectoryName": "🔁️replace-asset-payload",
+          "mutationDirectoryName": "🔁️replace-asset-payload",
+          "scenarios": [
+            {
+              "id": "swaps-logo-payload-for-svg",
+              "directoryName": "🧪️swaps-logo-payload-for-svg"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-block",
+          "sourceMutationDirectoryName": "↔️resize-block",
+          "mutationDirectoryName": "↔️resize-block",
+          "scenarios": [
+            {
+              "id": "enlarges-the-image-block",
+              "directoryName": "🧪️enlarges-the-image-block"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "rename-note",
         "change-grid-visible",

@@ -34,28 +34,28 @@ pub mod derived_construction {
         type Mutation = JsonIJsonMutation;
         type Diff = JsonDiff;
 
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: JsonSnapshot::default() }
         }
 
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
 
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self { snapshot: <JsonSnapshot as store::ArtifactDsl>::parse_dsl(text)? })
         }
 
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self { snapshot: <JsonSnapshot as store::ArtifactPack>::decode_pack(bytes)? })
         }
 
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = apply_json_i_json_mutation(&mut self.snapshot, &mutation);
             (self, outcome)
         }
 
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <JsonDiff as protocol::MutationDiff<JsonSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
@@ -64,7 +64,7 @@ pub mod derived_construction {
         /// violation fails `build()` -- soft/advisory diagnostics pass through as `Ok`. Two doors now
         /// lead to the same clauses: this gate rejects a violating STATE, and `JsonIJsonMutation`'s
         /// own `diff()` rejects a violating EDIT before it can produce one.
-        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let hard: Vec<Diagnostic> = check_i_json_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(self.snapshot)
@@ -81,13 +81,13 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn conforming_snapshot_builds_clean() {
-            let snapshot = JsonIJsonBuilderConstruction::from_text("{\"a\":1}").await.expect("parses").build().await.expect("conforming construction must build");
+            let snapshot = JsonIJsonBuilderConstruction::from_text("{\"a\":1}").expect("parses").build().expect("conforming construction must build");
             assert!(matches!(snapshot.value, crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::JsonValue::Object { .. }));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn duplicate_member_name_fails_build() {
-            let err = JsonIJsonBuilderConstruction::from_text("{\"a\":1,\"a\":2}").await.expect("parses").build().await.expect_err("a duplicate member name must fail build()");
+            let err = JsonIJsonBuilderConstruction::from_text("{\"a\":1,\"a\":2}").expect("parses").build().expect_err("a duplicate member name must fail build()");
             assert!(err.iter().any(|d| d.code.0 == "stdio.json.i-json.duplicate-member-name"));
         }
 
@@ -95,8 +95,8 @@ pub mod derived_construction {
         async fn unsafe_integer_injected_via_raw_mutate_still_fails_build() {
             use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::{JsonMember, JsonValue};
             let violating = JsonSnapshot { value: JsonValue::Object { members: vec![JsonMember { key: "n".into(), value: JsonValue::Number { lexeme: "9007199254740993".into() } }] }, ..JsonSnapshot::default() };
-            let (mutated, _diff) = JsonIJsonBuilderConstruction::from_snapshot(JsonSnapshot::default()).await.mutate(JsonIJsonMutation::SetSnapshot { snapshot: violating }).await;
-            let err = mutated.build().await.expect_err("an unsafe integer must fail build()");
+            let (mutated, _diff) = JsonIJsonBuilderConstruction::from_snapshot(JsonSnapshot::default()).mutate(JsonIJsonMutation::SetSnapshot { snapshot: violating });
+            let err = mutated.build().expect_err("an unsafe integer must fail build()");
             assert!(err.iter().any(|d| d.code.0 == "stdio.json.i-json.unsafe-integer"));
         }
     }
@@ -253,12 +253,12 @@ pub mod derived_analysis {
         type Parts = JsonParts;
         const DIALECT: Dialect = DIALECT;
 
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            JsonAnyAnalyzer::sniff(source).await
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            JsonAnyAnalyzer::sniff(source)
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = JsonAnyAnalyzer::analyze(sources).await;
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let inner = JsonAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {

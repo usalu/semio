@@ -3505,6 +3505,51 @@
                 }
               },
               {
+                "id": "setLocale",
+                "label": {
+                  "native": {
+                    "de": "Sprache festlegen",
+                    "en": "Set Locale"
+                  },
+                  "reuse": {
+                    "de": "Sprache festlegen",
+                    "en": "Set Locale"
+                  }
+                },
+                "kind": "view",
+                "iconId": "eye",
+                "args": [],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "documents.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "undo",
                 "label": {
                   "native": {
@@ -6345,6 +6390,51 @@
                   "reuse": {
                     "de": "Generation auswählen",
                     "en": "Set Generation"
+                  }
+                },
+                "kind": "view",
+                "iconId": "eye",
+                "args": [],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "documents.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setLocale",
+                "label": {
+                  "native": {
+                    "de": "Sprache festlegen",
+                    "en": "Set Locale"
+                  },
+                  "reuse": {
+                    "de": "Sprache festlegen",
+                    "en": "Set Locale"
                   }
                 },
                 "kind": "view",
@@ -9261,6 +9351,51 @@
                 }
               },
               {
+                "id": "setLocale",
+                "label": {
+                  "native": {
+                    "de": "Sprache festlegen",
+                    "en": "Set Locale"
+                  },
+                  "reuse": {
+                    "de": "Sprache festlegen",
+                    "en": "Set Locale"
+                  }
+                },
+                "kind": "view",
+                "iconId": "eye",
+                "args": [],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "documents.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "undo",
                 "label": {
                   "native": {
@@ -12135,6 +12270,51 @@
                 }
               },
               {
+                "id": "setLocale",
+                "label": {
+                  "native": {
+                    "de": "Sprache festlegen",
+                    "en": "Set Locale"
+                  },
+                  "reuse": {
+                    "de": "Sprache festlegen",
+                    "en": "Set Locale"
+                  }
+                },
+                "kind": "view",
+                "iconId": "eye",
+                "args": [],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "documents.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "undo",
                 "label": {
                   "native": {
@@ -14973,6 +15153,51 @@
                   "reuse": {
                     "de": "Generation auswählen",
                     "en": "Set Generation"
+                  }
+                },
+                "kind": "view",
+                "iconId": "eye",
+                "args": [],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "documents.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setLocale",
+                "label": {
+                  "native": {
+                    "de": "Sprache festlegen",
+                    "en": "Set Locale"
+                  },
+                  "reuse": {
+                    "de": "Sprache festlegen",
+                    "en": "Set Locale"
                   }
                 },
                 "kind": "view",
@@ -51264,6 +51489,51 @@
                 }
               },
               {
+                "id": "setLocale",
+                "label": {
+                  "native": {
+                    "de": "Sprache festlegen",
+                    "en": "Set Locale"
+                  },
+                  "reuse": {
+                    "de": "Sprache festlegen",
+                    "en": "Set Locale"
+                  }
+                },
+                "kind": "view",
+                "iconId": "eye",
+                "args": [],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "documents.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "undo",
                 "label": {
                   "native": {
@@ -53537,8 +53807,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "515ba55d89735c6bf1683a8ed7a0925122f317922968e7abad9cd196327e1363",
-    "coreWasmSha256": "515ba55d89735c6bf1683a8ed7a0925122f317922968e7abad9cd196327e1363",
-    "descriptorSha256": "38aa951a6e782347410864362b5dec0fa0ad8aa8685524af5f3d4e96f0aa6f56"
+    "wasmSha256": "e39095467e06ec3d2fd45543e73bdcfa12d03e4a5a941d9145cd46f570d0ae63",
+    "coreWasmSha256": "e39095467e06ec3d2fd45543e73bdcfa12d03e4a5a941d9145cd46f570d0ae63",
+    "descriptorSha256": "72e0822284f68c9fd9fa60552db84cd489b1ca9c770adf389dd6e17cb57a2ff3"
   }
 }

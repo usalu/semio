@@ -1,0 +1,12 @@
+{
+  "format": "ARC1",
+  "version": 3,
+  "workPhase": true,
+  "rawPageCursor": 2,
+  "rawBytes": 8192,
+  "workProgress": 7,
+  "contextDigest": 9,
+  "workspaceIdentity": 11,
+  "workState": [1, 254],
+  "encoded": [65, 82, 67, 49, 3, 1, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 1, 254]
+}

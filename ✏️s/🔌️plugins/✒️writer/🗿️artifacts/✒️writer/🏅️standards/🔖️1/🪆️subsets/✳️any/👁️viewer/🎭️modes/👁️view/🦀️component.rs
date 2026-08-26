@@ -8,12 +8,12 @@ pub const WRITER_VIEW_MODE_VIEW: &str = "view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::writer::create_writer_viewer`.
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: WRITER_VIEW_MODE_VIEW.into(), label: LocalizedLabel::native("View", "Ansicht"), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ Single full-width window — the read-only viewer has no quadrant layout to allocate.
-pub async fn layout() -> WindowLayout {
+pub fn layout() -> WindowLayout {
     create_default_layout(&[main::WRITER_VIEW_WINDOW_KIND.into()], "row", Some(&[100.0]), Some(&["Text".into()]))
 }
 //#endregion 🔖️Definition

@@ -27,7 +27,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// (`crate::artifacts::raster::artifact_kind().id`) is opened, this plugin's actor runs `Isolated`
 /// (no cross-plugin extension attachment, the SDK default holds), and it asks the broker for
 /// document write access because `RasterPlayApp` persists edits back to the open document.
-pub async fn plugin() -> Result<Plugin<RasterApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<RasterApps>, semio_framework_plugin::PluginAssemblyError> {
     Plugin::<RasterApps>::builder("raster")
         .label("Raster")
         .version("0.1.0")

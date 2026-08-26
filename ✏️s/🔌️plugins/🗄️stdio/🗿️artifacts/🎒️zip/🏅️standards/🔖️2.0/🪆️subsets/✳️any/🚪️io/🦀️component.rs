@@ -16,11 +16,11 @@ pub mod derived_composition {
         type Snapshot = ZipSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_BINARY, DEP_DEFLATE]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -36,7 +36,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "ZipComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = ZipAnalyzer::analyze(&native).await;
+            let analysis = ZipAnalyzer::analyze(&native);
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "ZipComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -1045,10 +1045,10 @@ mod codec_tests {
         crate::artifacts::zip::schema::mutations::apply_zip_mutation(&mut from_binary_op, &binary_op);
         assert_eq!(from_binary_op, logical);
 
-        let analysis = crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&pptx_bytes)]).await;
+        let analysis = crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&pptx_bytes)]);
         assert_eq!(analysis.parts.snapshot.as_ref(), Some(&logical));
         let dialect = <crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipAnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
-        let composition = ZipComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pptx_bytes) }]).await.expect("compose native OPC ZIP");
+        let composition = ZipComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pptx_bytes) }]).expect("compose native OPC ZIP");
         assert_eq!(composition.snapshot, logical);
 
         for routed in [&from_dsl, &from_pack, &from_text_op, &from_binary_op, &composition.snapshot] {

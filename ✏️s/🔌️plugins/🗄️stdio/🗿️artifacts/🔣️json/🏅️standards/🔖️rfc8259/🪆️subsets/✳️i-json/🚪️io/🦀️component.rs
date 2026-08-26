@@ -23,12 +23,12 @@ pub mod derived_composition {
         type Snapshot = JsonSnapshot;
         const WRITES: Dialect = DIALECT_I_JSON;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_I_JSON, DEP_TXT]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = semio_framework_plugin::resolve_ready(JsonAnyComposer::compose(sources))?;
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = JsonAnyComposer::compose(sources)?;
             let checks = check_i_json_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -100,7 +100,7 @@ pub mod derived_composition {
         async fn conforming_document_composes_and_stamps_i_json() {
             let text = conforming_json_text();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
-            let composed = JsonIJsonComposerComposition::compose(&sources).await.expect("clean document must compose to i-json");
+            let composed = JsonIJsonComposerComposition::compose(&sources).expect("clean document must compose to i-json");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
@@ -108,7 +108,7 @@ pub mod derived_composition {
         async fn duplicate_member_name_fails_compose_with_real_diagnostic() {
             let text = "{\"a\":1,\"a\":2}".to_string();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
-            let err = JsonIJsonComposerComposition::compose(&sources).await.expect_err("a document with a duplicate member name must not stamp i-json");
+            let err = JsonIJsonComposerComposition::compose(&sources).expect_err("a document with a duplicate member name must not stamp i-json");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == "stdio.json.i-json.duplicate-member-name" && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
@@ -116,7 +116,7 @@ pub mod derived_composition {
         async fn unsafe_integer_fails_compose_with_real_diagnostic() {
             let text = "{\"n\":9007199254740993}".to_string();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
-            let err = JsonIJsonComposerComposition::compose(&sources).await.expect_err("a document with an unsafe integer must not stamp i-json");
+            let err = JsonIJsonComposerComposition::compose(&sources).expect_err("a document with an unsafe integer must not stamp i-json");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == "stdio.json.i-json.unsafe-integer" && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 

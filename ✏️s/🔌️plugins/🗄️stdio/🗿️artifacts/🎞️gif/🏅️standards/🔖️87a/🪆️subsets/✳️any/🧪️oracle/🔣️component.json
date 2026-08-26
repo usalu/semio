@@ -17,6 +17,21 @@
     {
       "id": "gif-87a-any",
       "capability": "gif-87a-mutate",
+      "standardDirectoryName": "🔖️87a",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "repaints-the-right-pixel-of-the-single-image",
+              "directoryName": "🧪️repaints-the-right-pixel-of-the-single-image"
+            }
+          ]
+        }
+      ],
       "kinds": ["no-mutation", "set-snapshot", "set-screen-size", "set-global-color-table", "set-background-color-index", "set-pixel-aspect-ratio", "insert-image", "remove-image", "move-image", "set-image-geometry", "set-image-pixels", "set-image-interlace"]
     }
   ]

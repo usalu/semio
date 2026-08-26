@@ -22,10 +22,10 @@ pub enum RasterViewCommand {
 }
 
 impl protocol::OpBinary for RasterViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(RasterViewCommand::Noop)
     }
 }
@@ -49,7 +49,7 @@ impl ArtifactViewer for RasterViewer {
     const DIALECT: Dialect = RASTER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = RASTER_DOCUMENT_SCHEMA;
 
-    async fn initial_snapshot() -> RasterSnapshot {
+    fn initial_snapshot() -> RasterSnapshot {
         crate::artifacts::raster::schema::empty_raster_document()
     }
 
@@ -57,7 +57,7 @@ impl ArtifactViewer for RasterViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action is a pure
     /// addition here, never a signature change.
-    async fn handle(
+    fn handle(
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -67,7 +67,7 @@ impl ArtifactViewer for RasterViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             composite::RASTER_VIEW_BODY_COMPOSITE => composite::render(doc.snapshot),
             navigator::RASTER_VIEW_BODY_NAVIGATOR => navigator::render(doc.snapshot),
@@ -78,7 +78,7 @@ impl ArtifactViewer for RasterViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_raster_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_raster_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(RASTER_DIALECT)
         .document(["semio", "raster"])
         .icon_id("raster")

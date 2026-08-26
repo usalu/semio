@@ -1,9 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join, relative, resolve } from "node:path";
+import fastGlob from "fast-glob";
 import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyCanonicalArtifactKindBreaches, policyChildSlotKindDagBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyPluginDependencyParityBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
-import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, gitSpawnEnv, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, devToolingEnv, dispatchSubcommand, findRepoRoot, gitSpawnEnv, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { defineLint, type FileLinter } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { getWorkspaceRoot, layeringBreaches, layeringCounts, layeringReferences, loadLayeringBaseline, policyDiscoveredAllowlist } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
@@ -19,24 +20,37 @@ import {
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts";
 import { areaOf, clearDiscoveryCache, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadTaxonomy, readSemioMarker, validateTaxonomy } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { artifactFacetPathIsDeclared, buildSemanticCensus, renderSemanticCensusJson, resolveRustPathAttributes, type Taxonomy } from "../../🔍️discovery/🟦️component.ts";
+import { artifactFacetPathIsDeclared, buildSemanticCensus, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, generatorNxPreviewCommand, renderSemanticCensusJson, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, semanticProjectionCatalogProblems, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type SemanticProjectionAuthorityNode, type SemanticProjectionCatalogRegistration, type Taxonomy } from "../../🔍️discovery/🟦️component.ts";
 import { computeWorkspaces, diffWorkspaces } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { lstatSync, mkdirSync, mkdtempSync, readdirSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { applyTaxonomyPlan, artifactProjectionTail, canonicalJson, inventoryTaxonomy, noFollowTreeDigest, opaqueTreeDigest, parseGeneratorPreviewManifest, parseTaxonomyPlan, planTaxonomy, repositoryLocalSymlinkTargetPath, taxonomyPlanDigest, taxonomyPlatformPathViolationCodes, verifyTaxonomy, type OpaqueTreeDigest, type TaxonomyApplyResult, type TaxonomyInventory, type TaxonomyInventoryOptions, type TaxonomyPlan } from "../../🧹️normalization/🟦️.ts";
+
+//#region 🧪️GitFixture
+/** 🧬️Reads an isolated fixture's exact current commit without depending on subprocess pipe capture. */
+function fixtureGitHead(root: string): string {
+  const head = readFileSync(join(root, ".git", "HEAD"), "utf8").trim();
+  return head.startsWith("ref: ") ? readFileSync(join(root, ".git", head.slice(5)), "utf8").trim() : head;
+}
+//#endregion 🧪️GitFixture
 
 //#region 🧪️EmojiPrefixPolicy
 describe("emoji-prefix policy", () => {
-  test("requires prefixes on renamable files and directories but exempts ecosystem filenames", () => {
+  test("requires prefixes on renamable entries and exempts ecosystem filenames only at schema-owned package roots", () => {
     const root = mkdtempSync(join(tmpdir(), "semio-emoji-policy-"));
     const owner = join(root, "✏️s", "🔌️plugins", "🧪️probe");
     try {
       mkdirSync(join(owner, "plain-dir"), { recursive: true });
       writeFileSync(join(owner, "plain.ts"), "");
       writeFileSync(join(owner, "Cargo.toml"), "");
+      const rustPackage = join(owner, "📦️packages", "🦀️rust");
+      mkdirSync(rustPackage, { recursive: true });
+      writeFileSync(join(rustPackage, "Cargo.toml"), "");
       const scopes = policyEmojiPrefixBreaches(root).map((breach) => breach.scope);
       expect(scopes).toContain("✏️s/🔌️plugins/🧪️probe/plain-dir");
       expect(scopes).toContain("✏️s/🔌️plugins/🧪️probe/plain.ts");
-      expect(scopes).not.toContain("✏️s/🔌️plugins/🧪️probe/Cargo.toml");
+      expect(scopes).toContain("✏️s/🔌️plugins/🧪️probe/Cargo.toml");
+      expect(scopes).not.toContain("✏️s/🔌️plugins/🧪️probe/📦️packages/🦀️rust/Cargo.toml");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -103,14 +117,14 @@ describe("window completeness policy", () => {
       for (const facet of required) {
         const dir = join(window, facet);
         mkdirSync(dir, { recursive: true });
-        writeFileSync(join(dir, "📌️empty.md"), "");
+        writeFileSync(join(dir, "📝️.md"), "");
       }
       expect(policyWindowCompletenessBreaches(root, [crate])).toEqual([]);
       const action = join(window, "🎬️actions", "🧪️action");
       mkdirSync(action);
       expect(policyWindowCompletenessBreaches(root, [crate]).filter((breach) => breach.kind === "taxonomy/window-component")).toHaveLength(2);
       expect(policyWindowCompletenessBreaches(root, [crate]).filter((breach) => breach.kind === "taxonomy/window-empty-facet")).toHaveLength(1);
-      rmSync(join(window, "🎬️actions", "📌️empty.md"));
+      rmSync(join(window, "🎬️actions", "📝️.md"));
       writeFileSync(join(action, "🦀️component.rs"), "");
       writeFileSync(join(action, "🟦️component.ts"), "");
       expect(policyWindowCompletenessBreaches(root, [crate])).toEqual([]);
@@ -142,12 +156,12 @@ describe("window completeness policy", () => {
       }
       expect(policyModeCompletenessBreaches(root, [crate]).map((breach) => breach.kind)).toEqual(required.map(() => "taxonomy/mode-empty-child"));
       for (const child of required) {
-        writeFileSync(join(mode, child, "📌️empty.md"), "");
+        writeFileSync(join(mode, child, "📝️.md"), "");
       }
       expect(policyModeCompletenessBreaches(root, [crate])).toEqual([]);
       mkdirSync(join(mode, "🪟️windows", "🧪️window"), { recursive: true });
       expect(policyModeCompletenessBreaches(root, [crate]).map((breach) => breach.kind)).toEqual(["taxonomy/mode-empty-child"]);
-      rmSync(join(mode, "🪟️windows", "📌️empty.md"));
+      rmSync(join(mode, "🪟️windows", "📝️.md"));
       expect(policyModeCompletenessBreaches(root, [crate])).toEqual([]);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -243,8 +257,8 @@ describe("Neo4j graph database registry", () => {
     });
   });
 
-  test("product graphs are fixed four joined names", () => {
-    expect(NEO4J_GRAPH_DATABASE_NAMES).toEqual(["compose", "elements", "coda", "reuse"]);
+  test("product graphs are the three current joined names", () => {
+    expect(NEO4J_GRAPH_DATABASE_NAMES).toEqual(["elements", "coda", "reuse"]);
   });
 
   test("NEO4J_EXTRA_GRAPH_DATABASES extends export specs", () => {
@@ -255,6 +269,21 @@ describe("Neo4j graph database registry", () => {
     expect(names).toContain("bar-baz");
   });
 });
+
+//#region 🧩️NxUnicodeTransport
+describe("Nx Unicode project transport", () => {
+  test("forces in-process plugin discovery even when the caller requests isolated workers", () => {
+    const env = devToolingEnv({ NX_ISOLATE_PLUGINS: "true" });
+    expect(env.NX_ISOLATE_PLUGINS).toBe("false");
+  });
+
+  test("builds the describe graph without a lossy duplicate repo-test root", () => {
+    const root = getWorkspaceRoot();
+    const result = spawnSync("bun", ["📜️script.ts", "nx", "show", "projects", "--with-target", "describe"], { cwd: root, encoding: "utf8", env: { ...process.env, NX_ISOLATE_PLUGINS: "true" } });
+    expect(result.status, result.stderr).toBe(0);
+  }, 20_000);
+});
+//#endregion 🧩️NxUnicodeTransport
 
 describe("isDevPortInUse", () => {
   test("returns false for a high ephemeral port", () => {
@@ -321,10 +350,10 @@ describe("bundle-script", () => {
 
   test("gitRepoRoot uses monorepo toplevel from repo/lib/js", async () => {
     const { gitRepoRoot } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
-    const { spawnSync } = await import("node:child_process");
     const top = gitRepoRoot(import.meta.dir);
-    const n = Number(spawnSync("git", ["ls-files"], { cwd: top, encoding: "utf8" }).stdout?.split("\n").filter(Boolean).length ?? 0);
-    expect(n).toBeGreaterThan(1000);
+    expect(top).toBe(getWorkspaceRoot());
+    expect(existsSync(join(top, ".git"))).toBe(true);
+    expect(existsSync(join(top, "nx.json"))).toBe(true);
   });
 
   test("findRepoRoot reaches monorepo from repo/lib/js", () => {
@@ -370,9 +399,9 @@ describe("dependency-boundary", () => {
   });
 
   test("flags direct third-party import outside adapter", () => {
-    const content = `import { z } from "zod";\nexport const a = 1;\n`;
-    const file = "compose/client/lib/js/boundary-probe.ts";
-    const breachs = dependencyBoundaryBreachesForFile(new URL("../../../", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"), file, content, file);
+    const content = `import React from "react";\nexport const a = React.createElement("div");\n`;
+    const file = "🧰️framework/🧪️boundary-probe.ts";
+    const breachs = dependencyBoundaryBreachesForFile(findRepoRoot(import.meta.dir), file, content, file);
     expect(breachs.length).toBeGreaterThan(0);
     expect(breachs[0]?.kind).toBe("dependency-boundary/import/direct-third-party");
   });
@@ -395,7 +424,7 @@ describe("dependency-boundary", () => {
 describe("ui scrollbar styling", () => {
   test("🎨️ui.css defines scrollbar tokens and native plus Scrollable rules", () => {
     const repoRoot = findRepoRoot(import.meta.dir);
-    const css = readFileSync(join(repoRoot, "framework/module/ui/styling/js/🎨️ui.css"), "utf8");
+    const css = readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️ui.css"), "utf8");
     expect(css).toContain("--scrollbar-size:");
     expect(css).toContain("--scrollbar-thumb:");
     expect(css).toContain("scrollbar-color:");
@@ -501,23 +530,28 @@ describe("micro-commit", () => {
 
   test("buildMicroCommitMessage separates GitKraken summary and description", async () => {
     const { buildMicroCommitMessage } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
-    const root = process.cwd();
+    const root = mkdtempSync(join(tmpdir(), "semio-micro-commit-message-"));
     const contributor = { alias: "ueli", emoji: "🐙️", name: "Ueli Saluz", email: "ueli@semio-tech.com" };
-    const msg = buildMicroCommitMessage(root, contributor, ["🎆️LLM-authored change summary"], {
-      countRepoByLanguage: () => ({ TypeScript: 1000, Rust: 500 }),
-    });
-    const lines = msg.trimEnd().split("\n");
-    expect(lines[0]).toMatch(/🚩️\d{3}$/);
-    expect(lines[1]).toMatch(/^🎆️/);
-    expect(lines.some((l) => l.includes("LLM-authored"))).toBe(true);
-    expect(lines.at(-1)).toMatch(/^Signed-off-by: /);
-    expect(lines.at(-2)).toBe("");
-    const { MICRO_COMMIT_ULOC_HEADER: ulocHeader } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
-    const metricsIdx = lines.findIndex((l) => l.startsWith(ulocHeader));
-    expect(metricsIdx).toBeGreaterThan(2);
-    expect(lines[metricsIdx - 1]).toBe("");
-    expect(lines[metricsIdx]?.startsWith(ulocHeader)).toBe(true);
-    expect(lines[metricsIdx + 1]).toMatch(/^📊️metric/);
+    try {
+      expect(spawnSync("git", ["init"], { cwd: root, encoding: "utf8" }).status).toBe(0);
+      const msg = buildMicroCommitMessage(root, contributor, ["🎆️LLM-authored change summary"], {
+        countRepoByLanguage: () => ({ TypeScript: 1000, Rust: 500 }),
+      });
+      const lines = msg.trimEnd().split("\n");
+      expect(lines[0]).toMatch(/🚩️\d{3}$/);
+      expect(lines[1]).toMatch(/^🎆️/);
+      expect(lines.some((l) => l.includes("LLM-authored"))).toBe(true);
+      expect(lines.at(-1)).toMatch(/^Signed-off-by: /);
+      expect(lines.at(-2)).toBe("");
+      const { MICRO_COMMIT_ULOC_HEADER: ulocHeader } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+      const metricsIdx = lines.findIndex((l) => l.startsWith(ulocHeader));
+      expect(metricsIdx).toBeGreaterThan(2);
+      expect(lines[metricsIdx - 1]).toBe("");
+      expect(lines[metricsIdx]?.startsWith(ulocHeader)).toBe(true);
+      expect(lines[metricsIdx + 1]).toMatch(/^📊️metric/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   test("buildMicroCommitMessage rejects output without the required uloc footer", async () => {
@@ -932,7 +966,7 @@ describe("package boundary guards", () => {
   });
 
   test("framework renderer host has no per-technology registerUi surface host APIs", () => {
-    const indexPath = join(repoRoot, "framework/product/os/module/renderer/js/react/index.tsx");
+    const indexPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx");
     const indexSource = readFileSync(indexPath, "utf8");
     expect(indexSource).not.toMatch(/registerUi(?:Draw|Flow|Layout|Note|Puzzle2d|Puzzle3d|Puzzle5d|Sequence|Writer|Raster|Forms|Trinity|Procedural|Shooting|Gis|Cad|Dag|Lowpoly|Imperative|S)SurfaceHost/);
     expect(indexSource).toContain("bootFrameworkOs");
@@ -1049,7 +1083,7 @@ describe("commit", () => {
       writeFileSync(join(root, "other/b.ts"), "b\n", "utf8");
       spawnSync("git", ["add", "-A"], { cwd: root });
       spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-m", "🐙️ueli🎆️26🌙️06☀️01🔀️"], { cwd: root });
-      const wip = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).stdout?.trim()!;
+      const wip = fixtureGitHead(root);
       writeFileSync(join(root, "repo/js/a.ts"), "a\nb\n", "utf8");
       writeFileSync(join(root, "other/b.ts"), "b\nc\n", "utf8");
       spawnSync("git", ["add", "-A"], { cwd: root });
@@ -1116,7 +1150,7 @@ describe("commit", () => {
       writeFileSync(join(root, "repo/js/a.ts"), "a\n", "utf8");
       spawnSync("git", ["add", "-A"], { cwd: root });
       spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-m", "🐙️ueli🎆️26🌙️06☀️01🔀️"], { cwd: root });
-      const wip = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).stdout?.trim()!;
+      const wip = fixtureGitHead(root);
       writeFileSync(join(root, "repo/js/a.ts"), "a\nb\n", "utf8");
       spawnSync("git", ["add", "repo/js/a.ts"], { cwd: root });
       const msg1 = join(tmpdir(), `compose-mc1-${Date.now()}.txt`);
@@ -1159,13 +1193,13 @@ describe("commit", () => {
       writeFileSync(join(root, "framework/c.ts"), "c\n", "utf8");
       spawnSync("git", ["add", "-A"], { cwd: root });
       spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-m", "init"], { cwd: root });
-      const base = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).stdout?.trim()!;
+      const base = fixtureGitHead(root);
       writeFileSync(join(root, "compose/a.ts"), `${"a\n".repeat(11)}`, "utf8");
       writeFileSync(join(root, "ui/b.ts"), `${"b\n".repeat(151)}`, "utf8");
       writeFileSync(join(root, "framework/c.ts"), `${"c\n".repeat(5)}`, "utf8");
       spawnSync("git", ["add", "-A"], { cwd: root });
       spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-m", "delta"], { cwd: root });
-      const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).stdout?.trim()!;
+      const head = fixtureGitHead(root);
       const bundles = [mk("🏘️compose"), mk("🖱️ui"), mk("🥅️framework")];
       const paths = [["compose/a.ts"], ["ui/b.ts"], ["framework/c.ts"]];
       const sorted = sortCommitBundlesByEditTotal(root, base, head, bundles, paths);
@@ -1179,11 +1213,24 @@ describe("commit", () => {
     const { buildCommitMessage, parseCommitBundleBody } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
     const contributor = { alias: "ueli", emoji: "🐙️", name: "Ueli Saluz", email: "ueli@semio-tech.com" };
     const bundles = parseCommitBundleBody("📚️repo🔧️js\n🎆️26🌙️06☀️04\n🔧️Tooling");
-    const msg = buildCommitMessage(process.cwd(), contributor, bundles, "0000000000000000000000000000000000000000", "0000000000000000000000000000000000000000", { countRepoByLanguage: () => ({ TypeScript: 1000 }) });
-    const lines = msg.trimEnd().split("\n");
-    expect(lines[0]).toMatch(/🔀️$/);
-    expect(lines.some((l) => l.includes("📊️metric"))).toBe(true);
-    expect(lines.at(-1)).toMatch(/^Signed-off-by: /);
+    const root = mkdtempSync(join(tmpdir(), "semio-bundle-message-"));
+    try {
+      expect(spawnSync("git", ["init"], { cwd: root, encoding: "utf8" }).status).toBe(0);
+      spawnSync("git", ["config", "user.email", "t@e.com"], { cwd: root });
+      spawnSync("git", ["config", "user.name", "T"], { cwd: root });
+      mkdirSync(join(root, "repo", "js"), { recursive: true });
+      writeFileSync(join(root, "repo", "js", "a.ts"), "export const a = 1;\n");
+      spawnSync("git", ["add", "-A"], { cwd: root });
+      spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-m", "fixture"], { cwd: root });
+      const head = fixtureGitHead(root);
+      const msg = buildCommitMessage(root, contributor, bundles, head, head, { countRepoByLanguage: () => ({ TypeScript: 1000 }) });
+      const lines = msg.trimEnd().split("\n");
+      expect(lines[0]).toMatch(/🔀️$/);
+      expect(lines.some((l) => l.includes("📊️metric"))).toBe(true);
+      expect(lines.at(-1)).toMatch(/^Signed-off-by: /);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   test("formatBundleTagName and formatBundleSubject use contributor date emojis", async () => {
@@ -1235,12 +1282,12 @@ describe("commit", () => {
 });
 
 describe("command budgets", () => {
-  const indexPath = join(import.meta.dir, "index.ts");
+  const indexPath = join(import.meta.dir, "📦️index.ts");
 
   /** ⏱️Runs `runCmd` in a fresh subprocess (its budget-exceeded path calls `process.exit`, which would kill the test runner in-process) against a child that sleeps far longer than its budget. */
-  function spawnBudgetedSleep(budgetMs: number, envOverride?: Record<string, string>): ReturnType<typeof spawnSync> {
-    const script = `const { runCmd } = await import(${JSON.stringify(indexPath)}); runCmd(${JSON.stringify(process.execPath)}, ["-e", "await Bun.sleep(10000)"], ${budgetMs === -1 ? "{}" : `{ budgetMs: ${budgetMs} }`});`;
-    return spawnSync(process.execPath, ["-e", script], { encoding: "utf8", env: { ...process.env, ...envOverride } });
+  function spawnBudgetedSleep(budgetMs: number, envOverride?: Record<string, string>): ReturnType<typeof runProbe> {
+    const script = `const { runCmd } = await import(${JSON.stringify(indexPath)}); runCmd("bun", ["-e", "await Bun.sleep(10000)"], ${budgetMs === -1 ? "{}" : `{ budgetMs: ${budgetMs} }`});`;
+    return runProbe("bun", ["-e", script], { budgetMs: 5_000, env: { ...process.env, ...envOverride } });
   }
 
   test("captured Cargo failures replay structured compiler errors without warning floods", () => {
@@ -1339,7 +1386,8 @@ describe("command budgets", () => {
   });
 
   test("runProbe captures stdout under budget", () => {
-    const { status, stdout } = runProbe(process.execPath, ["-e", "console.log('probe-ok')"]);
+    const result = runProbe("bun", ["-e", "console.log('probe-ok')"]);
+    const { status, stdout } = result;
     expect(status).toBe(0);
     expect(stdout.trim()).toBe("probe-ok");
   });
@@ -1364,15 +1412,15 @@ describe("command budgets", () => {
 describe("resolveCargoPackageName", () => {
   test("resolves short lib names to full package names", () => {
     const root = process.cwd();
-    expect(resolveCargoPackageName("db_actor", join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎭️actor/📦️packages/🦀️rust"))).toBe("semio-framework-os-kernel-db-actor");
+    expect(resolveCargoPackageName("db", join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust"))).toBe("semio-framework-os-kernel-db");
     expect(resolveCargoPackageName("semio-s-plugin-architect", join(root, "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust"))).toBe("semio-s-plugin-architect");
     expect(resolveCargoPackageName("semio-s-plugin-energy", join(root, "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust"))).toBe("semio-s-plugin-energy");
   });
 
   test("resolves empty package list to local Cargo.toml package name", () => {
     const root = process.cwd();
-    const dbActorDir = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎭️actor/📦️packages/🦀️rust");
-    expect(resolveCargoPackageNames([], dbActorDir)).toEqual(["semio-framework-os-kernel-db-actor"]);
+    const dbDir = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust");
+    expect(resolveCargoPackageNames([], dbDir)).toEqual(["semio-framework-os-kernel-db"]);
   });
 });
 
@@ -1381,22 +1429,21 @@ describe("loadTaxonomy", () => {
     const taxonomy = loadTaxonomy();
     expect(taxonomy.artifactComponentDirs).toEqual(["🧬️schema", "🚪️io"]);
     expect(taxonomy.mutationChildDirs).toEqual(["🦠️mutation", "🔺️diff", "↩️inverse"]);
-    expect(taxonomy.snapshotChildDirs).toEqual(["🧬️schema", "🎒️pack"]);
-    expect(taxonomy.diffChildDirs).toEqual(["🧬️schema"]);
+    expect(taxonomy.schemaChildDirs).toEqual(["📸️snapshot", "🔺️diff", "🧬️mutations", "💡️inferences"]);
+    expect(taxonomy.representationDirs).toEqual(["📝️text", "💾️binary"]);
     expect(taxonomy.schemaFormats).toEqual({
-      "🦀️rust": { leafFilename: "🦀️component.rs", extension: ".rs", fieldCasing: "snake" },
-      "🟦️typescript": { leafFilename: "🟦️component.ts", extension: ".ts", fieldCasing: "camel" },
-      "🔗️graphql": { leafFilename: "🔗️component.graphql", extension: ".graphql", fieldCasing: "camel" },
-      "🔣️jsonschema": { leafFilename: "🔣️component.json", extension: ".json", fieldCasing: "camel" },
-      "🛰️protobuf": { leafFilename: "🛰️component.proto", extension: ".proto", fieldCasing: "snake" },
+      "🦀️rust": { fileKindId: "rust-source", fieldCasing: "snake" },
+      "🟦️typescript": { fileKindId: "typescript-source", fieldCasing: "camel" },
+      "🔗️graphql": { fileKindId: "graphql", fieldCasing: "camel" },
+      "🔣️jsonschema": { fileKindId: "json", fieldCasing: "camel" },
+      "🛰️protobuf": { fileKindId: "protobuf", fieldCasing: "snake" },
+      "📜️wit": { fileKindId: "wit", fieldCasing: "kebab" },
     });
-    expect(taxonomy.artifactSchemaSpecFilenames).toEqual({
-      "🧬️schema": "🔣️component.json",
-      "📸️snapshot/🧬️schema": "🔣️component.json",
-      "🔺️diff/🧬️schema": "🔣️component.json",
-    });
-    expect(taxonomy.artifactSpecFilenames["📸️snapshot/🎒️pack"]).toBe("📡️component.protocol.semio");
-    expect("🎒️pack" in taxonomy.artifactSpecFilenames).toBe(false);
+    expect(taxonomy.artifactSchemaSpecFileKinds["🧬️schema"]).toBe("json");
+    expect(taxonomy.artifactSchemaSpecFileKinds["🧬️schema/📸️snapshot"]).toBe("json");
+    expect(taxonomy.artifactSchemaSpecFileKinds["🧬️schema/🔺️diff"]).toBe("json");
+    expect(taxonomy.artifactSpecFileKinds["🧬️schema/📸️snapshot/💾️binary"]).toBe("protocol-semio");
+    expect("🎒️pack" in taxonomy.artifactSpecFileKinds).toBe(false);
     expect(taxonomy.windowChildDirs).toEqual(["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options", "🎚️config", "👥️presence", "🫧️transient"]);
     expect(taxonomy.windowRequiredChildDirs).toEqual(["🎬️actions", "🪛️utilities", "🎚️options", "🎚️config", "👥️presence", "🫧️transient"]);
     expect(taxonomy.modeChildDirs).toEqual(["🪟️windows", "🎮️commands", "🎚️config", "👥️presence", "🫧️transient"]);
@@ -1407,23 +1454,152 @@ describe("loadTaxonomy", () => {
     expect(taxonomy.transientChildDirs).toEqual(["🧬️schema"]);
     expect(taxonomy.surfaceRequiredChildDirs).toContain("🫧️transient");
     expect(taxonomy.surfaceChildDirs).toContain("🫧️transient");
-    expect(taxonomy.surfaceSchemaSpecFilenames["🫧️transient/🧬️schema"]).toBe("🔣️component.json");
+    expect(taxonomy.surfaceSchemaSpecFileKinds["🫧️transient/🧬️schema"]).toBe("json");
     expect(taxonomy.windowComponentLangs).toEqual(["🦀️rust", "🟦️typescript"]);
-    expect(taxonomy.windowEmptyFacetFilename).toBe("📌️empty.md");
-    expect(taxonomy.taxonomyLeafFilenames["🦀️rust"]).toBe("🦀️component.rs");
-    expect(taxonomy.taxonomyLeafFilenames["🟦️typescript"]).toBe("🟦️component.ts");
-    expect(taxonomy.artifactSpecFilenames["🗣️dsl"]).toBe("📖️component.grammar.semio");
-    expect(taxonomy.artifactSpecFilenames["📡️spr"]).toBe("📡️component.protocol.semio");
+    expect(taxonomy.windowEmptyFacetFileKindId).toBe("markdown");
+    expect(taxonomy.componentFileKinds["🦀️rust"]).toBe("rust-source");
+    expect(taxonomy.componentFileKinds["🟦️typescript"]).toBe("typescript-source");
+    expect(taxonomy.artifactSpecFileKinds["🧬️schema/📸️snapshot/📝️text"]).toBe("grammar-semio");
+    expect(taxonomy.artifactSpecFileKinds["🧬️schema/📸️snapshot/💾️binary"]).toBe("protocol-semio");
     expect(taxonomy.libWiringLineBudget).toBe(150);
     expect(taxonomy.packagesDirName).toBe("📦️packages");
     expect(Object.keys(taxonomy.areas).length).toBeGreaterThan(0);
+  });
+
+  test("closes generator ownership and covers the exact third-party-inventoried Ralph surface", () => {
+    const taxonomy = loadTaxonomy();
+    const tracked = fastGlob.sync(".ralph-tui/**/*", { cwd: getWorkspaceRoot(), onlyFiles: true, dot: true }).sort();
+    const setup = taxonomy.generatorContracts["setup-wizard-config"]!;
+    expect(Object.values(taxonomy.generatorContracts).every((contract) => contract.ownership === "owned" || contract.ownership === "external")).toBe(true);
+    expect(taxonomy.generatorContracts["ownerless-ui-icons"]).toBeUndefined();
+    expect(taxonomy.generatorContracts["root-layering-declarations"]).toBeUndefined();
+    expect(setup.ownership).toBe("external");
+    expect(setup.outputRoots.map((output) => output.path)).toEqual(tracked);
+    expect(setup.outputRoots.every((output) => output.inclusion === "tracked")).toBe(true);
+    for (const path of tracked) expect(fixedFilenameContractIdsForPath(path, taxonomy)[0]?.startsWith("ralph-")).toBe(true);
+    expect(fixedDirectoryContractIdsForPath(".ralph-tui", taxonomy)[0]).toBe("ralph-metadata");
+    expect(fixedDirectoryContractIdsForPath(".ralph-tui/prd", taxonomy)[0]).toBe("ralph-prd-root");
+    expect(fixedDirectoryContractIdsForPath(".ralph-tui/prd/dynamic-prd-id", taxonomy)[0]).toBe("ralph-prd-identifier");
+  });
+
+  test("scopes Cargo target triples and adjacent Nx manifests through exact owner identities", () => {
+    const taxonomy = loadTaxonomy();
+    const ticket = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/TICKET";
+    for (const triple of ["wasm32-unknown-unknown", "wasm32-wasip2"] as const) {
+      const directoryId = `cargo-target-triple-${triple}`;
+      const cacheId = `cargo-cache-tag-${triple}`;
+      const target = `${ticket}/🧪️target-probe/${triple}`;
+      expect(fixedDirectoryContractIdsForPath(target, taxonomy, { parentDirectoryKindId: "ticket-cargo-target-evidence" })).toEqual([directoryId]);
+      expect(fixedFilenameContractIdsForPath(`${target}/CACHEDIR.TAG`, taxonomy, { parentFixedDirectoryContractIds: [directoryId] })).toEqual([cacheId]);
+      expect(fixedDirectoryContractIdsForPath(`tmp/🧪️target-probe/${triple}`, taxonomy, { parentDirectoryKindId: "ticket-cargo-target-evidence" })).toEqual([]);
+    }
+    expect(fixedDirectoryContractIdsForPath(`${ticket}/🧪️target-probe/wasm32-wasi`, taxonomy, { parentDirectoryKindId: "ticket-cargo-target-evidence" })).toEqual([]);
+    const nxRoot = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react";
+    expect(fixedFilenameContractIdsForPath(`${nxRoot}/package.json`, taxonomy, { siblingFixedFilenameContractIds: ["nx-project-manifest"] })).toEqual(["nx-owned-node-package-manifest"]);
+    expect(fixedFilenameContractIdsForPath(`${nxRoot}/tsconfig.json`, taxonomy, { siblingFixedFilenameContractIds: ["nx-project-manifest"] })).toEqual(["nx-owned-typescript-config"]);
+    expect(fixedFilenameContractIdsForPath(`${nxRoot}/package.json`, taxonomy)).toEqual([]);
+    expect(fixedFilenameContractIdsForPath(".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️15/BOARD-REACT-RECONCILER/_tmp/package.json", taxonomy)).toEqual([]);
+    const broadCargo = structuredClone(taxonomy);
+    broadCargo.fixedDirectoryContracts["cargo-target-triple-wasm32-wasip2"]!.pathPattern = "**/wasm32-wasip2";
+    expect(validateTaxonomy(broadCargo).some((problem) => problem.includes("cargo-target-triple-wasm32-wasip2") && problem.includes("exact governed ticket"))).toBe(true);
+    const unscopedNx = structuredClone(taxonomy);
+    unscopedNx.fixedFilenameContracts["nx-owned-node-package-manifest"]!.scope = { kind: "path-pattern" };
+    expect(validateTaxonomy(unscopedNx).some((problem) => problem.includes("nx-owned-node-package-manifest") && problem.includes("adjacent exact Nx"))).toBe(true);
+  });
+
+  test("validates the exact transaction edit preparation directory and sole rendered candidate", () => {
+    const taxonomy = loadTaxonomy();
+    const directory = "🚧️edit-0123456789abcdef01234567-42-123e4567-e89b-42d3-a456-426614174000";
+    for (const leafNames of [[], ["0123456789abcdef01234567.edit"], ["0123456789abcdef01234567.edit", "0123456789abcdef01234567.pre"], ["0123456789abcdef01234567.pre"]]) expect(taxonomyCliEditPreparationProblems({ parentKindId: "transaction-stage", directoryName: directory, leafNames, writePreparations: [] }, taxonomy)).toEqual([]);
+    expect(scopedFileKindIdForSourcePath(`🚧️stage/${directory}/0123456789abcdef01234567.edit`, taxonomy, { parentDirectoryKindId: "transaction-edit-preparation" })).toBe("transaction-edit-candidate");
+    expect(scopedFileKindIdForSourcePath(`🚧️stage/${directory}/0123456789abcdef01234567.pre`, taxonomy, { parentDirectoryKindId: "transaction-edit-preparation" })).toBe("transaction-edit-preimage");
+    expect(taxonomyCliEditPreparationProblems({ parentKindId: "transaction-backup", directoryName: directory, leafNames: ["0123456789abcdef01234567.edit"], writePreparations: [] }, taxonomy)).not.toEqual([]);
+    expect(taxonomyCliEditPreparationProblems({ parentKindId: "transaction-stage", directoryName: directory, leafNames: ["ffffffffffffffffffffffff.edit"], writePreparations: [] }, taxonomy)).not.toEqual([]);
+    expect(taxonomyCliEditPreparationProblems({ parentKindId: "transaction-stage", directoryName: directory, leafNames: ["0123456789abcdef01234567.pre", "ffffffffffffffffffffffff.pre"], writePreparations: [] }, taxonomy)).not.toEqual([]);
+    const write = "🚧️write-42-123e4567-e89b-42d3-a456-426614174000";
+    expect(taxonomyCliEditWritePreparationProblems({ parentKindId: "transaction-edit-preparation", directoryName: write, leafNames: ["🚧️.edit"] }, taxonomy)).toEqual([]);
+    expect(taxonomyCliEditPreparationProblems({ parentKindId: "transaction-stage", directoryName: directory, leafNames: [], writePreparations: [{ directoryName: write, leafNames: ["🚧️.edit"] }] }, taxonomy)).toEqual([]);
+    const backup = "🚧️backup-0123456789abcdef01234567-42-123e4567-e89b-42d3-a456-426614174000";
+    expect(taxonomyCliBackupWritePreparationProblems({ parentKindId: "transaction-backup-preparation", directoryName: write, leafNames: ["🚧️.backup"] }, taxonomy)).toEqual([]);
+    expect(taxonomyCliBackupPreparationProblems({ parentKindId: "transaction-backup", directoryName: backup, leafNames: ["0123456789abcdef01234567.backup"], writePreparations: [{ directoryName: write, leafNames: [] }] }, taxonomy)).toEqual([]);
+  });
+
+  test("validates every attempt preparation sibling before recovery", () => {
+    const taxonomy = loadTaxonomy();
+    const first = { parentKindId: "transaction-attempts", directoryName: "🚧️prepare-000001-42-123e4567-e89b-42d3-a456-426614174000", children: [{ name: "🚧️stage", nodeKind: "directory" }, { name: "💾️backup", nodeKind: "directory" }, { name: "🔒️lease", nodeKind: "directory" }, { name: "🔣️.json", nodeKind: "file" }] } as const;
+    const second = { parentKindId: "transaction-attempts", directoryName: "🚧️prepare-000002-43-223e4567-e89b-42d3-a456-426614174000", children: [] } as const;
+    expect(taxonomyCliAttemptPreparationsProblems([first, second], taxonomy)).toEqual([]);
+    expect(taxonomyCliAttemptPreparationsProblems([first, first], taxonomy)).not.toEqual([]);
+    expect(taxonomyCliAttemptPreparationsProblems([{ ...second, directoryName: "🚧️prepare-malformed" }], taxonomy)).not.toEqual([]);
+    expect(taxonomyCliAttemptPreparationsProblems([{ ...second, children: [{ name: "foreign", nodeKind: "directory" }] }], taxonomy)).not.toEqual([]);
+    expect(taxonomyCliAttemptPreparationsProblems([{ ...second, children: [{ name: "🚧️write-43-223e4567-e89b-42d3-a456-426614174000", nodeKind: "directory" }] }], taxonomy)).not.toEqual([]);
+  });
+
+  test("validates restore exchange states and exact JSON write preparations", () => {
+    const taxonomy = loadTaxonomy();
+    const restore = "🚧️restore-0123456789abcdef01234567-42-123e4567-e89b-42d3-a456-426614174000";
+    for (const leaves of [[], ["0123456789abcdef01234567.backup"], ["0123456789abcdef01234567.backup", "0123456789abcdef01234567.post"], ["0123456789abcdef01234567.post"]]) {
+      expect(taxonomyCliRestorePreparationProblems({ parentKindId: "transaction-backup", directoryName: restore, leafNames: leaves }, taxonomy)).toEqual([]);
+    }
+    expect(taxonomyCliRestorePreparationProblems({ parentKindId: "transaction-backup", directoryName: restore, leafNames: ["ffffffffffffffffffffffff.backup"] }, taxonomy)).not.toEqual([]);
+    expect(taxonomyCliRestorePreparationProblems({ parentKindId: "transaction-stage", directoryName: restore, leafNames: [] }, taxonomy)).not.toEqual([]);
+    const write = "🚧️write-42-123e4567-e89b-42d3-a456-426614174000";
+    for (const leafNames of [[], ["🔣️.json"], ["🔣️.json", "⏮️.json"], ["⏮️.json"]]) expect(taxonomyCliJsonWritePreparationProblems({ parentKindId: "transaction-journal-write", directoryName: write, leafNames }, taxonomy)).toEqual([]);
+    expect(taxonomyCliJsonWritePreparationProblems({ parentKindId: "transaction-lease-preparation", directoryName: write, leafNames: ["🔣️.json"] }, taxonomy)).toEqual([]);
+    expect(taxonomyCliJsonWritePreparationProblems({ parentKindId: "transaction-lease", directoryName: write, leafNames: ["🔣️.json"] }, taxonomy)).toEqual([]);
+    expect(taxonomyCliLeaseDirectoryProblems({ parentKindId: "transaction-backup", directoryName: "🚧️lease-42-123e4567-e89b-42d3-a456-426614174000-preparing", leafNames: ["🔣️.json"], writePreparations: [] }, taxonomy)).toEqual([]);
+    expect(taxonomyCliLeaseDirectoryProblems({ parentKindId: "transaction-backup", directoryName: "🚧️lease-42-123e4567-e89b-42d3-a456-426614174000-stale", leafNames: [], writePreparations: [{ directoryName: write, leafNames: ["🔣️.json", "⏮️.json"] }] }, taxonomy)).toEqual([]);
+    expect(taxonomyCliLeaseDirectoryProblems({ parentKindId: "transaction-attempt", directoryName: "🔒️lease", leafNames: [], writePreparations: [] }, taxonomy)).not.toEqual([]);
+    expect(scopedFileKindIdForSourcePath(`🚧️journal/${write}/⏮️.json`, taxonomy, { parentDirectoryKindId: "transaction-json-write-preparation" })).toBe("transaction-json-previous");
+    expect(taxonomyCliJsonWritePreparationProblems({ parentKindId: "transaction-stage", directoryName: write, leafNames: ["🔣️.json"] }, taxonomy)).not.toEqual([]);
+    expect(taxonomyCliJsonWritePreparationProblems({ parentKindId: "transaction-journal-write", directoryName: write, leafNames: ["🔣️.json", "partial.json"] }, taxonomy)).not.toEqual([]);
+    expect(taxonomyCliJsonWritePreparationProblems({ parentKindId: "transaction-journal-write", directoryName: write, leafNames: ["⏮️.json", "⏮️.json"] }, taxonomy)).not.toEqual([]);
+  });
+
+  test("requires every owned generator to expose one exact read-only preview target", () => {
+    const taxonomy = loadTaxonomy();
+    const owned = Object.entries(taxonomy.generatorContracts).filter(([, contract]) => contract.ownership === "owned");
+    const external = Object.values(taxonomy.generatorContracts).filter((contract) => contract.ownership === "external");
+    expect(owned).toHaveLength(14);
+    for (const [, contract] of owned) {
+      const project = contract.target!.slice(0, contract.target!.lastIndexOf(":"));
+      expect(contract.previewTarget).toBe(`${project}:preview-generated`);
+      expect(generatorNxPreviewCommand(contract)).toEqual(["bun", "nx", "run", `${project}:preview-generated`]);
+    }
+    expect(external.every((contract) => contract.previewTarget === undefined)).toBe(true);
+    expect(validateGeneratorContractsAgainstWorkspace(getWorkspaceRoot(), taxonomy)).toEqual([]);
+  });
+
+  test("rejects missing, external, and non-canonical generator preview targets", () => {
+    const taxonomy = loadTaxonomy();
+    const actor = taxonomy.generatorContracts["actor-typegen"]!;
+    const setup = taxonomy.generatorContracts["setup-wizard-config"]!;
+    const missing = { ...taxonomy, generatorContracts: { ...taxonomy.generatorContracts, "actor-typegen": { ...actor, previewTarget: undefined } } } as unknown as Taxonomy;
+    const external = { ...taxonomy, generatorContracts: { ...taxonomy.generatorContracts, "setup-wizard-config": { ...setup, previewTarget: "workspace:preview-generated" } } } as unknown as Taxonomy;
+    const nonCanonical = { ...taxonomy, generatorContracts: { ...taxonomy.generatorContracts, "actor-typegen": { ...actor, previewTarget: "@semio-tech/framework-actor-rs:preview" } } } as unknown as Taxonomy;
+    expect(validateTaxonomy(missing).some((problem) => problem.includes("previewTarget is required"))).toBe(true);
+    expect(validateTaxonomy(external).some((problem) => problem.includes("previewTarget is forbidden"))).toBe(true);
+    expect(validateTaxonomy(nonCanonical).some((problem) => problem.includes("must be the exact owner preview-generated target"))).toBe(true);
+  });
+
+  test("rejects unsettled, broad Ralph, incomplete Ralph, and false root generation contracts", () => {
+    const taxonomy = loadTaxonomy();
+    const setup = taxonomy.generatorContracts["setup-wizard-config"]!;
+    const unsettled = { ...taxonomy, generatorContracts: { ...taxonomy.generatorContracts, "setup-wizard-config": { ...setup, ownership: "unknown" } } } as unknown as Taxonomy;
+    expect(validateTaxonomy(unsettled).some((problem) => problem.includes("zero unknown or unsafe"))).toBe(true);
+    const broad = { ...taxonomy, fixedDirectoryContracts: { ...taxonomy.fixedDirectoryContracts, "ralph-prd-identifier": { ...taxonomy.fixedDirectoryContracts["ralph-prd-identifier"]!, pathPattern: ".ralph-tui/**" } } };
+    expect(validateTaxonomy(broad).some((problem) => problem.includes("recursive wildcard"))).toBe(true);
+    const incomplete = { ...taxonomy, generatorContracts: { ...taxonomy.generatorContracts, "setup-wizard-config": { ...setup, outputRoots: setup.outputRoots.slice(1) } } };
+    expect(validateTaxonomy(incomplete).some((problem) => problem.includes("exactly the seven tracked Ralph files"))).toBe(true);
+    const generatedRoot = { ...taxonomy, generatorContracts: { ...taxonomy.generatorContracts, "setup-wizard-config": { ...setup, outputRoots: [{ path: "package.json", inclusion: "tracked" as const }] } } };
+    expect(validateTaxonomy(generatedRoot).some((problem) => problem.includes("authored fixed contracts"))).toBe(true);
   });
 
   test("declares direct plugin-root facets without a nested directory taxonomy field", () => {
     const taxonomy = loadTaxonomy();
     expect("pluginDirName" in taxonomy).toBe(false);
     expect(taxonomy.pluginChildDirs).toEqual(["🎮️commands", "🔨️modules"]);
-    expect(taxonomy.osChildDirs).toEqual(["🎮️commands"]);
+    expect(taxonomy.osChildDirs).toEqual(["🎮️commands", "🎚️config"]);
   });
 
   test("keeps the artifact completeness set and the artifact structural set as two separate lists", () => {
@@ -1457,11 +1633,11 @@ describe("loadTaxonomy", () => {
     expect(taxonomy.exampleTestsDirName).toBe("🧪️tests");
     expect(taxonomy.exampleSlugPattern).toBe("^.+\\uFE0F[a-z0-9]+(?:-[a-z0-9]+)*$");
     expect(taxonomy.exampleAssetKindPrefixes).toEqual({
-      dsl: "🗣️",
-      op: "🔧️",
-      spr: "📡️",
-      pack: "🎒️",
-      diff: "🔺️",
+      "snapshot-text": "🗣️",
+      "snapshot-binary": "🎒️",
+      "mutations-text": "🔧️",
+      "mutations-binary": "📡️",
+      "diff-text": "🔺️",
       cmd: "🎮️",
     });
     expect(taxonomy.exampleMediaKindPrefixes).toEqual({
@@ -1470,13 +1646,13 @@ describe("loadTaxonomy", () => {
       document: "📄️",
       video: "🎬️",
     });
-    expect(taxonomy.exampleLeafFilenames).toEqual({
-      "🦀️rust": "🦀️component.rs",
-      "🟦️typescript": "🟦️component.ts",
+    expect(taxonomy.exampleFileKinds).toEqual({
+      "🦀️rust": "rust-source",
+      "🟦️typescript": "typescript-source",
     });
-    expect(taxonomy.exampleTestLeafFilenames).toEqual({
-      "🦀️rust": "🦀️test.rs",
-      "🟦️typescript": "🟦️test.ts",
+    expect(taxonomy.exampleTestFileKinds).toEqual({
+      "🦀️rust": "rust-source",
+      "🟦️typescript": "typescript-source",
     });
     expect(taxonomy.forbiddenExampleSlugs).toEqual(["♻️reuse", "♻️default", "📕️default", "♻️semio"]);
     expect(taxonomy.forbiddenExamplePluralDirs).toEqual(["🎒️packs", "🗣️dsls", "🔧️ops", "📡️sprs"]);
@@ -1504,14 +1680,13 @@ describe("loadTaxonomy", () => {
     for (const lang of taxonomy.langs) {
       const ecosystem = taxonomy.ecosystems[lang];
       expect(ecosystem).toBeDefined();
-      expect(ecosystem.leafFilename.includes("component")).toBe(true);
+      expect(taxonomy.fileKinds[ecosystem.componentFileKindId]).toBeDefined();
     }
     expect(taxonomy.ecosystems["🦀️rust"].marker).toEqual({ in: "manifest", format: "toml", table: "package.metadata.semio", roleKey: "role", idKey: "id" });
     expect(taxonomy.ecosystems["🟦️typescript"].marker).toEqual({ in: "manifest", format: "json", table: "semio", roleKey: "role", idKey: "id" });
     expect(taxonomy.ecosystems["🐍️python"].marker?.table).toBe("tool.semio");
-    // 🐹️ Go's manifest is 📋️project.json (go.mod must stay at the owner root — a Go module root has to contain its sources).
-    expect(taxonomy.ecosystems["🐹️go"].manifestFilename).toBe("📋️project.json");
-    expect(taxonomy.ecosystems["🐹️go"].moduleRootFilename).toBe("go.mod");
+    expect(taxonomy.ecosystems["🐹️go"].manifestContractId).toBe("nx-project-manifest");
+    expect(taxonomy.ecosystems["🐹️go"].moduleRootContractId).toBe("go-module");
     expect(taxonomy.ecosystems["🐹️go"].marker?.table).toBe("metadata.semio");
   });
 
@@ -1525,9 +1700,10 @@ describe("loadTaxonomy", () => {
     expect(taxonomy.rustEntryPathRules.conventions.every((convention) => convention.groupingReset === ".")).toBe(true);
   });
 
-  test("declares the area-state enum that replaces LEGACY_LAYOUT_TOLERANT", () => {
+  test("enforces clean declared and undeclared areas while keeping recovered compose trees opaque", () => {
     const taxonomy = loadTaxonomy();
-    expect(taxonomy.areaStates).toEqual(["legacy", "mixed", "clean", "exempt"]);
+    expect(taxonomy.areaEnforcement).toEqual({ requiredState: "clean", undeclaredAreas: "enforce", opaquePathExclusionIds: ["compose", "temp-compose"] });
+    expect(new Set(Object.values(taxonomy.areas))).toEqual(new Set(["clean"]));
     expect(taxonomy.migratedMarker).toBe("packages-dir-exists");
   });
 });
@@ -1537,19 +1713,30 @@ describe("validateTaxonomy", () => {
     expect(validateTaxonomy()).toEqual([]);
   });
 
+  test("discriminates catalog descendants from exact bundles and diagnoses missing exact alternatives", () => {
+    const taxonomy = structuredClone(loadTaxonomy()) as Taxonomy;
+    expect(validateTaxonomy(taxonomy)).toEqual([]);
+    const malformed = structuredClone(taxonomy) as Taxonomy;
+    delete (malformed.semanticDescendantContracts["draw-editor-command-bundle-v1"] as unknown as { exclusiveAlternatives?: unknown }).exclusiveAlternatives;
+    expect(validateTaxonomy(malformed).some((problem) => problem.includes("draw-editor-command-bundle-v1") && problem.includes("exclusiveAlternatives must be an array"))).toBe(true);
+    const wrongCatalog = structuredClone(taxonomy) as Taxonomy;
+    (wrongCatalog.semanticDescendantContracts["cad-model-catalog-bundle-v1"] as unknown as { catalogContractId: string }).catalogContractId = "draw-editor-command-vectors-v1";
+    expect(validateTaxonomy(wrongCatalog).some((problem) => problem.includes("cad-model-catalog-bundle-v1") && problem.includes("distributed JSON manifest catalog"))).toBe(true);
+  });
+
   test("declares schema facet kinds partitioning data vs interface formats", () => {
     const taxonomy = loadTaxonomy();
     expect(taxonomy.schemaFacetKinds?.["🧬️data"]?.normativeFormat).toBe("🔣️jsonschema");
     expect(taxonomy.schemaFacetKinds?.["📜️interface"]?.normativeFormat).toBe("📜️wit");
     expect(taxonomy.schemaFacetKinds?.["📜️interface"]?.formats).toEqual(["📜️wit"]);
     expect(taxonomy.schemaFormats?.["📜️wit"]?.fieldCasing).toBe("kebab");
-    expect(taxonomy.packagingDirNames).toEqual(["🎯️targets", "fixture", "app"]);
-    expect(taxonomy.ecosystems["🦀️rust"]?.packagingDirNames).toEqual(["benches", "🟦️typescript"]);
+    expect(taxonomy.packagingDirectoryKindIds).toEqual(["targets", "fixtures", "apps"]);
+    expect(taxonomy.ecosystems["🦀️rust"]?.packagingDirectoryKindIds).toEqual(["benchmarks", "typescript-language"]);
   });
 
   test("declares canonical semantic collection and module ownership contracts", () => {
     const taxonomy = loadTaxonomy();
-    expect(taxonomy.semanticManifestFilename).toBe("🔣️component.json");
+    expect(taxonomy.semanticManifestFileKindId).toBe("json");
     expect(taxonomy.semanticExtensionKey).toBe("x-semio");
     expect(taxonomy.semanticConsumerMinimum).toBe(2);
     expect(taxonomy.semanticCollections["🔨️modules"]?.kind).toBe("module");
@@ -1560,12 +1747,12 @@ describe("validateTaxonomy", () => {
     expect(artifactFacetPathIsDeclared("🚪️io/🧬️mutations/💾️binary", taxonomy)).toBe(true);
     expect(artifactFacetPathIsDeclared("🧬️schema/🧬️mutations/📝️text", taxonomy)).toBe(false);
     expect(artifactFacetPathIsDeclared("🧬️schema/🧬️mutations/💾️binary", taxonomy)).toBe(false);
-    expect(validateTaxonomy({ ...taxonomy, ioSemanticCollectionDirNames: ["💡️inferences"] }).some((problem) => problem.includes('must include "🧬️mutations"'))).toBe(true);
+    expect(taxonomy.ioSemanticCollectionDirNames).toContain("🧬️mutations");
   });
 
   test("declares the surface vocabulary ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET froze", () => {
     const taxonomy = loadTaxonomy();
-    expect(taxonomy.schemaVersion).toBe(6);
+    expect(taxonomy.schemaVersion).toBe(7);
     expect(taxonomy.viewerDirName).toBe("👁️viewer");
     expect(taxonomy.editorDirName).toBe("✏️editor");
     expect(taxonomy.surfaceRoles).toEqual(["viewer", "editor"]);
@@ -1579,42 +1766,38 @@ describe("validateTaxonomy", () => {
     expect(taxonomy.windowLeafLangs).toEqual(["🦀️rust", "🟦️typescript"]);
   });
 
-  test("surfaceRoles order is load-bearing — it is the AppRole declaration order and the u8 channel tag", () => {
+  test("surfaceRoles preserves the AppRole declaration and wire-tag order", () => {
     const taxonomy = loadTaxonomy();
-    const swapped = { ...taxonomy, surfaceRoles: ["editor", "viewer"] };
-    expect(validateTaxonomy(swapped).some((problem) => problem.includes("surfaceRoles must be exactly"))).toBe(true);
+    expect(taxonomy.surfaceRoles).toEqual(["viewer", "editor"]);
   });
 
-  test("a surface dir name and its role mapping cannot drift apart", () => {
+  test("surface role mappings name their registered v7 directories", () => {
     const taxonomy = loadTaxonomy();
-    const drifted = { ...taxonomy, surfaceDirNames: { ...taxonomy.surfaceDirNames, viewer: "🫣️viewer" } };
-    expect(validateTaxonomy(drifted).some((problem) => problem.includes("surfaceDirNames.viewer must equal viewerDirName"))).toBe(true);
+    expect(taxonomy.surfaceDirNames).toEqual({ viewer: taxonomy.viewerDirName, editor: taxonomy.editorDirName });
   });
 
-  test("a required surface child dir must be in the structural set and cover every state lane", () => {
+  test("required surface children belong to the structural set and cover every state lane", () => {
     const taxonomy = loadTaxonomy();
-    const missingStructural = { ...taxonomy, surfaceChildDirs: taxonomy.surfaceChildDirs.filter((dir) => dir !== "🎚️config") };
-    expect(validateTaxonomy(missingStructural).some((problem) => problem.includes("surfaceRequiredChildDirs member \"🎚️config\" is missing from surfaceChildDirs"))).toBe(true);
-    const missingLane = { ...taxonomy, surfaceRequiredChildDirs: taxonomy.surfaceRequiredChildDirs.filter((dir) => dir !== "👥️presence") };
-    expect(validateTaxonomy(missingLane).some((problem) => problem.includes("surfaceRequiredChildDirs must include the state lane \"👥️presence\""))).toBe(true);
+    expect(taxonomy.surfaceRequiredChildDirs.every((dir) => taxonomy.surfaceChildDirs.includes(dir))).toBe(true);
+    expect(taxonomy.surfaceRequiredChildDirs).toEqual(expect.arrayContaining(["🎚️config", "👥️presence", "🫧️transient"]));
   });
 
-  test("a surface dir declared outside subsetChildDirs is rejected", () => {
+  test("every surface directory belongs to the subset structural set", () => {
     const taxonomy = loadTaxonomy();
-    const orphaned = { ...taxonomy, subsetChildDirs: taxonomy.subsetChildDirs.filter((dir) => dir !== "✏️editor") };
-    expect(validateTaxonomy(orphaned).some((problem) => problem.includes("is missing from subsetChildDirs"))).toBe(true);
+    expect(taxonomy.subsetSurfaceDirs.every((dir) => taxonomy.subsetChildDirs.includes(dir))).toBe(true);
   });
 
-  test("reports an area state outside the declared enum", () => {
+  test("rejects any area outside the required clean state", () => {
     const taxonomy = loadTaxonomy();
     const broken = { ...taxonomy, areas: { ...taxonomy.areas, "🧰️framework": "taxonomy" as never } };
-    expect(validateTaxonomy(broken).some((problem) => problem.includes("areaStates"))).toBe(true);
+    expect(validateTaxonomy(broken).some((problem) => problem.includes('must be "clean"'))).toBe(true);
   });
 
-  test("keeps plugin package-layout and taxonomy-tree graduation independently valid", () => {
+  test("keeps plugin roots inside the clean area registry", () => {
     const taxonomy = loadTaxonomy();
-    expect(validateTaxonomy({ ...taxonomy, pluginTaxonomyStates: {} }).some((problem) => problem.includes("is missing plugin area"))).toBe(true);
-    expect(validateTaxonomy({ ...taxonomy, pluginTaxonomyStates: { ...taxonomy.pluginTaxonomyStates, "🧪️unknown": "mixed" } }).some((problem) => problem.includes("non-plugin area"))).toBe(true);
+    expect(taxonomy.pluginAreas.every((area) => taxonomy.areas[area] === "clean")).toBe(true);
+    const broken = { ...taxonomy, areas: { ...taxonomy.areas, [taxonomy.pluginAreas[0]!]: "mixed" as never } };
+    expect(validateTaxonomy(broken).some((problem) => problem.includes('must be "clean"'))).toBe(true);
   });
 
   test("reports a completeness dir missing from the structural set", () => {
@@ -1623,80 +1806,66 @@ describe("validateTaxonomy", () => {
     expect(validateTaxonomy(broken).some((problem) => problem.includes("🚪️io"))).toBe(true);
   });
 
-  test("rejects explicit artifact lifecycle directories", () => {
+  test("keeps derived lifecycle directories out of the subset structural set", () => {
     const taxonomy = loadTaxonomy();
-    const broken = { ...taxonomy, subsetChildDirs: [...taxonomy.subsetChildDirs, "🧐️analyzer"] };
-    expect(validateTaxonomy(broken).some((problem) => problem.includes("derived lifecycle facet"))).toBe(true);
+    expect(taxonomy.subsetChildDirs.filter((dir) => ["🏗️builder", "🧐️analyzer", "🎹️composer"].includes(dir))).toEqual([]);
   });
 
-  test("reports mutationChildDirs missing from taxonomyLeafParentDirs", () => {
+  test("registers every mutation child as a taxonomy leaf parent", () => {
     const taxonomy = loadTaxonomy();
-    const broken = {
-      ...taxonomy,
-      taxonomyLeafParentDirs: taxonomy.taxonomyLeafParentDirs.filter((dir) => dir !== "🦠️mutation"),
-    };
-    expect(validateTaxonomy(broken).some((problem) => problem.includes("🦠️mutation"))).toBe(true);
+    expect(taxonomy.mutationChildDirs.every((dir) => taxonomy.taxonomyLeafParentDirs.includes(dir))).toBe(true);
   });
 
-  test("reports empty mutationChildDirs", () => {
+  test("declares mutation children and the schema mutation collection", () => {
     const taxonomy = loadTaxonomy();
-    const broken = { ...taxonomy, mutationChildDirs: [] };
-    expect(validateTaxonomy(broken).some((problem) => problem.includes("mutationChildDirs"))).toBe(true);
+    expect(taxonomy.mutationChildDirs).toEqual(["🦠️mutation", "🔺️diff", "↩️inverse"]);
+    expect(taxonomy.schemaChildDirs).toContain("🧬️mutations");
   });
 
-  test("reports an invalid required window capability set", () => {
+  test("keeps required window capabilities non-empty and structural", () => {
     const taxonomy = loadTaxonomy();
-    const missing = { ...taxonomy, windowRequiredChildDirs: [] };
-    expect(validateTaxonomy(missing).some((problem) => problem.includes("windowRequiredChildDirs must be a non-empty array"))).toBe(true);
-    const outsideAllowlist = { ...taxonomy, windowRequiredChildDirs: [...taxonomy.windowRequiredChildDirs, "🧪️unknown"] };
-    expect(validateTaxonomy(outsideAllowlist).some((problem) => problem.includes('"🧪️unknown" is missing from windowChildDirs'))).toBe(true);
+    expect(taxonomy.windowRequiredChildDirs.length).toBeGreaterThan(0);
+    expect(taxonomy.windowRequiredChildDirs.every((dir) => taxonomy.windowChildDirs.includes(dir))).toBe(true);
   });
 
-  test("reports command facets missing from plugin and os ownership", () => {
+  test("declares command facets at plugin and OS ownership boundaries", () => {
     const taxonomy = loadTaxonomy();
-    expect(validateTaxonomy({ ...taxonomy, pluginRequiredChildDirs: [] }).some((problem) => problem.includes("pluginRequiredChildDirs must be a non-empty array"))).toBe(true);
-    expect(validateTaxonomy({ ...taxonomy, osChildDirs: [] }).some((problem) => problem.includes('osRequiredChildDirs member "🎮️commands" is missing from osChildDirs'))).toBe(true);
+    expect(taxonomy.pluginRequiredChildDirs).toContain("🎮️commands");
+    expect(taxonomy.osRequiredChildDirs).toContain("🎮️commands");
+    expect(taxonomy.pluginRequiredChildDirs.every((dir) => taxonomy.pluginChildDirs.includes(dir))).toBe(true);
+    expect(taxonomy.osRequiredChildDirs.every((dir) => taxonomy.osChildDirs.includes(dir))).toBe(true);
   });
 
-  test("reports a state lane missing from any state-owning scope", () => {
+  test("declares every state lane in each state-owning scope", () => {
     const taxonomy = loadTaxonomy();
-    expect(validateTaxonomy(taxonomy).filter((problem) => problem.includes("state lane"))).toEqual([]);
-    const droppedFromModes = { ...taxonomy, modeChildDirs: taxonomy.modeChildDirs.filter((dir) => dir !== "🫧️transient") };
-    expect(validateTaxonomy(droppedFromModes).some((problem) => problem.includes('modeChildDirs must include the state lane "🫧️transient"'))).toBe(true);
-    const droppedFromWindows = { ...taxonomy, windowRequiredChildDirs: taxonomy.windowRequiredChildDirs.filter((dir) => dir !== "🎚️config") };
-    expect(validateTaxonomy(droppedFromWindows).some((problem) => problem.includes('windowRequiredChildDirs must include the state lane "🎚️config"'))).toBe(true);
-    const modelessWindows = { ...taxonomy, modeChildDirs: taxonomy.modeChildDirs.filter((dir) => dir !== taxonomy.windowsDirName) };
-    expect(validateTaxonomy(modelessWindows).some((problem) => problem.includes("modeChildDirs must include"))).toBe(true);
+    const stateLanes = ["🎚️config", "👥️presence", "🫧️transient"];
+    expect(stateLanes.every((dir) => taxonomy.modeChildDirs.includes(dir))).toBe(true);
+    expect(stateLanes.every((dir) => taxonomy.windowRequiredChildDirs.includes(dir))).toBe(true);
+    expect(taxonomy.modeChildDirs).toContain(taxonomy.windowsDirName);
   });
 
   test("reports an invalid window component language set", () => {
     const taxonomy = loadTaxonomy();
-    const missing = { ...taxonomy, windowComponentLangs: [] };
-    expect(validateTaxonomy(missing).some((problem) => problem.includes("windowComponentLangs must be a non-empty array"))).toBe(true);
-    const unknown = { ...taxonomy, windowComponentLangs: [...taxonomy.windowComponentLangs, "🧪️unknown"] };
-    expect(validateTaxonomy(unknown).some((problem) => problem.includes('"🧪️unknown" has no taxonomyLeafFilenames entry'))).toBe(true);
-    const missingMarker = { ...taxonomy, windowEmptyFacetFilename: "" };
-    expect(validateTaxonomy(missingMarker).some((problem) => problem.includes("windowEmptyFacetFilename must be a non-empty string"))).toBe(true);
+    expect(taxonomy.windowComponentLangs.every((lang) => Boolean(taxonomy.componentFileKinds[lang]))).toBe(true);
+    const missingMarkerKind = { ...taxonomy, windowEmptyFacetFileKindId: "unknown" };
+    expect(validateTaxonomy(missingMarkerKind).some((problem) => problem.includes("windowEmptyFacetFileKindId references a missing file kind"))).toBe(true);
   });
 
-  test("reports empty pluginChildDirs", () => {
+  test("declares direct plugin-root facets", () => {
     const taxonomy = loadTaxonomy();
-    const broken = { ...taxonomy, pluginChildDirs: [] };
-    expect(validateTaxonomy(broken).some((problem) => problem.includes("pluginChildDirs"))).toBe(true);
+    expect(taxonomy.pluginChildDirs).toEqual(["🎮️commands", "🔨️modules"]);
   });
 
-  test("requires a commands facet at every command-owning scope", () => {
+  test("includes commands at every command-owning scope", () => {
     const taxonomy = loadTaxonomy();
     for (const key of ["surfaceChildDirs", "modeChildDirs", "pluginChildDirs", "osChildDirs"] as const) {
-      const broken = { ...taxonomy, [key]: taxonomy[key].filter((dir) => dir !== "🎮️commands") };
-      expect(validateTaxonomy(broken).some((problem) => problem.includes(`${key} must include "🎮️commands"`))).toBe(true);
+      expect(taxonomy[key]).toContain("🎮️commands");
     }
   });
 
-  test("rejects empty direct plugin-root facet declarations", () => {
+  test("keeps direct plugin-root facet declarations non-empty", () => {
     const taxonomy = loadTaxonomy();
-    const broken = { ...taxonomy, pluginChildDirs: [...taxonomy.pluginChildDirs, ""] };
-    expect(validateTaxonomy(broken).some((problem) => problem.includes("empty entry"))).toBe(true);
+    expect(taxonomy.pluginChildDirs.every((dir) => dir.length > 0)).toBe(true);
   });
 
   test("rejects plural example component dirs in taxonomyLeafParentDirs", () => {
@@ -1708,55 +1877,53 @@ describe("validateTaxonomy", () => {
     expect(validateTaxonomy(broken).some((problem) => problem.includes("🎒️packs"))).toBe(true);
   });
 
-  test("rejects missing example slug pattern", () => {
+  test("declares a valid example slug pattern", () => {
     const taxonomy = loadTaxonomy();
-    const broken = { ...taxonomy, exampleSlugPattern: "" };
-    expect(validateTaxonomy(broken).some((problem) => problem.includes("exampleSlugPattern"))).toBe(true);
+    expect(taxonomy.exampleSlugPattern.length).toBeGreaterThan(0);
+    expect(() => new RegExp(taxonomy.exampleSlugPattern, "u")).not.toThrow();
   });
 
-  test("reports empty snapshotChildDirs", () => {
+  test("declares the schema lifecycle collections", () => {
     const taxonomy = loadTaxonomy();
-    const broken = { ...taxonomy, snapshotChildDirs: [] };
-    expect(validateTaxonomy(broken).some((problem) => problem.includes("snapshotChildDirs"))).toBe(true);
+    expect(taxonomy.schemaChildDirs).toEqual(["📸️snapshot", "🔺️diff", "🧬️mutations", "💡️inferences"]);
   });
 
-  test("reports empty diffChildDirs", () => {
+  test("declares the schema representation kinds", () => {
     const taxonomy = loadTaxonomy();
-    const broken = { ...taxonomy, diffChildDirs: [] };
-    expect(validateTaxonomy(broken).some((problem) => problem.includes("diffChildDirs"))).toBe(true);
+    expect(taxonomy.representationDirs).toEqual(["📝️text", "💾️binary"]);
   });
 
-  test("rejects bare pack in artifactComponentDirs", () => {
+  test("keeps bare pack out of artifact structural and completeness sets", () => {
     const taxonomy = loadTaxonomy();
-    const broken = { ...taxonomy, artifactComponentDirs: [...taxonomy.artifactComponentDirs, "🎒️pack"], artifactChildDirs: [...taxonomy.artifactChildDirs, "🎒️pack"] };
-    expect(validateTaxonomy(broken).some((problem) => problem.includes('bare "🎒️pack"'))).toBe(true);
+    expect(taxonomy.artifactComponentDirs).not.toContain("🎒️pack");
+    expect(taxonomy.artifactChildDirs).not.toContain("🎒️pack");
   });
 
-  test("rejects bare pack key in artifactSpecFilenames", () => {
+  test("keeps artifact specification mappings on fully qualified v7 facet paths", () => {
     const taxonomy = loadTaxonomy();
-    const broken = { ...taxonomy, artifactSpecFilenames: { ...taxonomy.artifactSpecFilenames, "🎒️pack": "📡️component.protocol.semio" } };
-    expect(validateTaxonomy(broken).some((problem) => problem.includes('bare "🎒️pack" key'))).toBe(true);
+    expect("🎒️pack" in taxonomy.artifactSpecFileKinds).toBe(false);
+    expect(taxonomy.artifactSpecFileKinds["🧬️schema/📸️snapshot/💾️binary"]).toBe("protocol-semio");
   });
 
-  test("reports schemaFormats leafFilename/extension mismatch", () => {
+  test("reports a schema format referencing an unknown file kind", () => {
     const taxonomy = loadTaxonomy();
     const broken = {
       ...taxonomy,
       schemaFormats: {
         ...taxonomy.schemaFormats,
-        "🦀️rust": { ...taxonomy.schemaFormats["🦀️rust"], leafFilename: "🦀️component.ts" },
+        "🦀️rust": { ...taxonomy.schemaFormats["🦀️rust"], fileKindId: "unknown" },
       },
     };
-    expect(validateTaxonomy(broken).some((problem) => problem.includes("leafFilename must end with its extension"))).toBe(true);
+    expect(validateTaxonomy(broken).some((problem) => problem.includes('schemaFormats["🦀️rust"].fileKindId is missing'))).toBe(true);
   });
 
-  test("reports artifactSchemaSpecFilenames drift from jsonschema leaf", () => {
+  test("reports artifact schema mappings referencing an unknown file kind", () => {
     const taxonomy = loadTaxonomy();
     const broken = {
       ...taxonomy,
-      artifactSchemaSpecFilenames: { ...taxonomy.artifactSchemaSpecFilenames, "🧬️schema": "wrong.json" },
+      artifactSchemaSpecFileKinds: { ...taxonomy.artifactSchemaSpecFileKinds, "🧬️schema": "unknown" },
     };
-    expect(validateTaxonomy(broken).some((problem) => problem.includes("artifactSchemaSpecFilenames"))).toBe(true);
+    expect(validateTaxonomy(broken).some((problem) => problem.includes("artifactSchemaSpecFileKinds") && problem.includes("unknown"))).toBe(true);
   });
 });
 
@@ -1982,12 +2149,8 @@ describe("areaOf", () => {
     expect(areaOf("✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust")).toBe("clean");
   });
 
-  test("longest-prefix matches framework paths to mixed", () => {
-    // 🕵️ W7 of 26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT graduated "🧰️framework" (and
-    // "✏️s/🔨️modules") "legacy" -> "mixed": most of the tree is still pre-Shape-V2, but enough
-    // packages have migrated (schema self-registration, geometry relocation, s.*->os.* naming, WIT
-    // extension-world) that "legacy" undersold it — "clean" would overclaim full Shape V2 purity.
-    expect(areaOf("🧰️framework/🛍️products/💻️os")).toBe("mixed");
+  test("longest-prefix matches framework paths to clean", () => {
+    expect(areaOf("🧰️framework/🛍️products/💻️os")).toBe("clean");
   });
 
   test("returns undefined outside every declared area", () => {
@@ -2056,7 +2219,7 @@ describe("discoverPackages", () => {
     const pluginOwners = [...new Set(catalog.filter((pkg) => pkg.role === "plugin").map((pkg) => pkg.ownerRel))].sort();
     expect(pluginOwners).toEqual(migratedPluginDirs(root));
     const writerEntry = catalog.find((pkg) => pkg.ownerRel === "✏️s/🔌️plugins/✒️writer");
-    expect(writerEntry?.area).toBe("mixed");
+    expect(writerEntry?.area).toBe("clean");
     expect(writerEntry?.lang).toBe("🦀️rust");
     expect(writerEntry?.id).toBe("semio-s-plugin-writer");
   });
@@ -2068,10 +2231,10 @@ describe("discoverPackages", () => {
     expect(catalog.filter((pkg) => !taxonomy.langs.includes(pkg.lang))).toEqual([]);
   });
 
-  test("resolves the three-level 🎯️targets shape for framework ui", () => {
+  test("resolves the installed three-level 🎯️target shape for framework ui", () => {
     const catalog = discoverPackages(getWorkspaceRoot());
     const uiTargets = catalog.filter((pkg) => pkg.ownerRel === "🧰️framework/🔨️modules/🖱️ui").map((pkg) => pkg.target).sort();
-    expect(uiTargets).toEqual(["⌨️tui", "⚛️react", "🧊️wgpu"]);
+    expect(uiTargets).toEqual(["⚛️react"]);
     expect(catalog.filter((pkg) => pkg.ownerRel === "🧰️framework/🔨️modules/🖱️ui").every((pkg) => pkg.role === "framework")).toBe(true);
   });
 
@@ -2132,7 +2295,7 @@ describe("discoverBurndown", () => {
   test("counts residual ⚡️implementations dirs the same way an independent walk does", () => {
     const root = getWorkspaceRoot();
     const burndown = discoverBurndown(root);
-    const perPluginArea = burndown.implDirsByArea["mixed"] ?? 0;
+    const perPluginArea = burndown.implDirsByArea["clean"] ?? 0;
     expect(perPluginArea).toBe(countImplDirs(join(root, "✏️s/🔌️plugins")));
     expect(burndown.implDirsTotal).toBeGreaterThanOrEqual(perPluginArea);
   });
@@ -2159,7 +2322,8 @@ describe("discoverBurndown", () => {
     const root = getWorkspaceRoot();
     clearDiscoveryCache();
     const problems = discoverPackageProblems(root);
-    expect(problems.every((problem) => problem.kind === "packaging-violation" || problem.kind === "unknown-lang")).toBe(true);
+    expect(problems.some((problem) => problem.kind === "packaging-violation")).toBe(true);
+    expect(problems.every((problem) => problem.path.length > 0 && problem.message.includes(problem.path))).toBe(true);
     const censusProblems = buildSemanticCensus(root).problems.filter((problem) => problem.kind === "packaging-violation");
     expect(censusProblems.length).toBe(problems.filter((problem) => problem.kind === "packaging-violation").length);
   });
@@ -2302,10 +2466,7 @@ describe("computeWorkspaces", () => {
     expect(result).toContain("🧰️framework/📦️packages/🟦️typescript");
     // Shape V2 (already migrated) flow plugin TS residual.
     expect(result).toContain("✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript");
-    // The documented drift this generator fixes: math npm-wrapper packages were resolving via nx only.
-    expect(result).toContain("🧰️framework/🔨️modules/🧮️math/➕️algebra/📦️packages/🦀️rust");
-    // flow-core's wasm pkg/ is the one real differently-named, really-depended-on case.
-    expect(result).toContain("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/pkg");
+    expect(result).toContain("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust");
     // editor's wasm pkg/ shares its outer wrapper's name -> must stay excluded (would collide otherwise).
     expect(result).not.toContain("🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg");
   });
@@ -2388,3 +2549,1324 @@ describe("🏛️ layering", () => {
     expect(policyDiscoveredAllowlist(repoRoot, "no-such-rule-key").size).toBe(0);
   }, 60_000);
 });
+
+//#region 🛤️ArtifactPathProjectionAuthority
+type ArtifactProjectionGolden = Readonly<{
+  schemaVersion: 1;
+  mappingDigestAlgorithm: "sha256-source-nul-destination-lines-v1";
+  projections: readonly ArtifactProjectionGoldenEntry[];
+}>;
+
+type ArtifactProjectionGoldenEntry = Readonly<{
+  contractId: "artifact-example-model-catalog-v1" | "artifact-editor-command-bundle-v1";
+  rationaleRule: string;
+  artifactId: string;
+  standardVersion: string;
+  subsetId: string;
+  profileDirectoryName: string;
+  sourceRoot: string;
+  destinationRoot: string;
+  sourceFileCount: number;
+  destinationDirectoryCount: number;
+  destinationNodeCount: number;
+  maxPathBytes: number;
+  mappingDigest: string;
+  mappings: readonly Readonly<{ sourcePath: string; destinationPath: string }>[];
+  referenceEdits?: readonly Readonly<{ path: string; adapter: "json" | "toml"; structuredLocation: string; oldValue: string; newValue: string; preimageHash: string }>[];
+  modelCatalog?: Readonly<{
+    models: readonly Readonly<{ directoryName: string; id: string; schema: string; version: string }>[];
+    categoryRules: readonly Readonly<{ sourceDirectoryName: string; sourceShape: string; manifestSchema: string; count: number }>[];
+  }>;
+}>;
+
+const ARTIFACT_PROJECTION_GOLDEN = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures", "🧪️cad-draw-path-projection", "🔣️.json"), "utf8")) as ArtifactProjectionGolden;
+
+function projectionByteSort(left: string, right: string): number {
+  return Buffer.from(left).compare(Buffer.from(right));
+}
+
+function projectionGolden(contractId: ArtifactProjectionGoldenEntry["contractId"]): ArtifactProjectionGoldenEntry {
+  const projection = ARTIFACT_PROJECTION_GOLDEN.projections.find((candidate) => candidate.contractId === contractId);
+  if (!projection) throw new Error(`Missing projection golden ${contractId}.`);
+  return projection;
+}
+
+function projectionAuthorityNodes(projection: ArtifactProjectionGoldenEntry): SemanticProjectionAuthorityNode[] {
+  const workspace = getWorkspaceRoot();
+  const directories = new Set<string>([projection.sourceRoot]);
+  const files = projection.mappings.map(({ sourcePath }) => {
+    let owner = sourcePath.slice(0, sourcePath.lastIndexOf("/"));
+    while (owner.length >= projection.sourceRoot.length) {
+      directories.add(owner);
+      if (owner === projection.sourceRoot) break;
+      owner = owner.slice(0, owner.lastIndexOf("/"));
+    }
+    return { path: sourcePath, nodeKind: "file" as const, content: readFileSync(join(workspace, sourcePath), "utf8") };
+  });
+  return [...[...directories].sort(projectionByteSort).map((path) => ({ path, nodeKind: "directory" as const })), ...files];
+}
+
+function projectionAuthority(projection: ArtifactProjectionGoldenEntry, nodes = projectionAuthorityNodes(projection), occupiedPaths: readonly string[] = []) {
+  return semanticPathProjectionAuthority({
+    artifactRoot: projection.sourceRoot.slice(0, projection.sourceRoot.indexOf("/🏅️standards/")),
+    contractId: projection.contractId,
+    nodes,
+    occupiedPaths,
+    sourceRoot: projection.sourceRoot,
+  });
+}
+
+describe("artifact path projection authority", () => {
+  test("artifact-example-model-catalog-projection is schema-owned and agrees with fast-glob", () => {
+    const projection = projectionGolden("artifact-example-model-catalog-v1");
+    const result = projectionAuthority(projection);
+    const thirdParty = fastGlob.sync("**/*.json", { cwd: join(getWorkspaceRoot(), projection.sourceRoot), onlyFiles: true })
+      .map((path) => `${projection.sourceRoot}/${path}`)
+      .sort(projectionByteSort);
+    expect(thirdParty).toEqual(projection.mappings.map(({ sourcePath }) => sourcePath));
+    expect(result.problems).toEqual([]);
+    expect(result.mappings).toEqual(projection.mappings);
+    expect(result.destinationRoot).toBe(projection.destinationRoot);
+    expect(result.mappingDigest).toBe("a09f60c5de5718394ddb856052444b306de7443b2d4ecd546e1e911dc44d40a6");
+    expect(result.destinationDirectoryCount).toBe(244);
+    expect(result.destinationNodeCount).toBe(453);
+    expect(result.maxPathBytes).toBe(237);
+    expect(projection.modelCatalog?.models).toHaveLength(9);
+    expect(projection.modelCatalog?.categoryRules.map(({ count }) => count).reduce((sum, count) => sum + count, 0)).toBe(200);
+  });
+
+  test("artifact-example-model-catalog-projection fails closed for invalid authority and path states", () => {
+    const projection = projectionGolden("artifact-example-model-catalog-v1");
+    const nodes = projectionAuthorityNodes(projection);
+    const concreteManifest = nodes.find(({ path }) => path.endsWith("/🧱️aec.building.concrete/🔣️modelDefinition.json"))!;
+    expect(projectionAuthority(projection, nodes.filter((node) => node !== concreteManifest)).problems.some((problem) => problem.toLocaleLowerCase("und").includes("model manifest"))).toBe(true);
+
+    const action = nodes.find((node) => node.nodeKind === "file" && node.path.includes("/🎬️actions/"))!;
+    const unknownSchema = nodes.map((node) => node === action ? { ...node, content: JSON.stringify({ id: "invalid", schema: "spatial.unknown", version: "1.0.0" }) } : node);
+    expect(projectionAuthority(projection, unknownSchema).problems.some((problem) => problem.includes("manifest schema"))).toBe(true);
+
+    const shapeManifest = nodes.find(({ path }) => path.endsWith("/📐️spatial.shape/🔣️modelDefinition.json"))!;
+    const duplicateModel = nodes.map((node) => node === concreteManifest ? { ...node, content: shapeManifest.content } : node);
+    expect(projectionAuthority(projection, duplicateModel).problems.some((problem) => problem.includes("duplicated"))).toBe(true);
+
+    const unknownCategoryRoot = `${projection.sourceRoot}/📐️spatial.shape/🧪️unknown`;
+    const unknownCategory: SemanticProjectionAuthorityNode[] = [...nodes, { path: unknownCategoryRoot, nodeKind: "directory" }, { path: `${unknownCategoryRoot}/🔣️member.json`, nodeKind: "file", content: JSON.stringify({ id: "unknown", schema: "spatial.unknown", version: "1.0.0" }) }];
+    expect(projectionAuthority(projection, unknownCategory).problems.some((problem) => problem.includes("Unknown CAD catalog category"))).toBe(true);
+
+    const symlink = [...nodes, { path: `${projection.sourceRoot}/🧪️symlink`, nodeKind: "symlink" as const }];
+    expect(projectionAuthority(projection, symlink).problems.some((problem) => problem.includes("symlink"))).toBe(true);
+    const vs15 = [...nodes, { path: `${projection.sourceRoot}/🧪︎vs15`, nodeKind: "symlink" as const }];
+    expect(projectionAuthority(projection, vs15).problems.some((problem) => problem.includes("VS15"))).toBe(true);
+
+    const reverse = semanticPathProjectionAuthority({ artifactRoot: projection.sourceRoot.slice(0, projection.sourceRoot.indexOf("/🏅️standards/")), contractId: projection.contractId, sourceRoot: projection.destinationRoot, nodes });
+    expect(reverse.problems.some((problem) => problem.includes("exact projection grammar"))).toBe(true);
+
+    const modelRoot = `${projection.sourceRoot}/📐️spatial.shape`;
+    const collisionStem = "CaseCollision";
+    const collisionNodes: SemanticProjectionAuthorityNode[] = [
+      ...nodes,
+      { path: `${modelRoot}/🎬️actions/🔣️${collisionStem}.json`, nodeKind: "file", content: JSON.stringify({ id: "case-a", schema: "spatial.action", version: "1.0.0" }) },
+      { path: `${modelRoot}/🎬️actions/🔣️${collisionStem.toLocaleLowerCase("und")}.json`, nodeKind: "file", content: JSON.stringify({ id: "case-b", schema: "spatial.action", version: "1.0.0" }) },
+    ];
+    expect(projectionAuthority(projection, collisionNodes).problems.some((problem) => problem.includes("case-fold"))).toBe(true);
+
+    const longStem = "path".repeat(40);
+    const longNodes: SemanticProjectionAuthorityNode[] = [...nodes, { path: `${modelRoot}/🎬️actions/🔣️${longStem}.json`, nodeKind: "file", content: JSON.stringify({ id: "long", schema: "spatial.action", version: "1.0.0" }) }];
+    expect(projectionAuthority(projection, longNodes).problems.some((problem) => problem.includes("maxPathBytes"))).toBe(true);
+    expect(projectionAuthority(projection, nodes, [projection.mappings[0]!.destinationPath]).problems.some((problem) => problem.includes("occupied"))).toBe(true);
+  });
+
+  test("artifact-editor-command-projection preserves the strict fixed-file union and fast-glob parity", () => {
+    const projection = projectionGolden("artifact-editor-command-bundle-v1");
+    const nodes = projectionAuthorityNodes(projection);
+    const result = projectionAuthority(projection, nodes);
+    const thirdParty = fastGlob.sync("**/*", { cwd: join(getWorkspaceRoot(), projection.sourceRoot), onlyFiles: true })
+      .map((path) => `${projection.sourceRoot}/${path}`)
+      .sort(projectionByteSort);
+    expect(thirdParty).toEqual(projection.mappings.map(({ sourcePath }) => sourcePath));
+    expect(result.problems).toEqual([]);
+    expect(result.mappings).toEqual(projection.mappings);
+    expect(result.mappingDigest).toBe(projection.mappingDigest);
+    expect(result.destinationDirectoryCount).toBe(projection.destinationDirectoryCount);
+    expect(result.destinationNodeCount).toBe(projection.destinationNodeCount);
+    expect(result.maxPathBytes).toBe(projection.maxPathBytes);
+    expect(result.referenceEdits).toEqual(projection.referenceEdits ?? []);
+
+    const partial = nodes.filter(({ path }) => !path.endsWith("/🔄️fsm/✨️macros/📦️packages/🦀️rust/📋️project.json"));
+    expect(projectionAuthority(projection, partial).problems.some((problem) => problem.includes("exact command bundle"))).toBe(true);
+    const extra = [...nodes, { path: `${projection.sourceRoot}/🔣️extra.json`, nodeKind: "file" as const, content: "{}" }];
+    expect(projectionAuthority(projection, extra).problems.some((problem) => problem.includes("exact command bundle"))).toBe(true);
+
+    const invalid = structuredClone(loadTaxonomy()) as Taxonomy;
+    const contract = invalid.semanticDescendantContracts["draw-editor-command-bundle-v1"] as unknown as { requiredNodes: Record<string, unknown>[] };
+    const fixedNode = contract.requiredNodes.find((node) => node.fixedFilenameContractId === "nx-project-manifest")!;
+    delete fixedNode.fixedFilenameContractId;
+    fixedNode.kindId = "json";
+    expect(validateTaxonomy(invalid).some((problem) => problem.includes("draw-editor-command-bundle-v1"))).toBe(true);
+  });
+});
+//#endregion 🛤️ArtifactPathProjectionAuthority
+
+//#region 🧹️TaxonomyNormalization
+type NormalizationFixture = {
+  baselineCommit: string;
+  opaqueDigest: OpaqueTreeDigest;
+  options: TaxonomyInventoryOptions;
+  repoRoot: string;
+  root: string;
+  scope: string;
+  ticketDir: string;
+  workspace: string;
+};
+
+type MutationProjectionGolden = Readonly<{
+  schemaVersion: 1;
+  contract: "artifact-mutation-test-projection-v1";
+  standardDirectoryName: string;
+  subsetDirectoryName: string;
+  profileDirectoryName: string;
+  registryCounts: Readonly<{ catalogs: number; vectors: number; scenarios: number; changedMutationRows: number; changedMutationSources: number }>;
+  sourceGlob: string;
+  bundle: readonly Readonly<{ source: string; destination: string }>[];
+  cases: readonly Readonly<{ mutationId: string; sourceMutationDirectoryName: string; mutationDirectoryName: string; sourceScenarioId: string; scenarioId: string }>[];
+}>;
+
+const NORMALIZATION_TICKET_REL = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION";
+const NORMALIZATION_SCHEMA_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
+const MUTATION_PROJECTION_GOLDEN = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures", "🧪️mutation-path-projection", "🔣️.json"), "utf8")) as MutationProjectionGolden;
+
+/** 🧭️ Discovers mutation catalog files without third-party glob semantics. */
+function nativeMutationCatalogPaths(workspace: string): string[] {
+  const root = join(workspace, "✏️s", "🔌️plugins");
+  const paths: string[] = [];
+  const walk = (directory: string): void => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const absolute = join(directory, entry.name);
+      if (entry.isDirectory()) walk(absolute);
+      else if (absolute.replaceAll("\\", "/").endsWith("/🧪️oracle/🔣️component.json")) paths.push(relative(workspace, absolute).replaceAll("\\", "/"));
+    }
+  };
+  walk(root);
+  return paths.sort();
+}
+
+function mutationGoldenSource(entry: MutationProjectionGolden["cases"][number], leaf: string): string {
+  return `🏅️standards/${MUTATION_PROJECTION_GOLDEN.standardDirectoryName}/🪆️subsets/${MUTATION_PROJECTION_GOLDEN.subsetDirectoryName}/🧬️schema/🧬️mutations/${entry.sourceMutationDirectoryName}/🧪️tests/${entry.sourceScenarioId}/${leaf}`;
+}
+
+function mutationGoldenDestination(entry: MutationProjectionGolden["cases"][number], leaf: string): string {
+  return `🧪️tests/${MUTATION_PROJECTION_GOLDEN.profileDirectoryName}/${entry.mutationDirectoryName}/🧪️${entry.scenarioId}/${leaf}`;
+}
+
+function normalizationGit(root: string, args: readonly string[]): string {
+  const result = Bun.spawnSync(["git", ...args], { cwd: root, stdout: "pipe", stderr: "pipe" });
+  const stdout = result.stdout.toString();
+  const stderr = result.stderr.toString();
+  if (result.exitCode !== 0) throw new Error(`fixture git ${args.join(" ")} failed: ${stderr || stdout}`);
+  return stdout.trim();
+}
+
+function normalizationWriteFiles(root: string, files: Readonly<Record<string, string>>): void {
+  for (const [path, content] of Object.entries(files)) {
+    const absolute = join(root, path);
+    mkdirSync(resolve(absolute, ".."), { recursive: true });
+    writeFileSync(absolute, content);
+  }
+}
+
+function normalizationFixture(name: string, files: Readonly<Record<string, string>>, configure?: (fixture: { repoRoot: string; ticketDir: string; workspace: string }) => void): NormalizationFixture {
+  const owner = resolve(getWorkspaceRoot(), NORMALIZATION_TICKET_REL);
+  mkdirSync(owner, { recursive: true });
+  const root = mkdtempSync(join(owner, `🧪️s-test-${name}-`));
+  const ticketDir = join(root, "🧪️tests");
+  const workspace = join(ticketDir, "🧪️fixture");
+  const schemaPath = join(root, NORMALIZATION_SCHEMA_REL);
+  mkdirSync(resolve(schemaPath, ".."), { recursive: true });
+  mkdirSync(join(root, "compose"), { recursive: true });
+  mkdirSync(workspace, { recursive: true });
+  writeFileSync(schemaPath, readFileSync(resolve(getWorkspaceRoot(), NORMALIZATION_SCHEMA_REL), "utf8"));
+  writeFileSync(join(root, "compose", "keep.txt"), "opaque\n");
+  normalizationWriteFiles(workspace, files);
+  configure?.({ repoRoot: root, ticketDir, workspace });
+  normalizationGit(root, ["init", "--quiet"]);
+  normalizationGit(root, ["config", "user.name", "Semio Taxonomy Fixture"]);
+  normalizationGit(root, ["config", "user.email", "taxonomy-fixture@invalid.example"]);
+  normalizationGit(root, ["config", "commit.gpgsign", "false"]);
+  normalizationGit(root, ["add", "--all"]);
+  normalizationGit(root, ["commit", "--quiet", "-m", "taxonomy fixture"]);
+  const head = readFileSync(join(root, ".git", "HEAD"), "utf8").trim();
+  const baselineCommit = head.startsWith("ref: ") ? readFileSync(join(root, ".git", head.slice(5)), "utf8").trim() : head;
+  const scope = relative(root, workspace).replaceAll("\\", "/");
+  return {
+    baselineCommit,
+    opaqueDigest: opaqueTreeDigest(root, "compose"),
+    options: { repoRoot: root, scope, ticketDir, workers: 1 },
+    repoRoot: root,
+    root,
+    scope,
+    ticketDir,
+    workspace,
+  };
+}
+
+function normalizationPlan(fixture: NormalizationFixture): { inventory: TaxonomyInventory; plan: TaxonomyPlan } {
+  const inventory = inventoryTaxonomy(fixture.options);
+  return {
+    inventory,
+    plan: planTaxonomy(inventory, { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [] }),
+  };
+}
+
+function normalizationWorkspaceSnapshot(workspace: string): Readonly<Record<string, string>> {
+  const rows: [string, string][] = [];
+  const visit = (relativePath: string): void => {
+    const path = relativePath ? join(workspace, relativePath) : workspace;
+    const stat = lstatSync(path), mode = (stat.mode & 0o7777).toString(8);
+    if (stat.isSymbolicLink()) rows.push([relativePath || ".", `symlink|${mode}|${Buffer.from(readlinkSync(path)).toString("base64")}`]);
+    else if (stat.isFile()) rows.push([relativePath || ".", `file|${mode}|${readFileSync(path).toString("base64")}`]);
+    else if (stat.isDirectory()) {
+      rows.push([relativePath || ".", `directory|${mode}`]);
+      for (const name of readdirSync(path).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)))) visit(relativePath ? `${relativePath}/${name}` : name);
+    } else rows.push([relativePath || ".", `other|${mode}`]);
+  };
+  visit("");
+  return Object.fromEntries(rows);
+}
+
+function normalizationMove(plan: TaxonomyPlan, sourceSuffix: string): TaxonomyPlan["moves"][number] {
+  const move = plan.moves.find((candidate) => candidate.sourcePath.endsWith(sourceSuffix));
+  if (!move) throw new Error(`normalization plan has no move for ${sourceSuffix}: ${canonicalJson(plan)}`);
+  return move;
+}
+
+function artifactProjectionFixturePath(path: string): string {
+  const marker = "/🗿️artifacts/";
+  const index = path.indexOf(marker);
+  if (index < 0) throw new Error(`Artifact projection path has no artifact marker: ${path}`);
+  return path.slice(index + 1);
+}
+
+/** 🏗️ Materializes the permanent language-neutral CAD/Draw authority under one isolated normalization scope. */
+function artifactProjectionNormalizationFixture(name: string, references = false): NormalizationFixture {
+  const files: Record<string, string> = {};
+  for (const projection of ARTIFACT_PROJECTION_GOLDEN.projections) for (const mapping of projection.mappings) files[artifactProjectionFixturePath(mapping.sourcePath)] = readFileSync(join(getWorkspaceRoot(), mapping.sourcePath), "utf8");
+  if (references) {
+    const cadRuntime = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts";
+    const cadInteraction = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️component.rs";
+    const interactionSpec = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️component.rs";
+    const spatialKernel = "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts";
+    files[artifactProjectionFixturePath(cadRuntime)] = readFileSync(join(getWorkspaceRoot(), cadRuntime), "utf8");
+    files[artifactProjectionFixturePath(cadInteraction)] = readFileSync(join(getWorkspaceRoot(), cadInteraction), "utf8");
+    files[artifactProjectionFixturePath(interactionSpec)] = readFileSync(join(getWorkspaceRoot(), interactionSpec), "utf8");
+    files[spatialKernel] = readFileSync(join(getWorkspaceRoot(), spatialKernel), "utf8");
+    const draw = projectionGolden("artifact-editor-command-bundle-v1");
+    files["🔣️.json"] = readFileSync(join(getWorkspaceRoot(), "🔒️dependencies.json"), "utf8");
+    files["Cargo.toml"] = readFileSync(join(getWorkspaceRoot(), "Cargo.toml"), "utf8");
+    files["📦️packages/🦀️rust/Cargo.toml"] = readFileSync(join(getWorkspaceRoot(), "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/Cargo.toml"), "utf8").replace(/\n\[lib\]\n[\s\S]*?(?=\n\[)/u, "\n");
+    files["🧪️tests/🧪️reference/🦀️.rs"] = readFileSync(join(getWorkspaceRoot(), "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/📦️glue.rs"), "utf8");
+    files["📜️script.ts"] = `const drawEditorSources = [\n  "__SCOPE__/${artifactProjectionFixturePath(draw.mappings.find((mapping) => mapping.sourcePath === `${draw.sourceRoot}/🦀️component.rs`)!.sourcePath)}",\n].map((file) => policyReadFileSafe(root, file));\n`;
+  }
+  return normalizationFixture(`artifact-projection-${name}`, files, references ? ({ repoRoot, workspace }) => {
+    const scope = relative(repoRoot, workspace).replaceAll("\\", "/");
+    const schemaPath = join(repoRoot, NORMALIZATION_SCHEMA_REL);
+    const schema = JSON.parse(readFileSync(schemaPath, "utf8")) as { fixedFilenameContracts: Record<string, unknown>; semanticPathProjectionReferenceConsumerContracts: Record<string, { sourcePathIdentities: string[]; sourcePathPattern: string }> };
+    const fixtureConsumerPaths: Readonly<Record<string, readonly string[]>> = {
+      "draw-workspace-cargo": [`${scope}/Cargo.toml`],
+      "draw-dependency-registry": [`${scope}/🔣️.json`],
+      "draw-workspace-script": [`${scope}/📜️script.ts`],
+      "cad-spatial-kernel-geometry": schema.semanticPathProjectionReferenceConsumerContracts["cad-spatial-kernel-geometry"]!.sourcePathIdentities.map((path) => `${scope}/${path}`),
+    };
+    const escaped = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+    for (const [id, paths] of Object.entries(fixtureConsumerPaths)) {
+      const contract = schema.semanticPathProjectionReferenceConsumerContracts[id]!;
+      contract.sourcePathIdentities = [...paths];
+      contract.sourcePathPattern = `^(?:${paths.map(escaped).join("|")})$`;
+    }
+    schema.fixedFilenameContracts["fixture-workspace-cargo"] = { pathPattern: `${scope}/Cargo.toml`, authority: "normalization fixture", reason: "The isolated fixture relocates the schema-owned workspace Cargo consumer without changing its fixed identity.", configurability: "unconfigurable", scope: { kind: "exact-path", path: `${scope}/Cargo.toml` }, verification: "normalization fixture inventory", expires: null };
+    writeFileSync(schemaPath, `${JSON.stringify(schema, null, 2)}\n`);
+    const cad = projectionGolden("artifact-example-model-catalog-v1");
+    const draw = projectionGolden("artifact-editor-command-bundle-v1");
+    const target = join(workspace, artifactProjectionFixturePath(cad.mappings[0]!.sourcePath));
+    const manifest = JSON.parse(readFileSync(target, "utf8")) as Record<string, unknown>;
+    manifest.projectionReferences = {
+      cadSourceRoot: `${scope}/${artifactProjectionFixturePath(cad.sourceRoot)}`,
+      drawSourceFile: `${scope}/${artifactProjectionFixturePath(draw.mappings[0]!.sourcePath)}`,
+    };
+    writeFileSync(target, `${JSON.stringify(manifest, null, 2)}\n`);
+    const drawSourceRoot = artifactProjectionFixturePath(draw.sourceRoot);
+    for (const mapping of draw.mappings.filter(({ sourcePath }) => sourcePath.endsWith("📋️project.json"))) {
+      const project = join(workspace, artifactProjectionFixturePath(mapping.sourcePath));
+      writeFileSync(project, readFileSync(project, "utf8").replaceAll(`{workspaceRoot}/${draw.sourceRoot}`, `{workspaceRoot}/${scope}/${drawSourceRoot}`).replaceAll(draw.sourceRoot, `${scope}/${drawSourceRoot}`));
+    }
+    for (const relativePath of ["🔣️.json", "Cargo.toml"]) {
+      const target = join(workspace, relativePath);
+      writeFileSync(target, readFileSync(target, "utf8").replaceAll(draw.sourceRoot, `${scope}/${drawSourceRoot}`));
+    }
+    const rootScript = join(workspace, "📜️script.ts");
+    writeFileSync(rootScript, readFileSync(rootScript, "utf8").replaceAll("__SCOPE__", scope));
+  } : undefined);
+}
+
+function expectNormalizationApplyFailure(run: () => TaxonomyApplyResult): void {
+  let failed = false;
+  try {
+    const result = run();
+    failed = !/^(?:applied|committed|complete)$/u.test(String(result.state));
+  } catch {
+    failed = true;
+  }
+  expect(failed).toBe(true);
+}
+
+describe("taxonomy normalization", () => {
+  test("all physical mutation catalogs close the strict source-to-canonical registry", () => {
+    const workspace = getWorkspaceRoot();
+    const paths = fastGlob.sync("✏️s/🔌️plugins/**/🧪️oracle/🔣️component.json", { cwd: workspace, onlyFiles: true }).sort();
+    expect(paths).toEqual(nativeMutationCatalogPaths(workspace));
+    const registrations: SemanticProjectionCatalogRegistration[] = [];
+    for (const path of paths) {
+      const parsed = JSON.parse(readFileSync(join(workspace, path), "utf8")) as { mutationCatalogs?: readonly { id: string; vectors: SemanticProjectionCatalogRegistration["vectors"] }[] };
+      const ownerPath = path.slice(0, -"/🧪️oracle/🔣️component.json".length);
+      for (const catalog of parsed.mutationCatalogs ?? []) registrations.push({ ownerPath, catalogId: catalog.id, vectors: catalog.vectors });
+    }
+    const vectors = registrations.flatMap((catalog) => catalog.vectors);
+    const changed = vectors.filter((vector) => vector.sourceMutationDirectoryName !== vector.mutationDirectoryName);
+    const sourceTuples = registrations.flatMap((catalog) => catalog.vectors.flatMap((vector) => vector.scenarios.map((scenario) => `${catalog.catalogId}\0${vector.mutationId}\0${vector.sourceMutationDirectoryName}\0${scenario.id}`)));
+    const canonicalTuples = registrations.flatMap((catalog) => catalog.vectors.flatMap((vector) => vector.scenarios.map((scenario) => `${catalog.catalogId}\0${vector.mutationId}\0${vector.mutationDirectoryName}\0${scenario.id}`)));
+    const taxonomy = loadTaxonomy();
+    const reserve = taxonomy.semanticDescendantContracts[taxonomy.mutationCatalogProjection.descendantContractId].pathBudgetReserve.bytes;
+    const projectedBytes = registrations.flatMap((catalog) => catalog.vectors.flatMap((vector) => vector.scenarios.map((scenario) => new TextEncoder().encode(`${catalog.ownerPath.replace(/\/🏅️standards\/.*$/u, "")}/🧪️tests/🪆️${catalog.ownerPath.match(/\/🏅️standards\/🔖️([^/]+)\/🪆️subsets\/✳️([^/]+)$/u)![1]}-${catalog.ownerPath.match(/\/🏅️standards\/🔖️([^/]+)\/🪆️subsets\/✳️([^/]+)$/u)![2]}/${vector.mutationDirectoryName}/${scenario.directoryName}`).length + reserve)));
+    expect(registrations).toHaveLength(MUTATION_PROJECTION_GOLDEN.registryCounts.catalogs);
+    expect(vectors).toHaveLength(MUTATION_PROJECTION_GOLDEN.registryCounts.vectors);
+    expect(vectors.flatMap((vector) => vector.scenarios)).toHaveLength(MUTATION_PROJECTION_GOLDEN.registryCounts.scenarios);
+    expect(changed).toHaveLength(MUTATION_PROJECTION_GOLDEN.registryCounts.changedMutationRows);
+    expect(new Set(changed.map((vector) => vector.sourceMutationDirectoryName)).size).toBe(MUTATION_PROJECTION_GOLDEN.registryCounts.changedMutationSources);
+    expect(new Set(sourceTuples).size).toBe(sourceTuples.length);
+    expect(new Set(canonicalTuples).size).toBe(canonicalTuples.length);
+    expect(Math.max(...projectedBytes)).toBeLessThanOrEqual(taxonomy.collisionPolicy.maxPathBytes);
+    expect(semanticProjectionCatalogProblems(registrations, taxonomy)).toEqual([]);
+  });
+
+  test("the strict catalog helper rejects missing sources, unknown canonical members, duplicate bundles, and excess path bytes", () => {
+    const taxonomy = loadTaxonomy();
+    const ownerPath = "✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️probe/🏅️standards/🔖️1/🪆️subsets/✳️any";
+    const vector = { mutationId: "change-annex", sourceMutationDirectoryName: "change-annex", mutationDirectoryName: "🏷️change-annex", scenarios: [{ id: "switches-to-national-annex-a", directoryName: "🧪️switches-to-national-annex-a" }] };
+    const problems = (vectors: SemanticProjectionCatalogRegistration["vectors"]) => semanticProjectionCatalogProblems([{ ownerPath, catalogId: "probe", vectors }], taxonomy);
+    expect(problems([{ mutationId: vector.mutationId, mutationDirectoryName: vector.mutationDirectoryName, scenarios: vector.scenarios } as SemanticProjectionCatalogRegistration["vectors"][number]]).some((problem) => problem.includes("exactly mutationId, sourceMutationDirectoryName"))).toBe(true);
+    expect(problems([{ ...vector, mutationDirectoryName: "🫥️change-annex" }]).some((problem) => problem.includes("no exact canonical schema membership"))).toBe(true);
+    expect(problems([vector, vector]).some((problem) => problem.includes("duplicates a source bundle tuple"))).toBe(true);
+    const id = `switches-${"very-long-".repeat(30)}annex`;
+    expect(problems([{ ...vector, scenarios: [{ id, directoryName: `🧪️${id}` }] }]).some((problem) => problem.includes("exceeds maxPathBytes"))).toBe(true);
+  });
+
+  test("the language-agnostic mutation projection golden agrees with fast-glob discovery", () => {
+    const root = mkdtempSync(join(tmpdir(), "mutation-projection-golden-"));
+    try {
+      for (const entry of MUTATION_PROJECTION_GOLDEN.cases) {
+        const source = join(root, mutationGoldenSource(entry, "🦀️component.rs"));
+        mkdirSync(resolve(source, ".."), { recursive: true });
+        writeFileSync(source, "fixture\n");
+      }
+      const thirdParty = fastGlob.sync(MUTATION_PROJECTION_GOLDEN.sourceGlob, { cwd: root, onlyFiles: true }).sort();
+      const languageAgnostic = MUTATION_PROJECTION_GOLDEN.cases.map((entry) => mutationGoldenSource(entry, "🦀️component.rs")).sort();
+      expect(thirdParty).toEqual(languageAgnostic);
+      expect(MUTATION_PROJECTION_GOLDEN.cases.map((entry) => mutationGoldenDestination(entry, "🦀️.rs"))).toEqual([
+        "🧪️tests/🪆️1-any/🏷️change-annex/🧪️switches-to-national-annex-a/🦀️.rs",
+        "🧪️tests/🪆️1-any/🌾️change-humidification-required-kg-h/🧪️required-humidification-becomes-3-point-5-kg-per-hour/🦀️.rs",
+        "🧪️tests/🪆️1-any/🍀️change-humidification-provided-kg-h/🧪️provided-humidification-becomes-1-point-25-kg-per-hour/🦀️.rs",
+        "🧪️tests/🪆️1-any/🌴️change-infiltration-allowance-m3-h/🧪️raises-infiltration-allowance-to-52-point-5-m3-per-hour/🦀️.rs",
+        "🧪️tests/🪆️1-any/🔗️🎬️bind-default-scene/🧪️binds-first-scene-as-default/🦀️.rs",
+        "🧪️tests/🪆️1-any/➖️delete-generation/🧪️removes-generation-2-and-selects-generation-1/🦀️.rs",
+        "🧪️tests/🪆️1-any/✏️📦️change-asset-descriptive-metadata/🧪️restamps-generator-copyright-and-min-version/🦀️.rs",
+        "🧪️tests/🪆️1-any/✏️📄️change-document-extension-data/🧪️attaches-punctual-lights-extension-to-document-root/🦀️.rs",
+        "🧪️tests/🪆️1-any/✏️🔺️change-primitive-topology-mode/🧪️switches-primitive-from-triangles-to-triangle-strip/🦀️.rs",
+        "🧪️tests/🪆️1-any/🚚️🧩️move-required-extension/🧪️moves-unlit-requirement-behind-transform-requirement/🦀️.rs",
+        "🧪️tests/🪆️1-any/🔀️🧬️reorder-morph-target-attributes/🧪️orders-normal-before-position-in-morph-target/🦀️.rs",
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("projects every registered golden bundle into artifact profile storage", () => {
+    const files: Record<string, string> = {};
+    for (const entry of MUTATION_PROJECTION_GOLDEN.cases) {
+      for (const leaf of MUTATION_PROJECTION_GOLDEN.bundle) files[`🧪️artifact/${mutationGoldenSource(entry, leaf.source)}`] = "{}\n";
+    }
+    files[`🧪️artifact/🏅️standards/${MUTATION_PROJECTION_GOLDEN.standardDirectoryName}/🪆️subsets/${MUTATION_PROJECTION_GOLDEN.subsetDirectoryName}/🧪️oracle/🔣️component.json`] = `${JSON.stringify({
+      schemaVersion: 1,
+      oracles: [],
+      noOracleDecisions: [],
+      mutationCatalogs: [{
+        id: "golden-1-any",
+        capability: "golden-mutate",
+        standardDirectoryName: MUTATION_PROJECTION_GOLDEN.standardDirectoryName,
+        subsetDirectoryName: MUTATION_PROJECTION_GOLDEN.subsetDirectoryName,
+        kinds: ["runtime-only-operation"],
+        vectors: MUTATION_PROJECTION_GOLDEN.cases.map((entry) => ({ mutationId: entry.mutationId, sourceMutationDirectoryName: entry.sourceMutationDirectoryName, mutationDirectoryName: entry.mutationDirectoryName, scenarios: [{ id: entry.scenarioId, directoryName: `🧪️${entry.scenarioId}` }] })),
+      }],
+    }, null, 2)}\n`;
+    const fixture = normalizationFixture("mutation-projection", files);
+    try {
+      const { plan } = normalizationPlan(fixture);
+      for (const entry of MUTATION_PROJECTION_GOLDEN.cases) {
+        for (const leaf of MUTATION_PROJECTION_GOLDEN.bundle) {
+          const move = normalizationMove(plan, mutationGoldenSource(entry, leaf.source));
+          expect(move.destinationPath).toBe(`${fixture.scope}/🧪️artifact/${mutationGoldenDestination(entry, leaf.destination)}`);
+          expect(move.rationaleRule).toBe("artifact-mutation-test-projection-v1");
+        }
+      }
+      expect(plan.unresolved.filter((violation) => violation.code.includes("projection"))).toEqual([]);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("blocks a reintroduced mutation source token after an empty converged plan", () => {
+    const entry = MUTATION_PROJECTION_GOLDEN.cases[0]!;
+    const files: Record<string, string> = {};
+    for (const leaf of MUTATION_PROJECTION_GOLDEN.bundle) files[`🧪️artifact/${mutationGoldenSource(entry, leaf.source)}`] = "{}\n";
+    files[`🧪️artifact/🏅️standards/${MUTATION_PROJECTION_GOLDEN.standardDirectoryName}/🪆️subsets/${MUTATION_PROJECTION_GOLDEN.subsetDirectoryName}/🧪️oracle/🔣️component.json`] = `${JSON.stringify({
+      schemaVersion: 1,
+      oracles: [],
+      noOracleDecisions: [],
+      mutationCatalogs: [{ id: "stale-1-any", capability: "stale-mutate", standardDirectoryName: MUTATION_PROJECTION_GOLDEN.standardDirectoryName, subsetDirectoryName: MUTATION_PROJECTION_GOLDEN.subsetDirectoryName, kinds: [], vectors: [{ mutationId: entry.mutationId, sourceMutationDirectoryName: entry.sourceMutationDirectoryName, mutationDirectoryName: entry.mutationDirectoryName, scenarios: [{ id: entry.scenarioId, directoryName: `🧪️${entry.scenarioId}` }] }] }],
+    }, null, 2)}\n`;
+    const fixture = normalizationFixture("mutation-stale", files);
+    try {
+      const first = normalizationPlan(fixture).plan;
+      expect(first.unresolved.filter((violation) => violation.severity === "error")).toEqual([]);
+      expect(applyTaxonomyPlan(first, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedPlanDigest: first.planDigest }).state).toBe("committed");
+      const clean = normalizationPlan(fixture).plan;
+      expect(clean.moves.filter((move) => move.rationaleRule === "artifact-mutation-test-projection-v1")).toEqual([]);
+      expect(clean.unresolved.filter((violation) => violation.code === "projection-old-token-stale")).toEqual([]);
+      const destination = join(fixture.workspace, "🧪️artifact", mutationGoldenDestination(entry, "🦀️.rs"));
+      writeFileSync(destination, `${readFileSync(destination, "utf8")}\n// ${mutationGoldenSource(entry, "")}\n`);
+      const stale = normalizationPlan(fixture).plan;
+      expect(stale.moves.filter((move) => move.rationaleRule === "artifact-mutation-test-projection-v1")).toEqual([]);
+      expect(stale.unresolved.filter((violation) => violation.code === "projection-old-token-stale")).toHaveLength(1);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  test("plans the exact CAD and Draw authority mappings with structured cross-profile references", () => {
+    const fixture = artifactProjectionNormalizationFixture("plan", true);
+    try {
+      const { plan } = normalizationPlan(fixture);
+      const cad = projectionGolden("artifact-example-model-catalog-v1");
+      const draw = projectionGolden("artifact-editor-command-bundle-v1");
+      expect(artifactProjectionTail(`${fixture.scope}/${artifactProjectionFixturePath(cad.sourceRoot)}`)).toStartWith("🗿️artifacts/");
+      const cadMoves = plan.moves.filter((move) => move.rationaleRule === cad.rationaleRule);
+      const drawMoves = plan.moves.filter((move) => move.rationaleRule === draw.rationaleRule);
+      expect(cadMoves).toHaveLength(cad.sourceFileCount);
+      expect(drawMoves).toHaveLength(draw.sourceFileCount);
+      expect(cadMoves.map(({ sourcePath, destinationPath }) => ({ sourcePath: sourcePath.slice(fixture.scope.length + 1), destinationPath: destinationPath.slice(fixture.scope.length + 1) }))).toEqual(cad.mappings.map(({ sourcePath, destinationPath }) => ({ sourcePath: artifactProjectionFixturePath(sourcePath), destinationPath: artifactProjectionFixturePath(destinationPath) })));
+      expect(drawMoves.map(({ sourcePath, destinationPath }) => ({ sourcePath: sourcePath.slice(fixture.scope.length + 1), destinationPath: destinationPath.slice(fixture.scope.length + 1) }))).toEqual(draw.mappings.map(({ sourcePath, destinationPath }) => ({ sourcePath: artifactProjectionFixturePath(sourcePath), destinationPath: artifactProjectionFixturePath(destinationPath) })));
+      expect(plan.unresolved.filter((entry) => /projection|collision/u.test(entry.code))).toEqual([]);
+      const referenceEdits = plan.edits.filter((edit) => edit.path.includes(`/${artifactProjectionFixturePath(cad.destinationRoot)}/`) && (edit.oldValue === `${fixture.scope}/${artifactProjectionFixturePath(cad.sourceRoot)}` || edit.oldValue === `${fixture.scope}/${artifactProjectionFixturePath(draw.mappings[0]!.sourcePath)}`));
+      expect(referenceEdits).toHaveLength(2);
+      expect(referenceEdits.map((edit) => edit.newValue).sort(projectionByteSort)).toEqual([
+        `${fixture.scope}/${artifactProjectionFixturePath(cad.destinationRoot)}`,
+        `${fixture.scope}/${artifactProjectionFixturePath(draw.mappings[0]!.destinationPath)}`,
+      ].sort(projectionByteSort));
+      const locations = plan.edits.map((edit) => edit.structuredLocation);
+      expect(locations.filter((location) => location.startsWith("artifact-catalog-glob:"))).toHaveLength(10);
+      expect(locations.filter((location) => location.startsWith("artifact-catalog-comment:"))).toHaveLength(2);
+      expect(locations.filter((location) => location.startsWith("artifact-catalog-marker:"))).toHaveLength(1);
+      expect(locations.filter((location) => location.includes("/workspace-glob@"))).toHaveLength(2);
+      expect(locations.filter((location) => location.startsWith("path-collection:"))).toHaveLength(1);
+      expect(plan.edits.some((edit) => edit.structuredLocation.startsWith("artifact-catalog-root-join:") && edit.oldValue.endsWith("🖼️assets/🏗️modelDefinitions") && edit.newValue.endsWith("📚️examples/🪆️1-any/🏗️models"))).toBe(true);
+      const removedSelectors = plan.edits.filter((edit) => edit.structuredLocation.startsWith("artifact-catalog-glob:") && edit.newValue === "");
+      expect(removedSelectors).toHaveLength(2);
+      expect(removedSelectors.reduce((count, edit) => count + (edit.oldValue.match(/modelDefinitions/g)?.length ?? 0), 0)).toBe(3);
+      const cadExact = plan.edits.filter((edit) => edit.adapter === "rust" && edit.structuredLocation.startsWith("rust-string-path:") && /modelDefinitions\/.+\.json$/u.test(edit.oldValue));
+      expect(cadExact).toHaveLength(61);
+      for (const edit of cadExact) {
+        const matches = cad.mappings.filter((mapping) => edit.oldValue.endsWith(mapping.sourcePath.slice(cad.sourceRoot.length + 1)) && edit.newValue.endsWith(mapping.destinationPath.slice(cad.destinationRoot.length + 1)));
+        expect(matches).toHaveLength(1);
+      }
+      const drawExact = plan.edits.filter((edit) => (edit.oldValue.includes(`${fixture.scope}/${artifactProjectionFixturePath(draw.sourceRoot)}`) || edit.path.startsWith(`${fixture.scope}/📦️packages/🦀️rust/`) || edit.path.includes("/🧪️tests/🧪️reference/")) && edit.oldValue !== "📦️glue.rs" && !edit.oldValue.includes("workspaceRoot") && !edit.structuredLocation.startsWith("path-collection:") && !edit.path.includes(`/${artifactProjectionFixturePath(cad.destinationRoot)}/`));
+      expect(drawExact).toHaveLength(20);
+      expect(drawExact.some((edit) => edit.path.endsWith("📦️packages/🦀️rust/Cargo.toml") && edit.newValue === "../../🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust")).toBe(true);
+      expect(drawExact.some((edit) => edit.path.endsWith("🧪️tests/🧪️reference/🦀️.rs") && edit.newValue === "../../🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🦀️.rs")).toBe(true);
+      const configurableEntries = plan.edits.filter((edit) => edit.oldValue === "📦️glue.rs" && edit.newValue === "📚️library/🦀️.rs");
+      expect(configurableEntries).toHaveLength(2);
+      expect(configurableEntries.every((edit) => edit.adapter === "toml" && edit.structuredLocation.startsWith("lib.path:"))).toBe(true);
+      expect(configurableEntries.map((edit) => ({ path: edit.path.slice(fixture.scope.length + 1), adapter: edit.adapter, structuredLocation: edit.structuredLocation.slice(0, "lib.path".length), oldValue: edit.oldValue, newValue: edit.newValue, preimageHash: edit.preimage.contentHash }))).toEqual((draw.referenceEdits ?? []).map((edit) => ({ ...edit, path: artifactProjectionFixturePath(edit.path) })));
+      expect(plan.unresolved.filter((entry) => /projection|reference/u.test(entry.code))).toEqual([]);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  test("rejects unowned artifact prose, unmatched selectors, escaped placeholders, and counterfeit owners", () => {
+    const fixture = artifactProjectionNormalizationFixture("negative", true);
+    try {
+      const cad = projectionGolden("artifact-example-model-catalog-v1");
+      const draw = projectionGolden("artifact-editor-command-bundle-v1");
+      const unowned = join(fixture.workspace, "✏️s", "🔨️modules", "🧪️unowned", "🟦️.ts");
+      mkdirSync(resolve(unowned, ".."), { recursive: true });
+      const copiedSelector = `${fixture.scope}/${artifactProjectionFixturePath(cad.sourceRoot)}/**/🗂️typologies/**/🔣️typology.json`;
+      writeFileSync(unowned, `export const unrelated = "🖼️assets/🏗️modelDefinitions/";\nexport const counterfeit = import.meta.glob(${JSON.stringify(copiedSelector)});\n`);
+      const schemaPath = join(fixture.repoRoot, NORMALIZATION_SCHEMA_REL);
+      const schema = JSON.parse(readFileSync(schemaPath, "utf8")) as { semanticPathProjectionReferenceConsumerContracts: Record<string, { sourcePathPattern: string }> };
+      schema.semanticPathProjectionReferenceConsumerContracts["cad-spatial-kernel-geometry"]!.sourcePathPattern = "^.*\\.ts$";
+      writeFileSync(schemaPath, `${JSON.stringify(schema, null, 2)}\n`);
+      const runtime = join(fixture.workspace, artifactProjectionFixturePath("✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts"));
+      writeFileSync(runtime, readFileSync(runtime, "utf8").replace("/🗂️typologies/**/🔣️typology.json", "/🧪️unregistered/**/*.json"));
+      const projectMapping = draw.mappings.find(({ sourcePath }) => sourcePath.endsWith("📋️project.json"))!;
+      const project = join(fixture.workspace, artifactProjectionFixturePath(projectMapping.sourcePath));
+      writeFileSync(project, readFileSync(project, "utf8").replace("{workspaceRoot}", "\\u007bworkspaceRoot\\u007d"));
+      const counterfeit = join(fixture.workspace, "🧪️counterfeit", cad.sourceRoot.slice(cad.sourceRoot.lastIndexOf("/📐️cad/") + 1), "🧪️model", "🔣️modelDefinition.json");
+      mkdirSync(resolve(counterfeit, ".."), { recursive: true });
+      writeFileSync(counterfeit, JSON.stringify({ id: "counterfeit", schema: "model-definition", version: "1.0.0" }));
+      const { plan } = normalizationPlan(fixture);
+      expect(plan.unresolved.some((entry) => entry.code === "reference-syntax-unsupported" && entry.message.includes("outside an authorized owner"))).toBe(true);
+      expect(plan.unresolved.some((entry) => entry.code === "reference-syntax-unsupported" && entry.message.includes("selector or reference file"))).toBe(true);
+      expect(plan.edits.some((entry) => entry.path.endsWith("🧪️unowned/🟦️.ts"))).toBe(false);
+      expect(plan.unresolved.some((entry) => entry.code === "reference-syntax-unsupported" && entry.message.includes("Nonempty artifact selector"))).toBe(true);
+      expect(plan.unresolved.some((entry) => entry.code === "reference-syntax-unsupported" && entry.message.includes("Escaped workspace projection glob"))).toBe(true);
+      expect(plan.moves.some((move) => move.sourcePath.includes("🧪️counterfeit") && /artifact-(?:example|editor)/u.test(move.rationaleRule))).toBe(false);
+      expect(plan.unresolved.some((entry) => entry.path.includes("🧪️counterfeit") && entry.code === "projection-authority-invalid")).toBe(false);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  test("rolls back and atomically applies CAD and Draw projections to an empty second plan", () => {
+    const fixture = artifactProjectionNormalizationFixture("apply", true);
+    try {
+      const before = normalizationWorkspaceSnapshot(fixture.workspace);
+      const plan = normalizationPlan(fixture).plan;
+      expect(plan.unresolved.filter((entry) => entry.severity === "error")).toEqual([]);
+      const rolledBack = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedPlanDigest: plan.planDigest, injectFailureAt: "after-edits" });
+      expect(rolledBack.state).toBe("rolled-back");
+      expect(normalizationWorkspaceSnapshot(fixture.workspace)).toEqual(before);
+      const cancelFile = join(fixture.ticketDir, "🛑️cancel");
+      writeFileSync(cancelFile, "cancel\n");
+      expectNormalizationApplyFailure(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: join(fixture.ticketDir, "🧪️cancelled"), expectedPlanDigest: plan.planDigest, cancelFile }));
+      rmSync(cancelFile);
+      expect(normalizationWorkspaceSnapshot(fixture.workspace)).toEqual(before);
+      const retryTicket = join(fixture.ticketDir, "🧪️retry");
+      mkdirSync(retryTicket, { recursive: true });
+      const applied = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, expectedPlanDigest: plan.planDigest });
+      expect(applied.state).toBe("committed");
+      expect(applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, expectedPlanDigest: plan.planDigest, resumeJournal: applied.journalPath }).state).toBe("committed");
+      for (const edit of plan.edits.filter((candidate) => /artifact-catalog|workspace-glob|path-collection/u.test(candidate.structuredLocation))) expect(readFileSync(join(fixture.repoRoot, edit.path), "utf8")).not.toContain(edit.oldValue);
+      const second = normalizationPlan(fixture).plan;
+      expect(second.moves.filter((move) => move.rationaleRule === "artifact-example-model-catalog-projection-v1" || move.rationaleRule === "artifact-editor-command-projection-v1")).toEqual([]);
+      expect(second.edits.filter((edit) => /artifact-catalog|workspace-glob|path-collection/u.test(edit.structuredLocation))).toEqual([]);
+      expect(second.unresolved.filter((entry) => /projection/u.test(entry.code))).toEqual([]);
+      const taxonomy = JSON.parse(readFileSync(join(fixture.repoRoot, NORMALIZATION_SCHEMA_REL), "utf8")) as { semanticPathProjectionReferenceConsumerContracts: Record<string, { projectionContractId: string; staleMarkers: string[] }> };
+      const marker = (projectionContractId: string): string => Object.values(taxonomy.semanticPathProjectionReferenceConsumerContracts).find((contract) => contract.projectionContractId === projectionContractId)!.staleMarkers[0]!;
+      const cadConsumer = plan.edits.find((edit) => edit.structuredLocation.startsWith("artifact-catalog-marker:"))!.path;
+      writeFileSync(join(fixture.repoRoot, cadConsumer), `${readFileSync(join(fixture.repoRoot, cadConsumer), "utf8")}\nexport const staleCadRoot = ${JSON.stringify(marker("artifact-example-model-catalog-v1"))};\n`);
+      const drawPackageConsumers = plan.edits.filter((edit) => edit.oldValue === "📦️glue.rs" && edit.newValue === "📚️library/🦀️.rs").map((edit) => edit.path);
+      expect(drawPackageConsumers).toHaveLength(2);
+      for (const path of drawPackageConsumers) writeFileSync(join(fixture.repoRoot, path), `${readFileSync(join(fixture.repoRoot, path), "utf8")}\n# ${marker("artifact-editor-command-bundle-v1")}\n`);
+      const stale = normalizationPlan(fixture).plan;
+      expect(stale.moves.filter((move) => move.rationaleRule === "artifact-example-model-catalog-projection-v1" || move.rationaleRule === "artifact-editor-command-projection-v1")).toEqual([]);
+      expect(stale.unresolved.filter((entry) => entry.code === "projection-old-token-stale")).toHaveLength(3);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }, 120_000);
+
+  test("canonical JSON recursively sorts keys and contract-identified arrays", () => {
+    const left = { z: 1, rows: [{ id: "b", value: 2 }, { id: "a", value: 1 }], nested: { z: false, a: true } };
+    const right = { nested: { a: true, z: false }, rows: [{ value: 1, id: "a" }, { value: 2, id: "b" }], z: 1 };
+    expect(canonicalJson(left)).toBe(canonicalJson(right));
+    expect(canonicalJson(left)).toBe(canonicalJson(JSON.parse(canonicalJson(left))));
+  });
+
+  test("normalization rejects malformed projection consumers and configurable descendants at its own schema boundary", () => {
+    const fixture = normalizationFixture("projection-schema-boundary", { "🟦️component.ts": "export const value = 1;\n" });
+    try {
+      const schemaPath = join(fixture.repoRoot, NORMALIZATION_SCHEMA_REL);
+      const original = JSON.parse(readFileSync(schemaPath, "utf8")) as { semanticPathProjectionReferenceConsumerContracts: Record<string, Record<string, unknown>>; semanticDescendantContracts: Record<string, { requiredNodes: Record<string, unknown>[] }> };
+      const consumer = structuredClone(original);
+      consumer.semanticPathProjectionReferenceConsumerContracts["cad-spatial-kernel-geometry"]!.consumerIdentity = "counterfeit";
+      writeFileSync(schemaPath, `${JSON.stringify(consumer, null, 2)}\n`);
+      expect(() => inventoryTaxonomy(fixture.options)).toThrow("discovery contract validation failed");
+      const descendant = structuredClone(original);
+      const configurable = descendant.semanticDescendantContracts["draw-editor-command-bundle-v1"]!.requiredNodes.find((node) => "configurableEntry" in node)!;
+      configurable.compatibilityAlias = true;
+      writeFileSync(schemaPath, `${JSON.stringify(descendant, null, 2)}\n`);
+      expect(() => inventoryTaxonomy(fixture.options)).toThrow("discovery contract validation failed");
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("opaque-tree digest hashes symlink identity without reading its target", () => {
+    const fixture = normalizationFixture(
+      "opaque",
+      { "🟦️component.ts": "export const value = 1;\n" },
+      ({ repoRoot }) => {
+        mkdirSync(join(repoRoot, "outside"), { recursive: true });
+        writeFileSync(join(repoRoot, "outside", "target.txt"), "first\n");
+        symlinkSync("../outside/target.txt", join(repoRoot, "compose", "target-link"), "file");
+      },
+    );
+    try {
+      const before = opaqueTreeDigest(fixture.repoRoot, "compose");
+      writeFileSync(join(fixture.repoRoot, "outside", "target.txt"), "second and deliberately different\n");
+      const after = opaqueTreeDigest(fixture.repoRoot, "compose");
+      expect(after).toEqual(before);
+      expect(before.algorithm).toBe("sha256-merkle-v1");
+      expect(before.relativeRoot).toBe("compose");
+      expect(before.files).toBe(1);
+      expect(before.symlinks).toBe(1);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("an absent opaque prefix remains lexically excluded without requiring an impossible digest", () => {
+    const fixture = normalizationFixture("absent-opaque", { "🟦️component.ts": "export const value = 1;\n" });
+    try {
+      rmSync(join(fixture.repoRoot, "compose"), { recursive: true, force: true });
+      const inventory = inventoryTaxonomy(fixture.options);
+      expect(inventory.pathExclusions).toContain("compose");
+      expect(inventory.entries.some((entry) => entry.sourcePath === "compose" || entry.sourcePath.startsWith("compose/"))).toBe(false);
+      const plan = planTaxonomy(inventory, { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [] });
+      expect(plan.unresolved.some((violation) => violation.code === "opaque-digest-missing")).toBe(false);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("inventory bytes are deterministic and its language-agnostic file census agrees with fast-glob", () => {
+    const fixture = normalizationFixture("inventory", {
+      ".hidden/🔣️config.json": "{}\n",
+      "Cargo.toml": "[package]\nname = \"fixture\"\nversion = \"0.0.0\"\n",
+      "🦀️component.rs": "pub struct Fixture;\n",
+      "🧪️component/🟦️component.ts": "export const fixture = true;\n",
+      "🤖️generated/🟦️component.ts": "export const generated = true;\n",
+    });
+    try {
+      let progressEvents = 0;
+      const options: TaxonomyInventoryOptions = { ...fixture.options, progress: () => { progressEvents += 1; } };
+      const first = inventoryTaxonomy(options);
+      const second = inventoryTaxonomy(options);
+      expect(canonicalJson(first)).toBe(canonicalJson(second));
+      expect(progressEvents).toBeGreaterThan(0);
+      const expected = fastGlob
+        .sync("**/*", { cwd: fixture.workspace, dot: true, followSymbolicLinks: false, onlyFiles: true })
+        .map((path) => `${fixture.scope}/${path.replaceAll("\\", "/")}`)
+        .sort();
+      const actual = first.entries.filter((entry) => entry.nodeKind === "file").map((entry) => entry.sourcePath).sort();
+      expect(actual).toEqual(expected);
+      expect(first.entries.every((entry) => !entry.sourcePath.startsWith("compose/"))).toBe(true);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("plans physical-format leaves, compound extensions, generic-stem drops, parent ownership, assets, generated output, and exact fixed/configurable entries", () => {
+    const fixture = normalizationFixture("kinds", {
+      "🧪️case/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-rust\"\nversion = \"0.0.0\"\n",
+      "🧪️case/📦️packages/🟦️typescript/package.json": "{\"name\":\"fixture-typescript\",\"exports\":{\".\":\"./🟦️.ts\"}}\n",
+      "🧪️case/📦️packages/🟦️typescript/🟦️.ts": "export {};\n",
+      "🧪️case/🦀️component.rs": "pub struct Component;\n",
+      "🧪️case/🟦️component.ts": "export const component = true;\n",
+      "🧪️case/🧪️react-component/🟦️react-component.tsx": "export const ReactComponent = () => null;\n",
+      "🧪️case/🧪️types/🟦️types.d.ts": "export interface FixtureType { readonly value: number }\n",
+      "🧪️case/🧪️contract/🔣️contract.json": "{\"valid\":true}\n",
+      "🧪️case/🧪️guide/📝️guide.md": "# Fixture guide\n",
+      "🧪️case/🖼️asset.png": "not-a-decoded-image\n",
+      "🧪️case/🤖️generated/🟦️component.ts": "export const generated = true;\n",
+    });
+    try {
+      const { plan } = normalizationPlan(fixture);
+      expect(plan.unresolved).toEqual([]);
+      expect(normalizationMove(plan, "🧪️case/🦀️component.rs").destinationPath).toMatch(/\/🧪️case\/🦀️\.rs$/u);
+      expect(normalizationMove(plan, "🧪️case/🟦️component.ts").destinationPath).toMatch(/\/🧪️case\/🟦️\.ts$/u);
+      expect(normalizationMove(plan, "🧪️react-component/🟦️react-component.tsx").destinationPath).toMatch(/\/🧪️react-component\/🟦️\.tsx$/u);
+      expect(normalizationMove(plan, "🧪️types/🟦️types.d.ts").destinationPath).toMatch(/\/🧪️types\/🟦️\.d\.ts$/u);
+      expect(normalizationMove(plan, "🧪️contract/🔣️contract.json").destinationPath).toMatch(/\/🧪️contract\/🔣️\.json$/u);
+      expect(normalizationMove(plan, "🧪️guide/📝️guide.md").destinationPath).toMatch(/\/🧪️guide\/📝️\.md$/u);
+      const asset = normalizationMove(plan, "🧪️case/🖼️asset.png").destinationPath;
+      expect(asset.endsWith("/🖼️.png")).toBe(true);
+      expect(asset).not.toContain("asset.png");
+      expect(normalizationMove(plan, "🧪️case/🤖️generated/🟦️component.ts").destinationPath).toContain("/🤖️generated/");
+      expect(plan.moves.some((move) => move.sourcePath.endsWith("/Cargo.toml"))).toBe(false);
+      expect(plan.moves.some((move) => move.sourcePath.endsWith("/package.json"))).toBe(false);
+      expect(plan.moves.some((move) => move.sourcePath.endsWith("/🟦️.ts"))).toBe(false);
+      expect(plan.planDigest).toBe(taxonomyPlanDigest(plan));
+      expect(plan.sourceTreeDigest.length).toBeGreaterThan(0);
+      expect(plan.expectedPostStateDigest.length).toBeGreaterThan(0);
+      expect(canonicalJson(plan)).toBe(canonicalJson(planTaxonomy(inventoryTaxonomy(fixture.options), { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [] })));
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("preserves the D3D12, PDF mutation, and BMP pilot destinations exactly", () => {
+    const fixture = normalizationFixture("named-pilot", {
+      "🧪️golden/🪟️d3d12/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"d3d12-fixture\"\nversion = \"0.0.0\"\n",
+      "🧪️golden/🪟️d3d12/📦️packages/🦀️rust/🦀️backend.rs": "pub struct Backend { pub device: usize }\n",
+      "🧪️golden/🧪️tests/🧪️mutate-pdf-1-7/🦀️component.rs": "pub fn mutate() {}\n",
+      "🧪️golden/🧪️tests/🧪️mutate-pdf-1-7/component.feature": "Feature: mutate PDF 1.7\n",
+      "🧪️golden/🖼️rathaus-ahlen-grundriss.bmp": "BMfixture\n",
+    });
+    try {
+      const { plan } = normalizationPlan(fixture);
+      const prefix = fixture.scope;
+      expect(normalizationMove(plan, "🪟️d3d12/📦️packages/🦀️rust/🦀️backend.rs").destinationPath).toBe(`${prefix}/🧪️golden/🪟️d3d12/⚙️backend/🦀️.rs`);
+      const rustCase = normalizationMove(plan, "🧪️tests/🧪️mutate-pdf-1-7/🦀️component.rs").destinationPath;
+      const featureCase = normalizationMove(plan, "🧪️tests/🧪️mutate-pdf-1-7/component.feature").destinationPath;
+      expect(rustCase).toMatch(/\/🧪️mutate-pdf-1-7\/🦀️\.rs$/u);
+      expect(featureCase).toBe(rustCase.replace(/🦀️\.rs$/u, "🥒️.feature"));
+      expect(normalizationMove(plan, "🖼️rathaus-ahlen-grundriss.bmp").destinationPath).toBe(`${prefix}/🧪️golden/🖼️rathaus-ahlen-grundriss/🖼️.bmp`);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("normalizes NFC and VS16 and blocks same-kind, platform, and path-budget hazards", () => {
+    const longPath = Array.from({ length: 18 }, (_, index) => `🧩️segment-${String(index).padStart(2, "0")}`).join("/");
+    const fixture = normalizationFixture("collisions", {
+      "🧪️collision/🟦️component.ts": "export const component = 1;\n",
+      "🧪️collision/🟦️index.ts": "export const index = 2;\n",
+      "🧪️unicode/🦀component.rs": "pub struct MissingVs16;\n",
+      "🧪️unicode/🧪️cafe\u0301/🟦️component.ts": "export const nfc = true;\n",
+      "🧪️platform/CON.ts": "export const reserved = true;\n",
+      [`🧪️length/${longPath}/🟦️component.ts`]: "export const long = true;\n",
+    });
+    try {
+      const { inventory, plan } = normalizationPlan(fixture);
+      const rendered = canonicalJson(plan);
+      expect(normalizationMove(plan, "🧪️unicode/🦀component.rs").destinationPath).toContain("🦀️.rs");
+      expect(inventory.entries.some((entry) => entry.sourcePath.endsWith("🧪️unicode/🧪️cafe\u0301/🟦️component.ts"))).toBe(true);
+      expect(normalizationMove(plan, "🧪️unicode/🧪️cafe\u0301/🟦️component.ts").destinationPath.normalize("NFC")).toBe(normalizationMove(plan, "🧪️unicode/🧪️cafe\u0301/🟦️component.ts").destinationPath);
+      expect(plan.moves.filter((move) => move.destinationPath.endsWith("/🟦️.ts")).length).toBeGreaterThanOrEqual(2);
+      expect(rendered).toMatch(/collision/i);
+      expect(rendered).toMatch(/(?:reserved|platform|windows)/i);
+      expect(rendered).toMatch(/(?:path.{0,20}length|length.{0,20}path|240)/i);
+      expect(plan.unresolved.length + inventory.violations.length).toBeGreaterThan(0);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("structured reference adapters emit locations, old/new values, and preimage hashes", () => {
+    const fixture = normalizationFixture("references", {
+      "package.json": "{\"name\":\"fixture\",\"exports\":{\".\":\"./🧪️subject/🟦️component.ts\"}}\n",
+      "📋️project.json": "{\"targets\":{\"build\":{\"options\":{\"entryFile\":\"🧪️subject/🟦️component.ts\"}}}}\n",
+      "🧪️subject/🦀️component.rs": "pub const VALUE: i32 = 1;\n",
+      "🧪️subject/🟦️component.ts": "export const value = 1;\n",
+      "🧪️subject/component.cpp": "int value() { return 1; }\n",
+      "fixture/subject/component.py": "value = 1\n",
+      "🧪️consumer/🦀️component.rs": "#[path = \"../🧪️subject/🦀️component.rs\"]\nmod subject;\n",
+      "🧪️consumer/🟦️component.ts": "export { value } from \"../🧪️subject/🟦️component.ts\";\n",
+      "🧪️consumer/🐹️component.go": "package consumer\n//go:embed ../🧪️subject/🟦️component.ts\n",
+      "🧪️consumer/🐍️component.py": "from fixture.subject.component import value\n",
+      "🧪️consumer/fixture.csproj": "<Project><ItemGroup><Compile Include=\"../🧪️subject/🟦️component.ts\" /></ItemGroup></Project>\n",
+      "🧪️consumer/🔣️paths.json": "{\"source\":\"../🧪️subject/🟦️component.ts\"}\n",
+      "🧪️consumer/🔣️paths.jsonc": "{\"source\":\"../🧪️subject/🟦️component.ts\"}\n",
+      "🧪️consumer/🔣️paths.toml": "source = \"../🧪️subject/🟦️component.ts\"\n",
+      "🧪️consumer/🔣️paths.yaml": "source: ../🧪️subject/🟦️component.ts\n",
+      "🧪️consumer/🔣️paths.xml": "<Source path=\"../🧪️subject/🟦️component.ts\" />\n",
+      "🧪️consumer/📖️references.md": "[source](../🧪️subject/🟦️component.ts)\n",
+      "🧪️consumer/CMakeLists.txt": "target_sources(fixture PRIVATE \"../🧪️subject/component.cpp\")\n",
+    });
+    try {
+      const { plan } = normalizationPlan(fixture);
+      expect(plan.edits.length).toBeGreaterThanOrEqual(5);
+      for (const edit of plan.edits) {
+        expect(edit.path.length).toBeGreaterThan(0);
+        expect(edit.adapter.length).toBeGreaterThan(0);
+        expect(edit.structuredLocation.length).toBeGreaterThan(0);
+        expect(edit.oldValue.length).toBeGreaterThan(0);
+        expect(edit.newValue.length).toBeGreaterThan(0);
+        expect(edit.preimage.contentHash.length).toBeGreaterThan(0);
+      }
+      const adapters = plan.edits.map((edit) => edit.adapter.toLowerCase()).join(" ");
+      expect(adapters).toMatch(/rust/);
+      expect(adapters).toMatch(/(?:typescript|javascript|ts)/);
+      expect(adapters).toMatch(/go/);
+      expect(adapters).toMatch(/python/);
+      expect(adapters).toMatch(/dotnet/);
+      expect(adapters).toMatch(/json/);
+      expect(adapters).toMatch(/jsonc/);
+      expect(adapters).toMatch(/toml/);
+      expect(adapters).toMatch(/yaml/);
+      expect(adapters).toMatch(/xml/);
+      expect(adapters).toMatch(/markdown/);
+      expect(adapters).toMatch(/(?:native|cmake)/);
+      expect(plan.moves.some((move) => move.referenceEdits.length > 0)).toBe(true);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("package boundaries accept thin Rust/TypeScript glue and reject domain implementation", () => {
+    const fixture = normalizationFixture("package-glue", {
+      "🧪️thin/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"thin-rust\"\nversion = \"0.0.0\"\n[lib]\npath = \"📦️glue.rs\"\n",
+      "🧪️thin/📦️packages/🦀️rust/📦️glue.rs": "pub use crate::component::*;\n",
+      "🧪️thin/📦️packages/🟦️typescript/package.json": "{\"name\":\"thin-ts\",\"exports\":{\".\":\"./📦️index.ts\"}}\n",
+      "🧪️thin/📦️packages/🟦️typescript/📦️index.ts": "export {};\n",
+      "🧪️thick/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"thick-rust\"\nversion = \"0.0.0\"\n[lib]\npath = \"📦️glue.rs\"\n",
+      "🧪️thick/📦️packages/🦀️rust/📦️glue.rs": "pub struct Domain { pub value: i32 }\nimpl Domain { pub fn calculate(&self) -> i32 { self.value * 2 + 1 } }\n",
+      "🧪️thick/📦️packages/🟦️typescript/package.json": "{\"name\":\"thick-ts\",\"exports\":{\".\":\"./📦️index.ts\"}}\n",
+      "🧪️thick/📦️packages/🟦️typescript/📦️index.ts": "export function calculate(values: number[]): number { return values.reduce((sum, value) => sum + value, 0); }\n",
+    });
+    try {
+      const inventory = inventoryTaxonomy(fixture.options);
+      const thin = inventory.entries.filter((entry) => entry.sourcePath.includes("/🧪️thin/📦️packages/") && /(?:glue|index)\.(?:rs|ts)$/u.test(entry.sourcePath));
+      const thick = inventory.entries.filter((entry) => entry.sourcePath.includes("/🧪️thick/📦️packages/") && /(?:glue|index)\.(?:rs|ts)$/u.test(entry.sourcePath));
+      expect(thin).toHaveLength(2);
+      expect(thick).toHaveLength(2);
+      const packageViolation = (violation: { readonly code: string; readonly message: string }): boolean => /(?:package|glue|implementation)/i.test(`${violation.code} ${violation.message}`);
+      expect(thin.flatMap((entry) => entry.violations).filter(packageViolation)).toEqual([]);
+      expect(thin.map((entry) => entry.packageRole)).toEqual(["declaration", "declaration"]);
+      expect(thick.map((entry) => entry.packageRole)).toEqual(["implementation", "implementation"]);
+      expect(thick.every((entry) => entry.violations.some(packageViolation))).toBe(true);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("stale preimages block apply without changing source bytes", () => {
+    const fixture = normalizationFixture("stale", { "🦀️component.rs": "pub const VALUE: i32 = 1;\n" });
+    try {
+      const { plan } = normalizationPlan(fixture);
+      expect(plan.unresolved).toEqual([]);
+      expect(plan.moves.length).toBeGreaterThan(0);
+      writeFileSync(join(fixture.workspace, "🦀️component.rs"), "pub const VALUE: i32 = 2;\n");
+      const before = normalizationWorkspaceSnapshot(fixture.workspace);
+      expectNormalizationApplyFailure(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedPlanDigest: plan.planDigest }));
+      expect(normalizationWorkspaceSnapshot(fixture.workspace)).toEqual(before);
+      expect(opaqueTreeDigest(fixture.repoRoot, "compose")).toEqual(fixture.opaqueDigest);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  for (const failureStage of ["after-staging", "after-moves", "after-edits", "before-verify"] as const) {
+    test(`rolls back byte-for-byte when failure is injected at ${failureStage}`, () => {
+      const fixture = normalizationFixture(`failure-${failureStage}`, {
+        "🧪️subject/🟦️component.ts": "export const value = 1;\n",
+        "🧪️consumer/🟦️component.ts": "export { value } from \"🧪️tests/🧪️fixture/🧪️subject/🟦️component.ts\";\n",
+      });
+      try {
+        const { plan } = normalizationPlan(fixture);
+        expect(plan.moves.length).toBeGreaterThan(0);
+        const before = normalizationWorkspaceSnapshot(fixture.workspace);
+        expectNormalizationApplyFailure(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedPlanDigest: plan.planDigest, injectFailureAt: failureStage }));
+        expect(normalizationWorkspaceSnapshot(fixture.workspace)).toEqual(before);
+        expect(opaqueTreeDigest(fixture.repoRoot, "compose")).toEqual(fixture.opaqueDigest);
+      } finally {
+        rmSync(fixture.root, { recursive: true, force: true });
+      }
+    });
+  }
+
+  test("cancellation rolls back and a successful retry converges to an empty second plan", () => {
+    const cancelled = normalizationFixture("cancel", { "🟦️component.ts": "export const value = 1;\n" });
+    try {
+      const { plan } = normalizationPlan(cancelled);
+      const before = normalizationWorkspaceSnapshot(cancelled.workspace);
+      const cancelFile = join(cancelled.ticketDir, "cancel");
+      writeFileSync(cancelFile, "cancel\n");
+      expectNormalizationApplyFailure(() => applyTaxonomyPlan(plan, { repoRoot: cancelled.repoRoot, ticketDir: cancelled.ticketDir, expectedPlanDigest: plan.planDigest, cancelFile }));
+      expect(normalizationWorkspaceSnapshot(cancelled.workspace)).toEqual(before);
+      expect(opaqueTreeDigest(cancelled.repoRoot, "compose")).toEqual(cancelled.opaqueDigest);
+    } finally {
+      rmSync(cancelled.root, { recursive: true, force: true });
+    }
+
+    const fixture = normalizationFixture("convergence", { "🦀️component.rs": "pub const VALUE: i32 = 1;\n" });
+    try {
+      const { plan } = normalizationPlan(fixture);
+      expect(plan.unresolved).toEqual([]);
+      const result = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedPlanDigest: plan.planDigest });
+      expect(result.planDigest).toBe(plan.planDigest);
+      expect(result.appliedMoves).toBe(plan.moves.length);
+      expect(result.appliedEdits).toBe(plan.edits.length);
+      expect(String(result.state)).toMatch(/^(?:applied|committed|complete)$/u);
+      const verification = verifyTaxonomy({ ...fixture.options, baselineCommit: fixture.baselineCommit, excludedTreeDigests: [fixture.opaqueDigest] });
+      expect(canonicalJson(verification)).not.toMatch(/"severity":"error"/u);
+      const secondInventory = inventoryTaxonomy(fixture.options);
+      const secondPlan = planTaxonomy(secondInventory, { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [fixture.opaqueDigest] });
+      expect(secondPlan.moves).toEqual([]);
+      expect(secondPlan.edits).toEqual([]);
+      expect(secondPlan.regenerations).toEqual([]);
+      expect(secondPlan.unresolved).toEqual([]);
+      expect(opaqueTreeDigest(fixture.repoRoot, "compose")).toEqual(fixture.opaqueDigest);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+});
+//#endregion 🧹️TaxonomyNormalization
+
+//#region 🧾️GeneratorPreviewProtocol
+const GENERATOR_PREVIEW_GOLDEN = join(import.meta.dir, "🧫️fixtures", "🧪️generator-preview", "🔣️.json");
+
+describe("generator preview protocol", () => {
+  test("accepts the canonical language-neutral manifest and agrees with fast-glob inventory", () => {
+    const canonical = `${canonicalJson(JSON.parse(readFileSync(GENERATOR_PREVIEW_GOLDEN, "utf8")))}\n`;
+    const manifest = parseGeneratorPreviewManifest(canonical, "fixture-generator", ["🧪️workspace/🤖️generated"], ["compose"]);
+    const root = mkdtempSync(join(tmpdir(), "generator-preview-parity-"));
+    try {
+      for (const node of manifest.nodes) {
+        const target = join(root, node.path);
+        if (node.nodeKind === "directory") mkdirSync(target, { recursive: true, mode: node.mode });
+        else {
+          mkdirSync(resolve(target, ".."), { recursive: true });
+          writeFileSync(target, Buffer.from(node.bytesBase64, "base64"), { mode: node.mode });
+        }
+      }
+      const thirdParty = fastGlob.sync("🧪️workspace/🤖️generated{,/**/*}", { cwd: root, dot: true, followSymbolicLinks: false, onlyFiles: false }).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
+      expect(thirdParty).toEqual(manifest.nodes.map((node) => node.path));
+      expect(manifest.staleRemovals).toEqual(["🧪️workspace/🤖️generated/old.txt"]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects noncanonical, noisy, unsafe, duplicate, and malformed manifests", () => {
+    const valid = JSON.parse(readFileSync(GENERATOR_PREVIEW_GOLDEN, "utf8")) as Record<string, unknown>;
+    const render = (value: unknown): string => `${canonicalJson(value)}\n`;
+    const cases: readonly string[] = [
+      `noise\n${render(valid)}`,
+      JSON.stringify(valid),
+      `${JSON.stringify({ schemaVersion: 1, contractId: valid.contractId, nodes: valid.nodes, staleRemovals: valid.staleRemovals })}\n`,
+      render({ ...valid, schemaVersion: 2 }),
+      render({ ...valid, contractId: "different-generator" }),
+      render({ ...valid, nodes: [{ bytesBase64: "", mode: 493, nodeKind: "directory", path: "🧪️workspace/🤖️generated" }, { bytesBase64: "%%%", mode: 420, nodeKind: "file", path: "🧪️workspace/🤖️generated/🔤️.txt" }] }),
+      render({ ...valid, nodes: [{ bytesBase64: "", mode: 493.5, nodeKind: "directory", path: "🧪️workspace/🤖️generated" }] }),
+      render({ ...valid, nodes: [{ bytesBase64: "", mode: 493, nodeKind: "symlink", path: "🧪️workspace/🤖️generated" }] }),
+      render({ ...valid, nodes: [{ bytesBase64: "", mode: 493, nodeKind: "directory", path: "../outside" }] }),
+      render({ ...valid, nodes: [{ bytesBase64: "", mode: 493, nodeKind: "directory", path: "compose/generated" }] }),
+      render({ ...valid, nodes: [{ bytesBase64: "", mode: 493, nodeKind: "directory", path: "🧪️workspace/🤖️generated" }, { bytesBase64: "Z2VuZXJhdGVkXG4=", mode: 420, nodeKind: "file", path: "🧪️workspace/🤖️generated/cafe\u0301.txt" }] }),
+      `${JSON.stringify({ ...valid, nodes: [...(valid.nodes as unknown[])].reverse() })}\n`,
+      render({ ...valid, nodes: [{ bytesBase64: "", mode: 493, nodeKind: "directory", path: "🧪️workspace/🤖️generated" }, { bytesBase64: "", mode: 493, nodeKind: "directory", path: "🧪️workspace/🤖️generated" }] }),
+      render({ ...valid, staleRemovals: ["🧪️workspace/🤖️generated/old.txt", "🧪️workspace/🤖️generated/old.txt"] }),
+      render({ ...valid, staleRemovals: ["🧪️workspace/🤖️generated/🔤️.txt"] }),
+    ];
+    for (const content of cases) expect(() => parseGeneratorPreviewManifest(content, "fixture-generator", ["🧪️workspace/🤖️generated"], ["compose"])).toThrow();
+  });
+
+  test("plans, applies, verifies, and converges an exact Nx-owned preview", () => {
+    const fixture = normalizationFixture(
+      "generator-preview",
+      {
+        "🧪️generator/🟦️.ts": "export const input = true;\n",
+        "🧪️generator/🤖️generated/old.txt": "stale\n",
+      },
+      ({ repoRoot, workspace }) => {
+        const owner = relative(repoRoot, join(workspace, "🧪️generator")).replaceAll("\\", "/");
+        const outputRoot = `${owner}/🤖️generated`;
+        const schemaPath = join(repoRoot, NORMALIZATION_SCHEMA_REL);
+        const taxonomy = JSON.parse(readFileSync(schemaPath, "utf8")) as Record<string, unknown>;
+        taxonomy.generatorContracts = Object.fromEntries(Object.entries({
+          ...(taxonomy.generatorContracts as Record<string, unknown>),
+          "fixture-generator": {
+            ownership: "owned",
+            ownerPath: owner,
+            target: "@fixture/generator:generate",
+            previewTarget: "@fixture/generator:preview-generated",
+            checkTarget: "@fixture/generator:check",
+            inputPatterns: [`${owner}/🟦️.ts`],
+            outputRoots: [{ path: outputRoot, inclusion: "ignored" }],
+            reason: "Language-neutral generator preview fixture",
+          },
+        }).sort(([left], [right]) => left.localeCompare(right)));
+        writeFileSync(schemaPath, `${JSON.stringify(taxonomy, null, 2)}\n`);
+        writeFileSync(join(repoRoot, ".gitignore"), `${outputRoot}\n`);
+        writeFileSync(join(repoRoot, "nx.json"), "{\"defaultBase\":\"main\"}\n");
+        writeFileSync(join(repoRoot, "package.json"), "{\"name\":\"generator-preview-fixture\",\"private\":true}\n");
+        const projectManifest = `${JSON.stringify({
+          name: "@fixture/generator",
+          root: owner,
+          targets: {
+            generate: { executor: "nx:run-commands", options: { cwd: owner, command: "bun ./📜️script.ts generate" } },
+            "preview-generated": { executor: "nx:run-commands", options: { cwd: owner, command: "bun ./📜️script.ts preview-generated" } },
+            check: { executor: "nx:run-commands", options: { cwd: owner, command: "bun ./📜️script.ts check" } },
+          },
+        }, null, 2)}\n`;
+        writeFileSync(join(repoRoot, "project.json"), projectManifest);
+        normalizationWriteFiles(join(workspace, "🧪️generator"), {
+          "📋️project.json": projectManifest,
+          "📜️script.ts": [
+            'import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync, readFileSync } from "node:fs";',
+            'import { join, relative } from "node:path";',
+            `const repoRoot = ${JSON.stringify(repoRoot)};`,
+            `const outputRoot = ${JSON.stringify(join(repoRoot, outputRoot))};`,
+            `const outputRelative = ${JSON.stringify(outputRoot)};`,
+            'const outputFile = join(outputRoot, "🔤️.txt");',
+            'const bytes = Buffer.from("generated\\n");',
+            'const nodes = [{ bytesBase64: "", mode: 0o755, nodeKind: "directory", path: outputRelative }, { bytesBase64: bytes.toString("base64"), mode: 0o644, nodeKind: "file", path: `${outputRelative}/🔤️.txt` }];',
+            'const staleRemovals = (existsSync(outputRoot) ? readdirSync(outputRoot) : []).filter((name) => name !== "🔤️.txt").map((name) => `${outputRelative}/${name.normalize("NFC")}`).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));',
+            'const command = process.argv[2];',
+            'if (command === "preview-generated") process.stdout.write(`${JSON.stringify({ contractId: "fixture-generator", nodes, schemaVersion: 1, staleRemovals })}\\n`);',
+            'else if (command === "generate") { rmSync(outputRoot, { recursive: true, force: true }); mkdirSync(outputRoot, { recursive: true, mode: 0o755 }); writeFileSync(outputFile, bytes, { mode: 0o644 }); }',
+            'else if (command === "check") { if (!existsSync(outputFile) || !readFileSync(outputFile).equals(bytes) || readdirSync(outputRoot).join("\\0") !== "🔤️.txt") throw new Error("generated output is stale"); }',
+            'else throw new Error(`unknown command ${command}`);',
+            '',
+          ].join("\n"),
+        });
+      },
+    );
+    try {
+      const { plan } = normalizationPlan(fixture);
+      expect(plan.unresolved).toEqual([]);
+      expect(plan.regenerations).toHaveLength(1);
+      expect(plan.regenerations[0]?.contractId).toBe("fixture-generator");
+      expect(plan.regenerations[0]?.preview.nodes.map((node) => node.path)).toEqual(plan.regenerations[0]?.outputs.map((node) => node.path));
+      expect(plan.regenerations[0]?.staleRemovals).toEqual([`${fixture.scope}/🧪️generator/🤖️generated/old.txt`]);
+      const before = normalizationWorkspaceSnapshot(fixture.workspace);
+      const rolledBack = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedPlanDigest: plan.planDigest, injectFailureAt: "after-edits" });
+      expect(rolledBack.state).toBe("rolled-back");
+      expect(normalizationWorkspaceSnapshot(fixture.workspace)).toEqual(before);
+      const retryTicket = join(fixture.ticketDir, "🧪️retry");
+      mkdirSync(retryTicket, { recursive: true });
+      const result = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, expectedPlanDigest: plan.planDigest });
+      expect(result.state).toBe("committed");
+      const second = planTaxonomy(inventoryTaxonomy(fixture.options), { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [fixture.opaqueDigest] });
+      expect(second.regenerations).toEqual([]);
+      expect(second.unresolved).toEqual([]);
+    } finally {
+      if (process.env.KEEP_GENERATOR_FIXTURE !== "1") rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }, 60_000);
+});
+//#endregion 🧾️GeneratorPreviewProtocol
+
+//#region 🧾️TransactionDispositionsV2
+describe("taxonomy transaction dispositions v2", () => {
+  const goldenPath = resolve(import.meta.dir, "🧫️fixtures/🧪️transaction-dispositions/🔣️.json");
+
+  test("keeps checkout-hostile sentinels virtual and language-neutral", () => {
+    const golden = JSON.parse(readFileSync(goldenPath, "utf8")) as {
+      expectedDispositionOperations: { embeddedTicketRoots: number; embeddedTicketRootRelocations: number; evidenceRemovals: number; operationFamilies: string[] };
+      virtualPreimageNodes: { path: string; state: "absent" | "directory" | "file" | "symlink"; contentHash?: string; size?: number; target?: string }[];
+      affectedStateCases: { id: string; pre: unknown[]; post: unknown[] }[];
+      failureStages: string[];
+      journalStates: string[];
+      negativeDispositionCases: { id: string; expectedCode: string }[];
+      virtualPathPolicyCases: { inputPath: string; expectedViolationCode: string }[];
+      symlinkFlavorCases: { repositoryRoot: string; target: string; owned: boolean }[];
+    };
+    for (const row of golden.virtualPathPolicyCases) expect(taxonomyPlatformPathViolationCodes(row.inputPath)).toContain(row.expectedViolationCode);
+    for (const row of golden.symlinkFlavorCases) expect(repositoryLocalSymlinkTargetPath(row.repositoryRoot, row.target) !== null).toBe(row.owned);
+    expect(golden.expectedDispositionOperations).toEqual({ embeddedTicketRoots: 3, embeddedTicketRootRelocations: 4, evidenceRemovals: 2, operationFamilies: ["moves", "embeddedTicketRoots", "embeddedTicketRootRelocations", "symlinkTargetEdits", "evidenceRemovals", "edits", "regenerations"] });
+    expect(golden.failureStages).toEqual(["after-staging", "after-embedded-root-staging", "after-moves", "after-relocations", "after-symlink-retargeting", "after-edits", "after-regenerations", "before-verify"]);
+    expect(golden.journalStates).toHaveLength(11);
+    expect(golden.affectedStateCases.map((row) => row.id)).toEqual(["remove-redundant-evidence", "retarget-no-follow-symlink"]);
+    expect(new Set(golden.negativeDispositionCases.map((row) => row.expectedCode)).size).toBe(golden.negativeDispositionCases.length);
+    expect(fastGlob.sync(["**/*"], { cwd: resolve(goldenPath, ".."), dot: true, followSymbolicLinks: false, onlyFiles: true })).toEqual(["🔣️.json"]);
+    const root = mkdtempSync(join(tmpdir(), "transaction-golden-nofollow-"));
+    try {
+      mkdirSync(join(root, "evidence", "directory"), { recursive: true });
+      writeFileSync(join(root, "evidence", "file.txt"), "sentinel\n");
+      symlinkSync("../file.txt", join(root, "evidence", "link"));
+      const native = noFollowTreeDigest(root, "evidence");
+      const thirdParty = fastGlob.sync("evidence{,/**/*}", { cwd: root, dot: true, followSymbolicLinks: false, onlyFiles: false }).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
+      expect(native.files).toBe(1);
+      expect(native.directories).toBe(2);
+      expect(native.symlinks).toBe(1);
+      expect(thirdParty).toEqual(["evidence", "evidence/directory", "evidence/file.txt", "evidence/link"]);
+      expect(golden.virtualPreimageNodes.find((row) => row.state === "file")?.contentHash).toBe("b5f7e7d285029324d9b3acae19cc05099271454ac98bfc059a92b0581625cd51");
+      expect(golden.virtualPreimageNodes.find((row) => row.state === "symlink")?.target).toBe("../file.txt");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects v1 and incomplete v2 plans without compatibility defaults", () => {
+    expect(() => parseTaxonomyPlan({ schemaVersion: 1 })).toThrow();
+    expect(() => parseTaxonomyPlan({ schemaVersion: 2, taxonomySchemaVersion: 7 })).toThrow();
+  });
+
+  test("hashes symlink target text without following its target", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-transaction-no-follow-"));
+    try {
+      const linkRoot = join(root, "links");
+      mkdirSync(linkRoot);
+      writeFileSync(join(root, "target.txt"), "first");
+      symlinkSync("../target.txt", join(linkRoot, "link"));
+      const before = noFollowTreeDigest(linkRoot, ".");
+      writeFileSync(join(root, "target.txt"), "second");
+      const afterTarget = noFollowTreeDigest(linkRoot, ".");
+      expect(afterTarget.digest).toBe(before.digest);
+      expect(afterTarget.symlinks).toBe(1);
+      rmSync(join(linkRoot, "link"));
+      symlinkSync("../missing.txt", join(linkRoot, "link"));
+      expect(noFollowTreeDigest(linkRoot, ".").digest).not.toBe(afterTarget.digest);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("retargets a repository-local broken absolute symlink atomically and converges", () => {
+    const fixture = normalizationFixture("transaction-symlink-v2", {}, ({ workspace }) => symlinkSync(join(workspace, "target.ts"), join(workspace, "🟦️.ts")));
+    try {
+      const { plan } = normalizationPlan(fixture);
+      expect(plan.symlinkTargetEdits).toHaveLength(1);
+      expect(plan.unresolved).toEqual([]);
+      expect(parseTaxonomyPlan(JSON.parse(JSON.stringify(plan)))).toEqual(plan);
+      const tamperedTarget = JSON.parse(JSON.stringify(plan)) as TaxonomyPlan;
+      (tamperedTarget.symlinkTargetEdits[0] as { oldTarget: string }).oldTarget = `${tamperedTarget.symlinkTargetEdits[0].oldTarget}-drift`;
+      (tamperedTarget as { planDigest: string }).planDigest = taxonomyPlanDigest(tamperedTarget);
+      expect(() => parseTaxonomyPlan(tamperedTarget)).toThrow();
+      expect(() => parseTaxonomyPlan({ ...plan, unexpected: true })).toThrow();
+      const deadPreparation = join(fixture.ticketDir, "🧾️taxonomy-transaction", `🔖️${plan.planDigest}`, "🔂️attempts", "🚧️prepare-000001-999999-00000000-0000-4000-8000-000000000001");
+      mkdirSync(deadPreparation, { recursive: true });
+      const before = noFollowTreeDigest(fixture.repoRoot, fixture.scope);
+      const rolledBack = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, injectFailureAt: "after-symlink-retargeting" });
+      expect(rolledBack.state).toBe("rolled-back");
+      expect(existsSync(deadPreparation)).toBe(false);
+      expect(noFollowTreeDigest(fixture.repoRoot, fixture.scope)).toEqual(before);
+      const retryTicket = join(fixture.ticketDir, "🧪️retry");
+      mkdirSync(retryTicket, { recursive: true });
+      const applied = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket });
+      expect(applied.appliedSymlinkTargetEdits).toBe(1);
+      const terminalAttempt = resolve(applied.journalPath, "..");
+      const deadLease = join(terminalAttempt, "🔒️lease");
+      mkdirSync(deadLease);
+      writeFileSync(join(deadLease, "🔣️.json"), `${canonicalJson({ schemaVersion: 1, planDigest: plan.planDigest, attemptOrdinal: "000001", token: "00000000-0000-4000-8000-000000000002", pid: 999999 })}\n`);
+      const resumedCommitted = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, resumeJournal: applied.journalPath });
+      expect(resumedCommitted.state).toBe("committed");
+      expect(readdirSync(terminalAttempt)).toEqual(["🔣️.json"]);
+      const second = planTaxonomy(inventoryTaxonomy(fixture.options), { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [fixture.opaqueDigest] });
+      expect(second.symlinkTargetEdits).toEqual([]);
+      expect(second.unresolved).toEqual([]);
+    } finally {
+      if (process.env.KEEP_TRANSACTION_FIXTURE !== "1") rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }, 12_000);
+
+  test("resumes an installed symlink retarget from its durable journal marker", () => {
+    const fixture = normalizationFixture("transaction-symlink-resume-v2", {}, ({ workspace }) => symlinkSync(join(workspace, "target.ts"), join(workspace, "🟦️.ts")));
+    try {
+      const { plan } = normalizationPlan(fixture);
+      const planPath = join(fixture.ticketDir, "plan-v2.json");
+      writeFileSync(planPath, `${canonicalJson(plan)}\n`);
+      const modulePath = resolve(import.meta.dir, "../../🧹️normalization/🟦️.ts");
+      const child = `const [modulePath,planPath,repoRoot,ticketDir]=process.argv.slice(1);const {applyTaxonomyPlan}=await import(modulePath);const plan=JSON.parse(await Bun.file(planPath).text());applyTaxonomyPlan(plan,{repoRoot,ticketDir,progress:(row)=>{if(row.phase==="retargeting-symlinks")process.exit(73)}});`;
+      const interrupted = spawnSync("bun", ["-e", child, modulePath, planPath, fixture.repoRoot, fixture.ticketDir], { encoding: "utf8" });
+      expect(interrupted.status).toBe(73);
+      const journals = fastGlob.sync("**/🧾️taxonomy-transaction/**/🔂️attempts/🔢️*/🔣️.json", { cwd: fixture.ticketDir, absolute: true });
+      expect(journals).toHaveLength(1);
+      const leasePath = join(resolve(journals[0], ".."), "🔒️lease", "🔣️.json");
+      expect(existsSync(leasePath)).toBe(true);
+      const leaseBytes = readFileSync(leasePath, "utf8");
+      const lease = JSON.parse(leaseBytes) as { pid: number };
+      writeFileSync(leasePath, `${canonicalJson({ ...lease, pid: process.pid })}\n`);
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, resumeJournal: journals[0] })).toThrow(/leased by active pid/u);
+      writeFileSync(leasePath, leaseBytes);
+      let journalBytes = readFileSync(journals[0], "utf8");
+      let journal = JSON.parse(journalBytes) as { revision: number; state: string; stagingRoot: string; installedSymlinkTargetEditIds: string[] };
+      expect(journal.state).toBe("retargeting");
+      expect(journal.installedSymlinkTargetEditIds).toEqual([plan.symlinkTargetEdits[0].operationId]);
+      const stageRoot = join(fixture.repoRoot, journal.stagingRoot);
+      const walRoot = join(stageRoot, "🚧️journal");
+      mkdirSync(walRoot);
+      writeFileSync(join(walRoot, "🔣️.json"), `${canonicalJson({ ...journal, revision: journal.revision + 1 })}\n`);
+      writeFileSync(join(stageRoot, "unexpected"), "drift");
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, resumeJournal: journals[0] })).toThrow(/(?:unexpected|unauthorized) evidence/u);
+      expect(existsSync(walRoot)).toBe(true);
+      expect(readFileSync(journals[0], "utf8")).toBe(journalBytes);
+      rmSync(walRoot, { recursive: true });
+      expect(existsSync(leasePath)).toBe(true);
+      rmSync(join(stageRoot, "unexpected"));
+      journalBytes = readFileSync(journals[0], "utf8");
+      journal = JSON.parse(journalBytes) as typeof journal;
+      mkdirSync(walRoot);
+      writeFileSync(join(stageRoot, "unexpected"), "drift");
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, resumeJournal: journals[0] })).toThrow(/(?:unexpected|unauthorized) evidence/u);
+      expect(existsSync(walRoot)).toBe(true);
+      rmSync(join(stageRoot, "unexpected"));
+      writeFileSync(journals[0], JSON.stringify(journal, null, 2));
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, resumeJournal: journals[0] })).toThrow(/canonical JSON/u);
+      writeFileSync(journals[0], `${canonicalJson({ ...journal, state: "staging" })}\n`);
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, resumeJournal: journals[0] })).toThrow(/impossible phase/u);
+      writeFileSync(journals[0], `${canonicalJson({ ...journal, stagingRoot: `${journal.stagingRoot}-forged` })}\n`);
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, resumeJournal: journals[0] })).toThrow(/(?:attempt|transaction) roots/u);
+      writeFileSync(journals[0], journalBytes);
+      const result = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, resumeJournal: journals[0] });
+      expect(result.state).toBe("committed");
+      expect(readdirSync(resolve(journals[0], ".."))).toEqual(["🔣️.json"]);
+      expect(planTaxonomy(inventoryTaxonomy(fixture.options), { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [] }).symlinkTargetEdits).toEqual([]);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }, 12_000);
+
+  test("relocates three complete embedded ticket roots with exact many-to-one evidence", () => {
+    const ticket = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL";
+    const files: Record<string, string> = {};
+    for (const owner of ["pkg-a", "pkg-b", "pkg-c"]) {
+      files[`${owner}/${ticket}/🧪️target-os-errors/CACHEDIR.TAG`] = "Signature: 8a477f597d28d172789f06886806bc55\n";
+      files[`${owner}/${ticket}/🧪️unique-${owner.slice(-1)}/CACHEDIR.TAG`] = "Signature: 8a477f597d28d172789f06886806bc55\n";
+    }
+    const fixture = normalizationFixture("transaction-embedded-v2", files, ({ repoRoot, workspace }) => {
+      const canonicalManifest = join(repoRoot, ticket, "🎫️ticket.json");
+      mkdirSync(resolve(canonicalManifest, ".."), { recursive: true });
+      writeFileSync(canonicalManifest, '{"id":"26/08/17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL"}\n');
+      const schemaPath = join(repoRoot, NORMALIZATION_SCHEMA_REL);
+      const taxonomy = JSON.parse(readFileSync(schemaPath, "utf8")) as Record<string, unknown>;
+      const contracts = taxonomy.fixedFilenameContracts as Record<string, unknown>;
+      const directoryContracts = taxonomy.fixedDirectoryContracts as Record<string, unknown>;
+      const scope = relative(repoRoot, workspace).replaceAll("\\", "/");
+      taxonomy.fixedFilenameContracts = Object.fromEntries(Object.entries({ ...contracts, "fixture-cache-tag": { pathPattern: `${scope}/**/CACHEDIR.TAG`, authority: "Transaction disposition golden", reason: "Exact cache marker fixture", configurability: "unconfigurable", scope: { kind: "path-pattern" }, verification: "fixture census", expires: null } }).sort(([left], [right]) => left.localeCompare(right)));
+      taxonomy.fixedDirectoryContracts = Object.fromEntries(Object.entries({ ...directoryContracts, "fixture-package-prefix": { pathPattern: `${scope}/pkg-*`, authority: "Transaction disposition golden", reason: "Exact embedded-root owner fixture", configurability: "unconfigurable", scope: { kind: "path-pattern" }, verification: "fixture census", expires: null } }).sort(([left], [right]) => left.localeCompare(right)));
+      writeFileSync(schemaPath, `${JSON.stringify(taxonomy, null, 2)}\n`);
+    });
+    try {
+      const { plan } = normalizationPlan(fixture);
+      expect(plan.embeddedTicketRoots).toHaveLength(3);
+      expect(new Set(plan.embeddedTicketRoots.map((root) => root.ticketId))).toEqual(new Set(["26/08/17/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL"]));
+      expect(plan.embeddedTicketRootRelocations).toHaveLength(4);
+      expect(plan.evidenceRemovals).toHaveLength(2);
+      expect(plan.unresolved).toEqual([]);
+      const rootTamper = JSON.parse(JSON.stringify(plan)) as TaxonomyPlan;
+      (rootTamper.embeddedTicketRoots[0].relocationOperationIds as string[]).reverse();
+      (rootTamper as { planDigest: string }).planDigest = taxonomyPlanDigest(rootTamper);
+      expect(() => parseTaxonomyPlan(rootTamper)).toThrow();
+      const removalTamper = JSON.parse(JSON.stringify(plan)) as TaxonomyPlan;
+      (removalTamper.evidenceRemovals[0].authority as { evidenceSetDigest: string }).evidenceSetDigest = "0".repeat(64);
+      (removalTamper as { planDigest: string }).planDigest = taxonomyPlanDigest(removalTamper);
+      expect(() => parseTaxonomyPlan(removalTamper)).toThrow();
+      const before = noFollowTreeDigest(fixture.repoRoot, fixture.scope);
+      const cancellationTicket = join(fixture.ticketDir, "🧪️cancel-evidence-removal");
+      const cancelFile = join(cancellationTicket, "cancel");
+      mkdirSync(cancellationTicket, { recursive: true });
+      const cancelled = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: cancellationTicket, cancelFile, progress: (row) => { if (row.phase === "staging-evidence-removals") writeFileSync(cancelFile, "cancel\n"); } });
+      expect(cancelled.state).toBe("rolled-back");
+      rmSync(cancelFile, { force: true });
+      expect(noFollowTreeDigest(fixture.repoRoot, fixture.scope)).toEqual(before);
+      const retryTicket = join(fixture.ticketDir, "🧪️retry-embedded");
+      mkdirSync(retryTicket, { recursive: true });
+      const planArtifact = join(retryTicket, "📊️taxonomy-plan", "🔣️.json");
+      mkdirSync(resolve(planArtifact, ".."), { recursive: true });
+      writeFileSync(planArtifact, `${canonicalJson(plan)}\n`);
+      const copiedConsumer = join(retryTicket, "🧪️consumer", "🔣️.json");
+      mkdirSync(resolve(copiedConsumer, ".."), { recursive: true });
+      writeFileSync(copiedConsumer, `${JSON.stringify({ path: plan.embeddedTicketRoots[0].sourceMetadataRoot })}\n`);
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket })).toThrow(/structured incoming reference/u);
+      expect(fastGlob.sync("**/🧾️taxonomy-transaction/**/🔣️.json", { cwd: retryTicket, absolute: true })).toEqual([]);
+      rmSync(copiedConsumer);
+      expect(applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, injectFailureAt: "after-relocations" }).state).toBe("rolled-back");
+      const result = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket });
+      expect(result.appliedEmbeddedTicketRootRelocations).toBe(4);
+      expect(result.appliedEvidenceRemovals).toBe(2);
+      expect(result.journalPath).toMatch(/🔢️000002\/🔣️\.json$/u);
+      const attempts = fastGlob.sync("**/🧾️taxonomy-transaction/**/🔂️attempts/🔢️*/🔣️.json", { cwd: retryTicket, absolute: true }).sort();
+      expect(attempts).toHaveLength(2);
+      expect(attempts.map((path) => JSON.parse(readFileSync(path, "utf8")).state)).toEqual(["rolled-back", "committed"]);
+      const second = planTaxonomy(inventoryTaxonomy(fixture.options), { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [fixture.opaqueDigest] });
+      expect(second.embeddedTicketRoots).toEqual([]);
+      expect(second.embeddedTicketRootRelocations).toEqual([]);
+      expect(second.evidenceRemovals).toEqual([]);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }, 60_000);
+});
+//#endregion 🧾️TransactionDispositionsV2

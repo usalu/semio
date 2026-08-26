@@ -28,7 +28,7 @@ pub struct VcsInference {
 }
 
 impl protocol::Inference<VcsSnapshot> for VcsInference {
-    async fn infer(snapshot: &VcsSnapshot) -> Self {
+    fn infer(snapshot: &VcsSnapshot) -> Self {
         Self { summary: compute_vcs_summary(snapshot) }
     }
 }
@@ -43,13 +43,13 @@ impl Default for VcsInference {
 }
 
 impl protocol::InferenceSpec<VcsSnapshot> for VcsInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.vcs.vcs.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.vcs.vcs.inference.summary", reads: &["tags", "notes"] }]
     }
 }
@@ -98,23 +98,23 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    async fn tagged_snapshot() -> VcsSnapshot {
+    fn tagged_snapshot() -> VcsSnapshot {
         VcsSnapshot { tags: vec!["alpha".into(), "beta".into()], notes: "demo notes here".into(), ..VcsSnapshot::default() }
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
+    fn inference_determinism_law() {
         let snapshot = tagged_snapshot();
         assert_eq!(VcsInference::infer(&snapshot), VcsInference::infer(&snapshot));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
+    fn inference_default_law() {
         assert_eq!(VcsInference::infer(&VcsSnapshot::default()), VcsInference::default());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn summary_counts_tags_and_words() {
+    fn summary_counts_tags_and_words() {
         let inferred = VcsInference::infer(&tagged_snapshot());
         assert_eq!(inferred.summary.tag_count, 2);
         assert_eq!(inferred.summary.notes_word_count, 3);

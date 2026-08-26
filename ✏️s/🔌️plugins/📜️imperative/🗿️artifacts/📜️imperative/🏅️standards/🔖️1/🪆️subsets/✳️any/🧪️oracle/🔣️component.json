@@ -20,6 +20,54 @@
     {
       "id": "imperative-1-any",
       "capability": "imperative-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "create-step",
+          "sourceMutationDirectoryName": "🌱create-step",
+          "mutationDirectoryName": "🌱create-step",
+          "scenarios": [
+            {
+              "id": "rejects-a-duplicate-step-id-at-the-root-path",
+              "directoryName": "🧪️rejects-a-duplicate-step-id-at-the-root-path"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-step",
+          "sourceMutationDirectoryName": "🗑️delete-step",
+          "mutationDirectoryName": "🗑️delete-step",
+          "scenarios": [
+            {
+              "id": "rejects-a-root-step-id-addressed-inside-a-branch-body",
+              "directoryName": "🧪️rejects-a-root-step-id-addressed-inside-a-branch-body"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-step-params",
+          "sourceMutationDirectoryName": "🔧edit-step-params",
+          "mutationDirectoryName": "🔧edit-step-params",
+          "scenarios": [
+            {
+              "id": "warns-that-step-1-already-carries-the-requested-params",
+              "directoryName": "🧪️warns-that-step-1-already-carries-the-requested-params"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-steps",
+          "sourceMutationDirectoryName": "🔀reorder-steps",
+          "mutationDirectoryName": "🔀reorder-steps",
+          "scenarios": [
+            {
+              "id": "warns-that-an-over-clamped-index-leaves-the-tail-step-in-place",
+              "directoryName": "🧪️warns-that-an-over-clamped-index-leaves-the-tail-step-in-place"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-step",
         "delete-step",

@@ -1,17 +1,17 @@
 //! 🛍️ Lowpoly play app panel — the primitive catalogue (box / plane / cylinder / cone / ico sphere).
 
-use crate::editor::lowpoly::{lowpoly_action, ui_node_list, ui_value_map, ui_value_text};
 use crate::editor::lowpoly::terminology::{primitive_catalog_label, LowpolyLabels};
+use crate::editor::lowpoly::{lowpoly_action, ui_node_list, ui_value_map, ui_value_text};
 use semio_framework_plugin::{tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiText, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
-pub(crate) const LOWPOLY_PLAY_BODY_CATALOGUE: &str = "lowpoly.play.catalogue";
+pub const LOWPOLY_PLAY_BODY_CATALOGUE: &str = "lowpoly.play.catalogue";
 
 const PRIMITIVE_CATALOG: &[(&str, &str, &str)] = &[("box", "Cube", "box"), ("plane", "Plane", "square"), ("cylinder", "Cylinder", "cylinder"), ("cone", "Cone", "triangle"), ("ico_sphere", "Ico Sphere", "globe")];
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub(crate) async fn definition() -> PanelTabDefinition {
+pub(crate) fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -23,7 +23,7 @@ pub(crate) async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub(crate) async fn render(labels: &LowpolyLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub(crate) fn render(labels: &LowpolyLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let items = ui_node_list(PRIMITIVE_CATALOG.iter().map(|(kind, label, icon)| {
         let args = ui_value_map([("kind", ui_value_text(kind)?)])?;
         let mut node = tree_item_with_action(format!("lowpoly-play-catalogue.{kind}"), primitive_catalog_label(kind, label, labels), Some((*kind).to_string()), lowpoly_action("addPrimitive", Some(args))?)?;
@@ -44,7 +44,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn catalogue_lists_primitives() {
         let mut a = app();
-        let json = render(&mut a, super::LOWPOLY_PLAY_BODY_CATALOGUE);
+        let json = render(&mut a, super::LOWPOLY_PLAY_BODY_CATALOGUE).await;
         assert!(json.contains("lowpoly-play-catalogue.box"));
         assert!(json.contains("Cube"));
         assert!(json.contains("Ico Sphere"));

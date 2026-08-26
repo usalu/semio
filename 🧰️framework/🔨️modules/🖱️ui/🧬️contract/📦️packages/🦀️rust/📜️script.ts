@@ -5,9 +5,10 @@
  * and `wasm32-unknown-unknown` browser renderers both speak, so a dependency that fails either target
  * is a design error, not a build error. Native `cargo check` cannot see that — it never compiles
  * `#[cfg(target_arch = "wasm32")]` code — which is why these run on every acceptance. */
-import { dirname, join } from "node:path";
+import { basename, dirname, join, relative } from "node:path";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
 const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
@@ -77,6 +78,25 @@ class GenerateScript extends BundleScript {
   }
 }
 
+/** 🧾️ Runs the exact schema exporter outside the workspace and emits its canonical output bytes. */
+class PreviewGeneratedScript extends BundleScript {
+  run(_segments: string[]): void {
+    const targetPath = generatedUiContractPath(this.root);
+    const temp = mkdtempSync(join(tmpdir(), "semio-ui-contract-typegen-"));
+    let content: Buffer;
+    try {
+      const outPath = join(temp, basename(targetPath));
+      const result = Bun.spawnSync(["cargo", "test", "--locked", "-p", "semio-framework-ui-contract", "--features", "typegen", "--test", TYPEGEN_TEST_NAME], { cwd: this.root, env: { ...process.env, CARGO_TARGET_DIR: join(temp, "target"), SEMIO_TYPEGEN_OUT: outPath }, stderr: "pipe", stdout: "pipe" });
+      if (result.exitCode !== 0) throw new Error(`ui-contract preview export failed: ${result.stderr.toString()}`);
+      content = readFileSync(outPath);
+    } finally {
+      rmSync(temp, { recursive: true, force: true });
+    }
+    const nodes = [{ bytesBase64: content.toString("base64"), mode: 0o644, nodeKind: "file" as const, path: relative(this.repoRoot, targetPath).replaceAll("\\", "/").normalize("NFC") }];
+    process.stdout.write(`${JSON.stringify({ contractId: "ui-contract", nodes, schemaVersion: 1, staleRemovals: [] })}\n`);
+  }
+}
+
 /** 🔎️ Validates metadata and byte-compares the owned projection with the committed mirror. */
 class CheckScript extends BundleScript {
   run(_segments: string[]): void {
@@ -92,6 +112,7 @@ if (import.meta.main) {
     .register("conformance", ConformanceScript)
     .register("check-wasm", CheckWasmScript)
     .register("generate", GenerateScript)
+    .register("preview-generated", PreviewGeneratedScript)
     .register("check", CheckScript);
   await runBundleScriptMain(router, import.meta.url);
 }

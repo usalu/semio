@@ -12,10 +12,10 @@
  * @see .🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/REGISTRY-SCRIPT-REFACTOR-TO-VOCABULARY-DISCOVERY-LIBRARY
  */
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import type { AreaState, DiscoveredPackage, PackageRole } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, loadTaxonomy, discoverPackages, discoverPackageProblems } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, canonicalFilenamesForKind, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadTaxonomy, runBundleScriptMain, runVitest, ScriptRouter } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { generateLaunchJson, LAUNCH_OUTPUT_REL_PATH } from "./🖥️launch.ts";
 
 //#region 🔖️PluginRegistryEntry
@@ -74,6 +74,13 @@ export type PluginRegistryEntry = {
  * `26/08/06/MECHANISM-VOCABULARY-AND-DISCOVERY-LIBRARY`. */
 const TAXONOMY = loadTaxonomy();
 
+/** 📄️ Resolves the taxonomy-ordered primary filename for consumers that require one component leaf. */
+function primaryFilenameForKind(kindId: string): string {
+  const filenames = canonicalFilenamesForKind(kindId, TAXONOMY);
+  if (filenames.length === 0) throw new Error(`📇️registry: file kind "${kindId}" has no canonical filename`);
+  return filenames[0];
+}
+
 /** @emoji 🗺️ Every area root that may hold a plugin crate, cross-checked against `taxonomy.areas` at
  * load time so none of these literals can outlive a vocabulary rename. Membership across this array —
  * never equality against one hand-picked literal — is how every plugin-tree path test below decides
@@ -95,7 +102,7 @@ function mergeAreaStates(states: readonly AreaState[]): AreaState {
 
 /** @emoji 🌳️ Declared taxonomy-tree maturity across every plugin area, independent of the package-layout
  * maturity in `areas`. `legacy`/`mixed` ⇒ findings are warn-only; `clean` ⇒ they fail the gate. */
-const PLUGIN_AREAS_STATE: AreaState = mergeAreaStates(PLUGIN_AREAS.map((area) => TAXONOMY.pluginTaxonomyStates[area] ?? "legacy"));
+const PLUGIN_AREAS_STATE: AreaState = mergeAreaStates(PLUGIN_AREAS.map((area) => TAXONOMY.areas[area]));
 
 /** @emoji 📚️ Artifact-scoped example data dir (`artifactChildDirs`, not owner root). */
 const EXAMPLES_DIRNAME = "📚️examples";
@@ -104,8 +111,8 @@ if (!TAXONOMY.artifactChildDirs.includes(EXAMPLES_DIRNAME)) {
 }
 const EXAMPLE_ASSETS_DIRNAME = TAXONOMY.exampleAssetsDirName ?? "🖼️assets";
 const EXAMPLE_TESTS_DIRNAME = TAXONOMY.exampleTestsDirName ?? "🧪️tests";
-const EXAMPLE_RUST_LEAF = TAXONOMY.exampleLeafFilenames?.["🦀️rust"] ?? "🦀️component.rs";
-const EXAMPLE_TS_LEAF = TAXONOMY.exampleLeafFilenames?.["🟦️typescript"] ?? "🟦️component.ts";
+const EXAMPLE_RUST_LEAF = primaryFilenameForKind(TAXONOMY.exampleFileKinds["🦀️rust"]);
+const EXAMPLE_TS_LEAF = primaryFilenameForKind(TAXONOMY.exampleFileKinds["🟦️typescript"]);
 const EXAMPLE_SLUG_RE = new RegExp(TAXONOMY.exampleSlugPattern ?? "^.+\uFE0F[a-z0-9]+(?:-[a-z0-9]+)*$", "u");
 const FORBIDDEN_EXAMPLE_PLURAL_DIRS = TAXONOMY.forbiddenExamplePluralDirs ?? [];
 const FORBIDDEN_EXAMPLE_SLUGS = new Set(TAXONOMY.forbiddenExampleSlugs ?? []);
@@ -1054,7 +1061,7 @@ const TAXONOMY_PRESENCE_CHILD_DIRS = TAXONOMY.presenceChildDirs ?? [];
 /** @emoji 🎭️ A mode owns its windows plus its own three state lanes — the completeness set the
  * taxonomy declares for every `🎭️modes/<mode>/` node. */
 const TAXONOMY_MODE_CHILDREN = TAXONOMY.modeChildDirs ?? [];
-const TAXONOMY_SCHEMA_FORMATS = Object.values(TAXONOMY.schemaFormats ?? {});
+const TAXONOMY_SCHEMA_FILENAMES = Object.values(TAXONOMY.schemaFormats).map((format) => primaryFilenameForKind(format.fileKindId));
 const MUTATIONS_FACET_DIR = "🧬️mutations";
 const ENGINE_FACET_DIR = "⚙️engine";
 const SNAPSHOT_FACET_DIR = "📸️snapshot";
@@ -1069,14 +1076,16 @@ const TAXONOMY_IO_DIRECTION_CHILD_DIRS = TAXONOMY.ioDirectionChildDirs ?? {};
 const BUILDER_FACET_DIR = "🏗️builder";
 const DECOMPOSER_FACET_DIR = "🪓️decomposer";
 const LEGACY_WASM_DIR = "🕸️wasm";
-const TAXONOMY_ARTIFACT_SPEC_FILENAMES = TAXONOMY.artifactSpecFilenames ?? {};
-const TAXONOMY_TS_LEAF_FILENAME = TAXONOMY.ecosystems["🟦️typescript"]?.leafFilename ?? "🟦️component.ts";
+const TAXONOMY_TS_LEAF_FILENAME = primaryFilenameForKind(TAXONOMY.ecosystems["🟦️typescript"].componentFileKindId);
 /** @emoji 🪟️ A window dir may only contain these children, each itself a `🦀️component.rs` leaf. */
 const TAXONOMY_WINDOW_CHILDREN = new Set(TAXONOMY.windowChildDirs);
-const TAXONOMY_LEAF_FILENAME = TAXONOMY.taxonomyLeafFilenames[RUST_LANG];
+const TAXONOMY_LEAF_FILENAME = primaryFilenameForKind(TAXONOMY.ecosystems[RUST_LANG].componentFileKindId);
 /** @emoji 🚪️ Rust entry filename and its Shape V2 home relative to the owner root. */
-const RUST_ENTRY_FILENAME = TAXONOMY.entryFilenames[RUST_LANG];
+const RUST_LIBRARY_ENTRY_CONTRACT_ID = TAXONOMY.ecosystems[RUST_LANG].entryContractIds.find((contractId) => TAXONOMY.configurableEntryContracts[contractId]?.role === "library");
+if (!RUST_LIBRARY_ENTRY_CONTRACT_ID) throw new Error("📇️registry: Rust ecosystem must declare a library entry contract");
+const RUST_ENTRY_FILENAME = TAXONOMY.configurableEntryContracts[RUST_LIBRARY_ENTRY_CONTRACT_ID].filename;
 const RUST_ENTRY_DIR_FROM_OWNER = TAXONOMY.rustEntryPathRules.entryDirFromOwner.split("/");
+const WINDOW_EMPTY_FACET_FILENAME = primaryFilenameForKind(TAXONOMY.windowEmptyFacetFileKindId);
 
 /** @emoji 🧭️ Plugin roots discovered via the shared package contract (`role = "plugin"`, rust, owner
  * sitting directly under one of `taxonomy.pluginAreas`). Drives the taxonomy tree audit below. */
@@ -1158,10 +1167,6 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
       if (!existsSync(join(facetDir, TAXONOMY_LEAF_FILENAME))) {
         findings.push(`${pluginId}: artifact "${artifact}" is missing ${component}/${TAXONOMY_LEAF_FILENAME}`);
       }
-      const specName = TAXONOMY_ARTIFACT_SPEC_FILENAMES[component];
-      if (specName && !existsSync(join(facetDir, specName))) {
-        findings.push(`${pluginId}: artifact "${artifact}" is missing ${component}/${specName}`);
-      }
       if (!existsSync(join(facetDir, TAXONOMY_TS_LEAF_FILENAME))) {
         findings.push(`${pluginId}: artifact "${artifact}" is missing ${component}/${TAXONOMY_TS_LEAF_FILENAME}`);
       }
@@ -1170,9 +1175,9 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
     // Presence-tolerant schema tree + io direction shape (full leaf matrix gated by stdio policies / W5–W6).
     const schemaDir = join(artifactsDir, artifact, SCHEMA_FACET_DIR);
     if (existsSync(schemaDir)) {
-      for (const format of TAXONOMY_SCHEMA_FORMATS) {
-        if (!existsSync(join(schemaDir, format.leafFilename))) {
-          findings.push(`${pluginId}: artifact "${artifact}" is missing ${SCHEMA_FACET_DIR}/${format.leafFilename}`);
+      for (const filename of TAXONOMY_SCHEMA_FILENAMES) {
+        if (!existsSync(join(schemaDir, filename))) {
+          findings.push(`${pluginId}: artifact "${artifact}" is missing ${SCHEMA_FACET_DIR}/${filename}`);
         }
       }
       for (const child of listDirs(schemaDir)) {
@@ -1389,7 +1394,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
 
   // 📦️ glue.rs mod/#[path] cross-check: every component.rs on disk must be declared, and no declared
   // #[path] target may dangle (point at a file that doesn't exist) — reported as separate findings.
-  // 🌳️ Shape V2-aware: the entry file lives at `📦️packages/🦀️rust/📦️glue.rs` (taxonomy.entryFilenames).
+  // 🌳️ The configurable Rust library entry lives beneath the taxonomy-declared package entry directory.
   //
   // 🧮️ #[path] resolution is CUMULATIVE, not always-relative-to-the-raw-file: each nested `pub mod X`
   // (or leaf `mod X;`) resolves its own `#[path]` string relative to its immediately enclosing mod's
@@ -1502,9 +1507,9 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
         continue;
       }
       if (child === SCHEMA_FACET_DIR) {
-        for (const format of TAXONOMY_SCHEMA_FORMATS) {
-          if (!existsSync(join(childAbs, format.leafFilename))) {
-            findings.push(`${pluginId}: ${ownerLabel} is missing ${CONFIG_FACET_DIR}/${child}/${format.leafFilename}`);
+        for (const filename of TAXONOMY_SCHEMA_FILENAMES) {
+          if (!existsSync(join(childAbs, filename))) {
+            findings.push(`${pluginId}: ${ownerLabel} is missing ${CONFIG_FACET_DIR}/${child}/${filename}`);
           }
         }
       }
@@ -1521,9 +1526,9 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
         continue;
       }
       if (child === SCHEMA_FACET_DIR) {
-        for (const format of TAXONOMY_SCHEMA_FORMATS) {
-          if (!existsSync(join(childAbs, format.leafFilename))) {
-            findings.push(`${pluginId}: ${ownerLabel} is missing ${PRESENCE_FACET_DIR}/${child}/${format.leafFilename}`);
+        for (const filename of TAXONOMY_SCHEMA_FILENAMES) {
+          if (!existsSync(join(childAbs, filename))) {
+            findings.push(`${pluginId}: ${ownerLabel} is missing ${PRESENCE_FACET_DIR}/${child}/${filename}`);
           }
         }
       }
@@ -1656,9 +1661,9 @@ function scaffoldEmptyFacetMarkdown(facetLabel: string): string {
 }
 
 function scaffoldLeafFilename(lang: string): string {
-  const filename = TAXONOMY.taxonomyLeafFilenames[lang];
-  if (!filename) throw new Error(`new surface: 🔣️taxonomy.json taxonomyLeafFilenames has no entry for "${lang}"`);
-  return filename;
+  const kindId = TAXONOMY.ecosystems[lang]?.componentFileKindId;
+  if (!kindId) throw new Error(`new surface: 🔣️taxonomy.json ecosystems has no component file kind for "${lang}"`);
+  return primaryFilenameForKind(kindId);
 }
 
 function scaffoldLeafContentForLang(lang: string, label: string): string {
@@ -1696,14 +1701,14 @@ function scaffoldSurfaceTree(repoRoot: string, subsetRel: string, role: string, 
   }
   for (const facet of TAXONOMY.surfaceRequiredChildDirs) {
     if (facet === TAXONOMY.modesDirName) continue;
-    scaffoldWriteIfAbsent(repoRoot, `${surfaceRel}/${facet}/${TAXONOMY.windowEmptyFacetFilename}`, scaffoldEmptyFacetMarkdown(`Surface ${facet}`), result, dryRun);
+    scaffoldWriteIfAbsent(repoRoot, `${surfaceRel}/${facet}/${WINDOW_EMPTY_FACET_FILENAME}`, scaffoldEmptyFacetMarkdown(`Surface ${facet}`), result, dryRun);
   }
 
   const modeRel = `${surfaceRel}/${TAXONOMY.modesDirName}/${SURFACE_DEFAULT_MODE_DIRNAME[role]}`;
-  scaffoldWriteIfAbsent(repoRoot, `${modeRel}/${TAXONOMY.taxonomyLeafFilenames["🦀️rust"]}`, scaffoldRustLeaf(`${role} mode`), result, dryRun);
+  scaffoldWriteIfAbsent(repoRoot, `${modeRel}/${scaffoldLeafFilename("🦀️rust")}`, scaffoldRustLeaf(`${role} mode`), result, dryRun);
   for (const facet of TAXONOMY.modeRequiredChildDirs ?? []) {
     if (facet === TAXONOMY.windowsDirName) continue;
-    scaffoldWriteIfAbsent(repoRoot, `${modeRel}/${facet}/${TAXONOMY.windowEmptyFacetFilename}`, scaffoldEmptyFacetMarkdown(`Mode ${facet}`), result, dryRun);
+    scaffoldWriteIfAbsent(repoRoot, `${modeRel}/${facet}/${WINDOW_EMPTY_FACET_FILENAME}`, scaffoldEmptyFacetMarkdown(`Mode ${facet}`), result, dryRun);
   }
 
   const windowRel = `${modeRel}/${TAXONOMY.windowsDirName}/${SURFACE_DEFAULT_WINDOW_DIRNAME}`;
@@ -1711,7 +1716,7 @@ function scaffoldSurfaceTree(repoRoot: string, subsetRel: string, role: string, 
     scaffoldWriteIfAbsent(repoRoot, `${windowRel}/${scaffoldLeafFilename(lang)}`, scaffoldLeafContentForLang(lang, `${role} window`), result, dryRun);
   }
   for (const facet of TAXONOMY.windowRequiredChildDirs) {
-    scaffoldWriteIfAbsent(repoRoot, `${windowRel}/${facet}/${TAXONOMY.windowEmptyFacetFilename}`, scaffoldEmptyFacetMarkdown(`Window ${facet}`), result, dryRun);
+    scaffoldWriteIfAbsent(repoRoot, `${windowRel}/${facet}/${WINDOW_EMPTY_FACET_FILENAME}`, scaffoldEmptyFacetMarkdown(`Window ${facet}`), result, dryRun);
   }
 
   return result;
@@ -1859,6 +1864,8 @@ class GenerateScript extends BundleScript {
     const { files, entries, playgrounds, frameworkPackages } = renderCatalogFiles(repoRoot);
     const outDir = join(this.root, "🤖️generated");
     mkdirSync(outDir, { recursive: true });
+    const expected = new Set(Object.keys(files));
+    for (const name of readdirSync(outDir)) if (!expected.has(name)) rmSync(join(outDir, name), { recursive: true, force: true });
     for (const [name, content] of Object.entries(files)) writeFileSync(join(outDir, name), content);
     console.log(`plugin registry catalog refreshed (${entries.length} plugin crates, ${playgrounds.length} playgrounds, ${frameworkPackages.length} framework packages) -> ${outDir}`);
     // 🖥️ `.vscode/launch.json` is the second consumer of the very same playground catalog, so it is
@@ -1867,6 +1874,25 @@ class GenerateScript extends BundleScript {
     const launchPath = join(repoRoot, LAUNCH_OUTPUT_REL_PATH);
     writeFileSync(launchPath, generateLaunchJson(repoRoot, playgrounds));
     console.log(`${LAUNCH_OUTPUT_REL_PATH} regenerated -> ${launchPath}`);
+  }
+}
+
+/** 🧾️ Emits exact registry/launch bytes and stale removals without touching either output root. */
+class PreviewGeneratedScript extends BundleScript {
+  run(_segments: string[]): void {
+    const repoRoot = getWorkspaceRoot();
+    const { files, playgrounds } = renderCatalogFiles(repoRoot);
+    const outDir = join(this.root, "🤖️generated");
+    const rootPath = relative(repoRoot, outDir).replaceAll("\\", "/").normalize("NFC");
+    const launchPath = join(repoRoot, LAUNCH_OUTPUT_REL_PATH);
+    const nodes = [
+      { bytesBase64: "", mode: 0o755, nodeKind: "directory" as const, path: rootPath },
+      ...Object.entries(files).map(([name, content]) => ({ bytesBase64: Buffer.from(content).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: `${rootPath}/${name.normalize("NFC")}` })),
+      { bytesBase64: Buffer.from(generateLaunchJson(repoRoot, playgrounds)).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: relative(repoRoot, launchPath).replaceAll("\\", "/").normalize("NFC") },
+    ].sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
+    const expected = new Set(Object.keys(files));
+    const staleRemovals = (existsSync(outDir) ? readdirSync(outDir) : []).filter((name) => !expected.has(name)).map((name) => `${rootPath}/${name.normalize("NFC")}`).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
+    process.stdout.write(`${JSON.stringify({ contractId: "plugin-registry", nodes, schemaVersion: 1, staleRemovals })}\n`);
   }
 }
 
@@ -2038,7 +2064,14 @@ class CheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("check", CheckScript).register("new", NewScript);
+/** 🧪️ Runs the language-neutral generated-launch contract without catalog generation. */
+class TestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    await runVitest(this.root, segments, "🧪️vitest.config.ts");
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("test", TestScript).register("new", NewScript);
 
 if (import.meta.main) {
   await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" });

@@ -42,37 +42,37 @@ pub mod derived_construction {
         type Mutation = PptxMutation;
         type Diff = PptxDiff;
 
-        async fn empty() -> Self {
-            Self { inner: PptxAnyBuilder::empty().await }
+        fn empty() -> Self {
+            Self { inner: PptxAnyBuilder::empty() }
         }
 
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { inner: PptxAnyBuilder::from_snapshot(snapshot).await }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { inner: PptxAnyBuilder::from_snapshot(snapshot) }
         }
 
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self { inner: PptxAnyBuilder::from_text(text).await? })
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self { inner: PptxAnyBuilder::from_text(text)? })
         }
 
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self { inner: PptxAnyBuilder::from_binary(bytes).await? })
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self { inner: PptxAnyBuilder::from_binary(bytes)? })
         }
 
-        async fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let (inner, diff) = self.inner.mutate(mutation).await;
+        fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let (inner, diff) = self.inner.mutate(mutation);
             (Self { inner }, diff)
         }
 
-        async fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            Ok(Self { inner: self.inner.absorb(diff).await? })
+        fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            Ok(Self { inner: self.inner.absorb(diff)? })
         }
 
         /// 🛡️ The real construction gate: however `self`'s inner snapshot got here, a hard
         /// ISO/IEC 29500-4 Transitional violation fails `build()` -- the soft diagnostic (explicit
         /// `conformance="strict"` attribute) passes through as an advisory `Diagnostic`; the `Err`
         /// path is NOT taken for it, only hard ones block.
-        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
-            let snapshot = self.inner.build().await?;
+        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+            let snapshot = self.inner.build()?;
             let hard: Vec<Diagnostic> = check_transitional_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(snapshot)
@@ -107,13 +107,13 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn empty_builder_has_no_office_document_relationship_and_fails_build() {
-            let err = PptxTransitionalBuilderConstruction::empty().await.build().await.expect_err("an empty package has no officeDocument relationship, must fail build()");
+            let err = PptxTransitionalBuilderConstruction::empty().build().expect_err("an empty package has no officeDocument relationship, must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::pptx::standards::v_ecma_376::subsets::transitional::schema::CODE_MAIN_NS));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn conforming_transitional_snapshot_builds_clean() {
-            let snapshot = PptxTransitionalBuilderConstruction::from_snapshot(transitional_snapshot()).await.build().await.expect("conforming Transitional snapshot must build");
+            let snapshot = PptxTransitionalBuilderConstruction::from_snapshot(transitional_snapshot()).build().expect("conforming Transitional snapshot must build");
             assert!(snapshot.opc.part_bytes("ppt/presentation.xml").is_some());
         }
 
@@ -121,8 +121,8 @@ pub mod derived_construction {
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut violating = transitional_snapshot();
             violating.opc.set_part("ppt/slides/slide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.slide+xml", b"<p:sld xmlns:p=\"http://purl.oclc.org/ooxml/presentationml/main\"/>".to_vec());
-            let (mutated, _diff) = PptxTransitionalBuilderConstruction::from_snapshot(PptxSnapshot::default()).await.mutate(PptxMutation::SetSnapshot { snapshot: violating }).await;
-            let err = mutated.build().await.expect_err("a Strict namespace anywhere must fail build()");
+            let (mutated, _diff) = PptxTransitionalBuilderConstruction::from_snapshot(PptxSnapshot::default()).mutate(PptxMutation::SetSnapshot { snapshot: violating });
+            let err = mutated.build().expect_err("a Strict namespace anywhere must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::pptx::standards::v_ecma_376::subsets::transitional::schema::CODE_STRICT_NS_PRESENT));
         }
     }
@@ -232,12 +232,12 @@ pub mod derived_analysis {
         type Parts = PptxParts;
         const DIALECT: Dialect = DIALECT;
 
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            PptxAnyAnalyzer::sniff(source).await
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            PptxAnyAnalyzer::sniff(source)
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = PptxAnyAnalyzer::analyze(sources).await;
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let inner = PptxAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {

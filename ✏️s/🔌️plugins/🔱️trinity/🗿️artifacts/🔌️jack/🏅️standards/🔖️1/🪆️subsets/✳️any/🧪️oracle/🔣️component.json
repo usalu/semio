@@ -23,6 +23,98 @@
     {
       "id": "jack-1-any",
       "capability": "jack-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-data-property",
+          "sourceMutationDirectoryName": "🔧️change-data-property",
+          "mutationDirectoryName": "🔧️change-data-property",
+          "scenarios": [
+            {
+              "id": "keeps-a-node-property-at-the-value-it-already-holds",
+              "directoryName": "🧪️keeps-a-node-property-at-the-value-it-already-holds"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-edge",
+          "sourceMutationDirectoryName": "🔗️create-edge",
+          "mutationDirectoryName": "🔗️create-edge",
+          "scenarios": [
+            {
+              "id": "rejects-an-edge-whose-endpoints-are-absent",
+              "directoryName": "🧪️rejects-an-edge-whose-endpoints-are-absent"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-node",
+          "sourceMutationDirectoryName": "🌱️create-node",
+          "mutationDirectoryName": "🌱️create-node",
+          "scenarios": [
+            {
+              "id": "rejects-a-node-id-the-scene-already-holds",
+              "directoryName": "🧪️rejects-a-node-id-the-scene-already-holds"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-edge",
+          "sourceMutationDirectoryName": "✂️delete-edge",
+          "mutationDirectoryName": "✂️delete-edge",
+          "scenarios": [
+            {
+              "id": "rejects-cutting-an-edge-the-scene-never-had",
+              "directoryName": "🧪️rejects-cutting-an-edge-the-scene-never-had"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-node",
+          "sourceMutationDirectoryName": "🗑️delete-node",
+          "mutationDirectoryName": "🗑️delete-node",
+          "scenarios": [
+            {
+              "id": "rejects-deleting-a-node-the-scene-never-had",
+              "directoryName": "🧪️rejects-deleting-a-node-the-scene-never-had"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-node",
+          "sourceMutationDirectoryName": "📍️move-node",
+          "mutationDirectoryName": "📍️move-node",
+          "scenarios": [
+            {
+              "id": "keeps-a-node-at-the-point-it-already-occupies",
+              "directoryName": "🧪️keeps-a-node-at-the-point-it-already-occupies"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-data-property",
+          "sourceMutationDirectoryName": "🧹️remove-data-property",
+          "mutationDirectoryName": "🧹️remove-data-property",
+          "scenarios": [
+            {
+              "id": "keeps-an-edge-without-the-property-it-never-had",
+              "directoryName": "🧪️keeps-an-edge-without-the-property-it-never-had"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-node",
+          "sourceMutationDirectoryName": "✏️rename-node",
+          "mutationDirectoryName": "✏️rename-node",
+          "scenarios": [
+            {
+              "id": "keeps-the-name-a-node-already-carries",
+              "directoryName": "🧪️keeps-the-name-a-node-already-carries"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-node",
         "delete-node",

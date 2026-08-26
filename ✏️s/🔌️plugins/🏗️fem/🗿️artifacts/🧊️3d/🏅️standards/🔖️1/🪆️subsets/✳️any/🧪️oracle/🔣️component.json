@@ -23,6 +23,285 @@
     {
       "id": "fem3d-1-any",
       "capability": "fem3d-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "add-load",
+          "sourceMutationDirectoryName": "➕add-load",
+          "mutationDirectoryName": "➕add-load",
+          "scenarios": [
+            {
+              "id": "lays-an-area-pressure-over-the-roof-slab",
+              "directoryName": "🧪️lays-an-area-pressure-over-the-roof-slab"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-load-case-self-weight",
+          "sourceMutationDirectoryName": "⚖change-load-case-self-weight",
+          "mutationDirectoryName": "⚖change-load-case-self-weight",
+          "scenarios": [
+            {
+              "id": "switches-self-weight-off-for-the-dead-case",
+              "directoryName": "🧪️switches-self-weight-off-for-the-dead-case"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-combination",
+          "sourceMutationDirectoryName": "🌱🔗️create-combination",
+          "mutationDirectoryName": "🌱🔗️create-combination",
+          "scenarios": [
+            {
+              "id": "appends-a-serviceability-combination-keyed-by-case-id",
+              "directoryName": "🧪️appends-a-serviceability-combination-keyed-by-case-id"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-element",
+          "sourceMutationDirectoryName": "🌱🧩️create-element",
+          "mutationDirectoryName": "🌱🧩️create-element",
+          "scenarios": [
+            {
+              "id": "appends-a-diagonal-bracing-bar",
+              "directoryName": "🧪️appends-a-diagonal-bracing-bar"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-load-case",
+          "sourceMutationDirectoryName": "🌱📋️create-load-case",
+          "mutationDirectoryName": "🌱📋️create-load-case",
+          "scenarios": [
+            {
+              "id": "appends-a-wind-case-pushing-on-the-column-head",
+              "directoryName": "🧪️appends-a-wind-case-pushing-on-the-column-head"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-material",
+          "sourceMutationDirectoryName": "🌱🧱️create-material",
+          "mutationDirectoryName": "🌱🧱️create-material",
+          "scenarios": [
+            {
+              "id": "appends-an-aluminium-alloy",
+              "directoryName": "🧪️appends-an-aluminium-alloy"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-node",
+          "sourceMutationDirectoryName": "🌱⚪️create-node",
+          "mutationDirectoryName": "🌱⚪️create-node",
+          "scenarios": [
+            {
+              "id": "appends-the-column-head-node-n3",
+              "directoryName": "🧪️appends-the-column-head-node-n3"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-section",
+          "sourceMutationDirectoryName": "🌱create-section",
+          "mutationDirectoryName": "🌱create-section",
+          "scenarios": [
+            {
+              "id": "appends-a-square-hollow-profile",
+              "directoryName": "🧪️appends-a-square-hollow-profile"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-solid",
+          "sourceMutationDirectoryName": "🌱🧊️create-solid",
+          "mutationDirectoryName": "🌱🧊️create-solid",
+          "scenarios": [
+            {
+              "id": "appends-an-extruded-roof-slab",
+              "directoryName": "🧪️appends-an-extruded-roof-slab"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-support",
+          "sourceMutationDirectoryName": "🌱🛡️create-support",
+          "mutationDirectoryName": "🌱🛡️create-support",
+          "scenarios": [
+            {
+              "id": "clamps-the-column-base-in-all-six-dofs",
+              "directoryName": "🧪️clamps-the-column-base-in-all-six-dofs"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-combination",
+          "sourceMutationDirectoryName": "🗑🔗️delete-combination",
+          "mutationDirectoryName": "🗑🔗️delete-combination",
+          "scenarios": [
+            {
+              "id": "removes-the-serviceability-combination-and-keeps-both-cases",
+              "directoryName": "🧪️removes-the-serviceability-combination-and-keeps-both-cases"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-element",
+          "sourceMutationDirectoryName": "🗑🧩️delete-element",
+          "mutationDirectoryName": "🗑🧩️delete-element",
+          "scenarios": [
+            {
+              "id": "removes-the-bracing-bar-and-leaves-the-frame",
+              "directoryName": "🧪️removes-the-bracing-bar-and-leaves-the-frame"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-load-case",
+          "sourceMutationDirectoryName": "🗑📋️delete-load-case",
+          "mutationDirectoryName": "🗑📋️delete-load-case",
+          "scenarios": [
+            {
+              "id": "removes-the-wind-case-together-with-its-load",
+              "directoryName": "🧪️removes-the-wind-case-together-with-its-load"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-material",
+          "sourceMutationDirectoryName": "🗑🧱️delete-material",
+          "mutationDirectoryName": "🗑🧱️delete-material",
+          "scenarios": [
+            {
+              "id": "removes-the-unreferenced-aluminium-alloy",
+              "directoryName": "🧪️removes-the-unreferenced-aluminium-alloy"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-node",
+          "sourceMutationDirectoryName": "🗑⚪️delete-node",
+          "mutationDirectoryName": "🗑⚪️delete-node",
+          "scenarios": [
+            {
+              "id": "removes-the-column-head-node-under-a-live-frame",
+              "directoryName": "🧪️removes-the-column-head-node-under-a-live-frame"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-section",
+          "sourceMutationDirectoryName": "🗑📐️delete-section",
+          "mutationDirectoryName": "🗑📐️delete-section",
+          "scenarios": [
+            {
+              "id": "removes-the-spare-square-hollow-profile",
+              "directoryName": "🧪️removes-the-spare-square-hollow-profile"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-solid",
+          "sourceMutationDirectoryName": "🗑🧊️delete-solid",
+          "mutationDirectoryName": "🗑🧊️delete-solid",
+          "scenarios": [
+            {
+              "id": "removes-the-roof-slab-and-keeps-its-material",
+              "directoryName": "🧪️removes-the-roof-slab-and-keeps-its-material"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-support",
+          "sourceMutationDirectoryName": "🗑delete-support",
+          "mutationDirectoryName": "🗑delete-support",
+          "scenarios": [
+            {
+              "id": "releases-the-pinned-node-n2",
+              "directoryName": "🧪️releases-the-pinned-node-n2"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-load",
+          "sourceMutationDirectoryName": "➖remove-load",
+          "mutationDirectoryName": "➖remove-load",
+          "scenarios": [
+            {
+              "id": "drops-the-trailing-member-udl-from-the-dead-case",
+              "directoryName": "🧪️drops-the-trailing-member-udl-from-the-dead-case"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-element",
+          "sourceMutationDirectoryName": "🔁🧩️replace-element",
+          "mutationDirectoryName": "🔁🧩️replace-element",
+          "scenarios": [
+            {
+              "id": "rolls-the-column-about-its-own-axis",
+              "directoryName": "🧪️rolls-the-column-about-its-own-axis"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-material",
+          "sourceMutationDirectoryName": "🔁🧱️replace-material",
+          "mutationDirectoryName": "🔁🧱️replace-material",
+          "scenarios": [
+            {
+              "id": "softens-the-steel-shear-modulus-in-place",
+              "directoryName": "🧪️softens-the-steel-shear-modulus-in-place"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-section",
+          "sourceMutationDirectoryName": "🔁📐️replace-section",
+          "mutationDirectoryName": "🔁📐️replace-section",
+          "scenarios": [
+            {
+              "id": "raises-the-torsion-constant-of-hea200",
+              "directoryName": "🧪️raises-the-torsion-constant-of-hea200"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-solid",
+          "sourceMutationDirectoryName": "🔁replace-solid",
+          "mutationDirectoryName": "🔁replace-solid",
+          "scenarios": [
+            {
+              "id": "thickens-the-slab-and-adds-a-mesh-layer",
+              "directoryName": "🧪️thickens-the-slab-and-adds-a-mesh-layer"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-support",
+          "sourceMutationDirectoryName": "🔁🛡️replace-support",
+          "mutationDirectoryName": "🔁🛡️replace-support",
+          "scenarios": [
+            {
+              "id": "frees-the-three-rotations-at-the-column-base",
+              "directoryName": "🧪️frees-the-three-rotations-at-the-column-base"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-analysis-settings",
+          "sourceMutationDirectoryName": "🎛update-analysis-settings",
+          "mutationDirectoryName": "🎛update-analysis-settings",
+          "scenarios": [
+            {
+              "id": "doubles-the-buckling-mode-count",
+              "directoryName": "🧪️doubles-the-buckling-mode-count"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-node",
         "delete-node",

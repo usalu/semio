@@ -30,6 +30,21 @@
     {
       "id": "obj-3-0-any",
       "capability": "obj-3-0-mutate",
+      "standardDirectoryName": "🔖️3.0",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "lifts-the-third-vertex-and-gives-it-an-explicit-w",
+              "directoryName": "🧪️lifts-the-third-vertex-and-gives-it-an-explicit-w"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

@@ -790,7 +790,7 @@ export type ShellBrand = {
   readonly assetsDir?: string;
   /** 📦️ Repo-root-relative directory this brand's build output lands in instead of the shared playground `dist/` — keeps a brand's specialization (including its build artifact) self-contained. */
   readonly distDir?: string;
-  /** 🌐️ Custom domain this brand's static build deploys to (e.g. GitHub Pages) — written verbatim into a `🌐️CNAME` file at the build root. */
+  /** 🌐️ Custom domain this brand's static build deploys to (e.g. GitHub Pages) — written verbatim into a `CNAME` file at the build root. */
   readonly cnameHost?: string;
 };
 //#endregion 🏷️ShellBrand

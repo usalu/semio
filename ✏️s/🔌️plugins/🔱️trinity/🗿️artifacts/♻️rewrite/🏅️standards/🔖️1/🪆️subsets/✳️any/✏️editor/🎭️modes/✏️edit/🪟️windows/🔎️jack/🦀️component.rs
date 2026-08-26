@@ -10,13 +10,14 @@
 
 use crate::artifacts::rewrite::RewriteSnapshot;
 use crate::editor::rewrite::config::RewriteConfig;
-use semio_framework_plugin::{build_text_editor_scene, TextEditorScene, UiNode};
+use semio_framework_plugin::{scene_surface, BuiltNode, TextEditorScene, UiAssemblyResult};
+use semio_framework_ui_contract::SurfaceKind;
 
-pub(crate) fn render(state: &RewriteSnapshot, _cfg: &RewriteConfig) -> UiNode {
+pub(crate) fn render(state: &RewriteSnapshot, _cfg: &RewriteConfig) -> UiAssemblyResult<BuiltNode> {
     let query = crate::editor::rewrite::compiled_jack_query(state);
-    build_text_editor_scene(
+    scene_surface(
         crate::editor::rewrite::TRINITY_REWRITE_PLAY_SURFACE_JACK,
-        crate::editor::rewrite::TRINITY_REWRITE_PLAY_CONTROLLER_ID,
-        TextEditorScene { tokens_json: serde_json::to_string(&crate::language_service::semantic_tokens(&query)).ok(), ..TextEditorScene::base(query, Some("jack".into()), None) },
+        SurfaceKind::TextEditor,
+        &TextEditorScene { tokens_json: serde_json::to_string(&crate::language_service::semantic_tokens(&query)).ok(), ..TextEditorScene::base(query, Some("jack".into()), None) },
     )
 }

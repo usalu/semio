@@ -16,8 +16,7 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::document::sc
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{
     FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,
 };
-use std::cell::RefCell;
-use std::collections::HashMap;
+use std::sync::Arc;
 
 //#region 🔖️Types
 pub use crate::artifacts::playbook::schema::diff::{PlaybookDiff, PlaybookStringList};
@@ -38,12 +37,12 @@ pub const PLAYBOOK_ARTIFACT_SCHEMA_ID: &str = "s.playbook.playbook";
 pub const PLAYBOOK_DIALECT: Dialect = Dialect { artifact_kind: "s.playbook.playbook", standard: StandardId("1"), subset: SubsetId::ANY };
 
 /// 📸️ Default persisted playbook document for new stores and demos.
-pub async fn empty_playbook_snapshot() -> PlaybookSnapshot {
+pub fn empty_playbook_snapshot() -> PlaybookSnapshot {
     PlaybookSnapshot::default()
 }
 
 /// 🧱️ Flattens all blocks across steps — delegates to the kernel helper.
-pub async fn flatten_playbook_blocks(snapshot: &PlaybookSnapshot) -> Vec<PlaybookBlock> {
+pub fn flatten_playbook_blocks(snapshot: &PlaybookSnapshot) -> Vec<PlaybookBlock> {
     crate::playbook::flatten_playbook_blocks(&snapshot.as_kernel()).into_iter().cloned().collect()
 }
 //#endregion 🔖️Types
@@ -65,7 +64,7 @@ pub type PlaybookFlowChild = store::ArtifactChild<SemioFlowSnapshot>;
 /// document order — `nodes`' own `Vec` order is the actual source read back by
 /// [`steps_from_flow_content`], never the edges (a `Vec` already carries order; the edges exist so a
 /// flow-graph consumer sees genuine `next`/`prev` connectivity, not just an implicit array position).
-pub async fn flow_content_snapshot_from_steps(steps: &[PlaybookStep]) -> SemioFlowSnapshot {
+pub fn flow_content_snapshot_from_steps(steps: &[PlaybookStep]) -> SemioFlowSnapshot {
     let nodes: Vec<SemioFlowNode> = steps
         .iter()
         .enumerate()
@@ -86,7 +85,7 @@ pub async fn flow_content_snapshot_from_steps(steps: &[PlaybookStep]) -> SemioFl
 
 /// 🌉 Inverse of [`flow_content_snapshot_from_steps`] — real and lossless: every `PlaybookStep`
 /// field (including the full `blocks` vocabulary) round-trips through `blocksJson`/`description`.
-pub async fn steps_from_flow_content(content: &SemioFlowSnapshot) -> Vec<PlaybookStep> {
+pub fn steps_from_flow_content(content: &SemioFlowSnapshot) -> Vec<PlaybookStep> {
     content
         .nodes
         .iter()
@@ -104,7 +103,7 @@ pub async fn steps_from_flow_content(content: &SemioFlowSnapshot) -> Vec<Playboo
 /// `Paragraph` per step (title/description). LOSSY BY DESIGN in the reverse direction only: a bare
 /// document cannot recover a step's `blocks`/`condition` data (see [`steps_from_document`]'s own doc
 /// comment) — `flow` is this data's lossless source of truth, `document` is a read/export companion.
-pub async fn document_snapshot_from_steps(title: Option<&str>, steps: &[PlaybookStep]) -> SemioDocumentSnapshot {
+pub fn document_snapshot_from_steps(title: Option<&str>, steps: &[PlaybookStep]) -> SemioDocumentSnapshot {
     let mut blocks = Vec::new();
     if let Some(title) = title {
         blocks.push(DocBlock::Heading { level: 1, style_id: None, runs: vec![DocRun::plain(title)] });
@@ -123,7 +122,7 @@ pub async fn document_snapshot_from_steps(title: Option<&str>, steps: &[Playbook
 /// none of that). Only used when a caller genuinely has nothing but narrative content to start from
 /// (e.g. a bare txt/md/pdf import with no procedural side) — every in-app mutation instead reads/
 /// writes through the lossless `flow` child via [`steps_from_flow_content`].
-pub async fn steps_from_document(content: &SemioDocumentSnapshot) -> (Option<String>, Vec<PlaybookStep>) {
+pub fn steps_from_document(content: &SemioDocumentSnapshot) -> (Option<String>, Vec<PlaybookStep>) {
     let mut title = None;
     let mut steps: Vec<PlaybookStep> = Vec::new();
     let mut index = 0usize;
@@ -150,7 +149,7 @@ pub async fn steps_from_document(content: &SemioDocumentSnapshot) -> (Option<Str
 /// 🕸️ Deterministic content-addressed CHILD handle for the flow content — same `(child_id, target)`
 /// for identical `steps`, a different pair once the content actually changes; mirrors writer's
 /// `document_child_handle`/flow's `flow_content_child_handle`.
-pub async fn flow_content_child_handle(steps: &[PlaybookStep]) -> PlaybookFlowChild {
+pub fn flow_content_child_handle(steps: &[PlaybookStep]) -> PlaybookFlowChild {
     use std::hash::{Hash, Hasher};
     let snapshot = flow_content_snapshot_from_steps(steps);
     let content_json = serde_json::to_string(&snapshot).unwrap_or_default();
@@ -165,7 +164,7 @@ pub async fn flow_content_child_handle(steps: &[PlaybookStep]) -> PlaybookFlowCh
 
 /// 🕸️ Deterministic content-addressed CHILD handle for the narrative document projection — same
 /// `(child_id, target)` for identical `(title, steps)`.
-pub async fn document_child_handle(title: Option<&str>, steps: &[PlaybookStep]) -> PlaybookDocumentChild {
+pub fn document_child_handle(title: Option<&str>, steps: &[PlaybookStep]) -> PlaybookDocumentChild {
     use std::hash::{Hash, Hasher};
     let snapshot = document_snapshot_from_steps(title, steps);
     let content_json = serde_json::to_string(&snapshot).unwrap_or_default();
@@ -186,79 +185,67 @@ pub async fn document_child_handle(title: Option<&str>, steps: &[PlaybookStep]) 
 /// `protocol::MutationKind::diff(&self, base: &PlaybookSnapshot)` — the sole signature every
 /// mutation triad's `🔺️diff` leaf builds against — receives only the opaque-handle-bearing `base`,
 /// never a live children view, so a persisted content-addressed HANDLE cannot round-trip to real
-/// steps within that call. Keyed by `PlaybookFlowChild::child_id` — mirrors
-/// `WriterWorkingScene`/`FlowWorkingScene` (`📓️wave3-reports/writer-report.md`,
-/// `📓️wave4-reports/flow-report.md`).
+/// steps within that call. The scene is retained by the exact `PlaybookFlowChild` instance —
+/// mirrors `WriterWorkingScene`/`FlowWorkingScene` without a process-global id map.
 ///
 /// ⚠️ **Checked against the real resolver seam before building this** (per this ticket's migration
 /// recipe §3): `🔌️plugin/🦀️component.rs`'s `ArtifactView::with_children`/`ChildContentView` IS real
 /// and IS generically threaded through `VcsArtifactApp`'s `handle`/`render`/`import_media` call
 /// sites (`ArtifactView::with_children(snapshot, history, ChildContentView::new(children))`, not
-/// `ArtifactView::new`) — traced directly in the framework source, not assumed. But `self.children`
-/// (`VcsArtifactApp`'s live child-store map) is populated ONLY by `open_child`/`register_child`/
-/// `absorb_created_children`, none of which any composed plugin in this ticket (including this one)
-/// ever calls — child creation here is still pure content-addressed-HANDLE minting inline in a diff,
-/// never a registered live child store. So `doc.children` is unconditionally empty for playbook at
-/// every call site that DOES receive it, and — separately and unconditionally — `MutationKind::diff`
-/// never receives a children view at all, real or empty. This cache is therefore still required for
-/// diff-building (no substitute exists), and is reused for `render`/`import_media` too rather than
-/// mixing two different resolution strategies for the same data.
+/// `ArtifactView::new`) — traced directly in the framework source, not assumed. Mutation traits do
+/// not receive that resolver, so the opaque child handle carries an ephemeral local owner used only
+/// while the handle is live in this process. Cloning the handle retains the same immutable owner;
+/// minting a new handle attaches a new owner.
 ///
-/// Same documented staleness gap as every prior exemplar: store-level undo/redo bypasses
-/// `ArtifactApp::handle` entirely, so a handle can in principle go uncached (a fresh process, or an
-/// undo past this session's history). `playbook_working_scene`/`_for_handle` fail soft (an empty
-/// scene) rather than panicking. A real fix needs actual child-store registration wired into this
-/// plugin's mutation lifecycle, which no WASM-guest plugin in this repo has yet.
+/// A deserialized handle has no ephemeral owner and therefore resolves to an empty scene until the
+/// child store attaches one. This is fail-soft and instance-local: equal ids cannot leak content
+/// across documents, sessions, threads, or ABA handle reuse.
 #[derive(Clone, Debug, Default)]
 pub struct PlaybookWorkingScene {
     pub steps: Vec<PlaybookStep>,
 }
 
-thread_local! {
-    static PLAYBOOK_SCRATCH: RefCell<HashMap<String, Vec<PlaybookStep>>> = RefCell::new(HashMap::new());
+/// 📝 Attaches one immutable working scene to this exact flow child owner.
+pub fn attach_playbook_steps(handle: &mut PlaybookFlowChild, steps: Vec<PlaybookStep>) {
+    handle.set_local_owner(Arc::new(PlaybookWorkingScene { steps }));
 }
 
-/// 📝 Seeds the scratch cache for the `flow` child's handle — call whenever new step content is
-/// about to become a document's `flow`/`document` field pair (every mutation-diff/fixture builder in
-/// this plugin does, via [`playbook_content_handles_and_cache`]).
-pub async fn cache_playbook_steps(flow_child_id: &str, steps: Vec<PlaybookStep>) {
-    PLAYBOOK_SCRATCH.with(|cache| cache.borrow_mut().insert(flow_child_id.to_string(), steps));
+/// 🧵️ Retains this exact flow child's immutable scene without cloning its rows.
+pub fn playbook_working_scene_owner(handle: &PlaybookFlowChild) -> Arc<PlaybookWorkingScene> {
+    handle.local_owner::<PlaybookWorkingScene>().unwrap_or_else(|| Arc::new(PlaybookWorkingScene::default()))
 }
 
-/// 🔎 Reads the cached live steps for a `flow` child handle — an empty scene (never a panic) when
-/// nothing has cached it yet (see this region's module doc comment for why that can happen).
-pub async fn playbook_working_scene_for_handle(handle: &PlaybookFlowChild) -> PlaybookWorkingScene {
-    PLAYBOOK_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned()).map(|steps| PlaybookWorkingScene { steps }).unwrap_or_default()
+/// 🔎 Reads an owned scene clone for mutation paths that edit a private next value.
+pub fn playbook_working_scene_for_handle(handle: &PlaybookFlowChild) -> PlaybookWorkingScene {
+    playbook_working_scene_owner(handle).as_ref().clone()
 }
 
 /// 🔎 Reads the current document's live steps off its `flow` child handle — the single read call
 /// site every mutation diff/inverse/render path in this plugin uses instead of the old
 /// `snapshot.steps` field access.
-pub async fn playbook_working_scene(snapshot: &PlaybookSnapshot) -> PlaybookWorkingScene {
+pub fn playbook_working_scene(snapshot: &PlaybookSnapshot) -> PlaybookWorkingScene {
     playbook_working_scene_for_handle(&snapshot.flow)
 }
 
 /// 🔎 Convenience: just the steps (see [`playbook_working_scene`]).
-pub async fn playbook_steps(snapshot: &PlaybookSnapshot) -> Vec<PlaybookStep> {
+pub fn playbook_steps(snapshot: &PlaybookSnapshot) -> Vec<PlaybookStep> {
     playbook_working_scene(snapshot).steps
 }
 
-/// 🏗️ Mints new content-addressed `document`+`flow` handles AND seeds the scratch cache with the
-/// steps in one call — the standard way every mutation-diff/fixture builder in this plugin creates a
-/// `(document, flow)` field pair; never construct handles without also caching, or
-/// [`playbook_working_scene`] will read back empty.
-pub async fn playbook_content_handles_and_cache(title: Option<&str>, steps: Vec<PlaybookStep>) -> (PlaybookDocumentChild, PlaybookFlowChild) {
-    let flow_handle = flow_content_child_handle(&steps);
+/// 🏗️ Mints new content-addressed `document`+`flow` handles and attaches the exact flow handle's
+/// immutable local working scene in one call.
+pub fn playbook_content_handles(title: Option<&str>, steps: Vec<PlaybookStep>) -> (PlaybookDocumentChild, PlaybookFlowChild) {
+    let mut flow_handle = flow_content_child_handle(&steps);
     let document_handle = document_child_handle(title, &steps);
-    cache_playbook_steps(&flow_handle.child_id, steps);
+    attach_playbook_steps(&mut flow_handle, steps);
     (document_handle, flow_handle)
 }
 
 /// 🏗️ Builds a full `PlaybookSnapshot` from literal steps — the standard fixture/import constructor
 /// replacing the old 5-field `PlaybookSnapshot { ..., steps }` struct literal now that
 /// `document`/`flow` are composed child handles, not a plain field.
-pub async fn playbook_snapshot_with_steps(schema: &str, id: &str, version: &str, title: Option<String>, steps: Vec<PlaybookStep>) -> PlaybookSnapshot {
-    let (document, flow) = playbook_content_handles_and_cache(title.as_deref(), steps);
+pub fn playbook_snapshot_with_steps(schema: &str, id: &str, version: &str, title: Option<String>, steps: Vec<PlaybookStep>) -> PlaybookSnapshot {
+    let (document, flow) = playbook_content_handles(title.as_deref(), steps);
     PlaybookSnapshot { schema: schema.into(), id: id.into(), version: version.into(), title, document, flow }
 }
 //#endregion 🔖️WorkingScene
@@ -272,7 +259,7 @@ pub async fn playbook_snapshot_with_steps(schema: &str, id: &str, version: &str,
 /// (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's artifact-scoped
 /// function set. Lives at the artifact root, not `⚙️engine` (reloc-g7 revision of that same ticket) —
 /// `declaration()` describes the artifact (kind/schema/io/ownership), it is not engine behaviour.
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
         ("s.playbook.standard.v1", "standard", "1", &[], None),
@@ -440,7 +427,7 @@ mod tests {
     }
 
     //#region 🌉️ContentBridgeLaws
-    async fn sample_steps() -> Vec<PlaybookStep> {
+    fn sample_steps() -> Vec<PlaybookStep> {
         vec![
             PlaybookStep {
                 id: "intro".into(),
@@ -500,6 +487,74 @@ mod tests {
             assert_eq!(projected.title, original.title);
             assert_eq!(projected.description, original.description);
             assert!(projected.blocks.is_empty(), "document alone cannot recover block data — flow is that data's source of truth");
+        }
+    }
+
+    fn one_step(title: &str) -> Vec<PlaybookStep> {
+        vec![PlaybookStep { id: "step".into(), title: title.into(), description: None, blocks: Vec::new() }]
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn scene_owner_fixture_proves_identity_isolation_aba_wire_omission_and_bounded_close() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/playbook-scene-owner-law.json")).expect("language-neutral playbook scene fixture");
+        let cases = fixture["cases"].as_array().expect("fixture cases");
+        assert_eq!(fixture["schemaVersion"], 1);
+        assert_eq!(fixture["ownedSlots"], 1);
+        assert_eq!(cases.len(), fixture["maximumCases"].as_u64().expect("bounded maximum") as usize);
+        assert_eq!(cases.len(), 5);
+
+        for case in cases {
+            let law = case["law"].as_str().expect("law");
+            let first = case["first"].as_str().expect("first");
+            let second = case["second"].as_str().expect("second");
+            match law {
+                "cloneIdentity" => {
+                    let snapshot = playbook_snapshot_with_steps(PLAYBOOK_DOCUMENT_SCHEMA, "identity", "1", None, one_step(first));
+                    let retained = playbook_working_scene_owner(&snapshot.flow);
+                    let cloned = snapshot.clone();
+                    let cloned_owner = playbook_working_scene_owner(&cloned.flow);
+                    assert!(Arc::ptr_eq(&retained, &cloned_owner));
+                    assert_eq!(cloned_owner.steps[0].title, first);
+                    assert_eq!(Arc::strong_count(&retained), 4);
+                }
+                "instanceIsolation" => {
+                    let mut left = flow_content_child_handle(&one_step(first));
+                    let mut right = left.clone();
+                    attach_playbook_steps(&mut left, one_step(first));
+                    attach_playbook_steps(&mut right, one_step(second));
+                    assert_eq!(playbook_working_scene_owner(&left).steps[0].title, first);
+                    assert_eq!(playbook_working_scene_owner(&right).steps[0].title, second);
+                }
+                "abaIsolation" => {
+                    let mut stale = flow_content_child_handle(&one_step("same-identity"));
+                    attach_playbook_steps(&mut stale, one_step(first));
+                    let mut reused_identity = flow_content_child_handle(&one_step("same-identity"));
+                    assert_eq!(stale.child_id, reused_identity.child_id);
+                    attach_playbook_steps(&mut reused_identity, one_step(second));
+                    assert_eq!(playbook_working_scene_owner(&stale).steps[0].title, first);
+                    assert_eq!(playbook_working_scene_owner(&reused_identity).steps[0].title, second);
+                }
+                "wireOmission" => {
+                    let snapshot = playbook_snapshot_with_steps(PLAYBOOK_DOCUMENT_SCHEMA, "wire", "1", None, one_step(first));
+                    let wire = serde_json::to_value(&snapshot).expect("third-party serde oracle serializes snapshot");
+                    assert!(wire.pointer("/flow/localOwner").is_none());
+                    let decoded: PlaybookSnapshot = serde_json::from_value(wire).expect("third-party serde oracle decodes snapshot");
+                    assert!(decoded.flow.local_owner::<PlaybookWorkingScene>().is_none());
+                    assert!(playbook_working_scene_owner(&decoded.flow).steps.is_empty());
+                    assert_eq!(playbook_working_scene_owner(&snapshot.flow).steps[0].title, first);
+                }
+                "boundedClose" => {
+                    let snapshot = playbook_snapshot_with_steps(PLAYBOOK_DOCUMENT_SCHEMA, "close", "1", None, one_step(first));
+                    let retained = playbook_working_scene_owner(&snapshot.flow);
+                    let weak = Arc::downgrade(&retained);
+                    assert_eq!(Arc::strong_count(&retained), fixture["ownedSlots"].as_u64().expect("owned slots") as usize + 1);
+                    drop(snapshot);
+                    assert_eq!(Arc::strong_count(&retained), 1);
+                    drop(retained);
+                    assert!(weak.upgrade().is_none());
+                }
+                other => panic!("unexpected playbook scene law {other}"),
+            }
         }
     }
     //#endregion 🌉️ContentBridgeLaws

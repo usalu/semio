@@ -106,27 +106,27 @@ pub mod derived_construction {
         type Snapshot = StlSnapshot;
         type Mutation = StlMutation;
         type Diff = StlDiff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: StlSnapshot::default(), diagnostics: Vec::new() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<StlSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<StlSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<StlSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<StlSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::stl::schema::mutations::apply_stl_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <StlDiff as protocol::MutationDiff<StlSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -182,7 +182,7 @@ pub mod derived_analysis {
         type Parts = StlParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
 
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Text(text) => {
                     let body = match store::semio_format::split_text_preamble(text) {
@@ -198,7 +198,7 @@ pub mod derived_analysis {
             }
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = StlParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -233,12 +233,12 @@ pub mod derived_analysis {
         #[semio_framework_async_macros::async_test]
         async fn sniff_real_ascii_stl_is_high() {
             let text = "solid mesh\n  facet normal 0 0 1\n    outer loop\n      vertex 0 0 0\n      vertex 1 0 0\n      vertex 0 1 0\n    endloop\n  endfacet\nendsolid mesh\n";
-            assert_eq!(StlAnalyzerAnalysis::sniff(&AnalyzeSource::Text(text)).await, IoConfidence::High);
+            assert_eq!(StlAnalyzerAnalysis::sniff(&AnalyzeSource::Text(text)), IoConfidence::High);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn sniff_unrelated_text_is_low() {
-            assert_eq!(StlAnalyzerAnalysis::sniff(&AnalyzeSource::Text("not an stl file")).await, IoConfidence::Low);
+            assert_eq!(StlAnalyzerAnalysis::sniff(&AnalyzeSource::Text("not an stl file")), IoConfidence::Low);
         }
     }
     //#endregion 🧪️Tests

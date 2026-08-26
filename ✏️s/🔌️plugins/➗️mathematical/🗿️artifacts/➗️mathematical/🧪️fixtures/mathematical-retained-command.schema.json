@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/mathematical-retained-command-law.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "contract", "actions", "hostileCases"],
+  "properties": {
+    "$schema": { "const": "./mathematical-retained-command.schema.json" },
+    "schemaVersion": { "const": 1 },
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rawBytes", "wirePageBytes", "workItems", "durationMillis", "maximumStepMillis", "checkpointBytes", "closeItems"],
+      "properties": {
+        "rawBytes": { "const": 65536 },
+        "wirePageBytes": { "const": 2048 },
+        "workItems": { "const": 65536 },
+        "durationMillis": { "const": 7500 },
+        "maximumStepMillis": { "type": "number", "exclusiveMinimum": 0, "maximum": 8 },
+        "checkpointBytes": { "const": 40 },
+        "closeItems": { "const": 1 }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "uniqueItems": true,
+      "prefixItems": [
+        { "const": "setDocument" },
+        { "const": "setAlgorithm" },
+        { "const": "setDirected" },
+        { "const": "nodeGraphEdit" },
+        { "const": "nodeGraphViewport" },
+        { "const": "setPoints" },
+        { "const": "setLocale" }
+      ],
+      "items": false
+    },
+    "hostileCases": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["law", "maximum", "maximumPlusOneAccepted"],
+        "properties": {
+          "law": {
+            "enum": [
+              "nodes", "edges", "points", "editJsonBytes", "editOperations", "deleteIds", "textBytes", "localeBytes",
+              "registrationIdentity", "interruptionReplay", "checkpointIdentity", "cancelBefore", "cancelAfter", "repeatedClose"
+            ]
+          },
+          "maximum": { "type": "integer", "minimum": 1, "maximum": 65536 },
+          "maximumPlusOneAccepted": { "const": false }
+        }
+      }
+    }
+  }
+}

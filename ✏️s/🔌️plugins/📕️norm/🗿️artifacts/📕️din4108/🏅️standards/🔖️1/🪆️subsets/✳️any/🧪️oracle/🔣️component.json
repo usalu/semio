@@ -23,6 +23,252 @@
     {
       "id": "din4108-1-any",
       "capability": "din4108-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-airtightness-class",
+          "sourceMutationDirectoryName": "🪚change-airtightness-class",
+          "mutationDirectoryName": "🪚change-airtightness-class",
+          "scenarios": [
+            {
+              "id": "upgrades-the-airtightness-class-to-class1",
+              "directoryName": "🧪️upgrades-the-airtightness-class-to-class1"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-airtightness-n50",
+          "sourceMutationDirectoryName": "🧰change-airtightness-n50",
+          "mutationDirectoryName": "🧰change-airtightness-n50",
+          "scenarios": [
+            {
+              "id": "tightens-n50-to-1-point-5-per-hour",
+              "directoryName": "🧪️tightens-n50-to-1-point-5-per-hour"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-application-type",
+          "sourceMutationDirectoryName": "🪤change-application-type",
+          "mutationDirectoryName": "🪤change-application-type",
+          "scenarios": [
+            {
+              "id": "reclassifies-the-application-type-as-wab",
+              "directoryName": "🧪️reclassifies-the-application-type-as-wab"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bb2-details-conform",
+          "sourceMutationDirectoryName": "🔀change-bb2-details-conform",
+          "mutationDirectoryName": "🔀change-bb2-details-conform",
+          "scenarios": [
+            {
+              "id": "declares-the-beiblatt-2-details-non-conforming",
+              "directoryName": "🧪️declares-the-beiblatt-2-details-non-conforming"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-catalog-id",
+          "sourceMutationDirectoryName": "🧵change-catalog-id",
+          "mutationDirectoryName": "🧵change-catalog-id",
+          "scenarios": [
+            {
+              "id": "repoints-the-catalogue-entry-to-aw-07",
+              "directoryName": "🧪️repoints-the-catalogue-entry-to-aw-07"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-category",
+          "sourceMutationDirectoryName": "🪜change-category",
+          "mutationDirectoryName": "🪜change-category",
+          "scenarios": [
+            {
+              "id": "retypes-the-assembly-as-office",
+              "directoryName": "🧪️retypes-the-assembly-as-office"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-climate",
+          "sourceMutationDirectoryName": "🛠️change-climate",
+          "mutationDirectoryName": "🛠️change-climate",
+          "scenarios": [
+            {
+              "id": "moves-the-building-to-climate-zone-4",
+              "directoryName": "🧪️moves-the-building-to-climate-zone-4"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-declared-application-class",
+          "sourceMutationDirectoryName": "🧶change-declared-application-class",
+          "mutationDirectoryName": "🧶change-declared-application-class",
+          "scenarios": [
+            {
+              "id": "declares-application-class-kh",
+              "directoryName": "🧪️declares-application-class-kh"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-envelope-area-m2",
+          "sourceMutationDirectoryName": "🪢change-envelope-area-m2",
+          "mutationDirectoryName": "🪢change-envelope-area-m2",
+          "scenarios": [
+            {
+              "id": "grows-the-envelope-to-150-m2",
+              "directoryName": "🧪️grows-the-envelope-to-150-m2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-irradiance-wm2",
+          "sourceMutationDirectoryName": "🧲change-irradiance-wm2",
+          "mutationDirectoryName": "🧲change-irradiance-wm2",
+          "scenarios": [
+            {
+              "id": "raises-design-irradiance-to-750-w-per-m2",
+              "directoryName": "🧪️raises-design-irradiance-to-750-w-per-m2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-layer-lambda",
+          "sourceMutationDirectoryName": "🪒change-layer-lambda",
+          "mutationDirectoryName": "🪒change-layer-lambda",
+          "scenarios": [
+            {
+              "id": "degrades-the-masonry-lambda-to-0-point-5",
+              "directoryName": "🧪️degrades-the-masonry-lambda-to-0-point-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-layer-thickness",
+          "sourceMutationDirectoryName": "🪡change-layer-thickness",
+          "mutationDirectoryName": "🪡change-layer-thickness",
+          "scenarios": [
+            {
+              "id": "thickens-the-insulation-layer-to-0-point-2-m",
+              "directoryName": "🧪️thickens-the-insulation-layer-to-0-point-2-m"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-material-id",
+          "sourceMutationDirectoryName": "🪥change-material-id",
+          "mutationDirectoryName": "🪥change-material-id",
+          "scenarios": [
+            {
+              "id": "swaps-the-insulation-material-to-eps",
+              "directoryName": "🧪️swaps-the-insulation-material-to-eps"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-moisture-mu-exterior",
+          "sourceMutationDirectoryName": "🪛change-moisture-mu-exterior",
+          "mutationDirectoryName": "🪛change-moisture-mu-exterior",
+          "scenarios": [
+            {
+              "id": "raises-the-exterior-mu-value-to-20",
+              "directoryName": "🧪️raises-the-exterior-mu-value-to-20"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-moisture-mu-interior",
+          "sourceMutationDirectoryName": "🪝change-moisture-mu-interior",
+          "mutationDirectoryName": "🪝change-moisture-mu-interior",
+          "scenarios": [
+            {
+              "id": "raises-the-interior-mu-value-to-2-point-5",
+              "directoryName": "🧪️raises-the-interior-mu-value-to-2-point-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-psi-times-l-sum",
+          "sourceMutationDirectoryName": "🧯change-psi-times-l-sum",
+          "mutationDirectoryName": "🧯change-psi-times-l-sum",
+          "scenarios": [
+            {
+              "id": "raises-the-thermal-bridge-sum-to-0-point-05",
+              "directoryName": "🧪️raises-the-thermal-bridge-sum-to-0-point-05"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-rh-int",
+          "sourceMutationDirectoryName": "🪣change-rh-int",
+          "mutationDirectoryName": "🪣change-rh-int",
+          "scenarios": [
+            {
+              "id": "raises-indoor-relative-humidity-to-0-point-65",
+              "directoryName": "🧪️raises-indoor-relative-humidity-to-0-point-65"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-solar-absorptance",
+          "sourceMutationDirectoryName": "🏷️change-solar-absorptance",
+          "mutationDirectoryName": "🏷️change-solar-absorptance",
+          "scenarios": [
+            {
+              "id": "lightens-the-facade-to-absorptance-0-point-25",
+              "directoryName": "🧪️lightens-the-facade-to-absorptance-0-point-25"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-t-int-c",
+          "sourceMutationDirectoryName": "🚨change-t-int-c",
+          "mutationDirectoryName": "🚨change-t-int-c",
+          "scenarios": [
+            {
+              "id": "raises-the-indoor-design-temperature-to-22-point-5-c",
+              "directoryName": "🧪️raises-the-indoor-design-temperature-to-22-point-5-c"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-layer",
+          "sourceMutationDirectoryName": "🔢insert-layer",
+          "mutationDirectoryName": "🔢insert-layer",
+          "scenarios": [
+            {
+              "id": "inserts-an-interior-plaster-layer-at-index-1",
+              "directoryName": "🧪️inserts-an-interior-plaster-layer-at-index-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-layer",
+          "sourceMutationDirectoryName": "🛡️remove-layer",
+          "mutationDirectoryName": "🛡️remove-layer",
+          "scenarios": [
+            {
+              "id": "removes-the-load-bearing-masonry-layer",
+              "directoryName": "🧪️removes-the-load-bearing-masonry-layer"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-layers",
+          "sourceMutationDirectoryName": "🧷reorder-layers",
+          "mutationDirectoryName": "🧷reorder-layers",
+          "scenarios": [
+            {
+              "id": "moves-the-insulation-in-front-of-the-masonry",
+              "directoryName": "🧪️moves-the-insulation-in-front-of-the-masonry"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "change-category",
         "change-climate",

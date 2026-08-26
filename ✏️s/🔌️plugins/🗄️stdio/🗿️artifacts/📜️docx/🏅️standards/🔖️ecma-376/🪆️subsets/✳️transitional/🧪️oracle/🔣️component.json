@@ -25,6 +25,9 @@
     {
       "id": "docx-ecma-376-transitional",
       "capability": "docx-ecma-376-transitional-mutate",
+      "standardDirectoryName": "🔖️ecma-376",
+      "subsetDirectoryName": "✳️transitional",
+      "vectors": [],
       "kinds": [
         "no-mutation",
         "set-snapshot",

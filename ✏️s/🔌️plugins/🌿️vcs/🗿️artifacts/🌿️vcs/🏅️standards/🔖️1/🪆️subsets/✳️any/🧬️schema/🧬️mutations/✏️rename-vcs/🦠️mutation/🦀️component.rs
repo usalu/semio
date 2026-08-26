@@ -13,20 +13,20 @@ pub struct RenameVcs {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn rename_vcs(new_title: String) -> VcsDemoMutation {
+pub fn rename_vcs(new_title: String) -> VcsDemoMutation {
     VcsDemoMutation::RenameVcs(RenameVcs { new_title })
 }
 
 impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for RenameVcs {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "vcs", kind: "rename-vcs", record: "RenamedVcs" };
 
-    async fn diff(&self, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
+    fn diff(&self, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
+    fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Rename vcs to \"{}\"", self.new_title)
     }
 }

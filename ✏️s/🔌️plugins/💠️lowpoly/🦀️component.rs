@@ -24,7 +24,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// is deleted, not deprecated. `.editor::<E>(…)` registers the mutation-capable surface (the former
 /// sole app), `.viewer::<V>(…)` the new genuinely read-only surface — see `👁️viewer/🦀️component.rs`
 /// for why it is not a thin wrapper around the editor.
-pub async fn plugin() -> Result<Plugin<LowpolyApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<LowpolyApps>, semio_framework_plugin::PluginAssemblyError> {
     Plugin::<LowpolyApps>::builder("lowpoly")
         .label("Lowpoly")
         .version("0.1.0")

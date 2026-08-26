@@ -117,27 +117,27 @@ pub mod derived_construction {
         type Snapshot = SemioGraphSnapshot;
         type Mutation = SemioGraphMutation;
         type Diff = SemioGraphDiff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: SemioGraphSnapshot::default() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<SemioGraphSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<SemioGraphSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SemioGraphSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<SemioGraphSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_graph_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioGraphDiff as protocol::MutationDiff<SemioGraphSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -154,7 +154,7 @@ pub mod derived_construction {
                 .add_node("n2", "sink", "Sink", SemioPoint2 { x: 10.0, y: 10.0 }, vec![], vec![])
                 .add_edge("e1", "n1", "n2", "flow", "Main")
                 .build()
-                .await.expect("build");
+                .expect("build");
             assert_eq!(snapshot.nodes.len(), 2);
             assert_eq!(snapshot.edges.len(), 1);
         }
@@ -180,7 +180,7 @@ pub mod derived_analysis {
         type Parts = SemioGraphParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("graph") };
 
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.as_bytes();
@@ -200,7 +200,7 @@ pub mod derived_analysis {
             }
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SemioGraphParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

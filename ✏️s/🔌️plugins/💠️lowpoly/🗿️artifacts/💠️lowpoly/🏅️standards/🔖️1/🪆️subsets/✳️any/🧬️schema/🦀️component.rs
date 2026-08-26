@@ -137,17 +137,17 @@ impl Default for LowpolyArtifact {
 
 impl LowpolyArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> crate::artifacts::lowpoly::LowpolySnapshot {
+    pub fn to_snapshot(&self) -> crate::artifacts::lowpoly::LowpolySnapshot {
         crate::artifacts::lowpoly::LowpolySnapshot { schema: self.schema.clone(), objects: self.objects.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: crate::artifacts::lowpoly::LowpolySnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::artifacts::lowpoly::LowpolySnapshot) -> Self {
         Self { schema: snapshot.schema, objects: snapshot.objects, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::lowpoly::LowpolySnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::lowpoly::LowpolySnapshot) {
         self.schema = snapshot.schema;
         self.objects = snapshot.objects;
     }
@@ -156,7 +156,7 @@ impl LowpolyArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.lowpoly.lowpoly` — twenty handcrafted schema leaves.
-pub async fn lowpoly_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn lowpoly_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.lowpoly.lowpoly",
         artifact: schema::FacetLeaves {
@@ -205,7 +205,7 @@ pub async fn lowpoly_artifact_schema_descriptor() -> schema::ArtifactSchemaDescr
 /// the "same" geometry), which would make `mesh_child_handle`'s content hash — computed over the raw
 /// JSON string — disagree between `default_snapshot()`'s handle and `default_mesh_workspace()`'s
 /// content, tripping `LowpolyDocument::reload_meshes`'s staleness check spuriously.
-pub async fn default_snapshot() -> crate::artifacts::lowpoly::LowpolySnapshot {
+pub fn default_snapshot() -> crate::artifacts::lowpoly::LowpolySnapshot {
     default_snapshot_and_mesh_workspace().0.clone()
 }
 
@@ -215,7 +215,7 @@ pub async fn default_snapshot() -> crate::artifacts::lowpoly::LowpolySnapshot {
 /// `LowpolyScratch::default()` seed from this so a freshly booted session can immediately reload the
 /// mesh `default_snapshot()` describes, without a real child-document resolution API (none exists
 /// yet for any WASM-guest plugin in this repo).
-pub async fn default_mesh_workspace() -> std::collections::HashMap<String, String> {
+pub fn default_mesh_workspace() -> std::collections::HashMap<String, String> {
     default_snapshot_and_mesh_workspace().1.clone()
 }
 
@@ -223,7 +223,7 @@ pub async fn default_mesh_workspace() -> std::collections::HashMap<String, Strin
 /// not optional) — computed once per process via `OnceLock`, so every caller of `default_snapshot()`/
 /// `default_mesh_workspace()` observes the identical `mesh_json` and therefore the identical
 /// content-addressed `mesh` handle, no matter how many times each is called independently.
-async fn default_snapshot_and_mesh_workspace() -> &'static (crate::artifacts::lowpoly::LowpolySnapshot, std::collections::HashMap<String, String>) {
+fn default_snapshot_and_mesh_workspace() -> &'static (crate::artifacts::lowpoly::LowpolySnapshot, std::collections::HashMap<String, String>) {
     static CACHE: std::sync::OnceLock<(crate::artifacts::lowpoly::LowpolySnapshot, std::collections::HashMap<String, String>)> = std::sync::OnceLock::new();
     CACHE.get_or_init(|| {
         let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim");
@@ -238,19 +238,19 @@ async fn default_snapshot_and_mesh_workspace() -> &'static (crate::artifacts::lo
 
 /// 🔧️ Shared by the app's compute session and the `edit-paint-layer`/`insert-paint-layer` mutation
 /// leaves — a mutable lookup of an object by id within a projection. Relocated from `⚙️engine`.
-pub async fn object_mut<'a>(projection: &'a mut crate::artifacts::lowpoly::LowpolySnapshot, object_id: &str) -> Option<&'a mut LowpolyObject> {
+pub fn object_mut<'a>(projection: &'a mut crate::artifacts::lowpoly::LowpolySnapshot, object_id: &str) -> Option<&'a mut LowpolyObject> {
     projection.objects.iter_mut().find(|object| object.id == object_id)
 }
 
 /// 🔧️ Shared by the app's compute session and `edit-paint-layer`'s `↩️inverse` leaf (which reads the
 /// currently-stored bytes at each run's offset to compute the undo runs). Relocated from `⚙️engine`.
-pub async fn layer_pixels_at<'a>(projection: &'a crate::artifacts::lowpoly::LowpolySnapshot, object_id: &str, layer_index: usize) -> Option<&'a [u8]> {
+pub fn layer_pixels_at<'a>(projection: &'a crate::artifacts::lowpoly::LowpolySnapshot, object_id: &str, layer_index: usize) -> Option<&'a [u8]> {
     projection.objects.iter().find(|object| object.id == object_id).and_then(|object| object.paint_layers.get(layer_index)).map(|layer| layer.pixels.as_slice())
 }
 
 /// 🔎 Returns whether `s.lowpoly.lowpoly` is present in the process-local schema registry. Relocated
 /// from `⚙️engine` alongside `default_snapshot` (same rule; mirrors `s.space.home`'s identical move).
-pub async fn artifact_schema_registered() -> bool {
+pub fn artifact_schema_registered() -> bool {
     ::schema::artifact_schema_descriptor_registered("s.lowpoly.lowpoly")
 }
 //#endregion 🔖️DocumentHelpers
@@ -261,7 +261,7 @@ pub async fn artifact_schema_registered() -> bool {
 /// texture when one is supplied. Shared by the app's live 3D scene builder and media export. Relocated
 /// from `⚙️engine/🧵️media` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): a pure
 /// `Value` → `MeshData` conversion, not engine behaviour.
-pub async fn mesh_data_from_transfer(transfer: &Value, paint_texture: Option<String>) -> MeshData {
+pub fn mesh_data_from_transfer(transfer: &Value, paint_texture: Option<String>) -> MeshData {
     let read_f32 = |key: &str| -> Vec<f32> { transfer.get(key).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default() };
     let read_u32 = |key: &str| -> Vec<u32> { transfer.get(key).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default() };
     let read_u8 = |key: &str| -> Vec<u8> { transfer.get(key).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default() };
@@ -283,7 +283,7 @@ pub async fn mesh_data_from_transfer(transfer: &Value, paint_texture: Option<Str
 
 /// 🔺️ Rebuilds a fresh single-object lowpoly projection from a DWG-imported mesh. Relocated from
 /// `⚙️engine/🧵️media`.
-pub async fn lowpoly_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
+pub fn lowpoly_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
     let halfedge = HalfedgeMesh::from_indexed_triangles(&mesh.positions, &mesh.indices).map_err(|err| format!("{err:?}"))?;
     let mesh_json = halfedge.to_json().map_err(|err| format!("{err:?}"))?;
     let snapshot = crate::artifacts::lowpoly::snapshot_from_mesh_json(&mesh_json, "obj-1", "Imported Mesh");
@@ -292,13 +292,13 @@ pub async fn lowpoly_document_from_mesh(mesh: &MeshData) -> Result<Value, String
 
 /// 🧊️ Minimal document wrapper for `3d.mesh` resources — no dedicated schema exists yet. Relocated
 /// from `⚙️engine/🧵️media`.
-pub async fn mesh_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
+pub fn mesh_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
     let mesh_value = serde_json::to_value(mesh).map_err(|err| err.to_string())?;
     Ok(serde_json::json!({ "schema": "mesh.document", "mesh": mesh_value }))
 }
 
 /// 🔺️ Relocated from `⚙️engine/🧵️media`.
-pub async fn mesh_from_mesh_document(doc: &Value) -> Result<MeshData, String> {
+pub fn mesh_from_mesh_document(doc: &Value) -> Result<MeshData, String> {
     doc.get("mesh").and_then(|value| serde_json::from_value(value.clone()).ok()).filter(|mesh: &MeshData| !mesh.positions.is_empty() && !mesh.indices.is_empty()).map_or_else(|| Ok(semio_framework_plugin::mesh_from_kind("box")), Ok)
 }
 //#endregion 🔖️MediaConversion
@@ -307,7 +307,7 @@ pub async fn mesh_from_mesh_document(doc: &Value) -> Result<MeshData, String> {
 /// @emoji 🎨️ Alpha-composites an object's paint layers into one RGBA buffer (bottom to top). Relocated
 /// from `⚙️engine/🎨️paint` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): a pure
 /// pixel-buffer algorithm, not engine behaviour.
-pub async fn composite_layer_pixels(layers: &[LowpolyPaintLayer]) -> Vec<u8> {
+pub fn composite_layer_pixels(layers: &[LowpolyPaintLayer]) -> Vec<u8> {
     let mut out = vec![0u8; LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4];
     for layer in layers.iter() {
         if !layer.visible {
@@ -336,7 +336,7 @@ pub async fn composite_layer_pixels(layers: &[LowpolyPaintLayer]) -> Vec<u8> {
 /// @emoji 🖌️ Stamps a soft round brush (or eraser) into a raw RGBA buffer in place. Shared by the
 /// app's compute session and the plugin's mid-drag scratch buffer. Relocated from `⚙️engine/🎨️paint`.
 #[allow(clippy::too_many_arguments, reason = "one brush stamp per call site; a params struct would only move the same 8 fields around for this single leaf fn")]
-pub async fn stamp_brush(pixels: &mut [u8], u: f32, v: f32, radius: f32, color: [u8; 4], hardness: f32, opacity: f32, eraser: bool) {
+pub fn stamp_brush(pixels: &mut [u8], u: f32, v: f32, radius: f32, color: [u8; 4], hardness: f32, opacity: f32, eraser: bool) {
     let size = LOWPOLY_PAINT_TEXTURE_SIZE as f32;
     let cx = (u.clamp(0.0, 1.0) * (size - 1.0)).round() as i32;
     let cy = ((1.0 - v.clamp(0.0, 1.0)) * (size - 1.0)).round() as i32;
@@ -373,7 +373,7 @@ pub async fn stamp_brush(pixels: &mut [u8], u: f32, v: f32, radius: f32, color: 
 
 /// @emoji 🪣️ Flood-fills a contiguous same-color region of a raw RGBA buffer in place. Relocated from
 /// `⚙️engine/🎨️paint`.
-pub async fn flood_fill(pixels: &mut [u8], u: f32, v: f32, color: [u8; 4]) {
+pub fn flood_fill(pixels: &mut [u8], u: f32, v: f32, color: [u8; 4]) {
     let size = LOWPOLY_PAINT_TEXTURE_SIZE;
     let sx = ((u.clamp(0.0, 1.0) * (size as f32 - 1.0)).round() as usize).min(size - 1);
     let sy = (((1.0 - v.clamp(0.0, 1.0)) * (size as f32 - 1.0)).round() as usize).min(size - 1);
@@ -409,7 +409,7 @@ pub async fn flood_fill(pixels: &mut [u8], u: f32, v: f32, color: [u8; 4]) {
 }
 
 /// @emoji 💧️ Reads one RGBA sample from a composited buffer at UV. Relocated from `⚙️engine/🎨️paint`.
-pub async fn sample_pixel_from(composite: &[u8], u: f32, v: f32) -> [u8; 4] {
+pub fn sample_pixel_from(composite: &[u8], u: f32, v: f32) -> [u8; 4] {
     let size = LOWPOLY_PAINT_TEXTURE_SIZE;
     let x = ((u.clamp(0.0, 1.0) * (size as f32 - 1.0)).round() as usize).min(size - 1);
     let y = (((1.0 - v.clamp(0.0, 1.0)) * (size as f32 - 1.0)).round() as usize).min(size - 1);
@@ -421,7 +421,7 @@ pub async fn sample_pixel_from(composite: &[u8], u: f32, v: f32) -> [u8; 4] {
 /// (`(offset, bytes)`) that turn `before` into `after`; the seam where a mutated scratch buffer becomes
 /// a `PaintStroke` operation. Returns raw `(offset, bytes)` tuples — `op` wraps each into its own
 /// `PixelRun`. Relocated from `⚙️engine/🎨️paint`.
-pub async fn pixel_runs_from_diff(before: &[u8], after: &[u8]) -> Vec<(u32, Vec<u8>)> {
+pub fn pixel_runs_from_diff(before: &[u8], after: &[u8]) -> Vec<(u32, Vec<u8>)> {
     let mut runs = Vec::new();
     let len = before.len().min(after.len());
     let mut index = 0;
@@ -457,19 +457,19 @@ pub mod derived_construction {
         type Snapshot = LowpolySnapshot;
         type Mutation = LowpolyMutation;
         type Diff = LowpolyDiff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: LowpolySnapshot::default(), diagnostics: Vec::new() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<LowpolySnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<LowpolySnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -477,12 +477,12 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <LowpolyDiff as protocol::MutationDiff<LowpolySnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -510,11 +510,11 @@ pub mod derived_analysis {
         type Parts = LowpolyParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.lowpoly", standard: StandardId("1"), subset: SubsetId("*") };
 
-        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = LowpolyParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -698,7 +698,7 @@ mod export_concrete_forest_mesh_tests {
 
     /// Asserts every directed edge (by vertex id, after welding) has an opposite-winding counterpart, i.e. the
     /// mesh has no open boundary loops.
-    async fn assert_watertight(mesh: &HalfedgeMesh) {
+    fn assert_watertight(mesh: &HalfedgeMesh) {
         let mut directed: HashMap<(u32, u32), u32> = HashMap::new();
         for fi in 0..mesh.face_count() {
             let verts = mesh.face_vertex_ids(FaceId(fi as u32)).expect("face verts");
@@ -711,7 +711,7 @@ mod export_concrete_forest_mesh_tests {
         assert!(open.is_empty(), "mesh is not watertight: {} open boundary edges, e.g. {:?}", open.len(), &open[..open.len().min(5)]);
     }
 
-    async fn open_boundary_count(mesh: &HalfedgeMesh) -> usize {
+    fn open_boundary_count(mesh: &HalfedgeMesh) -> usize {
         let mut directed: HashMap<(u32, u32), u32> = HashMap::new();
         for fi in 0..mesh.face_count() {
             let verts = mesh.face_vertex_ids(FaceId(fi as u32)).expect("face verts");
@@ -726,7 +726,7 @@ mod export_concrete_forest_mesh_tests {
     /// Spurious `fill_holes` caps on this solid spanned the open gap between vertical supports: large X
     /// extent *and* large Z extent on one face. Real CAD faces are either horizontal slabs (small Δz) or
     /// vertical support sides (small Δx).
-    async fn assert_no_spanning_face_across_support_gap(mesh: &HalfedgeMesh) {
+    fn assert_no_spanning_face_across_support_gap(mesh: &HalfedgeMesh) {
         for fi in 0..mesh.face_count() {
             let verts = mesh.face_vertex_ids(FaceId(fi as u32)).expect("face verts");
             let mut min_x = f32::MAX;

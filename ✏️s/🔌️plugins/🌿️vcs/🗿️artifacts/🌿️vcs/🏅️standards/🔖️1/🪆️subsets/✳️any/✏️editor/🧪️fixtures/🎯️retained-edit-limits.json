@@ -1,0 +1,10 @@
+{
+  "schema": "vcs.vcs.retained-edit-limits.v1",
+  "toolIds": ["textEdit", "edit"],
+  "maximumTextBytes": 8192,
+  "maximumTags": 4096,
+  "maximumOutputBytes": 16384,
+  "maximumWorkItems": 16400,
+  "rejectedAdditionalBytes": 1,
+  "closeGrant": { "items": 1, "bytes": 16384 }
+}

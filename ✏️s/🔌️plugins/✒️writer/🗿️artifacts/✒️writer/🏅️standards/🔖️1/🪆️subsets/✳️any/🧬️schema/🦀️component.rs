@@ -1,6 +1,6 @@
 //! 🧬️ Writer artifact schema — every field with its state class.
 
-use crate::artifacts::writer::{document_child_handle_and_cache, WriterDocumentChild, WriterEditorSelection, WriterEditorSettings, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
+use crate::artifacts::writer::{document_child_handle_with_text, WriterDocumentChild, WriterEditorSelection, WriterEditorSettings, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -55,22 +55,22 @@ impl Default for WriterArtifact {
 
 impl WriterArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> WriterSnapshot {
+    pub fn to_snapshot(&self) -> WriterSnapshot {
         WriterSnapshot { schema: self.schema.clone(), id: self.id.clone(), language_id: self.language_id.clone(), uri: self.uri.clone(), document: self.document.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot with UI defaults.
-    pub async fn from_snapshot(snapshot: WriterSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: WriterSnapshot) -> Self {
         Self { schema: snapshot.schema, id: snapshot.id, language_id: snapshot.language_id, uri: snapshot.uri, document: snapshot.document, ..Self::default_ui() }
     }
 
-    async fn default_ui() -> Self {
+    fn default_ui() -> Self {
         Self {
             schema: WRITER_DOCUMENT_SCHEMA.into(),
             id: String::new(),
             language_id: "plaintext".into(),
             uri: crate::artifacts::writer::default_uri(),
-            document: document_child_handle_and_cache("", "", "plaintext"),
+            document: document_child_handle_with_text("", "", "plaintext"),
             editor_selection: None,
             editor_settings: WriterEditorSettings::default(),
             format_signal: 0,
@@ -85,7 +85,7 @@ impl WriterArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot.
-    pub async fn set_snapshot(&mut self, snapshot: WriterSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: WriterSnapshot) {
         self.schema = snapshot.schema;
         self.id = snapshot.id;
         self.language_id = snapshot.language_id;
@@ -97,7 +97,7 @@ impl WriterArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.writer.writer` — twenty handcrafted schema leaves.
-pub async fn writer_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn writer_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.writer.writer",
         artifact: schema::FacetLeaves {
@@ -135,8 +135,8 @@ pub async fn writer_artifact_schema_descriptor() -> schema::ArtifactSchemaDescri
 //#region 🔖️DocumentHelpers
 /// 🌱️ The canonical empty `WriterSnapshot` — every artifact-tree helper here that needs a fallback or a
 /// baseline document builds off this one value.
-pub async fn empty_writer_snapshot() -> WriterSnapshot {
-    WriterSnapshot { schema: WRITER_DOCUMENT_SCHEMA.into(), id: "empty".into(), language_id: "plaintext".into(), uri: "writer://empty".into(), document: document_child_handle_and_cache("empty", "", "plaintext") }
+pub fn empty_writer_snapshot() -> WriterSnapshot {
+    WriterSnapshot { schema: WRITER_DOCUMENT_SCHEMA.into(), id: "empty".into(), language_id: "plaintext".into(), uri: "writer://empty".into(), document: document_child_handle_with_text("empty", "", "plaintext") }
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -150,7 +150,7 @@ pub struct GrammarToken {
     pub end: usize,
 }
 
-async fn byte_span_to_text_span(text: &str, start: usize, end: usize) -> dsl::TextSpan {
+fn byte_span_to_text_span(text: &str, start: usize, end: usize) -> dsl::TextSpan {
     let safe_end = end.min(text.len());
     let safe_start = start.min(safe_end);
     let prefix = &text[..safe_start];
@@ -160,7 +160,7 @@ async fn byte_span_to_text_span(text: &str, start: usize, end: usize) -> dsl::Te
     dsl::TextSpan::with_length(line, column, length.max(1))
 }
 
-async fn token_class_from_name(name: &str) -> dsl::TokenClass {
+fn token_class_from_name(name: &str) -> dsl::TokenClass {
     match name {
         "keyword" => dsl::TokenClass::Keyword,
         "string" => dsl::TokenClass::String,
@@ -179,19 +179,19 @@ impl dsl::DslIdiom for JackWriterIdiom {
     const LANG: &'static str = "jack";
     type Ast = String;
 
-    async fn parse(text: &str) -> Result<Self::Ast, dsl::TextError> {
+    fn parse(text: &str) -> Result<Self::Ast, dsl::TextError> {
         trinity::core::format(text).map_err(|e| dsl::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
 
-    async fn print(ast: &Self::Ast) -> String {
+    fn print(ast: &Self::Ast) -> String {
         ast.clone()
     }
 
-    async fn classify(text: &str) -> Vec<(dsl::TokenClass, dsl::TextSpan)> {
+    fn classify(text: &str) -> Vec<(dsl::TokenClass, dsl::TextSpan)> {
         trinity::core::semantic_tokens(text).into_iter().map(|t| (token_class_from_name(&t.class), byte_span_to_text_span(text, t.start, t.end))).collect()
     }
 
-    async fn complete(text: &str, offset: usize) -> Vec<dsl::CompletionItem> {
+    fn complete(text: &str, offset: usize) -> Vec<dsl::CompletionItem> {
         let graph = trinity::core::example_graph();
         trinity::core::complete(&graph, text, offset).into_iter().map(|item| dsl::CompletionItem { label: item.label, detail: item.detail }).collect()
     }
@@ -204,16 +204,16 @@ impl dsl::DslIdiom for WireWriterIdiom {
     const LANG: &'static str = "wire";
     type Ast = String;
 
-    async fn parse(text: &str) -> Result<Self::Ast, dsl::TextError> {
+    fn parse(text: &str) -> Result<Self::Ast, dsl::TextError> {
         dsl::parse_wire_text(text.trim())?;
         Ok(text.to_string())
     }
 
-    async fn print(ast: &Self::Ast) -> String {
+    fn print(ast: &Self::Ast) -> String {
         ast.clone()
     }
 
-    async fn classify(text: &str) -> Vec<(dsl::TokenClass, dsl::TextSpan)> {
+    fn classify(text: &str) -> Vec<(dsl::TokenClass, dsl::TextSpan)> {
         let limits = dsl::Limits::default();
         let Ok(tokens) = dsl::lex(text, &limits, false) else {
             return Vec::new();
@@ -238,7 +238,7 @@ impl dsl::DslIdiom for WireWriterIdiom {
 }
 
 /// @emoji 🎨️ Classifies `text` through the language registry (`idiom` / `LanguageSpec` hooks).
-pub async fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
+pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
     if language_id == "jack" {
         return trinity::core::semantic_tokens(text).into_iter().map(|t| GrammarToken { class: t.class, start: t.start, end: t.end }).collect();
     }
@@ -271,7 +271,7 @@ pub async fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToke
     Vec::new()
 }
 
-pub async fn language_completions_json(text: &str, language_id: &str, cursor: usize) -> Option<String> {
+pub fn language_completions_json(text: &str, language_id: &str, cursor: usize) -> Option<String> {
     if let Some(spec) = dsl::language(language_id) {
         let session = dsl::lsp::LanguageSession::open(spec, text.to_string());
         let items: Vec<Value> = session.completions_at(cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
@@ -284,13 +284,13 @@ pub async fn language_completions_json(text: &str, language_id: &str, cursor: us
     None
 }
 
-pub async fn jack_completions_json(text: &str, cursor: usize) -> Option<String> {
+pub fn jack_completions_json(text: &str, cursor: usize) -> Option<String> {
     let items: Vec<Value> = <JackWriterIdiom as dsl::DslIdiom>::complete(text, cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
     serde_json::to_string(&items).ok()
 }
 
 /// 🎼️ `wire` counterpart of [`jack_completions_json`] — see [`WireWriterIdiom`]'s doc comment.
-pub async fn wire_completions_json(text: &str, cursor: usize) -> Option<String> {
+pub fn wire_completions_json(text: &str, cursor: usize) -> Option<String> {
     let items: Vec<Value> = <WireWriterIdiom as dsl::DslIdiom>::complete(text, cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
     serde_json::to_string(&items).ok()
 }
@@ -323,7 +323,7 @@ pub struct JackAstNode {
     pub children: Vec<JackAstNode>,
 }
 
-pub async fn jack_ast_tree_icon(kind: &str) -> Option<&'static str> {
+pub fn jack_ast_tree_icon(kind: &str) -> Option<&'static str> {
     match kind {
         "query" => Some("file-code"),
         "match" | "create" | "merge" => Some("git-branch"),
@@ -342,17 +342,17 @@ pub async fn jack_ast_tree_icon(kind: &str) -> Option<&'static str> {
 
 /// 🌉️ Adapts trinity::core's shared [`trinity::core::SpannedNode`] tree into writer's own [`JackAstNode`]
 /// (adds the stable tree-item `id` the outline panel needs; `kind`/`label`/spans pass through unchanged).
-async fn jack_ast_from_spanned(node: &trinity::core::SpannedNode) -> JackAstNode {
+fn jack_ast_from_spanned(node: &trinity::core::SpannedNode) -> JackAstNode {
     JackAstNode { id: format!("jack-ast-{}-{}-{}", node.kind, node.start, node.end), kind: node.kind.clone(), label: node.label.clone(), start: node.start, end: node.end, children: node.children.iter().map(jack_ast_from_spanned).collect() }
 }
 
 /// 🌳️ Parse jack source into a span-tracked AST for hierarchy panels, via the shared `trinity::core` parser.
-pub async fn parse_jack_ast(text: &str) -> JackAstNode {
+pub fn parse_jack_ast(text: &str) -> JackAstNode {
     jack_ast_from_spanned(&trinity::core::parse_spanned(text))
 }
 
 /// 🎯️ Deepest AST node containing a byte offset.
-pub async fn find_deepest_jack_ast_node_at(root: &JackAstNode, offset: usize) -> Option<&JackAstNode> {
+pub fn find_deepest_jack_ast_node_at(root: &JackAstNode, offset: usize) -> Option<&JackAstNode> {
     if offset < root.start || offset >= root.end {
         return None;
     }
@@ -365,7 +365,7 @@ pub async fn find_deepest_jack_ast_node_at(root: &JackAstNode, offset: usize) ->
 }
 
 /// 🔎️ Find an AST node by stable id.
-pub async fn jack_ast_node_by_id<'a>(root: &'a JackAstNode, id: &str) -> Option<&'a JackAstNode> {
+pub fn jack_ast_node_by_id<'a>(root: &'a JackAstNode, id: &str) -> Option<&'a JackAstNode> {
     if root.id == id {
         return Some(root);
     }
@@ -373,8 +373,8 @@ pub async fn jack_ast_node_by_id<'a>(root: &'a JackAstNode, id: &str) -> Option<
 }
 
 /// 🖱️ Smallest AST node that fully contains a selection range.
-pub async fn jack_ast_node_for_selection(root: &JackAstNode, start: usize, end: usize) -> Option<&JackAstNode> {
-    async fn visit<'a>(node: &'a JackAstNode, start: usize, end: usize, best: &mut Option<&'a JackAstNode>) {
+pub fn jack_ast_node_for_selection(root: &JackAstNode, start: usize, end: usize) -> Option<&JackAstNode> {
+    fn visit<'a>(node: &'a JackAstNode, start: usize, end: usize, best: &mut Option<&'a JackAstNode>) {
         if node.start <= start && node.end >= end {
             let is_better = match best {
                 Some(current) => (node.end - node.start) < (current.end - current.start),
@@ -408,7 +408,7 @@ pub struct SelectableSpan {
 }
 
 /// 🎯️ Builds atomic and composite jack spans for token-wise selection (premigration `selectableSpansForJack`).
-pub async fn selectable_spans_for_jack(text: &str, tokens: &[GrammarToken]) -> Vec<SelectableSpan> {
+pub fn selectable_spans_for_jack(text: &str, tokens: &[GrammarToken]) -> Vec<SelectableSpan> {
     let mut spans: Vec<SelectableSpan> = tokens.iter().map(|token| SelectableSpan { start: token.start, end: token.end, kind: "atomic".into(), head_end: None, tail_start: None }).collect();
     for i in 0..tokens.len() {
         if i + 2 >= tokens.len() {
@@ -444,7 +444,7 @@ pub struct JackEditorPlaceholder {
     pub label: String,
 }
 
-async fn jack_placeholder_visible(caret: usize, offset: usize) -> bool {
+fn jack_placeholder_visible(caret: usize, offset: usize) -> bool {
     let caret = caret as i64;
     let offset = offset as i64;
     caret >= offset - 32 && caret <= offset + 48
@@ -456,16 +456,16 @@ fn jack_tokens(text: &str) -> Vec<SpannedToken> {
     lex_spanned(text, true).unwrap_or_default()
 }
 
-async fn jack_token_expects_expr(token: &Token) -> bool {
+fn jack_token_expects_expr(token: &Token) -> bool {
     matches!(token, Token::And | Token::Or)
 }
 
-async fn jack_token_expects_pattern(token: &Token) -> bool {
+fn jack_token_expects_pattern(token: &Token) -> bool {
     matches!(token, Token::KwMatch | Token::KwCreate | Token::KwMerge)
 }
 
 /// 👻️ Required jack token placeholders near the caret (premigration `jackEditorPlaceholders`).
-pub async fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlaceholder> {
+pub fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlaceholder> {
     use Token;
     let tokens = jack_tokens(text);
     let mut out = Vec::new();
@@ -575,7 +575,7 @@ pub async fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEdito
 
 const JACK_NEWLINE_AFTER_KEYWORDS: &[Token] = &[Token::KwMatch, Token::KwWhere, Token::KwReturn, Token::KwCreate, Token::KwDelete, Token::KwSet, Token::KwMerge, Token::And, Token::Or];
 
-async fn jack_lex_token_at_offset(tokens: &[SpannedToken], offset: usize) -> Option<&SpannedToken> {
+fn jack_lex_token_at_offset(tokens: &[SpannedToken], offset: usize) -> Option<&SpannedToken> {
     for token in tokens {
         if token.token == Token::Eof {
             break;
@@ -588,7 +588,7 @@ async fn jack_lex_token_at_offset(tokens: &[SpannedToken], offset: usize) -> Opt
 }
 
 /// ↩️ Whether a jack query may break onto a new line at a byte offset (premigration `jackNewlineAllowedAt`).
-pub async fn jack_newline_allowed_at(text: &str, offset: usize) -> bool {
+pub fn jack_newline_allowed_at(text: &str, offset: usize) -> bool {
     use Token;
     let clamped = offset.min(text.len());
     if !text.is_char_boundary(clamped) {
@@ -655,7 +655,7 @@ pub async fn jack_newline_allowed_at(text: &str, offset: usize) -> bool {
 }
 
 /// ↩️ All byte offsets at which Enter may insert a newline, for `newlineGatesJson`.
-pub async fn jack_newline_gate_offsets(text: &str) -> Vec<usize> {
+pub fn jack_newline_gate_offsets(text: &str) -> Vec<usize> {
     (0..=text.len()).filter(|&offset| text.is_char_boundary(offset) && jack_newline_allowed_at(text, offset)).collect()
 }
 

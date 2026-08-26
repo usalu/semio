@@ -9,7 +9,7 @@ use crate::artifacts::writer::{WriterSnapshot, WRITER_DIALECT, WRITER_DOCUMENT_S
 use crate::viewer::writer::modes::view;
 use crate::viewer::writer::modes::view::windows::main;
 use semio_framework_plugin::app::{ArtifactViewer, ViewEmit, Viewer};
-use semio_framework_plugin::{ArtifactView, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{ArtifactView, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -23,10 +23,10 @@ pub enum WriterViewCommand {
 }
 
 impl protocol::OpBinary for WriterViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(WriterViewCommand::Noop)
     }
 }
@@ -50,7 +50,7 @@ impl ArtifactViewer for WriterViewer {
     const DIALECT: Dialect = WRITER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
 
-    async fn initial_snapshot() -> WriterSnapshot {
+    fn initial_snapshot() -> WriterSnapshot {
         crate::artifacts::writer::schema::empty_writer_snapshot()
     }
 
@@ -58,7 +58,7 @@ impl ArtifactViewer for WriterViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (e.g. a
     /// read-only outline toggle) is a pure addition here, never a signature change.
-    async fn handle(
+    fn handle(
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -68,17 +68,18 @@ impl ArtifactViewer for WriterViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let node = match body_key {
             main::WRITER_VIEW_BODY_MAIN => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "writer viewer unknown-body text admission failed")),
+        }?;
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_writer_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_writer_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(WRITER_DIALECT).document(["semio", "writer"]).icon_id("writer").mode_def(view::definition()).default_mode_id(view::WRITER_VIEW_MODE_VIEW).window_kind_def(main::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest

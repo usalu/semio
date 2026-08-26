@@ -20,6 +20,351 @@
     {
       "id": "shooting-1-any",
       "capability": "shooting-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-asset-url",
+          "sourceMutationDirectoryName": "🔗️change-asset-url",
+          "mutationDirectoryName": "🔗️change-asset-url",
+          "scenarios": [
+            {
+              "id": "points-asset-prop-at-v2-mesh",
+              "directoryName": "🧪️points-asset-prop-at-v2-mesh"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-ambient-intensity",
+          "sourceMutationDirectoryName": "🔅️change-scene-ambient-intensity",
+          "mutationDirectoryName": "🔅️change-scene-ambient-intensity",
+          "scenarios": [
+            {
+              "id": "dims-scene-ambient-to-quarter",
+              "directoryName": "🧪️dims-scene-ambient-to-quarter"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-material-roughness",
+          "sourceMutationDirectoryName": "🪨️change-scene-material-roughness",
+          "mutationDirectoryName": "🪨️change-scene-material-roughness",
+          "scenarios": [
+            {
+              "id": "polishes-scene-material-to-quarter",
+              "directoryName": "🧪️polishes-scene-material-to-quarter"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-shadow-enabled",
+          "sourceMutationDirectoryName": "🌑️change-scene-shadow-enabled",
+          "mutationDirectoryName": "🌑️change-scene-shadow-enabled",
+          "scenarios": [
+            {
+              "id": "switches-scene-shadows-off",
+              "directoryName": "🧪️switches-scene-shadows-off"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-sun-azimuth",
+          "sourceMutationDirectoryName": "🧭️change-scene-sun-azimuth",
+          "mutationDirectoryName": "🧭️change-scene-sun-azimuth",
+          "scenarios": [
+            {
+              "id": "turns-scene-sun-to-315-degrees",
+              "directoryName": "🧪️turns-scene-sun-to-315-degrees"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-sun-elevation",
+          "sourceMutationDirectoryName": "🌅️change-scene-sun-elevation",
+          "mutationDirectoryName": "🌅️change-scene-sun-elevation",
+          "scenarios": [
+            {
+              "id": "raises-scene-sun-to-60-degrees",
+              "directoryName": "🧪️raises-scene-sun-to-60-degrees"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-sun-enabled",
+          "sourceMutationDirectoryName": "☀️change-scene-sun-enabled",
+          "mutationDirectoryName": "☀️change-scene-sun-enabled",
+          "scenarios": [
+            {
+              "id": "switches-scene-sun-off",
+              "directoryName": "🧪️switches-scene-sun-off"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-sun-intensity",
+          "sourceMutationDirectoryName": "💡️change-scene-sun-intensity",
+          "mutationDirectoryName": "💡️change-scene-sun-intensity",
+          "scenarios": [
+            {
+              "id": "dims-scene-sun-to-half",
+              "directoryName": "🧪️dims-scene-sun-to-half"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-shot-format",
+          "sourceMutationDirectoryName": "🖼️change-shot-format",
+          "mutationDirectoryName": "🖼️change-shot-format",
+          "scenarios": [
+            {
+              "id": "switches-shot-wide-to-svg",
+              "directoryName": "🧪️switches-shot-wide-to-svg"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-shot-height",
+          "sourceMutationDirectoryName": "📐️change-shot-height",
+          "mutationDirectoryName": "📐️change-shot-height",
+          "scenarios": [
+            {
+              "id": "heightens-shot-close-to-768",
+              "directoryName": "🧪️heightens-shot-close-to-768"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-shot-shape",
+          "sourceMutationDirectoryName": "✂️change-shot-shape",
+          "mutationDirectoryName": "✂️change-shot-shape",
+          "scenarios": [
+            {
+              "id": "rounds-shot-wide-to-ellipse",
+              "directoryName": "🧪️rounds-shot-wide-to-ellipse"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-shot-width",
+          "sourceMutationDirectoryName": "📏️change-shot-width",
+          "mutationDirectoryName": "📏️change-shot-width",
+          "scenarios": [
+            {
+              "id": "widens-shot-close-to-1024",
+              "directoryName": "🧪️widens-shot-close-to-1024"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-asset",
+          "sourceMutationDirectoryName": "🌱️create-asset",
+          "mutationDirectoryName": "🌱️create-asset",
+          "scenarios": [
+            {
+              "id": "appends-asset-detail",
+              "directoryName": "🧪️appends-asset-detail"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-saved-camera",
+          "sourceMutationDirectoryName": "🎥️create-saved-camera",
+          "mutationDirectoryName": "🎥️create-saved-camera",
+          "scenarios": [
+            {
+              "id": "appends-saved-camera-top",
+              "directoryName": "🧪️appends-saved-camera-top"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-shot",
+          "sourceMutationDirectoryName": "📸️create-shot",
+          "mutationDirectoryName": "📸️create-shot",
+          "scenarios": [
+            {
+              "id": "appends-shot-macro",
+              "directoryName": "🧪️appends-shot-macro"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-asset",
+          "sourceMutationDirectoryName": "🗑️delete-asset",
+          "mutationDirectoryName": "🗑️delete-asset",
+          "scenarios": [
+            {
+              "id": "removes-trailing-asset-prop",
+              "directoryName": "🧪️removes-trailing-asset-prop"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-saved-camera",
+          "sourceMutationDirectoryName": "🧹️delete-saved-camera",
+          "mutationDirectoryName": "🧹️delete-saved-camera",
+          "scenarios": [
+            {
+              "id": "removes-trailing-cam-close",
+              "directoryName": "🧪️removes-trailing-cam-close"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-shot",
+          "sourceMutationDirectoryName": "🚮️delete-shot",
+          "mutationDirectoryName": "🚮️delete-shot",
+          "scenarios": [
+            {
+              "id": "removes-trailing-shot-close",
+              "directoryName": "🧪️removes-trailing-shot-close"
+            }
+          ]
+        },
+        {
+          "mutationId": "drag-assets",
+          "sourceMutationDirectoryName": "↔️drag-assets",
+          "mutationDirectoryName": "↔️drag-assets",
+          "scenarios": [
+            {
+              "id": "offsets-both-assets-and-skips-a-ghost",
+              "directoryName": "🧪️offsets-both-assets-and-skips-a-ghost"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-asset",
+          "sourceMutationDirectoryName": "✏️rename-asset",
+          "mutationDirectoryName": "✏️rename-asset",
+          "scenarios": [
+            {
+              "id": "renames-asset-hero-to-lead",
+              "directoryName": "🧪️renames-asset-hero-to-lead"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-saved-camera",
+          "sourceMutationDirectoryName": "🪪️rename-saved-camera",
+          "mutationDirectoryName": "🪪️rename-saved-camera",
+          "scenarios": [
+            {
+              "id": "relabels-cam-close-to-tight",
+              "directoryName": "🧪️relabels-cam-close-to-tight"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-shot",
+          "sourceMutationDirectoryName": "🏷️rename-shot",
+          "mutationDirectoryName": "🏷️rename-shot",
+          "scenarios": [
+            {
+              "id": "relabels-shot-close-to-detail",
+              "directoryName": "🧪️relabels-shot-close-to-detail"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-assets",
+          "sourceMutationDirectoryName": "🔀️reorder-assets",
+          "mutationDirectoryName": "🔀️reorder-assets",
+          "scenarios": [
+            {
+              "id": "moves-asset-hero-behind-asset-prop",
+              "directoryName": "🧪️moves-asset-hero-behind-asset-prop"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-saved-cameras",
+          "sourceMutationDirectoryName": "🔁️reorder-saved-cameras",
+          "mutationDirectoryName": "🔁️reorder-saved-cameras",
+          "scenarios": [
+            {
+              "id": "moves-cam-close-to-front",
+              "directoryName": "🧪️moves-cam-close-to-front"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-shots",
+          "sourceMutationDirectoryName": "🔃️reorder-shots",
+          "mutationDirectoryName": "🔃️reorder-shots",
+          "scenarios": [
+            {
+              "id": "moves-shot-close-to-front",
+              "directoryName": "🧪️moves-shot-close-to-front"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-saved-camera-view",
+          "sourceMutationDirectoryName": "🎞️replace-saved-camera-view",
+          "mutationDirectoryName": "🎞️replace-saved-camera-view",
+          "scenarios": [
+            {
+              "id": "repositions-cam-close-view",
+              "directoryName": "🧪️repositions-cam-close-view"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-shot-camera",
+          "sourceMutationDirectoryName": "📷️replace-shot-camera",
+          "mutationDirectoryName": "📷️replace-shot-camera",
+          "scenarios": [
+            {
+              "id": "rewrites-cam-wide-through-shot-wide",
+              "directoryName": "🧪️rewrites-cam-wide-through-shot-wide"
+            }
+          ]
+        },
+        {
+          "mutationId": "rotate-assets",
+          "sourceMutationDirectoryName": "🔄️rotate-assets",
+          "mutationDirectoryName": "🔄️rotate-assets",
+          "scenarios": [
+            {
+              "id": "spins-asset-hero-about-z",
+              "directoryName": "🧪️spins-asset-hero-about-z"
+            }
+          ]
+        },
+        {
+          "mutationId": "scale-assets",
+          "sourceMutationDirectoryName": "↕️scale-assets",
+          "mutationDirectoryName": "↕️scale-assets",
+          "scenarios": [
+            {
+              "id": "doubles-asset-hero-scale",
+              "directoryName": "🧪️doubles-asset-hero-scale"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-active-asset",
+          "sourceMutationDirectoryName": "📌️set-active-asset",
+          "mutationDirectoryName": "📌️set-active-asset",
+          "scenarios": [
+            {
+              "id": "activates-asset-prop",
+              "directoryName": "🧪️activates-asset-prop"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-active-shot",
+          "sourceMutationDirectoryName": "🎯️set-active-shot",
+          "mutationDirectoryName": "🎯️set-active-shot",
+          "scenarios": [
+            {
+              "id": "activates-shot-close",
+              "directoryName": "🧪️activates-shot-close"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-asset",
         "delete-asset",

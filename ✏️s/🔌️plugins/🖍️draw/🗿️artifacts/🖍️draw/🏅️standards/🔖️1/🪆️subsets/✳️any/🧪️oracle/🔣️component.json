@@ -20,6 +20,164 @@
     {
       "id": "draw-1-any",
       "capability": "draw-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "create-layer",
+          "sourceMutationDirectoryName": "🌱create-layer",
+          "mutationDirectoryName": "🌱create-layer",
+          "scenarios": [
+            {
+              "id": "appends-shape-b-at-the-root",
+              "directoryName": "🧪️appends-shape-b-at-the-root"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-layer",
+          "sourceMutationDirectoryName": "🗑️delete-layer",
+          "mutationDirectoryName": "🗑️delete-layer",
+          "scenarios": [
+            {
+              "id": "removes-group-a-with-its-child",
+              "directoryName": "🧪️removes-group-a-with-its-child"
+            }
+          ]
+        },
+        {
+          "mutationId": "duplicate-layer",
+          "sourceMutationDirectoryName": "🧬️duplicate-layer",
+          "mutationDirectoryName": "🧬️duplicate-layer",
+          "scenarios": [
+            {
+              "id": "rejects-a-missing-source-layer",
+              "directoryName": "🧪️rejects-a-missing-source-layer"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-layer",
+          "sourceMutationDirectoryName": "✏️rename-layer",
+          "mutationDirectoryName": "✏️rename-layer",
+          "scenarios": [
+            {
+              "id": "renames-shape-a-without-touching-its-id",
+              "directoryName": "🧪️renames-shape-a-without-touching-its-id"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-layer",
+          "sourceMutationDirectoryName": "🔃reorder-layer",
+          "mutationDirectoryName": "🔃reorder-layer",
+          "scenarios": [
+            {
+              "id": "moves-shape-a-above-shape-b",
+              "directoryName": "🧪️moves-shape-a-above-shape-b"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-layer-fill",
+          "sourceMutationDirectoryName": "🔁replace-layer-fill",
+          "mutationDirectoryName": "🔁replace-layer-fill",
+          "scenarios": [
+            {
+              "id": "solid-to-linear-gradient",
+              "directoryName": "🧪️solid-to-linear-gradient"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-layer-stroke",
+          "sourceMutationDirectoryName": "♻️replace-layer-stroke",
+          "mutationDirectoryName": "♻️replace-layer-stroke",
+          "scenarios": [
+            {
+              "id": "adds-a-dashed-stroke",
+              "directoryName": "🧪️adds-a-dashed-stroke"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-layer-blend-mode",
+          "sourceMutationDirectoryName": "🖌️set-layer-blend-mode",
+          "mutationDirectoryName": "🖌️set-layer-blend-mode",
+          "scenarios": [
+            {
+              "id": "normal-to-multiply",
+              "directoryName": "🧪️normal-to-multiply"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-layer-boolean-operation",
+          "sourceMutationDirectoryName": "🔀set-layer-boolean-operation",
+          "mutationDirectoryName": "🔀set-layer-boolean-operation",
+          "scenarios": [
+            {
+              "id": "union-to-subtract",
+              "directoryName": "🧪️union-to-subtract"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-layer-locked",
+          "sourceMutationDirectoryName": "🔒️set-layer-locked",
+          "mutationDirectoryName": "🔒️set-layer-locked",
+          "scenarios": [
+            {
+              "id": "locks-shape-a",
+              "directoryName": "🧪️locks-shape-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-layer-opacity",
+          "sourceMutationDirectoryName": "🌫️set-layer-opacity",
+          "mutationDirectoryName": "🌫️set-layer-opacity",
+          "scenarios": [
+            {
+              "id": "dims-shape-a-to-half",
+              "directoryName": "🧪️dims-shape-a-to-half"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-layer-visible",
+          "sourceMutationDirectoryName": "👁️set-layer-visible",
+          "mutationDirectoryName": "👁️set-layer-visible",
+          "scenarios": [
+            {
+              "id": "hides-shape-a",
+              "directoryName": "🧪️hides-shape-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-layer-trace-params",
+          "sourceMutationDirectoryName": "🔧update-layer-trace-params",
+          "mutationDirectoryName": "🔧update-layer-trace-params",
+          "scenarios": [
+            {
+              "id": "sharpens-the-trace",
+              "directoryName": "🧪️sharpens-the-trace"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-layer-transform",
+          "sourceMutationDirectoryName": "🔄️update-layer-transform",
+          "mutationDirectoryName": "🔄️update-layer-transform",
+          "scenarios": [
+            {
+              "id": "translates-and-scales-shape-a",
+              "directoryName": "🧪️translates-and-scales-shape-a"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "set-layer-visible",
         "set-layer-locked",

@@ -40,6 +40,8 @@ struct InferenceBridgeItem {
 enum LosslessInferenceItem {
     Checkpoint(semio_framework_job::Checkpoint),
     Commit(CommitCandidate),
+    #[cfg(test)]
+    TestBytes(usize),
 }
 
 impl LosslessInferenceItem {
@@ -47,6 +49,8 @@ impl LosslessInferenceItem {
         match self {
             Self::Checkpoint(checkpoint) => checkpoint.state.len(),
             Self::Commit(candidate) => candidate.state.len().saturating_add(candidate.output.len()),
+            #[cfg(test)]
+            Self::TestBytes(bytes) => *bytes,
         }
     }
 }
@@ -503,20 +507,21 @@ mod tests {
         bridge.publish_preview(vec![2, 3]).expect("latest preview");
         assert_eq!(bridge.take_preview().expect("coalesced preview").payload, vec![2, 3]);
 
-        bridge.publish_lossless(LosslessInferenceItem::Checkpoint(semio_framework_job::Checkpoint { state: vec![4], applied_progress: 1 })).expect("first checkpoint");
-        bridge.publish_lossless(LosslessInferenceItem::Checkpoint(semio_framework_job::Checkpoint { state: vec![5], applied_progress: 2 })).expect("second checkpoint");
-        assert!(matches!(bridge.publish_lossless(LosslessInferenceItem::Commit(semio_framework_job::CommitCandidate { state: Vec::new(), output: vec![6] })), Err(InferenceBridgeError::Saturated { .. })));
-        assert!(matches!(bridge.take_lossless(), Some(LosslessInferenceItem::Checkpoint(checkpoint)) if checkpoint.state == vec![4]));
-        assert!(matches!(bridge.take_lossless(), Some(LosslessInferenceItem::Checkpoint(checkpoint)) if checkpoint.state == vec![5]));
+        bridge
+            .publish_lossless(LosslessInferenceItem::Checkpoint(semio_framework_job::Checkpoint { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState), applied_progress: 1 }))
+            .expect("first checkpoint");
+        bridge
+            .publish_lossless(LosslessInferenceItem::Checkpoint(semio_framework_job::Checkpoint { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState), applied_progress: 2 }))
+            .expect("second checkpoint");
+        assert!(matches!(bridge.publish_lossless(LosslessInferenceItem::TestBytes(1)), Err(InferenceBridgeError::Saturated { .. })));
+        assert!(matches!(bridge.take_lossless(), Some(LosslessInferenceItem::Checkpoint(checkpoint)) if checkpoint.applied_progress == 1));
+        assert!(matches!(bridge.take_lossless(), Some(LosslessInferenceItem::Checkpoint(checkpoint)) if checkpoint.applied_progress == 2));
         assert!(matches!(bridge.publish_preview(vec![0; PREVIEW_MAX_BYTES + 1]), Err(InferenceBridgeError::Oversized { channel: "preview", .. })));
-        bridge.publish_lossless(LosslessInferenceItem::Commit(semio_framework_job::CommitCandidate { state: Vec::new(), output: vec![0; LOSSLESS_MAX_BYTES] })).expect("exact byte maximum");
+        bridge.publish_lossless(LosslessInferenceItem::TestBytes(LOSSLESS_MAX_BYTES)).expect("exact byte maximum");
         assert_eq!(bridge.lossless_len, 1);
         assert_eq!(bridge.lossless_bytes, LOSSLESS_MAX_BYTES);
-        assert!(matches!(bridge.take_lossless(), Some(LosslessInferenceItem::Commit(_))));
-        assert!(matches!(
-            bridge.publish_lossless(LosslessInferenceItem::Commit(semio_framework_job::CommitCandidate { state: Vec::new(), output: vec![0; LOSSLESS_MAX_BYTES + 1] })),
-            Err(InferenceBridgeError::Oversized { channel: "checkpoint-commit", .. })
-        ));
+        assert!(matches!(bridge.take_lossless(), Some(LosslessInferenceItem::TestBytes(LOSSLESS_MAX_BYTES))));
+        assert!(matches!(bridge.publish_lossless(LosslessInferenceItem::TestBytes(LOSSLESS_MAX_BYTES + 1)), Err(InferenceBridgeError::Oversized { channel: "checkpoint-commit", .. })));
     }
 
     #[test]

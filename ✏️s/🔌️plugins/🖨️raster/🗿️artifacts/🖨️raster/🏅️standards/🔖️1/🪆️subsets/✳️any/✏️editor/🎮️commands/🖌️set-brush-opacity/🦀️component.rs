@@ -12,6 +12,6 @@ pub struct SetBrushOpacity {
     pub value: f64,
 }
 
-pub async fn handle(payload: &SetBrushOpacity, _doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+pub fn handle(payload: &SetBrushOpacity, _doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     Ok(Emit::config(vec![RasterConfigMutation::SetBrushOpacity { value: payload.value }]))
 }

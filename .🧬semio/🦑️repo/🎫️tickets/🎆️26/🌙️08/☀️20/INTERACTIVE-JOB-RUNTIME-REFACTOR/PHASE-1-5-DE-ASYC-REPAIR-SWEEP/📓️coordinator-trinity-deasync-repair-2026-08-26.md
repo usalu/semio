@@ -36,7 +36,7 @@ This packet deliberately does not generalize the declaration rewrite beyond Trin
 | Gate | Current result |
 | --- | --- |
 | Exact source classification | GREEN: 320 = 318 async tests + 2 genuine constructors; three `.await` sites inspected |
-| Native Trinity library compile | RUNNING: `cargo check --locked -p semio-s-plugin-trinity --lib --message-format short` |
+| Native Trinity library compile | BLOCKED upstream: a completely cold Stdio library target reports exactly 2,299 `E0053`/`E0277`/`E0728` diagnostics before reaching Trinity |
 | Native Trinity representative tests | PENDING |
 | `wasm32-unknown-unknown` Trinity check | PENDING |
 | Writer retained `setLocale` runtime tests | PENDING on Trinity compile |
@@ -46,3 +46,15 @@ This packet deliberately does not generalize the declaration rewrite beyond Trin
 No passing result will be recorded until the command has completed against the current shared tree.
 
 The initial `cargo test --lib --no-run` was intentionally interrupted after it had emitted current dependency type metadata but spent 44 additional minutes code-generating the unrelated 966 MiB Stdio rlib. The replacement `cargo check --lib` uses the same ticket-local target and is the correct compiler-diagnostic gate for this repair; executable representative tests remain a separate required row above.
+
+## Semantic UI and fresh classifier checkpoint
+
+The Jack editor's main text, graph, and results windows now publish semantic TextEditor, NodeGraph, and Table surfaces through fixed-capacity `BuiltNode` assembly. The Rewrite Jack window publishes a semantic TextEditor surface. Jack and Rewrite Artifact, Catalogue, and Inspection panels use fixed-capacity semantic panel/tree construction. Viewer windows publish semantic scene surfaces, and Artifact editor/viewer implementations convert `BuiltNode` to `ComponentTree` only at their framework boundary.
+
+Fresh production/test-aware classification after formatting:
+
+```text
+[DEBUG] immediate classifier: production=0 test=318 suspending-or-excepted=2 files=0
+```
+
+The three inspected `.await` expressions remain the two genuine Wasm constructors plus the nested canvas GPU future described above. A fresh legacy scan found no `build_node_graph_scene`, `build_table_scene`, `build_text_editor_scene`, `ui_declarative_sections_to_tree`, or `UiNode` return boundary. `cargo fmt -p semio-s-plugin-trinity -- --check` and `git diff --check -- ✏️s/🔌️plugins/🔱️trinity` complete without output.

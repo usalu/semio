@@ -106,27 +106,27 @@ pub mod derived_construction {
         type Snapshot = Ifc2x3Snapshot;
         type Mutation = Ifc2x3Mutation;
         type Diff = Ifc2x3Diff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: Ifc2x3Snapshot::default(), diagnostics: Vec::new() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_ifc2x3_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -178,7 +178,7 @@ pub mod derived_analysis {
         type Parts = Ifc2x3Parts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("*") };
 
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Text(text) => {
                     let body = match store::semio_format::split_text_preamble(text) {
@@ -194,7 +194,7 @@ pub mod derived_analysis {
             }
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Ifc2x3Parts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -233,19 +233,19 @@ pub mod derived_analysis {
         #[semio_framework_async_macros::async_test]
         async fn sniff_high_confidence_for_ifc2x3_envelope() {
             let text = "ISO-10303-21;\nHEADER;\nFILE_SCHEMA(('IFC2X3'));\nENDSEC;\nDATA;\nENDSEC;\nEND-ISO-10303-21;\n";
-            assert_eq!(Ifc2x3AnalyzerAnalysis::sniff(&AnalyzeSource::Text(text)).await, IoConfidence::High);
+            assert_eq!(Ifc2x3AnalyzerAnalysis::sniff(&AnalyzeSource::Text(text)), IoConfidence::High);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn sniff_medium_confidence_for_other_part21_schema() {
             let text = "ISO-10303-21;\nHEADER;\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\nENDSEC;\nEND-ISO-10303-21;\n";
-            assert_eq!(Ifc2x3AnalyzerAnalysis::sniff(&AnalyzeSource::Text(text)).await, IoConfidence::Medium);
+            assert_eq!(Ifc2x3AnalyzerAnalysis::sniff(&AnalyzeSource::Text(text)), IoConfidence::Medium);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn sniff_low_confidence_for_non_part21_input() {
-            assert_eq!(Ifc2x3AnalyzerAnalysis::sniff(&AnalyzeSource::Text("not a step file at all")).await, IoConfidence::Low);
-            assert_eq!(Ifc2x3AnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&[0xFF, 0xD8, 0xFF])).await, IoConfidence::Low);
+            assert_eq!(Ifc2x3AnalyzerAnalysis::sniff(&AnalyzeSource::Text("not a step file at all")), IoConfidence::Low);
+            assert_eq!(Ifc2x3AnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&[0xFF, 0xD8, 0xFF])), IoConfidence::Low);
         }
     }
     //#endregion 🧪️Tests

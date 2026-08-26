@@ -16,19 +16,19 @@ pub struct RenameLayer {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for RenameLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "layer", kind: "rename-layer", record: "RenamedLayer" };
 
-    async fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::rename_layer::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
+    fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
         crate::artifacts::raster::mutations::rename_layer::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Rename layer {} to \"{}\"", self.layer_id, self.new_name)
     }
 
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]
     }
 }

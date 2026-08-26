@@ -10,12 +10,12 @@ use crate::artifacts::raster::RasterSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `RasterSnapshot` to its binary pack form.
-pub async fn encode(document: &RasterSnapshot) -> Vec<u8> {
+pub fn encode(document: &RasterSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `RasterSnapshot` from its binary pack form.
-pub async fn decode(bytes: &[u8]) -> Result<RasterSnapshot, PackError> {
+pub fn decode(bytes: &[u8]) -> Result<RasterSnapshot, PackError> {
     <RasterSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 

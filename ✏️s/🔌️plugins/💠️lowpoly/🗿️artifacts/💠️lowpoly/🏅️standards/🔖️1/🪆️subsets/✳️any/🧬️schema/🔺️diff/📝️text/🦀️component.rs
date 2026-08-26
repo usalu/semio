@@ -14,7 +14,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️Apply
 impl LowpolyDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &LowpolyArtifact) -> protocol::MutationApplyResult<LowpolyArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &LowpolyArtifact) -> protocol::MutationApplyResult<LowpolyArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -137,7 +137,7 @@ impl LowpolyDiff {
 }
 
 /// 🧩 Applies an identified-collection delta to a snapshot object list.
-pub async fn apply_objects_delta(objects: &[crate::artifacts::lowpoly::LowpolyObject], delta: &LowpolyObjectsDelta) -> protocol::MutationApplyResult<Vec<crate::artifacts::lowpoly::LowpolyObject>> {
+pub fn apply_objects_delta(objects: &[crate::artifacts::lowpoly::LowpolyObject], delta: &LowpolyObjectsDelta) -> protocol::MutationApplyResult<Vec<crate::artifacts::lowpoly::LowpolyObject>> {
     let mut removed = std::collections::BTreeSet::new();
     for (index, id) in delta.removed.iter().enumerate() {
         if !removed.insert(id.as_str()) {
@@ -198,7 +198,7 @@ pub async fn apply_objects_delta(objects: &[crate::artifacts::lowpoly::LowpolyOb
 }
 
 impl MutationDiff<LowpolySnapshot> for LowpolyDiff {
-    async fn apply(&self, snapshot: &LowpolySnapshot) -> protocol::MutationApplyResult<LowpolySnapshot> {
+    fn apply(&self, snapshot: &LowpolySnapshot) -> protocol::MutationApplyResult<LowpolySnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(LowpolySnapshot { schema: replacement.schema.clone(), objects: replacement.objects.clone() });
@@ -213,7 +213,7 @@ impl MutationDiff<LowpolySnapshot> for LowpolyDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -279,7 +279,7 @@ impl MutationDiff<LowpolySnapshot> for LowpolyDiff {
 
 //#region 🔖️Constructors
 /// 🏗️ Objects-add field delta.
-pub async fn diff_objects_add(index: usize, item: crate::artifacts::lowpoly::LowpolyObject, base: &LowpolySnapshot) -> LowpolyDiff {
+pub fn diff_objects_add(index: usize, item: crate::artifacts::lowpoly::LowpolyObject, base: &LowpolySnapshot) -> LowpolyDiff {
     let mut order: Vec<String> = base.objects.iter().map(|object| object.id.clone()).collect();
     let id = item.id.clone();
     let at = index.min(order.len());
@@ -288,12 +288,12 @@ pub async fn diff_objects_add(index: usize, item: crate::artifacts::lowpoly::Low
 }
 
 /// 🏗️ Objects-remove field delta.
-pub async fn diff_objects_remove(id: String) -> LowpolyDiff {
+pub fn diff_objects_remove(id: String) -> LowpolyDiff {
     LowpolyDiff { objects: Some(LowpolyObjectsDelta { added: Vec::new(), removed: vec![id], patched: Vec::new(), reordered: None }), ..LowpolyDiff::default() }
 }
 
 /// 🏗️ Objects-move field delta.
-pub async fn diff_objects_move(id: &str, to_index: usize, base: &LowpolySnapshot) -> LowpolyDiff {
+pub fn diff_objects_move(id: &str, to_index: usize, base: &LowpolySnapshot) -> LowpolyDiff {
     let mut order: Vec<String> = base.objects.iter().map(|object| object.id.clone()).collect();
     if let Some(from) = order.iter().position(|existing| existing == id) {
         let moved = order.remove(from);
@@ -304,12 +304,12 @@ pub async fn diff_objects_move(id: &str, to_index: usize, base: &LowpolySnapshot
 }
 
 /// 🏗️ Objects-patch field delta.
-pub async fn diff_objects_patch(id: String, patch: crate::artifacts::lowpoly::LowpolyObjectPatch) -> LowpolyDiff {
+pub fn diff_objects_patch(id: String, patch: crate::artifacts::lowpoly::LowpolyObjectPatch) -> LowpolyDiff {
     LowpolyDiff { objects: Some(LowpolyObjectsDelta { added: Vec::new(), removed: Vec::new(), patched: vec![LowpolyObjectPatchEntry { id, patch, paint_layers: None }], reordered: None }), ..LowpolyDiff::default() }
 }
 
 /// 🏗️ Add-paint-layer field delta.
-pub async fn diff_add_paint_layer(object_id: String, index: usize, layer: crate::artifacts::lowpoly::LowpolyPaintLayer) -> LowpolyDiff {
+pub fn diff_add_paint_layer(object_id: String, index: usize, layer: crate::artifacts::lowpoly::LowpolyPaintLayer) -> LowpolyDiff {
     LowpolyDiff {
         objects: Some(LowpolyObjectsDelta {
             patched: vec![LowpolyObjectPatchEntry {
@@ -324,7 +324,7 @@ pub async fn diff_add_paint_layer(object_id: String, index: usize, layer: crate:
 }
 
 /// 🏗️ Remove-paint-layer field delta.
-pub async fn diff_remove_paint_layer(object_id: String, index: usize) -> LowpolyDiff {
+pub fn diff_remove_paint_layer(object_id: String, index: usize) -> LowpolyDiff {
     LowpolyDiff {
         objects: Some(LowpolyObjectsDelta {
             patched: vec![LowpolyObjectPatchEntry { id: object_id, patch: crate::artifacts::lowpoly::LowpolyObjectPatch::default(), paint_layers: Some(LowpolyPaintLayersDelta { removed: vec![index as u32], ..LowpolyPaintLayersDelta::default() }) }],
@@ -335,7 +335,7 @@ pub async fn diff_remove_paint_layer(object_id: String, index: usize) -> Lowpoly
 }
 
 /// 🏗️ Patch-paint-layer field delta.
-pub async fn diff_patch_paint_layer(object_id: String, index: usize, patch: crate::artifacts::lowpoly::schema::diff::LowpolyPaintLayerPatch) -> LowpolyDiff {
+pub fn diff_patch_paint_layer(object_id: String, index: usize, patch: crate::artifacts::lowpoly::schema::diff::LowpolyPaintLayerPatch) -> LowpolyDiff {
     LowpolyDiff {
         objects: Some(LowpolyObjectsDelta {
             patched: vec![LowpolyObjectPatchEntry {
@@ -350,7 +350,7 @@ pub async fn diff_patch_paint_layer(object_id: String, index: usize, patch: crat
 }
 
 /// 🏗️ Paint-stroke field delta.
-pub async fn diff_paint_stroke(object_id: String, layer_index: usize, runs: Vec<SchemaPixelRun>) -> LowpolyDiff {
+pub fn diff_paint_stroke(object_id: String, layer_index: usize, runs: Vec<SchemaPixelRun>) -> LowpolyDiff {
     LowpolyDiff {
         objects: Some(LowpolyObjectsDelta {
             patched: vec![LowpolyObjectPatchEntry {
@@ -365,7 +365,7 @@ pub async fn diff_paint_stroke(object_id: String, layer_index: usize, runs: Vec<
 }
 
 /// 🏗️ Whole snapshot replacement via schema+objects (clears then adds).
-pub async fn diff_replace_snapshot(before: &LowpolySnapshot, after: &LowpolySnapshot) -> LowpolyDiff {
+pub fn diff_replace_snapshot(before: &LowpolySnapshot, after: &LowpolySnapshot) -> LowpolyDiff {
     LowpolyDiff {
         schema: (before.schema != after.schema).then(|| after.schema.clone()),
         objects: Some(LowpolyObjectsDelta {

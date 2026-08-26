@@ -20,6 +20,120 @@
     {
       "id": "flow-1-any",
       "capability": "flow-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "connect-widgets",
+          "sourceMutationDirectoryName": "🔗️connect-widgets",
+          "mutationDirectoryName": "🔗️connect-widgets",
+          "scenarios": [
+            {
+              "id": "refuses-a-parallel-synapse-as-a-no-op",
+              "directoryName": "🧪️refuses-a-parallel-synapse-as-a-no-op"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-widget",
+          "sourceMutationDirectoryName": "➕️create-widget",
+          "mutationDirectoryName": "➕️create-widget",
+          "scenarios": [
+            {
+              "id": "rejects-a-duplicate-widget-id",
+              "directoryName": "🧪️rejects-a-duplicate-widget-id"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-widget",
+          "sourceMutationDirectoryName": "🗑️delete-widget",
+          "mutationDirectoryName": "🗑️delete-widget",
+          "scenarios": [
+            {
+              "id": "rejects-deleting-a-missing-widget",
+              "directoryName": "🧪️rejects-deleting-a-missing-widget"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-widgets",
+          "sourceMutationDirectoryName": "✂️disconnect-widgets",
+          "mutationDirectoryName": "✂️disconnect-widgets",
+          "scenarios": [
+            {
+              "id": "rejects-disconnecting-a-missing-synapse",
+              "directoryName": "🧪️rejects-disconnecting-a-missing-synapse"
+            }
+          ]
+        },
+        {
+          "mutationId": "duplicate-widget",
+          "sourceMutationDirectoryName": "👯️duplicate-widget",
+          "mutationDirectoryName": "👯️duplicate-widget",
+          "scenarios": [
+            {
+              "id": "rejects-duplicating-onto-a-taken-id",
+              "directoryName": "🧪️rejects-duplicating-onto-a-taken-id"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-widgets",
+          "sourceMutationDirectoryName": "📍️move-widgets",
+          "mutationDirectoryName": "📍️move-widgets",
+          "scenarios": [
+            {
+              "id": "re-applies-the-current-layout-to-both-widgets",
+              "directoryName": "🧪️re-applies-the-current-layout-to-both-widgets"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-synapses",
+          "sourceMutationDirectoryName": "🔀️reorder-synapses",
+          "mutationDirectoryName": "🔀️reorder-synapses",
+          "scenarios": [
+            {
+              "id": "keeps-the-leading-synapse-at-index-zero",
+              "directoryName": "🧪️keeps-the-leading-synapse-at-index-zero"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-widgets",
+          "sourceMutationDirectoryName": "🔀️🪟️reorder-widgets",
+          "mutationDirectoryName": "🔀️🪟️reorder-widgets",
+          "scenarios": [
+            {
+              "id": "clamps-an-out-of-range-index-onto-the-last-slot",
+              "directoryName": "🧪️clamps-an-out-of-range-index-onto-the-last-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-widget",
+          "sourceMutationDirectoryName": "🔁️replace-widget",
+          "mutationDirectoryName": "🔁️replace-widget",
+          "scenarios": [
+            {
+              "id": "replaces-a-note-with-an-identical-note",
+              "directoryName": "🧪️replaces-a-note-with-an-identical-note"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-synapse-endpoints",
+          "sourceMutationDirectoryName": "🔄️update-synapse-endpoints",
+          "mutationDirectoryName": "🔄️update-synapse-endpoints",
+          "scenarios": [
+            {
+              "id": "re-declares-the-same-endpoints",
+              "directoryName": "🧪️re-declares-the-same-endpoints"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-widget",
         "delete-widget",

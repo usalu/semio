@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "contract": "artifact-mutation-test-projection-v1",
+  "standardDirectoryName": "🔖️1",
+  "subsetDirectoryName": "✳️any",
+  "profileDirectoryName": "🪆️1-any",
+  "registryCounts": {
+    "catalogs": 144,
+    "vectors": 1555,
+    "scenarios": 1555,
+    "changedMutationRows": 126,
+    "changedMutationSources": 125
+  },
+  "sourceGlob": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/*/🧪️tests/*/🦀️component.rs",
+  "bundle": [
+    {
+      "source": "🦀️component.rs",
+      "destination": "🦀️.rs"
+    },
+    {
+      "source": "🦠️mutation/🔣️component.json",
+      "destination": "🦠️mutation/🔣️.json"
+    },
+    {
+      "source": "📸️snapshot/⬅️before/🔣️component.json",
+      "destination": "📸️snapshot/⬅️before/🔣️.json"
+    },
+    {
+      "source": "📸️snapshot/➡️after/🔣️component.json",
+      "destination": "📸️snapshot/➡️after/🔣️.json"
+    },
+    {
+      "source": "🔺️diff/🔣️component.json",
+      "destination": "🔺️diff/🔣️.json"
+    },
+    {
+      "source": "🎯️outcome/🔣️component.json",
+      "destination": "🎯️outcome/🔣️.json"
+    }
+  ],
+  "cases": [
+    {
+      "mutationId": "change-annex",
+      "sourceMutationDirectoryName": "🏷️change-annex",
+      "mutationDirectoryName": "🏷️change-annex",
+      "sourceScenarioId": "switches-to-national-annex-a",
+      "scenarioId": "switches-to-national-annex-a"
+    },
+    {
+      "mutationId": "change-humidification-required-kg-h",
+      "sourceMutationDirectoryName": "🌾change-humidification-required-kg-h",
+      "mutationDirectoryName": "🌾️change-humidification-required-kg-h",
+      "sourceScenarioId": "raises-the-required-humidification-to-3-point-5-kg-per-hour",
+      "scenarioId": "required-humidification-becomes-3-point-5-kg-per-hour"
+    },
+    {
+      "mutationId": "change-humidification-provided-kg-h",
+      "sourceMutationDirectoryName": "🍀change-humidification-provided-kg-h",
+      "mutationDirectoryName": "🍀️change-humidification-provided-kg-h",
+      "sourceScenarioId": "drops-the-provided-humidification-to-1-point-25-kg-per-hour",
+      "scenarioId": "provided-humidification-becomes-1-point-25-kg-per-hour"
+    },
+    {
+      "mutationId": "change-infiltration-allowance-m3-h",
+      "sourceMutationDirectoryName": "🌴change-infiltration-allowance-m3-h",
+      "mutationDirectoryName": "🌴️change-infiltration-allowance-m3-h",
+      "sourceScenarioId": "raises-the-infiltration-allowance-to-52-point-5-m3-per-hour",
+      "scenarioId": "raises-infiltration-allowance-to-52-point-5-m3-per-hour"
+    },
+    {
+      "mutationId": "bind-default-scene",
+      "sourceMutationDirectoryName": "bind-default-scene",
+      "mutationDirectoryName": "🔗️🎬️bind-default-scene",
+      "sourceScenarioId": "binds-first-scene-as-default",
+      "scenarioId": "binds-first-scene-as-default"
+    },
+    {
+      "mutationId": "delete-generation",
+      "sourceMutationDirectoryName": "➖delete-generation",
+      "mutationDirectoryName": "➖️delete-generation",
+      "sourceScenarioId": "removes-the-selected-generation-2-and-falls-back-to-generation-1",
+      "scenarioId": "removes-generation-2-and-selects-generation-1"
+    },
+    {
+      "mutationId": "change-asset-descriptive-metadata",
+      "sourceMutationDirectoryName": "change-asset-descriptive-metadata",
+      "mutationDirectoryName": "✏️📦️change-asset-descriptive-metadata",
+      "sourceScenarioId": "restamps-generator-copyright-and-min-version-together",
+      "scenarioId": "restamps-generator-copyright-and-min-version"
+    },
+    {
+      "mutationId": "change-document-extension-data",
+      "sourceMutationDirectoryName": "change-document-extension-data",
+      "mutationDirectoryName": "✏️📄️change-document-extension-data",
+      "sourceScenarioId": "attaches-a-punctual-lights-extension-to-the-document-root",
+      "scenarioId": "attaches-punctual-lights-extension-to-document-root"
+    },
+    {
+      "mutationId": "change-primitive-topology-mode",
+      "sourceMutationDirectoryName": "change-primitive-topology-mode",
+      "mutationDirectoryName": "✏️🔺️change-primitive-topology-mode",
+      "sourceScenarioId": "switches-the-primitive-from-implicit-triangles-to-triangle-strip",
+      "scenarioId": "switches-primitive-from-triangles-to-triangle-strip"
+    },
+    {
+      "mutationId": "move-required-extension",
+      "sourceMutationDirectoryName": "move-required-extension",
+      "mutationDirectoryName": "🚚️🧩️move-required-extension",
+      "sourceScenarioId": "demotes-the-unlit-requirement-behind-the-transform-requirement",
+      "scenarioId": "moves-unlit-requirement-behind-transform-requirement"
+    },
+    {
+      "mutationId": "reorder-morph-target-attributes",
+      "sourceMutationDirectoryName": "reorder-morph-target-attributes",
+      "mutationDirectoryName": "🔀️🧬️reorder-morph-target-attributes",
+      "sourceScenarioId": "flips-normal-ahead-of-position-inside-the-morph-target",
+      "scenarioId": "orders-normal-before-position-in-morph-target"
+    }
+  ]
+}

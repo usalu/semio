@@ -293,7 +293,7 @@ impl ArtifactEditor for AnimatePresentPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<PresentMutation, PresentConfigMutation, Self::DraftMutation>, Fault> {
-        let mut ctx = PresentDispatchCtx { selected_ids: interaction.selection(PRESENT_INTERACTION_DOMAIN).await.ids.clone() };
+        let mut ctx = PresentDispatchCtx { selected_ids: interaction.selection(PRESENT_INTERACTION_DOMAIN).ids.clone() };
         match command {
             PresentCommand::ExportVideoFromDeck(payload) => export_video_from_deck::handle_async(payload).await,
             _ => command.dispatch(doc, cfg, &mut ctx),

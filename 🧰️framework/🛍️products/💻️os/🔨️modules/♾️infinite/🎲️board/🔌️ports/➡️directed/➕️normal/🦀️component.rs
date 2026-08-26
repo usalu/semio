@@ -418,14 +418,26 @@ pub mod board_host {
     }
 
     struct BoardFillFixedPages<T, const CAPACITY: usize> {
-        pages: [Option<BoardFillPage<T>>; CAPACITY],
+        pages: Box<[Option<BoardFillPage<T>>]>,
         len: usize,
         page_count: usize,
     }
 
     impl<T, const CAPACITY: usize> BoardFillFixedPages<T, CAPACITY> {
         fn new() -> Self {
-            Self { pages: std::array::from_fn(|_| None), len: 0, page_count: 0 }
+            Self::try_new().expect("Puzzle2d fill fixed descriptor backing allocation")
+        }
+
+        fn try_new() -> Result<Self, ()> {
+            let _ = CAPACITY.checked_mul(std::mem::size_of::<Option<BoardFillPage<T>>>()).ok_or(())?;
+            let mut pages = Vec::new();
+            pages.try_reserve_exact(CAPACITY).map_err(|_| ())?;
+            pages.resize_with(CAPACITY, || None);
+            let pages = pages.into_boxed_slice();
+            if pages.len() != CAPACITY {
+                return Err(());
+            }
+            Ok(Self { pages, len: 0, page_count: 0 })
         }
 
         fn item_capacity() -> usize {
@@ -5653,7 +5665,16 @@ pub mod board_host {
             };
             let id = BoardFillText::try_from_str(key)?;
             self.kind = Some(BoardFillKindCapture {
-                value: BoardFillKindSnapshot { id, shape: BoardFillShape::Circle, radius: 0.0, width: 0.0, height: 0.0, icon: None, weight: 0.0, handles: BoardFillFixedPages::new() },
+                value: BoardFillKindSnapshot {
+                    id,
+                    shape: BoardFillShape::Circle,
+                    radius: 0.0,
+                    width: 0.0,
+                    height: 0.0,
+                    icon: None,
+                    weight: 0.0,
+                    handles: BoardFillFixedPages::try_new().map_err(|_| BoardFillCaptureFault::KindHandleCapacity)?,
+                },
                 stage: BoardFillKindCaptureStage::Icon,
                 template: None,
             });
@@ -5943,7 +5964,16 @@ pub mod board_host {
             if self.closing || self.kind.is_some() {
                 return Err(BoardFillCaptureFault::StaleKind);
             }
-            self.kind = Some(BoardFillKindSnapshot { id: BoardFillText::empty(), shape: BoardFillShape::Circle, radius: 0.0, width: 0.0, height: 0.0, icon: None, weight: 0.0, handles: BoardFillFixedPages::new() });
+            self.kind = Some(BoardFillKindSnapshot {
+                id: BoardFillText::empty(),
+                shape: BoardFillShape::Circle,
+                radius: 0.0,
+                width: 0.0,
+                height: 0.0,
+                icon: None,
+                weight: 0.0,
+                handles: BoardFillFixedPages::try_new().map_err(|_| BoardFillCaptureFault::KindHandleCapacity)?,
+            });
             Ok(())
         }
 
@@ -6678,7 +6708,7 @@ pub mod board_host {
                 width: kind.width,
                 height: kind.height,
                 icon_kind: None,
-                handles: BoardFillFixedPages::new(),
+                handles: BoardFillFixedPages::try_new().map_err(|_| "placement-handle-descriptor-capacity")?,
             });
             state.accept_handle_cursor = 0;
             state.accept_handle_template = None;
@@ -12466,6 +12496,37 @@ pub mod board_host {
         fn clear_color(&self) -> Color {
             self.canvas_theme.raster_clear
         }
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn board_fill_descriptor_backings_are_exact_heap_owners_with_bounded_transfer_frames() {
+        type SourcePages = BoardFillFixedPages<BoardFillSource, { (BOARD_FILL_SOURCE_CAPACITY + BOARD_FILL_PAGE_ITEMS - 1) / BOARD_FILL_PAGE_ITEMS }>;
+        type VirtualHandlePages = BoardFillFixedPages<BoardFillVirtualHandle, { (BOARD_FILL_PLACEMENT_CAPACITY * BOARD_FILL_KIND_HANDLE_CAPACITY + BOARD_FILL_PAGE_ITEMS - 1) / BOARD_FILL_PAGE_ITEMS }>;
+        let sources = SourcePages::try_new().expect("source descriptor owner");
+        let virtual_handles = VirtualHandlePages::try_new().expect("virtual-handle descriptor owner");
+        assert_eq!(sources.pages.len(), (BOARD_FILL_SOURCE_CAPACITY + BOARD_FILL_PAGE_ITEMS - 1) / BOARD_FILL_PAGE_ITEMS);
+        assert_eq!(virtual_handles.pages.len(), (BOARD_FILL_PLACEMENT_CAPACITY * BOARD_FILL_KIND_HANDLE_CAPACITY + BOARD_FILL_PAGE_ITEMS - 1) / BOARD_FILL_PAGE_ITEMS);
+        assert_eq!(std::mem::size_of::<SourcePages>(), 4 * std::mem::size_of::<usize>());
+        assert_eq!(std::mem::size_of::<VirtualHandlePages>(), 4 * std::mem::size_of::<usize>());
+        assert!(std::mem::size_of::<BoardFillSnapshot>() <= 1_024);
+        assert!(std::mem::size_of::<BoardFillSnapshotCapture>() <= 32 * 1_024);
+        assert!(std::mem::size_of::<BoardFillSnapshotIngress>() <= 32 * 1_024);
+        assert!(std::mem::size_of::<BoardFillPlacement>() <= 32 * 1_024);
+        assert!(std::mem::size_of::<BoardFillCommitPlacement>() <= 32 * 1_024);
+        assert!(std::mem::size_of::<BoardFillCommitCandidate>() <= 32 * 1_024);
+        assert!(std::mem::size_of::<BoardFillCommitEncoder>() <= 32 * 1_024);
+        assert!(std::mem::size_of::<BoardFillJobState>() <= 32 * 1_024);
+        assert!(std::mem::size_of::<BoardFillCheckpoint>() <= 32 * 1_024);
+        assert!(std::mem::size_of::<BoardFillJob>() <= 32 * 1_024);
+        assert!(std::mem::size_of::<Result<BoardFillJob, BoardFillCheckpoint>>() <= 32 * 1_024);
+        assert!(std::mem::size_of::<semio_framework_job::WorkerJobOutcome<BoardFillJob>>() <= 32 * 1_024);
+        assert!(std::mem::size_of::<semio_framework_job::MountedWorkerJobSession<BoardFillJob>>() <= 32 * 1_024);
+        assert!(std::mem::size_of::<semio_framework_job::WorkerJobSessionAdmissionRejected<BoardFillJob>>() <= 32 * 1_024);
+        assert!(std::mem::size_of::<Result<semio_framework_job::MountedWorkerJobSession<BoardFillJob>, semio_framework_job::WorkerJobSessionAdmissionRejected<BoardFillJob>>>() <= 32 * 1_024);
+        assert!(sources.terminal_is_empty());
+        assert!(virtual_handles.terminal_is_empty());
+        assert!(BoardFillFixedPages::<u8, { usize::MAX }>::try_new().is_err());
     }
 
     #[cfg(test)]

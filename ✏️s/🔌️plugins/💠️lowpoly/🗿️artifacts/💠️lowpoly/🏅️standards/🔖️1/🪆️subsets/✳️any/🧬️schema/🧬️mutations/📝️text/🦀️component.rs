@@ -16,10 +16,10 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 //#region 🔖️OpText
 impl protocol::OpText for LowpolyMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|e| store::__rt::field_error(format!("invalid lowpoly mutation line: {e}")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         serde_json::to_string(self).expect("LowpolyMutation always serializes")
     }
 }
@@ -27,10 +27,10 @@ impl protocol::OpText for LowpolyMutation {
 
 //#region 🔖️OpBinary
 impl protocol::OpBinary for LowpolyMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(serde_json::to_vec(self).expect("LowpolyMutation always serializes"))
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "lowpoly-mutation", offset: 0, detail: e.to_string() })
     }
 }
@@ -44,18 +44,18 @@ mod tests {
     use crate::artifacts::lowpoly::schema::default_snapshot;
     use protocol::{OpBinary, OpText};
 
-    async fn tiny_mesh_json() -> String {
+    fn tiny_mesh_json() -> String {
         semio_framework_3d::mesh::HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim").to_json().expect("mesh json")
     }
 
-    async fn tiny_object(id: &str, name: &str) -> crate::artifacts::lowpoly::LowpolyObject {
+    fn tiny_object(id: &str, name: &str) -> crate::artifacts::lowpoly::LowpolyObject {
         let mesh_workspace = tiny_mesh_json();
         let mesh = crate::artifacts::lowpoly::mesh_child_handle(id, &mesh_workspace);
         crate::artifacts::lowpoly::LowpolyObject { id: id.into(), name: name.into(), transform: Default::default(), smooth_shading: false, mesh: Some(mesh), paint_layers: vec![crate::artifacts::lowpoly::LowpolyPaintLayer::new("Base")] }
     }
 
     /// 🧪️ One representative value per variant — reused by the round-trip law test below.
-    async fn demo_mutation_cases() -> Vec<LowpolyMutation> {
+    fn demo_mutation_cases() -> Vec<LowpolyMutation> {
         let projection = default_snapshot();
         let object_id = projection.objects[0].id.clone();
         vec![

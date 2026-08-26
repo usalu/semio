@@ -89,17 +89,17 @@ pub struct LowpolyDocument {
     mesh_workspace: HashMap<String, String>,
 }
 
-async fn prepare_paint_mesh(mesh: &mut HalfedgeMesh) {
+fn prepare_paint_mesh(mesh: &mut HalfedgeMesh) {
     let _ = mesh.unwrap_uv();
 }
 
 impl LowpolyDocument {
-    pub async fn new(snapshot: LowpolySnapshot, mesh_workspace: HashMap<String, String>) -> Result<Self, LowpolyCoreError> {
+    pub fn new(snapshot: LowpolySnapshot, mesh_workspace: HashMap<String, String>) -> Result<Self, LowpolyCoreError> {
         let active_object_id = snapshot.objects.first().map(|object| object.id.clone()).unwrap_or_default();
         Self::with_context(snapshot, active_object_id, LowpolySelection::default(), mesh_workspace)
     }
 
-    pub async fn with_context(snapshot: LowpolySnapshot, active_object_id: String, selection: LowpolySelection, mesh_workspace: HashMap<String, String>) -> Result<Self, LowpolyCoreError> {
+    pub fn with_context(snapshot: LowpolySnapshot, active_object_id: String, selection: LowpolySelection, mesh_workspace: HashMap<String, String>) -> Result<Self, LowpolyCoreError> {
         let next_object_serial = snapshot.objects.iter().filter_map(|object| object.id.strip_prefix("obj-")?.parse::<u32>().ok()).max().unwrap_or(100);
         let mut doc = Self { snapshot, active_object_id, selection, meshes: Vec::new(), next_object_serial, mesh_workspace };
         doc.reload_meshes()?;
@@ -110,27 +110,27 @@ impl LowpolyDocument {
     /// 🕸️ The live half-edge-mesh JSON per object id, current as of the last `reload_meshes`/
     /// `sync_meshes_to_snapshot`/`add_primitive` — callers merge this back into their own session
     /// cache (`LowpolyScratch::set_mesh_workspace_map`) after a successful edit.
-    pub async fn mesh_workspace(&self) -> &HashMap<String, String> {
+    pub fn mesh_workspace(&self) -> &HashMap<String, String> {
         &self.mesh_workspace
     }
 
-    pub async fn snapshot(&self) -> &LowpolySnapshot {
+    pub fn snapshot(&self) -> &LowpolySnapshot {
         &self.snapshot
     }
 
-    pub async fn snapshot_mut(&mut self) -> &mut LowpolySnapshot {
+    pub fn snapshot_mut(&mut self) -> &mut LowpolySnapshot {
         &mut self.snapshot
     }
 
-    pub async fn active_object_id(&self) -> &str {
+    pub fn active_object_id(&self) -> &str {
         &self.active_object_id
     }
 
-    pub async fn selection(&self) -> &LowpolySelection {
+    pub fn selection(&self) -> &LowpolySelection {
         &self.selection
     }
 
-    pub async fn ensure_all_paint_buffers(&mut self) {
+    pub fn ensure_all_paint_buffers(&mut self) {
         for object in &mut self.snapshot.objects {
             if object.paint_layers.is_empty() {
                 object.paint_layers.push(LowpolyPaintLayer::new("Base"));
@@ -143,11 +143,11 @@ impl LowpolyDocument {
         }
     }
 
-    pub async fn layer_pixels(&self, object_id: &str, layer_index: usize) -> Result<&[u8], LowpolyCoreError> {
+    pub fn layer_pixels(&self, object_id: &str, layer_index: usize) -> Result<&[u8], LowpolyCoreError> {
         crate::artifacts::lowpoly::schema::layer_pixels_at(&self.snapshot, object_id, layer_index).ok_or(LowpolyCoreError::LayerIndexOutOfRange)
     }
 
-    pub async fn layer_pixels_mut(&mut self, object_id: &str, layer_index: usize) -> Result<&mut Vec<u8>, LowpolyCoreError> {
+    pub fn layer_pixels_mut(&mut self, object_id: &str, layer_index: usize) -> Result<&mut Vec<u8>, LowpolyCoreError> {
         self.ensure_paint_layer(object_id, layer_index)?;
         crate::artifacts::lowpoly::schema::object_mut(&mut self.snapshot, object_id).and_then(|object| object.paint_layers.get_mut(layer_index)).map(|layer| &mut layer.pixels).ok_or(LowpolyCoreError::LayerIndexOutOfRange)
     }
@@ -157,7 +157,7 @@ impl LowpolyDocument {
     /// (`mesh_child_handle`, "the handle IS the change signal" — see that fn's own doc comment) is a
     /// stale cache (e.g. an undo/redo the session never observed, see `LowpolyCoreError::StaleMeshWorkspace`'s
     /// own doc comment) and fails closed rather than silently loading the wrong geometry.
-    pub async fn reload_meshes(&mut self) -> Result<(), LowpolyCoreError> {
+    pub fn reload_meshes(&mut self) -> Result<(), LowpolyCoreError> {
         self.meshes.clear();
         for object in &self.snapshot.objects {
             let Some(json) = self.mesh_workspace.get(&object.id) else {
@@ -178,7 +178,7 @@ impl LowpolyDocument {
     /// (re-)derives the persisted `mesh` CHILD handle from that content via `mesh_child_handle` —
     /// identical geometry always resolves to the identical handle, so an unchanged mesh produces no
     /// spurious diff on the handle even though this runs on every sync.
-    pub async fn sync_meshes_to_snapshot(&mut self) -> Result<(), LowpolyCoreError> {
+    pub fn sync_meshes_to_snapshot(&mut self) -> Result<(), LowpolyCoreError> {
         for (object, mesh) in self.snapshot.objects.iter_mut().zip(self.meshes.iter()) {
             let json = mesh.to_json()?;
             object.mesh = Some(crate::artifacts::lowpoly::mesh_child_handle(&object.id, &json));
@@ -187,50 +187,50 @@ impl LowpolyDocument {
         Ok(())
     }
 
-    pub async fn active_index(&self) -> Option<usize> {
+    pub fn active_index(&self) -> Option<usize> {
         self.snapshot.objects.iter().position(|o| o.id == self.active_object_id)
     }
 
-    pub async fn active_mesh_mut(&mut self) -> Result<&mut HalfedgeMesh, LowpolyCoreError> {
+    pub fn active_mesh_mut(&mut self) -> Result<&mut HalfedgeMesh, LowpolyCoreError> {
         let idx = self.active_index().ok_or(LowpolyCoreError::NoActiveObject)?;
         self.meshes.get_mut(idx).ok_or(LowpolyCoreError::MeshMissing)
     }
 
-    pub async fn active_mesh(&self) -> Result<&HalfedgeMesh, LowpolyCoreError> {
+    pub fn active_mesh(&self) -> Result<&HalfedgeMesh, LowpolyCoreError> {
         let idx = self.active_index().ok_or(LowpolyCoreError::NoActiveObject)?;
         self.meshes.get(idx).ok_or(LowpolyCoreError::MeshMissing)
     }
 
-    pub async fn mesh_at(&self, index: usize) -> Option<&HalfedgeMesh> {
+    pub fn mesh_at(&self, index: usize) -> Option<&HalfedgeMesh> {
         self.meshes.get(index)
     }
 
-    pub async fn object_index(&self, object_id: &str) -> Result<usize, LowpolyCoreError> {
+    pub fn object_index(&self, object_id: &str) -> Result<usize, LowpolyCoreError> {
         self.snapshot.objects.iter().position(|o| o.id == object_id).ok_or(LowpolyCoreError::ObjectNotFound)
     }
 
-    pub async fn selected_face_ids(&self) -> Vec<FaceId> {
+    pub fn selected_face_ids(&self) -> Vec<FaceId> {
         if self.selection.mode != "face" {
             return Vec::new();
         }
         self.selection.ids.iter().map(|&id| FaceId(id)).collect()
     }
 
-    pub async fn selected_vertex_ids(&self) -> Vec<VertexId> {
+    pub fn selected_vertex_ids(&self) -> Vec<VertexId> {
         if self.selection.mode != "vertex" {
             return Vec::new();
         }
         self.selection.ids.iter().map(|&id| VertexId(id)).collect()
     }
 
-    pub async fn selected_edge_ids(&self) -> Vec<EdgeId> {
+    pub fn selected_edge_ids(&self) -> Vec<EdgeId> {
         if self.selection.mode != "edge" {
             return Vec::new();
         }
         self.selection.ids.iter().map(|&id| EdgeId(id)).collect()
     }
 
-    pub async fn normalize_selection_mode(mode: &str) -> String {
+    pub fn normalize_selection_mode(mode: &str) -> String {
         if mode == "object" {
             "mesh".into()
         } else {
@@ -238,12 +238,12 @@ impl LowpolyDocument {
         }
     }
 
-    pub async fn apply_selection(&mut self, mode: &str, ids: Vec<u32>) {
+    pub fn apply_selection(&mut self, mode: &str, ids: Vec<u32>) {
         self.selection.mode = Self::normalize_selection_mode(mode);
         self.selection.ids = ids;
     }
 
-    pub async fn selection_vertex_ids(&self) -> Result<Vec<VertexId>, LowpolyCoreError> {
+    pub fn selection_vertex_ids(&self) -> Result<Vec<VertexId>, LowpolyCoreError> {
         let mesh = self.active_mesh()?;
         match self.selection.mode.as_str() {
             "vertex" => Ok(self.selected_vertex_ids()),
@@ -276,7 +276,7 @@ impl LowpolyDocument {
         }
     }
 
-    pub async fn selection_transform_pivot(&self) -> Result<Vec3, LowpolyCoreError> {
+    pub fn selection_transform_pivot(&self) -> Result<Vec3, LowpolyCoreError> {
         let mesh = self.active_mesh()?;
         if self.selection.mode == "mesh" {
             let count = mesh.vertex_count();
@@ -301,7 +301,7 @@ impl LowpolyDocument {
     }
 
     /// @emoji ➕️ Appends a primitive object, making it active, and returns its new id.
-    pub async fn add_primitive(&mut self, kind: &str) -> Result<String, LowpolyCoreError> {
+    pub fn add_primitive(&mut self, kind: &str) -> Result<String, LowpolyCoreError> {
         let mut mesh = match kind {
             "box" => HalfedgeMesh::box_prim(1.0, 1.0, 1.0),
             "plane" => HalfedgeMesh::plane_prim(2.0, 2.0),
@@ -322,7 +322,7 @@ impl LowpolyDocument {
         Ok(id)
     }
 
-    pub async fn ensure_paint_layer(&mut self, object_id: &str, layer_index: usize) -> Result<(), LowpolyCoreError> {
+    pub fn ensure_paint_layer(&mut self, object_id: &str, layer_index: usize) -> Result<(), LowpolyCoreError> {
         let idx = self.object_index(object_id)?;
         if self.snapshot.objects[idx].paint_layers.is_empty() {
             self.snapshot.objects[idx].paint_layers.push(LowpolyPaintLayer::new("Base"));
@@ -333,7 +333,7 @@ impl LowpolyDocument {
         Ok(())
     }
 
-    pub async fn tessellate_transfer_json(mesh: &HalfedgeMesh) -> Result<Value, LowpolyCoreError> {
+    pub fn tessellate_transfer_json(mesh: &HalfedgeMesh) -> Result<Value, LowpolyCoreError> {
         let transfer = mesh.tessellate()?;
         Ok(serde_json::json!({
             "positions": transfer.positions,
@@ -349,7 +349,7 @@ impl LowpolyDocument {
         }))
     }
 
-    pub async fn tessellate_all_json(&self) -> Result<String, LowpolyCoreError> {
+    pub fn tessellate_all_json(&self) -> Result<String, LowpolyCoreError> {
         let active = self.active_object_id.clone();
         let mut items = Vec::new();
         for (idx, object) in self.snapshot.objects.iter().enumerate() {
@@ -367,26 +367,26 @@ impl LowpolyDocument {
         Ok(serde_json::to_string(&items)?)
     }
 
-    pub async fn composite_layers(&self, object_id: &str) -> Result<Vec<u8>, LowpolyCoreError> {
+    pub fn composite_layers(&self, object_id: &str) -> Result<Vec<u8>, LowpolyCoreError> {
         let idx = self.object_index(object_id)?;
         Ok(crate::artifacts::lowpoly::schema::composite_layer_pixels(&self.snapshot.objects[idx].paint_layers))
     }
 
     /// @emoji 🖌️ Stamps a soft brush (or eraser) into a layer's pixel buffer in place.
     #[allow(clippy::too_many_arguments, reason = "1:1 forwarder for stamp_brush's own justified 8 args plus object_id/layer_index; a params struct would only move the same fields around for this single call site")]
-    pub async fn paint_stroke(&mut self, object_id: &str, layer_index: usize, u: f32, v: f32, radius: f32, color: [u8; 4], hardness: f32, opacity: f32, eraser: bool) -> Result<(), LowpolyCoreError> {
+    pub fn paint_stroke(&mut self, object_id: &str, layer_index: usize, u: f32, v: f32, radius: f32, color: [u8; 4], hardness: f32, opacity: f32, eraser: bool) -> Result<(), LowpolyCoreError> {
         let layer_pixels = self.layer_pixels_mut(object_id, layer_index)?;
         crate::artifacts::lowpoly::schema::stamp_brush(layer_pixels, u, v, radius, color, hardness, opacity, eraser);
         Ok(())
     }
 
-    pub async fn fill_bucket(&mut self, object_id: &str, layer_index: usize, u: f32, v: f32, color: [u8; 4]) -> Result<(), LowpolyCoreError> {
+    pub fn fill_bucket(&mut self, object_id: &str, layer_index: usize, u: f32, v: f32, color: [u8; 4]) -> Result<(), LowpolyCoreError> {
         let layer_pixels = self.layer_pixels_mut(object_id, layer_index)?;
         crate::artifacts::lowpoly::schema::flood_fill(layer_pixels, u, v, color);
         Ok(())
     }
 
-    pub async fn sample_pixel(&self, object_id: &str, u: f32, v: f32) -> Result<[u8; 4], LowpolyCoreError> {
+    pub fn sample_pixel(&self, object_id: &str, u: f32, v: f32) -> Result<[u8; 4], LowpolyCoreError> {
         let composite = self.composite_layers(object_id)?;
         Ok(crate::artifacts::lowpoly::schema::sample_pixel_from(&composite, u, v))
     }
@@ -399,7 +399,7 @@ impl LowpolyDocument {
 /// schema (`crate::artifacts::lowpoly::schema::mesh_data_from_transfer` et al). Takes the caller's
 /// session-local `mesh_workspace` cache explicitly (round 2 of this ticket's round-trip law fix) —
 /// `doc: &Value` alone no longer carries live mesh content, only the persisted `mesh` handle.
-pub async fn lowpoly_mesh_from_document(doc: &Value, mesh_workspace: &HashMap<String, String>) -> Result<MeshData, String> {
+pub fn lowpoly_mesh_from_document(doc: &Value, mesh_workspace: &HashMap<String, String>) -> Result<MeshData, String> {
     let snapshot: LowpolySnapshot = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
     let loaded = LowpolyDocument::new(snapshot, mesh_workspace.clone()).map_err(|e| e.to_string())?;
     Ok(loaded.active_mesh().ok().and_then(|mesh| LowpolyDocument::tessellate_transfer_json(mesh).ok()).map(|transfer| crate::artifacts::lowpoly::schema::mesh_data_from_transfer(&transfer, None)).unwrap_or_default())

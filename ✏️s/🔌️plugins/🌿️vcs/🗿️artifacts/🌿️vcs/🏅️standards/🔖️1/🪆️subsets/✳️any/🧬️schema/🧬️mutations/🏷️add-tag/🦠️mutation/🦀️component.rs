@@ -13,23 +13,23 @@ pub struct AddTag {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn add_tag(tag: String) -> VcsDemoMutation {
+pub fn add_tag(tag: String) -> VcsDemoMutation {
     VcsDemoMutation::AddTag(AddTag { tag })
 }
 
 impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for AddTag {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "tag", kind: "add-tag", record: "AddedTagToVcs" };
 
-    async fn diff(&self, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
+    fn diff(&self, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
+    fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Add tag \"{}\"", self.tag)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.tag.clone()]
     }
 }

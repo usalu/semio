@@ -4,7 +4,7 @@
  * source of truth for every `app_labels!` exhaustive match and every locale/terminology-typed field
  * in Rust and TypeScript. */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BundleScript, ScriptRouter, buildBudgetMs, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
@@ -115,6 +115,19 @@ function generatedTargets(repoRoot: string, axes: UiAxesSpec): GeneratedTarget[]
 }
 //#endregion 🔖️targets
 
+//#region 🔖️preview-generated
+/** 🧾️ Emits the canonical read-only generator protocol from the same byte plan as generate/check. */
+class PreviewGeneratedScript extends BundleScript {
+  run(_segments: string[]): void {
+    const repoRoot = getWorkspaceRoot();
+    const nodes = generatedTargets(repoRoot, readUiAxes())
+      .map((target) => ({ bytesBase64: Buffer.from(target.content).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: relative(repoRoot, target.path).replaceAll("\\", "/").normalize("NFC") }))
+      .sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
+    process.stdout.write(`${JSON.stringify({ contractId: "ui-axes", nodes, schemaVersion: 1, staleRemovals: [] })}\n`);
+  }
+}
+//#endregion 🔖️preview-generated
+
 //#region 🔖️generate
 class GenerateAxesScript extends BundleScript {
   run(_segments: string[]): void {
@@ -187,6 +200,7 @@ class CheckWgpuEngineWasmScript extends BundleScript {
 if (import.meta.main) {
   const router = new ScriptRouter(import.meta.dir)
     .register("generate", GenerateAxesScript)
+    .register("preview-generated", PreviewGeneratedScript)
     .register("check", CheckAxesScript)
     .register("test", TestScript)
     .register("test-wgpu-engine", TestWgpuEngineScript)

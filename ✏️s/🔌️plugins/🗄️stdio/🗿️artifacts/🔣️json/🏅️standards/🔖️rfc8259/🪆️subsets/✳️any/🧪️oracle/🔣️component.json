@@ -25,6 +25,21 @@
     {
       "id": "json-rfc8259-any",
       "capability": "json-rfc8259-mutate",
+      "standardDirectoryName": "🔖️rfc8259",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "bumps-the-version-lexeme-and-appends-a-tag",
+              "directoryName": "🧪️bumps-the-version-lexeme-and-appends-a-tag"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

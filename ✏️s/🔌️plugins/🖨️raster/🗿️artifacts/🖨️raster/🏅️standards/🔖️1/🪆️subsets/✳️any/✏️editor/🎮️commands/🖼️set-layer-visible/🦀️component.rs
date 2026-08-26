@@ -15,7 +15,7 @@ pub struct SetLayerVisible {
     pub visible: Option<bool>,
 }
 
-pub async fn handle(payload: &SetLayerVisible, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+pub fn handle(payload: &SetLayerVisible, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     let document = doc.snapshot;
     let Some(layer) = find_layer(&document.layers, &payload.layer_id) else { return Ok(Emit::default()) };
     let resolved = payload.visible.unwrap_or_else(|| !layer_visible(layer));

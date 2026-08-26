@@ -272,7 +272,7 @@ impl JackOwnedRetirement {
     }
 
     fn spawn(active: &mut std::mem::ManuallyDrop<Option<Box<JackOwnedRetirement>>>, owner: JackRetirementOwner) -> store::SnapshotRetirementStep {
-        *active = Some(Box::new(Self::new(owner)));
+        **active = Some(Box::new(Self::new(owner)));
         store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
     }
 
@@ -570,13 +570,13 @@ impl JackOwnedRetirement {
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
                 2 => {
-                    if let Some(value) = value.port_kinds.pop() {
-                        if value.len() > maximum_bytes || maximum_items == 0 {
-                            value.port_kinds.push(value);
+                    if let Some(port_kind) = value.port_kinds.pop() {
+                        if port_kind.len() > maximum_bytes || maximum_items == 0 {
+                            value.port_kinds.push(port_kind);
                             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                         }
-                        let released_bytes = value.len();
-                        drop(value);
+                        let released_bytes = port_kind.len();
+                        drop(port_kind);
                         return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
                     }
                     self.phase = 3;
@@ -1700,7 +1700,9 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
                         semio_framework_job::StepOutcome::Cancelled
                     } else {
                         self.phase = JackStoreInitializationPhase::Fault;
-                        semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: self.fault.take().unwrap_or_else(|| b"jack-store.initializer-fault".to_vec()) })
+                        let fault = self.fault.take().unwrap_or_else(|| b"jack-store.initializer-fault".to_vec());
+                        let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, &fault).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                        semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
                     }
                 }
                 Err(error) => {
@@ -1713,7 +1715,11 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
                 output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
             }),
             JackStoreInitializationPhase::Cancelled => semio_framework_job::StepOutcome::Cancelled,
-            JackStoreInitializationPhase::Fault => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: self.fault.clone().unwrap_or_else(|| b"jack-store.initializer-fault".to_vec()) }),
+            JackStoreInitializationPhase::Fault => {
+                let fault = self.fault.as_deref().unwrap_or(b"jack-store.initializer-fault");
+                let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, fault).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
+            }
         }
     }
 

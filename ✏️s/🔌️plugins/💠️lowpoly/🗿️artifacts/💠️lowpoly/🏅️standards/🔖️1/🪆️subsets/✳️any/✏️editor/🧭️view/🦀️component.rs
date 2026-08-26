@@ -28,7 +28,7 @@ pub struct LowpolyView<'a> {
 //#endregion 🔖️View
 
 //#region 🔖️ActiveObject
-pub async fn resolve_active_object_id(snapshot: &LowpolySnapshot, config: &LowpolyConfig) -> String {
+pub fn resolve_active_object_id(snapshot: &LowpolySnapshot, config: &LowpolyConfig) -> String {
     if snapshot.objects.iter().any(|object| object.id == config.active_object_id) {
         config.active_object_id.clone()
     } else {
@@ -36,7 +36,7 @@ pub async fn resolve_active_object_id(snapshot: &LowpolySnapshot, config: &Lowpo
     }
 }
 
-pub async fn active_object<'a>(view: LowpolyView<'a>) -> Option<&'a LowpolyObject> {
+pub fn active_object<'a>(view: LowpolyView<'a>) -> Option<&'a LowpolyObject> {
     let id = resolve_active_object_id(view.snapshot, view.config);
     view.snapshot.objects.iter().find(|object| object.id == id)
 }
@@ -49,20 +49,20 @@ pub async fn active_object<'a>(view: LowpolyView<'a>) -> Option<&'a LowpolyObjec
 /// mesh-domain selection `LowpolyPlayApp::handle` resolved from `InteractionView` for THIS dispatch
 /// (see `🔖️MeshDomain` below) — render call sites never populate it, which is harmless: geometry/
 /// texture rendering never reads `LowpolyDocument::selection()`.
-pub async fn build_doc(snapshot: &LowpolySnapshot, config: &LowpolyConfig, ctx: &LowpolyScratch) -> Option<LowpolyDocument> {
+pub fn build_doc(snapshot: &LowpolySnapshot, config: &LowpolyConfig, ctx: &LowpolyScratch) -> Option<LowpolyDocument> {
     let active = resolve_active_object_id(snapshot, config);
     LowpolyDocument::with_context(snapshot.clone(), active, ctx.current_selection().clone(), ctx.mesh_workspace_map()).ok()
 }
 
-pub async fn document_target_row_id(object_id: &str, _object_index: usize, mode: &str, id: u32) -> String {
+pub fn document_target_row_id(object_id: &str, _object_index: usize, mode: &str, id: u32) -> String {
     format!("lowpoly-document.{object_id}.{mode}.{id}")
 }
 
-pub async fn document_object_row_id(object_id: &str) -> String {
+pub fn document_object_row_id(object_id: &str) -> String {
     format!("lowpoly-document.{object_id}")
 }
 
-pub async fn object_index_for(snapshot: &LowpolySnapshot, object_id: &str) -> usize {
+pub fn object_index_for(snapshot: &LowpolySnapshot, object_id: &str) -> usize {
     snapshot.objects.iter().position(|object| object.id == object_id).unwrap_or(0)
 }
 //#endregion 🔖️Selection
@@ -79,7 +79,7 @@ pub const MESH_GRANULARITY_OBJECT: &str = "object";
 
 /// 🔎️ Parses a mesh-domain target id back into `(objectId, Option<(granularity, numericId)>)` — the
 /// second slot is `None` for an object-granularity row (`"lowpoly-document.<objectId>"`).
-pub async fn parse_mesh_target_id(id: &str) -> Option<(String, Option<(String, u32)>)> {
+pub fn parse_mesh_target_id(id: &str) -> Option<(String, Option<(String, u32)>)> {
     let rest = id.strip_prefix("lowpoly-document.")?;
     let mut parts = rest.splitn(3, '.');
     let object_id = parts.next()?.to_string();
@@ -100,8 +100,13 @@ pub async fn parse_mesh_target_id(id: &str) -> Option<(String, Option<(String, u
 /// `interactionSelect`, whereas `InteractionView::active_granularity` only changes on an explicit
 /// `setInteractionGranularity` dispatch (a separate "what the NEXT pick defaults to" concern) and would
 /// silently stay "object" for a plain face pick that never touched it.
-pub async fn selection_from_interaction(active_object_id: &str, interaction: &InteractionView<'_>) -> LowpolySelection {
-    let selected = interaction.selection(MESH_INTERACTION_DOMAIN);
+pub fn selection_from_interaction(active_object_id: &str, interaction: &InteractionView<'_>) -> LowpolySelection {
+    selection_from_state(active_object_id, interaction.selection(MESH_INTERACTION_DOMAIN))
+}
+
+/// 🧬️ Typed retained reducers read the same immutable domain selection directly from their
+/// scheduler-owned request context, without manufacturing a host-only `InteractionView`.
+pub fn selection_from_state(active_object_id: &str, selected: &protocol::DomainSelection) -> LowpolySelection {
     let granularity = if selected.granularity.is_empty() { MESH_GRANULARITY_OBJECT } else { selected.granularity.as_str() };
     let mode = LowpolyDocument::normalize_selection_mode(granularity);
     let ids: Vec<u32> = selected.ids.iter().filter_map(|raw| parse_mesh_target_id(raw)).filter(|(object_id, _)| object_id == active_object_id).filter_map(|(_, component)| component.map(|(_, numeric)| numeric)).collect();
@@ -113,41 +118,28 @@ pub async fn selection_from_interaction(active_object_id: &str, interaction: &In
 /// `UiTreeItemNode.hoverAction`/`.unhoverAction` are DELETED (per `📋️master.md`'s UI section) — a
 /// domain-bound tree's hover is translated generically by the renderer now, like its selection click
 /// modifiers, never by an app-built per-row action.
-pub fn mesh_select_action(
-    granularity: &str,
-    target_id: &str,
-    merge: &str,
-) -> semio_framework_plugin::UiAssemblyResult<(
-    semio_framework_plugin::ActionId,
-    Option<semio_framework_plugin::UiValue>,
-)> {
-    let targets = serde_json::to_string(&[semio_framework_plugin::InteractionTarget {
-        granularity: granularity.into(),
-        id: target_id.into(),
-    }])
-    .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("ui.action-argument", error.to_string()))?;
-    let args = crate::editor::lowpoly::ui_value_map([
-        ("domainId", crate::editor::lowpoly::ui_value_text(MESH_INTERACTION_DOMAIN)?),
-        ("targets", crate::editor::lowpoly::ui_value_text(targets)?),
-        ("merge", crate::editor::lowpoly::ui_value_text(merge)?),
-    ])?;
+pub fn mesh_select_action(granularity: &str, target_id: &str, merge: &str) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
+    let targets =
+        serde_json::to_string(&[semio_framework_plugin::InteractionTarget { granularity: granularity.into(), id: target_id.into() }]).map_err(|error| semio_framework_plugin::PluginAssemblyError::new("ui.action-argument", error.to_string()))?;
+    let args =
+        crate::editor::lowpoly::ui_value_map([("domainId", crate::editor::lowpoly::ui_value_text(MESH_INTERACTION_DOMAIN)?), ("targets", crate::editor::lowpoly::ui_value_text(targets)?), ("merge", crate::editor::lowpoly::ui_value_text(merge)?)])?;
     crate::editor::lowpoly::lowpoly_action("interactionSelect", Some(args))
 }
 //#endregion 🔖️MeshDomain
 
 //#region 🔖️Utility
-pub async fn is_paint_utility(utility_id: &str) -> bool {
+pub fn is_paint_utility(utility_id: &str) -> bool {
     matches!(utility_id, "brush" | "eraser" | "fill" | "eyedropper")
 }
 
-pub async fn primitive_kind(kind: &str) -> &str {
+pub fn primitive_kind(kind: &str) -> &str {
     match kind {
         "sphere" | "ico" => "ico_sphere",
         other => other,
     }
 }
 
-pub async fn mirror_axis_from_param(params: &Value) -> semio_framework_3d::mesh::MirrorAxis {
+pub fn mirror_axis_from_param(params: &Value) -> semio_framework_3d::mesh::MirrorAxis {
     match utility_param_u32(params, "mirrorAxis", 0) {
         1 => semio_framework_3d::mesh::MirrorAxis::Y,
         2 => semio_framework_3d::mesh::MirrorAxis::Z,
@@ -155,25 +147,25 @@ pub async fn mirror_axis_from_param(params: &Value) -> semio_framework_3d::mesh:
     }
 }
 
-pub async fn utility_param_f32(params: &Value, key: &str, default: f32) -> f32 {
+pub fn utility_param_f32(params: &Value, key: &str, default: f32) -> f32 {
     params.get(key).and_then(|value| value.as_f64()).map_or(default, |v| v as f32)
 }
 
-pub async fn utility_param_u32(params: &Value, key: &str, default: u32) -> u32 {
+pub fn utility_param_u32(params: &Value, key: &str, default: u32) -> u32 {
     params.get(key).and_then(|value| value.as_u64()).map_or(default, |v| v as u32)
 }
 
-pub async fn utility_param_f64(params: &Value, key: &str, default: f64) -> f64 {
+pub fn utility_param_f64(params: &Value, key: &str, default: f64) -> f64 {
     utility_param_f32(params, key, default as f32) as f64
 }
 
 /// 🧮️ Parses `config.utility_params_json` back into a `Value` — the flattened `LowpolyConfig` field
 /// carries it as canonical JSON text since a raw `Value` field has no direct DSL binding.
-pub async fn utility_params_value(config: &LowpolyConfig) -> Value {
+pub fn utility_params_value(config: &LowpolyConfig) -> Value {
     serde_json::from_str(&config.utility_params_json).unwrap_or_default()
 }
 
-pub async fn euler_degrees_to_quaternion(rotation: [f32; 3]) -> [f64; 4] {
+pub fn euler_degrees_to_quaternion(rotation: [f32; 3]) -> [f64; 4] {
     let to_rad = std::f32::consts::PI / 180.0;
     let (sx, cx) = (rotation[0] * to_rad * 0.5).sin_cos();
     let (sy, cy) = (rotation[1] * to_rad * 0.5).sin_cos();

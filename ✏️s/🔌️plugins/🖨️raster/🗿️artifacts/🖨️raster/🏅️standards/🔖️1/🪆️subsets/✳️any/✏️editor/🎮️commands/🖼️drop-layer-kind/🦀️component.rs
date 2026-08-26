@@ -18,7 +18,7 @@ pub struct DropLayerKind {
 /// select itself here — the `"layers"` domain's selection is framework-owned `InteractionState` now,
 /// only ever mutated by the framework's own injected `interactionSelect` handling, never by an app
 /// command's `Emit::config_mutations`.
-pub async fn handle(payload: &DropLayerKind, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+pub fn handle(payload: &DropLayerKind, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     let document = doc.snapshot;
     let layer = create_layer_of_kind(&payload.kind);
     Ok(Emit { artifact_mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: document.layers.len(), layer: Box::new(layer) })], ..Default::default() })

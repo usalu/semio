@@ -20,6 +20,384 @@
     {
       "id": "remodel-1-any",
       "capability": "remodel-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "add-gcp-observation",
+          "sourceMutationDirectoryName": "🔎add-gcp-observation",
+          "mutationDirectoryName": "🔎add-gcp-observation",
+          "scenarios": [
+            {
+              "id": "adds-the-first-observation-to-gcp-ridge",
+              "directoryName": "🧪️adds-the-first-observation-to-gcp-ridge"
+            }
+          ]
+        },
+        {
+          "mutationId": "add-stream-frame",
+          "sourceMutationDirectoryName": "➕add-stream-frame",
+          "mutationDirectoryName": "➕add-stream-frame",
+          "scenarios": [
+            {
+              "id": "appends-a-third-frame-to-stream-a",
+              "directoryName": "🧪️appends-a-third-frame-to-stream-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-stream-sync",
+          "sourceMutationDirectoryName": "⏱️change-stream-sync",
+          "mutationDirectoryName": "⏱️change-stream-sync",
+          "scenarios": [
+            {
+              "id": "shifts-stream-a-sync-offset-to-minus-seven-and-a-half",
+              "directoryName": "🧪️shifts-stream-a-sync-offset-to-minus-seven-and-a-half"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-asset",
+          "sourceMutationDirectoryName": "🧷create-asset",
+          "mutationDirectoryName": "🧷create-asset",
+          "scenarios": [
+            {
+              "id": "stores-a-new-jpeg-frame-asset",
+              "directoryName": "🧪️stores-a-new-jpeg-frame-asset"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-camera-calibration",
+          "sourceMutationDirectoryName": "🔭create-camera-calibration",
+          "mutationDirectoryName": "🔭create-camera-calibration",
+          "scenarios": [
+            {
+              "id": "adds-the-cam-c-fisheye-calibration",
+              "directoryName": "🧪️adds-the-cam-c-fisheye-calibration"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-gcp",
+          "sourceMutationDirectoryName": "🧿create-gcp",
+          "mutationDirectoryName": "🧿create-gcp",
+          "scenarios": [
+            {
+              "id": "adds-gcp-tower-with-one-observation",
+              "directoryName": "🧪️adds-gcp-tower-with-one-observation"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-rig-extrinsic",
+          "sourceMutationDirectoryName": "⛓️create-rig-extrinsic",
+          "mutationDirectoryName": "⛓️create-rig-extrinsic",
+          "scenarios": [
+            {
+              "id": "adds-a-rig-extrinsic-for-cam-b",
+              "directoryName": "🧪️adds-a-rig-extrinsic-for-cam-b"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-stream",
+          "sourceMutationDirectoryName": "🌱create-stream",
+          "mutationDirectoryName": "🌱create-stream",
+          "scenarios": [
+            {
+              "id": "adds-stream-c-bound-to-cam-b",
+              "directoryName": "🧪️adds-stream-c-bound-to-cam-b"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-asset",
+          "sourceMutationDirectoryName": "🗞️delete-asset",
+          "mutationDirectoryName": "🗞️delete-asset",
+          "scenarios": [
+            {
+              "id": "removes-asset-a-and-reports-its-stale-references",
+              "directoryName": "🧪️removes-asset-a-and-reports-its-stale-references"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-camera-calibration",
+          "sourceMutationDirectoryName": "🚫delete-camera-calibration",
+          "mutationDirectoryName": "🚫delete-camera-calibration",
+          "scenarios": [
+            {
+              "id": "removes-the-cam-b-calibration",
+              "directoryName": "🧪️removes-the-cam-b-calibration"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-gcp",
+          "sourceMutationDirectoryName": "🚮delete-gcp",
+          "mutationDirectoryName": "🚮delete-gcp",
+          "scenarios": [
+            {
+              "id": "removes-gcp-corner-and-cascades-its-observation",
+              "directoryName": "🧪️removes-gcp-corner-and-cascades-its-observation"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-rig-extrinsic",
+          "sourceMutationDirectoryName": "✂️delete-rig-extrinsic",
+          "mutationDirectoryName": "✂️delete-rig-extrinsic",
+          "scenarios": [
+            {
+              "id": "drops-the-cam-a-rig-extrinsic",
+              "directoryName": "🧪️drops-the-cam-a-rig-extrinsic"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-stream",
+          "sourceMutationDirectoryName": "🪓delete-stream",
+          "mutationDirectoryName": "🪓delete-stream",
+          "scenarios": [
+            {
+              "id": "removes-stream-b-and-cascades-its-gcp-observation",
+              "directoryName": "🧪️removes-stream-b-and-cascades-its-gcp-observation"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-gcp-observation",
+          "sourceMutationDirectoryName": "🚷remove-gcp-observation",
+          "mutationDirectoryName": "🚷remove-gcp-observation",
+          "scenarios": [
+            {
+              "id": "removes-the-only-observation-of-gcp-corner",
+              "directoryName": "🧪️removes-the-only-observation-of-gcp-corner"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-stream-frame",
+          "sourceMutationDirectoryName": "➖remove-stream-frame",
+          "mutationDirectoryName": "➖remove-stream-frame",
+          "scenarios": [
+            {
+              "id": "removes-the-last-frame-of-stream-a",
+              "directoryName": "🧪️removes-the-last-frame-of-stream-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-dense",
+          "sourceMutationDirectoryName": "☁️replace-dense",
+          "mutationDirectoryName": "☁️replace-dense",
+          "scenarios": [
+            {
+              "id": "swaps-in-a-two-point-classified-dense-cloud",
+              "directoryName": "🧪️swaps-in-a-two-point-classified-dense-cloud"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-geo-products",
+          "sourceMutationDirectoryName": "🗾replace-geo-products",
+          "mutationDirectoryName": "🗾replace-geo-products",
+          "scenarios": [
+            {
+              "id": "adds-the-dtm-and-ortho-rasters",
+              "directoryName": "🧪️adds-the-dtm-and-ortho-rasters"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-job",
+          "sourceMutationDirectoryName": "🏗️replace-job",
+          "mutationDirectoryName": "🏗️replace-job",
+          "scenarios": [
+            {
+              "id": "advances-the-job-to-texturing",
+              "directoryName": "🧪️advances-the-job-to-texturing"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-mesh-result",
+          "sourceMutationDirectoryName": "🧱replace-mesh-result",
+          "mutationDirectoryName": "🧱replace-mesh-result",
+          "scenarios": [
+            {
+              "id": "swaps-in-an-imported-untextured-mesh",
+              "directoryName": "🧪️swaps-in-an-imported-untextured-mesh"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-qc",
+          "sourceMutationDirectoryName": "🧾replace-qc",
+          "mutationDirectoryName": "🧾replace-qc",
+          "scenarios": [
+            {
+              "id": "records-a-qc-report-carrying-a-watertight-summary",
+              "directoryName": "🧪️records-a-qc-report-carrying-a-watertight-summary"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-sparse",
+          "sourceMutationDirectoryName": "⭐replace-sparse",
+          "mutationDirectoryName": "⭐replace-sparse",
+          "scenarios": [
+            {
+              "id": "swaps-in-an-uncolored-four-point-sparse-cloud",
+              "directoryName": "🧪️swaps-in-an-uncolored-four-point-sparse-cloud"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-stream-source",
+          "sourceMutationDirectoryName": "🔁replace-stream-source",
+          "mutationDirectoryName": "🔁replace-stream-source",
+          "scenarios": [
+            {
+              "id": "clears-the-video-source-of-stream-a",
+              "directoryName": "🧪️clears-the-video-source-of-stream-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-tracks",
+          "sourceMutationDirectoryName": "🚂replace-tracks",
+          "mutationDirectoryName": "🚂replace-tracks",
+          "scenarios": [
+            {
+              "id": "replaces-the-moving-track-with-two-static-tracks",
+              "directoryName": "🧪️replaces-the-moving-track-with-two-static-tracks"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-trajectory",
+          "sourceMutationDirectoryName": "🛣️replace-trajectory",
+          "mutationDirectoryName": "🛣️replace-trajectory",
+          "scenarios": [
+            {
+              "id": "clears-the-camera-trajectory",
+              "directoryName": "🧪️clears-the-camera-trajectory"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-camera-calibration",
+          "sourceMutationDirectoryName": "🛠️update-camera-calibration",
+          "mutationDirectoryName": "🛠️update-camera-calibration",
+          "scenarios": [
+            {
+              "id": "refines-the-cam-a-focal-length-and-rms",
+              "directoryName": "🧪️refines-the-cam-a-focal-length-and-rms"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-dense-params",
+          "sourceMutationDirectoryName": "🌁update-dense-params",
+          "mutationDirectoryName": "🌁update-dense-params",
+          "scenarios": [
+            {
+              "id": "raises-the-dense-resolution-and-confidence-gate",
+              "directoryName": "🧪️raises-the-dense-resolution-and-confidence-gate"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-feature-params",
+          "sourceMutationDirectoryName": "🌠update-feature-params",
+          "mutationDirectoryName": "🌠update-feature-params",
+          "scenarios": [
+            {
+              "id": "switches-the-detector-to-akaze",
+              "directoryName": "🧪️switches-the-detector-to-akaze"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-geo-params",
+          "sourceMutationDirectoryName": "🌐update-geo-params",
+          "mutationDirectoryName": "🌐update-geo-params",
+          "scenarios": [
+            {
+              "id": "enables-georeferencing-with-an-origin",
+              "directoryName": "🧪️enables-georeferencing-with-an-origin"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-ingest-params",
+          "sourceMutationDirectoryName": "🥣update-ingest-params",
+          "mutationDirectoryName": "🥣update-ingest-params",
+          "scenarios": [
+            {
+              "id": "tightens-the-ingest-sharpness-gate",
+              "directoryName": "🧪️tightens-the-ingest-sharpness-gate"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-match-params",
+          "sourceMutationDirectoryName": "🪢update-match-params",
+          "mutationDirectoryName": "🪢update-match-params",
+          "scenarios": [
+            {
+              "id": "switches-the-matcher-to-a-kd-tree",
+              "directoryName": "🧪️switches-the-matcher-to-a-kd-tree"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-mesh-params",
+          "sourceMutationDirectoryName": "🕸️update-mesh-params",
+          "mutationDirectoryName": "🕸️update-mesh-params",
+          "scenarios": [
+            {
+              "id": "doubles-the-texture-size-and-drops-the-watertight-guarantee",
+              "directoryName": "🧪️doubles-the-texture-size-and-drops-the-watertight-guarantee"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-motion-params",
+          "sourceMutationDirectoryName": "🏎️update-motion-params",
+          "mutationDirectoryName": "🏎️update-motion-params",
+          "scenarios": [
+            {
+              "id": "enables-motion-tracking",
+              "directoryName": "🧪️enables-motion-tracking"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-rig-extrinsic",
+          "sourceMutationDirectoryName": "🔩update-rig-extrinsic",
+          "mutationDirectoryName": "🔩update-rig-extrinsic",
+          "scenarios": [
+            {
+              "id": "retunes-the-cam-a-rig-translation",
+              "directoryName": "🧪️retunes-the-cam-a-rig-translation"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-sfm-params",
+          "sourceMutationDirectoryName": "🧮update-sfm-params",
+          "mutationDirectoryName": "🧮update-sfm-params",
+          "scenarios": [
+            {
+              "id": "switches-the-robust-loss-to-cauchy",
+              "directoryName": "🧪️switches-the-robust-loss-to-cauchy"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-stream",
         "delete-stream",

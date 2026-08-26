@@ -11,7 +11,7 @@ use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclar
 use semio_framework_plugin::StandardId;
 
 //#region 🔖️Standard
-pub async fn standard() -> StandardDeclaration {
+pub fn standard() -> StandardDeclaration {
     StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.writer+json"], extensions: &["writer"] }, subsets: vec![subsets::any::subset()] }
 }
 //#endregion 🔖️Standard

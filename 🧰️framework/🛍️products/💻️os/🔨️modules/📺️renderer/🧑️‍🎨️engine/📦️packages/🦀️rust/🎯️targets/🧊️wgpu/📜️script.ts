@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** @emoji 🧊️ `@semio-tech/framework-renderer-wgpu` task router. */
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join, relative } from "node:path";
 import {
   BundleScript,
   ScriptRouter,
@@ -111,20 +111,53 @@ function resolveNativeAppArgs(catalog: ReturnType<typeof loadFrameworkOsPlaygrou
   return row?.app ? ["--app", row.app] : [];
 }
 
-function buildBootScript(bundleRoot: string): void {
+/** @emoji 🥖️ Rejects browser code generation unless it uses the repository's exact Bun toolchain. */
+export function assertPinnedBunVersion(actualVersion: string = Bun.version): string {
+  const packageManager = (JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as { readonly packageManager?: string }).packageManager ?? "";
+  const expectedVersion = /^bun@(\d+\.\d+\.\d+)$/u.exec(packageManager)?.[1];
+  if (!expectedVersion) throw new Error(`wgpu-frame-worker requires an exact root packageManager bun@x.y.z pin; received ${JSON.stringify(packageManager)}`);
+  if (actualVersion !== expectedVersion) throw new Error(`wgpu-frame-worker requires Bun ${expectedVersion} from root packageManager, received ${actualVersion}`);
+  return expectedVersion;
+}
+
+/** @emoji 🧾️ Bundles one browser entry entirely in memory for identical generate/check bytes. */
+async function renderBrowserEntry(entryPath: string): Promise<string> {
+  assertPinnedBunVersion();
+  const runtime = globalThis as typeof globalThis & { Bun: { build(options: { entrypoints: string[]; target: "browser"; format: "esm" }): Promise<{ success: boolean; logs: unknown[]; outputs: { text(): Promise<string> }[] }> } };
+  const result = await runtime.Bun.build({ entrypoints: [entryPath], target: "browser", format: "esm" });
+  if (!result.success || result.outputs.length !== 1) throw new Error(`browser bundle render failed for ${entryPath}: ${result.logs.map(String).join("\n")}`);
+  return await result.outputs[0]!.text();
+}
+
+async function buildBootScript(bundleRoot: string): Promise<void> {
   const bootTs = join(bundleRoot, "🟦️typescript/🟦️boot.ts");
   const bootJs = join(bundleRoot, "🟦️typescript/🟨️boot.js");
-  if (runCmdStatus("bun", ["build", bootTs, "--outfile", bootJs, "--target", "browser", "--format", "esm"], { cwd: bundleRoot }) !== 0) throw new Error("🟨️boot.js build failed");
+  writeFileSync(bootJs, await renderBrowserEntry(bootTs), "utf8");
+}
+
+/** @emoji 🧵️ Renders the frame worker without invoking Trunk, Cargo, or the WASM build. */
+export async function renderFrameWorker(bundleRoot: string): Promise<{ path: string; content: string }> {
   const workerTs = join(bundleRoot, "🟦️typescript/🧵️frame-worker.ts");
   const workerJs = join(bundleRoot, "🟦️typescript/🟨️frame-worker.js");
-  if (runCmdStatus("bun", ["build", workerTs, "--outfile", workerJs, "--target", "browser", "--format", "esm"], { cwd: bundleRoot }) !== 0) throw new Error("🟨️frame-worker.js build failed");
+  return { path: workerJs, content: await renderBrowserEntry(workerTs) };
+}
+
+async function generateFrameWorker(bundleRoot: string): Promise<void> {
+  const artifact = await renderFrameWorker(bundleRoot);
+  writeFileSync(artifact.path, artifact.content, "utf8");
+}
+
+async function checkFrameWorker(bundleRoot: string): Promise<void> {
+  const artifact = await renderFrameWorker(bundleRoot);
+  if (!existsSync(artifact.path) || readFileSync(artifact.path, "utf8") !== artifact.content) throw new Error("🟨️frame-worker.js is stale; run the generate-frame-worker target");
 }
 
 class TrunkBuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     ensureTrunk();
     ensureWasmTarget();
-    buildBootScript(this.root);
+    await buildBootScript(this.root);
+    await checkFrameWorker(this.root);
     mkdirSync(outDir, { recursive: true });
     const release = segments.includes("--release") || segments.includes("--dist");
     const args = ["build", "--config", "Trunk.toml"];
@@ -139,7 +172,8 @@ class TrunkServeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     ensureTrunk();
     ensureWasmTarget();
-    buildBootScript(this.root);
+    await buildBootScript(this.root);
+    await checkFrameWorker(this.root);
     const program = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
     ensureAssetServer(program);
     const catalog = loadFrameworkOsPlaygroundCatalog();
@@ -251,10 +285,43 @@ class BrowserWorkerTestScript extends BundleScript {
   }
 }
 
+/** @emoji 🧾️ Runs the deterministic in-memory frame-worker owner contract. */
+class PreviewGeneratedTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    await runVitest(this.root, ["🧪️index.test.ts", ...segments], "🧪️vitest.config.ts");
+  }
+}
+
 /** @emoji 🧵️ Bundles both browser isolates without invoking Cargo or Trunk. */
 class BrowserWorkerCheckScript extends BundleScript {
-  run(_segments: string[]): void {
-    buildBootScript(this.root);
+  async run(_segments: string[]): Promise<void> {
+    await buildBootScript(this.root);
+    await checkFrameWorker(this.root);
+  }
+}
+
+/** @emoji 🧵️ Generates only the deterministic browser frame-worker artifact. */
+class GenerateFrameWorkerScript extends BundleScript {
+  async run(): Promise<void> {
+    await generateFrameWorker(this.root);
+    console.log("framework-renderer-wgpu: generated 🟨️frame-worker.js");
+  }
+}
+
+/** 🧾️ Emits the canonical read-only generator protocol from the same in-memory browser bundle. */
+class PreviewGeneratedScript extends BundleScript {
+  async run(): Promise<void> {
+    const artifact = await renderFrameWorker(this.root);
+    const nodes = [{ bytesBase64: Buffer.from(artifact.content).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: relative(repoRoot, artifact.path).replaceAll("\\", "/").normalize("NFC") }];
+    process.stdout.write(`${JSON.stringify({ contractId: "wgpu-frame-worker", nodes, schemaVersion: 1, staleRemovals: [] })}\n`);
+  }
+}
+
+/** @emoji ✅️ Checks the frame-worker bytes without invoking any renderer build. */
+class CheckFrameWorkerScript extends BundleScript {
+  async run(): Promise<void> {
+    await checkFrameWorker(this.root);
+    console.log("framework-renderer-wgpu: 🟨️frame-worker.js is fresh");
   }
 }
 
@@ -299,7 +366,13 @@ const router = new ScriptRouter(import.meta.dir)
   .register("native-build", NativeBuildScript)
   .register("test", TestScript)
   .register("test-browser-worker", BrowserWorkerTestScript)
+  .register("test-preview-generated", PreviewGeneratedTestScript)
   .register("check-browser-worker", BrowserWorkerCheckScript)
+  .register("generate-frame-worker", GenerateFrameWorkerScript)
+  .register("preview-generated", PreviewGeneratedScript)
+  .register("check-frame-worker", CheckFrameWorkerScript)
   .register("lint", LintScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "wasm" });
+if (import.meta.main) {
+  await runBundleScriptMain(router, import.meta.url, { defaultCommand: "wasm" });
+}

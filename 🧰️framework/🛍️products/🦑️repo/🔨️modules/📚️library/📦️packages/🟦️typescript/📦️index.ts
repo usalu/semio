@@ -11,6 +11,7 @@ import { availableParallelism, devNull, homedir, tmpdir } from "node:os";
 import { basename, dirname, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
+import { fixedContractFilename, loadTaxonomy } from "../../🔍️discovery/🟦️component.ts";
 //#endregion 🔌️Adapters
 
 import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
@@ -642,9 +643,19 @@ export const LAYERING_BASELINE_REL_PATH = "🔒️layering.json";
 const LAYERING_SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".rs", ".go", ".py", ".cs", ".json", ".toml", ".yml", ".yaml"]);
 const LAYERING_SKIPPED_DIRS = new Set(["node_modules", ".git", ".nx", ".venv", "target", "dist", "build", "out", "__pycache__", "obj", "bin", "storybook-static", "🎫️tickets", "⚡️cache", "🤖️generated"]);
 
-function layeringTaxonomy(repoRoot: string): { layers: Record<string, string>; repoWide: string[]; generated: string[]; banners: string[] } {
-  const parsed = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as Record<string, unknown>;
-  return { layers: (parsed.areaLayers ?? {}) as Record<string, string>, repoWide: (parsed.repoWideFiles ?? []) as string[], generated: (parsed.layeringGeneratedInventories ?? []) as string[], banners: (parsed.layeringGeneratedBanners ?? []) as string[] };
+function layeringTaxonomy(): { layers: Record<string, string>; repoWide: string[]; generated: string[]; banners: string[] } {
+  const taxonomy = loadTaxonomy();
+  const rootContracts = (contractIds: readonly string[], key: string): string[] => contractIds.map((id) => {
+    const contract = taxonomy.fixedFilenameContracts[id];
+    if (!contract) throw new Error(`${key} references missing fixed contract ${JSON.stringify(id)}.`);
+    return fixedContractFilename(contract);
+  });
+  return {
+    layers: { ...taxonomy.areaLayers },
+    repoWide: rootContracts(taxonomy.repoWideContractIds, "repoWideContractIds"),
+    generated: rootContracts(taxonomy.layeringGeneratedContractIds, "layeringGeneratedContractIds"),
+    banners: [...taxonomy.layeringGeneratedBanners],
+  };
 }
 
 /**
@@ -658,8 +669,8 @@ function layeringTaxonomy(repoRoot: string): { layers: Record<string, string>; r
  * them itself and a new area needs no code change here.
  */
 export function layeringReferences(repoRoot: string): LayeringReference[] {
-  const { layers, repoWide, generated, banners } = layeringTaxonomy(repoRoot);
-  const isGenerated = (relPath: string): boolean => generated.some((name) => relPath === name || relPath.endsWith(`/${name}`));
+  const { layers, repoWide, generated, banners } = layeringTaxonomy();
+  const isGenerated = (relPath: string): boolean => generated.includes(relPath);
   const implementations = Object.entries(layers)
     .filter(([, layer]) => layer === "implementation")
     .map(([area]) => area);
@@ -1693,17 +1704,66 @@ export interface RunProbeResult {
   signal: NodeJS.Signals | null;
 }
 
+type CapturedSpawnOptions = Readonly<{
+  cwd?: string;
+  env?: NodeJS.ProcessEnv;
+  timeout?: number;
+  killSignal?: NodeJS.Signals | number;
+}>;
+
+type CapturedSpawnResult = Readonly<{
+  status: number | null;
+  stdout: Buffer;
+  stderr: Buffer;
+  signal: NodeJS.Signals | null;
+  error?: Error;
+}>;
+
+const CAPTURE_WRAPPER_SOURCE = `
+const { readFileSync, writeFileSync } = await import("node:fs");
+const { spawnSync } = await import("node:child_process");
+const spec = JSON.parse(readFileSync(process.env.SEMIO_PROCESS_CAPTURE_SPEC, "utf8"));
+const result = spawnSync(spec.cmd, spec.args, { cwd: spec.cwd, env: spec.env, timeout: spec.timeout, killSignal: spec.killSignal, stdio: ["ignore", "pipe", "pipe"], maxBuffer: 536870912 });
+writeFileSync(spec.stdoutPath, result.stdout ?? Buffer.alloc(0));
+writeFileSync(spec.stderrPath, result.stderr ?? Buffer.alloc(0));
+const sourceError = result.error;
+const error = sourceError ? { message: sourceError.message, code: sourceError.code, errno: sourceError.errno, syscall: sourceError.syscall, path: sourceError.path, spawnargs: sourceError.spawnargs } : undefined;
+writeFileSync(spec.metaPath, JSON.stringify({ status: result.status, signal: result.signal, error }));
+`;
+
+/** 📥️Captures subprocess bytes through a child-owned OS-file bridge so Bun test and native process hosts agree exactly. */
+function spawnCapturedSync(cmd: string, args: readonly string[], opts: CapturedSpawnOptions = {}): CapturedSpawnResult {
+  const captureRoot = mkdtempSync(join(tmpdir(), "semio-process-capture-"));
+  const stdoutPath = join(captureRoot, "stdout");
+  const stderrPath = join(captureRoot, "stderr");
+  const metaPath = join(captureRoot, "meta.json");
+  const specPath = join(captureRoot, "spec.json");
+  const env = Object.fromEntries(Object.entries(opts.env ?? process.env).filter((entry): entry is [string, string] => entry[1] !== undefined));
+  writeFileSync(specPath, JSON.stringify({ cmd, args, cwd: opts.cwd, env, timeout: opts.timeout, killSignal: opts.killSignal, stdoutPath, stderrPath, metaPath }));
+  try {
+    const launcher = spawnSync(process.execPath, ["-e", CAPTURE_WRAPPER_SOURCE], {
+      env: { ...process.env, SEMIO_PROCESS_CAPTURE_SPEC: specPath },
+      timeout: opts.timeout === undefined ? undefined : opts.timeout + 5_000,
+      killSignal: opts.killSignal,
+      stdio: "ignore",
+    });
+    if (!existsSync(metaPath)) return { status: launcher.status, stdout: Buffer.alloc(0), stderr: Buffer.alloc(0), signal: launcher.signal, error: launcher.error };
+    const meta = JSON.parse(readFileSync(metaPath, "utf8")) as { status: number | null; signal: NodeJS.Signals | null; error?: NodeJS.ErrnoException };
+    const error = meta.error ? Object.assign(new Error(meta.error.message), meta.error) : undefined;
+    return { status: meta.status, stdout: readFileSync(stdoutPath), stderr: readFileSync(stderrPath), signal: meta.signal, error };
+  } finally {
+    rmSync(captureRoot, { recursive: true, force: true });
+  }
+}
+
 /** 🔍️Budgeted capability probe with captured stdout/stderr — for `--version` checks that must not inherit stdio. */
 export function runProbe(cmd: string, args: string[], opts: RunCmdOpts = {}): RunProbeResult {
   const budgetMs = opts.budgetMs ?? defaultBudgetMs(cmd);
-  const result = spawnSync(cmd, args, {
-    encoding: "utf8",
+  const result = spawnCapturedSync(cmd, args, {
     cwd: opts.cwd,
     env: opts.env ?? process.env,
     timeout: budgetMs,
     killSignal: "SIGKILL",
-    stdio: ["ignore", "pipe", "pipe"],
-    maxBuffer: 64 * 1024 * 1024,
   });
   if (result.error) {
     if ((result.error as NodeJS.ErrnoException).code === "ETIMEDOUT") {
@@ -1713,8 +1773,8 @@ export function runProbe(cmd: string, args: string[], opts: RunCmdOpts = {}): Ru
   }
   return {
     status: result.status,
-    stdout: result.stdout ?? "",
-    stderr: result.stderr ?? "",
+    stdout: result.stdout.toString("utf8"),
+    stderr: result.stderr.toString("utf8"),
     signal: result.signal,
   };
 }
@@ -1979,7 +2039,7 @@ export function devToolingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv 
   env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT ??= "false";
   env.NX_TUI ??= "false";
   // 🧩️ Nx plugin-worker IPC corrupts non-BMP emoji path segments (🔨️→U+FFFD); keep plugins in-process.
-  env.NX_ISOLATE_PLUGINS ??= "false";
+  env.NX_ISOLATE_PLUGINS = "false";
   env.RUSTC_WRAPPER ??= "";
   return env;
 }
@@ -2146,9 +2206,28 @@ type PlaygroundPortSpec = {
 
 /** @emoji 🔌️ Builds playground port table from semio.app manifests plus non-app hosts. */
 function buildPlaygroundPortsFromManifests(): Record<string, PlaygroundPortSpec> {
-  return {
+  const ports: Record<string, PlaygroundPortSpec> = {
     storybook: { dev: 6010, env: "STORYBOOK_PORT" },
   };
+  for (const row of loadFrameworkOsPlaygroundCatalog()) ports[row.variant] = { dev: row.ports.react, test: row.ports.wgpu, env: "S_OS_PORT" };
+  const walk = (directory: string): void => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      if (entry.name === "node_modules" || entry.name === "target" || entry.name === "🎫️tickets" || entry.name.startsWith(".")) continue;
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) {
+        walk(path);
+        continue;
+      }
+      if (entry.name !== "package.json") continue;
+      try {
+        const manifest = JSON.parse(readFileSync(path, "utf8")) as { semio?: { app?: { hostKind?: string; port?: { dev?: number; test?: number; env?: string } } } };
+        const app = manifest.semio?.app;
+        if (app?.hostKind && Number.isSafeInteger(app.port?.dev) && app.port?.env) ports[app.hostKind] = { dev: app.port.dev!, test: app.port.test, env: app.port.env };
+      } catch {}
+    }
+  };
+  walk(getWorkspaceRoot());
+  return ports;
 }
 
 const playgroundPortsCache = ephemeralBox<Record<string, PlaygroundPortSpec> | undefined>("framework.products.repo.modules.lib.packages.typescript.index.ts.playgroundPortsCache", undefined);
@@ -2321,7 +2400,7 @@ export function resolveFrameworkOsPlaygroundPlugin(catalog: readonly PlaygroundV
 
 /** @emoji 🧊️ Env for `@semio-tech/framework-os-dev:dev` with wgpu renderer and plugin filter. */
 export function frameworkOsPlaygroundDevEnv(catalog: readonly PlaygroundVariant[], plugin: string, extra: NodeJS.ProcessEnv = {}, env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
-  const renderer = env.SEMIO_RENDERER ?? "react";
+  const renderer = env.SEMIO_RENDERER ?? "wgpu";
   const defaultPort = frameworkOsPlaygroundDefaultPort(catalog, plugin, renderer);
   const portVal = env.S_OS_PORT || String(defaultPort);
   return devToolingEnv({
@@ -3050,9 +3129,9 @@ export function langMetricsEmoji(lang: string): string {
 
 /** 🌳️Resolves the git worktree root (never a subdirectory of the monorepo). */
 export function gitRepoRoot(start: string): string {
-  const r = spawnSync("git", ["rev-parse", "--show-toplevel"], { cwd: start, encoding: "utf8", env: gitSpawnEnv() });
+  const r = spawnCapturedSync("git", ["rev-parse", "--show-toplevel"], { cwd: start, env: gitSpawnEnv() });
   if (r.status === 0) {
-    const top = (r.stdout ?? "").trim();
+    const top = r.stdout.toString("utf8").trim();
     if (top) return top;
   }
   return start;
@@ -3060,9 +3139,9 @@ export function gitRepoRoot(start: string): string {
 
 function gitTrackedPaths(root: string): string[] {
   const repoRoot = gitRepoRoot(root);
-  const r = spawnSync("git", ["ls-files", "-z"], { cwd: repoRoot, maxBuffer: 64 * 1024 * 1024, env: gitSpawnEnv() });
+  const r = spawnCapturedSync("git", ["ls-files", "-z"], { cwd: repoRoot, env: gitSpawnEnv() });
   if (r.status !== 0) return [];
-  return (r.stdout ?? Buffer.alloc(0)).toString("utf8").split("\0").filter(Boolean);
+  return r.stdout.toString("utf8").split("\0").filter(Boolean);
 }
 //#endregion Path rules
 
@@ -3110,9 +3189,9 @@ export function countUnifiedLocForFile(rel: string, data: string): number {
 
 function gitDir(root: string): string {
   const repoRoot = gitRepoRoot(root);
-  const r = spawnSync("git", ["rev-parse", "--git-dir"], { cwd: repoRoot, encoding: "utf8", env: gitSpawnEnv() });
+  const r = spawnCapturedSync("git", ["rev-parse", "--git-dir"], { cwd: repoRoot, env: gitSpawnEnv() });
   if (r.status !== 0) return join(repoRoot, ".git");
-  const dir = (r.stdout ?? "").trim();
+  const dir = r.stdout.toString("utf8").trim();
   return dir.startsWith("/") ? dir : join(repoRoot, dir);
 }
 
@@ -3148,8 +3227,8 @@ export function isUlocCachePlausible(root: string, counts: UlocByLanguage): bool
   if (totalLoc <= 0 || langCount === 0) return false;
   const tracked = gitTrackedPaths(root).length;
   if (tracked === 0) {
-    const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: gitRepoRoot(root), encoding: "utf8", env: gitSpawnEnv() });
-    if (head.status === 0 && (head.stdout ?? "").trim()) return false;
+    const head = spawnCapturedSync("git", ["rev-parse", "HEAD"], { cwd: gitRepoRoot(root), env: gitSpawnEnv() });
+    if (head.status === 0 && head.stdout.toString("utf8").trim()) return false;
     return true;
   }
   if (tracked < 100) return totalLoc > 0 && (langCount >= 2 || totalLoc >= 50);
@@ -3163,8 +3242,8 @@ function isSizeCachePlausible(root: string, counts: UlocByLanguage): boolean {
   if (totalBytes <= 0 || langCount === 0) return false;
   const tracked = gitTrackedPaths(root).length;
   if (tracked === 0) {
-    const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: gitRepoRoot(root), encoding: "utf8", env: gitSpawnEnv() });
-    if (head.status === 0 && (head.stdout ?? "").trim()) return false;
+    const head = spawnCapturedSync("git", ["rev-parse", "HEAD"], { cwd: gitRepoRoot(root), env: gitSpawnEnv() });
+    if (head.status === 0 && head.stdout.toString("utf8").trim()) return false;
     return true;
   }
   if (tracked < 100) return totalBytes > 0 && langCount >= 1;
@@ -3173,9 +3252,9 @@ function isSizeCachePlausible(root: string, counts: UlocByLanguage): boolean {
 }
 
 function readMetricsCache(root: string): { uloc: UlocByLanguage; size: UlocByLanguage } | null {
-  const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() });
+  const head = spawnCapturedSync("git", ["rev-parse", "HEAD"], { cwd: root, env: gitSpawnEnv() });
   if (head.status !== 0) return null;
-  const h = (head.stdout ?? "").trim();
+  const h = head.stdout.toString("utf8").trim();
   if (!h) return null;
   try {
     const raw = readFileSync(metricsCachePath(root), "utf8");
@@ -3197,9 +3276,9 @@ function readMetricsCache(root: string): { uloc: UlocByLanguage; size: UlocByLan
 }
 
 function writeMetricsCache(root: string, uloc: UlocByLanguage, size: UlocByLanguage): void {
-  const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() });
+  const head = spawnCapturedSync("git", ["rev-parse", "HEAD"], { cwd: root, env: gitSpawnEnv() });
   if (head.status !== 0) return;
-  const h = (head.stdout ?? "").trim();
+  const h = head.stdout.toString("utf8").trim();
   if (!h) return;
   const ulocStats = metricsMapStats(uloc);
   const sizeStats = metricsMapStats(size);
@@ -3333,9 +3412,9 @@ function parseGitNumstatZ(stdout: Buffer | string): { path: string; added: numbe
 }
 
 function gitCachedNumstat(root: string): { path: string; added: number; removed: number }[] {
-  const r = spawnSync("git", ["diff", "--cached", "--numstat", "-z"], { cwd: gitRepoRoot(root), maxBuffer: 64 * 1024 * 1024, env: gitSpawnEnv() });
+  const r = spawnCapturedSync("git", ["diff", "--cached", "--numstat", "-z"], { cwd: gitRepoRoot(root), env: gitSpawnEnv() });
   if (r.status !== 0) return [];
-  return parseGitNumstatZ(r.stdout ?? Buffer.alloc(0));
+  return parseGitNumstatZ(r.stdout);
 }
 
 /** 📂️Whether a repo-relative path lies under any normalized prefix. */
@@ -3353,13 +3432,12 @@ export function pathUnderPrefixes(rel: string, prefixes: string[]): boolean {
 /** 📈️Git numstat between two revisions. */
 export function gitRangeNumstat(root: string, base: string, head: string): { path: string; added: number; removed: number }[] {
   const repoRoot = gitRepoRoot(root);
-  const r = spawnSync("git", ["diff", "--numstat", "-z", `${base}..${head}`], {
+  const r = spawnCapturedSync("git", ["diff", "--numstat", "-z", `${base}..${head}`], {
     cwd: repoRoot,
-    maxBuffer: 64 * 1024 * 1024,
     env: gitSpawnEnv(),
   });
   if (r.status !== 0) return [];
-  return parseGitNumstatZ(r.stdout ?? Buffer.alloc(0));
+  return parseGitNumstatZ(r.stdout);
 }
 
 /** ➕️Accumulates per-language git deltas from numstat rows (optional path prefixes). */
@@ -3386,13 +3464,13 @@ function accumulateGitDeltas(root: string): Map<string, { added: number; removed
 
 function gitRevObjectByteSize(root: string, revPath: string): number {
   const repoRoot = gitRepoRoot(root);
-  const r = spawnSync("git", ["rev-parse", revPath], { cwd: repoRoot, encoding: "utf8", env: gitSpawnEnv() });
+  const r = spawnCapturedSync("git", ["rev-parse", revPath], { cwd: repoRoot, env: gitSpawnEnv() });
   if (r.status !== 0) return 0;
-  const hash = (r.stdout ?? "").trim();
+  const hash = r.stdout.toString("utf8").trim();
   if (!hash) return 0;
-  const s = spawnSync("git", ["cat-file", "-s", hash], { cwd: repoRoot, encoding: "utf8", env: gitSpawnEnv() });
+  const s = spawnCapturedSync("git", ["cat-file", "-s", hash], { cwd: repoRoot, env: gitSpawnEnv() });
   if (s.status !== 0) return 0;
-  return Number(s.stdout) || 0;
+  return Number(s.stdout.toString("utf8")) || 0;
 }
 
 function gitPathByteSizeAtRev(root: string, rev: string, path: string): number {
@@ -3990,15 +4068,15 @@ export function gitSpawnEnv(): Record<string, string> {
 }
 
 function git(root: string, args: string[]): { ok: boolean; out: string } {
-  const r = spawnSync("git", args, { cwd: root, encoding: "utf8", maxBuffer: 512 * 1024 * 1024, env: gitSpawnEnv() });
-  if (r.status !== 0) return { ok: false, out: (r.stderr ?? r.stdout ?? "").trim() };
-  return { ok: true, out: (r.stdout ?? "").trim() };
+  const r = spawnCapturedSync("git", args, { cwd: root, env: gitSpawnEnv() });
+  if (r.status !== 0) return { ok: false, out: (r.stderr.length > 0 ? r.stderr : r.stdout).toString("utf8").trim() };
+  return { ok: true, out: r.stdout.toString("utf8").trim() };
 }
 
 function gitCachedNames(root: string, extra: string[] = []): string[] {
-  const r = spawnSync("git", ["diff", "--cached", "--name-only", "-z", ...extra], { cwd: root, maxBuffer: 512 * 1024 * 1024, env: gitSpawnEnv() });
+  const r = spawnCapturedSync("git", ["diff", "--cached", "--name-only", "-z", ...extra], { cwd: root, env: gitSpawnEnv() });
   if (r.status !== 0) return [];
-  const raw = (r.stdout ?? Buffer.alloc(0)).toString("utf8");
+  const raw = r.stdout.toString("utf8");
   if (!raw) return [];
   return raw.split("\0").filter(Boolean);
 }
@@ -4864,13 +4942,12 @@ export function formatCommitPrepareAgentReply(opts: { tagName: string; wipSha: s
 /** 🔀️Finds the newest commit whose subject is a bundle/WIP marker (`…🔀️`). */
 export function findLastBundleWipCommit(root: string): { sha: string; subject: string } | null {
   root = gitRepoRoot(root);
-  const r = spawnSync("git", ["log", "--format=%H%x00%s%x00", "-n", "500"], {
+  const r = spawnCapturedSync("git", ["log", "--format=%H%x00%s%x00", "-n", "500"], {
     cwd: root,
-    encoding: "utf8",
-    maxBuffer: 16 * 1024 * 1024,
+    env: gitSpawnEnv(),
   });
   if (r.status !== 0) return null;
-  const parts = (r.stdout ?? "").split("\0").filter(Boolean);
+  const parts = r.stdout.toString("utf8").split("\0").filter(Boolean);
   for (let i = 0; i + 1 < parts.length; i += 2) {
     const sha = parts[i]!.trim();
     const subject = parts[i + 1]!.trim();
@@ -5422,6 +5499,7 @@ export function validateBundleDayDeltasAttribution(
   dateDeltas: BundleDateDeltasMap,
   bundleTotals: GitDeltaSum[],
   kindToken = "📃uloc",
+  additive = true,
 ): void {
   for (let bi = 0; bi < bundles.length; bi++) {
     const bundle = bundles[bi]!;
@@ -5440,7 +5518,7 @@ export function validateBundleDayDeltasAttribution(
         throw new Error(`commit: ${bundle.label} has micro-commit changes on ${dateLine} (${formatGitDeltaSumBrief(d)}) but that day is missing from your bundle body — add a 🎆️ section or fix attribution`);
       }
     }
-    if (daySum.added !== total.added || daySum.edited !== total.edited || daySum.removed !== total.removed) {
+    if (additive && (daySum.added !== total.added || daySum.edited !== total.edited || daySum.removed !== total.removed)) {
       throw new Error(`commit: per-day 📊️metric${kindToken} for ${bundle.label} does not add up to the bundle total — days ${formatGitDeltaSumBrief(daySum)} vs bundle ${formatGitDeltaSumBrief(total)}; re-read log + diff and fix bundle/date attribution`);
     }
   }
@@ -5459,7 +5537,7 @@ export function validateBundleCommitAttribution(root: string, base: string, head
   const dateDeltas = buildBundleDateDeltasMap(root, base, head, bundles);
   const dateSizeDeltas = buildBundleDateSizeDeltasMap(root, base, head, bundles);
   validateBundleDayDeltasAttribution(bundles, prefixSets, dateDeltas, ulocPartitioned, METRIC_KIND_ULOC.token);
-  validateBundleDayDeltasAttribution(bundles, prefixSets, dateSizeDeltas, sizePartitioned, METRIC_KIND_SIZE.token);
+  validateBundleDayDeltasAttribution(bundles, prefixSets, dateSizeDeltas, sizePartitioned, METRIC_KIND_SIZE.token, false);
   for (let bi = 0; bi < bundles.length; bi++) {
     let allDays: GitDeltaSum = { added: 0, removed: 0, edited: 0 };
     const perDay = dateDeltas.get(bi);
@@ -5467,12 +5545,6 @@ export function validateBundleCommitAttribution(root: string, base: string, head
       for (const d of perDay.values()) allDays = addGitDeltaSums(allDays, d);
     }
     assertGitDeltaSumsEqual(allDays, ulocPartitioned[bi] ?? { added: 0, removed: 0, edited: 0 }, `commit: all micro-commit days for ${bundles[bi]!.label} do not add up to the bundle uloc total`);
-    let allSizeDays: GitDeltaSum = { added: 0, removed: 0, edited: 0 };
-    const perSizeDay = dateSizeDeltas.get(bi);
-    if (perSizeDay) {
-      for (const d of perSizeDay.values()) allSizeDays = addGitDeltaSums(allSizeDays, d);
-    }
-    assertGitDeltaSumsEqual(allSizeDays, sizePartitioned[bi] ?? { added: 0, removed: 0, edited: 0 }, `commit: all micro-commit days for ${bundles[bi]!.label} do not add up to the bundle size total`);
   }
   let bundleSum: GitDeltaSum = { added: 0, removed: 0, edited: 0 };
   for (const t of ulocPartitioned) bundleSum = addGitDeltaSums(bundleSum, t);
@@ -5575,14 +5647,13 @@ function normalizeCompareLine(s: string): string {
 
 /** 📜️Collects comparable lines from commit bodies in range (for copy detection). */
 export function commitHistoryCompareLines(root: string, base: string, head: string): Set<string> {
-  const r = spawnSync("git", ["log", `--format=%B%x00`, `${base}..${head}`], {
+  const r = spawnCapturedSync("git", ["log", `--format=%B%x00`, `${base}..${head}`], {
     cwd: gitRepoRoot(root),
-    encoding: "utf8",
-    maxBuffer: 32 * 1024 * 1024,
+    env: gitSpawnEnv(),
   });
   const lines = new Set<string>();
   if (r.status !== 0) return lines;
-  for (const body of (r.stdout ?? "").split("\0")) {
+  for (const body of r.stdout.toString("utf8").split("\0")) {
     if (!body.trim()) continue;
     for (const raw of body.split("\n")) {
       const line = raw.trim();

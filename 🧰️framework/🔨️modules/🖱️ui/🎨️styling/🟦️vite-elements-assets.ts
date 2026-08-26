@@ -562,13 +562,13 @@ export type ShellBrandHostChrome = {
   readonly windowTitle: string;
   readonly logoSvg?: string;
   readonly faviconIcoPath?: string;
-  /** 🌐️ Custom domain this brand's static build deploys to (e.g. GitHub Pages) — written verbatim into a `🌐️CNAME` file at the build root. */
+  /** 🌐️ Custom domain this brand's static build deploys to (e.g. GitHub Pages) — written verbatim into a `CNAME` file at the build root. */
   readonly cnameHost?: string;
 };
 
 /** @emoji 🚫️ Vite: writes `dist/.nojekyll` on every build (unconditionally — any static host that runs
  * Jekyll, e.g. GitHub Pages, silently drops files/dirs starting with `_` otherwise, breaking Vite's own
- * `__vite-browser-external-*.js` shim chunk) and `dist/🌐️CNAME` when a brand declares `cnameHost`. */
+ * `__vite-browser-external-*.js` shim chunk) and `dist/CNAME` when a brand declares `cnameHost`. */
 function staticDeployMarkerVitePlugins(cnameHost: string | undefined): OwnedBuildPlugin[] {
   let outDir = resolve(process.cwd(), "dist");
   return [
@@ -582,7 +582,7 @@ function staticDeployMarkerVitePlugins(cnameHost: string | undefined): OwnedBuil
       closeBundle() {
         mkdirSync(outDir, { recursive: true });
         writeFileSync(resolve(outDir, ".nojekyll"), "");
-        if (cnameHost) writeFileSync(resolve(outDir, "🌐️CNAME"), `${cnameHost}\n`);
+        if (cnameHost) writeFileSync(resolve(outDir, "CNAME"), `${cnameHost}\n`);
       },
     },
   ];
@@ -682,7 +682,7 @@ export type SemioHostHtmlSpec = {
   readonly csp?: string;
   readonly loading?: { readonly title: string };
   /** 🌐️ Custom domain this app's static build deploys to (e.g. GitHub Pages) — written verbatim into a
-   * `🌐️CNAME` file at the build root, alongside the always-written `.nojekyll` marker. */
+   * `CNAME` file at the build root, alongside the always-written `.nojekyll` marker. */
   readonly cnameHost?: string;
 };
 
@@ -726,7 +726,7 @@ export function semioHostHtmlString(spec: SemioHostHtmlSpec): string {
 /** @emoji 🎬️ Vite: renders {@link semioHostHtmlString} as the app's `🌐️index.html` on every request/build
  * (full-document replace, `order: "pre"` so later plugins such as `@vitejs/plugin-react`'s HMR preamble
  * still layer on top), bundles semio favicon serving ({@link semioFaviconVitePlugin}), and writes the
- * static-deploy markers ({@link staticDeployMarkerVitePlugins} — `.nojekyll` always, `🌐️CNAME` when
+ * static-deploy markers ({@link staticDeployMarkerVitePlugins} — `.nojekyll` always, `CNAME` when
  * `spec.cnameHost` is set) — one call wires an app's whole boot + deploy surface instead of a
  * hand-authored `🌐️index.html` plus a separate build-output step. */
 export function semioHostHtmlVitePlugin(repoRoot: string, spec: SemioHostHtmlSpec): OwnedBuildPlugin[] {

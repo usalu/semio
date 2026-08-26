@@ -36,28 +36,28 @@ pub mod derived_construction {
         type Mutation = SvgTinyMutation;
         type Diff = SvgDiff;
 
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self::default()
         }
 
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
 
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_svg_tiny_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SvgDiff as protocol::MutationDiff<SvgSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
@@ -66,7 +66,7 @@ pub mod derived_construction {
         /// violation (however `self.snapshot` got here) fails `build()` -- soft diagnostics (external
         /// `href`) pass through silently here since `ArtifactBuilder::build`'s `Err` path only ever
         /// carries the hard set, matching the PDF/A pilot's own `build()` shape.
-        async fn build(mut self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        fn build(mut self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             if let Some(root) = self.snapshot.doc.root.as_mut() {
                 set_element_attr(root, "baseProfile", Some("tiny".into()));
                 set_element_attr(root, "version", Some("1.1".into()));
@@ -89,7 +89,7 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn empty_builder_injects_profile_and_builds_clean() {
-            let snapshot = SvgTinyBuilderConstruction::empty().await.build().await.expect("empty document builds clean");
+            let snapshot = SvgTinyBuilderConstruction::empty().build().expect("empty document builds clean");
             match &snapshot.doc.root {
                 Some(XmlNode::Element { attrs, .. }) => {
                     assert!(attrs.iter().any(|a| a.name == "baseProfile" && a.value == "tiny"));
@@ -101,19 +101,19 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
-            let mut snapshot = SvgTinyBuilderConstruction::empty().await.build().await.unwrap();
+            let mut snapshot = SvgTinyBuilderConstruction::empty().build().unwrap();
             if let Some(XmlNode::Element { children, .. }) = snapshot.doc.root.as_mut() {
                 children.push(XmlNode::Element { name: "script".into(), attrs: vec![], children: vec![XmlNode::Text { text: "alert(1)".into() }] });
             }
-            let (mutated, _diff) = SvgTinyBuilderConstruction::from_snapshot(SvgSnapshot::default()).await.mutate(SvgTinyMutation::SetSnapshot { snapshot }).await;
-            let err = mutated.build().await.expect_err("a <script> element must fail build()");
+            let (mutated, _diff) = SvgTinyBuilderConstruction::from_snapshot(SvgSnapshot::default()).mutate(SvgTinyMutation::SetSnapshot { snapshot });
+            let err = mutated.build().expect_err("a <script> element must fail build()");
             assert!(err.iter().any(|d| d.code.0 == CODE_ELEMENT));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn from_text_round_trips_through_tiny_build() {
             let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg>"#;
-            let built = SvgTinyBuilderConstruction::from_text(text).await.expect("parses").build().await.expect("conforming document builds");
+            let built = SvgTinyBuilderConstruction::from_text(text).expect("parses").build().expect("conforming document builds");
             assert!(matches!(built.doc.root, Some(XmlNode::Element { .. })));
         }
     }
@@ -246,12 +246,12 @@ pub mod derived_analysis {
         type Parts = SvgParts;
         const DIALECT: Dialect = DIALECT;
 
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            SvgAnyAnalyzer::sniff(source).await
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            SvgAnyAnalyzer::sniff(source)
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = SvgAnyAnalyzer::analyze(sources).await;
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let inner = SvgAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {

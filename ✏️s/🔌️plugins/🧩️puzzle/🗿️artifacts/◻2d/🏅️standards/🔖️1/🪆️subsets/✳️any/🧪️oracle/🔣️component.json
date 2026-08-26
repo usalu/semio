@@ -24,6 +24,296 @@
     {
       "id": "puzzle-2d-1-any",
       "capability": "puzzle-2d-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "add-node-handle",
+          "sourceMutationDirectoryName": "➕add-node-handle",
+          "mutationDirectoryName": "➕add-node-handle",
+          "scenarios": [
+            {
+              "id": "appends-handle-3-to-node-b",
+              "directoryName": "🧪️appends-handle-3-to-node-b"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-edge-kind",
+          "sourceMutationDirectoryName": "🏷change-edge-kind",
+          "mutationDirectoryName": "🏷change-edge-kind",
+          "scenarios": [
+            {
+              "id": "rekinds-edge-1",
+              "directoryName": "🧪️rekinds-edge-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-edge-locked",
+          "sourceMutationDirectoryName": "🔐change-edge-locked",
+          "mutationDirectoryName": "🔐change-edge-locked",
+          "scenarios": [
+            {
+              "id": "locks-edge-1",
+              "directoryName": "🧪️locks-edge-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-edge-tips",
+          "sourceMutationDirectoryName": "🖇change-edge-tips",
+          "mutationDirectoryName": "🖇change-edge-tips",
+          "scenarios": [
+            {
+              "id": "swaps-edge-1-tips",
+              "directoryName": "🧪️swaps-edge-1-tips"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-edge-visible",
+          "sourceMutationDirectoryName": "👀change-edge-visible",
+          "mutationDirectoryName": "👀change-edge-visible",
+          "scenarios": [
+            {
+              "id": "hides-edge-1",
+              "directoryName": "🧪️hides-edge-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-manifest-id",
+          "sourceMutationDirectoryName": "🆔change-manifest-id",
+          "mutationDirectoryName": "🆔change-manifest-id",
+          "scenarios": [
+            {
+              "id": "repoints-manifest",
+              "directoryName": "🧪️repoints-manifest"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-anchor",
+          "sourceMutationDirectoryName": "⚓change-node-anchor",
+          "mutationDirectoryName": "⚓change-node-anchor",
+          "scenarios": [
+            {
+              "id": "fixed-to-derived",
+              "directoryName": "🧪️fixed-to-derived"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-icon",
+          "sourceMutationDirectoryName": "🎨change-node-icon",
+          "mutationDirectoryName": "🎨change-node-icon",
+          "scenarios": [
+            {
+              "id": "swaps-node-a-icon",
+              "directoryName": "🧪️swaps-node-a-icon"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-kind",
+          "sourceMutationDirectoryName": "🏗change-node-kind",
+          "mutationDirectoryName": "🏗change-node-kind",
+          "scenarios": [
+            {
+              "id": "reassigns-node-a-kind",
+              "directoryName": "🧪️reassigns-node-a-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-locked",
+          "sourceMutationDirectoryName": "🔒change-node-locked",
+          "mutationDirectoryName": "🔒change-node-locked",
+          "scenarios": [
+            {
+              "id": "locks-node-a",
+              "directoryName": "🧪️locks-node-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-root",
+          "sourceMutationDirectoryName": "🌟change-node-root",
+          "mutationDirectoryName": "🌟change-node-root",
+          "scenarios": [
+            {
+              "id": "promotes-node-a-to-root",
+              "directoryName": "🧪️promotes-node-a-to-root"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-visible",
+          "sourceMutationDirectoryName": "👁change-node-visible",
+          "mutationDirectoryName": "👁change-node-visible",
+          "scenarios": [
+            {
+              "id": "hides-node-a",
+              "directoryName": "🧪️hides-node-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "connect-handles",
+          "sourceMutationDirectoryName": "🔗connect-handles",
+          "mutationDirectoryName": "🔗connect-handles",
+          "scenarios": [
+            {
+              "id": "adds-second-edge",
+              "directoryName": "🧪️adds-second-edge"
+            }
+          ]
+        },
+        {
+          "mutationId": "connect-kind-compatibility",
+          "sourceMutationDirectoryName": "🤝connect-kind-compatibility",
+          "mutationDirectoryName": "🤝connect-kind-compatibility",
+          "scenarios": [
+            {
+              "id": "adds-handle-kind-pair",
+              "directoryName": "🧪️adds-handle-kind-pair"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-node",
+          "sourceMutationDirectoryName": "🌱create-node",
+          "mutationDirectoryName": "🌱create-node",
+          "scenarios": [
+            {
+              "id": "appends-node-c",
+              "directoryName": "🧪️appends-node-c"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-node",
+          "sourceMutationDirectoryName": "🗑delete-node",
+          "mutationDirectoryName": "🗑delete-node",
+          "scenarios": [
+            {
+              "id": "removes-node-a-and-severs-edge",
+              "directoryName": "🧪️removes-node-a-and-severs-edge"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-handles",
+          "sourceMutationDirectoryName": "✂️disconnect-handles",
+          "mutationDirectoryName": "✂️disconnect-handles",
+          "scenarios": [
+            {
+              "id": "removes-edge-1",
+              "directoryName": "🧪️removes-edge-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-kind-compatibility",
+          "sourceMutationDirectoryName": "💔disconnect-kind-compatibility",
+          "mutationDirectoryName": "💔disconnect-kind-compatibility",
+          "scenarios": [
+            {
+              "id": "removes-handle-kind-pair",
+              "directoryName": "🧪️removes-handle-kind-pair"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-node-text",
+          "sourceMutationDirectoryName": "✏️edit-node-text",
+          "mutationDirectoryName": "✏️edit-node-text",
+          "scenarios": [
+            {
+              "id": "retitles-node-a",
+              "directoryName": "🧪️retitles-node-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-node",
+          "sourceMutationDirectoryName": "📍move-node",
+          "mutationDirectoryName": "📍move-node",
+          "scenarios": [
+            {
+              "id": "moves-node-a",
+              "directoryName": "🧪️moves-node-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-node-handle",
+          "sourceMutationDirectoryName": "➖remove-node-handle",
+          "mutationDirectoryName": "➖remove-node-handle",
+          "scenarios": [
+            {
+              "id": "removes-handle-2-and-severs-edge",
+              "directoryName": "🧪️removes-handle-2-and-severs-edge"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-edge-geometry",
+          "sourceMutationDirectoryName": "🧮replace-edge-geometry",
+          "mutationDirectoryName": "🧮replace-edge-geometry",
+          "scenarios": [
+            {
+              "id": "repositions-edge-1",
+              "directoryName": "🧪️repositions-edge-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-kind-catalogs",
+          "sourceMutationDirectoryName": "📚replace-kind-catalogs",
+          "mutationDirectoryName": "📚replace-kind-catalogs",
+          "scenarios": [
+            {
+              "id": "installs-handle-kind-catalog",
+              "directoryName": "🧪️installs-handle-kind-catalog"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-node-geometry",
+          "sourceMutationDirectoryName": "🧊replace-node-geometry",
+          "mutationDirectoryName": "🧊replace-node-geometry",
+          "scenarios": [
+            {
+              "id": "circle-to-rectangle",
+              "directoryName": "🧪️circle-to-rectangle"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-node-handle",
+          "sourceMutationDirectoryName": "🔌replace-node-handle",
+          "mutationDirectoryName": "🔌replace-node-handle",
+          "scenarios": [
+            {
+              "id": "rekind-handle-1-is-noop",
+              "directoryName": "🧪️rekind-handle-1-is-noop"
+            }
+          ]
+        },
+        {
+          "mutationId": "scale-node",
+          "sourceMutationDirectoryName": "📏scale-node",
+          "mutationDirectoryName": "📏scale-node",
+          "scenarios": [
+            {
+              "id": "doubles-node-a",
+              "directoryName": "🧪️doubles-node-a"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-node",
         "delete-node",

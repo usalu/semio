@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "add-step")]
 pub struct AddStep {}
 
-pub async fn handle(_payload: &AddStep, doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
+pub fn handle(_payload: &AddStep, doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
     let operation_id = doc.operation()?.operation_id;
     Ok(Emit::mutations(vec![add_step_operation(format!("step-op-{operation_id}"), format!("Step {operation_id}"))]))
 }
@@ -29,39 +29,39 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn add_step_action_appends_step() {
-        let mut app = playbook_app();
+        let mut app = playbook_app().await;
         let before = app.snapshot().expect("projection").steps().len();
-        dispatch(&mut app, PlaybookCommand::AddStep(AddStep {}));
+        dispatch(&mut app, PlaybookCommand::AddStep(AddStep {})).await;
         assert_eq!(app.snapshot().expect("projection").steps().len(), before + 1);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn remove_and_move_step_actions() {
-        let mut app = playbook_app();
-        dispatch(&mut app, PlaybookCommand::AddStep(AddStep {}));
+        let mut app = playbook_app().await;
+        dispatch(&mut app, PlaybookCommand::AddStep(AddStep {})).await;
         let last_step_id = app.snapshot().expect("projection").steps().last().unwrap().id.clone();
-        dispatch(&mut app, PlaybookCommand::MoveStep(MoveStep { step_id: last_step_id.clone(), index: 0 }));
+        dispatch(&mut app, PlaybookCommand::MoveStep(MoveStep { step_id: last_step_id.clone(), index: 0 })).await;
         assert_eq!(app.snapshot().expect("projection").steps()[0].id, last_step_id);
-        dispatch(&mut app, PlaybookCommand::RemoveStep(RemoveStep { step_id: last_step_id.clone() }));
+        dispatch(&mut app, PlaybookCommand::RemoveStep(RemoveStep { step_id: last_step_id.clone() })).await;
         assert!(app.snapshot().expect("projection").steps().iter().all(|step| step.id != last_step_id));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn remove_step_with_empty_id_is_a_no_op() {
-        let mut app = playbook_app();
+        let mut app = playbook_app().await;
         let before = app.snapshot().expect("projection").steps().len();
-        dispatch(&mut app, PlaybookCommand::RemoveStep(RemoveStep { step_id: String::new() }));
+        dispatch(&mut app, PlaybookCommand::RemoveStep(RemoveStep { step_id: String::new() })).await;
         assert_eq!(app.snapshot().expect("projection").steps().len(), before);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn update_playbook_title_coalesces_into_one_undo_step() {
-        let mut app = playbook_app();
+        let mut app = playbook_app().await;
         for title in ["R", "Re", "Recipe"] {
-            dispatch(&mut app, PlaybookCommand::UpdatePlaybook(UpdatePlaybook { value: title.into() }));
+            dispatch(&mut app, PlaybookCommand::UpdatePlaybook(UpdatePlaybook { value: title.into() })).await;
         }
         assert_eq!(app.snapshot().expect("projection").title.as_deref(), Some("Recipe"));
-        app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
+        app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo");
         assert_eq!(app.snapshot().expect("projection").title, None, "coalesced typing is one undo step");
     }
 }

@@ -33,6 +33,21 @@
     {
       "id": "png-1-2-any",
       "capability": "png-1-2-mutate",
+      "standardDirectoryName": "🔖️1.2",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "retunes-gamma-and-repaints-the-second-pixel",
+              "directoryName": "🧪️retunes-gamma-and-repaints-the-second-pixel"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

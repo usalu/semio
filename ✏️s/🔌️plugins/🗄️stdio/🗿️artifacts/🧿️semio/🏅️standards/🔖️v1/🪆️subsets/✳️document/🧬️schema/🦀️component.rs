@@ -117,27 +117,27 @@ pub mod derived_construction {
         type Snapshot = SemioDocumentSnapshot;
         type Mutation = SemioDocumentMutation;
         type Diff = SemioDocumentDiff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: SemioDocumentSnapshot::default() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_document_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioDocumentDiff as protocol::MutationDiff<SemioDocumentSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -150,29 +150,29 @@ pub mod derived_construction {
         #[semio_framework_async_macros::async_test]
         async fn fluent_builder_round_trips_through_text_and_binary() {
             let built = SemioDocumentBuilderConstruction::empty()
-                .await.with_style(DocStyle { id: "Normal".into(), name: "Normal".into(), based_on: None })
+                .with_style(DocStyle { id: "Normal".into(), name: "Normal".into(), based_on: None })
                 .with_image(DocImage { id: "img1".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] })
                 .with_block(DocBlock::paragraph("hello"))
                 .build()
-                .await.expect("build");
+                .expect("build");
             assert_eq!(built.styles.len(), 1);
             assert_eq!(built.images.len(), 1);
             assert_eq!(built.blocks.len(), 1);
 
             let text = <SemioDocumentSnapshot as store::ArtifactDsl>::print_dsl(&built);
-            let from_text = SemioDocumentBuilderConstruction::from_text(&text).await.expect("from_text").build().await.expect("build");
+            let from_text = SemioDocumentBuilderConstruction::from_text(&text).expect("from_text").build().expect("build");
             assert_eq!(from_text, built);
 
             let bytes = <SemioDocumentSnapshot as store::ArtifactPack>::encode_pack(&built);
-            let from_binary = SemioDocumentBuilderConstruction::from_binary(&bytes).await.expect("from_binary").build().await.expect("build");
+            let from_binary = SemioDocumentBuilderConstruction::from_binary(&bytes).expect("from_binary").build().expect("build");
             assert_eq!(from_binary, built);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn mutate_then_absorb_round_trips() {
-            let (builder, diff) = SemioDocumentBuilderConstruction::empty().await.mutate(SemioDocumentMutation::InsertStyle { style: DocStyle { id: "s".into(), name: "S".into(), based_on: None } }).await;
-            let rebuilt = SemioDocumentBuilderConstruction::empty().await.absorb(diff.diff().clone()).await.expect("absorb must succeed for a well-formed fixture");
-            assert_eq!(builder.build().await.unwrap(), rebuilt.build().await.unwrap());
+            let (builder, diff) = SemioDocumentBuilderConstruction::empty().mutate(SemioDocumentMutation::InsertStyle { style: DocStyle { id: "s".into(), name: "S".into(), based_on: None } });
+            let rebuilt = SemioDocumentBuilderConstruction::empty().absorb(diff.diff().clone()).expect("absorb must succeed for a well-formed fixture");
+            assert_eq!(builder.build().unwrap(), rebuilt.build().unwrap());
         }
     }
     //#endregion 🔖️Tests
@@ -196,7 +196,7 @@ pub mod derived_analysis {
         type Parts = SemioDocumentParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("document") };
 
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.as_bytes();
@@ -216,7 +216,7 @@ pub mod derived_analysis {
             }
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SemioDocumentParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -257,24 +257,24 @@ pub mod derived_analysis {
         async fn sniff_detects_own_binary_and_text_payloads() {
             let snap = rich_snapshot();
             let bytes = store::ArtifactPack::encode_pack(&snap);
-            assert_eq!(SemioDocumentAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)).await, IoConfidence::High);
+            assert_eq!(SemioDocumentAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::High);
             let text = <SemioDocumentSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-            assert_eq!(SemioDocumentAnalyzerAnalysis::sniff(&AnalyzeSource::Text(&text)).await, IoConfidence::High);
-            assert_eq!(SemioDocumentAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a semio document at all")).await, IoConfidence::Low);
+            assert_eq!(SemioDocumentAnalyzerAnalysis::sniff(&AnalyzeSource::Text(&text)), IoConfidence::High);
+            assert_eq!(SemioDocumentAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a semio document at all")), IoConfidence::Low);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn analyze_decodes_binary_source_into_snapshot() {
             let snap = rich_snapshot();
             let bytes = store::ArtifactPack::encode_pack(&snap);
-            let analysis = SemioDocumentAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&bytes)]).await;
+            let analysis = SemioDocumentAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&bytes)]);
             assert_eq!(analysis.confidence, IoConfidence::High);
             assert_eq!(analysis.parts.snapshot, Some(snap));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn analyze_reports_low_confidence_on_malformed_text() {
-            let analysis = SemioDocumentAnalyzerAnalysis::analyze(&[AnalyzeSource::Text("not valid semio document dsl")]).await;
+            let analysis = SemioDocumentAnalyzerAnalysis::analyze(&[AnalyzeSource::Text("not valid semio document dsl")]);
             assert_eq!(analysis.confidence, IoConfidence::Low);
             assert!(!analysis.diagnostics.is_empty());
         }

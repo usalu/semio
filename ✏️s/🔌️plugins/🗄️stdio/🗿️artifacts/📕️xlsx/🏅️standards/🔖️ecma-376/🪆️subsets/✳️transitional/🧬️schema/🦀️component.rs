@@ -81,28 +81,28 @@ pub mod derived_construction {
         type Mutation = XlsxMutation;
         type Diff = XlsxDiff;
 
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self::new(XlsxWorkbook::default())
         }
 
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
 
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<XlsxSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<XlsxSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<XlsxSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<XlsxSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::apply_xlsx_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <XlsxDiff as protocol::MutationDiff<XlsxSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
@@ -110,7 +110,7 @@ pub mod derived_construction {
         /// 🛡️ The real construction gate: however `self.snapshot` got here, a hard Transitional
         /// violation (Strict-shaped namespace/conformance attribute, or an unparsable workbook.xml)
         /// fails `build()`; the soft diagnostic passes through as advisory.
-        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let hard: Vec<Diagnostic> = check_transitional_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(self.snapshot)
@@ -127,16 +127,16 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn new_stamps_transitional_and_builds_clean() {
-            let snapshot = XlsxTransitionalBuilderConstruction::new(XlsxWorkbook::default()).build().await.expect("conforming construction must build");
+            let snapshot = XlsxTransitionalBuilderConstruction::new(XlsxWorkbook::default()).build().expect("conforming construction must build");
             assert!(check_transitional_conformance(&snapshot).iter().all(|d| d.severity != Severity::Error), "got {:?}", check_transitional_conformance(&snapshot));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
-            let mut snapshot = XlsxTransitionalBuilderConstruction::new(XlsxWorkbook::default()).build().await.unwrap();
+            let mut snapshot = XlsxTransitionalBuilderConstruction::new(XlsxWorkbook::default()).build().unwrap();
             snapshot.opc.set_part(WORKBOOK_PART, WORKBOOK_CONTENT_TYPE, br#"<workbook xmlns="http://purl.oclc.org/ooxml/spreadsheetml/main" xmlns:r="http://purl.oclc.org/ooxml/officeDocument/relationships" conformance="strict"/>"#.to_vec());
-            let (mutated, _diff) = XlsxTransitionalBuilderConstruction::from_snapshot(XlsxSnapshot::default()).await.mutate(XlsxMutation::SetSnapshot { snapshot }).await;
-            let err = mutated.build().await.expect_err("a Strict-declared workbook.xml must fail build()");
+            let (mutated, _diff) = XlsxTransitionalBuilderConstruction::from_snapshot(XlsxSnapshot::default()).mutate(XlsxMutation::SetSnapshot { snapshot });
+            let err = mutated.build().expect_err("a Strict-declared workbook.xml must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::schema::CODE_CONFORMANCE_ATTRIBUTE), "got {err:?}");
         }
     }
@@ -244,12 +244,12 @@ pub mod derived_analysis {
         type Parts = XlsxParts;
         const DIALECT: Dialect = DIALECT;
 
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            XlsxAnyAnalyzer::sniff(source).await
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            XlsxAnyAnalyzer::sniff(source)
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = XlsxAnyAnalyzer::analyze(sources).await;
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let inner = XlsxAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {

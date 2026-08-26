@@ -7,7 +7,7 @@ use crate::artifacts::raster::schema::{find_layer, layer_transform};
 use crate::artifacts::raster::RasterSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &MoveLayer, base: &RasterSnapshot) -> Vec<RasterMutation> {
+pub fn inverse(payload: &MoveLayer, base: &RasterSnapshot) -> Vec<RasterMutation> {
     match find_layer(&base.layers, &payload.layer_id) {
         Some(layer) => {
             let transform = layer_transform(layer);

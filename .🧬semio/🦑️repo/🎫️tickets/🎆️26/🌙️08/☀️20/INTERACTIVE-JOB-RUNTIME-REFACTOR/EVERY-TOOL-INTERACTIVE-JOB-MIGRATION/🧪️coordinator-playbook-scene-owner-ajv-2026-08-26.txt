@@ -1,0 +1,1 @@
+[playbook scene owner fixture] ajv=green cases=5 ownedSlots=1

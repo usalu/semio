@@ -5512,7 +5512,7 @@ mod tests {
                     }
                 }
                 let publication = log.take_captured_publication().expect("exact fault owner");
-                assert!(matches!(&publication.outcome, JobStepOutcome::Fault { detail } if detail.as_ptr() == payload_identity && detail == [109, 113, 127]));
+                assert!(matches!(&publication.outcome, JobStepOutcome::Fault { detail } if detail.as_ptr() == payload_identity && detail.as_slice() == [109, 113, 127]));
                 let mut sequence = 0;
                 let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut sequence);
                 log.acknowledge_publication(&mut context, JobReplayPublicationPolicy::Accepted).expect("fault ACK");

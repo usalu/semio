@@ -53,12 +53,12 @@ pub mod derived_composition {
         type Snapshot = ZipSnapshot;
         const WRITES: Dialect = DIALECT_ISO21320;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_ISO21320, DEP_BINARY, DEP_DEFLATE]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = semio_framework_plugin::resolve_ready(ZipAnyComposer::compose(sources))?;
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = ZipAnyComposer::compose(sources)?;
             let mut snapshot = inner.snapshot;
             for entry in &mut snapshot.entries {
                 normalize_entry_for_iso21320(entry);
@@ -192,10 +192,10 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn clean_snapshot_composes_and_stamps_iso21320() {
-            let snapshot = ZipIso21320Builder::new().with_stored_entry("a.txt", b"hello".to_vec()).build().await.unwrap();
+            let snapshot = ZipIso21320Builder::new().with_stored_entry("a.txt", b"hello".to_vec()).build().unwrap();
             let bytes = <ZipSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = ZipIso21320ComposerComposition::compose(&sources).await.expect("clean archive must compose to iso21320");
+            let composed = ZipIso21320ComposerComposition::compose(&sources).expect("clean archive must compose to iso21320");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
@@ -203,7 +203,7 @@ pub mod derived_composition {
         async fn encrypted_wire_archive_composes_to_clean_logical_output() {
             let raw = raw_zip_with_flags(FLAG_ENCRYPTED, 20);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&raw) }];
-            let composed = ZipIso21320ComposerComposition::compose(&sources).await.expect("decode+canonicalize must clear forbidden wire bits");
+            let composed = ZipIso21320ComposerComposition::compose(&sources).expect("decode+canonicalize must clear forbidden wire bits");
             let rematerialized = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&composed.snapshot).expect("encode canonical logical archive");
             assert!(check_iso21320_wire_conformance(&rematerialized).iter().all(|d| d.code.0 != CODE_ENCRYPTED));
         }

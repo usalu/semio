@@ -1,0 +1,38 @@
+[DEBUG] command
+CARGO_INCREMENTAL=0 CARGO_TARGET_DIR='.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-5-DE-ASYC-REPAIR-SWEEP/🧪️target-root-arc1-runtime' RUSTFLAGS='-Awarnings' cargo test --locked -p semio-framework-plugin memory_copy_ranges_match_the_language_neutral_fixture_and_wasmtime --lib -- --nocapture
+
+[DEBUG] result
+exit=101
+test-executed=false
+repository-source-errors=27
+
+[DEBUG] exact diagnostic groups
+8 E0425: testkit render fixtures lacked explicit UiAssemblyResult/built_text_to_component_tree imports (component.rs 6982-6983, 7240-7241, 7617-7618, 7652-7653 before repair).
+1 E0425: plugin_builder_contract_tests could not reach artifact_owned_tool_job_context_identity_digest through the public close prelude (component.rs 30080 before repair).
+1 E0308: AsyncTask::new is async but SpawnCountTask supplied its future directly to Emit::task (component.rs 30911 before repair).
+4 E0631/E0277: presence roster first-page map used a slice method item against &Vec<u8>, cascading into unsized/default failures (component.rs 31904 before repair).
+3 E0308: SurfaceReconciler test fixtures passed String after its constructor became SurfaceId-typed (reactor/patches/component.rs 904, 997, 1136 before repair).
+1 E0599: reactor close test called get on ReactorCloseRegistry instead of its fixed slots (reactor/component.rs 2698 before repair).
+9 E0624: cancellation tests reached private ToolCancellationLease cancel_token/finish methods through the public close prelude (component.rs 31254-31323 before repair).
+
+[DEBUG] source-only repair
+Explicit render imports were added in each fixture module. The identity oracle and cancellation assertions use cfg(test), crate-visible wrappers; production lease internals remain private. AsyncTask construction is awaited. The roster page clones through a closure. Surface fixtures perform bounded SurfaceId validation. Reactor-close inspection addresses the fixed slots explicitly.
+rustfmt=exit 0
+git-diff-check=exit 0
+compile-rerun=held-for-puzzle
+
+[DEBUG] base plugin post-repair rerun
+command=CARGO_INCREMENTAL=0 CARGO_TARGET_DIR='.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-5-DE-ASYC-REPAIR-SWEEP/🧪️target-root-arc1-runtime' RUSTFLAGS='-Awarnings' cargo test --locked -p semio-framework-plugin memory_copy_ranges_match_the_language_neutral_fixture_and_wasmtime --lib -- --nocapture
+first-result=exit 101; 27 privacy diagnostics
+privacy-repair=AppActionRegistry cfg(test) constructor; cfg(test) public wrapper around private ToolCancellationLease
+second-result=exit 0; 404 tests compiled; 0 selected; 404 filtered
+interpretation=base plugin lib-test compile is green, but this package does not include the interpreter and supplied no differential runtime evidence
+
+[DEBUG] owning host differential
+command=CARGO_INCREMENTAL=0 CARGO_TARGET_DIR='.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-5-DE-ASYC-REPAIR-SWEEP/🧪️target-root-arc1-runtime' RUSTFLAGS='-Awarnings' cargo test --locked -p semio-framework-plugin-host memory_copy_ranges_match_the_language_neutral_fixture_and_wasmtime --lib -- --nocapture
+result=exit 101; test not executed; 3 unrelated host lib-test diagnostics
+diagnostics=2 non-Debug UiTurnPatchTransportLease error-owner `.expect` calls; 1 JobCommitCandidate move in pattern guard
+source-repair=owner-returning Results use unwrap_or_else without Debug; completion candidate is borrowed
+rustfmt=exit 0
+git-diff-check=exit 0
+compile-rerun=held-for-puzzle

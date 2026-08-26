@@ -121,6 +121,10 @@ pub fn render(doc: &Fem2dSnapshot, display: &ResultDisplay, camera: &FemCamera) 
     }
 }
 
+fn placeholder(label: Label) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    built_text_node(label).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem2d results placeholder admission failed"))
+}
+
 /// 📊️ Static results: undeformed structure faintly, plus a deformed-shape polyline, text labels at
 /// every support reaction, (for beams) a moment-diagram polyline, and (for meshed regions) a
 /// nodal-averaged, marching-triangle-banded von-Mises stress contour with a color-swatch legend.
@@ -129,14 +133,14 @@ pub fn render(doc: &Fem2dSnapshot, display: &ResultDisplay, camera: &FemCamera) 
 fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let results = match crate::fem2d_engine::fem2d_solve_all(doc) {
         Ok(results) => results,
-        Err(e) => return built_text_node(Label::data(format!("Analysis error: {e}"))),
+        Err(e) => return placeholder(Label::data(format!("Analysis error: {e}"))),
     };
     let case_id = source_id.filter(|id| results.contains_key(*id)).map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone()));
     let Some(case_id) = case_id else {
-        return built_text_node(Label::data("No load case defined"));
+        return placeholder(Label::data("No load case defined"));
     };
     let Some(result) = results.get(&case_id) else {
-        return built_text_node(Label::data(format!("Result not found: {case_id}")));
+        return placeholder(Label::data(format!("Result not found: {case_id}")));
     };
 
     let mut layers = fem2d_structure_layers(doc, "#334155", "#334155", "#334155");
@@ -232,7 +236,7 @@ fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamer
 fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let (freq_hz, mut disp_map) = match crate::fem2d_engine::modal_buckling::fem2d_modal_mode_values(doc, mode_index) {
         Ok(values) => values,
-        Err(e) => return built_text_node(Label::data(format!("Modal analysis error: {e}"))),
+        Err(e) => return placeholder(Label::data(format!("Modal analysis error: {e}"))),
     };
     normalize_mode_shape(&mut disp_map);
     let mut layers = fem2d_structure_layers(doc, "#334155", "#334155", "#334155");
@@ -252,11 +256,11 @@ fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera) -> s
 /// load case, falling back to the first load case when `None`.
 fn render_buckling(doc: &Fem2dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
-        return built_text_node(Label::data("No load case defined"));
+        return placeholder(Label::data("No load case defined"));
     };
     let (factor, mut disp_map) = match crate::fem2d_engine::modal_buckling::fem2d_buckling_mode_values(doc, &case_id, mode_index) {
         Ok(values) => values,
-        Err(e) => return built_text_node(Label::data(format!("Buckling analysis error: {e}"))),
+        Err(e) => return placeholder(Label::data(format!("Buckling analysis error: {e}"))),
     };
     normalize_mode_shape(&mut disp_map);
     let mut layers = fem2d_structure_layers(doc, "#334155", "#334155", "#334155");

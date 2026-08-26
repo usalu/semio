@@ -22,6 +22,21 @@
     {
       "id": "pdf-1-7-any",
       "capability": "pdf-1-7-mutate",
+      "standardDirectoryName": "🔖️1.7",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "rotates-the-plan-page-and-titles-the-document",
+              "directoryName": "🧪️rotates-the-plan-page-and-titles-the-document"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

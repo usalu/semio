@@ -23,12 +23,12 @@ pub mod derived_composition {
         type Snapshot = XmlSnapshot;
         const WRITES: Dialect = DIALECT_VALID;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_VALID, DEP_TXT]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = semio_framework_plugin::resolve_ready(XmlAnyComposer::compose(sources))?;
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = XmlAnyComposer::compose(sources)?;
             let checks = check_valid_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -100,7 +100,7 @@ pub mod derived_composition {
         async fn conforming_document_composes_and_stamps_valid() {
             let text = conforming_xml_text();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
-            let composed = XmlValidComposerComposition::compose(&sources).await.expect("clean document must compose to valid");
+            let composed = XmlValidComposerComposition::compose(&sources).expect("clean document must compose to valid");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
@@ -108,7 +108,7 @@ pub mod derived_composition {
         async fn missing_doctype_fails_compose_with_real_diagnostic() {
             let text = "<root/>".to_string();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
-            let err = XmlValidComposerComposition::compose(&sources).await.expect_err("a document without a doctype must not stamp valid");
+            let err = XmlValidComposerComposition::compose(&sources).expect_err("a document without a doctype must not stamp valid");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == "stdio.xml.valid.doctype-missing" && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
@@ -116,7 +116,7 @@ pub mod derived_composition {
         async fn root_name_mismatch_fails_compose_with_real_diagnostic() {
             let text = "<!DOCTYPE book>\n<root/>".to_string();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
-            let err = XmlValidComposerComposition::compose(&sources).await.expect_err("a doctype/root name mismatch must not stamp valid");
+            let err = XmlValidComposerComposition::compose(&sources).expect_err("a doctype/root name mismatch must not stamp valid");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == "stdio.xml.valid.root-name-mismatch" && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
@@ -133,7 +133,7 @@ pub mod derived_composition {
         async fn negative_no_doctype_example_fails_compose_with_declared_hard_code() {
             let text = crate::artifacts::xml::standards::v1_0::subsets::valid::examples::no_doctype::PRIMARY_TEXT;
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(text) }];
-            let err = XmlValidComposerComposition::compose(&sources).await.expect_err("missing doctype must not stamp valid");
+            let err = XmlValidComposerComposition::compose(&sources).expect_err("missing doctype must not stamp valid");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == "stdio.xml.valid.doctype-missing" && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 

@@ -13,6 +13,20 @@
         "forwardAllArgs": true
       }
     },
+    "preview-generated": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts preview-generated"
+      }
+    },
+    "check-generated": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check-generated"
+      }
+    },
     "logo": {
       "executor": "nx:run-commands",
       "options": {

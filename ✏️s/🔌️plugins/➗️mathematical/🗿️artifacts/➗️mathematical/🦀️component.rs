@@ -6,8 +6,7 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schem
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
-use std::cell::RefCell;
-use std::collections::HashMap;
+use std::sync::Arc;
 
 //#region 🔖️Constants
 /// 🗂️ The store envelope schema AND the plugin's registered document codec key — see
@@ -294,28 +293,14 @@ pub async fn mathematical_graph_geometry_from_children(notation: &SemioTextSnaps
 //#endregion 🔖️Converters
 
 //#region 🔖️WorkingScene
-/// 🌱 Ephemeral, session-side cache of the live `(graph, geometry)` state behind a triple of
-/// composed-child handles — NEVER persisted (matches the `EngineRep` contract: wholly derived,
-/// droppable at any instant, rebuilt from base). No `LinkResolver`/child-dispatch seam exists in
-/// `ArtifactApp::handle` yet (checked directly against `🔌️plugin/🦀️component.rs`, same standing gap
-/// every prior wave's report documents), so this is the only way a persisted content-addressed
-/// handle round-trips to the real graph/geometry within one process — mirrors writer's
-/// `WRITER_SCRATCH`/lowpoly's `mesh_workspace`, scaled to three co-derived children that always
-/// share ONE scene id (a triple is always minted together from the same `(graph, geometry)` pair,
-/// so `notation.child_id == results.child_id == computed.child_id`, and one cache entry serves all
-/// three reads).
-///
-/// ⚠️ Same documented staleness gap as every prior exemplar: store-level undo/redo bypasses
-/// `ArtifactApp::handle` entirely, so a handle can in principle go uncached (fresh process, or an
-/// undo past this session's history). `mathematical_graph`/`mathematical_geometry` fail soft
-/// (empty graph/geometry) rather than panicking.
+/// 🌱 Ephemeral artifact-instance owner of the live `(graph, geometry)` materialization behind
+/// one composed-child triple. All three handles minted for a snapshot retain the same immutable
+/// owner; other snapshots and hostile identity reuse cannot observe or replace it. Wire and DSL
+/// codecs omit the owner, so unresolved decoded handles fail soft until materialized.
+#[derive(Clone)]
 pub struct MathematicalWorkingScene {
     pub graph: MathematicalGraph,
     pub geometry: MathematicalGeometry,
-}
-
-thread_local! {
-    static MATH_SCRATCH: RefCell<HashMap<String, MathematicalWorkingScene>> = RefCell::new(HashMap::new());
 }
 
 async fn mathematical_scene_id(graph: &MathematicalGraph, geometry: &MathematicalGeometry) -> String {
@@ -326,26 +311,30 @@ async fn mathematical_scene_id(graph: &MathematicalGraph, geometry: &Mathematica
     format!("mathematical-scene-{:016x}", hasher.finish())
 }
 
-/// 🏗️ Mints all three composed-child handles for a `(graph, geometry)` pair AND seeds the scratch
-/// cache in one call — the standard way every mutation-diff/fixture builder in this plugin creates
-/// `notation`/`results`/`computed` field values; never construct these handles without also
-/// caching, or `mathematical_graph`/`mathematical_geometry` will read back empty.
+/// 🏗️ Mints all three composed-child handles for a `(graph, geometry)` pair and attaches one
+/// shared immutable artifact-instance owner.
 pub async fn mathematical_children_from_state(graph: &MathematicalGraph, geometry: &MathematicalGeometry) -> (MathematicalNotationChild, MathematicalResultsChild, MathematicalComputedChild) {
     let scene_id = mathematical_scene_id(graph, geometry);
-    MATH_SCRATCH.with(|cache| {
-        cache.borrow_mut().insert(scene_id.clone(), MathematicalWorkingScene { graph: graph.clone(), geometry: geometry.clone() });
-    });
+    let owner = Arc::new(MathematicalWorkingScene { graph: graph.clone(), geometry: geometry.clone() });
     let dialect_for = |subset: &str| store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
     let target_for = |subset: &str| store::os_io::ArtifactRef { artifact_id: format!("mathematical-{subset}"), dialect: dialect_for(subset) };
-    (store::ArtifactChild::new(scene_id.clone(), target_for("text")), store::ArtifactChild::new(scene_id.clone(), target_for("table")), store::ArtifactChild::new(scene_id, target_for("value")))
+    (
+        store::ArtifactChild::new(scene_id.clone(), target_for("text")).with_local_owner(owner.clone()),
+        store::ArtifactChild::new(scene_id.clone(), target_for("table")).with_local_owner(owner.clone()),
+        store::ArtifactChild::new(scene_id, target_for("value")).with_local_owner(owner),
+    )
 }
 
-/// 🔎 Reads the cached working scene behind a snapshot's composed children — an empty graph/
-/// geometry (never a panic) on a cache miss, per this region's own doc comment.
+/// 🔎 Reads the exact artifact-instance scene behind a snapshot's composed children.
 pub async fn mathematical_scene(snapshot: &MathematicalSnapshot) -> MathematicalWorkingScene {
-    MATH_SCRATCH
-        .with(|cache| cache.borrow().get(&snapshot.results.child_id).map(|scene| MathematicalWorkingScene { graph: scene.graph.clone(), geometry: scene.geometry.clone() }))
+    mathematical_scene_owner(snapshot)
+        .map(|scene| (*scene).clone())
         .unwrap_or_else(|| MathematicalWorkingScene { graph: MathematicalGraph { directed: true, nodes: Vec::new(), edges: Vec::new(), algorithm: String::new(), algorithm_seed: None }, geometry: MathematicalGeometry { points: Vec::new() } })
+}
+
+/// 🧵 Retains the exact immutable scene owner for a resumable app operation.
+pub fn mathematical_scene_owner(snapshot: &MathematicalSnapshot) -> Option<Arc<MathematicalWorkingScene>> {
+    snapshot.results.local_owner::<MathematicalWorkingScene>()
 }
 
 /// 🔎 The live graph behind a snapshot's composed children — the single read call site every
@@ -531,6 +520,23 @@ pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDe
 mod tests {
     use super::*;
 
+    fn scene(directed: bool) -> MathematicalWorkingScene {
+        let mut graph = MathematicalGraph::default();
+        graph.directed = directed;
+        MathematicalWorkingScene { graph, geometry: MathematicalGeometry::default() }
+    }
+
+    async fn owned_snapshot(directed: bool) -> MathematicalSnapshot {
+        let scene = scene(directed);
+        mathematical_snapshot_with_state(scene.graph, scene.geometry)
+    }
+
+    fn replace_scene_owner(snapshot: &mut MathematicalSnapshot, scene: Arc<MathematicalWorkingScene>) {
+        snapshot.notation.set_local_owner(scene.clone());
+        snapshot.results.set_local_owner(scene.clone());
+        snapshot.computed.set_local_owner(scene);
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn artifact_kind_keeps_the_media_schema_distinct_from_the_store_schema() {
         assert_eq!(artifact_kind().schema, "computation.mathematical");
@@ -547,6 +553,70 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn default_geometry_has_points() {
         assert!(!MathematicalGeometry::default().points.is_empty());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn scene_owner_fixture_proves_identity_isolation_aba_wire_omission_and_bounded_close() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/mathematical-scene-owner-law.json")).expect("language-neutral mathematical scene fixture");
+        let cases = fixture["cases"].as_array().expect("fixture cases");
+        assert_eq!(fixture["schemaVersion"], 1);
+        assert_eq!(fixture["ownedSlots"], 3);
+        assert_eq!(cases.len(), fixture["maximumCases"].as_u64().expect("bounded maximum") as usize);
+        assert_eq!(cases.len(), 5);
+
+        for case in cases {
+            let law = case["law"].as_str().expect("law");
+            let left_directed = case["leftDirected"].as_bool().expect("leftDirected");
+            let right_directed = case["rightDirected"].as_bool().expect("rightDirected");
+            match law {
+                "tripleIdentity" => {
+                    let snapshot = owned_snapshot(left_directed).await;
+                    let notation = snapshot.notation.local_owner::<MathematicalWorkingScene>().expect("notation owner");
+                    let results = snapshot.results.local_owner::<MathematicalWorkingScene>().expect("results owner");
+                    let computed = snapshot.computed.local_owner::<MathematicalWorkingScene>().expect("computed owner");
+                    assert!(Arc::ptr_eq(&notation, &results) && Arc::ptr_eq(&results, &computed));
+                    assert_eq!(Arc::strong_count(&notation), 6);
+                }
+                "instanceIsolation" => {
+                    let left = owned_snapshot(left_directed).await;
+                    let mut right = left.clone();
+                    replace_scene_owner(&mut right, Arc::new(scene(right_directed)));
+                    assert_eq!(left.results.child_id, right.results.child_id, "hostile identity collision is deliberate");
+                    assert_eq!(mathematical_graph(&left).await.directed, left_directed);
+                    assert_eq!(mathematical_graph(&right).await.directed, right_directed);
+                }
+                "abaIsolation" => {
+                    let stale_a = owned_snapshot(left_directed).await;
+                    let mut reused_identity_b = stale_a.clone();
+                    replace_scene_owner(&mut reused_identity_b, Arc::new(scene(right_directed)));
+                    assert_eq!(stale_a.computed.child_id, reused_identity_b.computed.child_id);
+                    assert_eq!(mathematical_graph(&reused_identity_b).await.directed, right_directed);
+                    drop(reused_identity_b);
+                    assert_eq!(mathematical_graph(&stale_a).await.directed, left_directed);
+                }
+                "wireOmission" => {
+                    let left = owned_snapshot(left_directed).await;
+                    let mut right = left.clone();
+                    replace_scene_owner(&mut right, Arc::new(scene(right_directed)));
+                    let left_wire = serde_json::to_value(&left).expect("third-party serde oracle serializes left");
+                    let right_wire = serde_json::to_value(&right).expect("third-party serde oracle serializes right");
+                    assert_eq!(left_wire, right_wire, "local owners never alter the durable wire");
+                    let decoded: MathematicalSnapshot = serde_json::from_value(left_wire).expect("third-party serde oracle decodes snapshot");
+                    assert!(decoded.results.local_owner::<MathematicalWorkingScene>().is_none());
+                }
+                "boundedClose" => {
+                    let snapshot = owned_snapshot(left_directed).await;
+                    let retained = snapshot.results.local_owner::<MathematicalWorkingScene>().expect("retained owner");
+                    let weak = Arc::downgrade(&retained);
+                    assert_eq!(Arc::strong_count(&retained), fixture["ownedSlots"].as_u64().expect("owned slots") as usize + 1);
+                    drop(snapshot);
+                    assert_eq!(Arc::strong_count(&retained), 1);
+                    drop(retained);
+                    assert!(weak.upgrade().is_none());
+                }
+                other => panic!("unexpected mathematical scene law {other}"),
+            }
+        }
     }
 }
 //#endregion 🧪️Tests

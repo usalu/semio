@@ -195,6 +195,14 @@
         }
       }
     },
+    "preview-generated": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts preview-generated",
+        "forwardAllArgs": true
+      }
+    },
     "scale-fixture-check": {
       "executor": "nx:run-commands",
       "options": {

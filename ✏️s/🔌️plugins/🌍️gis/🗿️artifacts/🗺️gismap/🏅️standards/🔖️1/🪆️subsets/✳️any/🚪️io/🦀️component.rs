@@ -27,18 +27,18 @@ pub mod derived_composition {
         type Snapshot = GisMapSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_DWG, DEP_DXF, DEP_JSON, DEP_PDF, DEP_PNG, DEP_SVG, DEP_TXT]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
                         AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
                         AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
                     };
-                    let analysis = GisMapAnalyzer::analyze(&[native]).await;
+                    let analysis = GisMapAnalyzer::analyze(&[native]);
                     if let Some(snapshot) = analysis.parts.snapshot {
                         return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
                     }
@@ -124,7 +124,7 @@ pub use derived_composition::*;
 pub mod io_registry {
     use crate::artifacts::gismap::standards::v1::subsets::any::schema::GisMapComposer as GisMapAnyComposer;
     use crate::artifacts::gismap::standards::v1::subsets::any::schema::GismapBuilder as GisMapAnyBuilder;
-    use semio_framework_plugin::{composer_entry_of, resolve_ready, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -146,10 +146,10 @@ pub mod io_registry {
     fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::gismap::GisMapSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == GISMAP_DIALECT) {
             let builder = match &source.payload {
-                IoPayload::Text(t) => resolve_ready(GisMapAnyBuilder::from_text(t)).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-                IoPayload::Binary(b) => resolve_ready(GisMapAnyBuilder::from_binary(b)).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
+                IoPayload::Text(t) => GisMapAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
+                IoPayload::Binary(b) => GisMapAnyBuilder::from_binary(b).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
             };
-            return resolve_ready(builder.build()).map_err(|diagnostics| ComposeError { message: "GisMapComposer export: build() failed".into(), diagnostics });
+            return builder.build().map_err(|diagnostics| ComposeError { message: "GisMapComposer export: build() failed".into(), diagnostics });
         }
         if let Some(source) = sources.iter().find(|s| s.dialect == GISMAP_JSON_BRIDGE_DIALECT) {
             // 🌉 The OS dispatch layer (export_os_app_instance_media_kind) deals in already-

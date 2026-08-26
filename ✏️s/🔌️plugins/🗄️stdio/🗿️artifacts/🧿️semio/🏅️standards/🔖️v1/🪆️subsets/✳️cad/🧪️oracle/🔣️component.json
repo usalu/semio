@@ -22,6 +22,21 @@
     {
       "id": "semio-v1-cad",
       "capability": "semio-v1-cad-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️cad",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "dims-the-walls-layer-and-widens-the-circle",
+              "directoryName": "🧪️dims-the-walls-layer-and-widens-the-circle"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

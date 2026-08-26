@@ -42,6 +42,21 @@
     {
       "id": "docx-ecma-376-any",
       "capability": "docx-ecma-376-mutate",
+      "standardDirectoryName": "🔖️ecma-376",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "bolds-the-tower-run-of-the-opening-paragraph",
+              "directoryName": "🧪️bolds-the-tower-run-of-the-opening-paragraph"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

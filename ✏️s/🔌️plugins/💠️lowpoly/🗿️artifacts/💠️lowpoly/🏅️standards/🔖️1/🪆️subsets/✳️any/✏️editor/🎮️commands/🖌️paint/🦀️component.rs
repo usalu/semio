@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 
 /// 🎯️ Extracts UV (0..1) from a paint command's fields — either direct `u`/`v` (world 3d picks) or
 /// canvas `x`/`y` positions mapped through the paint-texture extent (UV canvas).
-async fn paint_uv(u: Option<f32>, v: Option<f32>, x: Option<f32>, y: Option<f32>) -> Option<(f32, f32)> {
+fn paint_uv(u: Option<f32>, v: Option<f32>, x: Option<f32>, y: Option<f32>) -> Option<(f32, f32)> {
     crate::editor::lowpoly::session::paint_uv_from_command(u, v, x, y)
 }
 
@@ -22,7 +22,7 @@ async fn paint_uv(u: Option<f32>, v: Option<f32>, x: Option<f32>, y: Option<f32>
 /// Bare `Emit` (no `Result`): every one of its 3 call sites is a handler's tail expression, wrapped in
 /// `Ok(...)` there to satisfy `app_commands!`'s `Result<Emit<_, _>, Fault>` handler signature.
 #[allow(clippy::too_many_arguments, reason = "1:1 forwarder for the 3 identically-shaped paint-tick commands' fields (object_id + u/v/x/y); a params struct would only move the same fields around for this one shared body")]
-async fn paint_tick_command(
+fn paint_tick_command(
     doc: &ArtifactView<'_, LowpolySnapshot>,
     cfg: &ConfigView<'_, LowpolyConfig>,
     ctx: &mut LowpolyScratch,
@@ -45,7 +45,7 @@ pub mod paint_stroke_begin {
     #[dsl(keyword = "paint-stroke-begin")]
     pub struct PaintStrokeBegin {}
 
-    pub async fn handle(_payload: &PaintStrokeBegin, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(_payload: &PaintStrokeBegin, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         ctx.begin_stroke_drag();
         Ok(Emit::default())
     }
@@ -60,7 +60,7 @@ pub mod paint_stroke_end {
     #[dsl(keyword = "paint-stroke-end")]
     pub struct PaintStrokeEnd {}
 
-    pub async fn handle(_payload: &PaintStrokeEnd, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(_payload: &PaintStrokeEnd, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(ctx.end_stroke_drag())
     }
 }
@@ -80,7 +80,7 @@ pub mod paint_stroke {
         pub y: Option<f32>,
     }
 
-    pub async fn handle(payload: &PaintStroke, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &PaintStroke, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(paint_tick_command(doc, cfg, ctx, payload.object_id.clone(), payload.u, payload.v, payload.x, payload.y))
     }
 }
@@ -100,7 +100,7 @@ pub mod paint_at {
         pub y: Option<f32>,
     }
 
-    pub async fn handle(payload: &PaintAt, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &PaintAt, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(paint_tick_command(doc, cfg, ctx, payload.object_id.clone(), payload.u, payload.v, payload.x, payload.y))
     }
 }
@@ -120,7 +120,7 @@ pub mod canvas_pointer_down {
         pub y: Option<f32>,
     }
 
-    pub async fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(paint_tick_command(doc, cfg, ctx, payload.object_id.clone(), payload.u, payload.v, payload.x, payload.y))
     }
 }
@@ -140,7 +140,7 @@ pub mod canvas_pointer_move {
         pub y: Option<f32>,
     }
 
-    pub async fn handle(payload: &CanvasPointerMove, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &CanvasPointerMove, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         if !ctx.stroke_drag_active() {
             return Ok(Emit::default());
         }
@@ -163,7 +163,7 @@ pub mod paint_fill {
         pub y: Option<f32>,
     }
 
-    pub async fn handle(payload: &PaintFill, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &PaintFill, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let Some((uu, vv)) = paint_uv(payload.u, payload.v, payload.x, payload.y) else { return Ok(Emit::default()) };
         let object_id = payload.object_id.clone().unwrap_or_else(|| resolve_active_object_id(doc.snapshot, cfg.snapshot));
         Ok(ctx.fill_at(doc.snapshot, cfg.snapshot, object_id, uu, vv))
@@ -185,7 +185,7 @@ pub mod fill_bucket {
         pub y: Option<f32>,
     }
 
-    pub async fn handle(payload: &FillBucket, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &FillBucket, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let Some((uu, vv)) = paint_uv(payload.u, payload.v, payload.x, payload.y) else { return Ok(Emit::default()) };
         let object_id = payload.object_id.clone().unwrap_or_else(|| resolve_active_object_id(doc.snapshot, cfg.snapshot));
         Ok(ctx.fill_at(doc.snapshot, cfg.snapshot, object_id, uu, vv))
@@ -207,7 +207,7 @@ pub mod paint_sample {
         pub y: Option<f32>,
     }
 
-    pub async fn handle(payload: &PaintSample, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &PaintSample, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let Some((uu, vv)) = paint_uv(payload.u, payload.v, payload.x, payload.y) else { return Ok(Emit::default()) };
         let object_id = payload.object_id.clone().unwrap_or_else(|| resolve_active_object_id(doc.snapshot, cfg.snapshot));
         let Some(object) = doc.snapshot.objects.iter().find(|object| object.id == object_id) else { return Ok(Emit::default()) };
@@ -229,7 +229,7 @@ pub mod add_paint_layer {
         pub name: Option<String>,
     }
 
-    pub async fn handle(payload: &AddPaintLayer, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &AddPaintLayer, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let object_id = payload.object_id.clone().unwrap_or_else(|| resolve_active_object_id(doc.snapshot, cfg.snapshot));
         let name = payload.name.as_deref().unwrap_or("Layer");
         let index = doc.snapshot.objects.iter().find(|object| object.id == object_id).map_or(0, |object| object.paint_layers.len());
@@ -249,7 +249,7 @@ mod tests {
     async fn add_paint_layer_emits_operation() {
         let mut a = app();
         let before = a.snapshot().expect("projection").objects[0].paint_layers.len();
-        dispatch(&mut a, LowpolyCommand::AddPaintLayer(super::add_paint_layer::AddPaintLayer { object_id: None, name: Some("Detail".into()) }));
+        dispatch(&mut a, LowpolyCommand::AddPaintLayer(super::add_paint_layer::AddPaintLayer { object_id: None, name: Some("Detail".into()) })).await;
         assert_eq!(a.snapshot().expect("projection").objects[0].paint_layers.len(), before + 1);
     }
 
@@ -259,18 +259,18 @@ mod tests {
         let object_id = a.snapshot().expect("projection").objects[0].id.clone();
         let before = a.snapshot().expect("projection").objects[0].paint_layers[0].pixels.clone();
         // begin → tick → tick → end : one undoable PaintStroke edit.
-        a.dispatch_typed(LowpolyCommand::PaintStrokeBegin(super::paint_stroke_begin::PaintStrokeBegin {}), &testkit::meta("a")).unwrap();
-        let tick_a = a.dispatch_typed(LowpolyCommand::PaintAt(super::paint_at::PaintAt { object_id: Some(object_id.clone()), u: Some(0.5), v: Some(0.5), x: None, y: None }), &testkit::meta("a")).unwrap();
-        let tick_b = a.dispatch_typed(LowpolyCommand::PaintAt(super::paint_at::PaintAt { object_id: Some(object_id), u: Some(0.52), v: Some(0.5), x: None, y: None }), &testkit::meta("a")).unwrap();
+        a.dispatch_typed(LowpolyCommand::PaintStrokeBegin(super::paint_stroke_begin::PaintStrokeBegin {}), &testkit::meta("a")).await.unwrap();
+        let tick_a = a.dispatch_typed(LowpolyCommand::PaintAt(super::paint_at::PaintAt { object_id: Some(object_id.clone()), u: Some(0.5), v: Some(0.5), x: None, y: None }), &testkit::meta("a")).await.unwrap();
+        let tick_b = a.dispatch_typed(LowpolyCommand::PaintAt(super::paint_at::PaintAt { object_id: Some(object_id), u: Some(0.52), v: Some(0.5), x: None, y: None }), &testkit::meta("a")).await.unwrap();
         assert!(tick_a.mutations.is_empty() && tick_b.mutations.is_empty(), "mid-drag ticks emit no operations");
-        let end = a.dispatch_typed(LowpolyCommand::PaintStrokeEnd(super::paint_stroke_end::PaintStrokeEnd {}), &testkit::meta("a")).unwrap();
+        let end = a.dispatch_typed(LowpolyCommand::PaintStrokeEnd(super::paint_stroke_end::PaintStrokeEnd {}), &testkit::meta("a")).await.unwrap();
         assert_eq!(end.mutations.len(), 1, "the whole drag commits as one operation");
         let painted = a.snapshot().expect("projection").objects[0].paint_layers[0].pixels.clone();
         assert_ne!(painted, before, "the stroke changed pixels");
-        a.handle_action("undo", None, &testkit::meta("a")).unwrap();
+        a.handle_action("undo", None, &testkit::meta("a")).await.unwrap();
         let restored = a.snapshot().expect("projection").objects[0].paint_layers[0].pixels.clone();
         assert_eq!(restored, before, "undo restores the exact pre-stroke pixels");
-        a.handle_action("redo", None, &testkit::meta("a")).unwrap();
+        a.handle_action("redo", None, &testkit::meta("a")).await.unwrap();
         assert_eq!(a.snapshot().expect("projection").objects[0].paint_layers[0].pixels, painted);
     }
 
@@ -278,9 +278,9 @@ mod tests {
     async fn eyedropper_updates_paint_color_without_operations() {
         let mut a = app();
         // 🧰️ The host-owned utility switch bridges into config.paint_utility and emits no operations.
-        let switch = a.dispatch_typed(LowpolyCommand::SetActiveUtility(crate::editor::lowpoly::commands::utility::set_active_utility::SetActiveUtility { utility_id: "eyedropper".into() }), &testkit::meta("a")).unwrap();
+        let switch = a.dispatch_typed(LowpolyCommand::SetActiveUtility(crate::editor::lowpoly::commands::utility::set_active_utility::SetActiveUtility { utility_id: "eyedropper".into() }), &testkit::meta("a")).await.unwrap();
         assert!(switch.mutations.is_empty());
-        let result = a.dispatch_typed(LowpolyCommand::PaintSample(super::paint_sample::PaintSample { object_id: None, u: Some(0.5), v: Some(0.5), x: None, y: None }), &testkit::meta("a")).unwrap();
+        let result = a.dispatch_typed(LowpolyCommand::PaintSample(super::paint_sample::PaintSample { object_id: None, u: Some(0.5), v: Some(0.5), x: None, y: None }), &testkit::meta("a")).await.unwrap();
         assert!(result.mutations.is_empty());
     }
 }

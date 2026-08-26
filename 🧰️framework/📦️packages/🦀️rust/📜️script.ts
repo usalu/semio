@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
 /** 🦀️ `@semio-tech/framework` task router: `bun ./📜️script.ts test|generate|check|lint`. */
 import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargoLint, runCargoTestBudgeted, runCmdStatus, runVitest, resolveTestLevel } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { mkdirSync } from "node:fs";
-import { join } from "node:path";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { basename, join, relative } from "node:path";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -49,6 +50,25 @@ class GenerateScript extends BundleScript {
   }
 }
 
+/** 🧾️ Runs the exact schema exporter outside the workspace and emits its canonical output bytes. */
+class PreviewGeneratedScript extends BundleScript {
+  run(_segments: string[]): void {
+    const targetPath = generatedManifestPath(this.root);
+    const temp = mkdtempSync(join(tmpdir(), "semio-framework-typegen-"));
+    let content: Buffer;
+    try {
+      const outPath = join(temp, basename(targetPath));
+      const result = Bun.spawnSync(["cargo", "test", "--locked", "--features", "typegen", TYPEGEN_TEST_FILTER], { cwd: this.root, env: { ...process.env, CARGO_TARGET_DIR: join(temp, "target"), SEMIO_TYPEGEN_OUT: outPath }, stderr: "pipe", stdout: "pipe" });
+      if (result.exitCode !== 0) throw new Error(`framework preview export failed: ${result.stderr.toString()}`);
+      content = readFileSync(outPath);
+    } finally {
+      rmSync(temp, { recursive: true, force: true });
+    }
+    const nodes = [{ bytesBase64: content.toString("base64"), mode: 0o644, nodeKind: "file" as const, path: relative(this.repoRoot, targetPath).replaceAll("\\", "/").normalize("NFC") }];
+    process.stdout.write(`${JSON.stringify({ contractId: "framework-manifest", nodes, schemaVersion: 1, staleRemovals: [] })}\n`);
+  }
+}
+
 /** 🔎️ Validates metadata and byte-compares the owned projection with the committed mirror. */
 class CheckScript extends BundleScript {
   run(_segments: string[]): void {
@@ -58,6 +78,6 @@ class CheckScript extends BundleScript {
 }
 //#endregion 🔖️Typegen
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("generate", GenerateScript).register("check", CheckScript).register("lint", LintScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

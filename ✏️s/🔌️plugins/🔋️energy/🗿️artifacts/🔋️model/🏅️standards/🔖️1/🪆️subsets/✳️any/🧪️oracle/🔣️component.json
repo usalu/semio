@@ -20,6 +20,21 @@
     {
       "id": "energy-model-1-any",
       "capability": "energy-model-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "replace-model",
+          "sourceMutationDirectoryName": "♻️replace-model",
+          "mutationDirectoryName": "♻️replace-model",
+          "scenarios": [
+            {
+              "id": "degrades-an-empty-model-payload-to-a-no-op",
+              "directoryName": "🧪️degrades-an-empty-model-payload-to-a-no-op"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "replace-model"
       ]

@@ -23,12 +23,12 @@ pub mod derived_composition {
         type Snapshot = JpgSnapshot;
         const WRITES: Dialect = DIALECT_BASELINE;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_BASELINE, DEP_BINARY]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = semio_framework_plugin::resolve_ready(JpgAnyComposer::compose(sources))?;
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = JpgAnyComposer::compose(sources)?;
             let checks = check_baseline_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -120,7 +120,7 @@ pub mod derived_composition {
             // 🌱 Route through the ✳️any composer first to get a real, engine-decoded snapshot (with
             // frame/sof_marker/huffman-table-count populated) the way `JpgBaselineComposerComposition::compose`
             // itself would internally.
-            let composed = JpgBaselineComposerComposition::compose(&sources).await.expect("real baseline JPEG must compose and stamp baseline");
+            let composed = JpgBaselineComposerComposition::compose(&sources).expect("real baseline JPEG must compose and stamp baseline");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
             assert!(composed.snapshot.frame.is_some());
             assert_eq!(composed.snapshot.sof_marker, crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::SOF0);

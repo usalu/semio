@@ -34,6 +34,21 @@
     {
       "id": "bmp-3-any",
       "capability": "bmp-3-mutate",
+      "standardDirectoryName": "🔖️v3",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "recolors-the-second-palette-slot-to-magenta",
+              "directoryName": "🧪️recolors-the-second-palette-slot-to-magenta"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

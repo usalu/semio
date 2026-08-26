@@ -1,7 +1,7 @@
 //! 🔺️ Writer artifact — sparse field-delta diff codec and apply/absorb.
 
 use crate::artifacts::writer::schema::WriterArtifact;
-use crate::artifacts::writer::{document_child_handle_and_cache, WriterSnapshot};
+use crate::artifacts::writer::{document_child_handle_with_text, WriterSnapshot};
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -15,7 +15,7 @@ pub use crate::artifacts::writer::schema::diff::*;
 //#region 🔖️Apply
 impl WriterDiff {
     /// 🧬️ Applies every sparse entry onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &WriterArtifact) -> protocol::MutationApplyResult<WriterArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &WriterArtifact) -> protocol::MutationApplyResult<WriterArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -72,7 +72,7 @@ impl WriterDiff {
 }
 
 impl MutationDiff<WriterSnapshot> for WriterDiff {
-    async fn apply(&self, snapshot: &WriterSnapshot) -> protocol::MutationApplyResult<WriterSnapshot> {
+    fn apply(&self, snapshot: &WriterSnapshot) -> protocol::MutationApplyResult<WriterSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -96,7 +96,7 @@ impl MutationDiff<WriterSnapshot> for WriterDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -151,33 +151,33 @@ impl MutationDiff<WriterSnapshot> for WriterDiff {
 //#endregion 🔖️Apply
 
 //#region 🔖️Builders
-pub async fn diff_set_snapshot(snapshot: &WriterSnapshot) -> WriterDiff {
+pub fn diff_set_snapshot(snapshot: &WriterSnapshot) -> WriterDiff {
     WriterDiff { artifact: Some(Box::new(WriterArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 
 /// 🔺️ Mints a new content-addressed `document` handle for the whole-body replacement `text` and
-/// seeds the working-scene cache with it (`document_child_handle_and_cache`) — real handcrafted
+/// attaches the artifact-instance text owner (`document_child_handle_with_text`) — real handcrafted
 /// construction, never apply-then-capture. `id`/`language_id` come from `base` since the handle's
 /// target/content both need them.
-pub async fn diff_set_text(text: &str, id: &str, language_id: &str) -> WriterDiff {
-    WriterDiff { document: Some(document_child_handle_and_cache(id, text, language_id)), ..Default::default() }
+pub fn diff_set_text(text: &str, id: &str, language_id: &str) -> WriterDiff {
+    WriterDiff { document: Some(document_child_handle_with_text(id, text, language_id)), ..Default::default() }
 }
 //#endregion 🔖️Builders
 
 impl protocol::DiffCodec for WriterDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         serde_json::to_string(self).expect("serialize writer diff")
     }
 
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|error| dsl::__rt::field_error(error.to_string()))
     }
 
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(self.print_diff().into_bytes())
     }
 
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: error.to_string() })?;
         Self::parse_diff(line).map_err(|error| protocol::ProtocolError::Malformed { what: "diff json", offset: 0, detail: error.to_string() })
     }
@@ -189,7 +189,7 @@ mod tests {
     use super::*;
     use protocol::DiffCodec;
 
-    async fn jack_snapshot() -> WriterSnapshot {
+    fn jack_snapshot() -> WriterSnapshot {
         crate::artifacts::writer::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
     }
 

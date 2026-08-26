@@ -12,7 +12,7 @@
     "setGridSnapEnabled", "setLodMode", "setObjectKindWeight", "setSuggestionOffset", "setSunAzimuth", "setSunElevation",
     "setSunIntensity", "setVortexKindWeight", "toggleSun", "translateSelection", "worldPointerDown", "worldRelocate"
   ],
-  "capacities": {"rawBytes": 8192, "decodedItems": 512, "workItems": 4096, "outputBytes": 262144, "stepMicros": 7500, "semanticUnitsPerGrant": 1},
+  "capacities": {"rawBytes": 8192, "decodedItems": 512, "workItems": 4096, "outputBytes": 262144, "stepMicros": 7500, "semanticUnitsPerGrant": 1, "checkpointBytes": 112},
   "semanticCursors": {
     "addBrushPart": ["catalogEntry", "gripTemplate", "targetPart", "targetGrip", "createPart", "connectGrip", "publishMutation", "closeOwner"],
     "addBrushObject": ["catalogEntry", "gripTemplate", "targetPart", "targetGrip", "createPart", "connectGrip", "publishMutation", "closeOwner"],
@@ -133,7 +133,13 @@
     {"id": "faultWork", "boundary": "work", "control": "faultClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
     {"id": "retry", "control": "faultRetryAckClose", "expected": "onePublicationTerminalEmpty", "fingerprint": "0:0:0:0:0:0"},
     {"id": "close", "closeGrant": {"items": 1, "bytes": 1}, "expected": "incrementalTerminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "replay", "control": "runAckReplayAckClose", "expected": "sameSemanticDigest", "fingerprint": "0:0:0:0:0:0"}
+    {"id": "replay", "control": "runAckReplayAckClose", "expected": "sameSemanticDigest", "fingerprint": "0:0:0:0:0:0"},
+    {"id":"checkpointEmpty", "checkpointBytes":0, "control":"restoreCheckpoint", "expected":"rejectedExactHandback"},
+    {"id":"checkpointSingle", "checkpointBytes":1, "control":"restoreCheckpoint", "expected":"rejectedExactHandback"},
+    {"id":"checkpointMax", "checkpointBytes":112, "control":"checkpointRestoreResumeAckClose", "expected":"sameSemanticDigestTerminalEmpty"},
+    {"id":"checkpointMaxPlusOne", "checkpointBytes":113, "control":"restoreCheckpoint", "expected":"rejectedExactHandback"},
+    {"id":"checkpointCorrupt", "checkpointBytes":112, "mutation":"magic", "control":"restoreCheckpoint", "expected":"rejectedExactHandback"},
+    {"id":"checkpointInterruptedClose", "checkpointBytes":112, "boundary":"workProgress", "closeGrant":{"items":1,"bytes":16384}, "control":"checkpointRestoreCancelIncrementalClose", "expected":"terminalEmptyExactHandback"}
     ,{"id": "boardEventOrder", "toolId": "applyBoardEvents", "input": {"eventsJson": "[{\"name\":\"nodeMove\",\"payload\":{\"id\":\"teil-ä\",\"x\":3,\"y\":5}},{\"name\":\"edgeDelete\",\"payload\":{\"id\":\"kante-ß\"}}]"}, "expectedMutations": ["movePart2d:teil-ä:3:5", "disconnectGrips:kante-ß"], "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
     {"id": "boardCancelEveryBoundary", "toolId": "applyBoardEvents", "boundaries": ["jsonByte", "eventDecode", "eventDispatch", "partScan", "edgeScan", "deleteEdgeScan", "brushStep", "brushMutationTransfer", "brushOwnerClose"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
     {"id": "boardFaultEveryBoundary", "toolId": "applyBoardEvents", "boundaries": ["jsonByte", "eventDecode", "eventDispatch", "partScan", "edgeScan", "deleteEdgeScan", "brushStep", "brushMutationTransfer", "brushOwnerClose"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},

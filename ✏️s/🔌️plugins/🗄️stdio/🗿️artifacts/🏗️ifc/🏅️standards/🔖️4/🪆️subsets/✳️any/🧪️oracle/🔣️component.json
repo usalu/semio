@@ -34,6 +34,21 @@
     {
       "id": "ifc-4-any",
       "capability": "ifc-4-any-mutate",
+      "standardDirectoryName": "🔖️4",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "renames-the-exterior-wall",
+              "directoryName": "🧪️renames-the-exterior-wall"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

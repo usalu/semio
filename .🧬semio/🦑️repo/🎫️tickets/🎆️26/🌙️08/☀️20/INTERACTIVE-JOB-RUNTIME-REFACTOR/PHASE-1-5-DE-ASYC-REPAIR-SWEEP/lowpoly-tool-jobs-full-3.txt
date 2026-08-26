@@ -1,0 +1,16 @@
+[verify interactivity tool-jobs] wrote .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-5-DE-ASYC-REPAIR-SWEEP/📊️lowpoly-tool-jobs-live-2026-08-26.json
+8883 |       writeFileSync(path, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+8884 |     }
+8885 |     if (format === "json" && !output) console.log(JSON.stringify(report, null, 2));
+8886 |     else if (output) console.log(`[verify interactivity tool-jobs] wrote ${output}`);
+8887 |     else console.log(`[verify interactivity tool-jobs] production-hosts=${report.macroHostFiles} production-invocations=${report.macroInvocations} production-rows=${report.commandRows} literal-registrations=${report.literalRegistrations} fixture-hosts=${report.fixtureMacroHostFiles} fixture-invocations=${report.fixtureMacroInvocations} fixture-rows=${report.fixtureCommandRows} admitted=${report.boundedRows} batch-only=${report.batchOnlyRows} forbidden=${report.forbiddenRows} deleted=${report.deletedRows} remaining=${report.remainingCommands.length} unique=${report.uniqueCommandRows} factories=${report.productionFactories} registrations=${report.productionRegistrations} dispatches=${report.productionDispatches} aliases=${report.aliases} self-tests=${report.selfTests}`);
+8888 |     if (report.failures.length > 0) throw new Error(`[verify interactivity tool-jobs] ${report.failures.join("; ")}`);
+                                                     ^
+error: [verify interactivity tool-jobs] 36 process-global payload store candidate(s) require operation-owned state or an explicit static exemption; 35 app-owned import-media route(s) remain fail-closed pending explicit resumable factories; 696 live command registration(s) remain fail-closed; see remainingCommands ledger
+      at runToolJobCoverage (/Users/ueli/Documents/semio/📜️script.ts:8888:47)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:8472:12)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1048:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1083:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:31901:11
+
+Bun v1.3.14 (macOS arm64)

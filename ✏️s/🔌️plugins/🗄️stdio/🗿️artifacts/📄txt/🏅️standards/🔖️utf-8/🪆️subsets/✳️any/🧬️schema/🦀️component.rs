@@ -110,27 +110,27 @@ pub mod derived_construction {
         type Snapshot = TxtSnapshot;
         type Mutation = TxtMutation;
         type Diff = TxtDiff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: TxtSnapshot::default(), diagnostics: Vec::new() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<TxtSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<TxtSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<TxtSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<TxtSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::txt::schema::mutations::apply_txt_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <TxtDiff as protocol::MutationDiff<TxtSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -177,7 +177,7 @@ pub mod derived_analysis {
         type Parts = TxtParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
 
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Text(_) => IoConfidence::High,
                 AnalyzeSource::Binary(bytes) => match store::semio_format::unwrap_binary(bytes) {
@@ -187,7 +187,7 @@ pub mod derived_analysis {
             }
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = TxtParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -221,19 +221,19 @@ pub mod derived_analysis {
 
         #[semio_framework_async_macros::async_test]
         async fn sniff_text_source_is_high() {
-            assert_eq!(TxtAnalyzerAnalysis::sniff(&AnalyzeSource::Text("anything at all")).await, IoConfidence::High);
+            assert_eq!(TxtAnalyzerAnalysis::sniff(&AnalyzeSource::Text("anything at all")), IoConfidence::High);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn sniff_binary_with_nul_bytes_is_low_or_medium_not_high() {
             let bytes: &[u8] = b"\x00\x01\x02binary garbage\x00";
-            assert_ne!(TxtAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(bytes)).await, IoConfidence::High);
+            assert_ne!(TxtAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(bytes)), IoConfidence::High);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn sniff_invalid_utf8_binary_is_low() {
             let bytes: &[u8] = &[0xff, 0xfe, 0xfd];
-            assert_eq!(TxtAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(bytes)).await, IoConfidence::Low);
+            assert_eq!(TxtAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(bytes)), IoConfidence::Low);
         }
     }
     //#endregion 🧪️Tests

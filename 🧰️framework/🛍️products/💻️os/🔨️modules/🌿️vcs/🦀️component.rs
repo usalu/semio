@@ -798,7 +798,7 @@ where
 /// callers that must not silently apply a rejected op check `worst_level(&messages)` against their
 /// `MergePolicy` themselves (this fn stays policy-agnostic, matching its old unconditional-apply
 /// shape).
-pub async fn apply_mutation<P, Mutation>(snapshot: &P, operation: &Mutation) -> Result<(P, Vec<crate::os_spr::MutationMessage>), MutationApplyError>
+pub fn apply_mutation<P, Mutation>(snapshot: &P, operation: &Mutation) -> Result<(P, Vec<crate::os_spr::MutationMessage>), MutationApplyError>
 where
     Mutation: self::Mutation<P>,
 {

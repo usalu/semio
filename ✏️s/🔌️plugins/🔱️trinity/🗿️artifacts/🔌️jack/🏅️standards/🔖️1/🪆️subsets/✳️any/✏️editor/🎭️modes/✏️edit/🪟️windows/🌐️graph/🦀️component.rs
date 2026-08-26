@@ -2,7 +2,8 @@
 
 use crate::artifacts::jack::JackSnapshot;
 use crate::editor::jack::config::JackConfig;
-use semio_framework_plugin::{build_node_graph_scene, ActionDescriptor, MeasureSelectItem, NodeGraphScene, NodeGraphViewport, UiNode, WindowMeasure};
+use semio_framework_plugin::{scene_surface, ActionDescriptor, BuiltNode, MeasureSelectItem, NodeGraphScene, NodeGraphViewport, UiAssemblyResult, WindowMeasure};
+use semio_framework_ui_contract::SurfaceKind;
 use serde_json::json;
 
 pub(crate) const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";
@@ -36,8 +37,8 @@ pub(crate) fn trinity_lod_json_for_window(cfg: &JackConfig, window_id: &str) -> 
 /// `stamp_and_cache_interaction_ui` post-pass would stamp either. The live node-graph host reads
 /// domain "ast"'s `DomainSelection`/`DomainHover` directly (`GraphHost::sync_interaction`), so the
 /// interactive surface stays correct even though this snapshot doesn't carry it.
-pub(crate) fn render(surface_id: &str, controller_id: &str, window_id: &str, fixture: &JackSnapshot, cfg: &JackConfig) -> UiNode {
+pub(crate) fn render(surface_id: &str, _controller_id: &str, window_id: &str, fixture: &JackSnapshot, cfg: &JackConfig) -> UiAssemblyResult<BuiltNode> {
     let (nodes, edges, _) = crate::editor::jack::fixture_to_workflow(fixture);
     let viewport = NodeGraphViewport { x: cfg.camera.x, y: cfg.camera.y, zoom: cfg.camera.zoom };
-    build_node_graph_scene(surface_id, controller_id, NodeGraphScene { lod_json: trinity_lod_json_for_window(cfg, window_id), ..NodeGraphScene::base(nodes, edges, viewport) })
+    scene_surface(surface_id, SurfaceKind::NodeGraph, &NodeGraphScene { lod_json: trinity_lod_json_for_window(cfg, window_id), ..NodeGraphScene::base(nodes, edges, viewport) })
 }

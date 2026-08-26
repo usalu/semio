@@ -12,7 +12,7 @@ pub struct VcsDemoConfig {
 
 //region 📎 App-schema descriptor
 /// 📎 `s.vcs.vcs`'s config and presence schema, owned by this leaf.
-pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     ::schema::AppSchemaDescriptor {
         id: "s.vcs.vcs",
         config: ::schema::FacetLeaves {

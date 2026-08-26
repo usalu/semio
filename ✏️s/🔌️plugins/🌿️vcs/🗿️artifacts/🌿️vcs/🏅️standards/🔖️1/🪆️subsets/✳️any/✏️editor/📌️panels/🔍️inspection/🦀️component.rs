@@ -14,7 +14,7 @@ pub const VCS_PLAY_BODY_INSPECTION: &str = "vcs.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -26,7 +26,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(projection: &VcsSnapshot, labels: &VcsPlayLabels) -> UiNode {
+pub fn render(projection: &VcsSnapshot, labels: &VcsPlayLabels) -> UiNode {
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "vcs-play-inspector".into(),
         label: labels.title.into(),
@@ -138,7 +138,7 @@ mod tests {
     use crate::editor::vcs::testkit::{app, render as render_body};
 
     #[semio_framework_async_macros::async_test]
-    async fn vcs_labels_resolve_native_english_by_default() {
+    fn vcs_labels_resolve_native_english_by_default() {
         let mut instance = app();
         let json = render_body(&mut instance, VCS_PLAY_BODY_INSPECTION);
         assert!(json.contains("Title"));

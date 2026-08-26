@@ -22,7 +22,7 @@ pub struct PlaybookTopology {
 //#endregion 🔖️Topology
 
 //#region 🔖️Compute
-async fn collect_condition_vars(expr: &PlaybookExpr, names: &mut Vec<String>) {
+fn collect_condition_vars(expr: &PlaybookExpr, names: &mut Vec<String>) {
     match expr {
         PlaybookExpr::Const { .. } => {}
         PlaybookExpr::Var { name } => names.push(name.clone()),
@@ -41,7 +41,7 @@ async fn collect_condition_vars(expr: &PlaybookExpr, names: &mut Vec<String>) {
 
 /// 🧭️ Builds the step/block dependency graph (declaration order + condition-var reads) and
 /// topologically sorts it.
-pub async fn compute_playbook_topology(steps: &[PlaybookStep]) -> PlaybookTopology {
+pub fn compute_playbook_topology(steps: &[PlaybookStep]) -> PlaybookTopology {
     let mut nodes: Vec<String> = Vec::new();
     let mut edges: Vec<(String, String)> = Vec::new();
     let mut block_ids: HashSet<String> = HashSet::new();
@@ -83,7 +83,7 @@ pub async fn compute_playbook_topology(steps: &[PlaybookStep]) -> PlaybookTopolo
 /// 🧮️ Kahn's algorithm: a stable (declaration-order-first) topological sort that also yields each
 /// node's longest-path depth from a root, and reports `cycleFree = false` when the queue drains
 /// before every node is visited (the unvisited remainder is exactly the cyclic subgraph).
-async fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> PlaybookTopology {
+fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> PlaybookTopology {
     let node_count = nodes.len() as u32;
     let mut indegree: HashMap<String, u32> = nodes.iter().map(|id| (id.clone(), 0)).collect();
     let mut adjacency: HashMap<String, Vec<String>> = HashMap::new();
@@ -138,7 +138,7 @@ mod tests {
     use super::*;
     use crate::artifacts::playbook::PlaybookBlock;
 
-    async fn block(id: &str, condition: Option<PlaybookExpr>) -> PlaybookBlock {
+    fn block(id: &str, condition: Option<PlaybookExpr>) -> PlaybookBlock {
         PlaybookBlock {
             id: id.into(),
             label: id.into(),
@@ -163,7 +163,7 @@ mod tests {
         }
     }
 
-    async fn step(id: &str, blocks: Vec<PlaybookBlock>) -> PlaybookStep {
+    fn step(id: &str, blocks: Vec<PlaybookBlock>) -> PlaybookStep {
         PlaybookStep { id: id.into(), title: id.into(), description: None, blocks }
     }
 

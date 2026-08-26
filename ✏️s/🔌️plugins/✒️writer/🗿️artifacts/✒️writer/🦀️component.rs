@@ -3,8 +3,7 @@
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::Arc;
 
 //#region 🔖️Constants
 pub const WRITER_DOCUMENT_SCHEMA: &str = "writer.document";
@@ -62,15 +61,15 @@ impl Default for WriterEditorSettings {
     }
 }
 
-pub async fn default_zoom() -> f64 {
+pub fn default_zoom() -> f64 {
     1.0
 }
 
-pub async fn default_uri() -> String {
+pub fn default_uri() -> String {
     "writer://empty".into()
 }
 
-pub async fn default_camera() -> WriterCamera {
+pub fn default_camera() -> WriterCamera {
     WriterCamera { x: 0.0, y: 0.0, zoom: 1.0 }
 }
 
@@ -89,7 +88,7 @@ pub type WriterDocumentChild = store::ArtifactChild<SemioDocumentSnapshot>;
 /// leaf (`language` = `language_id`, `text` = the raw buffer), which round-trips losslessly: `Code`
 /// carries no run/formatting structure to lose, exactly matching what `text: String` used to carry
 /// verbatim. `"plaintext"`/empty language ids map to `None` (no fenced-language hint).
-pub async fn document_snapshot_from_text(text: &str, language_id: &str) -> SemioDocumentSnapshot {
+pub fn document_snapshot_from_text(text: &str, language_id: &str) -> SemioDocumentSnapshot {
     let language = (!language_id.is_empty() && language_id != "plaintext").then(|| language_id.to_string());
     SemioDocumentSnapshot { schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(), styles: Vec::new(), images: Vec::new(), blocks: vec![DocBlock::Code { language, text: text.to_string() }] }
 }
@@ -97,7 +96,7 @@ pub async fn document_snapshot_from_text(text: &str, language_id: &str) -> Semio
 /// 🌉 Inverse of [`document_snapshot_from_text`] — concatenates every `Code` block's body (the
 /// common, lossless case is exactly one); any non-`Code` block is honestly skipped rather than
 /// fabricating prose from block content this plugin never authored.
-pub async fn text_from_document_snapshot(snapshot: &SemioDocumentSnapshot) -> String {
+pub fn text_from_document_snapshot(snapshot: &SemioDocumentSnapshot) -> String {
     snapshot
         .blocks
         .iter()
@@ -113,7 +112,7 @@ pub async fn text_from_document_snapshot(snapshot: &SemioDocumentSnapshot) -> St
 /// for identical `(text, language_id)`, a different pair once the content actually changes; the
 /// handle alone is the change signal the parent's diff/mutation machinery reads without ever
 /// comparing embedded content, mirroring lowpoly's `mesh_child_handle`/cad's `cad_model_child_handle`.
-pub async fn document_child_handle(id: &str, text: &str, language_id: &str) -> WriterDocumentChild {
+pub fn document_child_handle(id: &str, text: &str, language_id: &str) -> WriterDocumentChild {
     use std::hash::{Hash, Hasher};
     let snapshot = document_snapshot_from_text(text, language_id);
     let content_json = serde_json::to_string(&snapshot).unwrap_or_default();
@@ -128,42 +127,23 @@ pub async fn document_child_handle(id: &str, text: &str, language_id: &str) -> W
 //#endregion 🔖️DocumentBridge
 
 //#region 🔖️WorkingScene
-/// 🌱 Ephemeral, session-side working representation of the composed document child's live text —
-/// NEVER persisted, NEVER a durable field on `WriterSnapshot` itself (matches the `EngineRep`
-/// contract §`design-full-plan.md` corrigendum: wholly derived, droppable at any instant, rebuilt
-/// from base). Exists because writer edits at keystroke granularity and no `LinkResolver`/child-
-/// dispatch seam is wired into `ArtifactApp::handle` yet (checked: `🔌️plugin/🦀️component.rs` has
-/// no such plumbing — same standing gap cad/lowpoly's reports both document); until one exists, the
-/// only way a persisted content-addressed HANDLE can round-trip to real text within one process is
-/// this cache, keyed by `WriterDocumentChild::child_id` — mirrors lowpoly's
-/// `LowpolyScratch.mesh_workspace: HashMap<String, String>` (`📓️wave3-reports/lowpoly-report.md`).
-///
-/// ⚠️ Same documented gap as lowpoly's `StaleMeshWorkspace`: store-level undo/redo bypasses
-/// `ArtifactApp::handle` entirely, so a handle can in principle go uncached (a fresh process, or an
-/// undo past this session's history) — `writer_text`/`writer_text_for_handle` fail soft (empty
-/// string) rather than panicking. A real fix needs child-document resolution, which no WASM-guest
-/// plugin in this repo has yet (repeatedly flagged in this ticket already).
+/// 🌱 Ephemeral, artifact-instance working representation of the composed document child's live
+/// text. The owner is the `WriterDocumentChild` embedded by one snapshot, so independent apps and
+/// stale handles cannot observe or replace one another's text. Persistence and DSL codecs skip
+/// the text; constructors and mutations materialize their immutable local owner directly.
 pub struct WriterWorkingScene {
     pub text: String,
     pub language_id: String,
 }
 
-fn writer_scratch() -> &'static Mutex<HashMap<String, Arc<str>>> {
-    static WRITER_SCRATCH: OnceLock<Mutex<HashMap<String, Arc<str>>>> = OnceLock::new();
-    WRITER_SCRATCH.get_or_init(|| Mutex::new(HashMap::new()))
+/// 📝 Materializes text on this exact artifact-child owner without publishing process state.
+pub fn attach_writer_document_text(handle: &mut WriterDocumentChild, text: &str) {
+    handle.set_local_text(Arc::<str>::from(text));
 }
 
-/// 📝 Seeds the scratch cache for a handle — call whenever new text content is about to become a
-/// document's `document` field (every mutation-diff/fixture builder in this plugin does, via
-/// [`document_child_handle_and_cache`]).
-pub fn cache_writer_document_text(child_id: &str, text: &str) {
-    writer_scratch().lock().unwrap_or_else(|poisoned| poisoned.into_inner()).insert(child_id.to_string(), Arc::<str>::from(text));
-}
-
-/// 🔎 Reads the cached live text for a document child handle — empty string (never a panic) when
-/// nothing has cached it yet (see this region's module doc comment for why that can happen).
+/// 🔎 Reads this child owner's live text, or empty text when the child is unresolved.
 pub fn writer_text_for_handle(handle: &WriterDocumentChild) -> String {
-    writer_scratch().lock().unwrap_or_else(|poisoned| poisoned.into_inner()).get(&handle.child_id).cloned().map_or_else(String::new, |text| text.to_string())
+    handle.local_text().unwrap_or_default().to_string()
 }
 
 /// 🔎 Reads the current document's live text off its `document` child handle — the single read
@@ -175,29 +155,25 @@ pub fn writer_text(snapshot: &WriterSnapshot) -> String {
 
 /// 🧵️ Retains the immutable child-text owner for bounded worker jobs without cloning its bytes.
 pub fn writer_text_owner(snapshot: &WriterSnapshot) -> Arc<str> {
-    writer_scratch().lock().unwrap_or_else(|poisoned| poisoned.into_inner()).get(&snapshot.document.child_id).cloned().unwrap_or_else(|| Arc::<str>::from(""))
+    snapshot.document.local_text_owner().unwrap_or_else(|| Arc::<str>::from(""))
 }
 
-/// 🏗️ Mints a new content-addressed handle AND seeds the scratch cache with its text in one call —
-/// the standard way every mutation-diff/fixture builder in this plugin creates a `document` field
-/// value; never construct a handle without also caching, or [`writer_text`] will read back empty.
-pub fn document_child_handle_and_cache(id: &str, text: &str, language_id: &str) -> WriterDocumentChild {
-    let handle = document_child_handle(id, text, language_id);
-    cache_writer_document_text(&handle.child_id, text);
-    handle
+/// 🏗️ Mints a content-addressed handle carrying its artifact-instance text owner.
+pub fn document_child_handle_with_text(id: &str, text: &str, language_id: &str) -> WriterDocumentChild {
+    document_child_handle(id, text, language_id).with_local_text(Arc::<str>::from(text))
 }
 
 /// 🏗️ Builds a full `WriterSnapshot` from literal text — the standard fixture/import constructor
 /// replacing the old 5-field `WriterSnapshot { ..., text }` struct literal now that `document` is a
 /// composed child handle, not a plain field.
 pub fn writer_snapshot_with_text(schema: &str, id: &str, language_id: &str, uri: &str, text: &str) -> WriterSnapshot {
-    WriterSnapshot { schema: schema.into(), id: id.into(), language_id: language_id.into(), uri: uri.into(), document: document_child_handle_and_cache(id, text, language_id) }
+    WriterSnapshot { schema: schema.into(), id: id.into(), language_id: language_id.into(), uri: uri.into(), document: document_child_handle_with_text(id, text, language_id) }
 }
 //#endregion 🔖️WorkingScene
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "text.document".into(),
         name: "Text Document".into(),
@@ -230,10 +206,61 @@ mod tests {
     async fn default_camera_is_centered_and_unzoomed() {
         assert_eq!(WriterCamera::default(), WriterCamera { x: 0.0, y: 0.0, zoom: 1.0 });
     }
+
+    #[semio_framework_async_macros::async_test]
+    async fn child_local_text_fixture_proves_bounded_identity_isolation_aba_and_wire_omission() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/writer-child-local-text-law.json")).expect("language-neutral writer child fixture");
+        let cases = fixture["cases"].as_array().expect("fixture cases");
+        assert_eq!(fixture["schemaVersion"], 1);
+        assert_eq!(cases.len(), fixture["maximumCases"].as_u64().expect("bounded maximum") as usize);
+        assert_eq!(cases.len(), 4);
+
+        for case in cases {
+            let law = case["law"].as_str().expect("law");
+            let first = case["first"].as_str().expect("first");
+            let second = case["second"].as_str().expect("second");
+            let expected = case["expected"].as_str().expect("expected");
+            match law {
+                "cloneIdentity" => {
+                    let snapshot = writer_snapshot_with_text(WRITER_DOCUMENT_SCHEMA, "identity", "plaintext", "writer://identity", first);
+                    let retained = writer_text_owner(&snapshot);
+                    let cloned = snapshot.clone();
+                    let cloned_owner = writer_text_owner(&cloned);
+                    assert!(Arc::ptr_eq(&retained, &cloned_owner));
+                    assert_eq!(&*cloned_owner, expected);
+                    assert_eq!(Arc::strong_count(&retained), 4);
+                }
+                "instanceIsolation" => {
+                    let mut left = document_child_handle("collision", "", "plaintext");
+                    let mut right = left.clone();
+                    attach_writer_document_text(&mut left, first);
+                    attach_writer_document_text(&mut right, second);
+                    assert_eq!(format!("{}|{}", writer_text_for_handle(&left), writer_text_for_handle(&right)), expected);
+                }
+                "abaIsolation" => {
+                    let mut stale = document_child_handle("aba", "", "plaintext");
+                    attach_writer_document_text(&mut stale, first);
+                    let mut reused_identity = document_child_handle("aba", "", "plaintext");
+                    assert_eq!(stale.child_id, reused_identity.child_id);
+                    attach_writer_document_text(&mut reused_identity, second);
+                    assert_eq!(format!("{}|{}", writer_text_for_handle(&stale), writer_text_for_handle(&reused_identity)), expected);
+                }
+                "wireOmission" => {
+                    let handle = document_child_handle_with_text("wire", first, "plaintext");
+                    let wire = serde_json::to_value(&handle).expect("third-party serde oracle serializes handle");
+                    assert!(wire.get("localText").is_none());
+                    let decoded: WriterDocumentChild = serde_json::from_value(wire).expect("third-party serde oracle decodes handle");
+                    assert_eq!(writer_text_for_handle(&decoded), expected);
+                    assert_eq!(writer_text_for_handle(&handle), first);
+                }
+                other => panic!("unexpected writer child law {other}"),
+            }
+        }
+    }
 }
 //#endregion 🧪️Tests
 //#region 🔖️Declaration
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     ArtifactDefinition::new(ArtifactIdentity::parse("s.writer")?)
         .capability(
@@ -276,7 +303,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
 /// `.artifact(declaration())` + `.editor::<>()`/`.viewer::<>()` channel is deleted in the SAME pass
 /// (plugin root `🦀️component.rs`), never coexisting with this. `kind` uses `WRITER_DIALECT`'s own
 /// `artifact_kind` ("s.writer.writer") — the documented canonical coordinate, not guessed.
-pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse(WRITER_DIALECT.artifact_kind).expect("canonical writer kind"), localization: &[], standards: vec![crate::artifacts::writer::standards::v1::standard()] }

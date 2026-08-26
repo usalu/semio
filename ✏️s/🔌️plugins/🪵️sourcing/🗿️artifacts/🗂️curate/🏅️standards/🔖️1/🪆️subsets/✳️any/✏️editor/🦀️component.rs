@@ -15,10 +15,13 @@ use crate::editor::sourcing::presence::{SourcingCuratePresence, SourcingCuratePr
 use crate::editor::sourcing::terminology::sourcing_curate_labels;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, ArtifactEditor, ArtifactKindSpec, ArtifactView, CommandDefinition, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition,
-    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod,
-    SelectionMode, SelectionSpec,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest,
+    ArtifactToolFactoryRegistry, ArtifactView, CommandDefinition, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label,
+    LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec,
 };
+use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+use semio_framework_job::InteractiveJobCloseStep;
 use store::ArtifactPack;
 use store::EngineHandles;
 
@@ -213,6 +216,322 @@ fn sourcing_curate_command_from_action(action: &str, args: Option<&serde_json::V
 #[derive(Default)]
 pub struct SourcingCurateApp;
 
+//#region 🧵️RetainedCommands
+const SOURCING_CURATE_BOUNDED_TOOL_IDS: &[&str] = &["setFilterQuery", "setFilterModule", "setFilterMinAvailability", "sortTable", "setContributions"];
+const SOURCING_CURATE_RESUMABLE_TOOL_IDS: &[&str] = &[
+    "setDocument",
+    "setActiveExample",
+    "stockFromCatalogue",
+    "curateAdd",
+    "curateSetCount",
+    "curateRemove",
+    "dropOnPool",
+    "dropOnCurated",
+    "setFilterTypology",
+];
+const SOURCING_CURATE_RETAINED_SCHEMA: &str = "sourcing.curate/v1.tool-command.v1";
+const SOURCING_CURATE_RETAINED_RAW_BYTES: usize = 8_192;
+const SOURCING_CURATE_RETAINED_WORK_ITEMS: usize = 16_384;
+const SOURCING_CURATE_SCAN_BYTES: usize = 256;
+
+fn sourcing_curate_bounded_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(SOURCING_CURATE_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500)
+}
+
+fn sourcing_curate_resumable_contract() -> ToolExecutionContract {
+    ToolExecutionContract::resumable(SOURCING_CURATE_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500, 1, 1)
+}
+
+fn sourcing_curate_string_units(value: &str) -> usize {
+    value.len().div_ceil(SOURCING_CURATE_SCAN_BYTES)
+}
+
+fn sourcing_curate_checked_sum(parts: impl IntoIterator<Item = usize>) -> Option<usize> {
+    parts.into_iter().try_fold(0usize, usize::checked_add).map(|extent| extent.max(1))
+}
+
+fn sourcing_curate_payload_units(command: &SourcingCurateCommand) -> usize {
+    match command {
+        SourcingCurateCommand::SetArtifactJson(payload) => sourcing_curate_string_units(&payload.json),
+        SourcingCurateCommand::SetActiveExample(payload) => sourcing_curate_string_units(&payload.example_id),
+        SourcingCurateCommand::CurateAdd(payload) => sourcing_curate_string_units(&payload.object_id),
+        SourcingCurateCommand::CurateSetCount(payload) => sourcing_curate_string_units(&payload.object_id),
+        SourcingCurateCommand::CurateRemove(payload) => sourcing_curate_string_units(&payload.object_id),
+        SourcingCurateCommand::DropOnPool(payload) => sourcing_curate_string_units(&payload.object_id),
+        SourcingCurateCommand::DropOnCurated(payload) => sourcing_curate_string_units(&payload.object_id),
+        SourcingCurateCommand::SetFilterTypology(payload) => sourcing_curate_string_units(&payload.path),
+        _ => 0,
+    }
+}
+
+fn sourcing_curate_resumable_extent(command: &SourcingCurateCommand, snapshot: &CurateSnapshot, config: &SourcingCurateConfig) -> Option<usize> {
+    let snapshot_items = match command {
+        SourcingCurateCommand::StockFromCatalogue(_)
+        | SourcingCurateCommand::CurateAdd(_)
+        | SourcingCurateCommand::CurateSetCount(_)
+        | SourcingCurateCommand::CurateRemove(_)
+        | SourcingCurateCommand::DropOnPool(_)
+        | SourcingCurateCommand::DropOnCurated(_) => snapshot.stock_extra.len().checked_add(snapshot.curated.len())?,
+        SourcingCurateCommand::SetActiveExample(_) => snapshot.stock_extra.len(),
+        _ => 0,
+    };
+    let config_units = matches!(command, SourcingCurateCommand::StockFromCatalogue(_)).then(|| sourcing_curate_string_units(&config.contributions_json)).unwrap_or(0);
+    sourcing_curate_checked_sum([sourcing_curate_payload_units(command), snapshot_items, config_units])
+}
+
+fn sourcing_curate_bounded_extent(_command: &SourcingCurateCommand, _snapshot: &CurateSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    Some(1)
+}
+
+fn sourcing_curate_retained_reduce(
+    command: &SourcingCurateCommand,
+    snapshot: &CurateSnapshot,
+    config: &SourcingCurateConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation, NoDraftMutation>, Fault> {
+    let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
+    let cfg = ConfigView { snapshot: config };
+    command.dispatch(&doc, &cfg)
+}
+
+fn sourcing_curate_tool_identity(tool_id: &str) -> u64 {
+    tool_id.as_bytes().iter().fold(0xcbf2_9ce4_8422_2325, |hash, byte| (hash ^ u64::from(*byte)).wrapping_mul(0x1000_0000_01b3))
+}
+
+struct SourcingCurateResumableCommandWork {
+    tool_id: &'static str,
+    extent: usize,
+    cursor: usize,
+    digest: u64,
+    complete: bool,
+    closing: bool,
+}
+
+impl SourcingCurateResumableCommandWork {
+    fn new(tool_id: &'static str, extent: usize) -> Self {
+        Self { tool_id, extent, cursor: 0, digest: sourcing_curate_tool_identity(tool_id), complete: false, closing: false }
+    }
+
+    fn observe(&mut self, command: &SourcingCurateCommand, snapshot: &CurateSnapshot, config: &SourcingCurateConfig) {
+        let payload_units = sourcing_curate_payload_units(command);
+        let byte = if self.cursor < payload_units {
+            (self.cursor as u8).wrapping_add(command.command_id().as_bytes().first().copied().unwrap_or_default())
+        } else {
+            let index = self.cursor - payload_units;
+            snapshot
+                .stock_extra
+                .get(index)
+                .and_then(|row| row.id.as_bytes().first().copied())
+                .or_else(|| index.checked_sub(snapshot.stock_extra.len()).and_then(|cursor| snapshot.curated.get(cursor)).and_then(|row| row.object_id.as_bytes().first().copied()))
+                .or_else(|| config.contributions_json.as_bytes().get(index).copied())
+                .unwrap_or_default()
+        };
+        self.digest = (self.digest ^ u64::from(byte)).wrapping_mul(0x1000_0000_01b3);
+    }
+}
+
+impl ArtifactCommandWork<EditorApp<SourcingCurateApp>> for SourcingCurateResumableCommandWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(
+        &self,
+        _command: &SourcingCurateCommand,
+        _snapshot: &CurateSnapshot,
+        _interaction: &protocol::InteractionState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<SourcingCurateApp>>>,
+    ) -> Option<usize> {
+        Some(self.extent)
+    }
+
+    fn step(
+        &mut self,
+        command: &SourcingCurateCommand,
+        snapshot: &CurateSnapshot,
+        config: &SourcingCurateConfig,
+        history: &semio_framework_plugin::HistoryView,
+        interaction: &protocol::InteractionState,
+        hover: &semio_framework_plugin::app::InteractionHoverState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<SourcingCurateApp>>>,
+        operation: &AppOperationContext,
+    ) -> Result<ArtifactCommandWorkStep<EditorApp<SourcingCurateApp>>, Fault> {
+        if self.complete {
+            return Err(Fault::from("sourcing-curate-retained-work-repeated"));
+        }
+        let extent = sourcing_curate_resumable_extent(command, snapshot, config).ok_or_else(|| Fault::from("sourcing-curate-retained-work-extent-overflow"))?;
+        if extent != self.extent || self.cursor > extent {
+            return Err(Fault::from("sourcing-curate-retained-work-extent-drift"));
+        }
+        if self.cursor < extent {
+            self.observe(command, snapshot, config);
+            self.cursor += 1;
+            return Ok(ArtifactCommandWorkStep::Progress {
+                stage: "sourcing-curate-command-scan",
+                preview: b"{\"en\":\"Scanning command inputs\",\"de\":\"Befehlseingaben werden gepr\xC3\xBCft\"}",
+            });
+        }
+        self.complete = true;
+        sourcing_curate_retained_reduce(command, snapshot, config, history, interaction, hover, operation).map(ArtifactCommandWorkStep::Complete)
+    }
+
+    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
+        if target.len() < 32 {
+            return Err(Fault::from("sourcing-curate-retained-checkpoint-capacity"));
+        }
+        target[..4].copy_from_slice(b"SCC1");
+        target[4] = u8::from(self.complete);
+        target[8..16].copy_from_slice(&(self.cursor as u64).to_le_bytes());
+        target[16..24].copy_from_slice(&self.digest.to_le_bytes());
+        target[24..32].copy_from_slice(&(self.extent as u64).to_le_bytes());
+        Ok(32)
+    }
+
+    fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
+        if checkpoint.len() != 32 || &checkpoint[..4] != b"SCC1" || checkpoint[4] > 1 {
+            return Err(Fault::from("sourcing-curate-retained-checkpoint-invalid"));
+        }
+        let cursor = u64::from_le_bytes(checkpoint[8..16].try_into().map_err(|_| Fault::from("sourcing-curate-retained-checkpoint-cursor"))?);
+        let extent = u64::from_le_bytes(checkpoint[24..32].try_into().map_err(|_| Fault::from("sourcing-curate-retained-checkpoint-extent"))?);
+        if cursor > usize::MAX as u64 || extent != self.extent as u64 || cursor > extent {
+            return Err(Fault::from("sourcing-curate-retained-checkpoint-range"));
+        }
+        self.cursor = cursor as usize;
+        self.digest = u64::from_le_bytes(checkpoint[16..24].try_into().map_err(|_| Fault::from("sourcing-curate-retained-checkpoint-digest"))?);
+        self.complete = checkpoint[4] == 1;
+        Ok(())
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
+        if self.closing { InteractiveJobCloseStep::Complete } else { InteractiveJobCloseStep::Blocked }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
+    }
+}
+
+struct SourcingCurateBoundedCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl SourcingCurateBoundedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: SOURCING_CURATE_BOUNDED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for SourcingCurateBoundedCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<SourcingCurateApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<SourcingCurateApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        SOURCING_CURATE_RETAINED_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        sourcing_curate_bounded_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > SOURCING_CURATE_RETAINED_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Sourcing bounded command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for SourcingCurateBoundedCommandJobFactory {
+    type Owner = EditorApp<SourcingCurateApp>;
+    const TOOL_IDS: &'static [&'static str] = SOURCING_CURATE_BOUNDED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATE_SCHEMA;
+}
+
+struct SourcingCurateResumableCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl SourcingCurateResumableCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: SOURCING_CURATE_RESUMABLE_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for SourcingCurateResumableCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<SourcingCurateApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<SourcingCurateApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        SOURCING_CURATE_RETAINED_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        sourcing_curate_resumable_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > SOURCING_CURATE_RETAINED_RAW_BYTES
+            || checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES)
+        {
+            return Err((ToolJobFactoryError::new("Sourcing resumable command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(match checkpoint {
+            Some(checkpoint) => ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
+            None => ArtifactRetainedCommandJob::from_wire(payload, input),
+        })
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for SourcingCurateResumableCommandJobFactory {
+    type Owner = EditorApp<SourcingCurateApp>;
+    const TOOL_IDS: &'static [&'static str] = SOURCING_CURATE_RESUMABLE_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATE_SCHEMA;
+}
+//#endregion 🧵️RetainedCommands
+
 impl ArtifactEditor for SourcingCurateApp {
     type Snapshot = CurateSnapshot;
     type Mutation = SourcingMutation;
@@ -236,21 +555,80 @@ impl ArtifactEditor for SourcingCurateApp {
         controller: "s.sourcing.curate@1/*#editor",
         document_schema: "sourcing.curate/v1",
         factory: "BoundedFirstStepCommandJobFactory",
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
-        tools: [
-            "setDocument", "setActiveExample", "stockFromCatalogue", "curateAdd", "curateSetCount", "curateRemove", "dropOnPool", "dropOnCurated", "setFilterQuery", "setFilterModule", "setFilterTypology", "setFilterMinAvailability", "sortTable", "setContributions",
-        ]
+        tools: {
+            "setDocument" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "setActiveExample" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "stockFromCatalogue" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "curateAdd" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "curateSetCount" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "curateRemove" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "dropOnPool" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "dropOnCurated" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "setFilterTypology" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "setFilterQuery" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setFilterModule" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setFilterMinAvailability" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "sortTable" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setContributions" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+        }
     }
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller_id = registry.controller_id().to_string();
+        registry.register(SourcingCurateBoundedCommandJobFactory::new(&controller_id))?;
+        registry.register(SourcingCurateResumableCommandJobFactory::new(&controller_id))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        let bounded = SOURCING_CURATE_BOUNDED_TOOL_IDS.contains(&request.tool_id.as_str());
+        let resumable = SOURCING_CURATE_RESUMABLE_TOOL_IDS.contains(&request.tool_id.as_str());
+        if !bounded && !resumable {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id {
+            return Err(Fault::from("sourcing-curate-command-tool-mismatch"));
+        }
+        let tool_id = request.command.command_id();
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = if bounded {
+            Box::new(BoundedArtifactCommandWork::new(tool_id, sourcing_curate_retained_reduce, sourcing_curate_bounded_extent))
+        } else {
+            let extent = sourcing_curate_resumable_extent(&request.command, &request.snapshot, &request.config).ok_or_else(|| Fault::from("sourcing-curate-retained-work-extent-overflow"))?;
+            Box::new(SourcingCurateResumableCommandWork::new(tool_id, extent))
+        };
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            request.context,
+            operation_context,
+            request.completion,
+            SourcingCurateCommand::command_id,
+            SOURCING_CURATE_RETAINED_RAW_BYTES,
+            SOURCING_CURATE_RETAINED_WORK_ITEMS,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
+
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::sourcing::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> CurateSnapshot {
+    fn initial_snapshot() -> CurateSnapshot {
         crate::artifacts::curate::schema::default_document()
     }
 
-    async fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(sourcing_curate_io())
     }
 
@@ -258,14 +636,14 @@ impl ArtifactEditor for SourcingCurateApp {
     /// plus the inherited `document:out` default (the pack of `doc.snapshot`, replicated inline —
     /// overriding `export_media` shadows the trait's provided body for every port on this app, not just
     /// the new one).
-    async fn export_media(port: &str, doc: &ArtifactView<'_, CurateSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, CurateSnapshot>) -> Result<Media, MediaError> {
         match port {
             "catalog:out" => Ok(Media {
                 media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
                 payload: MediaPayload::Structured { schema: "kit.catalog".into(), json: crate::artifacts::curate::schema::inferences::sourcing_catalog_fragment(doc.snapshot).to_string() },
             }),
             "document:out" => {
-                let media_type = Self::io().await.map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -278,7 +656,7 @@ impl ArtifactEditor for SourcingCurateApp {
     /// override `whole_document_operation`
     /// (stays at the trait's own `None` default) and instead overrides `import_media` below to build a
     /// `Effect::LoadDocument` via `reset_document_effect`, outside undo history.
-    async fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, CurateSnapshot>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, CurateSnapshot>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "document:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -293,14 +671,14 @@ impl ArtifactEditor for SourcingCurateApp {
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`. `setLocale` has no manifest declaration (host-pushed,
     /// not a user-facing action).
-    async fn command_id(command: &SourcingCurateCommand) -> &'static str {
+    fn command_id(command: &SourcingCurateCommand) -> &'static str {
         command.command_id()
     }
 
     /// 🎯️ Production action bridge — see `sourcing_curate_command_from_action`. Overriding this is
     /// mandatory for any app that declares its own actions: the trait default only admits the
     /// framework-reserved ids and rejects everything else.
-    async fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<SourcingCurateCommand, Fault> {
+    fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<SourcingCurateCommand, Fault> {
         sourcing_curate_command_from_action(action, args)
     }
 
@@ -310,7 +688,7 @@ impl ArtifactEditor for SourcingCurateApp {
         }))
     }
 
-    async fn handle(
+    fn handle(
         command: &SourcingCurateCommand,
         doc: &ArtifactView<'_, CurateSnapshot>,
         cfg: &ConfigView<'_, SourcingCurateConfig>,
@@ -321,7 +699,7 @@ impl ArtifactEditor for SourcingCurateApp {
         command.dispatch(doc, cfg)
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let snapshot = doc.snapshot;
         let config = cfg.snapshot;
         let labels = sourcing_curate_labels(config);
@@ -382,7 +760,12 @@ fn hidden_view_action(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefin
 /// `📓️w2-cad-report.md`'s "SDK gaps found" #4 for the same gap hit by the pilot packet.
 pub fn create_sourcing_curate_app() -> AppDefinition {
     Editor::builder(crate::artifacts::curate::SOURCING_DIALECT)
-            .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
+            .command({
+                let mut definition = CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) };
+                definition.semantics.execution.interactive_job = semio_framework_plugin::InteractiveJobClassification::Migrated;
+                definition
+            })
+            .action_interactive_job("setContributions", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .document(["semio", "sourcing", "curate"])
             .artifact_kind(crate::artifacts::curate::artifact_kind())
             .artifact_kind(ArtifactKindSpec {
@@ -478,7 +861,20 @@ pub fn create_sourcing_curate_app() -> AppDefinition {
             // undeclared above, mirroring `flow_ui`: `VcsArtifactApp`'s kind-discipline check only runs
             // when the registry actually declares a command's id).
             .io(sourcing_curate_io())
-            .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setDocument", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("stockFromCatalogue", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("curateAdd", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("curateSetCount", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("curateRemove", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("dropOnPool", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("dropOnCurated", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setFilterQuery", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setFilterModule", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setFilterTypology", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setFilterMinAvailability", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("sortTable", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLocale", semio_framework_plugin::InteractiveJobClassification::ForbiddenFromUi)
             .build_definition()
 }
 //#endregion 🔖️Manifest
@@ -728,6 +1124,79 @@ mod tests {
             }
             MediaPayload::Binary { .. } => panic!("expected a Structured payload"),
         }
+    }
+
+    #[derive(serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct RetainedCheckpointFixture {
+        format: String,
+        byte_length: usize,
+        cases: Vec<RetainedCheckpointCase>,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct RetainedCheckpointCase {
+        name: String,
+        complete: bool,
+        cursor: usize,
+        digest: u64,
+        extent: usize,
+        hex: String,
+    }
+
+    fn retained_checkpoint_hex(value: &str) -> Vec<u8> {
+        value
+            .as_bytes()
+            .chunks_exact(2)
+            .map(|pair| {
+                let digit = |byte: u8| match byte {
+                    b'0'..=b'9' => byte - b'0',
+                    b'a'..=b'f' => byte - b'a' + 10,
+                    _ => panic!("fixture hex digit"),
+                };
+                (digit(pair[0]) << 4) | digit(pair[1])
+            })
+            .collect()
+    }
+
+    #[test]
+    fn retained_checkpoint_matches_the_language_neutral_fixture_and_rejects_maximum_plus_one() {
+        let fixture: RetainedCheckpointFixture = serde_json::from_str(include_str!("🧪️fixtures/retained-command-checkpoint.json")).expect("language-neutral retained checkpoint fixture");
+        assert_eq!(fixture.format, "SCC1");
+        assert_eq!(fixture.byte_length, 32);
+        for case in fixture.cases {
+            let mut work = SourcingCurateResumableCommandWork::new("setDocument", case.extent);
+            work.complete = case.complete;
+            work.cursor = case.cursor;
+            work.digest = case.digest;
+            let mut bytes = [0_u8; 32];
+            assert_eq!(ArtifactCommandWork::checkpoint(&work, &mut bytes).expect("exact checkpoint"), 32, "{}", case.name);
+            assert_eq!(bytes.as_slice(), retained_checkpoint_hex(&case.hex), "{}", case.name);
+            let mut restored = SourcingCurateResumableCommandWork::new("setDocument", case.extent);
+            ArtifactCommandWork::restore(&mut restored, &bytes).expect("fixture checkpoint restores");
+            assert_eq!((restored.complete, restored.cursor, restored.digest, restored.extent), (case.complete, case.cursor, case.digest, case.extent));
+        }
+        let work = SourcingCurateResumableCommandWork::new("setDocument", 1);
+        assert!(ArtifactCommandWork::checkpoint(&work, &mut [0_u8; 31]).is_err());
+        let mut hostile = [0_u8; 32];
+        ArtifactCommandWork::checkpoint(&work, &mut hostile).expect("hostile base checkpoint");
+        hostile[24..32].copy_from_slice(&2_u64.to_le_bytes());
+        let mut restored = SourcingCurateResumableCommandWork::new("setDocument", 1);
+        assert!(ArtifactCommandWork::restore(&mut restored, &hostile).is_err());
+    }
+
+    #[test]
+    fn retained_route_catalog_is_exact_and_close_is_incremental() {
+        let mut routes = SOURCING_CURATE_BOUNDED_TOOL_IDS.to_vec();
+        routes.extend_from_slice(SOURCING_CURATE_RESUMABLE_TOOL_IDS);
+        routes.sort_unstable();
+        routes.dedup();
+        assert_eq!(routes.len(), 14);
+        let mut work = SourcingCurateResumableCommandWork::new("setDocument", 1);
+        assert_eq!(ArtifactCommandWork::close_step(&mut work, 1, 32), InteractiveJobCloseStep::Blocked);
+        ArtifactCommandWork::begin_close(&mut work);
+        assert_eq!(ArtifactCommandWork::close_step(&mut work, 1, 32), InteractiveJobCloseStep::Complete);
+        assert!(ArtifactCommandWork::terminal_is_empty(&work));
     }
 
     #[semio_framework_async_macros::async_test]

@@ -17,23 +17,23 @@ pub struct AddBlock {
 }
 
 /// 🏗️ Builder.
-pub async fn add_block_operation(step_id: &str, block: PlaybookBlock, index: Option<usize>) -> PlaybookMutation {
+pub fn add_block_operation(step_id: &str, block: PlaybookBlock, index: Option<usize>) -> PlaybookMutation {
     PlaybookMutation::AddBlock(AddBlock { step_id: step_id.into(), block, index })
 }
 
 impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for AddBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "block", kind: "add-block", record: "AddedBlock" };
 
-    async fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
+    fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
+    fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Add block \"{}\"", self.block.label)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.step_id.clone(), self.block.id.clone()]
     }
 }

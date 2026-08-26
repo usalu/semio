@@ -12,9 +12,13 @@ use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::view::build_doc;
 use base64::Engine;
+use protocol::Mutation;
 use semio_framework_3d::mesh::Vec3;
 use semio_framework_plugin::Emit;
-use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, HashMap};
+use std::sync::Arc;
+use store::ArtifactPack;
 
 //#region 🔖️Sessions
 /// @emoji 🖌️ In-progress paint drag: the pre-stroke layer buffer and the accumulating scratch buffer.
@@ -62,11 +66,11 @@ pub enum Transform {
 /// purpose: every call site uses it directly as a `.map_err(map_kernel_err)` callback, and `map_err`'s
 /// closure signature is `FnOnce(E) -> F`, which always hands the error by value.
 #[allow(clippy::needless_pass_by_value)]
-pub async fn map_kernel_err(error: semio_framework_3d::mesh::MeshKernelError) -> String {
+pub fn map_kernel_err(error: semio_framework_3d::mesh::MeshKernelError) -> String {
     format!("{error:?}")
 }
 
-pub async fn apply_transform(doc: &mut LowpolyDocument, transform: Transform) -> Result<(), String> {
+pub fn apply_transform(doc: &mut LowpolyDocument, transform: Transform) -> Result<(), String> {
     let selection_mode = doc.selection().mode.clone();
     let pivot = doc.selection_transform_pivot().map_err(|e| e.to_string())?;
     let component_verts = match selection_mode.as_str() {
@@ -103,7 +107,7 @@ pub async fn apply_transform(doc: &mut LowpolyDocument, transform: Transform) ->
 
 /// 🎯️ Extracts UV (0..1) from a paint command's fields — either direct `u`/`v` (world 3d picks) or
 /// canvas `x`/`y` positions mapped through the paint-texture extent (UV canvas).
-pub async fn paint_uv_from_command(u: Option<f32>, v: Option<f32>, x: Option<f32>, y: Option<f32>) -> Option<(f32, f32)> {
+pub fn paint_uv_from_command(u: Option<f32>, v: Option<f32>, x: Option<f32>, y: Option<f32>) -> Option<(f32, f32)> {
     if let (Some(u), Some(v)) = (u, v) {
         return Some((u, v));
     }
@@ -122,7 +126,7 @@ pub async fn paint_uv_from_command(u: Option<f32>, v: Option<f32>, x: Option<f32
 /// (see `semantic_mutation_for_patch`'s own `before_mesh_workspace`/`after_mesh_workspace` params) —
 /// `LowpolyObject`/`LowpolyObjectPatch` carry no mesh content field at all (round 2 of this ticket's
 /// round-trip law fix); only the `mesh` handle is comparable here.
-pub async fn object_patch_diff(before: &LowpolyObject, after: &LowpolyObject) -> LowpolyObjectPatch {
+pub fn object_patch_diff(before: &LowpolyObject, after: &LowpolyObject) -> LowpolyObjectPatch {
     LowpolyObjectPatch {
         name: (before.name != after.name).then(|| after.name.clone()),
         smooth_shading: (before.smooth_shading != after.smooth_shading).then_some(after.smooth_shading),
@@ -138,7 +142,7 @@ pub async fn object_patch_diff(before: &LowpolyObject, after: &LowpolyObject) ->
 /// first populated field wins. Transform sub-field priority (position, then rotation, then scale)
 /// matches the gumball's own single-axis-per-drag gesture (`translate_selection`/`rotate_selection`/
 /// `scale_selection` each mutate exactly one `LowpolyTransform` field via `apply_transform`).
-pub async fn semantic_mutation_for_patch(id: String, before_transform: &crate::artifacts::lowpoly::LowpolyTransform, patch: &LowpolyObjectPatch, before_mesh_workspace: &str, after_mesh_workspace: &str) -> Option<LowpolyMutation> {
+pub fn semantic_mutation_for_patch(id: String, before_transform: &crate::artifacts::lowpoly::LowpolyTransform, patch: &LowpolyObjectPatch, before_mesh_workspace: &str, after_mesh_workspace: &str) -> Option<LowpolyMutation> {
     if let Some(new_name) = &patch.name {
         return Some(LowpolyMutation::RenameObject(crate::artifacts::lowpoly::mutations::rename_object::mutation::RenameObject { id, new_name: new_name.clone() }));
     }
@@ -166,7 +170,7 @@ pub async fn semantic_mutation_for_patch(id: String, before_transform: &crate::a
     None
 }
 
-async fn encode_rgba_png(pixels: &[u8], width: u32, height: u32) -> Result<Vec<u8>, String> {
+fn encode_rgba_png(pixels: &[u8], width: u32, height: u32) -> Result<Vec<u8>, String> {
     let mut bytes = Vec::new();
     {
         let mut encoder = png::Encoder::new(&mut bytes, width, height);
@@ -178,7 +182,7 @@ async fn encode_rgba_png(pixels: &[u8], width: u32, height: u32) -> Result<Vec<u
     Ok(bytes)
 }
 
-async fn fnv1a_u64(mut hash: u64, bytes: &[u8]) -> u64 {
+fn fnv1a_u64(mut hash: u64, bytes: &[u8]) -> u64 {
     let (chunks, remainder) = bytes.as_chunks::<8>();
     for chunk in chunks {
         let word = u64::from_le_bytes(*chunk);
@@ -197,7 +201,7 @@ async fn fnv1a_u64(mut hash: u64, bytes: &[u8]) -> u64 {
 /// `ctx: &mut LowpolyScratch` (round 2 of this ticket's round-trip law fix) — the compute session's
 /// live `mesh_workspace` content now lives session-side, never on `LowpolyObject`, so building the
 /// doc and reading back its post-edit content both need the cache.
-pub async fn mesh_edit(projection: &LowpolySnapshot, config: &LowpolyConfig, ctx: &mut LowpolyScratch, edit: impl FnOnce(&mut LowpolyDocument) -> Result<(), String>) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
+pub fn mesh_edit(projection: &LowpolySnapshot, config: &LowpolyConfig, ctx: &mut LowpolyScratch, edit: impl FnOnce(&mut LowpolyDocument) -> Result<(), String>) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
     let Some(mut doc) = build_doc(projection, config, ctx) else {
         return Emit::default();
     };
@@ -284,54 +288,54 @@ impl Default for LowpolyScratch {
 
 impl LowpolyScratch {
     /// 🕹️ Sets THIS dispatch's mesh-domain selection — see `current_selection`'s own doc comment.
-    pub async fn set_current_selection(&mut self, selection: LowpolySelection) {
+    pub fn set_current_selection(&mut self, selection: LowpolySelection) {
         self.current_selection = selection;
     }
 
     /// 🕹️ THIS dispatch's mesh-domain selection (or the default/empty one outside a command dispatch,
     /// e.g. `render`).
-    pub async fn current_selection(&self) -> &LowpolySelection {
+    pub fn current_selection(&self) -> &LowpolySelection {
         &self.current_selection
     }
 
     /// 🕸️ The live half-edge-mesh JSON cached for `object_id`, or `""` when this session has no
     /// working content for it yet (e.g. an object loaded from a real document import, pending child-
     /// document resolution — see this struct's own doc comment).
-    pub async fn mesh_workspace(&self, object_id: &str) -> &str {
+    pub fn mesh_workspace(&self, object_id: &str) -> &str {
         self.mesh_workspace.get(object_id).map(String::as_str).unwrap_or_default()
     }
 
     /// 🕸️ A clone of the full session-local mesh-workspace cache — `LowpolyDocument::with_context`'s
     /// input, since it needs one entry per object to reload every mesh, not just the active one.
-    pub async fn mesh_workspace_map(&self) -> HashMap<String, String> {
+    pub fn mesh_workspace_map(&self) -> HashMap<String, String> {
         self.mesh_workspace.clone()
     }
 
     /// 🕸️ Replaces the whole session-local mesh-workspace cache — called after a successful edit with
     /// `LowpolyDocument::mesh_workspace()`'s post-`sync_meshes_to_snapshot` content.
-    pub async fn set_mesh_workspace_map(&mut self, map: HashMap<String, String>) {
+    pub fn set_mesh_workspace_map(&mut self, map: HashMap<String, String>) {
         self.mesh_workspace = map;
     }
 
-    pub async fn stroke_drag_active(&self) -> bool {
+    pub fn stroke_drag_active(&self) -> bool {
         self.stroke_drag_active
     }
 
-    pub async fn set_stroke_drag_active(&mut self, value: bool) {
+    pub fn set_stroke_drag_active(&mut self, value: bool) {
         self.stroke_drag_active = value;
     }
 
-    pub async fn set_transform_drag_active(&mut self, value: bool) {
+    pub fn set_transform_drag_active(&mut self, value: bool) {
         self.transform_drag_active = value;
     }
 
-    pub async fn transform_projection(&self) -> Option<LowpolySnapshot> {
+    pub fn transform_projection(&self) -> Option<LowpolySnapshot> {
         self.transform.as_ref().map(|session| session.doc.snapshot().clone())
     }
 
     /// 🧰️ Clears every mid-gesture scratch — used by `SetActiveUtility` so switching tools never leaves
     /// a stale paint/transform drag behind.
-    pub async fn reset_gestures(&mut self) {
+    pub fn reset_gestures(&mut self) {
         self.stroke = None;
         self.stroke_drag_active = false;
         self.transform = None;
@@ -339,32 +343,32 @@ impl LowpolyScratch {
     }
 
     /// ▶️ `paintStrokeBegin`: arms the drag flag and clears any stale scratch from a previous gesture.
-    pub async fn begin_stroke_drag(&mut self) {
+    pub fn begin_stroke_drag(&mut self) {
         self.stroke_drag_active = true;
         self.stroke = None;
     }
 
     /// ⏹️ `paintStrokeEnd`: disarms the drag flag and commits the accumulated scratch as one edit.
-    pub async fn end_stroke_drag(&mut self) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
+    pub fn end_stroke_drag(&mut self) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
         self.stroke_drag_active = false;
         self.commit_stroke()
     }
 
     /// ▶️ `transformBegin`: arms the drag flag and clears any stale scratch from a previous gesture.
-    pub async fn begin_transform_drag(&mut self) {
+    pub fn begin_transform_drag(&mut self) {
         self.transform_drag_active = true;
         self.transform = None;
     }
 
     /// ⏹️ `transformEnd`: disarms the drag flag and commits the accumulated scratch as one edit.
-    pub async fn end_transform_drag(&mut self) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
+    pub fn end_transform_drag(&mut self) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
         self.transform_drag_active = false;
         self.commit_transform()
     }
 
     /// @emoji 🖼️ The layers to composite for `object`, overlaying the live stroke scratch when the drag
     /// targets that object so the in-progress stroke previews before it commits.
-    async fn composite_layers_for(&self, object: &LowpolyObject) -> Vec<u8> {
+    fn composite_layers_for(&self, object: &LowpolyObject) -> Vec<u8> {
         if let Some(session) = &self.stroke {
             if session.object_id == object.id {
                 let mut layers = object.paint_layers.clone();
@@ -377,7 +381,7 @@ impl LowpolyScratch {
         composite_layer_pixels(&object.paint_layers)
     }
 
-    async fn paint_fingerprint(&self, projection: &LowpolySnapshot) -> u64 {
+    fn paint_fingerprint(&self, projection: &LowpolySnapshot) -> u64 {
         let mut hash = 0xcbf29ce484222325u64;
         for object in &projection.objects {
             hash = fnv1a_u64(hash, object.id.as_bytes());
@@ -390,7 +394,7 @@ impl LowpolyScratch {
         fnv1a_u64(hash, &self.stroke_dirty.to_le_bytes())
     }
 
-    pub async fn refresh_texture_cache(&mut self, projection: &LowpolySnapshot) {
+    pub fn refresh_texture_cache(&mut self, projection: &LowpolySnapshot) {
         let fingerprint = self.paint_fingerprint(projection);
         if self.texture_cache.fingerprint == Some(fingerprint) {
             return;
@@ -405,13 +409,13 @@ impl LowpolyScratch {
         self.texture_cache = PaintTextureLut { fingerprint: Some(fingerprint), textures };
     }
 
-    pub async fn textures(&self) -> &HashMap<String, String> {
+    pub fn textures(&self) -> &HashMap<String, String> {
         &self.texture_cache.textures
     }
 
     /// @emoji 📌️ Commits the accumulated paint scratch as ONE described `PaintStroke` edit (scratch-commit
     /// pattern b — the whole drag is one undoable edit; megabyte pixel buffers never coalesce per tick).
-    pub async fn commit_stroke(&mut self) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
+    pub fn commit_stroke(&mut self) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
         let Some(session) = self.stroke.take() else {
             return Emit::default();
         };
@@ -426,7 +430,7 @@ impl LowpolyScratch {
     /// @emoji 🖌️ One mid-drag paint tick: brush/eraser/fill mutate the stroke scratch, eyedropper samples
     /// the paint color (as a `SetPaintColor` config op). Emits ZERO document operations — the stroke
     /// commits only on `paintStrokeEnd` (View-kind safe).
-    pub async fn paint_tick(&mut self, projection: &LowpolySnapshot, config: &LowpolyConfig, object_id: &str, u: f32, v: f32) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
+    pub fn paint_tick(&mut self, projection: &LowpolySnapshot, config: &LowpolyConfig, object_id: &str, u: f32, v: f32) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
         let utility = config.paint_utility.clone();
         if utility == "eyedropper" {
             let Some(object) = projection.objects.iter().find(|object| object.id == object_id) else {
@@ -463,7 +467,7 @@ impl LowpolyScratch {
 
     /// @emoji 🪣️ A single-shot flood fill emitted as ONE `PaintStroke` edit (the `fillBucket`/`paintFill`
     /// operation path — not drag-bracketed, so it commits immediately).
-    pub async fn fill_at(&mut self, projection: &LowpolySnapshot, config: &LowpolyConfig, object_id: String, u: f32, v: f32) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
+    pub fn fill_at(&mut self, projection: &LowpolySnapshot, config: &LowpolyConfig, object_id: String, u: f32, v: f32) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
         let layer_index = config.active_paint_layer as usize;
         let color = [config.paint_color_r, config.paint_color_g, config.paint_color_b, config.paint_color_a];
         let Some(layer) = projection.objects.iter().find(|object| object.id == object_id).and_then(|object| object.paint_layers.get(layer_index)) else {
@@ -481,15 +485,7 @@ impl LowpolyScratch {
 
     /// @emoji 🧲️ Runs one gumball transform delta against a working scratch document. Mid-drag it emits
     /// nothing; only `transformEnd` (or an unbracketed single dispatch) commits the accumulated diff.
-    pub async fn transform_selection(
-        &mut self,
-        projection: &LowpolySnapshot,
-        config: &LowpolyConfig,
-        mode: &str,
-        ids: Vec<u32>,
-        transform: Transform,
-        description: &str,
-    ) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
+    pub fn transform_selection(&mut self, projection: &LowpolySnapshot, config: &LowpolyConfig, mode: &str, ids: Vec<u32>, transform: Transform, description: &str) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
         if self.transform_drag_active {
             if self.transform.is_none() {
                 self.begin_transform_session(projection, config);
@@ -517,7 +513,7 @@ impl LowpolyScratch {
     }
 
     /// @emoji 🎬️ Snapshots the active object as the transform-drag base and builds the working scratch doc.
-    async fn begin_transform_session(&mut self, projection: &LowpolySnapshot, config: &LowpolyConfig) {
+    fn begin_transform_session(&mut self, projection: &LowpolySnapshot, config: &LowpolyConfig) {
         let Some(doc) = build_doc(projection, config, self) else {
             return;
         };
@@ -530,7 +526,7 @@ impl LowpolyScratch {
     }
 
     /// @emoji 📌️ Commits the whole gumball drag as ONE `Objects(Patch)` diff (base → final mesh).
-    pub async fn commit_transform(&mut self) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
+    pub fn commit_transform(&mut self) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
         let Some(mut session) = self.transform.take() else {
             return Emit::default();
         };
@@ -568,7 +564,7 @@ impl LowpolyScratch {
     /// variant. See `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
     /// `#[allow(dead_code)]`: exercised by `🧪️Tests` only until a host bridge exists.
     #[allow(dead_code)]
-    pub async fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {
+    pub fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {
         let session = self.transform.as_ref()?;
         let after = session.doc.snapshot().objects.iter().find(|object| object.id == session.object_id)?.clone();
         let patch = object_patch_diff(&session.before, &after);
@@ -579,11 +575,451 @@ impl LowpolyScratch {
 }
 //#endregion 🔖️LowpolyScratch
 
+//#region 🔖️Transient
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PaintStrokeState {
+    object_id: String,
+    layer_index: usize,
+    base: Vec<u8>,
+    scratch: Vec<u8>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct TransformState {
+    object_id: String,
+    before: LowpolyObject,
+    before_mesh_workspace: String,
+    snapshot: LowpolySnapshot,
+    selection: LowpolySelection,
+    mesh_workspace: BTreeMap<String, String>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct LowpolyTransientState {
+    stroke: Option<Arc<PaintStrokeState>>,
+    stroke_drag_active: bool,
+    stroke_dirty: u64,
+    transform: Option<Arc<TransformState>>,
+    transform_drag_active: bool,
+    preview_seq: u64,
+    mesh_workspace: Arc<BTreeMap<String, String>>,
+}
+
+impl Default for LowpolyTransientState {
+    fn default() -> Self {
+        Self { stroke: None, stroke_drag_active: false, stroke_dirty: 0, transform: None, transform_drag_active: false, preview_seq: 0, mesh_workspace: Arc::new(crate::artifacts::lowpoly::schema::default_mesh_workspace().into_iter().collect()) }
+    }
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct LowpolyTransientStateRef<'a> {
+    stroke: Option<&'a PaintStrokeState>,
+    stroke_drag_active: bool,
+    stroke_dirty: u64,
+    transform: Option<&'a TransformState>,
+    transform_drag_active: bool,
+    preview_seq: u64,
+    mesh_workspace: &'a BTreeMap<String, String>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct LowpolyTransientStateWire {
+    stroke: Option<PaintStrokeState>,
+    stroke_drag_active: bool,
+    stroke_dirty: u64,
+    transform: Option<TransformState>,
+    transform_drag_active: bool,
+    preview_seq: u64,
+    mesh_workspace: BTreeMap<String, String>,
+}
+
+impl Serialize for LowpolyTransientState {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        LowpolyTransientStateRef {
+            stroke: self.stroke.as_deref(),
+            stroke_drag_active: self.stroke_drag_active,
+            stroke_dirty: self.stroke_dirty,
+            transform: self.transform.as_deref(),
+            transform_drag_active: self.transform_drag_active,
+            preview_seq: self.preview_seq,
+            mesh_workspace: &self.mesh_workspace,
+        }
+        .serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for LowpolyTransientState {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let wire = LowpolyTransientStateWire::deserialize(deserializer)?;
+        Ok(Self {
+            stroke: wire.stroke.map(Arc::new),
+            stroke_drag_active: wire.stroke_drag_active,
+            stroke_dirty: wire.stroke_dirty,
+            transform: wire.transform.map(Arc::new),
+            transform_drag_active: wire.transform_drag_active,
+            preview_seq: wire.preview_seq,
+            mesh_workspace: Arc::new(wire.mesh_workspace),
+        })
+    }
+}
+
+/// 🫧️ Immutable request-owned Lowpoly editing session snapshot. Large paint and live mesh bytes
+/// remain behind one shared typed root; retained jobs clone only bounded segments into their
+/// operation-owned workspace and checkpoints carry identity/cursors, never this content.
+#[derive(Clone, Debug, PartialEq)]
+pub struct LowpolyTransient {
+    state: Arc<LowpolyTransientState>,
+}
+
+impl Default for LowpolyTransient {
+    fn default() -> Self {
+        Self { state: Arc::new(LowpolyTransientState::default()) }
+    }
+}
+
+impl LowpolyTransient {
+    #[cfg(test)]
+    pub(crate) fn with_test_workspace_bytes(bytes: usize) -> Self {
+        let mut state = LowpolyTransientState::default();
+        Arc::make_mut(&mut state.mesh_workspace).insert("test-padding".into(), "x".repeat(bytes));
+        Self { state: Arc::new(state) }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn with_test_mesh_workspace(object_id: &str, mesh_json: String) -> Self {
+        let mut state = LowpolyTransientState::default();
+        let workspace = Arc::make_mut(&mut state.mesh_workspace);
+        workspace.clear();
+        workspace.insert(object_id.to_string(), mesh_json);
+        Self { state: Arc::new(state) }
+    }
+
+    pub(crate) fn begin_stroke_drag(&self) -> Self {
+        Self {
+            state: Arc::new(LowpolyTransientState {
+                stroke: None,
+                stroke_drag_active: true,
+                stroke_dirty: self.state.stroke_dirty,
+                transform: self.state.transform.clone(),
+                transform_drag_active: self.state.transform_drag_active,
+                preview_seq: self.state.preview_seq,
+                mesh_workspace: self.state.mesh_workspace.clone(),
+            }),
+        }
+    }
+
+    pub(crate) fn begin_transform_drag(&self) -> Self {
+        Self {
+            state: Arc::new(LowpolyTransientState {
+                stroke: self.state.stroke.clone(),
+                stroke_drag_active: self.state.stroke_drag_active,
+                stroke_dirty: self.state.stroke_dirty,
+                transform: None,
+                transform_drag_active: true,
+                preview_seq: self.state.preview_seq,
+                mesh_workspace: self.state.mesh_workspace.clone(),
+            }),
+        }
+    }
+
+    pub(crate) fn reset_gestures(&self) -> Self {
+        Self {
+            state: Arc::new(LowpolyTransientState {
+                stroke: None,
+                stroke_drag_active: false,
+                stroke_dirty: self.state.stroke_dirty,
+                transform: None,
+                transform_drag_active: false,
+                preview_seq: self.state.preview_seq,
+                mesh_workspace: self.state.mesh_workspace.clone(),
+            }),
+        }
+    }
+
+    pub fn segmented_extent(&self, segment_bytes: usize) -> Option<usize> {
+        if segment_bytes == 0 {
+            return None;
+        }
+        let chunks = |bytes: &[u8]| bytes.len().div_ceil(segment_bytes).max(1);
+        let mut extent = 0_usize;
+        let mut add = |bytes: &[u8]| {
+            extent = extent.checked_add(chunks(bytes))?;
+            Some(())
+        };
+        for (key, value) in &self.state.mesh_workspace {
+            add(key.as_bytes())?;
+            add(value.as_bytes())?;
+        }
+        if let Some(stroke) = &self.state.stroke {
+            add(stroke.object_id.as_bytes())?;
+            add(&stroke.base)?;
+            add(&stroke.scratch)?;
+        }
+        if let Some(transform) = &self.state.transform {
+            add(transform.object_id.as_bytes())?;
+            add(transform.before.id.as_bytes())?;
+            add(transform.before.name.as_bytes())?;
+            add(transform.before_mesh_workspace.as_bytes())?;
+            for object in &transform.snapshot.objects {
+                add(object.id.as_bytes())?;
+                add(object.name.as_bytes())?;
+                for layer in &object.paint_layers {
+                    add(layer.name.as_bytes())?;
+                    add(&layer.pixels)?;
+                }
+            }
+            for (key, value) in &transform.mesh_workspace {
+                add(key.as_bytes())?;
+                add(value.as_bytes())?;
+            }
+        }
+        Some(extent.max(1))
+    }
+
+    pub(crate) fn retained_shape_admitted(&self, maximum_meshes: usize, maximum_mesh_bytes: usize, maximum_paint_bytes: usize) -> bool {
+        self.state.mesh_workspace.len() <= maximum_meshes
+            && self.state.mesh_workspace.iter().all(|(key, value)| key.len() <= maximum_mesh_bytes && value.len() <= maximum_mesh_bytes)
+            && self.state.stroke.as_deref().is_none_or(|stroke| stroke.object_id.len() <= maximum_mesh_bytes && stroke.base.len() <= maximum_paint_bytes && stroke.scratch.len() <= maximum_paint_bytes)
+            && self.state.transform.as_deref().is_none_or(|transform| {
+                transform.before_mesh_workspace.len() <= maximum_mesh_bytes
+                    && transform.mesh_workspace.len() <= maximum_meshes
+                    && transform.mesh_workspace.iter().all(|(key, value)| key.len() <= maximum_mesh_bytes && value.len() <= maximum_mesh_bytes)
+            })
+    }
+
+    pub fn segment_at(&self, mut cursor: usize, segment_bytes: usize) -> Option<&[u8]> {
+        if segment_bytes == 0 {
+            return None;
+        }
+        macro_rules! pick {
+            ($bytes:expr) => {{
+                let bytes: &[u8] = $bytes;
+                let units = bytes.len().div_ceil(segment_bytes).max(1);
+                if cursor < units {
+                    let start = cursor * segment_bytes;
+                    return Some(&bytes[start.min(bytes.len())..start.saturating_add(segment_bytes).min(bytes.len())]);
+                }
+                cursor -= units;
+            }};
+        }
+        for (key, value) in &self.state.mesh_workspace {
+            pick!(key.as_bytes());
+            pick!(value.as_bytes());
+        }
+        if let Some(stroke) = &self.state.stroke {
+            pick!(stroke.object_id.as_bytes());
+            pick!(stroke.base.as_slice());
+            pick!(stroke.scratch.as_slice());
+        }
+        if let Some(transform) = &self.state.transform {
+            pick!(transform.object_id.as_bytes());
+            pick!(transform.before.id.as_bytes());
+            pick!(transform.before.name.as_bytes());
+            pick!(transform.before_mesh_workspace.as_bytes());
+            for object in &transform.snapshot.objects {
+                pick!(object.id.as_bytes());
+                pick!(object.name.as_bytes());
+                for layer in &object.paint_layers {
+                    pick!(layer.name.as_bytes());
+                    pick!(layer.pixels.as_slice());
+                }
+            }
+            for (key, value) in &transform.mesh_workspace {
+                pick!(key.as_bytes());
+                pick!(value.as_bytes());
+            }
+        }
+        (cursor == 0).then_some(&[])
+    }
+}
+
+impl Serialize for LowpolyTransient {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.state.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for LowpolyTransient {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        LowpolyTransientState::deserialize(deserializer).map(|state| Self { state: Arc::new(state) })
+    }
+}
+
+impl store::ArtifactDsl for LowpolyTransient {
+    const EXTENSION: &'static str = "lowpoly.transient";
+    fn envelope_id() -> &'static str {
+        "lowpoly.transient"
+    }
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let body = match store::semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        if body.trim().is_empty() {
+            return Ok(Self::default());
+        }
+        serde_json::from_str(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(error.line(), error.column())))
+    }
+    fn print_dsl(&self) -> String {
+        let body = serde_json::to_string(self).expect("typed Lowpoly transient is serializable");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid lowpoly transient envelope");
+        store::semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+impl ArtifactPack for LowpolyTransient {
+    fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let inner = serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
+    }
+
+    fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        if bytes.is_empty() {
+            return Ok(Self::default());
+        }
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
+        }
+        serde_json::from_slice(&inner).map_err(|error| store::PackError::Schema(error.to_string()))
+    }
+}
+
+impl protocol::MutationDiff<LowpolyTransient> for LowpolyTransient {
+    fn apply(&self, _base: &LowpolyTransient) -> protocol::MutationApplyResult<LowpolyTransient> {
+        Ok(self.clone())
+    }
+
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum LowpolyTransientMutation {
+    Snapshot { transient: LowpolyTransient },
+}
+
+impl Mutation<LowpolyTransient> for LowpolyTransientMutation {
+    type Diff = LowpolyTransient;
+
+    fn diff(&self, _base: &LowpolyTransient) -> protocol::MutationOutcome<LowpolyTransient> {
+        protocol::MutationOutcome::new(match self {
+            Self::Snapshot { transient } => transient.clone(),
+        })
+    }
+
+    fn inverse(&self, base: &LowpolyTransient) -> Vec<Self> {
+        vec![Self::Snapshot { transient: base.clone() }]
+    }
+}
+
+impl protocol::OpText for LowpolyTransientMutation {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        let body = line.strip_prefix("snapshot ").ok_or_else(|| store::TextError::new("expected Lowpoly transient snapshot", store::TextSpan::at(1, 1)))?;
+        serde_json::from_str(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(error.line(), error.column())))
+    }
+
+    fn print_op(&self) -> String {
+        format!("snapshot {}", serde_json::to_string(self).expect("typed Lowpoly transient mutation is serializable"))
+    }
+}
+
+impl protocol::OpBinary for LowpolyTransientMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+    }
+}
+
+impl LowpolyScratch {
+    pub fn from_transient(transient: &LowpolyTransient, current_selection: LowpolySelection) -> Result<Self, String> {
+        let state = transient.state.as_ref();
+        let transform = state
+            .transform
+            .as_deref()
+            .map(|state| {
+                LowpolyDocument::with_context(state.snapshot.clone(), state.object_id.clone(), state.selection.clone(), state.mesh_workspace.clone().into_iter().collect())
+                    .map(|doc| TransformSession { object_id: state.object_id.clone(), before: state.before.clone(), before_mesh_workspace: state.before_mesh_workspace.clone(), doc })
+                    .map_err(|error| error.to_string())
+            })
+            .transpose()?;
+        Ok(Self {
+            stroke: state.stroke.as_deref().map(|stroke| PaintStrokeSession { object_id: stroke.object_id.clone(), layer_index: stroke.layer_index, base: stroke.base.clone(), scratch: stroke.scratch.clone() }),
+            stroke_drag_active: state.stroke_drag_active,
+            stroke_dirty: state.stroke_dirty,
+            transform,
+            transform_drag_active: state.transform_drag_active,
+            texture_cache: PaintTextureLut::default(),
+            preview_seq: state.preview_seq,
+            mesh_workspace: state.mesh_workspace.iter().map(|(key, value)| (key.clone(), value.clone())).collect(),
+            current_selection,
+        })
+    }
+
+    pub fn transient_snapshot(&self) -> Result<LowpolyTransient, String> {
+        let transform = self.transform.as_ref().map(|session| TransformState {
+            object_id: session.object_id.clone(),
+            before: session.before.clone(),
+            before_mesh_workspace: session.before_mesh_workspace.clone(),
+            snapshot: session.doc.snapshot().clone(),
+            selection: session.doc.selection().clone(),
+            mesh_workspace: session.doc.mesh_workspace().clone().into_iter().collect(),
+        });
+        let state = LowpolyTransientState {
+            stroke: self.stroke.as_ref().map(|stroke| Arc::new(PaintStrokeState { object_id: stroke.object_id.clone(), layer_index: stroke.layer_index, base: stroke.base.clone(), scratch: stroke.scratch.clone() })),
+            stroke_drag_active: self.stroke_drag_active,
+            stroke_dirty: self.stroke_dirty,
+            transform: transform.map(Arc::new),
+            transform_drag_active: self.transform_drag_active,
+            preview_seq: self.preview_seq,
+            mesh_workspace: Arc::new(self.mesh_workspace.clone().into_iter().collect()),
+        };
+        Ok(LowpolyTransient { state: Arc::new(state) })
+    }
+}
+//#endregion 🔖️Transient
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::artifacts::lowpoly::schema::default_snapshot;
+
+    #[test]
+    fn transient_schema_pack_and_typed_scratch_round_trip_exactly() {
+        let transient = LowpolyTransient::default();
+        let pack = transient.encode_pack();
+        assert_eq!(LowpolyTransient::decode_pack(&pack).expect("transient pack"), transient);
+        let mut scratch = LowpolyScratch::from_transient(&transient, LowpolySelection::default()).expect("typed transient");
+        scratch.begin_stroke_drag();
+        let next = scratch.transient_snapshot().expect("typed transient snapshot");
+        let restored = LowpolyScratch::from_transient(&next, LowpolySelection::default()).expect("typed transient restore");
+        assert!(restored.stroke_drag_active());
+        assert_eq!(restored.mesh_workspace_map(), scratch.mesh_workspace_map());
+    }
+
+    #[test]
+    fn gesture_lifecycle_transitions_share_the_immutable_mesh_root() {
+        let transient = LowpolyTransient::with_test_workspace_bytes(LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4);
+        let paint = transient.begin_stroke_drag();
+        let transform = transient.begin_transform_drag();
+        let reset = transient.reset_gestures();
+        assert!(Arc::ptr_eq(&transient.state.mesh_workspace, &paint.state.mesh_workspace));
+        assert!(Arc::ptr_eq(&transient.state.mesh_workspace, &transform.state.mesh_workspace));
+        assert!(Arc::ptr_eq(&transient.state.mesh_workspace, &reset.state.mesh_workspace));
+        assert!(paint.state.stroke_drag_active && transform.state.transform_drag_active);
+        assert!(!reset.state.stroke_drag_active && !reset.state.transform_drag_active);
+    }
 
     #[semio_framework_async_macros::async_test]
     async fn gesture_preview_is_none_without_an_active_transform_drag() {

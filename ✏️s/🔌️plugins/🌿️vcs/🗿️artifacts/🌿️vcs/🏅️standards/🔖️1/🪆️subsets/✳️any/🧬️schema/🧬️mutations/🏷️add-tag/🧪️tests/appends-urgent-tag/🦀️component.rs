@@ -26,7 +26,7 @@ fn mutation() -> VcsDemoMutation {
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
 #[semio_framework_async_macros::async_test]
-async fn applies_to_committed_after() {
+fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_vcs_mutation(&mut snapshot, &mutation()).expect("add-tag applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "add-tag/appends-urgent-tag: applied state differs from committed after-snapshot");
@@ -35,7 +35,7 @@ async fn applies_to_committed_after() {
 /// 🏷️ `tags` is set-like but ORDERED on the wire: the tag delta appends the new member after the
 /// members BASE already carried, it never re-sorts or de-duplicates the existing list.
 #[semio_framework_async_macros::async_test]
-async fn tag_is_appended_after_the_existing_members() {
+fn tag_is_appended_after_the_existing_members() {
     let base = before();
     let mut snapshot = base.clone();
     apply_vcs_mutation(&mut snapshot, &mutation()).expect("add-tag applies");
@@ -48,7 +48,7 @@ async fn tag_is_appended_after_the_existing_members() {
 
 /// ↩️ Because BASE did NOT already carry `urgent`, the inverse is a real `remove-tag` step.
 #[semio_framework_async_macros::async_test]
-async fn inverse_removes_the_tag_it_added() {
+fn inverse_removes_the_tag_it_added() {
     let base = before();
     let mutation = mutation();
     let inverse = inverse_vcs_mutation(&base, &mutation);
@@ -63,7 +63,7 @@ async fn inverse_removes_the_tag_it_added() {
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: VcsSnapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
@@ -78,7 +78,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ The declared outcome matches the diff builder: applied with no `mutation.no-op` warning
 /// (that warning is reserved for a duplicate add), and the delta is `added`-only.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "add-tag/appends-urgent-tag declares an applied outcome");
     let produced = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(&mutation(), &before());
@@ -92,7 +92,7 @@ async fn declared_outcome_holds() {
 /// an empty `removed`. The member BASE already held never appears — the delta describes the CHANGE,
 /// not the resulting list, which is precisely what a whole-collection rewrite would get wrong.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let outcome = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
@@ -106,7 +106,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical: it decodes to the artifact's own diff type and
 /// re-encodes byte-for-byte, so the file is a faithful `VcsDiff`, not prose that merely resembles one.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::vcs::VcsDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff DIRECTLY to `before` yields the committed `after` — the diff is a
 /// complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::vcs::VcsDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::vcs::VcsDiff as protocol::MutationDiff<VcsSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "add-tag/appends-urgent-tag: committed diff did not carry before to after");

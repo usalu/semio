@@ -40,7 +40,7 @@ pub fn render(_document: &DrawSnapshot, labels: &DrawPlayLabels) -> semio_framew
     for (kind, label, icon) in catalogue_kinds {
         let mut drag_data = UiFixedMap::default();
         let key = UiText::try_from_str(crate::editor::draw::panels::layers::DRAW_LAYER_KIND_DRAG_MIME).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "draw drag mime admission failed"))?;
-        let value = UiText::try_from_string(serde_json::json!({ "kind": kind }).to_string()).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "draw drag payload admission failed"))?;
+        let value = UiText::try_from_string(serde_json::json!({ "kind": kind }).to_string()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "draw drag payload admission failed"))?;
         drag_data.try_push(key, value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "draw drag map admission failed"))?;
         let label = ui::Label::try_from(label.as_str()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "draw catalogue label admission failed"))?;
         let item = ui::tree_item(label)

@@ -7,7 +7,7 @@ use crate::artifacts::raster::schema::find_layer;
 use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot};
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &ResizeLayer, base: &RasterSnapshot) -> Vec<RasterMutation> {
+pub fn inverse(payload: &ResizeLayer, base: &RasterSnapshot) -> Vec<RasterMutation> {
     match find_layer(&base.layers, &payload.layer_id) {
         Some(RasterLayerNode::Pixel { width, height, .. }) => {
             vec![RasterMutation::ResizeLayer(ResizeLayer { layer_id: payload.layer_id.clone(), new_width: width.unwrap_or(512), new_height: height.unwrap_or(512) })]

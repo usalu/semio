@@ -22,6 +22,9 @@
     {
       "id": "ifc-2x3-sav",
       "capability": "ifc-2x3-sav-mutate",
+      "standardDirectoryName": "🔖️2x3",
+      "subsetDirectoryName": "✳️sav",
+      "vectors": [],
       "kinds": ["no-mutation", "set-snapshot", "set-view-definition", "set-analysis-model", "set-load-group", "set-group-assignment"]
     }
   ],

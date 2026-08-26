@@ -8,7 +8,7 @@ use crate::artifacts::raster::schema::find_layer;
 use crate::artifacts::raster::RasterSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &DeleteLayer, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+pub fn diff(payload: &DeleteLayer, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
     if find_layer(&base.layers, &payload.layer_id).is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.layer_id), [payload.layer_id.clone()]);
     }

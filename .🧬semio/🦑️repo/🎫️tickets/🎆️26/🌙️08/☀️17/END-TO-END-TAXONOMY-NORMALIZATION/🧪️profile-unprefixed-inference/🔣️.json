@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "vectors": [
+    { "relativePath": "🧪️tests/host-protocol-parity", "expectedNormalizedName": "🧪️host-protocol-parity" },
+    { "relativePath": "🧪️tests/🪆️1-any", "expectedNormalizedName": "🪆️1-any" },
+    { "relativePath": "📚️examples/🪆️1-any", "expectedNormalizedName": "🪆️1-any" }
+  ]
+}

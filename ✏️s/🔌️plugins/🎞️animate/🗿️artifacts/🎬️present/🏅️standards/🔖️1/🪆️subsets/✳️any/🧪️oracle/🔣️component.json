@@ -20,6 +20,109 @@
     {
       "id": "present-1-any",
       "capability": "present-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "create-tile",
+          "sourceMutationDirectoryName": "🆕create-tile",
+          "mutationDirectoryName": "🆕create-tile",
+          "scenarios": [
+            {
+              "id": "rejects-a-duplicate-tile-id",
+              "directoryName": "🧪️rejects-a-duplicate-tile-id"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-tile",
+          "sourceMutationDirectoryName": "🗑delete-tile",
+          "mutationDirectoryName": "🗑delete-tile",
+          "scenarios": [
+            {
+              "id": "rejects-deleting-a-missing-tile",
+              "directoryName": "🧪️rejects-deleting-a-missing-tile"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-tiles",
+          "sourceMutationDirectoryName": "🧹delete-tiles",
+          "mutationDirectoryName": "🧹delete-tiles",
+          "scenarios": [
+            {
+              "id": "rejects-when-every-addressed-tile-is-missing",
+              "directoryName": "🧪️rejects-when-every-addressed-tile-is-missing"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-tile",
+          "sourceMutationDirectoryName": "✏rename-tile",
+          "mutationDirectoryName": "✏rename-tile",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-tile-already-has-that-name",
+              "directoryName": "🧪️no-ops-when-the-tile-already-has-that-name"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-tiles",
+          "sourceMutationDirectoryName": "🔀reorder-tiles",
+          "mutationDirectoryName": "🔀reorder-tiles",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-tile-is-already-at-that-index",
+              "directoryName": "🧪️no-ops-when-the-tile-is-already-at-that-index"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-source",
+          "sourceMutationDirectoryName": "🖼replace-source",
+          "mutationDirectoryName": "🖼replace-source",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-source-is-already-identical",
+              "directoryName": "🧪️no-ops-when-the-source-is-already-identical"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-tiles",
+          "sourceMutationDirectoryName": "🔁replace-tiles",
+          "mutationDirectoryName": "🔁replace-tiles",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-collection-is-already-empty",
+              "directoryName": "🧪️no-ops-when-the-collection-is-already-empty"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-source-frame",
+          "sourceMutationDirectoryName": "🔲resize-source-frame",
+          "mutationDirectoryName": "🔲resize-source-frame",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-frame-is-already-identical",
+              "directoryName": "🧪️no-ops-when-the-frame-is-already-identical"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-tile-crop",
+          "sourceMutationDirectoryName": "✂resize-tile-crop",
+          "mutationDirectoryName": "✂resize-tile-crop",
+          "scenarios": [
+            {
+              "id": "rejects-a-zero-width-crop",
+              "directoryName": "🧪️rejects-a-zero-width-crop"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "resize-source-frame",
         "replace-source",

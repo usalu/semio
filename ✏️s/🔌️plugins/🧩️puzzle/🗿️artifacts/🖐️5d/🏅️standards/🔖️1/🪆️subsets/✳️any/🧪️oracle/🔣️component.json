@@ -24,6 +24,318 @@
     {
       "id": "puzzle-5d-1-any",
       "capability": "puzzle-5d-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "add-part-grip",
+          "sourceMutationDirectoryName": "➕add-part-grip",
+          "mutationDirectoryName": "➕add-part-grip",
+          "scenarios": [
+            {
+              "id": "appends-grip-3",
+              "directoryName": "🧪️appends-grip-3"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-description",
+          "sourceMutationDirectoryName": "📝change-description",
+          "mutationDirectoryName": "📝change-description",
+          "scenarios": [
+            {
+              "id": "rewrites-description",
+              "directoryName": "🧪️rewrites-description"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-domain",
+          "sourceMutationDirectoryName": "🌐change-domain",
+          "mutationDirectoryName": "🌐change-domain",
+          "scenarios": [
+            {
+              "id": "architecture-to-engineering",
+              "directoryName": "🧪️architecture-to-engineering"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fastener-kind",
+          "sourceMutationDirectoryName": "🎯change-fastener-kind",
+          "mutationDirectoryName": "🎯change-fastener-kind",
+          "scenarios": [
+            {
+              "id": "rekinds-fast-1",
+              "directoryName": "🧪️rekinds-fast-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-part-anchor",
+          "sourceMutationDirectoryName": "⚓change-part-anchor",
+          "mutationDirectoryName": "⚓change-part-anchor",
+          "scenarios": [
+            {
+              "id": "fixed-to-derived",
+              "directoryName": "🧪️fixed-to-derived"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-part-kind",
+          "sourceMutationDirectoryName": "🏗change-part-kind",
+          "mutationDirectoryName": "🏗change-part-kind",
+          "scenarios": [
+            {
+              "id": "reassigns-kind",
+              "directoryName": "🧪️reassigns-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-part2d-hidden",
+          "sourceMutationDirectoryName": "🙈change-part2d-hidden",
+          "mutationDirectoryName": "🙈change-part2d-hidden",
+          "scenarios": [
+            {
+              "id": "hides-part-a",
+              "directoryName": "🧪️hides-part-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-part2d-icon",
+          "sourceMutationDirectoryName": "🎨change-part2d-icon",
+          "mutationDirectoryName": "🎨change-part2d-icon",
+          "scenarios": [
+            {
+              "id": "swaps-icon",
+              "directoryName": "🧪️swaps-icon"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-part2d-locked",
+          "sourceMutationDirectoryName": "🔒change-part2d-locked",
+          "mutationDirectoryName": "🔒change-part2d-locked",
+          "scenarios": [
+            {
+              "id": "locks-part-a",
+              "directoryName": "🧪️locks-part-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-part3d-mesh",
+          "sourceMutationDirectoryName": "🧱change-part3d-mesh",
+          "mutationDirectoryName": "🧱change-part3d-mesh",
+          "scenarios": [
+            {
+              "id": "repoints-mesh",
+              "directoryName": "🧪️repoints-mesh"
+            }
+          ]
+        },
+        {
+          "mutationId": "connect-grips",
+          "sourceMutationDirectoryName": "🔗connect-grips",
+          "mutationDirectoryName": "🔗connect-grips",
+          "scenarios": [
+            {
+              "id": "adds-second-fastener",
+              "directoryName": "🧪️adds-second-fastener"
+            }
+          ]
+        },
+        {
+          "mutationId": "connect-kind-compatibility",
+          "sourceMutationDirectoryName": "🤝connect-kind-compatibility",
+          "mutationDirectoryName": "🤝connect-kind-compatibility",
+          "scenarios": [
+            {
+              "id": "adds-grip-pair",
+              "directoryName": "🧪️adds-grip-pair"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-part",
+          "sourceMutationDirectoryName": "🌱create-part",
+          "mutationDirectoryName": "🌱create-part",
+          "scenarios": [
+            {
+              "id": "appends-part-c",
+              "directoryName": "🧪️appends-part-c"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-part",
+          "sourceMutationDirectoryName": "🗑delete-part",
+          "mutationDirectoryName": "🗑delete-part",
+          "scenarios": [
+            {
+              "id": "removes-part-a-and-severs-fastener",
+              "directoryName": "🧪️removes-part-a-and-severs-fastener"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-grips",
+          "sourceMutationDirectoryName": "✂️disconnect-grips",
+          "mutationDirectoryName": "✂️disconnect-grips",
+          "scenarios": [
+            {
+              "id": "removes-fast-1",
+              "directoryName": "🧪️removes-fast-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-kind-compatibility",
+          "sourceMutationDirectoryName": "💔disconnect-kind-compatibility",
+          "mutationDirectoryName": "💔disconnect-kind-compatibility",
+          "scenarios": [
+            {
+              "id": "removes-grip-pair",
+              "directoryName": "🧪️removes-grip-pair"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-part2d-text",
+          "sourceMutationDirectoryName": "✏️edit-part2d-text",
+          "mutationDirectoryName": "✏️edit-part2d-text",
+          "scenarios": [
+            {
+              "id": "retitles-part-a",
+              "directoryName": "🧪️retitles-part-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-part3d-label",
+          "sourceMutationDirectoryName": "🖋️edit-part3d-label",
+          "mutationDirectoryName": "🖋️edit-part3d-label",
+          "scenarios": [
+            {
+              "id": "relabels-part-a",
+              "directoryName": "🧪️relabels-part-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-part2d",
+          "sourceMutationDirectoryName": "📍move-part2d",
+          "mutationDirectoryName": "📍move-part2d",
+          "scenarios": [
+            {
+              "id": "moves-part-a",
+              "directoryName": "🧪️moves-part-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-part3d",
+          "sourceMutationDirectoryName": "🚀move-part3d",
+          "mutationDirectoryName": "🚀move-part3d",
+          "scenarios": [
+            {
+              "id": "moves-part-a-in-world",
+              "directoryName": "🧪️moves-part-a-in-world"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-part-grip",
+          "sourceMutationDirectoryName": "➖remove-part-grip",
+          "mutationDirectoryName": "➖remove-part-grip",
+          "scenarios": [
+            {
+              "id": "removes-grip-1-and-severs-fastener",
+              "directoryName": "🧪️removes-grip-1-and-severs-fastener"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-puzzle5d",
+          "sourceMutationDirectoryName": "🏷rename-puzzle5d",
+          "mutationDirectoryName": "🏷rename-puzzle5d",
+          "scenarios": [
+            {
+              "id": "relabels-document",
+              "directoryName": "🧪️relabels-document"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-fastener-geometry",
+          "sourceMutationDirectoryName": "🧮replace-fastener-geometry",
+          "mutationDirectoryName": "🧮replace-fastener-geometry",
+          "scenarios": [
+            {
+              "id": "repositions-fast-1",
+              "directoryName": "🧪️repositions-fast-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-kind-catalogs",
+          "sourceMutationDirectoryName": "📚replace-kind-catalogs",
+          "mutationDirectoryName": "📚replace-kind-catalogs",
+          "scenarios": [
+            {
+              "id": "null-catalogs-is-noop",
+              "directoryName": "🧪️null-catalogs-is-noop"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-part-grip",
+          "sourceMutationDirectoryName": "🔌replace-part-grip",
+          "mutationDirectoryName": "🔌replace-part-grip",
+          "scenarios": [
+            {
+              "id": "rekinds-grip-1",
+              "directoryName": "🧪️rekinds-grip-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-part2d-geometry",
+          "sourceMutationDirectoryName": "🧊replace-part2d-geometry",
+          "mutationDirectoryName": "🧊replace-part2d-geometry",
+          "scenarios": [
+            {
+              "id": "circle-to-rectangle",
+              "directoryName": "🧪️circle-to-rectangle"
+            }
+          ]
+        },
+        {
+          "mutationId": "rotate-part3d",
+          "sourceMutationDirectoryName": "🔃rotate-part3d",
+          "mutationDirectoryName": "🔃rotate-part3d",
+          "scenarios": [
+            {
+              "id": "half-turn-about-z",
+              "directoryName": "🧪️half-turn-about-z"
+            }
+          ]
+        },
+        {
+          "mutationId": "scale-part3d",
+          "sourceMutationDirectoryName": "📏scale-part3d",
+          "mutationDirectoryName": "📏scale-part3d",
+          "scenarios": [
+            {
+              "id": "uniform-double",
+              "directoryName": "🧪️uniform-double"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-part",
         "delete-part",

@@ -9,21 +9,21 @@ use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
 //#region 🔖️Examples
-async fn examples() -> &'static [ExampleSource] {
+fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::artifacts::writer::examples::demo::source()]).as_slice()
 }
 //#endregion 🔖️Examples
 
 //#region 🔖️Inferences
-async fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
+fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::schema::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::writer_artifact_inference_descriptor()]).as_slice()
 }
 //#endregion 🔖️Inferences
 
 //#region 🔖️Subset
-pub async fn subset() -> SubsetDeclaration {
+pub fn subset() -> SubsetDeclaration {
     SubsetDeclaration {
         dialect: crate::artifacts::writer::WRITER_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::writer_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },

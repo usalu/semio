@@ -18,12 +18,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 /// 📦️ Encodes a `WriterMutation` to its binary state-patch form.
-pub async fn encode_op(operation: &WriterMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &WriterMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `WriterMutation` from its binary state-patch form.
-pub async fn decode_op(bytes: &[u8]) -> Result<WriterMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<WriterMutation, protocol::ProtocolError> {
     WriterMutation::decode_op(bytes)
 }
 
@@ -1554,7 +1554,9 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot
                         semio_framework_job::StepOutcome::Cancelled
                     } else {
                         self.phase = WriterStoreInitializationPhase::Fault;
-                        semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: self.fault.take().unwrap_or_else(|| b"writer-store.initializer-fault".to_vec()) })
+                        let source = self.fault.take().unwrap_or_else(|| b"writer-store.initializer-fault".to_vec());
+                        let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, &source).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                        semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
                     }
                 }
                 Err(error) => {
@@ -1567,7 +1569,11 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot
                 output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
             }),
             WriterStoreInitializationPhase::Cancelled => semio_framework_job::StepOutcome::Cancelled,
-            WriterStoreInitializationPhase::Fault => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: self.fault.clone().unwrap_or_else(|| b"writer-store.initializer-fault".to_vec()) }),
+            WriterStoreInitializationPhase::Fault => {
+                let source = self.fault.as_deref().unwrap_or(b"writer-store.initializer-fault");
+                let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, source).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
+            }
         }
     }
 
@@ -1830,7 +1836,7 @@ mod tests {
     }
 
     /// ✍️ Hand-built representative document — used across the artifact's own component tests.
-    async fn jack_snapshot() -> WriterSnapshot {
+    fn jack_snapshot() -> WriterSnapshot {
         crate::artifacts::writer::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
     }
 
@@ -1840,7 +1846,7 @@ mod tests {
     /// identical in both, so it gets no mutation). `EditText` mints its `document` handle from
     /// `base.id`/`base.language_id` at apply time, so it must run LAST, after `RenameWriter`/
     /// `ChangeLanguage` have already landed — otherwise its handle would target the wrong owner id.
-    async fn jack_mutations() -> Vec<WriterMutation> {
+    fn jack_mutations() -> Vec<WriterMutation> {
         let jack = jack_snapshot();
         let text = crate::artifacts::writer::writer_text(&jack);
         vec![

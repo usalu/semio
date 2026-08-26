@@ -15,7 +15,7 @@ pub struct TextEdit {
 /// ⌨️ Keystroke-granular edits coalesce under a stable key so a typing burst amends into a few undo
 /// steps, not one-per-keystroke. Any interrupting command applies without this key and breaks the
 /// coalescing run.
-pub async fn handle(payload: &TextEdit, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+pub fn handle(payload: &TextEdit, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
     Ok(Emit::amend(vec![WriterMutation::EditText(EditText { text: payload.text.clone() })], "writer-text-edit"))
 }
 
@@ -36,7 +36,7 @@ mod tests {
     /// emits (`SetSnapshot` is banned — see `reset_document_effect`'s doc comment) — the standard
     /// way this file's tests observe a replaced document, mirroring `📐️cad`'s own
     /// `import_cad_file_action_imports_...` tests.
-    async fn loaded_document(result: &semio_framework_plugin::InvocationResult) -> WriterSnapshot {
+    fn loaded_document(result: &semio_framework_plugin::InvocationResult) -> WriterSnapshot {
         let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("expected a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };

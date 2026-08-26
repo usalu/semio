@@ -35,32 +35,32 @@ pub mod derived_construction {
         type Mutation = JpgMutation;
         type Diff = JpgDiff;
 
-        async fn empty() -> Self {
-            Self(JpgAnyBuilder::empty().await)
+        fn empty() -> Self {
+            Self(JpgAnyBuilder::empty())
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self(JpgAnyBuilder::from_snapshot(snapshot).await)
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self(JpgAnyBuilder::from_snapshot(snapshot))
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self(JpgAnyBuilder::from_text(text).await?))
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self(JpgAnyBuilder::from_text(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self(JpgAnyBuilder::from_binary(bytes).await?))
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self(JpgAnyBuilder::from_binary(bytes)?))
         }
-        async fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let (inner, diff) = self.0.mutate(mutation).await;
+        fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let (inner, diff) = self.0.mutate(mutation);
             (Self(inner), diff)
         }
-        async fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            Ok(Self(self.0.absorb(diff).await?))
+        fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            Ok(Self(self.0.absorb(diff)?))
         }
 
         /// 🛡️ The real construction gate: however the wrapped snapshot got here, a hard baseline
         /// violation fails `build()` -- soft diagnostics are not surfaced here (`ArtifactBuilder`'s
         /// `build` has no diagnostics-on-success channel), matching `JpgAnyBuilder::build`'s existing
         /// contract of "diagnostics accumulated during mutation, not from validation".
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            let snapshot = self.0.build().await?;
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+            let snapshot = self.0.build()?;
             let hard: Vec<dsl::Diagnostic> = check_baseline_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, dsl::Severity::Error | dsl::Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(snapshot)
@@ -97,13 +97,13 @@ pub mod derived_construction {
             let bytes = crate::artifacts::jpg::standards::v_jfif_1_01::engine::encode_jpg(&snap).expect("encode");
             let decoded = crate::artifacts::jpg::standards::v_jfif_1_01::engine::decode_jpg(&bytes).expect("decode");
             let packed = <JpgSnapshot as store::ArtifactPack>::encode_pack(&decoded);
-            let built = JpgBaselineBuilderConstruction::from_binary(&packed).await.expect("from_binary").build().await.expect("real baseline JPEG must build clean");
+            let built = JpgBaselineBuilderConstruction::from_binary(&packed).expect("from_binary").build().expect("real baseline JPEG must build clean");
             assert!(built.frame.is_some());
         }
 
         #[semio_framework_async_macros::async_test]
         async fn empty_snapshot_fails_build_with_no_frame() {
-            let err = JpgBaselineBuilderConstruction::empty().await.build().await.expect_err("an empty snapshot has no SOF0 frame -- must fail build()");
+            let err = JpgBaselineBuilderConstruction::empty().build().expect_err("an empty snapshot has no SOF0 frame -- must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::CODE_NO_FRAME));
         }
     }
@@ -197,12 +197,12 @@ pub mod derived_analysis {
         type Parts = JpgParts;
         const DIALECT: Dialect = DIALECT;
 
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            JpgAnyAnalyzer::sniff(source).await
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            JpgAnyAnalyzer::sniff(source)
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = JpgAnyAnalyzer::analyze(sources).await;
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let inner = JpgAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {

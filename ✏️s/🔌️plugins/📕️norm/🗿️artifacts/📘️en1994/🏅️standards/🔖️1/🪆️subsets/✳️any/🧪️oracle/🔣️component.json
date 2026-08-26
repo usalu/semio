@@ -23,6 +23,252 @@
     {
       "id": "en1994-1-any",
       "capability": "en1994-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-annex",
+          "sourceMutationDirectoryName": "🏞️change-annex",
+          "mutationDirectoryName": "🏞️change-annex",
+          "scenarios": [
+            {
+              "id": "switches-national-annex-to-en",
+              "directoryName": "🧪️switches-national-annex-to-en"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-d-mm",
+          "sourceMutationDirectoryName": "🌰change-d-mm",
+          "mutationDirectoryName": "🌰change-d-mm",
+          "scenarios": [
+            {
+              "id": "thickens-stud-shank-to-22-mm",
+              "directoryName": "🧪️thickens-stud-shank-to-22-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-deck-type",
+          "sourceMutationDirectoryName": "🐝change-deck-type",
+          "mutationDirectoryName": "🐝change-deck-type",
+          "scenarios": [
+            {
+              "id": "switches-deck-to-re-entrant",
+              "directoryName": "🧪️switches-deck-to-re-entrant"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-delta-sigma-mpa",
+          "sourceMutationDirectoryName": "🌏️change-delta-sigma-mpa",
+          "mutationDirectoryName": "🌏️change-delta-sigma-mpa",
+          "scenarios": [
+            {
+              "id": "raises-steel-stress-range-to-96-mpa",
+              "directoryName": "🧪️raises-steel-stress-range-to-96-mpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-delta-tau-stud-mpa",
+          "sourceMutationDirectoryName": "🌎️change-delta-tau-stud-mpa",
+          "mutationDirectoryName": "🌎️change-delta-tau-stud-mpa",
+          "scenarios": [
+            {
+              "id": "raises-stud-shear-stress-range-to-110-mpa",
+              "directoryName": "🧪️raises-stud-shear-stress-range-to-110-mpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-e-cm-mpa",
+          "sourceMutationDirectoryName": "🌍️change-e-cm-mpa",
+          "mutationDirectoryName": "🌍️change-e-cm-mpa",
+          "scenarios": [
+            {
+              "id": "raises-concrete-modulus-to-35000-mpa",
+              "directoryName": "🧪️raises-concrete-modulus-to-35000-mpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-eta",
+          "sourceMutationDirectoryName": "🏕️change-eta",
+          "mutationDirectoryName": "🏕️change-eta",
+          "scenarios": [
+            {
+              "id": "raises-shear-connection-degree-to-0-875",
+              "directoryName": "🧪️raises-shear-connection-degree-to-0-875"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-f-ck-mpa",
+          "sourceMutationDirectoryName": "🪵change-f-ck-mpa",
+          "mutationDirectoryName": "🪵change-f-ck-mpa",
+          "scenarios": [
+            {
+              "id": "upgrades-concrete-cylinder-strength-to-40-mpa",
+              "directoryName": "🧪️upgrades-concrete-cylinder-strength-to-40-mpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fatigue-detail",
+          "sourceMutationDirectoryName": "⛰️change-fatigue-detail",
+          "mutationDirectoryName": "⛰️change-fatigue-detail",
+          "scenarios": [
+            {
+              "id": "switches-fatigue-detail-to-flange-butt-weld",
+              "directoryName": "🧪️switches-fatigue-detail-to-flange-butt-weld"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fire-rating",
+          "sourceMutationDirectoryName": "🏟️change-fire-rating",
+          "mutationDirectoryName": "🏟️change-fire-rating",
+          "scenarios": [
+            {
+              "id": "upgrades-fire-rating-to-r90",
+              "directoryName": "🧪️upgrades-fire-rating-to-r90"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fu-mpa",
+          "sourceMutationDirectoryName": "🪨change-fu-mpa",
+          "mutationDirectoryName": "🪨change-fu-mpa",
+          "scenarios": [
+            {
+              "id": "upgrades-stud-ultimate-strength-to-500-mpa",
+              "directoryName": "🧪️upgrades-stud-ultimate-strength-to-500-mpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fy-mpa",
+          "sourceMutationDirectoryName": "🌼change-fy-mpa",
+          "mutationDirectoryName": "🌼change-fy-mpa",
+          "scenarios": [
+            {
+              "id": "upgrades-steel-yield-to-460-mpa",
+              "directoryName": "🧪️upgrades-steel-yield-to-460-mpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-h-sc-mm",
+          "sourceMutationDirectoryName": "🌐change-h-sc-mm",
+          "mutationDirectoryName": "🌐change-h-sc-mm",
+          "scenarios": [
+            {
+              "id": "lengthens-stud-to-125-mm",
+              "directoryName": "🧪️lengthens-stud-to-125-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-insulation-thickness-mm",
+          "sourceMutationDirectoryName": "🏖️change-insulation-thickness-mm",
+          "mutationDirectoryName": "🏖️change-insulation-thickness-mm",
+          "scenarios": [
+            {
+              "id": "thickens-fire-insulation-to-40-mm",
+              "directoryName": "🧪️thickens-fire-insulation-to-40-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-m-ed-knm",
+          "sourceMutationDirectoryName": "🗻change-m-ed-knm",
+          "mutationDirectoryName": "🗻change-m-ed-knm",
+          "scenarios": [
+            {
+              "id": "raises-design-moment-to-320-knm",
+              "directoryName": "🧪️raises-design-moment-to-320-knm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-m-pl-rd",
+          "sourceMutationDirectoryName": "🐚change-m-pl-rd",
+          "mutationDirectoryName": "🐚change-m-pl-rd",
+          "scenarios": [
+            {
+              "id": "raises-plastic-moment-resistance-to-375-knm",
+              "directoryName": "🧪️raises-plastic-moment-resistance-to-375-knm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-m-pla",
+          "sourceMutationDirectoryName": "🏝️change-m-pla",
+          "mutationDirectoryName": "🏝️change-m-pla",
+          "scenarios": [
+            {
+              "id": "raises-steel-plastic-moment-to-128-knm",
+              "directoryName": "🧪️raises-steel-plastic-moment-to-128-knm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-n-cycles-stud",
+          "sourceMutationDirectoryName": "🏔️change-n-cycles-stud",
+          "mutationDirectoryName": "🏔️change-n-cycles-stud",
+          "scenarios": [
+            {
+              "id": "raises-stud-cycle-count-to-5000000",
+              "directoryName": "🧪️raises-stud-cycle-count-to-5000000"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-span-m",
+          "sourceMutationDirectoryName": "🌊change-span-m",
+          "mutationDirectoryName": "🌊change-span-m",
+          "scenarios": [
+            {
+              "id": "lengthens-span-to-12-m",
+              "directoryName": "🧪️lengthens-span-to-12-m"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-v-ed-kn",
+          "sourceMutationDirectoryName": "🍄change-v-ed-kn",
+          "mutationDirectoryName": "🍄change-v-ed-kn",
+          "scenarios": [
+            {
+              "id": "raises-design-shear-to-225-kn",
+              "directoryName": "🧪️raises-design-shear-to-225-kn"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-v-ed-per-stud-kn",
+          "sourceMutationDirectoryName": "🏜️change-v-ed-per-stud-kn",
+          "mutationDirectoryName": "🏜️change-v-ed-per-stud-kn",
+          "scenarios": [
+            {
+              "id": "raises-per-stud-shear-to-62-5-kn",
+              "directoryName": "🧪️raises-per-stud-shear-to-62-5-kn"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-vl-rd",
+          "sourceMutationDirectoryName": "🐞change-vl-rd",
+          "mutationDirectoryName": "🐞change-vl-rd",
+          "scenarios": [
+            {
+              "id": "raises-longitudinal-shear-resistance-to-240-kn",
+              "directoryName": "🧪️raises-longitudinal-shear-resistance-to-240-kn"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "change-annex",
         "change-m-ed-knm",

@@ -30,6 +30,21 @@
     {
       "id": "avi-1-0-any",
       "capability": "avi-1-0-mutate",
+      "standardDirectoryName": "🔖️1.0",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "promotes-the-second-movi-chunk-to-a-keyframe",
+              "directoryName": "🧪️promotes-the-second-movi-chunk-to-a-keyframe"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

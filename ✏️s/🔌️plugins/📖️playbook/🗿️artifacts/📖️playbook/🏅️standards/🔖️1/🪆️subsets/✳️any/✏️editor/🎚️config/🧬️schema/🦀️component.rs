@@ -18,7 +18,7 @@ pub struct PlaybookConfig {
 /// https://github.com/usalu/semio/issues/2543. Returned, not self-registered; `ArtifactEditor::app_schema`
 /// (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) hands it to `register_document_app`, which
 /// replaces the narrowed `.setup()` this used to run through — `.setup()` is gone from this plugin root.
-pub async fn app_schema_descriptor() -> schema::AppSchemaDescriptor {
+pub fn app_schema_descriptor() -> schema::AppSchemaDescriptor {
     schema::AppSchemaDescriptor {
         id: "s.playbook.playbook",
         config: schema::FacetLeaves {

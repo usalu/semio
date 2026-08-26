@@ -37,11 +37,11 @@ fn expected_after() -> FlowSnapshot {
 /// widget the committed payload tries to create — the seeded widget IS the mutation JSON's own
 /// `widget`, never a second hand-written copy of it.
 fn before() -> FlowSnapshot {
-    let snapshot: FlowSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FlowSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let FlowMutation::CreateWidget(payload) = mutation() else {
         panic!("rejects-a-duplicate-widget-id's committed mutation must be a create-widget");
     };
-    cache_flow_content(&snapshot.content.child_id, vec![payload.widget.clone()], Vec::new(), BTreeMap::new());
+    cache_flow_content(&mut snapshot.content, vec![payload.widget.clone()], Vec::new(), BTreeMap::new());
     snapshot
 }
 

@@ -989,11 +989,11 @@ pub mod derived_composition {
         type Snapshot = DwgSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_BINARY]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -1009,7 +1009,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "DwgComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = DwgAnalyzer::analyze(&native).await;
+            let analysis = DwgAnalyzer::analyze(&native);
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "DwgComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }

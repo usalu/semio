@@ -17,7 +17,7 @@ pub struct LowpolyBounds {
     pub max: [f32; 3],
 }
 
-async fn grow(bounds: Option<LowpolyBounds>, point: [f32; 3]) -> LowpolyBounds {
+fn grow(bounds: Option<LowpolyBounds>, point: [f32; 3]) -> LowpolyBounds {
     match bounds {
         Some(bounds) => LowpolyBounds { min: [bounds.min[0].min(point[0]), bounds.min[1].min(point[1]), bounds.min[2].min(point[2])], max: [bounds.max[0].max(point[0]), bounds.max[1].max(point[1]), bounds.max[2].max(point[2])] },
         None => LowpolyBounds { min: point, max: point },
@@ -25,7 +25,7 @@ async fn grow(bounds: Option<LowpolyBounds>, point: [f32; 3]) -> LowpolyBounds {
 }
 
 /// 📦 3d bounding box across every object's `transform.position`, or `None` for an empty document.
-pub(crate) async fn scene_bounds(snapshot: &LowpolySnapshot) -> Option<LowpolyBounds> {
+pub(crate) fn scene_bounds(snapshot: &LowpolySnapshot) -> Option<LowpolyBounds> {
     snapshot.objects.iter().fold(None, |bounds, object: &LowpolyObject| Some(grow(bounds, object.transform.position)))
 }
 //#endregion 📦Bounds
@@ -36,7 +36,7 @@ mod tests {
     use super::*;
     use crate::artifacts::lowpoly::{LowpolyPaintLayer, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
 
-    async fn object(id: &str, position: [f32; 3]) -> LowpolyObject {
+    fn object(id: &str, position: [f32; 3]) -> LowpolyObject {
         LowpolyObject { id: id.into(), name: id.into(), transform: LowpolyTransform { position, ..LowpolyTransform::default() }, smooth_shading: false, mesh: None, paint_layers: vec![LowpolyPaintLayer::new("Base")] }
     }
 

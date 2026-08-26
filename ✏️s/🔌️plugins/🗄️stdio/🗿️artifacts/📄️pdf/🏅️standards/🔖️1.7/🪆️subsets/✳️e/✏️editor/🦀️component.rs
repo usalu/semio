@@ -115,7 +115,7 @@ impl ArtifactEditor for Pdf17EEditor {
     const DIALECT: Dialect = PDF17E_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PDF_DOCUMENT_SCHEMA;
 
-    async fn initial_snapshot() -> PdfSnapshot {
+    fn initial_snapshot() -> PdfSnapshot {
         PdfSnapshot::default()
     }
 
@@ -123,7 +123,7 @@ impl ArtifactEditor for Pdf17EEditor {
     /// exposes (see `main`'s own doc comment for why this appends rather than replaces). An
     /// out-of-range `index` is a documented no-op (`Emit::default()`), never a panic, matching
     /// `apply_pdf_mutation`'s own out-of-range-is-noop contract.
-    async fn handle(
+    fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -141,7 +141,7 @@ impl ArtifactEditor for Pdf17EEditor {
         }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(built_to_component_tree),
             _ => return semio_framework_plugin::built_text_to_component_tree(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))),

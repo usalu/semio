@@ -21,6 +21,21 @@
     {
       "id": "tsv-iana-any",
       "capability": "tsv-iana-mutate",
+      "standardDirectoryName": "🔖️iana",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "renames-the-alpha-row-and-switches-to-crlf",
+              "directoryName": "🧪️renames-the-alpha-row-and-switches-to-crlf"
+            }
+          ]
+        }
+      ],
       "kinds": ["no-mutation", "set-snapshot", "set-trailing-newline", "set-line-ending", "insert-row", "remove-row", "set-cell"]
     }
   ],

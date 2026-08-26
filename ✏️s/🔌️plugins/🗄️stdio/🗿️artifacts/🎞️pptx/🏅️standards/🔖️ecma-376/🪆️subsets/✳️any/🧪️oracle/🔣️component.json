@@ -34,6 +34,21 @@
     {
       "id": "pptx-ecma-376-any",
       "capability": "pptx-ecma-376-mutate",
+      "standardDirectoryName": "🔖️ecma-376",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "retitles-and-lowers-the-title-placeholder",
+              "directoryName": "🧪️retitles-and-lowers-the-title-placeholder"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

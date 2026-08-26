@@ -6,7 +6,7 @@ use crate::editor::raster::raster_action;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub async fn measure(config: &RasterConfig) -> WindowMeasure {
+pub fn measure(config: &RasterConfig) -> WindowMeasure {
     WindowMeasure::Group {
         id: "raster-utility-options-paintBrush".into(),
         label: "Brush".into(),

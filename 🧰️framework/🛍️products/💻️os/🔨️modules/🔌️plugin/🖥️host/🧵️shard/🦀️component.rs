@@ -35,11 +35,11 @@ use semio_framework::kernel::{Budget, Effect, Event, JobPlacement, RequestOutcom
 use semio_framework_actor::{ActorId, Envelope, JobCheckpoint, JobCommitCandidate, JobOperation, JobPublication, JobReplayRequest, JobStepOutcome, JobTurn, Payload, ShardTransport};
 use semio_framework_trace::{Generation, InteractiveStage, OperationId, Watchdog};
 use std::collections::{BTreeSet, HashMap};
-use std::mem::{size_of, ManuallyDrop, MaybeUninit};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::mem::{ManuallyDrop, MaybeUninit, size_of};
 use std::sync::Arc;
 #[cfg(test)]
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 //#region 📨️ShardFrame
 /// 📨️ terra-shard-grants: what actually crosses a [`ShardTransport`] INBOUND (host → shard) —
@@ -2998,7 +2998,7 @@ mod tests {
         assert_eq!(bridged.usage.fuel, 999, "usage.fuel comes from the kernel TurnResult's own fuel_used");
         assert_eq!(bridged.usage.wall_us, 1234, "wall_us is host-measured, passed straight through");
         assert_eq!(bridged.usage.memory_bytes, 5678, "memory_bytes is host-measured, passed straight through");
-        let mut patches = semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&bridged.ui_patches, 1).expect("exact test transport").take_owner().expect("exact test owner");
+        let mut patches = semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&bridged.ui_patches, 1).expect("exact test transport").take_owner().unwrap_or_else(|_| panic!("exact test owner"));
         while !patches.close_step() {}
     }
 
@@ -3021,7 +3021,7 @@ mod tests {
             };
             let bridged = to_actor_turn_result(kernel_result, 1, 0, 0).await.expect("fixed turn encoding");
             assert_eq!(bridged.status, expected);
-            let mut patches = semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&bridged.ui_patches, 1).expect("exact test transport").take_owner().expect("exact test owner");
+            let mut patches = semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&bridged.ui_patches, 1).expect("exact test transport").take_owner().unwrap_or_else(|_| panic!("exact test owner"));
             while !patches.close_step() {}
         }
     }

@@ -20,6 +20,21 @@
     {
       "id": "txt-utf-8-any",
       "capability": "txt-utf-8-mutate",
+      "standardDirectoryName": "🔖️utf-8",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "appends-a-third-line-and-switches-to-crlf",
+              "directoryName": "🧪️appends-a-third-line-and-switches-to-crlf"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

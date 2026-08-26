@@ -139,28 +139,28 @@ pub mod derived_construction {
         type Mutation = DocxMutation;
         type Diff = DocxDiff;
 
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: build_minimal_strict_docx(DocxDocument::default()) }
         }
 
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
 
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<DocxSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<DocxSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<DocxSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<DocxSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::docx::schema::mutations::apply_docx_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <DocxDiff as protocol::MutationDiff<DocxSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
@@ -169,7 +169,7 @@ pub mod derived_construction {
         /// regardless of which path produced the in-flight snapshot (typed `add_paragraph`,
         /// `from_binary`, a raw `SetSnapshot` mutation) -- a hard violation can never leave `build()`
         /// as `Ok`.
-        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let hard: Vec<Diagnostic> = check_strict_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(self.snapshot)
@@ -186,13 +186,13 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn empty_builder_is_strict_conformant() {
-            let snapshot = DocxStrictBuilderConstruction::empty().await.build().await.expect("empty strict builder must be conformant");
+            let snapshot = DocxStrictBuilderConstruction::empty().build().expect("empty strict builder must be conformant");
             assert!(snapshot.opc.part_bytes(MAIN_DOCUMENT_PART).is_some());
         }
 
         #[semio_framework_async_macros::async_test]
         async fn add_paragraph_stays_strict_conformant() {
-            let snapshot = DocxStrictBuilderConstruction::empty().await.add_text_paragraph("Hello, strict world!").build().await.expect("must build");
+            let snapshot = DocxStrictBuilderConstruction::empty().add_text_paragraph("Hello, strict world!").build().expect("must build");
             assert_eq!(snapshot.document.body.len(), 1);
             let bytes = snapshot.opc.part_bytes(MAIN_DOCUMENT_PART).unwrap();
             assert!(String::from_utf8_lossy(bytes).contains(STRICT_MAIN_NS));
@@ -200,10 +200,10 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
-            let mut snapshot = DocxStrictBuilderConstruction::empty().await.add_text_paragraph("clean").build().await.unwrap();
+            let mut snapshot = DocxStrictBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
             snapshot.opc.set_part("word/legacyDrawing.xml", "application/xml", b"<v:shape xmlns:v=\"urn:schemas-microsoft-com:vml\"/>".to_vec());
-            let (mutated, _diff) = DocxStrictBuilderConstruction::from_snapshot(DocxSnapshot::default()).await.mutate(DocxMutation::SetSnapshot { snapshot }).await;
-            let err = mutated.build().await.expect_err("VML content must fail build()");
+            let (mutated, _diff) = DocxStrictBuilderConstruction::from_snapshot(DocxSnapshot::default()).mutate(DocxMutation::SetSnapshot { snapshot });
+            let err = mutated.build().expect_err("VML content must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::docx::standards::v_ecma_376::subsets::strict::schema::CODE_VML_PRESENT));
         }
     }
@@ -323,12 +323,12 @@ pub mod derived_analysis {
         type Parts = DocxParts;
         const DIALECT: Dialect = DIALECT;
 
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            DocxAnyAnalyzer::sniff(source).await
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            DocxAnyAnalyzer::sniff(source)
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = DocxAnyAnalyzer::analyze(sources).await;
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let inner = DocxAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {

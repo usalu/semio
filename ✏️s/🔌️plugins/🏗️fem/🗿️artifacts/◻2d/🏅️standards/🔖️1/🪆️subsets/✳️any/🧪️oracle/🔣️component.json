@@ -23,6 +23,285 @@
     {
       "id": "fem2d-1-any",
       "capability": "fem2d-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "add-load",
+          "sourceMutationDirectoryName": "➕add-load",
+          "mutationDirectoryName": "➕add-load",
+          "scenarios": [
+            {
+              "id": "appends-a-member-udl-to-the-dead-case",
+              "directoryName": "🧪️appends-a-member-udl-to-the-dead-case"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-load-case-self-weight",
+          "sourceMutationDirectoryName": "⚖change-load-case-self-weight",
+          "mutationDirectoryName": "⚖change-load-case-self-weight",
+          "scenarios": [
+            {
+              "id": "switches-self-weight-on-for-the-dead-case",
+              "directoryName": "🧪️switches-self-weight-on-for-the-dead-case"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-combination",
+          "sourceMutationDirectoryName": "🌱🔗️create-combination",
+          "mutationDirectoryName": "🌱🔗️create-combination",
+          "scenarios": [
+            {
+              "id": "appends-an-uls-combination-over-both-cases",
+              "directoryName": "🧪️appends-an-uls-combination-over-both-cases"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-element",
+          "sourceMutationDirectoryName": "🌱🧩️create-element",
+          "mutationDirectoryName": "🌱🧩️create-element",
+          "scenarios": [
+            {
+              "id": "appends-bar-e2-between-n2-and-n3",
+              "directoryName": "🧪️appends-bar-e2-between-n2-and-n3"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-load-case",
+          "sourceMutationDirectoryName": "🌱📋️create-load-case",
+          "mutationDirectoryName": "🌱📋️create-load-case",
+          "scenarios": [
+            {
+              "id": "appends-a-live-case-carrying-one-nodal-load",
+              "directoryName": "🧪️appends-a-live-case-carrying-one-nodal-load"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-material",
+          "sourceMutationDirectoryName": "🌱🧱️create-material",
+          "mutationDirectoryName": "🌱🧱️create-material",
+          "scenarios": [
+            {
+              "id": "appends-concrete-c30",
+              "directoryName": "🧪️appends-concrete-c30"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-node",
+          "sourceMutationDirectoryName": "🌱⚪️create-node",
+          "mutationDirectoryName": "🌱⚪️create-node",
+          "scenarios": [
+            {
+              "id": "appends-node-n3",
+              "directoryName": "🧪️appends-node-n3"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-region",
+          "sourceMutationDirectoryName": "🌱🗺️create-region",
+          "mutationDirectoryName": "🌱🗺️create-region",
+          "scenarios": [
+            {
+              "id": "appends-a-solid-rectangular-slab",
+              "directoryName": "🧪️appends-a-solid-rectangular-slab"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-section",
+          "sourceMutationDirectoryName": "🌱create-section",
+          "mutationDirectoryName": "🌱create-section",
+          "scenarios": [
+            {
+              "id": "appends-the-ipe300-profile",
+              "directoryName": "🧪️appends-the-ipe300-profile"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-support",
+          "sourceMutationDirectoryName": "🌱🛡️create-support",
+          "mutationDirectoryName": "🌱🛡️create-support",
+          "scenarios": [
+            {
+              "id": "adds-a-vertical-roller-at-node-n2",
+              "directoryName": "🧪️adds-a-vertical-roller-at-node-n2"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-combination",
+          "sourceMutationDirectoryName": "🗑🔗️delete-combination",
+          "mutationDirectoryName": "🗑🔗️delete-combination",
+          "scenarios": [
+            {
+              "id": "removes-the-uls-combination-and-keeps-both-cases",
+              "directoryName": "🧪️removes-the-uls-combination-and-keeps-both-cases"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-element",
+          "sourceMutationDirectoryName": "🗑🧩️delete-element",
+          "mutationDirectoryName": "🗑🧩️delete-element",
+          "scenarios": [
+            {
+              "id": "removes-bar-e2-and-keeps-its-end-nodes",
+              "directoryName": "🧪️removes-bar-e2-and-keeps-its-end-nodes"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-load-case",
+          "sourceMutationDirectoryName": "🗑📋️delete-load-case",
+          "mutationDirectoryName": "🗑📋️delete-load-case",
+          "scenarios": [
+            {
+              "id": "removes-the-live-case-together-with-its-loads",
+              "directoryName": "🧪️removes-the-live-case-together-with-its-loads"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-material",
+          "sourceMutationDirectoryName": "🗑🧱️delete-material",
+          "mutationDirectoryName": "🗑🧱️delete-material",
+          "scenarios": [
+            {
+              "id": "removes-the-unreferenced-timber-material",
+              "directoryName": "🧪️removes-the-unreferenced-timber-material"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-node",
+          "sourceMutationDirectoryName": "🗑⚪️delete-node",
+          "mutationDirectoryName": "🗑⚪️delete-node",
+          "scenarios": [
+            {
+              "id": "removes-node-n3-without-cascading-to-its-support",
+              "directoryName": "🧪️removes-node-n3-without-cascading-to-its-support"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-region",
+          "sourceMutationDirectoryName": "🗑🗺️delete-region",
+          "mutationDirectoryName": "🗑🗺️delete-region",
+          "scenarios": [
+            {
+              "id": "removes-the-slab-and-keeps-its-material",
+              "directoryName": "🧪️removes-the-slab-and-keeps-its-material"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-section",
+          "sourceMutationDirectoryName": "🗑📐️delete-section",
+          "mutationDirectoryName": "🗑📐️delete-section",
+          "scenarios": [
+            {
+              "id": "removes-the-spare-hollow-section",
+              "directoryName": "🧪️removes-the-spare-hollow-section"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-support",
+          "sourceMutationDirectoryName": "🗑delete-support",
+          "mutationDirectoryName": "🗑delete-support",
+          "scenarios": [
+            {
+              "id": "releases-the-roller-at-node-n2",
+              "directoryName": "🧪️releases-the-roller-at-node-n2"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-load",
+          "sourceMutationDirectoryName": "➖remove-load",
+          "mutationDirectoryName": "➖remove-load",
+          "scenarios": [
+            {
+              "id": "strips-the-trailing-member-udl-from-the-dead-case",
+              "directoryName": "🧪️strips-the-trailing-member-udl-from-the-dead-case"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-element",
+          "sourceMutationDirectoryName": "🔁🧩️replace-element",
+          "mutationDirectoryName": "🔁🧩️replace-element",
+          "scenarios": [
+            {
+              "id": "converts-beam-e1-into-a-bar-in-place",
+              "directoryName": "🧪️converts-beam-e1-into-a-bar-in-place"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-material",
+          "sourceMutationDirectoryName": "🔁🧱️replace-material",
+          "mutationDirectoryName": "🔁🧱️replace-material",
+          "scenarios": [
+            {
+              "id": "restates-steel-as-s355-in-its-original-slot",
+              "directoryName": "🧪️restates-steel-as-s355-in-its-original-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-region",
+          "sourceMutationDirectoryName": "🔁🗺️replace-region",
+          "mutationDirectoryName": "🔁🗺️replace-region",
+          "scenarios": [
+            {
+              "id": "punches-a-stair-opening-through-the-slab",
+              "directoryName": "🧪️punches-a-stair-opening-through-the-slab"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-section",
+          "sourceMutationDirectoryName": "🔁📐️replace-section",
+          "mutationDirectoryName": "🔁📐️replace-section",
+          "scenarios": [
+            {
+              "id": "stiffens-ipe200-with-a-reinforced-profile",
+              "directoryName": "🧪️stiffens-ipe200-with-a-reinforced-profile"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-support",
+          "sourceMutationDirectoryName": "🔁replace-support",
+          "mutationDirectoryName": "🔁replace-support",
+          "scenarios": [
+            {
+              "id": "upgrades-the-roller-at-n2-to-a-full-fixity",
+              "directoryName": "🧪️upgrades-the-roller-at-n2-to-a-full-fixity"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-analysis-settings",
+          "sourceMutationDirectoryName": "🎛update-analysis-settings",
+          "mutationDirectoryName": "🎛update-analysis-settings",
+          "scenarios": [
+            {
+              "id": "doubles-the-modal-count-and-halves-the-deformation-scale",
+              "directoryName": "🧪️doubles-the-modal-count-and-halves-the-deformation-scale"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-node",
         "delete-node",

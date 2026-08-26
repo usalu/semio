@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/flow-scene-owner-law.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "ownedSlots", "maximumCases", "cases"],
+  "properties": {
+    "$schema": { "const": "./flow-scene-owner.schema.json" },
+    "schemaVersion": { "const": 1 },
+    "ownedSlots": { "const": 1 },
+    "maximumCases": { "const": 5 },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["law", "leftText", "rightText"],
+        "properties": {
+          "law": { "enum": ["cloneIdentity", "instanceIsolation", "abaIsolation", "wireOmission", "boundedClose"] },
+          "leftText": { "type": "string", "maxLength": 16 },
+          "rightText": { "type": "string", "maxLength": 16 }
+        }
+      }
+    }
+  }
+}

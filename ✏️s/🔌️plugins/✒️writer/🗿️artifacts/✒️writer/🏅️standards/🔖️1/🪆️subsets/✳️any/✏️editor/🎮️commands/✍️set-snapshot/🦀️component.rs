@@ -22,7 +22,7 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️JsonSetters
 /// 🙈️ Shared body for `SetSnapshotJson`/`SetFixtureJson` — both replace the whole document from a raw
 /// JSON string, silently no-op'ing on a parse failure (dev-only chrome setters, never user-facing).
-async fn parse_document_json(json: &str) -> Emit<WriterMutation, WriterConfigMutation> {
+fn parse_document_json(json: &str) -> Emit<WriterMutation, WriterConfigMutation> {
     match serde_json::from_str::<WriterSnapshot>(json) {
         Ok(document) => Emit { effects: vec![reset_document_effect(&document)], ..Default::default() },
         Err(_) => Emit::default(),
@@ -51,6 +51,6 @@ pub struct SetSnapshot {
     pub json: String,
 }
 
-pub async fn handle(payload: &SetSnapshot, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+pub fn handle(payload: &SetSnapshot, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
     Ok(parse_document_json(&payload.json))
 }

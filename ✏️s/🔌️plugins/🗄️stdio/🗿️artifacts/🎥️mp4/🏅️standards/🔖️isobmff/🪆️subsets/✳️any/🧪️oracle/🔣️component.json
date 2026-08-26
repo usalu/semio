@@ -22,6 +22,21 @@
     {
       "id": "mp4-isobmff-any",
       "capability": "mp4-isobmff-mutate",
+      "standardDirectoryName": "🔖️isobmff",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "promotes-the-second-sample-to-a-sync-frame",
+              "directoryName": "🧪️promotes-the-second-sample-to-a-sync-frame"
+            }
+          ]
+        }
+      ],
       "kinds": ["no-mutation", "set-snapshot", "set-ftyp", "insert-track", "remove-track", "set-track-dimensions", "set-track-codec", "insert-sample", "remove-sample", "set-sample-sync"]
     }
   ],

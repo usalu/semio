@@ -444,13 +444,27 @@ ensure_cpp_toolchain() {
 
 #region 🔖️EnsureBun
 ensure_bun() {
-  if command -v bun >/dev/null 2>&1; then
-    return 0
+  local package_manager
+  package_manager="$(awk -F'"' '/"packageManager"[[:space:]]*:/ { print $4; exit }' "$REPO_ROOT/package.json")"
+  if ! printf '%s\n' "$package_manager" | grep -Eq '^bun@[0-9]+\.[0-9]+\.[0-9]+$'; then
+    log "package.json must declare an exact packageManager bun@x.y.z before native setup."
+    return 1
   fi
-  log "Installing Bun…"
+  local required_version="${package_manager#bun@}"
+  local actual_version
+  actual_version="$(bun --version 2>/dev/null || true)"
   export BUN_INSTALL="${BUN_INSTALL:-$HOME/.bun}"
-  curl -fsSL https://bun.sh/install | bash
   export PATH="${BUN_INSTALL}/bin:${PATH}"
+  if [ "$actual_version" != "$required_version" ]; then
+    log "Installing repository-pinned Bun $required_version…"
+    curl -fsSL https://bun.sh/install | bash -s "bun-v$required_version"
+    hash -r
+    actual_version="$(bun --version 2>/dev/null || true)"
+  fi
+  if [ "$actual_version" != "$required_version" ]; then
+    log "Bun toolchain mismatch: package.json requires $required_version, but native setup resolved ${actual_version:-missing}. Install bun-v$required_version and rerun setup."
+    return 1
+  fi
 }
 #endregion 🔖️EnsureBun
 

@@ -18,6 +18,21 @@
     {
       "id": "semio-v1-presentation",
       "capability": "semio-v1-presentation-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️presentation",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "rewrites-the-second-slides-textbox-and-adds-a-speaker-note",
+              "directoryName": "🧪️rewrites-the-second-slides-textbox-and-adds-a-speaker-note"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

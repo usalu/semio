@@ -136,7 +136,7 @@ key: string, component: Component, layout: LayoutSpec, style: StyleSpec, activit
 export type ButtonProps = {
 /**
  * 🖼️ Icon key. The old `IconName` is generated per-consuming-crate via a `#[path]` mount (see
- * `🧰️framework/🔨️modules/🖱️ui/🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs`), not a publishable
+ * `🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs`), not a publishable
  * dependency this crate's `Cargo.toml` — which this packet is forbidden from editing — could
  * take on. A plain `String` icon key is the only viable choice here; flagged as a
  * registrar-request in `📓️terra-contract-doc-report.md` in case a shared icon crate should

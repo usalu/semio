@@ -1,0 +1,69 @@
+{
+  "$schema": "semio.puzzle5d.import-media-retained-law.v1",
+  "owner": "puzzle5d",
+  "route": "import-media",
+  "port": "kit:in",
+  "capacities": {
+    "mediaBytes": 16384,
+    "semanticItemsPerOwner": 32,
+    "decodedItems": 1184,
+    "mutationItems": 65,
+    "semanticUnitsPerGrant": 1,
+    "stepMicros": 7500,
+    "closeItemsPerGrant": 1,
+    "closeBytesPerGrant": 16384
+  },
+  "checkpoint": {
+    "bytes": 33,
+    "fields": ["stage:u8", "cursor:u64le", "nestedCursor:u64le", "decodedItems:u64le", "progress:u64le"]
+  },
+  "stages": [
+    "envelope",
+    "decode",
+    "censusParts",
+    "reserveCatalogParts",
+    "reserveCatalogGrips",
+    "reserveCatalogFasteners",
+    "reserveCatalogRopes",
+    "reserveCompatibility",
+    "reservePartIndex",
+    "reserveGripIndex",
+    "reserveCompatibilityIndex",
+    "reserveMutations",
+    "loadCatalogParts",
+    "loadCatalogGrips",
+    "loadCatalogFasteners",
+    "loadCatalogRopes",
+    "loadCompatibility",
+    "indexParts",
+    "indexGrips",
+    "indexCompatibility",
+    "parts",
+    "partReserve",
+    "partVortices",
+    "partPublish",
+    "grips",
+    "compatibility",
+    "catalogMutation",
+    "complete"
+  ],
+  "vectors": [
+    {"id": "empty", "mediaBytes": 63, "objectKinds": 0, "vortexKinds": 0, "compatibility": 0, "expected": "terminalEmpty"},
+    {"id": "single", "objectKinds": 1, "vorticesPerObjectKind": 1, "vortexKinds": 1, "compatibility": 1, "expected": "oneSemanticUnitPerGrant"},
+    {"id": "mediaMax", "mediaBytes": 16384, "expected": "admittedUnder7500Micros"},
+    {"id": "mediaMaxPlusOne", "mediaBytes": 16385, "expected": "rejectedBeforeSerde"},
+    {"id": "itemsMax", "decodedItems": 1184, "expected": "admittedThroughCensus"},
+    {"id": "itemsMaxPlusOne", "decodedItems": 1185, "expected": "faultBeforeReserve"},
+    {"id": "semanticMax", "objectKinds": 32, "expected": "admittedThroughReserve"},
+    {"id": "semanticMaxPlusOne", "objectKinds": 33, "expected": "faultBeforeReserve"},
+    {"id": "nestedVortexMaxPlusOne", "objectKinds": 1, "vorticesPerObjectKind": 33, "expected": "faultDuringSchemaCensus"},
+    {"id": "unmappedNonempty", "cableKinds": 1, "expected": "faultBeforeSemanticReserve"},
+    {"id": "cancelEveryStage", "control": "freshCancelBeforeEachStage", "expected": "terminalEmptyExactHandback"},
+    {"id": "corruptRow", "mutation": "removeVortexKind", "expected": "faultThenRecursiveClose"},
+    {"id": "interruptedClose", "closeGrant": {"items": 1, "bytes": 16384}, "expected": "recursiveTypedAndJsonTerminalEmpty"}
+  ],
+  "locales": {
+    "en": {"progress": "Importing kit", "cancel": "Cancel import"},
+    "de": {"progress": "Kit wird importiert", "cancel": "Import abbrechen"}
+  }
+}

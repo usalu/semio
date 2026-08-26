@@ -23,6 +23,142 @@
     {
       "id": "gismap-1-any",
       "capability": "gismap-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "create-position",
+          "sourceMutationDirectoryName": "🆕create-position",
+          "mutationDirectoryName": "🆕create-position",
+          "scenarios": [
+            {
+              "id": "adds-a-lighthouse-position-after-the-harbor",
+              "directoryName": "🧪️adds-a-lighthouse-position-after-the-harbor"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-region",
+          "sourceMutationDirectoryName": "🌐create-region",
+          "mutationDirectoryName": "🌐create-region",
+          "scenarios": [
+            {
+              "id": "adds-the-old-town-region-after-the-harbor-district",
+              "directoryName": "🧪️adds-the-old-town-region-after-the-harbor-district"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-route",
+          "sourceMutationDirectoryName": "🛣️create-route",
+          "mutationDirectoryName": "🛣️create-route",
+          "scenarios": [
+            {
+              "id": "adds-a-tram-route-after-the-ferry",
+              "directoryName": "🧪️adds-a-tram-route-after-the-ferry"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-position",
+          "sourceMutationDirectoryName": "🗑delete-position",
+          "mutationDirectoryName": "🗑delete-position",
+          "scenarios": [
+            {
+              "id": "removes-the-lighthouse-position",
+              "directoryName": "🧪️removes-the-lighthouse-position"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-region",
+          "sourceMutationDirectoryName": "🧹delete-region",
+          "mutationDirectoryName": "🧹delete-region",
+          "scenarios": [
+            {
+              "id": "removes-the-old-town-region",
+              "directoryName": "🧪️removes-the-old-town-region"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-route",
+          "sourceMutationDirectoryName": "✂️delete-route",
+          "mutationDirectoryName": "✂️delete-route",
+          "scenarios": [
+            {
+              "id": "removes-the-tram-route",
+              "directoryName": "🧪️removes-the-tram-route"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-positions",
+          "sourceMutationDirectoryName": "🔀reorder-positions",
+          "mutationDirectoryName": "🔀reorder-positions",
+          "scenarios": [
+            {
+              "id": "moves-the-harbor-position-to-the-end",
+              "directoryName": "🧪️moves-the-harbor-position-to-the-end"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-regions",
+          "sourceMutationDirectoryName": "🔃reorder-regions",
+          "mutationDirectoryName": "🔃reorder-regions",
+          "scenarios": [
+            {
+              "id": "moves-the-park-region-between-the-two-districts",
+              "directoryName": "🧪️moves-the-park-region-between-the-two-districts"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-routes",
+          "sourceMutationDirectoryName": "🧭reorder-routes",
+          "mutationDirectoryName": "🧭reorder-routes",
+          "scenarios": [
+            {
+              "id": "moves-the-bus-route-to-the-front",
+              "directoryName": "🧪️moves-the-bus-route-to-the-front"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-position-data",
+          "sourceMutationDirectoryName": "🔁replace-position-data",
+          "mutationDirectoryName": "🔁replace-position-data",
+          "scenarios": [
+            {
+              "id": "rewrites-the-harbor-position-payload",
+              "directoryName": "🧪️rewrites-the-harbor-position-payload"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-region-data",
+          "sourceMutationDirectoryName": "🔄replace-region-data",
+          "mutationDirectoryName": "🔄replace-region-data",
+          "scenarios": [
+            {
+              "id": "rewrites-the-harbor-district-region-payload",
+              "directoryName": "🧪️rewrites-the-harbor-district-region-payload"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-route-data",
+          "sourceMutationDirectoryName": "♻️replace-route-data",
+          "mutationDirectoryName": "♻️replace-route-data",
+          "scenarios": [
+            {
+              "id": "rewrites-the-ferry-route-payload",
+              "directoryName": "🧪️rewrites-the-ferry-route-payload"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-position",
         "delete-position",

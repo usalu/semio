@@ -16,19 +16,19 @@ pub struct ChangeLayerBlendMode {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ChangeLayerBlendMode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "layer", kind: "change-layer-blend-mode", record: "ChangedLayerBlendMode" };
 
-    async fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::change_layer_blend_mode::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
+    fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
         crate::artifacts::raster::mutations::change_layer_blend_mode::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Set layer {} blend mode to {}", self.layer_id, self.new_blend_mode)
     }
 
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]
     }
 }

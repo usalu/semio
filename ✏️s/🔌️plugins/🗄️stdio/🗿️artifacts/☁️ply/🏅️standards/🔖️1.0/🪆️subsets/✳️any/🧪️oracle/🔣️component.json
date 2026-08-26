@@ -29,6 +29,21 @@
     {
       "id": "ply-1-0-any",
       "capability": "ply-1-0-mutate",
+      "standardDirectoryName": "🔖️1.0",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "lifts-the-second-vertex-and-appends-a-comment",
+              "directoryName": "🧪️lifts-the-second-vertex-and-appends-a-comment"
+            }
+          ]
+        }
+      ],
       "kinds": ["no-mutation", "set-snapshot", "set-format", "insert-comment", "remove-comment", "add-element", "remove-element", "insert-row", "remove-row", "set-row-property"]
     }
   ]

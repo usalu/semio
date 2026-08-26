@@ -15,6 +15,6 @@ pub struct MoveBlock {
     pub index: usize,
 }
 
-pub async fn handle(payload: &MoveBlock, _doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
+pub fn handle(payload: &MoveBlock, _doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![move_block_operation(&payload.block_id, &payload.from_step_id, &payload.to_step_id, payload.index)]))
 }

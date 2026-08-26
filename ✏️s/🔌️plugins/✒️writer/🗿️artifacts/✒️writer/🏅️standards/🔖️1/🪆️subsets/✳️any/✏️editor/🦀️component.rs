@@ -97,13 +97,13 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 
 /// 🙈️ An internal document operation kept out of the command palette — editor events (text edits,
 /// camera, rename, engagement submit) and dev-only whole-document setters dispatched from chrome.
-async fn writer_hidden_operation(id: &str, label: LocalizedLabel) -> ActionDefinition {
+fn writer_hidden_operation(id: &str, label: LocalizedLabel) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, ActionKind::Mutation) }
 }
 
 /// 🙈️ An internal View action kept out of the palette — ephemeral editor/selection/hover/setting events
 /// that mutate only runtime scratch and emit no document operations.
-async fn writer_hidden_view(id: &str, label: LocalizedLabel) -> ActionDefinition {
+fn writer_hidden_view(id: &str, label: LocalizedLabel) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, ActionKind::View) }
 }
 //#endregion 🔖️Constants
@@ -112,7 +112,7 @@ async fn writer_hidden_view(id: &str, label: LocalizedLabel) -> ActionDefinition
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — the implicit document ports plus one
 /// extra output, `text:out` (Text×Document, kind `text.document`, `Many` — a workflow may fan this
 /// writer's text out to several consumers, e.g. `playbook`'s `chapters:in`).
-pub async fn writer_io() -> AppIo {
+pub fn writer_io() -> AppIo {
     AppIo {
         document_schema: WRITER_DOCUMENT_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
@@ -145,7 +145,7 @@ pub struct WriterChapterPayload {
 }
 
 /// 🎞️ Projects a `WriterSnapshot` onto the `"text:out"` chapter payload shape.
-pub async fn writer_chapter_payload(document: &WriterSnapshot) -> WriterChapterPayload {
+pub fn writer_chapter_payload(document: &WriterSnapshot) -> WriterChapterPayload {
     WriterChapterPayload { id: document.id.clone(), title: document.id.clone(), text: writer_text(document), language_id: document.language_id.clone() }
 }
 
@@ -163,7 +163,7 @@ fn reset_document_effect_now(scene: &WriterSnapshot) -> Effect {
     Effect::LoadDocument { pack, spr }
 }
 
-pub async fn reset_document_effect(scene: &WriterSnapshot) -> Effect {
+pub fn reset_document_effect(scene: &WriterSnapshot) -> Effect {
     reset_document_effect_now(scene)
 }
 //#endregion 🔖️Io
@@ -173,10 +173,10 @@ pub async fn reset_document_effect(scene: &WriterSnapshot) -> Effect {
 /// this is the framework's ONLY source of truth for that domain's membership/hierarchy (selection
 /// pruning after a document edit, `selectAll`, range-select, transitive descendant-closure
 /// hover/selection). Empty for a non-jack document (nothing to select) or a document with no AST.
-async fn writer_ast_topology(document: &WriterSnapshot) -> DomainTopology {
+fn writer_ast_topology(document: &WriterSnapshot) -> DomainTopology {
     use crate::artifacts::writer::schema::{parse_jack_ast, JackAstNode};
 
-    async fn visit(node: &JackAstNode, parent: Option<&str>, out: &mut Vec<TopologyNode>) {
+    fn visit(node: &JackAstNode, parent: Option<&str>, out: &mut Vec<TopologyNode>) {
         out.push(TopologyNode { id: node.id.clone(), granularity: "node".into(), parent: parent.map(str::to_string) });
         for child in &node.children {
             visit(child, Some(node.id.as_str()), out);
@@ -200,7 +200,7 @@ mod record_tutorial {
     #[dsl(keyword = "record-tutorial")]
     pub struct RecordTutorial {}
 
-    pub async fn handle(_payload: &RecordTutorial, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    pub fn handle(_payload: &RecordTutorial, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 }
@@ -249,7 +249,7 @@ semio_framework_plugin::app_commands! {
 /// entry makes sense for them), so they stay bespoke `.item(...)` rows per `Menu::of`'s escape hatch;
 /// `requestCompletions`/`lintDocument`/`formatDocument`/`commitRename` are declared actions and resolve
 /// through `.action(...)` against `registry`.
-async fn writer_context_menu_items(registry: &AppActionRegistry, text: Option<&ContextMenuTextContext>, is_de: bool) -> Vec<ContextMenuItemSpec> {
+fn writer_context_menu_items(registry: &AppActionRegistry, text: Option<&ContextMenuTextContext>, is_de: bool) -> Vec<ContextMenuItemSpec> {
     let can_suggest = text.is_some_and(|t| t.has_completions);
     let has_selection = text.is_some_and(|t| t.has_selection);
     let can_rename = text.is_some_and(|t| t.can_rename);
@@ -308,6 +308,7 @@ const WRITER_COMMAND_TOOL_IDS: &[&str] = &[
     "engagementInput",
     "setActiveExample",
     "setSnapshot",
+    "openDocument",
     "setSnapshotJson",
     "setFixtureJson",
     "formatDocument",
@@ -320,6 +321,7 @@ const WRITER_COMMAND_PAYLOAD_SCHEMA: &str = "writer.writer.tool-command.v1";
 const MAX_WRITER_COMMAND_RAW_BYTES: usize = 4_096;
 const MAX_WRITER_COMMAND_DECODED_ITEMS: usize = 4_096;
 const MAX_WRITER_COMMAND_TEXT_BYTES: usize = 4_096;
+const MAX_WRITER_COMMAND_URI_BYTES: usize = 1_024;
 const MAX_WRITER_LOCALE_BYTES: usize = 64;
 
 struct WriterCommandToolPayload {
@@ -360,6 +362,9 @@ impl WriterCommandToolJob {
         let Some(command) = self.command.as_ref() else { return false };
         let Some(config) = self.config.as_ref() else { return false };
         if matches!(command, WriterCommand::SetLocale(payload) if payload.value.len() > MAX_WRITER_LOCALE_BYTES) {
+            return false;
+        }
+        if matches!(command, WriterCommand::OpenDocument(payload) if payload.text.len() > MAX_WRITER_COMMAND_TEXT_BYTES || payload.uri.len() > MAX_WRITER_COMMAND_URI_BYTES) {
             return false;
         }
         let requires_text = match command {
@@ -425,6 +430,7 @@ impl WriterCommandToolJob {
                 Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }
             }
             WriterCommand::SetSnapshot(payload) => serde_json::from_str::<WriterSnapshot>(&payload.json).map(|document| Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }).unwrap_or_default(),
+            WriterCommand::OpenDocument(payload) => open_document::emit(&payload),
             WriterCommand::SetSnapshotJson(payload) => serde_json::from_str::<WriterSnapshot>(&payload.json).map(|document| Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }).unwrap_or_default(),
             WriterCommand::SetFixtureJson(payload) => serde_json::from_str::<WriterSnapshot>(&payload.json).map(|document| Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }).unwrap_or_default(),
             WriterCommand::FormatDocument(_) => {
@@ -762,6 +768,7 @@ impl ArtifactEditor for WriterPlayApp {
             "engagementInput",
             "setActiveExample",
             "setSnapshot",
+            "openDocument",
             "setSnapshotJson",
             "setFixtureJson",
             "formatDocument",
@@ -792,15 +799,15 @@ impl ArtifactEditor for WriterPlayApp {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::writer::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> WriterSnapshot {
+    fn initial_snapshot() -> WriterSnapshot {
         crate::artifacts::writer::schema::empty_writer_snapshot()
     }
 
-    async fn io() -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(writer_io())
     }
 
@@ -813,7 +820,7 @@ impl ArtifactEditor for WriterPlayApp {
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    async fn command_id(command: &WriterCommand) -> &'static str {
+    fn command_id(command: &WriterCommand) -> &'static str {
         command.command_id()
     }
 
@@ -822,7 +829,7 @@ impl ArtifactEditor for WriterPlayApp {
         registry.register(WriterCommandJobFactory::new(&controller_id))
     }
 
-    async fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
         if !WRITER_COMMAND_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
@@ -834,7 +841,7 @@ impl ArtifactEditor for WriterPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    async fn handle(
+    fn handle(
         command: &WriterCommand,
         doc: &ArtifactView<'_, WriterSnapshot>,
         cfg: &ConfigView<'_, WriterConfig>,
@@ -847,7 +854,7 @@ impl ArtifactEditor for WriterPlayApp {
 
     /// 🕹️ `ast` domain: `HierarchyProvider::Topology` from the jack AST's own parent links — see
     /// `writer_ast_topology`'s doc comment.
-    async fn interaction_topology(doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> InteractionTopology {
         let mut domains = std::collections::BTreeMap::new();
         domains.insert("ast".to_string(), writer_ast_topology(doc.snapshot));
         InteractionTopology { domains }
@@ -857,7 +864,7 @@ impl ArtifactEditor for WriterPlayApp {
     /// `writer_chapter_payload`) — `playbook`'s `"chapters:in"` is the intended consumer. Falls through
     /// to the default whole-document-pack export for `"document:out"` (duplicated inline, not delegated
     /// — Rust traits have no `super` call for an overridden default).
-    async fn export_media(port: &str, doc: &ArtifactView<'_, WriterSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, WriterSnapshot>) -> Result<Media, MediaError> {
         if port == "text:out" {
             let payload = writer_chapter_payload(doc.snapshot);
             let json = serde_json::to_string(&payload).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
@@ -870,20 +877,21 @@ impl ArtifactEditor for WriterPlayApp {
         Ok(Media { media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = writer_play_labels(config);
-        match body_key {
+        let node = match body_key {
             WRITER_PLAY_BODY_MAIN => main::render(document, config),
             WRITER_PLAY_BODY_ARTIFACT => document_panel::render(document, config, labels),
             WRITER_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             WRITER_PLAY_BODY_INSPECTION => inspection_panel::render(document, config, labels),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "writer unknown-body text admission failed")),
+        }?;
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 
-    async fn window_engagements(_doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
+    fn window_engagements(_doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
         use semio_framework_plugin::{WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus};
 
         let config = cfg.snapshot;
@@ -920,12 +928,12 @@ impl ArtifactEditor for WriterPlayApp {
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), engagement)])
     }
 
-    async fn window_measures(_doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), main::window_measures(config, writer_play_labels(config)))])
     }
 
-    async fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let is_de = cfg.snapshot.locale.starts_with("de");
         let text = request.surface.as_ref().and_then(|surface| surface.text.as_ref());
         writer_context_menu_items(registry, text, is_de)
@@ -937,7 +945,7 @@ impl ArtifactEditor for WriterPlayApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub async fn create_writer_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::writer::WRITER_DIALECT)
             .document(["semio", "writer"])
             .artifact_kind(crate::artifacts::writer::artifact_kind())
@@ -986,6 +994,7 @@ pub async fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSnapshot", InteractiveJobClassification::Migrated)
+            .action_interactive_job("openDocument", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSnapshotJson", InteractiveJobClassification::Migrated)
             .action_interactive_job("setFixtureJson", InteractiveJobClassification::Migrated)
             .action_interactive_job("formatDocument", InteractiveJobClassification::Migrated)
@@ -1049,19 +1058,19 @@ pub(crate) mod testkit {
     pub type WriterApp = VcsArtifactApp<EditorApp<WriterPlayApp>>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub async fn new_app() -> WriterApp {
+    pub fn new_app() -> WriterApp {
         framework_new_app::<EditorApp<WriterPlayApp>>()
     }
 
     /// Adapts create_writer_app's AppDefinition (contract 2.4) into the App { definition, examples }
     /// shape testkit::new_app_with_registry/assert_declared_actions_bridge_to_commands still expect --
     /// framework testkit gap (framework crate outside this packet's lease), not modifiable here.
-    async fn writer_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    fn writer_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_writer_app(), examples: Vec::new() }
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub async fn new_app_with_registry() -> WriterApp {
+    pub fn new_app_with_registry() -> WriterApp {
         framework_new_app_with_registry::<EditorApp<WriterPlayApp>>(writer_app_manifest_for_testkit)
     }
 
@@ -1071,7 +1080,7 @@ pub(crate) mod testkit {
     /// `dispatch_typed` alone; this loads the same document pack a real host would apply from that
     /// command's `Effect::LoadDocument`, via `PluginApp::load_document_pack` directly — the same
     /// technique `📐️cad`'s own `two_instances_converge_disjoint_edits_via_backbone` test uses.
-    pub async fn app_with_jack() -> WriterApp {
+    pub fn app_with_jack() -> WriterApp {
         let mut app = new_app();
         let document = crate::artifacts::writer::dsl::jack_example_document();
         let (schema, id) = (document.schema.clone(), document.id.clone());
@@ -1081,15 +1090,15 @@ pub(crate) mod testkit {
         app
     }
 
-    pub async fn dispatch(app: &mut WriterApp, command: WriterCommand) -> InvocationResult {
+    pub fn dispatch(app: &mut WriterApp, command: WriterCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub async fn render(app: &mut WriterApp, body_key: &str) -> String {
+    pub fn render(app: &mut WriterApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
-    pub async fn main_window_measures(app: &mut WriterApp) -> Vec<WindowMeasure> {
+    pub fn main_window_measures(app: &mut WriterApp) -> Vec<WindowMeasure> {
         app.window_measures().get(WRITER_PLAY_WINDOW_KIND).cloned().expect("main window measures")
     }
 }
@@ -1102,7 +1111,7 @@ mod tests {
     use crate::editor::writer::testkit::{new_app_with_registry, WriterApp};
     use semio_framework_plugin::PluginApp;
 
-    async fn context_menu_items(app: &mut WriterApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
+    fn context_menu_items(app: &mut WriterApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
         let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "writer.play".into(), args: None }, surface, window_instance_id: None, point: None };
         serde_json::to_value(app.context_menu(&request)).unwrap_or(Value::Null)
     }
@@ -1134,6 +1143,7 @@ mod tests {
         assert_eq!(fixture["payloadSchema"], WRITER_COMMAND_PAYLOAD_SCHEMA);
         assert_eq!(fixture["maxRawWireBytes"], MAX_WRITER_COMMAND_RAW_BYTES);
         assert_eq!(fixture["maxCurrentTextBytes"], MAX_WRITER_COMMAND_TEXT_BYTES);
+        assert_eq!(fixture["maxOpenDocumentUriBytes"], MAX_WRITER_COMMAND_URI_BYTES);
         assert_eq!(fixture["maxWorkUnitsPerStep"], 1);
         let actions = fixture["migrated"].as_array().expect("migrated action rows").iter().map(|row| row["action"].as_str().expect("action id")).collect::<Vec<_>>();
         assert_eq!(actions, WRITER_COMMAND_TOOL_IDS);
@@ -1147,6 +1157,12 @@ mod tests {
         assert_eq!(fixture["localeAdmissionCases"][1]["fuelDelta"], 0);
         assert_eq!(fixture["localeAdmissionCases"][1]["cursorDelta"], 0);
         assert_eq!(fixture["localeAdmissionCases"][1]["ownersPreserved"], true);
+        assert_eq!(fixture["openDocumentAdmissionCases"][0]["textBytes"], MAX_WRITER_COMMAND_TEXT_BYTES);
+        assert_eq!(fixture["openDocumentAdmissionCases"][0]["uriBytes"], MAX_WRITER_COMMAND_URI_BYTES);
+        assert_eq!(fixture["openDocumentAdmissionCases"][1]["textBytes"], MAX_WRITER_COMMAND_TEXT_BYTES + 1);
+        assert_eq!(fixture["openDocumentAdmissionCases"][2]["uriBytes"], MAX_WRITER_COMMAND_URI_BYTES + 1);
+        assert_eq!(fixture["openDocumentAdmissionCases"][1]["ownersPreserved"], true);
+        assert_eq!(fixture["openDocumentAdmissionCases"][2]["ownersPreserved"], true);
         assert_eq!(fixture["requiredLifecycle"].as_array().map(Vec::len), Some(10));
     }
 
@@ -1167,6 +1183,7 @@ mod tests {
             WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "Format".into() }),
             WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() }),
             WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { json: snapshot_json.clone() }),
+            WriterCommand::OpenDocument(open_document::OpenDocument { uri: "writer://brief.md".into(), text: "# Brief".into() }),
             WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: snapshot_json.clone() }),
             WriterCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: snapshot_json }),
             WriterCommand::FormatDocument(format_document::FormatDocument {}),
@@ -1263,6 +1280,31 @@ mod tests {
         assert_eq!(Arc::strong_count(&current), 3);
     }
 
+    #[test]
+    fn bounded_open_document_admission_preserves_maximum_plus_one_job_state_and_owners() {
+        let current: Arc<str> = Arc::from("");
+        let accepted_command = WriterCommand::OpenDocument(open_document::OpenDocument { uri: "u".repeat(MAX_WRITER_COMMAND_URI_BYTES), text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) });
+        let mut accepted = writer_command_job(accepted_command, current.clone());
+        assert!(accepted.admit_text());
+        assert_eq!(accepted.emit().expect("bounded open document emission").effects.len(), 1);
+
+        for rejected_command in [
+            WriterCommand::OpenDocument(open_document::OpenDocument { uri: "u".repeat(MAX_WRITER_COMMAND_URI_BYTES), text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
+            WriterCommand::OpenDocument(open_document::OpenDocument { uri: "u".repeat(MAX_WRITER_COMMAND_URI_BYTES + 1), text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
+        ] {
+            let mut rejected = writer_command_job(rejected_command, current.clone());
+            let rejected_cursor = (rejected.raw_page_cursor, rejected.raw_scan_cursor, rejected.raw_bytes.clone());
+            let rejected_command = rejected.command.clone();
+            let rejected_snapshot = rejected.snapshot.clone();
+            let rejected_config = rejected.config.clone();
+            assert!(!rejected.admit_text());
+            assert_eq!((rejected.raw_page_cursor, rejected.raw_scan_cursor, rejected.raw_bytes.clone()), rejected_cursor);
+            assert_eq!(rejected.command, rejected_command);
+            assert!(Arc::ptr_eq(rejected.snapshot.as_ref().expect("snapshot owner"), rejected_snapshot.as_ref().expect("saved snapshot owner")));
+            assert!(Arc::ptr_eq(rejected.config.as_ref().expect("config owner"), rejected_config.as_ref().expect("saved config owner")));
+        }
+    }
+
     fn admit_writer_envelope(app: &mut WriterApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
         let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
         let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Writer live envelope ingress credits");
@@ -1290,7 +1332,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn writer_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed() {
-        let mut app = crate::editor::writer::testkit::new_app().await;
+        let mut app = crate::editor::writer::testkit::new_app();
         let base_generation = app.artifact_generation_now();
         let handle = admit_writer_envelope(&mut app, &writer_envelope_wire());
         assert_eq!(handle.generation, base_generation);
@@ -1302,7 +1344,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn writer_live_envelope_cancel_closes_retained_pages_without_publication() {
-        let mut app = crate::editor::writer::testkit::new_app().await;
+        let mut app = crate::editor::writer::testkit::new_app();
         let base_generation = app.artifact_generation_now();
         let wire = writer_envelope_wire();
         let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
@@ -1380,12 +1422,12 @@ mod tests {
     }
 
     /// ✍️ Hand-built representative document — used across the app's own command-surface tests.
-    async fn jack_snapshot() -> WriterSnapshot {
+    fn jack_snapshot() -> WriterSnapshot {
         crate::artifacts::writer::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) async fn every_command() -> Vec<WriterCommand> {
+    pub(super) fn every_command() -> Vec<WriterCommand> {
         vec![
             WriterCommand::TextEdit(text_edit::TextEdit { text: "hello".into() }),
             WriterCommand::SetText(set_text::SetText { text: "MATCH (a) RETURN a".into() }),

@@ -14,12 +14,12 @@ pub const LOWPOLY_PLAY_LAYOUT_PAINT: &str = "lowpoly-paint";
 /// `.mode_layout("paint", "lowpoly-paint")` post-hoc call — `ModeDefinition::layout_id` already carries
 /// the same information through `mode_definition_to_spec`, so setting it here needs no separate
 /// passthrough).
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: LOWPOLY_PLAY_MODE_PAINT.into(), label: LocalizedLabel::native("Paint", "Malen"), icon_id: "paintbrush".into(), tools: Vec::new(), layout_id: Some(LOWPOLY_PLAY_LAYOUT_PAINT.into()), commands: Vec::new() }
 }
 
 /// 🪟️ The two-window paint layout (Model 60% / UV 40%), registered as an app-level named layout.
-pub async fn layout() -> NamedLayout {
+pub fn layout() -> NamedLayout {
     create_named_layout(
         LOWPOLY_PLAY_LAYOUT_PAINT,
         "Paint",

@@ -20,6 +20,21 @@
     {
       "id": "s-home-1-any",
       "capability": "s-home-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-catalog-generation",
+          "sourceMutationDirectoryName": "🔢️change-catalog-generation",
+          "mutationDirectoryName": "🔢️change-catalog-generation",
+          "scenarios": [
+            {
+              "id": "bumps-the-catalog-generation-to-7",
+              "directoryName": "🧪️bumps-the-catalog-generation-to-7"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "change-catalog-generation"
       ]

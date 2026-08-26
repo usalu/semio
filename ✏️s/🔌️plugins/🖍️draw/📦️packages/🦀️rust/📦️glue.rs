@@ -661,6 +661,7 @@ pub mod viewer {
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 mod plugin;
+pub use plugin::DrawApps;
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::DrawApps);
 
 //#region 📚️Examples

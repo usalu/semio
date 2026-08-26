@@ -14,8 +14,11 @@ use crate::editor::din18599::modes::edit as edit_mode;
 use crate::editor::din18599::modes::edit::windows::{inputs, results};
 use crate::editor::din18599::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::presence::{NormPresence, NormPresenceMutation};
+use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{AppIo, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, LocalizedLabel, Media, MediaError, NoDraft, NoDraftMutation, UiNode};
+use semio_framework_plugin::{AppOperationContext, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, EditorApp, InteractiveJobClassification};
 // 🚧️ SDK GAP: `Dialect` is not in `semio_framework_plugin`'s curated crate-root re-export list
 // (only `ArtifactEditor`/`ArtifactViewer`/`Editor`/`Viewer`/`EditorApp`/`ViewerApp`/`ViewEmit` are,
 // per ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET W0-F gap 1) — only reachable through `app`.
@@ -50,6 +53,90 @@ semio_framework_plugin::app_commands! {
 #[derive(Default)]
 pub struct Din18599PlayApp;
 
+//#region 🧵️RetainedCommands
+const NORM_BOUNDED_TOOL_IDS: &[&str] = &["evaluate", "setSelectedCheckIndex"];
+const NORM_BOUNDED_PAYLOAD_SCHEMA: &str = "semio.norm.din18599/v1.tool-command.v1";
+const NORM_BOUNDED_RAW_BYTES: usize = 256;
+
+fn norm_bounded_wire_admitted(bytes: usize, has_checkpoint: bool) -> bool {
+    bytes <= NORM_BOUNDED_RAW_BYTES && !has_checkpoint
+}
+
+fn norm_bounded_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(NORM_BOUNDED_RAW_BYTES, 8, 1, 1_024, 7_500)
+}
+
+fn norm_bounded_extent(command: &Din18599Command, _snapshot: &Din18599Snapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    NORM_BOUNDED_TOOL_IDS.contains(&command.command_id()).then_some(1)
+}
+
+fn norm_bounded_reduce(
+    command: &Din18599Command,
+    snapshot: &Din18599Snapshot,
+    config: &NormConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> Result<Emit<Din18599Mutation, NormConfigMutation, NoDraftMutation>, Fault> {
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+}
+
+struct BoundedFirstStepCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl BoundedFirstStepCommandJobFactory {
+    fn new(controller: &str) -> Self {
+        Self { keys: NORM_BOUNDED_TOOL_IDS.iter().map(|tool| ToolFactoryKey::new(controller, *tool)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for BoundedFirstStepCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<Din18599PlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<Din18599PlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        NORM_BOUNDED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        norm_bounded_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if !norm_bounded_wire_admitted(input.declared_bytes(), checkpoint.is_some()) {
+            return Err((ToolJobFactoryError::new("Norm bounded command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for BoundedFirstStepCommandJobFactory {
+    type Owner = EditorApp<Din18599PlayApp>;
+    const TOOL_IDS: &'static [&'static str] = NORM_BOUNDED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = "semio.norm.din18599/v1";
+}
+//#endregion 🧵️RetainedCommands
+
 impl ArtifactEditor for Din18599PlayApp {
     type Snapshot = Din18599Snapshot;
     type Mutation = Din18599Mutation;
@@ -66,6 +153,57 @@ impl ArtifactEditor for Din18599PlayApp {
 
     const DIALECT: Dialect = crate::artifacts::din18599::DIN18599_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = "semio.norm.din18599/v1";
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<Din18599PlayApp>,
+        owner_file: "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.norm.din18599@1/*#editor",
+        document_schema: "semio.norm.din18599/v1",
+        factory: "BoundedFirstStepCommandJobFactory",
+        tools: {
+            "evaluate" => semio_framework::ToolExecutionContract::bounded_first_step(256, 8, 1, 1_024, 7_500),
+            "setSelectedCheckIndex" => semio_framework::ToolExecutionContract::bounded_first_step(256, 8, 1, 1_024, 7_500),
+        }
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(BoundedFirstStepCommandJobFactory::new(&controller))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !NORM_BOUNDED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id || norm_bounded_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
+            return Err(Fault::from("norm-bounded-command-contract-mismatch"));
+        }
+        let tool_id = request.command.command_id();
+        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, norm_bounded_reduce, norm_bounded_extent));
+        let operation = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            request.context,
+            operation,
+            request.completion,
+            Din18599Command::command_id,
+            NORM_BOUNDED_RAW_BYTES,
+            1,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
 
     fn config_schema() -> &'static str {
         CONFIG_SCHEMA
@@ -167,6 +305,8 @@ pub fn create_din18599_app() -> semio_framework_plugin::AppDefinition {
             .mutation("setSnapshot", LocalizedLabel::native("Set Snapshot", "Dokument setzen"))
             .view_action("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"))
             .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "AusgewÃ¤hlte PrÃ¼fung setzen"))
+            .action_interactive_job("evaluate", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSelectedCheckIndex", InteractiveJobClassification::Migrated)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder` takes a bare `AppDefinition` — there is no

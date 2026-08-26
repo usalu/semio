@@ -16,7 +16,7 @@ use semio_framework_plugin::{LabelText, WindowMeasure};
 use serde_json::json;
 
 /// 🎯️ One mesh-domain granularity toggle — dispatches `setInteractionGranularity`.
-async fn granularity_toggle(id: &str, icon: &str, label: LabelText, granularity_id: &str) -> WindowMeasure {
+fn granularity_toggle(id: &str, icon: &str, label: LabelText, granularity_id: &str) -> WindowMeasure {
     WindowMeasure::Toggle {
         id: format!("lowpoly-select-{id}"),
         icon_id: icon.into(),
@@ -28,7 +28,7 @@ async fn granularity_toggle(id: &str, icon: &str, label: LabelText, granularity_
 }
 
 /// 🎯️ One mesh-domain selection-mode toggle — dispatches `setSelectionMode`.
-async fn selection_mode_toggle(id: &str, icon: &str, label: LabelText, mode: &str) -> WindowMeasure {
+fn selection_mode_toggle(id: &str, icon: &str, label: LabelText, mode: &str) -> WindowMeasure {
     WindowMeasure::Toggle {
         id: format!("lowpoly-select-{id}"),
         icon_id: icon.into(),
@@ -40,7 +40,7 @@ async fn selection_mode_toggle(id: &str, icon: &str, label: LabelText, mode: &st
 }
 
 /// 🎛️ The live chrome measure for this option.
-pub async fn measure(_config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMeasure {
+pub fn measure(_config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: "lowpoly-select".into(),
         label: labels.select.into(),

@@ -18,6 +18,153 @@
     {
       "id": "semio-v1-brep",
       "capability": "semio-v1-brep-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️brep",
+      "vectors": [
+        {
+          "mutationId": "create-edge",
+          "sourceMutationDirectoryName": "🔗create-edge",
+          "mutationDirectoryName": "🔗create-edge",
+          "scenarios": [
+            {
+              "id": "adds-a-diagonal-edge-across-the-square",
+              "directoryName": "🧪️adds-a-diagonal-edge-across-the-square"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-face",
+          "sourceMutationDirectoryName": "🔷create-face",
+          "mutationDirectoryName": "🔷create-face",
+          "scenarios": [
+            {
+              "id": "adds-an-opposing-face-over-the-same-loop",
+              "directoryName": "🧪️adds-an-opposing-face-over-the-same-loop"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-shell",
+          "sourceMutationDirectoryName": "🐚create-shell",
+          "mutationDirectoryName": "🐚create-shell",
+          "scenarios": [
+            {
+              "id": "adds-a-second-shell-that-reuses-the-face-with-flipped-sense",
+              "directoryName": "🧪️adds-a-second-shell-that-reuses-the-face-with-flipped-sense"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-solid",
+          "sourceMutationDirectoryName": "🧊create-solid",
+          "mutationDirectoryName": "🧊create-solid",
+          "scenarios": [
+            {
+              "id": "adds-a-second-solid-that-treats-the-shell-as-a-void",
+              "directoryName": "🧪️adds-a-second-solid-that-treats-the-shell-as-a-void"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-vertex",
+          "sourceMutationDirectoryName": "🏗️create-vertex",
+          "mutationDirectoryName": "🏗️create-vertex",
+          "scenarios": [
+            {
+              "id": "adds-an-apex-vertex-above-the-square",
+              "directoryName": "🧪️adds-an-apex-vertex-above-the-square"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-edge",
+          "sourceMutationDirectoryName": "✂️delete-edge",
+          "mutationDirectoryName": "✂️delete-edge",
+          "scenarios": [
+            {
+              "id": "removes-the-closing-edge-and-keeps-its-two-vertices",
+              "directoryName": "🧪️removes-the-closing-edge-and-keeps-its-two-vertices"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-face",
+          "sourceMutationDirectoryName": "🚮delete-face",
+          "mutationDirectoryName": "🚮delete-face",
+          "scenarios": [
+            {
+              "id": "removes-the-only-face-and-leaves-its-loop-behind",
+              "directoryName": "🧪️removes-the-only-face-and-leaves-its-loop-behind"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-shell",
+          "sourceMutationDirectoryName": "💥delete-shell",
+          "mutationDirectoryName": "💥delete-shell",
+          "scenarios": [
+            {
+              "id": "removes-the-only-shell-and-leaves-its-faces-behind",
+              "directoryName": "🧪️removes-the-only-shell-and-leaves-its-faces-behind"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-solid",
+          "sourceMutationDirectoryName": "🕳️delete-solid",
+          "mutationDirectoryName": "🕳️delete-solid",
+          "scenarios": [
+            {
+              "id": "removes-the-only-solid-and-leaves-its-shell-behind",
+              "directoryName": "🧪️removes-the-only-solid-and-leaves-its-shell-behind"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-vertex",
+          "sourceMutationDirectoryName": "🗑️delete-vertex",
+          "mutationDirectoryName": "🗑️delete-vertex",
+          "scenarios": [
+            {
+              "id": "removes-a-corner-vertex-and-cascades-into-its-two-incident-edges",
+              "directoryName": "🧪️removes-a-corner-vertex-and-cascades-into-its-two-incident-edges"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-vertex",
+          "sourceMutationDirectoryName": "📍move-vertex",
+          "mutationDirectoryName": "📍move-vertex",
+          "scenarios": [
+            {
+              "id": "lifts-the-third-corner-off-the-base-plane",
+              "directoryName": "🧪️lifts-the-third-corner-off-the-base-plane"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-curve",
+          "sourceMutationDirectoryName": "➰replace-curve",
+          "mutationDirectoryName": "➰replace-curve",
+          "scenarios": [
+            {
+              "id": "swaps-the-first-edges-line-for-a-circular-arc",
+              "directoryName": "🧪️swaps-the-first-edges-line-for-a-circular-arc"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-surface",
+          "sourceMutationDirectoryName": "🗺️replace-surface",
+          "mutationDirectoryName": "🗺️replace-surface",
+          "scenarios": [
+            {
+              "id": "swaps-the-faces-plane-for-a-cylinder",
+              "directoryName": "🧪️swaps-the-faces-plane-for-a-cylinder"
+            }
+          ]
+        }
+      ],
       "kinds": ["create-vertex", "delete-vertex", "create-edge", "delete-edge", "create-face", "delete-face", "create-shell", "delete-shell", "create-solid", "delete-solid", "replace-curve", "replace-surface", "move-vertex"]
     }
   ]

@@ -359,7 +359,6 @@ mod tests {
         let checkpoint = next_checkpoint(first).expect("durable Flow continuation");
         let (_, config_ops, _) = initial.take_last_emit_wire().await.expect("initial Flow config operation wire");
 
-        crate::artifacts::flow::clear_flow_process_state().await;
         let mut restarted = flow_app_with_registry().await;
         let child_id = restarted.snapshot().await.expect("restarted Flow snapshot").content.child_id;
         let before = restarted.child_store("content", &child_id).await.expect("restarted Flow child").document_pack_bytes().await.expect("Flow child before pack");

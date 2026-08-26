@@ -3561,19 +3561,15 @@ impl ShellState {
     }
 
     pub async fn dispatch_action(&mut self, action: ActionDescriptor) -> Result<(), String> {
-        // 🎬️ Tutorial interception — fully short-circuits (mirrors `SET_ACTIVE_UTILITY_ACTION_ID`'s own
-        // interception further down): both `startTutorial`/`recordTutorial` are framework-injected View
-        // actions with no plugin-side handler at all (see `framework/plugin/rs`'s auto-injection).
+        // 🎬️ Tutorial playback remains shell-local. Recording is armed only after the plugin's shared
+        // retained `recordTutorial` route accepts and commits below.
         if action.action == semio_framework::START_TUTORIAL_ACTION_ID {
             if let Some(tutorial_id) = action.args.as_ref().and_then(|args| args.get("tutorialId")).and_then(|v| v.as_str()) {
                 self.tutorial_start(tutorial_id);
             }
             return Ok(());
         }
-        if action.action == semio_framework::RECORD_TUTORIAL_ACTION_ID {
-            self.tutorial_start_recording();
-            return Ok(());
-        }
+        let record_tutorial_after_acceptance = action.action == semio_framework::RECORD_TUTORIAL_ACTION_ID;
         // 🎬️ Deviation detection + recorder tap — every OTHER real dispatch funnels through here exactly
         // once, before any of this function's own side effects, and skips itself while the tutorial
         // player's own history-action replay is mid-flight (`tutorial_flush_pending_document_ops`'s
@@ -3690,6 +3686,9 @@ impl ShellState {
         // clock, checkpoint-landed detection + `TouchArtifact`) before anything else touches `self`.
         #[cfg(not(target_arch = "wasm32"))]
         self.observe_invocation_history(result.history_patch.as_ref()).await;
+        if record_tutorial_after_acceptance {
+            self.tutorial_start_recording();
+        }
         // 🎓️ Advance-by-doing: this action was actually performed (the plugin call above succeeded), so
         // a tour step whose `advance` targets it moves on now — see `chrome_tour_note_action_performed`.
         self.chrome_tour_note_action_performed(&action.action);

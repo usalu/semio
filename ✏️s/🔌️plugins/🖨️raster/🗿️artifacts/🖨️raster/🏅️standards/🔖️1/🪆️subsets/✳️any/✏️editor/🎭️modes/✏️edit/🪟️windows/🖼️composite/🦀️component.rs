@@ -16,7 +16,7 @@ const RASTER_PLAY_SURFACE_COMPOSITE: &str = "raster.play.composite";
 /// 🧱️ Stitched into the app manifest by `crate::editor::raster::create_raster_app`. `options.measures`
 /// stays empty here on purpose: raster's measures are config-derived and rebuilt per frame by
 /// [`window_measures`], not frozen into the manifest.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: RASTER_PLAY_WINDOW_COMPOSITE.into(),
         label: LocalizedLabel::native("Composite", "Komposit"),
@@ -36,13 +36,13 @@ pub async fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
-pub async fn window_measures(config: &RasterConfig) -> Vec<WindowMeasure> {
+pub fn window_measures(config: &RasterConfig) -> Vec<WindowMeasure> {
     vec![options::brush::measure(config), options::eraser::measure(config)]
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(document: &RasterDocument, config: &RasterConfig) -> UiNode {
+pub fn render(document: &RasterDocument, config: &RasterConfig) -> UiNode {
     build_paint_2d_scene(RASTER_PLAY_SURFACE_COMPOSITE, crate::editor::raster::RASTER_PLAY_CONTROLLER_ID, raster_scene(document, config, config.active_utility_id.as_str(), "composite"))
 }
 //#endregion 🔖️Render

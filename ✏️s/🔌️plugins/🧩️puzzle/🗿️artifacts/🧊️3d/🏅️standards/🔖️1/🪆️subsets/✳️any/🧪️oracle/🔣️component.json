@@ -24,6 +24,395 @@
     {
       "id": "puzzle-3d-1-any",
       "capability": "puzzle-3d-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "add-object-vortex",
+          "sourceMutationDirectoryName": "➕add-object-vortex",
+          "mutationDirectoryName": "➕add-object-vortex",
+          "scenarios": [
+            {
+              "id": "appends-vortex-3-to-object-b",
+              "directoryName": "🧪️appends-vortex-3-to-object-b"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-domain",
+          "sourceMutationDirectoryName": "🌐change-domain",
+          "mutationDirectoryName": "🌐change-domain",
+          "scenarios": [
+            {
+              "id": "architecture-to-engineering",
+              "directoryName": "🧪️architecture-to-engineering"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-object-anchor",
+          "sourceMutationDirectoryName": "⚓change-object-anchor",
+          "mutationDirectoryName": "⚓change-object-anchor",
+          "scenarios": [
+            {
+              "id": "fixed-to-derived",
+              "directoryName": "🧪️fixed-to-derived"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-object-hidden",
+          "sourceMutationDirectoryName": "👁change-object-hidden",
+          "mutationDirectoryName": "👁change-object-hidden",
+          "scenarios": [
+            {
+              "id": "hides-object-a",
+              "directoryName": "🧪️hides-object-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-object-kind",
+          "sourceMutationDirectoryName": "🏗change-object-kind",
+          "mutationDirectoryName": "🏗change-object-kind",
+          "scenarios": [
+            {
+              "id": "reassigns-object-a-kind",
+              "directoryName": "🧪️reassigns-object-a-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-object-locked",
+          "sourceMutationDirectoryName": "🔒change-object-locked",
+          "mutationDirectoryName": "🔒change-object-locked",
+          "scenarios": [
+            {
+              "id": "locks-object-a",
+              "directoryName": "🧪️locks-object-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-object-mesh",
+          "sourceMutationDirectoryName": "🧱change-object-mesh",
+          "mutationDirectoryName": "🧱change-object-mesh",
+          "scenarios": [
+            {
+              "id": "repoints-object-a-mesh",
+              "directoryName": "🧪️repoints-object-a-mesh"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-reference-hidden",
+          "sourceMutationDirectoryName": "👀change-reference-hidden",
+          "mutationDirectoryName": "👀change-reference-hidden",
+          "scenarios": [
+            {
+              "id": "hides-reference-1",
+              "directoryName": "🧪️hides-reference-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-reference-locked",
+          "sourceMutationDirectoryName": "🗝change-reference-locked",
+          "mutationDirectoryName": "🗝change-reference-locked",
+          "scenarios": [
+            {
+              "id": "locks-reference-1",
+              "directoryName": "🧪️locks-reference-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-target-volume-hidden",
+          "sourceMutationDirectoryName": "🙈change-target-volume-hidden",
+          "mutationDirectoryName": "🙈change-target-volume-hidden",
+          "scenarios": [
+            {
+              "id": "hides-volume-1",
+              "directoryName": "🧪️hides-volume-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-target-volume-locked",
+          "sourceMutationDirectoryName": "🔐change-target-volume-locked",
+          "mutationDirectoryName": "🔐change-target-volume-locked",
+          "scenarios": [
+            {
+              "id": "locks-volume-1",
+              "directoryName": "🧪️locks-volume-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "connect-kind-compatibility",
+          "sourceMutationDirectoryName": "🤝connect-kind-compatibility",
+          "mutationDirectoryName": "🤝connect-kind-compatibility",
+          "scenarios": [
+            {
+              "id": "adds-vortex-kind-pair",
+              "directoryName": "🧪️adds-vortex-kind-pair"
+            }
+          ]
+        },
+        {
+          "mutationId": "connect-vortices",
+          "sourceMutationDirectoryName": "🔗connect-vortices",
+          "mutationDirectoryName": "🔗connect-vortices",
+          "scenarios": [
+            {
+              "id": "adds-second-attraction",
+              "directoryName": "🧪️adds-second-attraction"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-object",
+          "sourceMutationDirectoryName": "🌱create-object",
+          "mutationDirectoryName": "🌱create-object",
+          "scenarios": [
+            {
+              "id": "appends-object-c",
+              "directoryName": "🧪️appends-object-c"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-reference",
+          "sourceMutationDirectoryName": "🖼create-reference",
+          "mutationDirectoryName": "🖼create-reference",
+          "scenarios": [
+            {
+              "id": "appends-reference-2",
+              "directoryName": "🧪️appends-reference-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-target-volume",
+          "sourceMutationDirectoryName": "🌍create-target-volume",
+          "mutationDirectoryName": "🌍create-target-volume",
+          "scenarios": [
+            {
+              "id": "appends-volume-2",
+              "directoryName": "🧪️appends-volume-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-object",
+          "sourceMutationDirectoryName": "🗑delete-object",
+          "mutationDirectoryName": "🗑delete-object",
+          "scenarios": [
+            {
+              "id": "removes-object-a-and-severs-attraction",
+              "directoryName": "🧪️removes-object-a-and-severs-attraction"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-reference",
+          "sourceMutationDirectoryName": "🚮delete-reference",
+          "mutationDirectoryName": "🚮delete-reference",
+          "scenarios": [
+            {
+              "id": "removes-reference-1",
+              "directoryName": "🧪️removes-reference-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-target-volume",
+          "sourceMutationDirectoryName": "🪦delete-target-volume",
+          "mutationDirectoryName": "🪦delete-target-volume",
+          "scenarios": [
+            {
+              "id": "removes-volume-1",
+              "directoryName": "🧪️removes-volume-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-kind-compatibility",
+          "sourceMutationDirectoryName": "💔disconnect-kind-compatibility",
+          "mutationDirectoryName": "💔disconnect-kind-compatibility",
+          "scenarios": [
+            {
+              "id": "removes-vortex-kind-pair",
+              "directoryName": "🧪️removes-vortex-kind-pair"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-vortices",
+          "sourceMutationDirectoryName": "✂️disconnect-vortices",
+          "mutationDirectoryName": "✂️disconnect-vortices",
+          "scenarios": [
+            {
+              "id": "removes-attraction-1",
+              "directoryName": "🧪️removes-attraction-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-object-label",
+          "sourceMutationDirectoryName": "🖋️edit-object-label",
+          "mutationDirectoryName": "🖋️edit-object-label",
+          "scenarios": [
+            {
+              "id": "relabels-object-a",
+              "directoryName": "🧪️relabels-object-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-object",
+          "sourceMutationDirectoryName": "📍move-object",
+          "mutationDirectoryName": "📍move-object",
+          "scenarios": [
+            {
+              "id": "moves-object-a",
+              "directoryName": "🧪️moves-object-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-reference",
+          "sourceMutationDirectoryName": "🎯move-reference",
+          "mutationDirectoryName": "🎯move-reference",
+          "scenarios": [
+            {
+              "id": "slides-reference-1",
+              "directoryName": "🧪️slides-reference-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-target-volume",
+          "sourceMutationDirectoryName": "🚀move-target-volume",
+          "mutationDirectoryName": "🚀move-target-volume",
+          "scenarios": [
+            {
+              "id": "lifts-volume-1",
+              "directoryName": "🧪️lifts-volume-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-object-vortex",
+          "sourceMutationDirectoryName": "➖remove-object-vortex",
+          "mutationDirectoryName": "➖remove-object-vortex",
+          "scenarios": [
+            {
+              "id": "removes-vortex-2-and-severs-attraction",
+              "directoryName": "🧪️removes-vortex-2-and-severs-attraction"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-attraction-geometry",
+          "sourceMutationDirectoryName": "🧮replace-attraction-geometry",
+          "mutationDirectoryName": "🧮replace-attraction-geometry",
+          "scenarios": [
+            {
+              "id": "repositions-attraction-1",
+              "directoryName": "🧪️repositions-attraction-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-kind-catalogs",
+          "sourceMutationDirectoryName": "📚replace-kind-catalogs",
+          "mutationDirectoryName": "📚replace-kind-catalogs",
+          "scenarios": [
+            {
+              "id": "installs-vortex-kind-catalog",
+              "directoryName": "🧪️installs-vortex-kind-catalog"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-object-vortex",
+          "sourceMutationDirectoryName": "🔌replace-object-vortex",
+          "mutationDirectoryName": "🔌replace-object-vortex",
+          "scenarios": [
+            {
+              "id": "rekind-vortex-1-is-noop",
+              "directoryName": "🧪️rekind-vortex-1-is-noop"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-reference-source",
+          "sourceMutationDirectoryName": "🖇replace-reference-source",
+          "mutationDirectoryName": "🖇replace-reference-source",
+          "scenarios": [
+            {
+              "id": "repoints-reference-1-source",
+              "directoryName": "🧪️repoints-reference-1-source"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-reference",
+          "sourceMutationDirectoryName": "📎resize-reference",
+          "mutationDirectoryName": "📎resize-reference",
+          "scenarios": [
+            {
+              "id": "widens-reference-1",
+              "directoryName": "🧪️widens-reference-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "rotate-object",
+          "sourceMutationDirectoryName": "🔃rotate-object",
+          "mutationDirectoryName": "🔃rotate-object",
+          "scenarios": [
+            {
+              "id": "half-turn-about-z",
+              "directoryName": "🧪️half-turn-about-z"
+            }
+          ]
+        },
+        {
+          "mutationId": "rotate-target-volume",
+          "sourceMutationDirectoryName": "🌀rotate-target-volume",
+          "mutationDirectoryName": "🌀rotate-target-volume",
+          "scenarios": [
+            {
+              "id": "half-turn-about-z",
+              "directoryName": "🧪️half-turn-about-z"
+            }
+          ]
+        },
+        {
+          "mutationId": "scale-object",
+          "sourceMutationDirectoryName": "📏scale-object",
+          "mutationDirectoryName": "📏scale-object",
+          "scenarios": [
+            {
+              "id": "uniform-to-per-axis",
+              "directoryName": "🧪️uniform-to-per-axis"
+            }
+          ]
+        },
+        {
+          "mutationId": "scale-target-volume",
+          "sourceMutationDirectoryName": "📐scale-target-volume",
+          "mutationDirectoryName": "📐scale-target-volume",
+          "scenarios": [
+            {
+              "id": "per-axis-to-uniform",
+              "directoryName": "🧪️per-axis-to-uniform"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-object",
         "delete-object",

@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "opaqueExclusions": [
+    "compose",
+    "temp/compose"
+  ],
+  "cases": [
+    {
+      "id": "unscoped",
+      "inputScope": null,
+      "normalizedScope": null,
+      "conservativePrefix": ".",
+      "positivePathspec": ".",
+      "exclusionPathspecs": [
+        ":(exclude,top,literal)compose",
+        ":(exclude,top,literal)temp/compose"
+      ]
+    },
+    {
+      "id": "exact-stable-scope",
+      "inputScope": "✏️s/🔌️plugins/✒️writer",
+      "normalizedScope": "✏️s/🔌️plugins/✒️writer",
+      "conservativePrefix": "✏️s/🔌️plugins/✒️writer",
+      "positivePathspec": ":(top,literal)✏️s/🔌️plugins/✒️writer",
+      "exclusionPathspecs": []
+    },
+    {
+      "id": "scope-above-one-opaque-root",
+      "inputScope": "temp",
+      "normalizedScope": "temp",
+      "conservativePrefix": "temp",
+      "positivePathspec": ":(top,literal)temp",
+      "exclusionPathspecs": [
+        ":(exclude,top,literal)temp/compose"
+      ]
+    },
+    {
+      "id": "scope-disjoint-from-opaque-roots",
+      "inputScope": "🧰️framework",
+      "normalizedScope": "🧰️framework",
+      "conservativePrefix": "🧰️framework",
+      "positivePathspec": ":(top,literal)🧰️framework",
+      "exclusionPathspecs": []
+    },
+    {
+      "id": "first-segment-decomposition-sensitive",
+      "inputScope": "café/case",
+      "normalizedScope": "café/case",
+      "conservativePrefix": ".",
+      "positivePathspec": ".",
+      "exclusionPathspecs": [
+        ":(exclude,top,literal)compose",
+        ":(exclude,top,literal)temp/compose"
+      ]
+    },
+    {
+      "id": "later-segment-decomposition-sensitive",
+      "inputScope": "owners/café/case",
+      "normalizedScope": "owners/café/case",
+      "conservativePrefix": "owners",
+      "positivePathspec": ":(top,literal)owners",
+      "exclusionPathspecs": []
+    },
+    {
+      "id": "literal-git-metacharacters",
+      "inputScope": "owners/[x]*?!:/leaf with space",
+      "normalizedScope": "owners/[x]*?!:/leaf with space",
+      "conservativePrefix": "owners/[x]*?!:/leaf with space",
+      "positivePathspec": ":(top,literal)owners/[x]*?!:/leaf with space",
+      "exclusionPathspecs": []
+    }
+  ]
+}

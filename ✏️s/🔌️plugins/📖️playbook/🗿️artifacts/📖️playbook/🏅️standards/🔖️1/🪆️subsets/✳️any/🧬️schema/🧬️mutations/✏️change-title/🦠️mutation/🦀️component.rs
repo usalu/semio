@@ -16,20 +16,20 @@ pub struct ChangeTitle {
 }
 
 /// 🏗️ Builder.
-pub async fn change_title_operation(new_title: Option<String>) -> PlaybookMutation {
+pub fn change_title_operation(new_title: Option<String>) -> PlaybookMutation {
     PlaybookMutation::ChangeTitle(ChangeTitle { new_title })
 }
 
 impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for ChangeTitle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "playbook", kind: "change-title", record: "ChangedPlaybookTitle" };
 
-    async fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
+    fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
+    fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change playbook title to \"{}\"", self.new_title.clone().unwrap_or_default())
     }
 }

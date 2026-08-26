@@ -13,7 +13,7 @@
 //! reachable slot — the exact arithmetic this second guard exists for.
 
 use crate::artifacts::playbook::mutations::{apply_playbook_mutation, inverse_playbook_mutation, PlaybookMutation};
-use crate::artifacts::playbook::{cache_playbook_steps, PlaybookDiff, PlaybookSnapshot, PlaybookStep};
+use crate::artifacts::playbook::{attach_playbook_steps, PlaybookDiff, PlaybookSnapshot, PlaybookStep};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -32,11 +32,11 @@ fn expected_after() -> PlaybookSnapshot {
 /// only step is the id the committed payload names. Only that id is load-bearing here: the guard
 /// compares list positions, never titles or blocks.
 fn before() -> PlaybookSnapshot {
-    let snapshot: PlaybookSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: PlaybookSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let PlaybookMutation::MoveStep(payload) = mutation() else {
         panic!("no-ops-when-the-step-is-already-at-that-index's committed mutation must be a move-step");
     };
-    cache_playbook_steps(&snapshot.flow.child_id, vec![PlaybookStep { id: payload.step_id.clone(), title: "Intro".into(), description: None, blocks: Vec::new() }]);
+    attach_playbook_steps(&mut snapshot.flow, vec![PlaybookStep { id: payload.step_id.clone(), title: "Intro".into(), description: None, blocks: Vec::new() }]);
     snapshot
 }
 

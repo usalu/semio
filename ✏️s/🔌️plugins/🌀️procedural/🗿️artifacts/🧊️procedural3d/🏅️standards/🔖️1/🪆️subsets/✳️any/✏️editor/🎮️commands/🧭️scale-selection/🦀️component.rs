@@ -89,6 +89,6 @@ pub fn apply(
     interaction: &InteractionView<'_>,
     _session: &mut FlowEvalSession,
 ) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
-    let ids = mesh_selection_ids_typed(&payload.node_ids, &semio_framework::io::resolve_ready(interaction.selection("graph")).ids);
+    let ids = mesh_selection_ids_typed(&payload.node_ids, &interaction.selection("graph").ids);
     Ok(scale_ids(&doc.snapshot.fixture, &ids, (payload.sx + payload.sy + payload.sz) / 3.0))
 }

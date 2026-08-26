@@ -77,6 +77,7 @@ pub struct ToolWireAdmission {
 
 pub const TOOL_WIRE_PAGE_BYTES: usize = 4_096;
 
+#[derive(Debug)]
 pub struct ToolWirePage {
     bytes: [u8; TOOL_WIRE_PAGE_BYTES],
     len: usize,

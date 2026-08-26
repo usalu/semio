@@ -47,12 +47,12 @@ pub use super::update_step::mutation::{update_step_operation, UpdateStep};
 
 /// ▶️ Applies `mutation` via its diff. External call site: `derived_construction`'s
 /// `ArtifactBuilder::mutate` (`../🦀️component.rs`).
-pub async fn apply_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &PlaybookMutation) -> protocol::MutationApplyResult<PlaybookSnapshot> {
+pub fn apply_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &PlaybookMutation) -> protocol::MutationApplyResult<PlaybookSnapshot> {
     protocol::MutationDiff::apply(protocol::Mutation::diff(mutation, snapshot).diff(), snapshot)
 }
 
 /// ↩️ Computes `mutation`'s inverse from the pre-state `snapshot`.
-pub async fn inverse_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &PlaybookMutation) -> Vec<PlaybookMutation> {
+pub fn inverse_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &PlaybookMutation) -> Vec<PlaybookMutation> {
     protocol::Mutation::inverse(mutation, snapshot)
 }
 
@@ -62,17 +62,7 @@ pub async fn inverse_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &P
 /// exhaustive `mutate-*` case measures itself against (3 step kinds, 4 block kinds, one step-header patch and the document title). The framework never
 /// parses Rust, so `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest
 /// against both the enum and the committed catalog.
-pub const KINDS: &[&str] = &[
-    "add-step",
-    "remove-step",
-    "move-step",
-    "add-block",
-    "remove-block",
-    "move-block",
-    "replace-block",
-    "update-step",
-    "change-title",
-];
+pub const KINDS: &[&str] = &["add-step", "remove-step", "move-step", "add-block", "remove-block", "move-block", "replace-block", "update-step", "change-title"];
 
 /// 🧮️ Applies `mutation` to `base` and hands back the whole `protocol::MutationOutcome`, the
 /// diagnostics included — the shape an external conformance host needs, since a committed
@@ -111,8 +101,8 @@ pub fn decode_playbook_snapshot_json(text: &str) -> Result<PlaybookSnapshot, Str
 pub fn encode_playbook_snapshot_json(snapshot: &PlaybookSnapshot) -> String {
     serde_json::to_string(snapshot).expect("a PlaybookSnapshot is always serializable")
 }
-/// 🌱 Seeds the working-scene cache behind this snapshot's composed `s.stdio.semio.flow` `flow` child handle from a committed
-/// `[PlaybookStep]` JSON document, and hands back what it decoded.
+/// 🌱 Attaches the working scene to this snapshot's exact composed `flow` child handle from a
+/// committed `[PlaybookStep]` JSON document, and hands back what it decoded.
 ///
 /// This subset's persisted snapshot holds only the child HANDLE; the live rows behind it are an
 /// ephemeral, session-side scene that a fresh process has never populated. A committed
@@ -123,9 +113,9 @@ pub fn encode_playbook_snapshot_json(snapshot: &PlaybookSnapshot) -> String {
 /// it was read from cited there. The right long-term fix is to commit the scene beside the snapshot
 /// as a fixture file of its own; until then this is the seam that makes the vectors runnable.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
-pub fn seed_playbook_scene_json(snapshot: &PlaybookSnapshot, steps_json: &str) -> Result<Vec<crate::artifacts::playbook::PlaybookStep>, String> {
+pub fn seed_playbook_scene_json(snapshot: &mut PlaybookSnapshot, steps_json: &str) -> Result<Vec<crate::artifacts::playbook::PlaybookStep>, String> {
     let steps: Vec<crate::artifacts::playbook::PlaybookStep> = serde_json::from_str(steps_json).map_err(|error| error.to_string())?;
-    crate::artifacts::playbook::cache_playbook_steps(&snapshot.flow.child_id, steps.clone());
+    crate::artifacts::playbook::attach_playbook_steps(&mut snapshot.flow, steps.clone());
     Ok(steps)
 }
 //#endregion 🔖️Kinds
@@ -164,7 +154,7 @@ mod tests {
     use protocol::MutationKind;
     use protocol::SemanticMutation;
 
-    async fn sample_block(id: &str, kind: &str, label: &str) -> PlaybookBlock {
+    fn sample_block(id: &str, kind: &str, label: &str) -> PlaybookBlock {
         PlaybookBlock {
             id: id.into(),
             label: label.into(),
@@ -189,7 +179,7 @@ mod tests {
         }
     }
 
-    async fn sample_snapshot() -> PlaybookSnapshot {
+    fn sample_snapshot() -> PlaybookSnapshot {
         let base = PlaybookSnapshot::default();
         let mut steps = base.steps();
         steps.push(PlaybookStep { id: "s2".into(), title: "Review".into(), description: None, blocks: vec![sample_block("b1", "number", "Team size")] });

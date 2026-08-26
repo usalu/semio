@@ -23,12 +23,12 @@ pub mod derived_composition {
         type Snapshot = DocxSnapshot;
         const WRITES: Dialect = DIALECT_TRANSITIONAL;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_TRANSITIONAL, DEP_ZIP, DEP_XML]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = semio_framework_plugin::resolve_ready(DocxAnyComposer::compose(sources))?;
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = DocxAnyComposer::compose(sources)?;
             let checks = check_transitional_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -110,7 +110,7 @@ pub mod derived_composition {
         async fn conforming_snapshot_composes_and_stamps_transitional() {
             let bytes = <DocxSnapshot as store::ArtifactPack>::encode_pack(&transitional_snapshot());
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = DocxTransitionalComposerComposition::compose(&sources).await.expect("clean transitional document must compose");
+            let composed = DocxTransitionalComposerComposition::compose(&sources).expect("clean transitional document must compose");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "got {:?}", composed.diagnostics);
         }
 
@@ -125,7 +125,7 @@ pub mod derived_composition {
             let snapshot = DocxSnapshot::from_parts(opc, Default::default());
             let bytes = <DocxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let err = DocxTransitionalComposerComposition::compose(&sources).await.expect_err("mixed-in strict namespace must not stamp transitional");
+            let err = DocxTransitionalComposerComposition::compose(&sources).expect_err("mixed-in strict namespace must not stamp transitional");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_STRICT_NS_PRESENT && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 

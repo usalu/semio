@@ -20,6 +20,186 @@
     {
       "id": "process3d-1-any",
       "capability": "process3d-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-cursor",
+          "sourceMutationDirectoryName": "⏱️change-cursor",
+          "mutationDirectoryName": "⏱️change-cursor",
+          "scenarios": [
+            {
+              "id": "pins-the-replay-cursor-to-two-steps",
+              "directoryName": "🧪️pins-the-replay-cursor-to-two-steps"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-machine-icon",
+          "sourceMutationDirectoryName": "🎨change-machine-icon",
+          "mutationDirectoryName": "🎨change-machine-icon",
+          "scenarios": [
+            {
+              "id": "swaps-the-saw-icon",
+              "directoryName": "🧪️swaps-the-saw-icon"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-step-enabled",
+          "sourceMutationDirectoryName": "🔘change-step-enabled",
+          "mutationDirectoryName": "🔘change-step-enabled",
+          "scenarios": [
+            {
+              "id": "accepts-a-disable-flag-and-changes-nothing",
+              "directoryName": "🧪️accepts-a-disable-flag-and-changes-nothing"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-step-origin",
+          "sourceMutationDirectoryName": "🧷change-step-origin",
+          "mutationDirectoryName": "🧷change-step-origin",
+          "scenarios": [
+            {
+              "id": "accepts-a-machine-provenance-and-changes-nothing",
+              "directoryName": "🧪️accepts-a-machine-provenance-and-changes-nothing"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-stock-label",
+          "sourceMutationDirectoryName": "🔤change-stock-label",
+          "mutationDirectoryName": "🔤change-stock-label",
+          "scenarios": [
+            {
+              "id": "relabels-the-oak-beam-as-planed",
+              "directoryName": "🧪️relabels-the-oak-beam-as-planed"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-machine",
+          "sourceMutationDirectoryName": "🏭create-machine",
+          "mutationDirectoryName": "🏭create-machine",
+          "scenarios": [
+            {
+              "id": "adds-a-drill-press-to-the-workshop",
+              "directoryName": "🧪️adds-a-drill-press-to-the-workshop"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-step",
+          "sourceMutationDirectoryName": "🌱create-step",
+          "mutationDirectoryName": "🌱create-step",
+          "scenarios": [
+            {
+              "id": "accepts-a-rip-cut-step-and-changes-nothing",
+              "directoryName": "🧪️accepts-a-rip-cut-step-and-changes-nothing"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-machine",
+          "sourceMutationDirectoryName": "❌delete-machine",
+          "mutationDirectoryName": "❌delete-machine",
+          "scenarios": [
+            {
+              "id": "empties-the-workshop-of-the-saw",
+              "directoryName": "🧪️empties-the-workshop-of-the-saw"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-step",
+          "sourceMutationDirectoryName": "🗑️delete-step",
+          "mutationDirectoryName": "🗑️delete-step",
+          "scenarios": [
+            {
+              "id": "accepts-a-step-id-and-changes-nothing",
+              "directoryName": "🧪️accepts-a-step-id-and-changes-nothing"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-stock",
+          "sourceMutationDirectoryName": "📍move-stock",
+          "mutationDirectoryName": "📍move-stock",
+          "scenarios": [
+            {
+              "id": "lifts-and-tilts-the-stock",
+              "directoryName": "🧪️lifts-and-tilts-the-stock"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-machine",
+          "sourceMutationDirectoryName": "🔖rename-machine",
+          "mutationDirectoryName": "✏️🏭️rename-machine",
+          "scenarios": [
+            {
+              "id": "retitles-the-saw",
+              "directoryName": "🧪️retitles-the-saw"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-step",
+          "sourceMutationDirectoryName": "🏷️rename-step",
+          "mutationDirectoryName": "🏷️rename-step",
+          "scenarios": [
+            {
+              "id": "accepts-a-new-label-and-changes-nothing",
+              "directoryName": "🧪️accepts-a-new-label-and-changes-nothing"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-steps",
+          "sourceMutationDirectoryName": "🔀reorder-steps",
+          "mutationDirectoryName": "🔀reorder-steps",
+          "scenarios": [
+            {
+              "id": "accepts-a-target-index-and-changes-nothing",
+              "directoryName": "🧪️accepts-a-target-index-and-changes-nothing"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-machine-capabilities",
+          "sourceMutationDirectoryName": "🔁replace-machine-capabilities",
+          "mutationDirectoryName": "🔁replace-machine-capabilities",
+          "scenarios": [
+            {
+              "id": "trades-the-blade-cut-for-a-gated-pocket-cut",
+              "directoryName": "🧪️trades-the-blade-cut-for-a-gated-pocket-cut"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-step-measure",
+          "sourceMutationDirectoryName": "📐replace-step-measure",
+          "mutationDirectoryName": "📐replace-step-measure",
+          "scenarios": [
+            {
+              "id": "accepts-a-bore-measure-and-changes-nothing",
+              "directoryName": "🧪️accepts-a-bore-measure-and-changes-nothing"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-stock-solid",
+          "sourceMutationDirectoryName": "🧊replace-stock-solid",
+          "mutationDirectoryName": "🧊replace-stock-solid",
+          "scenarios": [
+            {
+              "id": "reissues-the-stock-brep-child-handle",
+              "directoryName": "🧪️reissues-the-stock-brep-child-handle"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-step",
         "delete-step",

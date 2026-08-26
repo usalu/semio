@@ -1,6 +1,6 @@
 //! 🧬️ Writer snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::writer::{document_child_handle_and_cache, WriterDocumentChild, WRITER_DOCUMENT_SCHEMA};
+use crate::artifacts::writer::{document_child_handle_with_text, WriterDocumentChild, WRITER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -30,7 +30,7 @@ pub struct WriterSnapshot {
 
 impl Default for WriterSnapshot {
     fn default() -> Self {
-        Self { schema: WRITER_DOCUMENT_SCHEMA.into(), id: String::new(), language_id: "plaintext".into(), uri: crate::artifacts::writer::default_uri(), document: document_child_handle_and_cache("", "", "plaintext") }
+        Self { schema: WRITER_DOCUMENT_SCHEMA.into(), id: String::new(), language_id: "plaintext".into(), uri: crate::artifacts::writer::default_uri(), document: document_child_handle_with_text("", "", "plaintext") }
     }
 }
 //#endregion 🔖️Snapshot

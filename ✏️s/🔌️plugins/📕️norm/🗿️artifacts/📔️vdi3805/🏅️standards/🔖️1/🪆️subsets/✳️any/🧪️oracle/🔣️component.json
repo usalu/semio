@@ -23,6 +23,219 @@
     {
       "id": "vdi3805-1-any",
       "capability": "vdi3805-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "add-geometry-connection",
+          "sourceMutationDirectoryName": "🐞add-geometry-connection",
+          "mutationDirectoryName": "🐞add-geometry-connection",
+          "scenarios": [
+            {
+              "id": "attaches-the-drain-connection-to-geom-valve-50",
+              "directoryName": "🧪️attaches-the-drain-connection-to-geom-valve-50"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-correction-as-of",
+          "sourceMutationDirectoryName": "🏜️change-correction-as-of",
+          "mutationDirectoryName": "🏜️change-correction-as-of",
+          "scenarios": [
+            {
+              "id": "advances-the-correction-cut-off-to-2025-03",
+              "directoryName": "🧪️advances-the-correction-cut-off-to-2025-03"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-edition-profile",
+          "sourceMutationDirectoryName": "🐝change-edition-profile",
+          "mutationDirectoryName": "🐝change-edition-profile",
+          "scenarios": [
+            {
+              "id": "switches-sheet-8-from-legacy-to-current",
+              "directoryName": "🧪️switches-sheet-8-from-legacy-to-current"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-strict-mode",
+          "sourceMutationDirectoryName": "🦋change-strict-mode",
+          "mutationDirectoryName": "🦋change-strict-mode",
+          "scenarios": [
+            {
+              "id": "turns-strict-mode-on",
+              "directoryName": "🧪️turns-strict-mode-on"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-curve",
+          "sourceMutationDirectoryName": "🏝️create-curve",
+          "mutationDirectoryName": "🏝️create-curve",
+          "scenarios": [
+            {
+              "id": "adds-the-curve-dp-pressure-drop-curve",
+              "directoryName": "🧪️adds-the-curve-dp-pressure-drop-curve"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-geometry",
+          "sourceMutationDirectoryName": "🦭create-geometry",
+          "mutationDirectoryName": "🦭create-geometry",
+          "scenarios": [
+            {
+              "id": "adds-the-geom-valve-80-definition",
+              "directoryName": "🧪️adds-the-geom-valve-80-definition"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-product",
+          "sourceMutationDirectoryName": "🪵create-product",
+          "mutationDirectoryName": "🪵create-product",
+          "scenarios": [
+            {
+              "id": "appends-vlv-80-002-and-its-index-entry",
+              "directoryName": "🧪️appends-vlv-80-002-and-its-index-entry"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-curve",
+          "sourceMutationDirectoryName": "🐢delete-curve",
+          "mutationDirectoryName": "🐢delete-curve",
+          "scenarios": [
+            {
+              "id": "removes-the-curve-kvs-flow-curve",
+              "directoryName": "🧪️removes-the-curve-kvs-flow-curve"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-geometry",
+          "sourceMutationDirectoryName": "🐬delete-geometry",
+          "mutationDirectoryName": "🐬delete-geometry",
+          "scenarios": [
+            {
+              "id": "removes-the-geom-valve-50-definition",
+              "directoryName": "🧪️removes-the-geom-valve-50-definition"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-product",
+          "sourceMutationDirectoryName": "🐳delete-product",
+          "mutationDirectoryName": "🐳delete-product",
+          "scenarios": [
+            {
+              "id": "removes-vlv-50-001-and-its-index-entry",
+              "directoryName": "🧪️removes-vlv-50-001-and-its-index-entry"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-edition-profile",
+          "sourceMutationDirectoryName": "⛰️remove-edition-profile",
+          "mutationDirectoryName": "⛰️remove-edition-profile",
+          "scenarios": [
+            {
+              "id": "clears-the-sheet-8-legacy-override",
+              "directoryName": "🧪️clears-the-sheet-8-legacy-override"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-geometry-connection",
+          "sourceMutationDirectoryName": "🏔️remove-geometry-connection",
+          "mutationDirectoryName": "🏔️remove-geometry-connection",
+          "scenarios": [
+            {
+              "id": "detaches-the-out-connection-from-geom-valve-50",
+              "directoryName": "🧪️detaches-the-out-connection-from-geom-valve-50"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-product",
+          "sourceMutationDirectoryName": "🏖️rename-product",
+          "mutationDirectoryName": "🏖️rename-product",
+          "scenarios": [
+            {
+              "id": "retitles-vlv-50-001-and-resyncs-its-index-tags",
+              "directoryName": "🧪️retitles-vlv-50-001-and-resyncs-its-index-tags"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-curve-points",
+          "sourceMutationDirectoryName": "🏞️replace-curve-points",
+          "mutationDirectoryName": "🏞️replace-curve-points",
+          "scenarios": [
+            {
+              "id": "resamples-curve-kvs-onto-three-points",
+              "directoryName": "🧪️resamples-curve-kvs-onto-three-points"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-geometry-parameters",
+          "sourceMutationDirectoryName": "🐌replace-geometry-parameters",
+          "mutationDirectoryName": "🐌replace-geometry-parameters",
+          "scenarios": [
+            {
+              "id": "rescales-geom-valve-50-to-half-and-adds-clearance",
+              "directoryName": "🧪️rescales-geom-valve-50-to-half-and-adds-clearance"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-product-configuration",
+          "sourceMutationDirectoryName": "🗻replace-product-configuration",
+          "mutationDirectoryName": "🗻replace-product-configuration",
+          "scenarios": [
+            {
+              "id": "reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn",
+              "directoryName": "🧪️reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-geometry",
+          "sourceMutationDirectoryName": "🏟️resize-geometry",
+          "mutationDirectoryName": "🏟️resize-geometry",
+          "scenarios": [
+            {
+              "id": "doubles-the-geom-valve-50-bounding-box",
+              "directoryName": "🧪️doubles-the-geom-valve-50-bounding-box"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-limits",
+          "sourceMutationDirectoryName": "🦈update-limits",
+          "mutationDirectoryName": "🦈update-limits",
+          "scenarios": [
+            {
+              "id": "tightens-every-untrusted-input-limit",
+              "directoryName": "🧪️tightens-every-untrusted-input-limit"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-manufacturer-file",
+          "sourceMutationDirectoryName": "🏕️update-manufacturer-file",
+          "mutationDirectoryName": "🏕️update-manufacturer-file",
+          "scenarios": [
+            {
+              "id": "renames-the-header-manufacturer-to-acme",
+              "directoryName": "🧪️renames-the-header-manufacturer-to-acme"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "update-manufacturer-file",
         "change-correction-as-of",

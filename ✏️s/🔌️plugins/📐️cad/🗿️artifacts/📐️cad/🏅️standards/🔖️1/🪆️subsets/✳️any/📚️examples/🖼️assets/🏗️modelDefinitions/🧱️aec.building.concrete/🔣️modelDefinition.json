@@ -1,0 +1,8 @@
+{
+  "schema": "spatial.modelDefinition",
+  "id": "aec.building.concrete",
+  "version": "1.0.0",
+  "label": "Building Concrete",
+  "description": "Concrete construction model definition assets.",
+  "kinds": ["action"]
+}

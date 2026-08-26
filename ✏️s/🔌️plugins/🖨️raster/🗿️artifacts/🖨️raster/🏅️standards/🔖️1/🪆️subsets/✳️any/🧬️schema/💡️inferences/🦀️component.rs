@@ -27,7 +27,7 @@ pub struct RasterInference {
 }
 
 impl protocol::Inference<RasterSnapshot> for RasterInference {
-    async fn infer(snapshot: &RasterSnapshot) -> Self {
+    fn infer(snapshot: &RasterSnapshot) -> Self {
         Self { topology: compute_raster_topology(snapshot) }
     }
 }
@@ -41,13 +41,13 @@ impl Default for RasterInference {
 }
 
 impl protocol::InferenceSpec<RasterSnapshot> for RasterInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.raster.raster.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.raster.raster.inference.topology", reads: &["layers"] }]
     }
 }
@@ -63,7 +63,7 @@ impl ArtifactInferrer for crate::artifacts::raster::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.raster.raster.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `raster_artifact_schema_descriptor`'s registration.
-pub async fn raster_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn raster_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.raster.raster.inference",
         inference: schema::FacetLeaves {

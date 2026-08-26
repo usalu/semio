@@ -221,11 +221,48 @@ struct Process3dPublicationLease {
     maximum_items: usize,
     maximum_output_pages: usize,
     maximum_controls: usize,
+    closing: bool,
+    terminal: bool,
 }
 
-fn process3d_publication_leases() -> &'static std::sync::Mutex<[Option<Process3dPublicationLease>; PROCESS3D_PUBLICATION_SLOTS]> {
-    static LEASES: std::sync::OnceLock<std::sync::Mutex<[Option<Process3dPublicationLease>; PROCESS3D_PUBLICATION_SLOTS]>> = std::sync::OnceLock::new();
-    LEASES.get_or_init(|| std::sync::Mutex::new([None; PROCESS3D_PUBLICATION_SLOTS]))
+impl semio_framework_job::FixedOperationOwner for Process3dPublicationLease {
+    fn retained_bytes(&self) -> usize {
+        std::mem::size_of::<Self>()
+    }
+
+    fn cancel(&mut self) {
+        self.closing = true;
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if !self.closing || maximum_items == 0 || maximum_bytes < std::mem::size_of::<Self>() {
+            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        }
+        if !self.terminal {
+            self.terminal = true;
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<Self>() };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.terminal
+    }
+}
+
+type Process3dPublicationRegistry = semio_framework_job::FixedOperationRegistry<Process3dPublicationLease, PROCESS3D_PUBLICATION_SLOTS>;
+
+fn process3d_publication_leases() -> &'static std::sync::Mutex<Process3dPublicationRegistry> {
+    static LEASES: std::sync::OnceLock<std::sync::Mutex<semio_framework_job::FixedOperationRegistry<Process3dPublicationLease, PROCESS3D_PUBLICATION_SLOTS>>> = std::sync::OnceLock::new();
+    LEASES.get_or_init(|| std::sync::Mutex::new(Process3dPublicationRegistry::new(PROCESS3D_PUBLICATION_SLOTS * std::mem::size_of::<Process3dPublicationLease>())))
+}
+
+fn process3d_publication_key(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> semio_framework_job::FixedOperationKey {
+    semio_framework_job::FixedOperationKey::new(operation, generation)
 }
 
 #[cfg(test)]
@@ -280,27 +317,30 @@ pub fn process3d_admit_publication_authority(
         return Err("process3d-publication.initial-freshness");
     }
     let mut leases = process3d_publication_leases().try_lock().map_err(|_| "process3d-publication.contended")?;
-    if leases.iter().flatten().any(|lease| lease.operation == operation.0) {
+    if leases.get_operation(operation).is_some() {
         return Err("process3d-publication.operation-duplicate");
     }
-    let slot = leases.iter_mut().find(|slot| slot.is_none()).ok_or("process3d-publication.saturated")?;
     if maximum_items == 0 || maximum_items > PROCESS3D_MAXIMUM_DOMAIN_ITEMS || maximum_output_pages != PROCESS3D_MOUNTED_OUTPUT_CHANNELS || maximum_controls != PROCESS3D_MOUNTED_CONTROL_CREDITS {
         return Err("process3d-publication.domain-credits");
     }
-    *slot = Some(Process3dPublicationLease { operation: operation.0, generation: generation.0, base_revision, parent_revision, live_revision, maximum_items, maximum_output_pages, maximum_controls });
-    Ok(())
+    leases
+        .admit(
+            process3d_publication_key(operation, generation),
+            Process3dPublicationLease { operation: operation.0, generation: generation.0, base_revision, parent_revision, live_revision, maximum_items, maximum_output_pages, maximum_controls, closing: false, terminal: false },
+        )
+        .map_err(|_| "process3d-publication.saturated")
 }
 
 pub fn process3d_refresh_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_revision: u64) -> Result<(), &'static str> {
     let mut leases = process3d_publication_leases().try_lock().map_err(|_| "process3d-publication.contended")?;
-    let lease = leases.iter_mut().flatten().find(|lease| lease.operation == operation.0 && lease.generation == generation.0).ok_or("process3d-publication.stale-authority")?;
+    let lease = leases.get_mut(process3d_publication_key(operation, generation)).ok_or("process3d-publication.stale-authority")?;
     lease.live_revision = live_revision;
     Ok(())
 }
 
 pub fn process3d_validate_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<(u64, u64), &'static str> {
     let leases = process3d_publication_leases().try_lock().map_err(|_| "process3d-publication.contended")?;
-    let lease = leases.iter().flatten().find(|lease| lease.operation == operation.0 && lease.generation == generation.0).ok_or("process3d-publication.stale-authority")?;
+    let lease = leases.get(process3d_publication_key(operation, generation)).ok_or("process3d-publication.stale-authority")?;
     if lease.generation != generation.0 || lease.live_revision != generation.0 || lease.base_revision != lease.live_revision || lease.parent_revision != lease.base_revision {
         return Err("process3d-publication.stale-aba-parent");
     }
@@ -329,7 +369,7 @@ fn process3d_validate_atomic_lease(lease: Process3dPublicationLease, operation: 
 /// 🔐️ Fail-closed Process3d authority used by the shared atomic replacement branch.
 pub fn process3d_validate_atomic_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), &'static str> {
     let leases = process3d_publication_leases().try_lock().map_err(|_| "process3d-publication.contended")?;
-    let mut lease = leases.iter().flatten().find(|lease| lease.operation == operation.0).or_else(|| leases.iter().flatten().next()).copied().ok_or("process3d-publication.authority-missing")?;
+    let mut lease = leases.get_operation(operation).map(|(_, lease)| *lease).ok_or("process3d-publication.authority-missing")?;
     #[cfg(test)]
     {
         let mut hostiles = process3d_publication_hostiles().try_lock().map_err(|_| "process3d-publication.hostile-contended")?;
@@ -355,7 +395,7 @@ pub fn process3d_validate_atomic_publication_authority(operation: semio_framewor
 
 pub fn process3d_publication_item_credit(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<usize, &'static str> {
     let leases = process3d_publication_leases().try_lock().map_err(|_| "process3d-publication.contended")?;
-    let lease = leases.iter().flatten().find(|lease| lease.operation == operation.0 && lease.generation == generation.0).ok_or("process3d-publication.stale-authority")?;
+    let lease = leases.get(process3d_publication_key(operation, generation)).ok_or("process3d-publication.stale-authority")?;
     if lease.maximum_output_pages != PROCESS3D_MOUNTED_OUTPUT_CHANNELS || lease.maximum_controls != PROCESS3D_MOUNTED_CONTROL_CREDITS {
         return Err("process3d-publication.domain-credits-lost");
     }
@@ -364,9 +404,7 @@ pub fn process3d_publication_item_credit(operation: semio_framework_job::Operati
 
 pub fn process3d_release_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> bool {
     let Ok(mut leases) = process3d_publication_leases().try_lock() else { return false };
-    let Some(slot) = leases.iter_mut().find(|slot| slot.is_some_and(|lease| lease.operation == operation.0 && lease.generation == generation.0)) else { return false };
-    *slot = None;
-    true
+    leases.take(process3d_publication_key(operation, generation)).is_some()
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -3248,6 +3286,8 @@ mod retained_laws {
             maximum_items: PROCESS3D_MAXIMUM_DOMAIN_ITEMS,
             maximum_output_pages: PROCESS3D_MOUNTED_OUTPUT_CHANNELS,
             maximum_controls: PROCESS3D_MOUNTED_CONTROL_CREDITS,
+            closing: false,
+            terminal: false,
         }
     }
 

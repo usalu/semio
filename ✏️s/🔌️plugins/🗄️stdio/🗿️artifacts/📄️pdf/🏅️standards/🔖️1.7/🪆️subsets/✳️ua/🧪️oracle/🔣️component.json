@@ -26,6 +26,9 @@
     {
       "id": "pdf-1-7-ua",
       "capability": "pdf-1-7-ua-mutate",
+      "standardDirectoryName": "🔖️1.7",
+      "subsetDirectoryName": "✳️ua",
+      "vectors": [],
       "kinds": [
         "no-mutation",
         "set-snapshot",

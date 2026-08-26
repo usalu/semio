@@ -25,6 +25,9 @@
     {
       "id": "docx-ecma-376-strict",
       "capability": "docx-ecma-376-strict-mutate",
+      "standardDirectoryName": "🔖️ecma-376",
+      "subsetDirectoryName": "✳️strict",
+      "vectors": [],
       "kinds": [
         "no-mutation",
         "set-snapshot",

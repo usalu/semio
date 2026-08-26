@@ -24,6 +24,2936 @@
     {
       "id": "program-1-any",
       "capability": "program-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "connect-adjacency",
+          "sourceMutationDirectoryName": "🔗🧲connect-adjacency",
+          "mutationDirectoryName": "🔗🧲connect-adjacency",
+          "scenarios": [
+            {
+              "id": "connects-reception-to-waiting",
+              "directoryName": "🧪️connects-reception-to-waiting"
+            }
+          ]
+        },
+        {
+          "mutationId": "connect-trace",
+          "sourceMutationDirectoryName": "🔗🧵connect-trace",
+          "mutationDirectoryName": "🔗🧵connect-trace",
+          "scenarios": [
+            {
+              "id": "connects-requirement-a-to-decision-a",
+              "directoryName": "🧪️connects-requirement-a-to-decision-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-access-rule",
+          "sourceMutationDirectoryName": "🌱🔑create-access-rule",
+          "mutationDirectoryName": "🌱🔑create-access-rule",
+          "scenarios": [
+            {
+              "id": "creates-access-rule-a",
+              "directoryName": "🧪️creates-access-rule-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-accessibility-requirement",
+          "sourceMutationDirectoryName": "🌱♿create-accessibility-requirement",
+          "mutationDirectoryName": "🌱♿create-accessibility-requirement",
+          "scenarios": [
+            {
+              "id": "creates-accessibility-requirement-a",
+              "directoryName": "🧪️creates-accessibility-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-activity",
+          "sourceMutationDirectoryName": "🌱🏃create-activity",
+          "mutationDirectoryName": "🌱🏃create-activity",
+          "scenarios": [
+            {
+              "id": "creates-activity-a",
+              "directoryName": "🧪️creates-activity-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-analysis-record",
+          "sourceMutationDirectoryName": "🌱🔬create-analysis-record",
+          "mutationDirectoryName": "🌱🔬create-analysis-record",
+          "scenarios": [
+            {
+              "id": "creates-analysis-record-a",
+              "directoryName": "🧪️creates-analysis-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-approval-record",
+          "sourceMutationDirectoryName": "🌱👍create-approval-record",
+          "mutationDirectoryName": "🌱👍create-approval-record",
+          "scenarios": [
+            {
+              "id": "creates-approval-record-a",
+              "directoryName": "🧪️creates-approval-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-assumption",
+          "sourceMutationDirectoryName": "🌱💭create-assumption",
+          "mutationDirectoryName": "🌱💭create-assumption",
+          "scenarios": [
+            {
+              "id": "creates-assumption-a",
+              "directoryName": "🧪️creates-assumption-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-audit-event",
+          "sourceMutationDirectoryName": "🌱📒create-audit-event",
+          "mutationDirectoryName": "🌱📒create-audit-event",
+          "scenarios": [
+            {
+              "id": "creates-audit-event-a",
+              "directoryName": "🧪️creates-audit-event-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-benchmark-record",
+          "sourceMutationDirectoryName": "🌱🏁create-benchmark-record",
+          "mutationDirectoryName": "🌱🏁create-benchmark-record",
+          "scenarios": [
+            {
+              "id": "creates-benchmark-record-a",
+              "directoryName": "🧪️creates-benchmark-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-change-record",
+          "sourceMutationDirectoryName": "🌱📝create-change-record",
+          "mutationDirectoryName": "🌱📝create-change-record",
+          "scenarios": [
+            {
+              "id": "creates-change-record-a",
+              "directoryName": "🧪️creates-change-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-collaboration-record",
+          "sourceMutationDirectoryName": "🌱🤝create-collaboration-record",
+          "mutationDirectoryName": "🌱🤝create-collaboration-record",
+          "scenarios": [
+            {
+              "id": "creates-collaboration-record-a",
+              "directoryName": "🧪️creates-collaboration-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-communication-requirement",
+          "sourceMutationDirectoryName": "🌱📡create-communication-requirement",
+          "mutationDirectoryName": "🌱📡create-communication-requirement",
+          "scenarios": [
+            {
+              "id": "creates-communication-requirement-a",
+              "directoryName": "🧪️creates-communication-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-compliance-record",
+          "sourceMutationDirectoryName": "🌱🛂create-compliance-record",
+          "mutationDirectoryName": "🌱🛂create-compliance-record",
+          "scenarios": [
+            {
+              "id": "creates-compliance-record-a",
+              "directoryName": "🧪️creates-compliance-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-conflict",
+          "sourceMutationDirectoryName": "🌱⚔️create-conflict",
+          "mutationDirectoryName": "🌱⚔️create-conflict",
+          "scenarios": [
+            {
+              "id": "creates-conflict-a",
+              "directoryName": "🧪️creates-conflict-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-constraint-record",
+          "sourceMutationDirectoryName": "🌱🚧create-constraint-record",
+          "mutationDirectoryName": "🌱🚧create-constraint-record",
+          "scenarios": [
+            {
+              "id": "creates-constraint-record-a",
+              "directoryName": "🧪️creates-constraint-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-cost-requirement",
+          "sourceMutationDirectoryName": "🌱💰create-cost-requirement",
+          "mutationDirectoryName": "🌱💰create-cost-requirement",
+          "scenarios": [
+            {
+              "id": "creates-cost-requirement-a",
+              "directoryName": "🧪️creates-cost-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-decision",
+          "sourceMutationDirectoryName": "🌱✅create-decision",
+          "mutationDirectoryName": "🌱✅create-decision",
+          "scenarios": [
+            {
+              "id": "creates-decision-a",
+              "directoryName": "🧪️creates-decision-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-delivery-constraint",
+          "sourceMutationDirectoryName": "🌱🚚create-delivery-constraint",
+          "mutationDirectoryName": "🌱🚚create-delivery-constraint",
+          "scenarios": [
+            {
+              "id": "creates-delivery-constraint-a",
+              "directoryName": "🧪️creates-delivery-constraint-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-document",
+          "sourceMutationDirectoryName": "🌱📄create-document",
+          "mutationDirectoryName": "🌱📄create-document",
+          "scenarios": [
+            {
+              "id": "creates-document-a",
+              "directoryName": "🧪️creates-document-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-environmental-requirement",
+          "sourceMutationDirectoryName": "🌱🌿create-environmental-requirement",
+          "mutationDirectoryName": "🌱🌿create-environmental-requirement",
+          "scenarios": [
+            {
+              "id": "creates-environmental-requirement-a",
+              "directoryName": "🧪️creates-environmental-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-equipment",
+          "sourceMutationDirectoryName": "🌱🛠️create-equipment",
+          "mutationDirectoryName": "🌱🛠️create-equipment",
+          "scenarios": [
+            {
+              "id": "creates-equipment-a",
+              "directoryName": "🧪️creates-equipment-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-flexibility-requirement",
+          "sourceMutationDirectoryName": "🌱🧩create-flexibility-requirement",
+          "mutationDirectoryName": "🌱🧩create-flexibility-requirement",
+          "scenarios": [
+            {
+              "id": "creates-flexibility-requirement-a",
+              "directoryName": "🧪️creates-flexibility-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-flow-requirement",
+          "sourceMutationDirectoryName": "🌱🌊create-flow-requirement",
+          "mutationDirectoryName": "🌱🌊create-flow-requirement",
+          "scenarios": [
+            {
+              "id": "creates-flow-requirement-a",
+              "directoryName": "🧪️creates-flow-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-function",
+          "sourceMutationDirectoryName": "🌱⚙️create-function",
+          "mutationDirectoryName": "🌱⚙️create-function",
+          "scenarios": [
+            {
+              "id": "creates-function-a",
+              "directoryName": "🧪️creates-function-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-growth-plan",
+          "sourceMutationDirectoryName": "🌱📈create-growth-plan",
+          "mutationDirectoryName": "🌱📈create-growth-plan",
+          "scenarios": [
+            {
+              "id": "creates-growth-plan-a",
+              "directoryName": "🧪️creates-growth-plan-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-human-factor-requirement",
+          "sourceMutationDirectoryName": "🌱🧠create-human-factor-requirement",
+          "mutationDirectoryName": "🌱🧠create-human-factor-requirement",
+          "scenarios": [
+            {
+              "id": "creates-human-factor-requirement-a",
+              "directoryName": "🧪️creates-human-factor-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-information-requirement",
+          "sourceMutationDirectoryName": "🌱ℹ️create-information-requirement",
+          "mutationDirectoryName": "🌱ℹ️create-information-requirement",
+          "scenarios": [
+            {
+              "id": "creates-information-requirement-a",
+              "directoryName": "🧪️creates-information-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-infrastructure-requirement",
+          "sourceMutationDirectoryName": "🌱🏗️create-infrastructure-requirement",
+          "mutationDirectoryName": "🌱🏗️create-infrastructure-requirement",
+          "scenarios": [
+            {
+              "id": "creates-infrastructure-requirement-a",
+              "directoryName": "🧪️creates-infrastructure-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-issue",
+          "sourceMutationDirectoryName": "🌱🐛create-issue",
+          "mutationDirectoryName": "🌱🐛create-issue",
+          "scenarios": [
+            {
+              "id": "creates-issue-a",
+              "directoryName": "🧪️creates-issue-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-knowledge-record",
+          "sourceMutationDirectoryName": "🌱📚create-knowledge-record",
+          "mutationDirectoryName": "🌱📚create-knowledge-record",
+          "scenarios": [
+            {
+              "id": "creates-knowledge-record-a",
+              "directoryName": "🧪️creates-knowledge-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-meeting-record",
+          "sourceMutationDirectoryName": "🌱🗓️create-meeting-record",
+          "mutationDirectoryName": "🌱🗓️create-meeting-record",
+          "scenarios": [
+            {
+              "id": "creates-meeting-record-a",
+              "directoryName": "🧪️creates-meeting-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-operational-requirement",
+          "sourceMutationDirectoryName": "🌱📋create-operational-requirement",
+          "mutationDirectoryName": "🌱📋create-operational-requirement",
+          "scenarios": [
+            {
+              "id": "creates-operational-requirement-a",
+              "directoryName": "🧪️creates-operational-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-option-evaluation",
+          "sourceMutationDirectoryName": "🌱⚖️create-option-evaluation",
+          "mutationDirectoryName": "🌱⚖️create-option-evaluation",
+          "scenarios": [
+            {
+              "id": "creates-option-evaluation-a",
+              "directoryName": "🧪️creates-option-evaluation-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-organizational-requirement",
+          "sourceMutationDirectoryName": "🌱🏢create-organizational-requirement",
+          "mutationDirectoryName": "🌱🏢create-organizational-requirement",
+          "scenarios": [
+            {
+              "id": "creates-organizational-requirement-a",
+              "directoryName": "🧪️creates-organizational-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-performance-criterion",
+          "sourceMutationDirectoryName": "🌱📊create-performance-criterion",
+          "mutationDirectoryName": "🌱📊create-performance-criterion",
+          "scenarios": [
+            {
+              "id": "creates-performance-criterion-a",
+              "directoryName": "🧪️creates-performance-criterion-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-priority-record",
+          "sourceMutationDirectoryName": "🌱⭐create-priority-record",
+          "mutationDirectoryName": "🌱⭐create-priority-record",
+          "scenarios": [
+            {
+              "id": "creates-priority-record-a",
+              "directoryName": "🧪️creates-priority-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-privacy-requirement",
+          "sourceMutationDirectoryName": "🌱🔒create-privacy-requirement",
+          "mutationDirectoryName": "🌱🔒create-privacy-requirement",
+          "scenarios": [
+            {
+              "id": "creates-privacy-requirement-a",
+              "directoryName": "🧪️creates-privacy-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-process",
+          "sourceMutationDirectoryName": "🌱🔄create-process",
+          "mutationDirectoryName": "🌱🔄create-process",
+          "scenarios": [
+            {
+              "id": "creates-process-a",
+              "directoryName": "🧪️creates-process-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-program-element",
+          "sourceMutationDirectoryName": "🌱🧱create-program-element",
+          "mutationDirectoryName": "🌱🧱create-program-element",
+          "scenarios": [
+            {
+              "id": "creates-program-element-a",
+              "directoryName": "🧪️creates-program-element-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-quality-record",
+          "sourceMutationDirectoryName": "🌱💎create-quality-record",
+          "mutationDirectoryName": "🌱💎create-quality-record",
+          "scenarios": [
+            {
+              "id": "creates-quality-record-a",
+              "directoryName": "🧪️creates-quality-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-quantity-requirement",
+          "sourceMutationDirectoryName": "🌱🔢create-quantity-requirement",
+          "mutationDirectoryName": "🌱🔢create-quantity-requirement",
+          "scenarios": [
+            {
+              "id": "creates-quantity-requirement-a",
+              "directoryName": "🧪️creates-quantity-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-regulatory-requirement",
+          "sourceMutationDirectoryName": "🌱📜create-regulatory-requirement",
+          "mutationDirectoryName": "🌱📜create-regulatory-requirement",
+          "scenarios": [
+            {
+              "id": "creates-regulatory-requirement-a",
+              "directoryName": "🧪️creates-regulatory-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-relationship",
+          "sourceMutationDirectoryName": "🌱🔗create-relationship",
+          "mutationDirectoryName": "🌱🔗create-relationship",
+          "scenarios": [
+            {
+              "id": "creates-relationship-a",
+              "directoryName": "🧪️creates-relationship-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-report-record",
+          "sourceMutationDirectoryName": "🌱📑create-report-record",
+          "mutationDirectoryName": "🌱📑create-report-record",
+          "scenarios": [
+            {
+              "id": "creates-report-record-a",
+              "directoryName": "🧪️creates-report-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-requirement",
+          "sourceMutationDirectoryName": "🌱📌create-requirement",
+          "mutationDirectoryName": "🌱📌create-requirement",
+          "scenarios": [
+            {
+              "id": "creates-requirement-a",
+              "directoryName": "🧪️creates-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-resilience-requirement",
+          "sourceMutationDirectoryName": "🌱💪create-resilience-requirement",
+          "mutationDirectoryName": "🌱💪create-resilience-requirement",
+          "scenarios": [
+            {
+              "id": "creates-resilience-requirement-a",
+              "directoryName": "🧪️creates-resilience-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-resource",
+          "sourceMutationDirectoryName": "🌱📦create-resource",
+          "mutationDirectoryName": "🌱📦create-resource",
+          "scenarios": [
+            {
+              "id": "creates-resource-a",
+              "directoryName": "🧪️creates-resource-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-risk",
+          "sourceMutationDirectoryName": "🌱⚠️create-risk",
+          "mutationDirectoryName": "🌱⚠️create-risk",
+          "scenarios": [
+            {
+              "id": "creates-risk-a",
+              "directoryName": "🧪️creates-risk-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-safety-requirement",
+          "sourceMutationDirectoryName": "🌱🦺create-safety-requirement",
+          "mutationDirectoryName": "🌱🦺create-safety-requirement",
+          "scenarios": [
+            {
+              "id": "creates-safety-requirement-a",
+              "directoryName": "🧪️creates-safety-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-scenario",
+          "sourceMutationDirectoryName": "🌱🎬create-scenario",
+          "mutationDirectoryName": "🌱🎬create-scenario",
+          "scenarios": [
+            {
+              "id": "creates-scenario-a",
+              "directoryName": "🧪️creates-scenario-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-schedule-requirement",
+          "sourceMutationDirectoryName": "🌱📅create-schedule-requirement",
+          "mutationDirectoryName": "🌱📅create-schedule-requirement",
+          "scenarios": [
+            {
+              "id": "creates-schedule-requirement-a",
+              "directoryName": "🧪️creates-schedule-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-search-filter",
+          "sourceMutationDirectoryName": "🌱🔍create-search-filter",
+          "mutationDirectoryName": "🌱🔍create-search-filter",
+          "scenarios": [
+            {
+              "id": "creates-search-filter-a",
+              "directoryName": "🧪️creates-search-filter-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-security-requirement",
+          "sourceMutationDirectoryName": "🌱🛡️create-security-requirement",
+          "mutationDirectoryName": "🌱🛡️create-security-requirement",
+          "scenarios": [
+            {
+              "id": "creates-security-requirement-a",
+              "directoryName": "🧪️creates-security-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-service-requirement",
+          "sourceMutationDirectoryName": "🌱🛎️create-service-requirement",
+          "mutationDirectoryName": "🌱🛎️create-service-requirement",
+          "scenarios": [
+            {
+              "id": "creates-service-requirement-a",
+              "directoryName": "🧪️creates-service-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-site-context",
+          "sourceMutationDirectoryName": "🌱📍create-site-context",
+          "mutationDirectoryName": "🌱📍create-site-context",
+          "scenarios": [
+            {
+              "id": "creates-site-context-a",
+              "directoryName": "🧪️creates-site-context-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-stakeholder",
+          "sourceMutationDirectoryName": "🌱👥create-stakeholder",
+          "mutationDirectoryName": "🌱👥create-stakeholder",
+          "scenarios": [
+            {
+              "id": "creates-stakeholder-a",
+              "directoryName": "🧪️creates-stakeholder-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-status-record",
+          "sourceMutationDirectoryName": "🌱📶create-status-record",
+          "mutationDirectoryName": "🌱📶create-status-record",
+          "scenarios": [
+            {
+              "id": "creates-status-record-a",
+              "directoryName": "🧪️creates-status-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-storage-requirement",
+          "sourceMutationDirectoryName": "🌱🗄️create-storage-requirement",
+          "mutationDirectoryName": "🌱🗄️create-storage-requirement",
+          "scenarios": [
+            {
+              "id": "creates-storage-requirement-a",
+              "directoryName": "🧪️creates-storage-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-survey",
+          "sourceMutationDirectoryName": "🌱🗳️create-survey",
+          "mutationDirectoryName": "🌱🗳️create-survey",
+          "scenarios": [
+            {
+              "id": "creates-survey-a",
+              "directoryName": "🧪️creates-survey-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-sustainability-requirement",
+          "sourceMutationDirectoryName": "🌱♻️create-sustainability-requirement",
+          "mutationDirectoryName": "🌱♻️create-sustainability-requirement",
+          "scenarios": [
+            {
+              "id": "creates-sustainability-requirement-a",
+              "directoryName": "🧪️creates-sustainability-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-template-record",
+          "sourceMutationDirectoryName": "🌱📐create-template-record",
+          "mutationDirectoryName": "🌱📐create-template-record",
+          "scenarios": [
+            {
+              "id": "creates-template-record-a",
+              "directoryName": "🧪️creates-template-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-user-profile",
+          "sourceMutationDirectoryName": "🌱🧑create-user-profile",
+          "mutationDirectoryName": "🌱🧑create-user-profile",
+          "scenarios": [
+            {
+              "id": "creates-user-profile-a",
+              "directoryName": "🧪️creates-user-profile-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-validation-record",
+          "sourceMutationDirectoryName": "🌱✔️create-validation-record",
+          "mutationDirectoryName": "🌱✔️create-validation-record",
+          "scenarios": [
+            {
+              "id": "creates-validation-record-a",
+              "directoryName": "🧪️creates-validation-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-wayfinding-requirement",
+          "sourceMutationDirectoryName": "🌱🧭create-wayfinding-requirement",
+          "mutationDirectoryName": "🌱🧭create-wayfinding-requirement",
+          "scenarios": [
+            {
+              "id": "creates-wayfinding-requirement-a",
+              "directoryName": "🧪️creates-wayfinding-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-workshop",
+          "sourceMutationDirectoryName": "🌱🎓create-workshop",
+          "mutationDirectoryName": "🌱🎓create-workshop",
+          "scenarios": [
+            {
+              "id": "creates-workshop-a",
+              "directoryName": "🧪️creates-workshop-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-access-rule",
+          "sourceMutationDirectoryName": "🗑️🔑delete-access-rule",
+          "mutationDirectoryName": "🗑️🔑delete-access-rule",
+          "scenarios": [
+            {
+              "id": "deletes-access-rule-a",
+              "directoryName": "🧪️deletes-access-rule-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-accessibility-requirement",
+          "sourceMutationDirectoryName": "🗑️♿delete-accessibility-requirement",
+          "mutationDirectoryName": "🗑️♿delete-accessibility-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-accessibility-requirement-a",
+              "directoryName": "🧪️deletes-accessibility-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-activity",
+          "sourceMutationDirectoryName": "🗑️🏃delete-activity",
+          "mutationDirectoryName": "🗑️🏃delete-activity",
+          "scenarios": [
+            {
+              "id": "deletes-activity-a",
+              "directoryName": "🧪️deletes-activity-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-analysis-record",
+          "sourceMutationDirectoryName": "🗑️🔬delete-analysis-record",
+          "mutationDirectoryName": "🗑️🔬delete-analysis-record",
+          "scenarios": [
+            {
+              "id": "deletes-analysis-record-a",
+              "directoryName": "🧪️deletes-analysis-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-approval-record",
+          "sourceMutationDirectoryName": "🗑️👍delete-approval-record",
+          "mutationDirectoryName": "🗑️👍delete-approval-record",
+          "scenarios": [
+            {
+              "id": "deletes-approval-record-a",
+              "directoryName": "🧪️deletes-approval-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-assumption",
+          "sourceMutationDirectoryName": "🗑️💭delete-assumption",
+          "mutationDirectoryName": "🗑️💭delete-assumption",
+          "scenarios": [
+            {
+              "id": "deletes-assumption-a",
+              "directoryName": "🧪️deletes-assumption-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-audit-event",
+          "sourceMutationDirectoryName": "🗑️📒delete-audit-event",
+          "mutationDirectoryName": "🗑️📒delete-audit-event",
+          "scenarios": [
+            {
+              "id": "deletes-audit-event-a",
+              "directoryName": "🧪️deletes-audit-event-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-benchmark-record",
+          "sourceMutationDirectoryName": "🗑️🏁delete-benchmark-record",
+          "mutationDirectoryName": "🗑️🏁delete-benchmark-record",
+          "scenarios": [
+            {
+              "id": "rejects-deleting-absent-benchmark-record-a",
+              "directoryName": "🧪️rejects-deleting-absent-benchmark-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-change-record",
+          "sourceMutationDirectoryName": "🗑️📝delete-change-record",
+          "mutationDirectoryName": "🗑️📝delete-change-record",
+          "scenarios": [
+            {
+              "id": "deletes-change-record-a",
+              "directoryName": "🧪️deletes-change-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-collaboration-record",
+          "sourceMutationDirectoryName": "🗑️🤝delete-collaboration-record",
+          "mutationDirectoryName": "🗑️🤝delete-collaboration-record",
+          "scenarios": [
+            {
+              "id": "deletes-collaboration-record-a",
+              "directoryName": "🧪️deletes-collaboration-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-communication-requirement",
+          "sourceMutationDirectoryName": "🗑️📡delete-communication-requirement",
+          "mutationDirectoryName": "🗑️📡delete-communication-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-communication-requirement-a",
+              "directoryName": "🧪️deletes-communication-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-compliance-record",
+          "sourceMutationDirectoryName": "🗑️🛂delete-compliance-record",
+          "mutationDirectoryName": "🗑️🛂delete-compliance-record",
+          "scenarios": [
+            {
+              "id": "deletes-compliance-record-a",
+              "directoryName": "🧪️deletes-compliance-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-conflict",
+          "sourceMutationDirectoryName": "🗑️⚔️delete-conflict",
+          "mutationDirectoryName": "🗑️⚔️delete-conflict",
+          "scenarios": [
+            {
+              "id": "deletes-conflict-a",
+              "directoryName": "🧪️deletes-conflict-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-constraint-record",
+          "sourceMutationDirectoryName": "🗑️🚧delete-constraint-record",
+          "mutationDirectoryName": "🗑️🚧delete-constraint-record",
+          "scenarios": [
+            {
+              "id": "deletes-constraint-record-a",
+              "directoryName": "🧪️deletes-constraint-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-cost-requirement",
+          "sourceMutationDirectoryName": "🗑️💰delete-cost-requirement",
+          "mutationDirectoryName": "🗑️💰delete-cost-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-cost-requirement-a",
+              "directoryName": "🧪️deletes-cost-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-decision",
+          "sourceMutationDirectoryName": "🗑️✅delete-decision",
+          "mutationDirectoryName": "🗑️✅delete-decision",
+          "scenarios": [
+            {
+              "id": "deletes-decision-a",
+              "directoryName": "🧪️deletes-decision-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-delivery-constraint",
+          "sourceMutationDirectoryName": "🗑️🚚delete-delivery-constraint",
+          "mutationDirectoryName": "🗑️🚚delete-delivery-constraint",
+          "scenarios": [
+            {
+              "id": "deletes-delivery-constraint-a",
+              "directoryName": "🧪️deletes-delivery-constraint-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-document",
+          "sourceMutationDirectoryName": "🗑️📄delete-document",
+          "mutationDirectoryName": "🗑️📄delete-document",
+          "scenarios": [
+            {
+              "id": "deletes-document-a",
+              "directoryName": "🧪️deletes-document-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-environmental-requirement",
+          "sourceMutationDirectoryName": "🗑️🌿delete-environmental-requirement",
+          "mutationDirectoryName": "🗑️🌿delete-environmental-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-environmental-requirement-a",
+              "directoryName": "🧪️deletes-environmental-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-equipment",
+          "sourceMutationDirectoryName": "🗑️🛠️delete-equipment",
+          "mutationDirectoryName": "🗑️🛠️delete-equipment",
+          "scenarios": [
+            {
+              "id": "deletes-equipment-a",
+              "directoryName": "🧪️deletes-equipment-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-flexibility-requirement",
+          "sourceMutationDirectoryName": "🗑️🧩delete-flexibility-requirement",
+          "mutationDirectoryName": "🗑️🧩delete-flexibility-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-flexibility-requirement-a",
+              "directoryName": "🧪️deletes-flexibility-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-flow-requirement",
+          "sourceMutationDirectoryName": "🗑️🌊delete-flow-requirement",
+          "mutationDirectoryName": "🗑️🌊delete-flow-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-flow-requirement-a",
+              "directoryName": "🧪️deletes-flow-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-function",
+          "sourceMutationDirectoryName": "🗑️⚙️delete-function",
+          "mutationDirectoryName": "🗑️⚙️delete-function",
+          "scenarios": [
+            {
+              "id": "deletes-function-a",
+              "directoryName": "🧪️deletes-function-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-growth-plan",
+          "sourceMutationDirectoryName": "🗑️📈delete-growth-plan",
+          "mutationDirectoryName": "🗑️📈delete-growth-plan",
+          "scenarios": [
+            {
+              "id": "deletes-growth-plan-a",
+              "directoryName": "🧪️deletes-growth-plan-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-human-factor-requirement",
+          "sourceMutationDirectoryName": "🗑️🧠delete-human-factor-requirement",
+          "mutationDirectoryName": "🗑️🧠delete-human-factor-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-human-factor-requirement-a",
+              "directoryName": "🧪️deletes-human-factor-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-information-requirement",
+          "sourceMutationDirectoryName": "🗑️ℹ️delete-information-requirement",
+          "mutationDirectoryName": "🗑️ℹ️delete-information-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-information-requirement-a",
+              "directoryName": "🧪️deletes-information-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-infrastructure-requirement",
+          "sourceMutationDirectoryName": "🗑️🏗️delete-infrastructure-requirement",
+          "mutationDirectoryName": "🗑️🏗️delete-infrastructure-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-infrastructure-requirement-a",
+              "directoryName": "🧪️deletes-infrastructure-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-issue",
+          "sourceMutationDirectoryName": "🗑️🐛delete-issue",
+          "mutationDirectoryName": "🗑️🐛delete-issue",
+          "scenarios": [
+            {
+              "id": "deletes-issue-a",
+              "directoryName": "🧪️deletes-issue-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-knowledge-record",
+          "sourceMutationDirectoryName": "🗑️📚delete-knowledge-record",
+          "mutationDirectoryName": "🗑️📚delete-knowledge-record",
+          "scenarios": [
+            {
+              "id": "rejects-deleting-absent-knowledge-record-a",
+              "directoryName": "🧪️rejects-deleting-absent-knowledge-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-meeting-record",
+          "sourceMutationDirectoryName": "🗑️🗓️delete-meeting-record",
+          "mutationDirectoryName": "🗑️🗓️delete-meeting-record",
+          "scenarios": [
+            {
+              "id": "deletes-meeting-record-a",
+              "directoryName": "🧪️deletes-meeting-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-operational-requirement",
+          "sourceMutationDirectoryName": "🗑️📋delete-operational-requirement",
+          "mutationDirectoryName": "🗑️📋delete-operational-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-operational-requirement-a",
+              "directoryName": "🧪️deletes-operational-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-option-evaluation",
+          "sourceMutationDirectoryName": "🗑️⚖️delete-option-evaluation",
+          "mutationDirectoryName": "🗑️⚖️delete-option-evaluation",
+          "scenarios": [
+            {
+              "id": "deletes-option-evaluation-a",
+              "directoryName": "🧪️deletes-option-evaluation-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-organizational-requirement",
+          "sourceMutationDirectoryName": "🗑️🏢delete-organizational-requirement",
+          "mutationDirectoryName": "🗑️🏢delete-organizational-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-organizational-requirement-a",
+              "directoryName": "🧪️deletes-organizational-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-performance-criterion",
+          "sourceMutationDirectoryName": "🗑️📊delete-performance-criterion",
+          "mutationDirectoryName": "🗑️📊delete-performance-criterion",
+          "scenarios": [
+            {
+              "id": "deletes-performance-criterion-a",
+              "directoryName": "🧪️deletes-performance-criterion-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-priority-record",
+          "sourceMutationDirectoryName": "🗑️⭐delete-priority-record",
+          "mutationDirectoryName": "🗑️⭐delete-priority-record",
+          "scenarios": [
+            {
+              "id": "deletes-priority-record-a",
+              "directoryName": "🧪️deletes-priority-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-privacy-requirement",
+          "sourceMutationDirectoryName": "🗑️🔒delete-privacy-requirement",
+          "mutationDirectoryName": "🗑️🔒delete-privacy-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-privacy-requirement-a",
+              "directoryName": "🧪️deletes-privacy-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-process",
+          "sourceMutationDirectoryName": "🗑️🔄delete-process",
+          "mutationDirectoryName": "🗑️🔄delete-process",
+          "scenarios": [
+            {
+              "id": "deletes-process-a",
+              "directoryName": "🧪️deletes-process-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-program-element",
+          "sourceMutationDirectoryName": "🗑️🧱delete-program-element",
+          "mutationDirectoryName": "🗑️🧱delete-program-element",
+          "scenarios": [
+            {
+              "id": "deletes-program-element-a",
+              "directoryName": "🧪️deletes-program-element-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-quality-record",
+          "sourceMutationDirectoryName": "🗑️💎delete-quality-record",
+          "mutationDirectoryName": "🗑️💎delete-quality-record",
+          "scenarios": [
+            {
+              "id": "deletes-quality-record-a",
+              "directoryName": "🧪️deletes-quality-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-quantity-requirement",
+          "sourceMutationDirectoryName": "🗑️🔢delete-quantity-requirement",
+          "mutationDirectoryName": "🗑️🔢delete-quantity-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-quantity-requirement-a",
+              "directoryName": "🧪️deletes-quantity-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-regulatory-requirement",
+          "sourceMutationDirectoryName": "🗑️📜delete-regulatory-requirement",
+          "mutationDirectoryName": "🗑️📜delete-regulatory-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-regulatory-requirement-a",
+              "directoryName": "🧪️deletes-regulatory-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-relationship",
+          "sourceMutationDirectoryName": "🗑️🔗delete-relationship",
+          "mutationDirectoryName": "🗑️🔗delete-relationship",
+          "scenarios": [
+            {
+              "id": "deletes-relationship-a",
+              "directoryName": "🧪️deletes-relationship-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-report-record",
+          "sourceMutationDirectoryName": "🗑️📑delete-report-record",
+          "mutationDirectoryName": "🗑️📑delete-report-record",
+          "scenarios": [
+            {
+              "id": "deletes-report-record-a",
+              "directoryName": "🧪️deletes-report-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-requirement",
+          "sourceMutationDirectoryName": "🗑️📌delete-requirement",
+          "mutationDirectoryName": "🗑️📌delete-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-requirement-a",
+              "directoryName": "🧪️deletes-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-resilience-requirement",
+          "sourceMutationDirectoryName": "🗑️💪delete-resilience-requirement",
+          "mutationDirectoryName": "🗑️💪delete-resilience-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-resilience-requirement-a",
+              "directoryName": "🧪️deletes-resilience-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-resource",
+          "sourceMutationDirectoryName": "🗑️📦delete-resource",
+          "mutationDirectoryName": "🗑️📦delete-resource",
+          "scenarios": [
+            {
+              "id": "deletes-resource-a",
+              "directoryName": "🧪️deletes-resource-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-risk",
+          "sourceMutationDirectoryName": "🗑️⚠️delete-risk",
+          "mutationDirectoryName": "🗑️⚠️delete-risk",
+          "scenarios": [
+            {
+              "id": "deletes-risk-a",
+              "directoryName": "🧪️deletes-risk-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-safety-requirement",
+          "sourceMutationDirectoryName": "🗑️🦺delete-safety-requirement",
+          "mutationDirectoryName": "🗑️🦺delete-safety-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-safety-requirement-a",
+              "directoryName": "🧪️deletes-safety-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-scenario",
+          "sourceMutationDirectoryName": "🗑️🎬delete-scenario",
+          "mutationDirectoryName": "🗑️🎬delete-scenario",
+          "scenarios": [
+            {
+              "id": "deletes-scenario-a",
+              "directoryName": "🧪️deletes-scenario-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-schedule-requirement",
+          "sourceMutationDirectoryName": "🗑️📅delete-schedule-requirement",
+          "mutationDirectoryName": "🗑️📅delete-schedule-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-schedule-requirement-a",
+              "directoryName": "🧪️deletes-schedule-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-search-filter",
+          "sourceMutationDirectoryName": "🗑️🔍delete-search-filter",
+          "mutationDirectoryName": "🗑️🔍delete-search-filter",
+          "scenarios": [
+            {
+              "id": "deletes-search-filter-a",
+              "directoryName": "🧪️deletes-search-filter-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-security-requirement",
+          "sourceMutationDirectoryName": "🗑️🛡️delete-security-requirement",
+          "mutationDirectoryName": "🗑️🛡️delete-security-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-security-requirement-a",
+              "directoryName": "🧪️deletes-security-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-service-requirement",
+          "sourceMutationDirectoryName": "🗑️🛎️delete-service-requirement",
+          "mutationDirectoryName": "🗑️🛎️delete-service-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-service-requirement-a",
+              "directoryName": "🧪️deletes-service-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-site-context",
+          "sourceMutationDirectoryName": "🗑️📍delete-site-context",
+          "mutationDirectoryName": "🗑️📍delete-site-context",
+          "scenarios": [
+            {
+              "id": "deletes-site-context-a",
+              "directoryName": "🧪️deletes-site-context-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-stakeholder",
+          "sourceMutationDirectoryName": "🗑️👥delete-stakeholder",
+          "mutationDirectoryName": "🗑️👥delete-stakeholder",
+          "scenarios": [
+            {
+              "id": "deletes-stakeholder-a",
+              "directoryName": "🧪️deletes-stakeholder-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-status-record",
+          "sourceMutationDirectoryName": "🗑️📶delete-status-record",
+          "mutationDirectoryName": "🗑️📶delete-status-record",
+          "scenarios": [
+            {
+              "id": "deletes-status-record-a",
+              "directoryName": "🧪️deletes-status-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-storage-requirement",
+          "sourceMutationDirectoryName": "🗑️🗄️delete-storage-requirement",
+          "mutationDirectoryName": "🗑️🗄️delete-storage-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-storage-requirement-a",
+              "directoryName": "🧪️deletes-storage-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-survey",
+          "sourceMutationDirectoryName": "🗑️🗳️delete-survey",
+          "mutationDirectoryName": "🗑️🗳️delete-survey",
+          "scenarios": [
+            {
+              "id": "deletes-survey-a",
+              "directoryName": "🧪️deletes-survey-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-sustainability-requirement",
+          "sourceMutationDirectoryName": "🗑️♻️delete-sustainability-requirement",
+          "mutationDirectoryName": "🗑️♻️delete-sustainability-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-sustainability-requirement-a",
+              "directoryName": "🧪️deletes-sustainability-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-template-record",
+          "sourceMutationDirectoryName": "🗑️📐delete-template-record",
+          "mutationDirectoryName": "🗑️📐delete-template-record",
+          "scenarios": [
+            {
+              "id": "deletes-template-record-a",
+              "directoryName": "🧪️deletes-template-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-user-profile",
+          "sourceMutationDirectoryName": "🗑️🧑delete-user-profile",
+          "mutationDirectoryName": "🗑️🧑delete-user-profile",
+          "scenarios": [
+            {
+              "id": "deletes-user-profile-a",
+              "directoryName": "🧪️deletes-user-profile-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-validation-record",
+          "sourceMutationDirectoryName": "🗑️✔️delete-validation-record",
+          "mutationDirectoryName": "🗑️✔️delete-validation-record",
+          "scenarios": [
+            {
+              "id": "deletes-validation-record-a",
+              "directoryName": "🧪️deletes-validation-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-wayfinding-requirement",
+          "sourceMutationDirectoryName": "🗑️🧭delete-wayfinding-requirement",
+          "mutationDirectoryName": "🗑️🧭delete-wayfinding-requirement",
+          "scenarios": [
+            {
+              "id": "deletes-wayfinding-requirement-a",
+              "directoryName": "🧪️deletes-wayfinding-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-workshop",
+          "sourceMutationDirectoryName": "🗑️🎓delete-workshop",
+          "mutationDirectoryName": "🗑️🎓delete-workshop",
+          "scenarios": [
+            {
+              "id": "deletes-workshop-a",
+              "directoryName": "🧪️deletes-workshop-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-adjacency",
+          "sourceMutationDirectoryName": "✂️🧲disconnect-adjacency",
+          "mutationDirectoryName": "✂️🧲disconnect-adjacency",
+          "scenarios": [
+            {
+              "id": "disconnects-reception-from-waiting",
+              "directoryName": "🧪️disconnects-reception-from-waiting"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-trace",
+          "sourceMutationDirectoryName": "✂️🧵disconnect-trace",
+          "mutationDirectoryName": "✂️🧵disconnect-trace",
+          "scenarios": [
+            {
+              "id": "disconnects-requirement-a-from-decision-a",
+              "directoryName": "🧪️disconnects-requirement-a-from-decision-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-access-rule",
+          "sourceMutationDirectoryName": "✏️🔑rename-access-rule",
+          "mutationDirectoryName": "✏️🔑rename-access-rule",
+          "scenarios": [
+            {
+              "id": "renames-access-rule-a",
+              "directoryName": "🧪️renames-access-rule-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-accessibility-requirement",
+          "sourceMutationDirectoryName": "✏️♿rename-accessibility-requirement",
+          "mutationDirectoryName": "✏️♿rename-accessibility-requirement",
+          "scenarios": [
+            {
+              "id": "renames-accessibility-requirement-a",
+              "directoryName": "🧪️renames-accessibility-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-activity",
+          "sourceMutationDirectoryName": "✏️🏃rename-activity",
+          "mutationDirectoryName": "✏️🏃rename-activity",
+          "scenarios": [
+            {
+              "id": "renames-activity-a",
+              "directoryName": "🧪️renames-activity-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-analysis-record",
+          "sourceMutationDirectoryName": "✏️🔬rename-analysis-record",
+          "mutationDirectoryName": "✏️🔬rename-analysis-record",
+          "scenarios": [
+            {
+              "id": "renames-analysis-record-a",
+              "directoryName": "🧪️renames-analysis-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-approval-record",
+          "sourceMutationDirectoryName": "✏️👍rename-approval-record",
+          "mutationDirectoryName": "✏️👍rename-approval-record",
+          "scenarios": [
+            {
+              "id": "renames-approval-record-a",
+              "directoryName": "🧪️renames-approval-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-assumption",
+          "sourceMutationDirectoryName": "✏️💭rename-assumption",
+          "mutationDirectoryName": "✏️💭rename-assumption",
+          "scenarios": [
+            {
+              "id": "renames-assumption-a",
+              "directoryName": "🧪️renames-assumption-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-audit-event",
+          "sourceMutationDirectoryName": "✏️📒rename-audit-event",
+          "mutationDirectoryName": "✏️📒rename-audit-event",
+          "scenarios": [
+            {
+              "id": "renames-audit-event-a",
+              "directoryName": "🧪️renames-audit-event-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-benchmark-record",
+          "sourceMutationDirectoryName": "✏️🏁rename-benchmark-record",
+          "mutationDirectoryName": "✏️🏁rename-benchmark-record",
+          "scenarios": [
+            {
+              "id": "rejects-renaming-absent-benchmark-record-a",
+              "directoryName": "🧪️rejects-renaming-absent-benchmark-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-change-record",
+          "sourceMutationDirectoryName": "✏️📝rename-change-record",
+          "mutationDirectoryName": "✏️📝rename-change-record",
+          "scenarios": [
+            {
+              "id": "renames-change-record-a",
+              "directoryName": "🧪️renames-change-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-collaboration-record",
+          "sourceMutationDirectoryName": "✏️🤝rename-collaboration-record",
+          "mutationDirectoryName": "✏️🤝rename-collaboration-record",
+          "scenarios": [
+            {
+              "id": "renames-collaboration-record-a",
+              "directoryName": "🧪️renames-collaboration-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-communication-requirement",
+          "sourceMutationDirectoryName": "✏️📡rename-communication-requirement",
+          "mutationDirectoryName": "✏️📡rename-communication-requirement",
+          "scenarios": [
+            {
+              "id": "renames-communication-requirement-a",
+              "directoryName": "🧪️renames-communication-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-compliance-record",
+          "sourceMutationDirectoryName": "✏️🛂rename-compliance-record",
+          "mutationDirectoryName": "✏️🛂rename-compliance-record",
+          "scenarios": [
+            {
+              "id": "renames-compliance-record-a",
+              "directoryName": "🧪️renames-compliance-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-conflict",
+          "sourceMutationDirectoryName": "✏️⚔️rename-conflict",
+          "mutationDirectoryName": "✏️⚔️rename-conflict",
+          "scenarios": [
+            {
+              "id": "renames-conflict-a",
+              "directoryName": "🧪️renames-conflict-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-constraint-record",
+          "sourceMutationDirectoryName": "✏️🚧rename-constraint-record",
+          "mutationDirectoryName": "✏️🚧rename-constraint-record",
+          "scenarios": [
+            {
+              "id": "renames-constraint-record-a",
+              "directoryName": "🧪️renames-constraint-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-cost-requirement",
+          "sourceMutationDirectoryName": "✏️💰rename-cost-requirement",
+          "mutationDirectoryName": "✏️💰rename-cost-requirement",
+          "scenarios": [
+            {
+              "id": "renames-cost-requirement-a",
+              "directoryName": "🧪️renames-cost-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-decision",
+          "sourceMutationDirectoryName": "✏️✅rename-decision",
+          "mutationDirectoryName": "✏️✅rename-decision",
+          "scenarios": [
+            {
+              "id": "renames-decision-a",
+              "directoryName": "🧪️renames-decision-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-delivery-constraint",
+          "sourceMutationDirectoryName": "✏️🚚rename-delivery-constraint",
+          "mutationDirectoryName": "✏️🚚rename-delivery-constraint",
+          "scenarios": [
+            {
+              "id": "renames-delivery-constraint-a",
+              "directoryName": "🧪️renames-delivery-constraint-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-document",
+          "sourceMutationDirectoryName": "✏️📄rename-document",
+          "mutationDirectoryName": "✏️📄rename-document",
+          "scenarios": [
+            {
+              "id": "renames-document-a",
+              "directoryName": "🧪️renames-document-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-environmental-requirement",
+          "sourceMutationDirectoryName": "✏️🌿rename-environmental-requirement",
+          "mutationDirectoryName": "✏️🌿rename-environmental-requirement",
+          "scenarios": [
+            {
+              "id": "renames-environmental-requirement-a",
+              "directoryName": "🧪️renames-environmental-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-equipment",
+          "sourceMutationDirectoryName": "✏️🛠️rename-equipment",
+          "mutationDirectoryName": "✏️🛠️rename-equipment",
+          "scenarios": [
+            {
+              "id": "renames-equipment-a",
+              "directoryName": "🧪️renames-equipment-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-flexibility-requirement",
+          "sourceMutationDirectoryName": "✏️🧩rename-flexibility-requirement",
+          "mutationDirectoryName": "✏️🧩rename-flexibility-requirement",
+          "scenarios": [
+            {
+              "id": "renames-flexibility-requirement-a",
+              "directoryName": "🧪️renames-flexibility-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-flow-requirement",
+          "sourceMutationDirectoryName": "✏️🌊rename-flow-requirement",
+          "mutationDirectoryName": "✏️🌊rename-flow-requirement",
+          "scenarios": [
+            {
+              "id": "renames-flow-requirement-a",
+              "directoryName": "🧪️renames-flow-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-function",
+          "sourceMutationDirectoryName": "✏️⚙️rename-function",
+          "mutationDirectoryName": "✏️⚙️rename-function",
+          "scenarios": [
+            {
+              "id": "renames-function-a",
+              "directoryName": "🧪️renames-function-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-governance",
+          "sourceMutationDirectoryName": "✏️🏛️rename-governance",
+          "mutationDirectoryName": "✏️🏛️rename-governance",
+          "scenarios": [
+            {
+              "id": "renames-the-governance-framework",
+              "directoryName": "🧪️renames-the-governance-framework"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-growth-plan",
+          "sourceMutationDirectoryName": "✏️📈rename-growth-plan",
+          "mutationDirectoryName": "✏️📈rename-growth-plan",
+          "scenarios": [
+            {
+              "id": "renames-growth-plan-a",
+              "directoryName": "🧪️renames-growth-plan-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-human-factor-requirement",
+          "sourceMutationDirectoryName": "✏️🧠rename-human-factor-requirement",
+          "mutationDirectoryName": "✏️🧠rename-human-factor-requirement",
+          "scenarios": [
+            {
+              "id": "renames-human-factor-requirement-a",
+              "directoryName": "🧪️renames-human-factor-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-information-requirement",
+          "sourceMutationDirectoryName": "✏️ℹ️rename-information-requirement",
+          "mutationDirectoryName": "✏️ℹ️rename-information-requirement",
+          "scenarios": [
+            {
+              "id": "renames-information-requirement-a",
+              "directoryName": "🧪️renames-information-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-infrastructure-requirement",
+          "sourceMutationDirectoryName": "✏️🏗️rename-infrastructure-requirement",
+          "mutationDirectoryName": "✏️🏗️rename-infrastructure-requirement",
+          "scenarios": [
+            {
+              "id": "renames-infrastructure-requirement-a",
+              "directoryName": "🧪️renames-infrastructure-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-issue",
+          "sourceMutationDirectoryName": "✏️🐛rename-issue",
+          "mutationDirectoryName": "✏️🐛rename-issue",
+          "scenarios": [
+            {
+              "id": "renames-issue-a",
+              "directoryName": "🧪️renames-issue-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-knowledge-record",
+          "sourceMutationDirectoryName": "✏️📚rename-knowledge-record",
+          "mutationDirectoryName": "✏️📚rename-knowledge-record",
+          "scenarios": [
+            {
+              "id": "rejects-renaming-absent-knowledge-record-a",
+              "directoryName": "🧪️rejects-renaming-absent-knowledge-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-meeting-record",
+          "sourceMutationDirectoryName": "✏️🗓️rename-meeting-record",
+          "mutationDirectoryName": "✏️🗓️rename-meeting-record",
+          "scenarios": [
+            {
+              "id": "renames-meeting-record-a",
+              "directoryName": "🧪️renames-meeting-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-meta",
+          "sourceMutationDirectoryName": "✏️🏷️rename-meta",
+          "mutationDirectoryName": "✏️🏷️rename-meta",
+          "scenarios": [
+            {
+              "id": "renames-the-document-title",
+              "directoryName": "🧪️renames-the-document-title"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-operational-requirement",
+          "sourceMutationDirectoryName": "✏️📋rename-operational-requirement",
+          "mutationDirectoryName": "✏️📋rename-operational-requirement",
+          "scenarios": [
+            {
+              "id": "renames-operational-requirement-a",
+              "directoryName": "🧪️renames-operational-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-option-evaluation",
+          "sourceMutationDirectoryName": "✏️⚖️rename-option-evaluation",
+          "mutationDirectoryName": "✏️⚖️rename-option-evaluation",
+          "scenarios": [
+            {
+              "id": "renames-option-evaluation-a",
+              "directoryName": "🧪️renames-option-evaluation-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-organizational-requirement",
+          "sourceMutationDirectoryName": "✏️🏢rename-organizational-requirement",
+          "mutationDirectoryName": "✏️🏢rename-organizational-requirement",
+          "scenarios": [
+            {
+              "id": "renames-organizational-requirement-a",
+              "directoryName": "🧪️renames-organizational-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-performance-criterion",
+          "sourceMutationDirectoryName": "✏️📊rename-performance-criterion",
+          "mutationDirectoryName": "✏️📊rename-performance-criterion",
+          "scenarios": [
+            {
+              "id": "renames-performance-criterion-a",
+              "directoryName": "🧪️renames-performance-criterion-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-priority-record",
+          "sourceMutationDirectoryName": "✏️⭐rename-priority-record",
+          "mutationDirectoryName": "✏️⭐rename-priority-record",
+          "scenarios": [
+            {
+              "id": "renames-priority-record-a",
+              "directoryName": "🧪️renames-priority-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-privacy-requirement",
+          "sourceMutationDirectoryName": "✏️🔒rename-privacy-requirement",
+          "mutationDirectoryName": "✏️🔒rename-privacy-requirement",
+          "scenarios": [
+            {
+              "id": "renames-privacy-requirement-a",
+              "directoryName": "🧪️renames-privacy-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-process",
+          "sourceMutationDirectoryName": "✏️🔄rename-process",
+          "mutationDirectoryName": "✏️🔄rename-process",
+          "scenarios": [
+            {
+              "id": "renames-process-a",
+              "directoryName": "🧪️renames-process-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-program-element",
+          "sourceMutationDirectoryName": "✏️🧱rename-program-element",
+          "mutationDirectoryName": "✏️🧱rename-program-element",
+          "scenarios": [
+            {
+              "id": "renames-program-element-a",
+              "directoryName": "🧪️renames-program-element-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-project",
+          "sourceMutationDirectoryName": "✏️📁rename-project",
+          "mutationDirectoryName": "✏️📁rename-project",
+          "scenarios": [
+            {
+              "id": "renames-the-project-code",
+              "directoryName": "🧪️renames-the-project-code"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-quality-record",
+          "sourceMutationDirectoryName": "✏️💎rename-quality-record",
+          "mutationDirectoryName": "✏️💎rename-quality-record",
+          "scenarios": [
+            {
+              "id": "renames-quality-record-a",
+              "directoryName": "🧪️renames-quality-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-quantity-requirement",
+          "sourceMutationDirectoryName": "✏️🔢rename-quantity-requirement",
+          "mutationDirectoryName": "✏️🔢rename-quantity-requirement",
+          "scenarios": [
+            {
+              "id": "renames-quantity-requirement-a",
+              "directoryName": "🧪️renames-quantity-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-regulatory-requirement",
+          "sourceMutationDirectoryName": "✏️📜rename-regulatory-requirement",
+          "mutationDirectoryName": "✏️📜rename-regulatory-requirement",
+          "scenarios": [
+            {
+              "id": "renames-regulatory-requirement-a",
+              "directoryName": "🧪️renames-regulatory-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-relationship",
+          "sourceMutationDirectoryName": "✏️🔗rename-relationship",
+          "mutationDirectoryName": "✏️🔗rename-relationship",
+          "scenarios": [
+            {
+              "id": "renames-relationship-a",
+              "directoryName": "🧪️renames-relationship-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-report-record",
+          "sourceMutationDirectoryName": "✏️📑rename-report-record",
+          "mutationDirectoryName": "✏️📑rename-report-record",
+          "scenarios": [
+            {
+              "id": "renames-report-record-a",
+              "directoryName": "🧪️renames-report-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-requirement",
+          "sourceMutationDirectoryName": "✏️📌rename-requirement",
+          "mutationDirectoryName": "✏️📌rename-requirement",
+          "scenarios": [
+            {
+              "id": "renames-requirement-a",
+              "directoryName": "🧪️renames-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-resilience-requirement",
+          "sourceMutationDirectoryName": "✏️💪rename-resilience-requirement",
+          "mutationDirectoryName": "✏️💪rename-resilience-requirement",
+          "scenarios": [
+            {
+              "id": "renames-resilience-requirement-a",
+              "directoryName": "🧪️renames-resilience-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-resource",
+          "sourceMutationDirectoryName": "✏️📦rename-resource",
+          "mutationDirectoryName": "✏️📦rename-resource",
+          "scenarios": [
+            {
+              "id": "renames-resource-a",
+              "directoryName": "🧪️renames-resource-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-risk",
+          "sourceMutationDirectoryName": "✏️⚠️rename-risk",
+          "mutationDirectoryName": "✏️⚠️rename-risk",
+          "scenarios": [
+            {
+              "id": "renames-risk-a",
+              "directoryName": "🧪️renames-risk-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-safety-requirement",
+          "sourceMutationDirectoryName": "✏️🦺rename-safety-requirement",
+          "mutationDirectoryName": "✏️🦺rename-safety-requirement",
+          "scenarios": [
+            {
+              "id": "renames-safety-requirement-a",
+              "directoryName": "🧪️renames-safety-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-scenario",
+          "sourceMutationDirectoryName": "✏️🎬rename-scenario",
+          "mutationDirectoryName": "✏️🎬rename-scenario",
+          "scenarios": [
+            {
+              "id": "renames-scenario-a",
+              "directoryName": "🧪️renames-scenario-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-schedule-requirement",
+          "sourceMutationDirectoryName": "✏️📅rename-schedule-requirement",
+          "mutationDirectoryName": "✏️📅rename-schedule-requirement",
+          "scenarios": [
+            {
+              "id": "renames-schedule-requirement-a",
+              "directoryName": "🧪️renames-schedule-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-search-filter",
+          "sourceMutationDirectoryName": "✏️🔍rename-search-filter",
+          "mutationDirectoryName": "✏️🔍rename-search-filter",
+          "scenarios": [
+            {
+              "id": "renames-search-filter-a",
+              "directoryName": "🧪️renames-search-filter-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-security-requirement",
+          "sourceMutationDirectoryName": "✏️🛡️rename-security-requirement",
+          "mutationDirectoryName": "✏️🛡️rename-security-requirement",
+          "scenarios": [
+            {
+              "id": "renames-security-requirement-a",
+              "directoryName": "🧪️renames-security-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-service-requirement",
+          "sourceMutationDirectoryName": "✏️🛎️rename-service-requirement",
+          "mutationDirectoryName": "✏️🛎️rename-service-requirement",
+          "scenarios": [
+            {
+              "id": "renames-service-requirement-a",
+              "directoryName": "🧪️renames-service-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-site-context",
+          "sourceMutationDirectoryName": "✏️📍rename-site-context",
+          "mutationDirectoryName": "✏️📍rename-site-context",
+          "scenarios": [
+            {
+              "id": "renames-site-context-a",
+              "directoryName": "🧪️renames-site-context-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-stakeholder",
+          "sourceMutationDirectoryName": "✏️👥rename-stakeholder",
+          "mutationDirectoryName": "✏️👥rename-stakeholder",
+          "scenarios": [
+            {
+              "id": "renames-stakeholder-a",
+              "directoryName": "🧪️renames-stakeholder-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-status-record",
+          "sourceMutationDirectoryName": "✏️📶rename-status-record",
+          "mutationDirectoryName": "✏️📶rename-status-record",
+          "scenarios": [
+            {
+              "id": "renames-status-record-a",
+              "directoryName": "🧪️renames-status-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-storage-requirement",
+          "sourceMutationDirectoryName": "✏️🗄️rename-storage-requirement",
+          "mutationDirectoryName": "✏️🗄️rename-storage-requirement",
+          "scenarios": [
+            {
+              "id": "renames-storage-requirement-a",
+              "directoryName": "🧪️renames-storage-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-survey",
+          "sourceMutationDirectoryName": "✏️🗳️rename-survey",
+          "mutationDirectoryName": "✏️🗳️rename-survey",
+          "scenarios": [
+            {
+              "id": "renames-survey-a",
+              "directoryName": "🧪️renames-survey-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-sustainability-requirement",
+          "sourceMutationDirectoryName": "✏️♻️rename-sustainability-requirement",
+          "mutationDirectoryName": "✏️♻️rename-sustainability-requirement",
+          "scenarios": [
+            {
+              "id": "renames-sustainability-requirement-a",
+              "directoryName": "🧪️renames-sustainability-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-template-record",
+          "sourceMutationDirectoryName": "✏️📐rename-template-record",
+          "mutationDirectoryName": "✏️📐rename-template-record",
+          "scenarios": [
+            {
+              "id": "renames-template-record-a",
+              "directoryName": "🧪️renames-template-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-user-profile",
+          "sourceMutationDirectoryName": "✏️🧑rename-user-profile",
+          "mutationDirectoryName": "✏️🧑rename-user-profile",
+          "scenarios": [
+            {
+              "id": "renames-user-profile-a",
+              "directoryName": "🧪️renames-user-profile-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-validation-record",
+          "sourceMutationDirectoryName": "✏️✔️rename-validation-record",
+          "mutationDirectoryName": "✏️✔️rename-validation-record",
+          "scenarios": [
+            {
+              "id": "renames-validation-record-a",
+              "directoryName": "🧪️renames-validation-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-wayfinding-requirement",
+          "sourceMutationDirectoryName": "✏️🧭rename-wayfinding-requirement",
+          "mutationDirectoryName": "✏️🧭rename-wayfinding-requirement",
+          "scenarios": [
+            {
+              "id": "renames-wayfinding-requirement-a",
+              "directoryName": "🧪️renames-wayfinding-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-workshop",
+          "sourceMutationDirectoryName": "✏️🎓rename-workshop",
+          "mutationDirectoryName": "✏️🎓rename-workshop",
+          "scenarios": [
+            {
+              "id": "renames-workshop-a",
+              "directoryName": "🧪️renames-workshop-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-access-rule",
+          "sourceMutationDirectoryName": "🔁🔑replace-access-rule",
+          "mutationDirectoryName": "🔁🔑replace-access-rule",
+          "scenarios": [
+            {
+              "id": "replaces-access-rule-a",
+              "directoryName": "🧪️replaces-access-rule-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-accessibility-requirement",
+          "sourceMutationDirectoryName": "🔁♿replace-accessibility-requirement",
+          "mutationDirectoryName": "🔁♿replace-accessibility-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-accessibility-requirement-a",
+              "directoryName": "🧪️replaces-accessibility-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-activity",
+          "sourceMutationDirectoryName": "🔁🏃replace-activity",
+          "mutationDirectoryName": "🔁🏃replace-activity",
+          "scenarios": [
+            {
+              "id": "replaces-activity-a",
+              "directoryName": "🧪️replaces-activity-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-analysis-record",
+          "sourceMutationDirectoryName": "🔁🔬replace-analysis-record",
+          "mutationDirectoryName": "🔁🔬replace-analysis-record",
+          "scenarios": [
+            {
+              "id": "replaces-analysis-record-a",
+              "directoryName": "🧪️replaces-analysis-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-approval-record",
+          "sourceMutationDirectoryName": "🔁👍replace-approval-record",
+          "mutationDirectoryName": "🔁👍replace-approval-record",
+          "scenarios": [
+            {
+              "id": "replaces-approval-record-a",
+              "directoryName": "🧪️replaces-approval-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-assumption",
+          "sourceMutationDirectoryName": "🔁💭replace-assumption",
+          "mutationDirectoryName": "🔁💭replace-assumption",
+          "scenarios": [
+            {
+              "id": "replaces-assumption-a",
+              "directoryName": "🧪️replaces-assumption-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-audit-event",
+          "sourceMutationDirectoryName": "🔁📒replace-audit-event",
+          "mutationDirectoryName": "🔁📒replace-audit-event",
+          "scenarios": [
+            {
+              "id": "replaces-audit-event-a",
+              "directoryName": "🧪️replaces-audit-event-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-benchmark-record",
+          "sourceMutationDirectoryName": "🔁🏁replace-benchmark-record",
+          "mutationDirectoryName": "🔁🏁replace-benchmark-record",
+          "scenarios": [
+            {
+              "id": "rejects-replacing-absent-benchmark-record-a",
+              "directoryName": "🧪️rejects-replacing-absent-benchmark-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-change-record",
+          "sourceMutationDirectoryName": "🔁📝replace-change-record",
+          "mutationDirectoryName": "🔁📝replace-change-record",
+          "scenarios": [
+            {
+              "id": "replaces-change-record-a",
+              "directoryName": "🧪️replaces-change-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-collaboration-record",
+          "sourceMutationDirectoryName": "🔁🤝replace-collaboration-record",
+          "mutationDirectoryName": "🔁🤝replace-collaboration-record",
+          "scenarios": [
+            {
+              "id": "replaces-collaboration-record-a",
+              "directoryName": "🧪️replaces-collaboration-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-communication-requirement",
+          "sourceMutationDirectoryName": "🔁📡replace-communication-requirement",
+          "mutationDirectoryName": "🔁📡replace-communication-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-communication-requirement-a",
+              "directoryName": "🧪️replaces-communication-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-compliance-record",
+          "sourceMutationDirectoryName": "🔁🛂replace-compliance-record",
+          "mutationDirectoryName": "🔁🛂replace-compliance-record",
+          "scenarios": [
+            {
+              "id": "replaces-compliance-record-a",
+              "directoryName": "🧪️replaces-compliance-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-conflict",
+          "sourceMutationDirectoryName": "🔁⚔️replace-conflict",
+          "mutationDirectoryName": "🔁⚔️replace-conflict",
+          "scenarios": [
+            {
+              "id": "replaces-conflict-a",
+              "directoryName": "🧪️replaces-conflict-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-constraint-record",
+          "sourceMutationDirectoryName": "🔁🚧replace-constraint-record",
+          "mutationDirectoryName": "🔁🚧replace-constraint-record",
+          "scenarios": [
+            {
+              "id": "replaces-constraint-record-a",
+              "directoryName": "🧪️replaces-constraint-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-cost-requirement",
+          "sourceMutationDirectoryName": "🔁💰replace-cost-requirement",
+          "mutationDirectoryName": "🔁💰replace-cost-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-cost-requirement-a",
+              "directoryName": "🧪️replaces-cost-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-decision",
+          "sourceMutationDirectoryName": "🔁✅replace-decision",
+          "mutationDirectoryName": "🔁✅replace-decision",
+          "scenarios": [
+            {
+              "id": "replaces-decision-a",
+              "directoryName": "🧪️replaces-decision-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-delivery-constraint",
+          "sourceMutationDirectoryName": "🔁🚚replace-delivery-constraint",
+          "mutationDirectoryName": "🔁🚚replace-delivery-constraint",
+          "scenarios": [
+            {
+              "id": "replaces-delivery-constraint-a",
+              "directoryName": "🧪️replaces-delivery-constraint-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-document",
+          "sourceMutationDirectoryName": "🔁📄replace-document",
+          "mutationDirectoryName": "🔁📄replace-document",
+          "scenarios": [
+            {
+              "id": "replaces-document-a",
+              "directoryName": "🧪️replaces-document-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-environmental-requirement",
+          "sourceMutationDirectoryName": "🔁🌿replace-environmental-requirement",
+          "mutationDirectoryName": "🔁🌿replace-environmental-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-environmental-requirement-a",
+              "directoryName": "🧪️replaces-environmental-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-equipment",
+          "sourceMutationDirectoryName": "🔁🛠️replace-equipment",
+          "mutationDirectoryName": "🔁🛠️replace-equipment",
+          "scenarios": [
+            {
+              "id": "replaces-equipment-a",
+              "directoryName": "🧪️replaces-equipment-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-flexibility-requirement",
+          "sourceMutationDirectoryName": "🔁🧩replace-flexibility-requirement",
+          "mutationDirectoryName": "🔁🧩replace-flexibility-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-flexibility-requirement-a",
+              "directoryName": "🧪️replaces-flexibility-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-flow-requirement",
+          "sourceMutationDirectoryName": "🔁🌊replace-flow-requirement",
+          "mutationDirectoryName": "🔁🌊replace-flow-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-flow-requirement-a",
+              "directoryName": "🧪️replaces-flow-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-function",
+          "sourceMutationDirectoryName": "🔁⚙️replace-function",
+          "mutationDirectoryName": "🔁⚙️replace-function",
+          "scenarios": [
+            {
+              "id": "replaces-function-a",
+              "directoryName": "🧪️replaces-function-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-governance",
+          "sourceMutationDirectoryName": "🔁🏛️replace-governance",
+          "mutationDirectoryName": "🔁🏛️replace-governance",
+          "scenarios": [
+            {
+              "id": "replaces-the-governance-block",
+              "directoryName": "🧪️replaces-the-governance-block"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-growth-plan",
+          "sourceMutationDirectoryName": "🔁📈replace-growth-plan",
+          "mutationDirectoryName": "🔁📈replace-growth-plan",
+          "scenarios": [
+            {
+              "id": "replaces-growth-plan-a",
+              "directoryName": "🧪️replaces-growth-plan-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-human-factor-requirement",
+          "sourceMutationDirectoryName": "🔁🧠replace-human-factor-requirement",
+          "mutationDirectoryName": "🔁🧠replace-human-factor-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-human-factor-requirement-a",
+              "directoryName": "🧪️replaces-human-factor-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-information-requirement",
+          "sourceMutationDirectoryName": "🔁ℹ️replace-information-requirement",
+          "mutationDirectoryName": "🔁ℹ️replace-information-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-information-requirement-a",
+              "directoryName": "🧪️replaces-information-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-infrastructure-requirement",
+          "sourceMutationDirectoryName": "🔁🏗️replace-infrastructure-requirement",
+          "mutationDirectoryName": "🔁🏗️replace-infrastructure-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-infrastructure-requirement-a",
+              "directoryName": "🧪️replaces-infrastructure-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-issue",
+          "sourceMutationDirectoryName": "🔁🐛replace-issue",
+          "mutationDirectoryName": "🔁🐛replace-issue",
+          "scenarios": [
+            {
+              "id": "replaces-issue-a",
+              "directoryName": "🧪️replaces-issue-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-knowledge-record",
+          "sourceMutationDirectoryName": "🔁📚replace-knowledge-record",
+          "mutationDirectoryName": "🔁📚replace-knowledge-record",
+          "scenarios": [
+            {
+              "id": "rejects-replacing-absent-knowledge-record-a",
+              "directoryName": "🧪️rejects-replacing-absent-knowledge-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-meeting-record",
+          "sourceMutationDirectoryName": "🔁🗓️replace-meeting-record",
+          "mutationDirectoryName": "🔁🗓️replace-meeting-record",
+          "scenarios": [
+            {
+              "id": "replaces-meeting-record-a",
+              "directoryName": "🧪️replaces-meeting-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-meta",
+          "sourceMutationDirectoryName": "🔁🏷️replace-meta",
+          "mutationDirectoryName": "🔁🏷️replace-meta",
+          "scenarios": [
+            {
+              "id": "replaces-the-document-meta-block",
+              "directoryName": "🧪️replaces-the-document-meta-block"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-operational-requirement",
+          "sourceMutationDirectoryName": "🔁📋replace-operational-requirement",
+          "mutationDirectoryName": "🔁📋replace-operational-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-operational-requirement-a",
+              "directoryName": "🧪️replaces-operational-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-option-evaluation",
+          "sourceMutationDirectoryName": "🔁⚖️replace-option-evaluation",
+          "mutationDirectoryName": "🔁⚖️replace-option-evaluation",
+          "scenarios": [
+            {
+              "id": "replaces-option-evaluation-a",
+              "directoryName": "🧪️replaces-option-evaluation-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-organizational-requirement",
+          "sourceMutationDirectoryName": "🔁🏢replace-organizational-requirement",
+          "mutationDirectoryName": "🔁🏢replace-organizational-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-organizational-requirement-a",
+              "directoryName": "🧪️replaces-organizational-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-performance-criterion",
+          "sourceMutationDirectoryName": "🔁📊replace-performance-criterion",
+          "mutationDirectoryName": "🔁📊replace-performance-criterion",
+          "scenarios": [
+            {
+              "id": "replaces-performance-criterion-a",
+              "directoryName": "🧪️replaces-performance-criterion-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-priority-record",
+          "sourceMutationDirectoryName": "🔁⭐replace-priority-record",
+          "mutationDirectoryName": "🔁⭐replace-priority-record",
+          "scenarios": [
+            {
+              "id": "replaces-priority-record-a",
+              "directoryName": "🧪️replaces-priority-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-privacy-requirement",
+          "sourceMutationDirectoryName": "🔁🔒replace-privacy-requirement",
+          "mutationDirectoryName": "🔁🔒replace-privacy-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-privacy-requirement-a",
+              "directoryName": "🧪️replaces-privacy-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-process",
+          "sourceMutationDirectoryName": "🔁🔄replace-process",
+          "mutationDirectoryName": "🔁🔄replace-process",
+          "scenarios": [
+            {
+              "id": "replaces-process-a",
+              "directoryName": "🧪️replaces-process-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-program-element",
+          "sourceMutationDirectoryName": "🔁🧱replace-program-element",
+          "mutationDirectoryName": "🔁🧱replace-program-element",
+          "scenarios": [
+            {
+              "id": "replaces-program-element-a",
+              "directoryName": "🧪️replaces-program-element-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-project",
+          "sourceMutationDirectoryName": "🔁📁replace-project",
+          "mutationDirectoryName": "🔁📁replace-project",
+          "scenarios": [
+            {
+              "id": "replaces-the-project-definition",
+              "directoryName": "🧪️replaces-the-project-definition"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-quality-record",
+          "sourceMutationDirectoryName": "🔁💎replace-quality-record",
+          "mutationDirectoryName": "🔁💎replace-quality-record",
+          "scenarios": [
+            {
+              "id": "replaces-quality-record-a",
+              "directoryName": "🧪️replaces-quality-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-quantity-requirement",
+          "sourceMutationDirectoryName": "🔁🔢replace-quantity-requirement",
+          "mutationDirectoryName": "🔁🔢replace-quantity-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-quantity-requirement-a",
+              "directoryName": "🧪️replaces-quantity-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-regulatory-requirement",
+          "sourceMutationDirectoryName": "🔁📜replace-regulatory-requirement",
+          "mutationDirectoryName": "🔁📜replace-regulatory-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-regulatory-requirement-a",
+              "directoryName": "🧪️replaces-regulatory-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-relationship",
+          "sourceMutationDirectoryName": "🔁🔗replace-relationship",
+          "mutationDirectoryName": "🔁🔗replace-relationship",
+          "scenarios": [
+            {
+              "id": "replaces-relationship-a",
+              "directoryName": "🧪️replaces-relationship-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-report-record",
+          "sourceMutationDirectoryName": "🔁📑replace-report-record",
+          "mutationDirectoryName": "🔁📑replace-report-record",
+          "scenarios": [
+            {
+              "id": "replaces-report-record-a",
+              "directoryName": "🧪️replaces-report-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-requirement",
+          "sourceMutationDirectoryName": "🔁📌replace-requirement",
+          "mutationDirectoryName": "🔁📌replace-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-requirement-a",
+              "directoryName": "🧪️replaces-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-resilience-requirement",
+          "sourceMutationDirectoryName": "🔁💪replace-resilience-requirement",
+          "mutationDirectoryName": "🔁💪replace-resilience-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-resilience-requirement-a",
+              "directoryName": "🧪️replaces-resilience-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-resource",
+          "sourceMutationDirectoryName": "🔁📦replace-resource",
+          "mutationDirectoryName": "🔁📦replace-resource",
+          "scenarios": [
+            {
+              "id": "replaces-resource-a",
+              "directoryName": "🧪️replaces-resource-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-risk",
+          "sourceMutationDirectoryName": "🔁⚠️replace-risk",
+          "mutationDirectoryName": "🔁⚠️replace-risk",
+          "scenarios": [
+            {
+              "id": "replaces-risk-a",
+              "directoryName": "🧪️replaces-risk-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-safety-requirement",
+          "sourceMutationDirectoryName": "🔁🦺replace-safety-requirement",
+          "mutationDirectoryName": "🔁🦺replace-safety-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-safety-requirement-a",
+              "directoryName": "🧪️replaces-safety-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-scenario",
+          "sourceMutationDirectoryName": "🔁🎬replace-scenario",
+          "mutationDirectoryName": "🔁🎬replace-scenario",
+          "scenarios": [
+            {
+              "id": "replaces-scenario-a",
+              "directoryName": "🧪️replaces-scenario-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-schedule-requirement",
+          "sourceMutationDirectoryName": "🔁📅replace-schedule-requirement",
+          "mutationDirectoryName": "🔁📅replace-schedule-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-schedule-requirement-a",
+              "directoryName": "🧪️replaces-schedule-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-search-filter",
+          "sourceMutationDirectoryName": "🔁🔍replace-search-filter",
+          "mutationDirectoryName": "🔁🔍replace-search-filter",
+          "scenarios": [
+            {
+              "id": "replaces-search-filter-a",
+              "directoryName": "🧪️replaces-search-filter-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-security-requirement",
+          "sourceMutationDirectoryName": "🔁🛡️replace-security-requirement",
+          "mutationDirectoryName": "🔁🛡️replace-security-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-security-requirement-a",
+              "directoryName": "🧪️replaces-security-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-service-requirement",
+          "sourceMutationDirectoryName": "🔁🛎️replace-service-requirement",
+          "mutationDirectoryName": "🔁🛎️replace-service-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-service-requirement-a",
+              "directoryName": "🧪️replaces-service-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-site-context",
+          "sourceMutationDirectoryName": "🔁📍replace-site-context",
+          "mutationDirectoryName": "🔁📍replace-site-context",
+          "scenarios": [
+            {
+              "id": "replaces-site-context-a",
+              "directoryName": "🧪️replaces-site-context-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-stakeholder",
+          "sourceMutationDirectoryName": "🔁👥replace-stakeholder",
+          "mutationDirectoryName": "🔁👥replace-stakeholder",
+          "scenarios": [
+            {
+              "id": "replaces-stakeholder-a",
+              "directoryName": "🧪️replaces-stakeholder-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-status-record",
+          "sourceMutationDirectoryName": "🔁📶replace-status-record",
+          "mutationDirectoryName": "🔁📶replace-status-record",
+          "scenarios": [
+            {
+              "id": "replaces-status-record-a",
+              "directoryName": "🧪️replaces-status-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-storage-requirement",
+          "sourceMutationDirectoryName": "🔁🗄️replace-storage-requirement",
+          "mutationDirectoryName": "🔁🗄️replace-storage-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-storage-requirement-a",
+              "directoryName": "🧪️replaces-storage-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-survey",
+          "sourceMutationDirectoryName": "🔁🗳️replace-survey",
+          "mutationDirectoryName": "🔁🗳️replace-survey",
+          "scenarios": [
+            {
+              "id": "replaces-survey-a",
+              "directoryName": "🧪️replaces-survey-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-sustainability-requirement",
+          "sourceMutationDirectoryName": "🔁♻️replace-sustainability-requirement",
+          "mutationDirectoryName": "🔁♻️replace-sustainability-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-sustainability-requirement-a",
+              "directoryName": "🧪️replaces-sustainability-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-template-record",
+          "sourceMutationDirectoryName": "🔁📐replace-template-record",
+          "mutationDirectoryName": "🔁📐replace-template-record",
+          "scenarios": [
+            {
+              "id": "replaces-template-record-a",
+              "directoryName": "🧪️replaces-template-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-user-profile",
+          "sourceMutationDirectoryName": "🔁🧑replace-user-profile",
+          "mutationDirectoryName": "🔁🧑replace-user-profile",
+          "scenarios": [
+            {
+              "id": "replaces-user-profile-a",
+              "directoryName": "🧪️replaces-user-profile-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-validation-record",
+          "sourceMutationDirectoryName": "🔁✔️replace-validation-record",
+          "mutationDirectoryName": "🔁✔️replace-validation-record",
+          "scenarios": [
+            {
+              "id": "replaces-validation-record-a",
+              "directoryName": "🧪️replaces-validation-record-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-wayfinding-requirement",
+          "sourceMutationDirectoryName": "🔁🧭replace-wayfinding-requirement",
+          "mutationDirectoryName": "🔁🧭replace-wayfinding-requirement",
+          "scenarios": [
+            {
+              "id": "replaces-wayfinding-requirement-a",
+              "directoryName": "🧪️replaces-wayfinding-requirement-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-workshop",
+          "sourceMutationDirectoryName": "🔁🎓replace-workshop",
+          "mutationDirectoryName": "🔁🎓replace-workshop",
+          "scenarios": [
+            {
+              "id": "replaces-workshop-a",
+              "directoryName": "🧪️replaces-workshop-a"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-information-requirement",
         "delete-information-requirement",

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 📜️ `@semio-tech/framework-schema` — single-source entity catalog codegen (kind → emoji/icon/label/filterable) for CLI, VS Code and Rust consumers. */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
@@ -118,6 +118,19 @@ function generatedTargets(repoRoot: string, kinds: EntityKindSpec[]): GeneratedT
 }
 //#endregion 🔖️targets
 
+//#region 🔖️preview-generated
+/** 🧾️ Emits the canonical read-only generator protocol from the same byte plan as generate/check. */
+class PreviewGeneratedScript extends BundleScript {
+  run(_segments: string[]): void {
+    const repoRoot = getWorkspaceRoot();
+    const nodes = generatedTargets(repoRoot, readEntityKinds())
+      .map((target) => ({ bytesBase64: Buffer.from(target.content).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: relative(repoRoot, target.path).replaceAll("\\", "/").normalize("NFC") }))
+      .sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
+    process.stdout.write(`${JSON.stringify({ contractId: "schema-entity-catalog", nodes, schemaVersion: 1, staleRemovals: [] })}\n`);
+  }
+}
+//#endregion 🔖️preview-generated
+
 //#region 🔖️generate
 class GenerateScript extends BundleScript {
   run(_segments: string[]): void {
@@ -151,7 +164,7 @@ class CheckScript extends BundleScript {
 }
 //#endregion 🔖️check
 
-const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("check", CheckScript);
+const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript);
 
 if (import.meta.main) {
   await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" });

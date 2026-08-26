@@ -1,0 +1,1 @@
+[norm retained fixture] ajv=green apps=15 tools=2 cases=5 max=256 maxPlusOne=false

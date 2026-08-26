@@ -15,7 +15,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 #[allow(unused_imports)]
 
 //#region 🔖️Tree
-pub async fn remove_layer_from_tree(layers: &mut Vec<RasterLayerNode>, target_id: &str) -> Option<RasterLayerNode> {
+pub fn remove_layer_from_tree(layers: &mut Vec<RasterLayerNode>, target_id: &str) -> Option<RasterLayerNode> {
     if let Some(index) = layers.iter().position(|layer| layer_node_id(layer) == target_id) {
         return Some(layers.remove(index));
     }
@@ -29,7 +29,7 @@ pub async fn remove_layer_from_tree(layers: &mut Vec<RasterLayerNode>, target_id
     None
 }
 
-pub async fn insert_layer(layers: &mut Vec<RasterLayerNode>, parent_id: Option<&str>, index: usize, layer: RasterLayerNode) -> bool {
+pub fn insert_layer(layers: &mut Vec<RasterLayerNode>, parent_id: Option<&str>, index: usize, layer: RasterLayerNode) -> bool {
     match parent_id {
         None => {
             if index > layers.len() {
@@ -58,11 +58,11 @@ pub async fn insert_layer(layers: &mut Vec<RasterLayerNode>, parent_id: Option<&
     }
 }
 
-async fn contains_layer(node: &RasterLayerNode, target_id: &str) -> bool {
+fn contains_layer(node: &RasterLayerNode, target_id: &str) -> bool {
     layer_node_id(node) == target_id || matches!(node, RasterLayerNode::Group { children, .. } if children.iter().any(|child| contains_layer(child, target_id)))
 }
 
-async fn validate_layer_patch(node: &RasterLayerNode, patch: &RasterLayerPatch) -> protocol::MutationApplyResult<()> {
+fn validate_layer_patch(node: &RasterLayerNode, patch: &RasterLayerPatch) -> protocol::MutationApplyResult<()> {
     let invalid = match node {
         RasterLayerNode::Pixel { .. } => patch.adjustment_kind.is_some(),
         RasterLayerNode::Group { .. } => patch.width.is_some() || patch.height.is_some() || patch.adjustment_kind.is_some(),
@@ -74,7 +74,7 @@ async fn validate_layer_patch(node: &RasterLayerNode, patch: &RasterLayerPatch) 
     Ok(())
 }
 
-async fn apply_layer_patch(node: &mut RasterLayerNode, patch: &RasterLayerPatch) -> RasterLayerPatch {
+fn apply_layer_patch(node: &mut RasterLayerNode, patch: &RasterLayerPatch) -> RasterLayerPatch {
     let mut inverse = RasterLayerPatch::default();
     match node {
         RasterLayerNode::Pixel { name, visible, opacity, blend_mode, transform, width, height, .. } => {
@@ -163,7 +163,7 @@ async fn apply_layer_patch(node: &mut RasterLayerNode, patch: &RasterLayerPatch)
     inverse
 }
 
-pub async fn patch_layer_in_tree(layers: &mut [RasterLayerNode], target_id: &str, patch: &RasterLayerPatch) -> Option<RasterLayerPatch> {
+pub fn patch_layer_in_tree(layers: &mut [RasterLayerNode], target_id: &str, patch: &RasterLayerPatch) -> Option<RasterLayerPatch> {
     for layer in layers.iter_mut() {
         if layer_node_id(layer) == target_id {
             return Some(apply_layer_patch(layer, patch));
@@ -181,7 +181,7 @@ pub async fn patch_layer_in_tree(layers: &mut [RasterLayerNode], target_id: &str
 //#region 🔖️Apply
 impl RasterDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &RasterArtifact) -> protocol::MutationApplyResult<RasterArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &RasterArtifact) -> protocol::MutationApplyResult<RasterArtifact> {
         if !artifact.assets.is_empty() {
             return Err(protocol::MutationApplyError::new("mutation.apply.retained-owner-required", "populated Raster maps require the retained initialization authority"));
         }
@@ -251,7 +251,7 @@ impl RasterDiff {
     }
 }
 
-pub async fn apply_layers_delta(layers: &[RasterLayerNode], delta: &RasterLayersDelta) -> protocol::MutationApplyResult<Vec<RasterLayerNode>> {
+pub fn apply_layers_delta(layers: &[RasterLayerNode], delta: &RasterLayersDelta) -> protocol::MutationApplyResult<Vec<RasterLayerNode>> {
     let mut removed = std::collections::BTreeSet::new();
     for (index, id) in delta.removed.iter().enumerate() {
         if !removed.insert(id.as_str()) {
@@ -320,11 +320,11 @@ pub async fn apply_layers_delta(layers: &[RasterLayerNode], delta: &RasterLayers
     Ok(next)
 }
 
-async fn apply_layer_patch_entry(layers: &mut [RasterLayerNode], entry: &RasterLayerPatchEntry) -> protocol::MutationApplyResult<()> {
+fn apply_layer_patch_entry(layers: &mut [RasterLayerNode], entry: &RasterLayerPatchEntry) -> protocol::MutationApplyResult<()> {
     patch_layer_in_tree(layers, &entry.id, &entry.patch).map(|_| ()).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "patched layer does not exist"))
 }
 
-async fn validate_assets_delta<T>(assets: &crate::artifacts::raster::RasterOwnedMap<T>, delta: &RasterAssetsDelta) -> protocol::MutationApplyResult<()> {
+fn validate_assets_delta<T>(assets: &crate::artifacts::raster::RasterOwnedMap<T>, delta: &RasterAssetsDelta) -> protocol::MutationApplyResult<()> {
     for (key, value) in &delta.entries {
         if value.is_none() && !assets.contains_key(key) {
             return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed asset does not exist").at([key.as_str()]));
@@ -334,7 +334,7 @@ async fn validate_assets_delta<T>(assets: &crate::artifacts::raster::RasterOwned
 }
 
 impl MutationDiff<RasterSnapshot> for RasterDiff {
-    async fn apply(&self, snapshot: &RasterSnapshot) -> protocol::MutationApplyResult<RasterSnapshot> {
+    fn apply(&self, snapshot: &RasterSnapshot) -> protocol::MutationApplyResult<RasterSnapshot> {
         if !snapshot.assets.is_empty() {
             return Err(protocol::MutationApplyError::new("mutation.apply.retained-owner-required", "populated Raster maps require the retained initialization authority"));
         }
@@ -372,7 +372,7 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -419,43 +419,43 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
 //#endregion 🔖️Apply
 
 //#region 🔖️Builders
-pub async fn diff_set_snapshot(snapshot: &RasterSnapshot) -> RasterDiff {
+pub fn diff_set_snapshot(snapshot: &RasterSnapshot) -> RasterDiff {
     RasterDiff { artifact: Some(Box::new(RasterArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 
-pub async fn diff_from_snapshot(snapshot: RasterSnapshot) -> RasterDiff {
+pub fn diff_from_snapshot(snapshot: RasterSnapshot) -> RasterDiff {
     diff_set_snapshot(&snapshot)
 }
 
 /// ➕ Sparse insertion diff — tree-aware (`parent_id: None` = document root), so `create-layer` never
 /// needs to fall back to whole-snapshot capture even when inserting into a nested `Group`.
-pub async fn diff_add_layer(parent_id: Option<String>, index: usize, layer: RasterLayerNode) -> RasterDiff {
+pub fn diff_add_layer(parent_id: Option<String>, index: usize, layer: RasterLayerNode) -> RasterDiff {
     RasterDiff { layers: Some(RasterLayersDelta { added: vec![RasterLayerInsertion { parent_id, index, layer }], ..Default::default() }), ..Default::default() }
 }
 
-pub async fn diff_remove_layer(layer_id: &str) -> RasterDiff {
+pub fn diff_remove_layer(layer_id: &str) -> RasterDiff {
     RasterDiff { layers: Some(RasterLayersDelta { removed: vec![layer_id.to_string()], ..Default::default() }), ..Default::default() }
 }
 
-pub async fn diff_patch_layer(layer_id: &str, patch: RasterLayerPatch) -> RasterDiff {
+pub fn diff_patch_layer(layer_id: &str, patch: RasterLayerPatch) -> RasterDiff {
     RasterDiff { layers: Some(RasterLayersDelta { patched: vec![RasterLayerPatchEntry { id: layer_id.to_string(), patch }], ..Default::default() }), ..Default::default() }
 }
 
 /// 🔀 Sparse reposition diff (`reorder-layers`) — remove-then-insert at a tree address, built
 /// directly from the payload; never clones/mutates/re-diffs the whole snapshot.
-pub async fn diff_move_layer(layer_id: &str, parent_id: Option<String>, index: usize) -> RasterDiff {
+pub fn diff_move_layer(layer_id: &str, parent_id: Option<String>, index: usize) -> RasterDiff {
     RasterDiff { layers: Some(RasterLayersDelta { moved: vec![RasterLayerMove { id: layer_id.to_string(), parent_id, index }], ..Default::default() }), ..Default::default() }
 }
 
 /// 🖇️ Sparse asset-map insertion diff (`add-layer-asset`).
-pub async fn diff_add_asset(asset_id: &str, asset: crate::artifacts::raster::RasterImageAsset) -> RasterDiff {
+pub fn diff_add_asset(asset_id: &str, asset: crate::artifacts::raster::RasterImageAsset) -> RasterDiff {
     let mut entries = std::collections::BTreeMap::new();
     entries.insert(asset_id.to_string(), Some(asset));
     RasterDiff { assets: Some(RasterAssetsDelta { entries }), ..Default::default() }
 }
 
 /// 🗂️ Sparse asset-map removal diff (`remove-layer-asset`).
-pub async fn diff_remove_asset(asset_id: &str) -> RasterDiff {
+pub fn diff_remove_asset(asset_id: &str) -> RasterDiff {
     let mut entries = std::collections::BTreeMap::new();
     entries.insert(asset_id.to_string(), None);
     RasterDiff { assets: Some(RasterAssetsDelta { entries }), ..Default::default() }

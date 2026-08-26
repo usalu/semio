@@ -24,6 +24,21 @@
     {
       "id": "wav-riff-pcm-any",
       "capability": "wav-riff-pcm-mutate",
+      "standardDirectoryName": "🔖️riff-pcm",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "resamples-to-16-khz-and-doubles-the-pcm16-amplitude",
+              "directoryName": "🧪️resamples-to-16-khz-and-doubles-the-pcm16-amplitude"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

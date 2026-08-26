@@ -1,0 +1,3 @@
+[DEBUG] command=bun -e <Ajv2020 compile+validate> shared-framework-action-routes.schema.json shared-framework-action-routes-law.json
+[DEBUG] exit=0
+[oracle] semio://framework/plugin/shared-framework-action-routes/v1: valid routes=12 descriptorLaws=6 hostileLaws=12

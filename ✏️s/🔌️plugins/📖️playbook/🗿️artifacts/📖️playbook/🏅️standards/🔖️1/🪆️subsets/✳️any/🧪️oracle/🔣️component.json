@@ -24,6 +24,109 @@
     {
       "id": "playbook-1-any",
       "capability": "playbook-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "add-block",
+          "sourceMutationDirectoryName": "🧱add-block",
+          "mutationDirectoryName": "🧱add-block",
+          "scenarios": [
+            {
+              "id": "rejects-adding-a-block-to-a-missing-step",
+              "directoryName": "🧪️rejects-adding-a-block-to-a-missing-step"
+            }
+          ]
+        },
+        {
+          "mutationId": "add-step",
+          "sourceMutationDirectoryName": "➕add-step",
+          "mutationDirectoryName": "➕add-step",
+          "scenarios": [
+            {
+              "id": "no-ops-on-a-duplicate-step-id",
+              "directoryName": "🧪️no-ops-on-a-duplicate-step-id"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-title",
+          "sourceMutationDirectoryName": "✏️change-title",
+          "mutationDirectoryName": "✏️change-title",
+          "scenarios": [
+            {
+              "id": "changes-the-playbook-title",
+              "directoryName": "🧪️changes-the-playbook-title"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-block",
+          "sourceMutationDirectoryName": "🔀move-block",
+          "mutationDirectoryName": "🔀move-block",
+          "scenarios": [
+            {
+              "id": "rejects-moving-a-block-into-a-missing-step",
+              "directoryName": "🧪️rejects-moving-a-block-into-a-missing-step"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-step",
+          "sourceMutationDirectoryName": "↔️move-step",
+          "mutationDirectoryName": "↔️move-step",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-step-is-already-at-that-index",
+              "directoryName": "🧪️no-ops-when-the-step-is-already-at-that-index"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-block",
+          "sourceMutationDirectoryName": "🗑️remove-block",
+          "mutationDirectoryName": "🗑️remove-block",
+          "scenarios": [
+            {
+              "id": "rejects-removing-a-block-missing-from-its-step",
+              "directoryName": "🧪️rejects-removing-a-block-missing-from-its-step"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-step",
+          "sourceMutationDirectoryName": "➖remove-step",
+          "mutationDirectoryName": "➖remove-step",
+          "scenarios": [
+            {
+              "id": "rejects-removing-a-missing-step",
+              "directoryName": "🧪️rejects-removing-a-missing-step"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-block",
+          "sourceMutationDirectoryName": "🔄replace-block",
+          "mutationDirectoryName": "🔄replace-block",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-block-is-already-identical",
+              "directoryName": "🧪️no-ops-when-the-block-is-already-identical"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-step",
+          "sourceMutationDirectoryName": "🩹update-step",
+          "mutationDirectoryName": "🩹update-step",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-header-is-already-current",
+              "directoryName": "🧪️no-ops-when-the-header-is-already-current"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "add-step",
         "remove-step",

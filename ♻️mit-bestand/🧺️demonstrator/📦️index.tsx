@@ -30,23 +30,14 @@ import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "./⚛�
 import { DEMONSTRATOR_LOCALE, DEMONSTRATOR_PANES, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, ENTWERFEN_MIT_BESTAND_LOGO_SVG, demonstratorPaneBootVariants, scheduleDemonstratorIdle, type DemonstratorPaneSpec } from "./🟦️brand.ts";
 import "./🎨️globals.css";
 
-console.debug("[DEBUG] demonstrator entry imports evaluated");
-navigator.sendBeacon("http://127.0.0.1:6040/entry-imports-evaluated");
-
 // 🎪️ Page-owning (single React root, no `ShellScope` of its own) — plain browser storage is correct;
 // each pane's own `FrameworkOsShell` gets its own `ShellScope` (ephemeral brands → in-memory storage).
 const demonstratorStorage = createBrowserStoragePort();
-console.debug("[DEBUG] demonstrator browser storage created");
-navigator.sendBeacon("http://127.0.0.1:6040/browser-storage-created");
 
 bootstrapElementsSurfaceChromeDocument(readStoredUiChromeAppearance(demonstratorStorage));
-console.debug("[DEBUG] demonstrator chrome bootstrapped");
-navigator.sendBeacon("http://127.0.0.1:6040/chrome-bootstrapped");
 // 🇩🇪️ The whole demonstrator is German-locked (see 🟦️brand.ts) — resolve synchronously before the
 // first render so the landing page's own chrome (Skip/Back/Next/Done) never flashes English.
 initUiLocaleSync(DEMONSTRATOR_LOCALE);
-console.debug("[DEBUG] demonstrator locale initialized");
-navigator.sendBeacon("http://127.0.0.1:6040/locale-initialized");
 
 /** @emoji 📱️ Touch-first viewports use the vertical snap list even when wider than {@link UI_MOBILE_MEDIA_QUERY}. */
 const DEMONSTRATOR_TOUCH_LIST_MEDIA_QUERY = `${UI_MOBILE_MEDIA_QUERY} and (hover: none) and (pointer: coarse)`;
@@ -361,7 +352,7 @@ type PaneErrorBoundaryState = { readonly error: Error | null };
 const PaneErrorBoundary = createUiErrorBoundary<PaneErrorBoundaryProps, PaneErrorBoundaryState>({
   initialState: { error: null },
   deriveState: (error) => ({ error }),
-  didCatch: (props, error) => console.error(`[DEBUG] demonstrator pane "${props.paneLabel}" crashed`, error),
+  didCatch: (props, error) => console.error(`Demonstrator pane "${props.paneLabel}" crashed`, error),
   render: (props, state) => {
     if (state.error) {
       return (
@@ -396,7 +387,6 @@ function DemonstratorPane({
   readonly onDirty: () => void;
   readonly onContainerElement: (id: string, el: HTMLDivElement | null) => void;
 }) {
-  navigator.sendBeacon(`http://127.0.0.1:6040/pane-render-${pane.id}-${booted ? "booted" : "idle"}`);
   const bootVariants = demonstratorPaneBootVariants(pane.variant);
   const runtimeBoot = useMemo(() => resolvePlaygroundBoot(PLUGIN_CATALOG, bootVariants.runtime), [bootVariants.runtime]);
   const manifestBoot = useMemo(() => resolvePlaygroundBoot(PLUGIN_CATALOG, bootVariants.manifest), [bootVariants.manifest]);
@@ -497,10 +487,8 @@ function DemonstratorCard({
 
 //#region 🎪️DemonstratorLanding
 function DemonstratorLanding() {
-  navigator.sendBeacon("http://127.0.0.1:6040/landing-render-start");
   const viewportMobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
   const touchListMode = useMediaQuery(DEMONSTRATOR_TOUCH_LIST_MEDIA_QUERY);
-  navigator.sendBeacon("http://127.0.0.1:6040/landing-media-ready");
 
   const surfaceChrome = useMemo(
     () => ({
@@ -511,16 +499,13 @@ function DemonstratorLanding() {
     [viewportMobile],
   );
   useElementsSurfaceChrome(surfaceChrome);
-  navigator.sendBeacon("http://127.0.0.1:6040/landing-surface-chrome-ready");
 
   const initialFocusId = useMemo(() => paneIdFromLocationHash(), []);
   const [introductionStep, setIntroductionStep] = useState(0);
   const [showIntroduction, setShowIntroduction] = useState(!initialFocusId);
   const [focusedId, setFocusedId] = useState<string | null>(initialFocusId);
   const { bootedIds, promote } = useSequentialPaneBoot(initialFocusId, { skipIdleQueue: touchListMode || focusedId != null });
-  navigator.sendBeacon("http://127.0.0.1:6040/landing-sequential-boot-ready");
   const { suspendedIds, postersById, markDirty, registerContainer, resumePane } = usePaneSuspension(bootedIds, focusedId, initialFocusId);
-  navigator.sendBeacon("http://127.0.0.1:6040/landing-suspension-ready");
   const promoteAndResume = useCallback(
     (id: string) => {
       promote(id);
@@ -824,7 +809,6 @@ function DemonstratorLanding() {
   ) : null;
 
   if (touchListMode) {
-    navigator.sendBeacon("http://127.0.0.1:6040/landing-return-mobile");
     return (
       <div className="relative h-full w-full overflow-hidden bg-background text-foreground">
         <div
@@ -874,7 +858,6 @@ function DemonstratorLanding() {
     );
   }
 
-  navigator.sendBeacon("http://127.0.0.1:6040/landing-return-desktop");
   return (
     <div className="relative h-full w-full overflow-hidden bg-background text-foreground">
       <div
@@ -951,8 +934,4 @@ function DemonstratorLanding() {
 }
 //#endregion 🎪️DemonstratorLanding
 
-console.debug("[DEBUG] demonstrator mounting root");
-navigator.sendBeacon("http://127.0.0.1:6040/mounting-root");
 mountUiRoot(document.getElementById("root")!, <DemonstratorLanding />);
-console.debug("[DEBUG] demonstrator root mounted");
-navigator.sendBeacon("http://127.0.0.1:6040/root-mounted");

@@ -29,6 +29,21 @@
     {
       "id": "xml-1-0-any",
       "capability": "xml-1-0-mutate",
+      "standardDirectoryName": "🔖️1.0",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "retags-the-catalog-revision-and-rewrites-an-item-label",
+              "directoryName": "🧪️retags-the-catalog-revision-and-rewrites-an-item-label"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

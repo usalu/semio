@@ -26,18 +26,18 @@ pub mod derived_composition {
         type Snapshot = Puzzle5dSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_JSON, DEP_OBJ, DEP_PNG, DEP_STL, DEP_TXT, DEP_ZIP]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
                         AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
                         AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
                     };
-                    let analysis = Puzzle5dAnalyzer::analyze(&[native]).await;
+                    let analysis = Puzzle5dAnalyzer::analyze(&[native]);
                     if let Some(snapshot) = analysis.parts.snapshot {
                         return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
                     }
@@ -133,10 +133,10 @@ pub mod io_registry {
     fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::puzzle5d::Puzzle5dSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == PUZZLE5D_DIALECT) {
             let builder = match &source.payload {
-                IoPayload::Text(t) => semio_framework::io::resolve_ready(Puzzle5dAnyBuilder::from_text(t)).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-                IoPayload::Binary(b) => semio_framework::io::resolve_ready(Puzzle5dAnyBuilder::from_binary(b)).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
+                IoPayload::Text(t) => Puzzle5dAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
+                IoPayload::Binary(b) => Puzzle5dAnyBuilder::from_binary(b).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
             };
-            return semio_framework::io::resolve_ready(builder.build()).map_err(|diagnostics| ComposeError { message: "Puzzle5dComposer export: build() failed".into(), diagnostics });
+            return builder.build().map_err(|diagnostics| ComposeError { message: "Puzzle5dComposer export: build() failed".into(), diagnostics });
         }
         if let Some(source) = sources.iter().find(|s| s.dialect == PUZZLE5D_JSON_BRIDGE_DIALECT) {
             // 🌉 The OS dispatch layer (export_os_app_instance_media_kind) deals in already-

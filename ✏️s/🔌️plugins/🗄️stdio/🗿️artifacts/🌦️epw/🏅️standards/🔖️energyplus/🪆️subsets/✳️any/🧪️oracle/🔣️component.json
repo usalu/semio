@@ -33,6 +33,21 @@
     {
       "id": "epw-energyplus-any",
       "capability": "epw-energyplus-mutate",
+      "standardDirectoryName": "🔖️energyplus",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "warms-the-second-hour-and-restamps-the-station-city",
+              "directoryName": "🧪️warms-the-second-hour-and-restamps-the-station-city"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

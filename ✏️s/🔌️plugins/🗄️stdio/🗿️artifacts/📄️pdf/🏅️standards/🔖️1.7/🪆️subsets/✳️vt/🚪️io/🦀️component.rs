@@ -27,12 +27,12 @@ pub mod derived_composition {
 
         /// 📚️ Reads `✳️x` alongside `✳️any`/self/deps -- VT is layered on X-4 (ISO 16612-2 is based
         /// on ISO 15930-7), matching the catalog DAG relationship the roster describes.
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_X, DIALECT_VT, DEP_BINARY, DEP_DEFLATE]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = semio_framework_plugin::resolve_ready(PdfAnyComposer::compose(sources))?;
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = PdfAnyComposer::compose(sources)?;
             let checks = check_vt_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -134,7 +134,7 @@ pub mod derived_composition {
             let bytes = minimal_conforming_vt_pdf();
             let hex = hex_encode(&bytes);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
-            let composed = PdfVtComposerComposition::compose(&sources).await.expect("clean document must compose to vt");
+            let composed = PdfVtComposerComposition::compose(&sources).expect("clean document must compose to vt");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
@@ -143,7 +143,7 @@ pub mod derived_composition {
             let snapshot = PdfSnapshot::default();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let err = PdfVtComposerComposition::compose(&sources).await.expect_err("a document with no DPartRoot must not stamp vt");
+            let err = PdfVtComposerComposition::compose(&sources).expect_err("a document with no DPartRoot must not stamp vt");
             assert!(err.diagnostics.iter().any(|d| d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
     }

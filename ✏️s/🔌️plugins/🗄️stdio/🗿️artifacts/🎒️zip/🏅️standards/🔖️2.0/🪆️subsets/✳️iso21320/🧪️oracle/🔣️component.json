@@ -22,6 +22,9 @@
     {
       "id": "zip-2-0-iso21320",
       "capability": "zip-2-0-iso21320-mutate",
+      "standardDirectoryName": "🔖️2.0",
+      "subsetDirectoryName": "✳️iso21320",
+      "vectors": [],
       "kinds": [
         "no-mutation",
         "set-snapshot",

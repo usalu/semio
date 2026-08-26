@@ -26,6 +26,21 @@
     {
       "id": "md-commonmark-any",
       "capability": "md-commonmark-mutate",
+      "standardDirectoryName": "🔖️commonmark",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "demotes-the-tower-heading-to-level-3",
+              "directoryName": "🧪️demotes-the-tower-heading-to-level-3"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

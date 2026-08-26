@@ -15,12 +15,12 @@ use crate::artifacts::lowpoly::schema::mutations::text::LowpolyMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `LowpolyMutation` to its binary command form.
-pub async fn encode_op(operation: &LowpolyMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &LowpolyMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `LowpolyMutation` from its binary command form.
-pub async fn decode_op(bytes: &[u8]) -> Result<LowpolyMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<LowpolyMutation, protocol::ProtocolError> {
     LowpolyMutation::decode_op(bytes)
 }
 

@@ -392,7 +392,7 @@ async fn spawn_job(job: u64, kind: &str, input: &[u8], restored: Option<Vec<u8>>
                 outcome_state.borrow_mut().outcome = Some(result);
             })
         });
-        let body = task.map_or_else(|| JobBody::AdmissionFailed(fault_bytes("job.admission-failed", format!("job {job} could not enter the test executor"))), |task| JobBody::Running { task, state });
+        let body = task.map_or_else(|_| JobBody::AdmissionFailed(fault_bytes("job.admission-failed", format!("job {job} could not enter the test executor"))), |task| JobBody::Running { task, state });
         JOBS.with(|jobs| jobs.borrow_mut().insert(job, JobSlot { kind: kind.to_string(), input: input.to_vec(), body }));
     }
 }

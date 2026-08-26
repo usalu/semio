@@ -95,7 +95,7 @@ app_labels! {
 /// this render call site — same native-only-render gap other `NoConfig`-backed slots hit in this
 /// migration. Defaults to the native English cell until this block-kind slot grows its own locale
 /// channel (see `s-home-ui`'s `resolve_labels` for the general two-axis pattern this mirrors).
-async fn resolve_labels<L: AppLabels>() -> &'static L {
+fn resolve_labels<L: AppLabels>() -> &'static L {
     L::labels(Locale::En, Terminology::Native)
 }
 //#endregion 🔖️Terminology
@@ -169,13 +169,13 @@ impl store::ArtifactPack for ModuleRenderPayload {
 
 //#endregion 🔖️ArtifactCodec
 
-async fn default_params_field() -> dsl::DslValue {
+fn default_params_field() -> dsl::DslValue {
     dsl::DslValue::Null
 }
 
 /// 🌱️ The module's default document — the hex-column fixture with its stock procedural params. Used
 /// as `ArtifactApp::initial_snapshot`; live slot renders override it with the forms-supplied payload.
-async fn default_payload() -> ModuleRenderPayload {
+fn default_payload() -> ModuleRenderPayload {
     ModuleRenderPayload {
         fixture_slug: "hexagonal-mushroom-column".into(),
         params: dsl::to_dsl_value(&json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })).expect("default params"),
@@ -186,7 +186,7 @@ async fn default_payload() -> ModuleRenderPayload {
     }
 }
 
-async fn params_as_json(params: &dsl::DslValue) -> Value {
+fn params_as_json(params: &dsl::DslValue) -> Value {
     dsl::from_dsl_value(params.clone()).unwrap_or(Value::Null)
 }
 
@@ -292,18 +292,18 @@ impl Mutation<ModuleRenderPayload> for ModulePayloadMutation {
 }
 //#endregion 🔖️DocumentMutation
 
-async fn fixture_json_for_slug(slug: &str) -> Option<&'static str> {
+fn fixture_json_for_slug(slug: &str) -> Option<&'static str> {
     match slug {
         "hexagonal-mushroom-column" => Some(HEX_COLUMN_FIXTURE_JSON),
         _ => None,
     }
 }
 
-async fn json_f64_value(value: &Value) -> f64 {
+fn json_f64_value(value: &Value) -> f64 {
     value.as_f64().unwrap_or(0.0)
 }
 
-async fn json_string_value(value: &Value) -> String {
+fn json_string_value(value: &Value) -> String {
     match value {
         Value::String(text) => text.clone(),
         Value::Bool(flag) => flag.to_string(),
@@ -313,13 +313,13 @@ async fn json_string_value(value: &Value) -> String {
     }
 }
 
-async fn module_action(payload: &ModuleRenderPayload, action: &str, args: Value) -> ActionDescriptor {
+fn module_action(payload: &ModuleRenderPayload, action: &str, args: Value) -> ActionDescriptor {
     ActionDescriptor { controller_id: payload.controller_id.clone(), action: action.into(), args: Some(dsl::to_dsl_value(&args).unwrap_or(dsl::DslValue::Null)) }
 }
 //#endregion 🔖️Payload
 
 //#region 🔖️Preview
-async fn widget_id(widget: &Widget) -> &str {
+fn widget_id(widget: &Widget) -> &str {
     match widget {
         Widget::Neuron { id, .. }
         | Widget::InputSlider { id, .. }
@@ -333,7 +333,7 @@ async fn widget_id(widget: &Widget) -> &str {
     }
 }
 
-async fn is_brep_geometry_handle(handle: &str) -> bool {
+fn is_brep_geometry_handle(handle: &str) -> bool {
     handle.starts_with("solid-")
         || handle.starts_with("shell-")
         || handle.starts_with("face-")
@@ -345,7 +345,7 @@ async fn is_brep_geometry_handle(handle: &str) -> bool {
         || handle.starts_with("surface-")
 }
 
-async fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
+fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
     match value {
         Value::Object(map) => {
             if let Some(handle) = map.get("handle").and_then(|entry| entry.as_str()) {
@@ -366,7 +366,7 @@ async fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<Str
     }
 }
 
-async fn geometry_handle_for_widget(eval: &Value, widget_id: &str) -> Option<String> {
+fn geometry_handle_for_widget(eval: &Value, widget_id: &str) -> Option<String> {
     let widget_eval = eval.get(widget_id)?;
     let channels = widget_eval.get("out").or_else(|| widget_eval.get("in"))?;
     let mut handles = Vec::new();
@@ -374,7 +374,7 @@ async fn geometry_handle_for_widget(eval: &Value, widget_id: &str) -> Option<Str
     handles.into_iter().next()
 }
 
-async fn apply_flow_params(host: &mut FlowHost, fixture: &FlowFixture, params: &Value) {
+fn apply_flow_params(host: &mut FlowHost, fixture: &FlowFixture, params: &Value) {
     let Some(object) = params.as_object() else {
         return;
     };
@@ -392,7 +392,7 @@ async fn apply_flow_params(host: &mut FlowHost, fixture: &FlowFixture, params: &
     }
 }
 
-async fn evaluated_preview_payload(fixture: &FlowFixture, params: &Value) -> (String, String) {
+fn evaluated_preview_payload(fixture: &FlowFixture, params: &Value) -> (String, String) {
     let mut host = FlowHost::from_fixture(fixture.clone());
     host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
     apply_flow_params(&mut host, fixture, params);
@@ -445,7 +445,7 @@ async fn evaluated_preview_payload(fixture: &FlowFixture, params: &Value) -> (St
     (serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into()))
 }
 
-async fn render_preview_body(payload: &ModuleRenderPayload) -> UiNode {
+fn render_preview_body(payload: &ModuleRenderPayload) -> UiNode {
     let slug = if payload.fixture_slug.is_empty() { "hexagonal-mushroom-column" } else { payload.fixture_slug.as_str() };
     let Some(fixture_json) = fixture_json_for_slug(slug) else {
         return ui_text(Label::data(format!("Unknown fixture slug: {slug}")));
@@ -459,7 +459,7 @@ async fn render_preview_body(payload: &ModuleRenderPayload) -> UiNode {
 
 //#region 🔖️MediaExport
 /// 🧵️ Collects every distinct brep geometry handle exposed by the fixture's preview-flagged widgets, evaluated against the current param overrides — same eval pass as `evaluated_preview_payload`, minus the tessellation step.
-async fn evaluated_preview_geometry_handles(fixture: &FlowFixture, params: &Value) -> Vec<String> {
+fn evaluated_preview_geometry_handles(fixture: &FlowFixture, params: &Value) -> Vec<String> {
     let mut host = FlowHost::from_fixture(fixture.clone());
     host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
     apply_flow_params(&mut host, fixture, params);
@@ -482,7 +482,7 @@ async fn evaluated_preview_geometry_handles(fixture: &FlowFixture, params: &Valu
 }
 
 /// 📤️ Handles `Command::ExportSolid`: re-evaluates the active fixture, exports every preview geometry handle through `flow` brep geometry session's STEP/OBJ/STL kernel codecs (GLB bridges through mesh tessellation), and stashes the JSON result on `params.__solidExport` for the host shell to read back.
-async fn handle_export_solid(payload: &mut ModuleRenderPayload, format: &str) {
+fn handle_export_solid(payload: &mut ModuleRenderPayload, format: &str) {
     let slug = if payload.fixture_slug.is_empty() { "hexagonal-mushroom-column" } else { payload.fixture_slug.as_str() };
     let Some(fixture_json) = fixture_json_for_slug(slug) else {
         return;
@@ -499,7 +499,7 @@ async fn handle_export_solid(payload: &mut ModuleRenderPayload, format: &str) {
 }
 
 /// 📥️ Handles `Command::ImportSolid`: imports `data` (UTF-8 text for STEP/OBJ, base64 for STL/GLB) as `format` through `flow` brep geometry session's in-process kernel (GLB bridges through mesh tessellation into an OBJ ingestion) and stashes the resulting geometry handles on `params.__solidImport`.
-async fn handle_import_solid(payload: &mut ModuleRenderPayload, format: &str, data: &str) {
+fn handle_import_solid(payload: &mut ModuleRenderPayload, format: &str, data: &str) {
     let result_json = if data.is_empty() { json!({ "error": "no import data provided" }) } else { serde_json::from_str(&import_solid_json(format, data, SOLID_IMPORT_TOLERANCE)).unwrap_or(json!({ "error": "import failed" })) };
     let mut object = params_as_json(&payload.params);
     let Some(map) = object.as_object_mut() else {
@@ -509,7 +509,7 @@ async fn handle_import_solid(payload: &mut ModuleRenderPayload, format: &str, da
     payload.params = dsl::to_dsl_value(&object).expect("params object");
 }
 
-async fn export_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
+fn export_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
     UiNode::Button(UiButtonNode {
         id: Some(format!("playbook-module.export.{format}")),
         icon_id: "export".into(),
@@ -521,7 +521,7 @@ async fn export_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiN
     })
 }
 
-async fn import_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
+fn import_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
     UiNode::Button(UiButtonNode {
         id: Some(format!("playbook-module.import.{format}")),
         icon_id: "import".into(),
@@ -534,7 +534,7 @@ async fn import_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiN
 }
 
 /// 🎛️ One export + import button pair per solid interchange format, wired to `ACTION_EXPORT_SOLID`/`ACTION_IMPORT_SOLID` question-type actions.
-async fn render_media_export_buttons(payload: &ModuleRenderPayload) -> Vec<UiNode> {
+fn render_media_export_buttons(payload: &ModuleRenderPayload) -> Vec<UiNode> {
     let mut buttons: Vec<UiNode> = Vec::new();
     for format in SOLID_MEDIA_FORMATS {
         buttons.push(export_solid_button(payload, format));
@@ -545,7 +545,7 @@ async fn render_media_export_buttons(payload: &ModuleRenderPayload) -> Vec<UiNod
 //#endregion 🔖️MediaExport
 
 //#region 🔖️Params
-async fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &ModuleRenderPayload) -> UiNode {
+fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &ModuleRenderPayload) -> UiNode {
     let key = &question.id;
     let patch_field = if payload.surface == "blueprint" { "param" } else { "tryParam" };
     let patch_cmd = |param_key: &str| {
@@ -641,7 +641,7 @@ async fn render_question_control(question: &PlaybookBlock, value: &Value, payloa
     }
 }
 
-async fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> UiNode {
+fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> UiNode {
     let slug = if payload.fixture_slug.is_empty() { "hexagonal-mushroom-column" } else { payload.fixture_slug.as_str() };
     let Some(fixture_json) = fixture_json_for_slug(slug) else {
         return ui_text(Label::data(format!("Unknown fixture slug: {slug}")));
@@ -712,13 +712,13 @@ impl ArtifactApp for ModuleApp {
     const APP_ID: &'static str = MODULE_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = MODULE_DOCUMENT_SCHEMA;
 
-    async fn initial_snapshot() -> ModuleRenderPayload {
+    fn initial_snapshot() -> ModuleRenderPayload {
         default_payload()
     }
 
     /// 🏷️ Maps each `Command` variant back to the action id it was declared under in
     /// `create_module_app` — command-log labeling and the registry's kind-discipline check.
-    async fn command_id(command: &Command) -> &'static str {
+    fn command_id(command: &Command) -> &'static str {
         match command {
             Command::ExportSolid { .. } => ACTION_EXPORT_SOLID,
             Command::ImportSolid { .. } => ACTION_IMPORT_SOLID,
@@ -728,7 +728,7 @@ impl ArtifactApp for ModuleApp {
     /// 🎯️ The bridge the React/wgpu shells still speak (`{action,args}`) — parses the two solid
     /// media actions this module dispatches into `Command`; `format` defaults to `"obj"` (matching
     /// the handlers' pre-B1 defaults) and `data` (import's file-callback payload) defaults to empty.
-    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Command, Fault> {
         let format = args.and_then(|value| value.get("format")).and_then(Value::as_str).unwrap_or("obj").to_string();
         match action {
             ACTION_EXPORT_SOLID => Ok(Command::ExportSolid { format }),
@@ -740,7 +740,7 @@ impl ArtifactApp for ModuleApp {
         }
     }
 
-    async fn handle(
+    fn handle(
         command: &Command,
         doc: &ArtifactView<'_, ModuleRenderPayload>,
         _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>,
@@ -762,7 +762,7 @@ impl ArtifactApp for ModuleApp {
         }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>) -> UiNode {
         let labels = resolve_labels::<ModuleLabels>();
         match body_key {
             BODY_PARAMS => render_params_body(doc.snapshot, labels),
@@ -809,7 +809,7 @@ fn module_plugin_bundle() -> Result<Plugin<ProceduralModuleApps>, semio_framewor
     Plugin::<ProceduralModuleApps>::builder(MODULE_PLUGIN_ID).label("Playbook Module Procedural").version("0.1.0").foreign_document_codec::<ModuleApp>(MODULE_DOCUMENT_SCHEMA).document_app::<ModuleApp>(create_module_app()?).try_build()
 }
 
-async fn module_extension_bundle() -> ExtensionBundle {
+fn module_extension_bundle() -> ExtensionBundle {
     ExtensionBundle::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", "0.1.0").extends("playbook").mode(ExecutionMode::Declarative).contributes_topic(
         "playbook.blockKind",
         serde_json::json!({
@@ -834,15 +834,15 @@ mod tests {
     use super::*;
     use semio_framework_plugin::{ActionMeta, Plugin, PluginApp, VcsArtifactApp};
 
-    async fn meta() -> ActionMeta {
+    fn meta() -> ActionMeta {
         ActionMeta { actor: "local".into(), instance_id: 1 }
     }
 
     async fn new_app() -> VcsArtifactApp<ModuleApp> {
-        VcsArtifactApp::new(ModuleApp)
+        VcsArtifactApp::new(ModuleApp).await
     }
 
-    async fn payload_json(params: Value) -> String {
+    fn payload_json(params: Value) -> String {
         serde_json::to_string(&ModuleRenderPayload {
             fixture_slug: "hexagonal-mushroom-column".into(),
             params: dsl::to_dsl_value(&params).expect("params"),
@@ -879,23 +879,23 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn preview_body_emits_world_scene() {
-        let mut app = new_app();
+        let mut app = new_app().await;
         let document = payload_json(json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }));
-        let node = app.render(BODY_PREVIEW, Some(&document), &ViewModel::default()).expect("render");
+        let node = app.render(BODY_PREVIEW, Some(&document), &ViewModel::default()).await.expect("render");
         assert!(matches!(node, UiNode::ComponentScene(_)));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn params_body_lists_flow_inputs() {
-        let mut app = new_app();
-        let node = app.render(BODY_PARAMS, None, &ViewModel::default()).expect("render");
+        let mut app = new_app().await;
+        let node = app.render(BODY_PARAMS, None, &ViewModel::default()).await.expect("render");
         assert!(matches!(node, UiNode::Stack(_)));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn params_body_includes_media_export_buttons() {
-        let mut app = new_app();
-        let node = app.render(BODY_PARAMS, None, &ViewModel::default()).expect("render");
+        let mut app = new_app().await;
+        let node = app.render(BODY_PARAMS, None, &ViewModel::default()).await.expect("render");
         let UiNode::Stack(stack) = node else {
             panic!("expected a stack node");
         };
@@ -905,28 +905,28 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn export_solid_action_stashes_result_and_is_undoable() {
-        let mut app = new_app();
+        let mut app = new_app().await;
         assert!(app.snapshot().expect("projection").params.get("__solidExport").is_none());
         // The export action emits a whole-payload `SetPayload` operation; the store applies it and the
         // stashed result is read back through the materialized projection.
-        app.handle_action(ACTION_EXPORT_SOLID, Some(&json!({ "format": "obj" })), &meta()).expect("export");
+        app.handle_action(ACTION_EXPORT_SOLID, Some(&json!({ "format": "obj" })), &meta()).await.expect("export");
         assert!(app.snapshot().expect("projection").params.get("__solidExport").is_some(), "export result stashed on params via the SetPayload operation");
         // The operation carries a true inverse (the pre-operation payload), so undo removes the stashed result.
-        app.handle_action("undo", None, &meta()).expect("undo");
+        app.handle_action("undo", None, &meta()).await.expect("undo");
         assert!(app.snapshot().expect("projection").params.get("__solidExport").is_none(), "undo restores the pre-operation payload");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn import_solid_action_stashes_result_on_params() {
-        let mut app = new_app();
-        app.handle_action(ACTION_IMPORT_SOLID, Some(&json!({ "format": "obj", "data": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n" })), &meta()).expect("import");
+        let mut app = new_app().await;
+        app.handle_action(ACTION_IMPORT_SOLID, Some(&json!({ "format": "obj", "data": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n" })), &meta()).await.expect("import");
         assert!(app.snapshot().expect("projection").params.get("__solidImport").is_some(), "import result stashed on params via the SetPayload operation");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn import_solid_action_reports_error_when_no_data_given() {
-        let mut app = new_app();
-        app.handle_action(ACTION_IMPORT_SOLID, Some(&json!({ "format": "obj" })), &meta()).expect("import");
+        let mut app = new_app().await;
+        app.handle_action(ACTION_IMPORT_SOLID, Some(&json!({ "format": "obj" })), &meta()).await.expect("import");
         let payload = app.snapshot().expect("projection");
         let import = payload.params.get("__solidImport").expect("import result present");
         assert!(import.get("error").is_some());
@@ -941,18 +941,18 @@ mod tests {
         let export = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == ACTION_EXPORT_SOLID).expect("export declared");
         assert_eq!(export.args.len(), 1, "export exposes exactly the format choice");
         let registry = AppActionRegistry::from_definition(&definition);
-        let mut app = VcsArtifactApp::with_registry(ModuleApp, registry);
+        let mut app = VcsArtifactApp::with_registry(ModuleApp, registry).await;
         // exportSolid fired with no args: the declared `format` default is materialized before dispatch,
         // so the whole-payload operation still applies and stashes a result.
-        app.handle_action(ACTION_EXPORT_SOLID, None, &meta()).expect("export");
+        app.handle_action(ACTION_EXPORT_SOLID, None, &meta()).await.expect("export");
         assert!(app.snapshot().expect("projection").params.get("__solidExport").is_some(), "export result stashed under the materialized format");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn unknown_action_yields_no_document_change() {
-        let mut app = new_app();
+        let mut app = new_app().await;
         let before = app.snapshot().expect("projection");
-        assert!(app.handle_action("noSuchAction", None, &meta()).is_err(), "an undeclared action is rejected rather than silently ignored");
+        assert!(app.handle_action("noSuchAction", None, &meta()).await.is_err(), "an undeclared action is rejected rather than silently ignored");
         assert_eq!(app.snapshot().expect("snapshot"), before);
     }
 
@@ -1002,10 +1002,10 @@ mod tests {
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
         let mut store: ArtifactStore<ModuleRenderPayload, ModulePayloadMutation> =
-            ArtifactStore::new(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None)).expect("valid artifact store fixture");
+            ArtifactStore::new(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None)).await.expect("valid artifact store fixture");
         let mut payload = default_payload();
         payload.interactive = false;
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload { payload }], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload { payload }], description: None }).await.expect("apply");
         let edit: &Edit<ModulePayloadMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<ModuleRenderPayload, ModulePayloadMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }

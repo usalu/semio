@@ -17,19 +17,19 @@ pub struct CreateLayer {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for CreateLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "layer", kind: "create-layer", record: "CreatedLayer" };
 
-    async fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::create_layer::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
+    fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
         crate::artifacts::raster::mutations::create_layer::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create layer \"{}\"", crate::artifacts::raster::schema::layer_name(&self.layer))
     }
 
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![crate::artifacts::raster::schema::layer_node_id(&self.layer).to_string()]
     }
 }

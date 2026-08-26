@@ -15,7 +15,7 @@ use serde_json::Value;
 /// — replaces the retired option-bag `layer_patch_for_field`/`PatchLayer` pair. `field` keeps the
 /// panel's pre-migration wire names (`transformX`/`transformY`/`blendMode`/`adjustmentKind`) so no
 /// UI call site needs to change.
-async fn raster_mutation_for_field(layer_id: &str, field: &str, value: &Value, prior: &RasterLayerNode) -> Option<RasterMutation> {
+fn raster_mutation_for_field(layer_id: &str, field: &str, value: &Value, prior: &RasterLayerNode) -> Option<RasterMutation> {
     match field {
         "name" => Some(RasterMutation::RenameLayer(rename_layer::mutation::RenameLayer { layer_id: layer_id.into(), new_name: value.as_str().unwrap_or("").into() })),
         "visible" => Some(RasterMutation::ChangeLayerVisible(change_layer_visible::mutation::ChangeLayerVisible { layer_id: layer_id.into(), new_visible: value.as_bool().unwrap_or_else(|| !layer_visible(prior)) })),
@@ -44,7 +44,7 @@ async fn raster_mutation_for_field(layer_id: &str, field: &str, value: &Value, p
 
 /// 📐️ Current `(width, height)` for a `Pixel` layer, `(512, 512)` for any other kind — mirrors
 /// `resize-layer`'s own inverse-side default.
-async fn pixel_extent(layer: &RasterLayerNode) -> (u32, u32) {
+fn pixel_extent(layer: &RasterLayerNode) -> (u32, u32) {
     match layer {
         RasterLayerNode::Pixel { width, height, .. } => (width.unwrap_or(512), height.unwrap_or(512)),
         _ => (512, 512),
@@ -53,7 +53,7 @@ async fn pixel_extent(layer: &RasterLayerNode) -> (u32, u32) {
 
 /// 🩹️ Builds the `RasterMutation`s for a `patchLayer`/`patchLayers` field write across ids — shared by
 /// both payloads below (the only two consumers).
-async fn raster_patch_layer_operations(document: &RasterSnapshot, layer_ids: &[String], field: &str, value: &Value) -> Vec<RasterMutation> {
+fn raster_patch_layer_operations(document: &RasterSnapshot, layer_ids: &[String], field: &str, value: &Value) -> Vec<RasterMutation> {
     layer_ids
         .iter()
         .filter_map(|layer_id| {
@@ -65,7 +65,7 @@ async fn raster_patch_layer_operations(document: &RasterSnapshot, layer_ids: &[S
 
 /// 🩹️ Parses a `patchLayer`/`patchLayers` wire `value` as JSON text (falling back to a plain JSON string
 /// when it isn't valid JSON) — mirrors `draw_ui::patch_value_json`.
-async fn patch_value_json(value: &str) -> Value {
+fn patch_value_json(value: &str) -> Value {
     serde_json::from_str(value).unwrap_or_else(|_| Value::String(value.to_string()))
 }
 //#endregion 🔖️Shared
@@ -78,7 +78,7 @@ pub struct PatchLayers {
     pub value: String,
 }
 
-pub async fn handle(payload: &PatchLayers, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+pub fn handle(payload: &PatchLayers, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     let json_value = patch_value_json(&payload.value);
     let operations = raster_patch_layer_operations(doc.snapshot, &payload.layer_ids, &payload.field, &json_value);
     if operations.is_empty() {

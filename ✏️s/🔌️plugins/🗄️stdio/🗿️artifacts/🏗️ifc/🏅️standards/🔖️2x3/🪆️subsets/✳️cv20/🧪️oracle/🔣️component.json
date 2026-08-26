@@ -22,6 +22,9 @@
     {
       "id": "ifc-2x3-cv20",
       "capability": "ifc-2x3-cv20-mutate",
+      "standardDirectoryName": "🔖️2x3",
+      "subsetDirectoryName": "✳️cv20",
+      "vectors": [],
       "kinds": ["no-mutation", "set-snapshot", "set-view-definition", "set-structural-entity", "set-project-units", "set-product-placement"]
     }
   ],

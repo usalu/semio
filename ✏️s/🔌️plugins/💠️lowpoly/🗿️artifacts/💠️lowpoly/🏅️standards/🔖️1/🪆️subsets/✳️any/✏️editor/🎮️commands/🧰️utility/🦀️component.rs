@@ -22,7 +22,7 @@ pub mod set_utility_param {
         pub value_json: String,
     }
 
-    pub async fn handle(payload: &SetUtilityParam, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &SetUtilityParam, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let mut params = utility_params_value(cfg.snapshot);
         let value: Value = serde_json::from_str(&payload.value_json).unwrap_or(Value::Null);
         if let Some(map) = params.as_object_mut() {
@@ -47,7 +47,7 @@ pub mod set_active_utility {
         pub utility_id: String,
     }
 
-    pub async fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         ctx.reset_gestures();
         // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: hover used to be cleared here
         // (`SetHoveredTarget`/`SetHoveredObject`) — it is framework-owned ephemeral state now, cleared by
@@ -72,10 +72,10 @@ mod tests {
     async fn active_utility_switch_emits_no_ops_and_no_history() {
         // 🧰️ Selecting a host-owned utility must never create an undoable edit.
         let mut a = app();
-        let result = dispatch(&mut a, LowpolyCommand::SetActiveUtility(super::set_active_utility::SetActiveUtility { utility_id: "rotate".into() }));
+        let result = dispatch(&mut a, LowpolyCommand::SetActiveUtility(super::set_active_utility::SetActiveUtility { utility_id: "rotate".into() })).await;
         assert!(result.mutations.is_empty(), "utility switch must emit no operations");
         let before = a.snapshot().expect("projection");
-        a.handle_action("undo", None, &testkit::meta("a")).unwrap();
+        a.handle_action("undo", None, &testkit::meta("a")).await.unwrap();
         assert_eq!(a.snapshot().expect("projection"), before, "utility switch left nothing to undo");
     }
 }

@@ -27,6 +27,16 @@ pub(crate) mod testkit {
     use crate::editor::puzzle2d::engine::{BoardHost, EdgeDescJson, HandleDescJson, NodeDescJson, SceneDescriptorJson};
     use serde_json::json;
 
+    pub trait BoardHostTestEvents {
+        fn drain_events_json(&mut self) -> String;
+    }
+
+    impl BoardHostTestEvents for BoardHost {
+        fn drain_events_json(&mut self) -> String {
+            crate::editor::puzzle2d::drain_board_events_json(self)
+        }
+    }
+
     pub fn set_detail_lod(h: &mut BoardHost) {
         h.set_camera(0.0, 0.0, 2.0);
     }

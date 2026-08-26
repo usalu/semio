@@ -4,7 +4,7 @@ use super::mutation::RotateObject;
 use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &RotateObject, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
+pub fn inverse(payload: &RotateObject, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
     let Some(object) = base.objects.iter().find(|object| object.id == payload.id) else {
         return Vec::new();
     };

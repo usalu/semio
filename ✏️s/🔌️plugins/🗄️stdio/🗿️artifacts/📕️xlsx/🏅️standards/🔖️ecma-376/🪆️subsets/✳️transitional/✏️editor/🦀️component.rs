@@ -137,7 +137,7 @@ impl ArtifactEditor for XlsxTransitionalEditor {
     const DIALECT: Dialect = XLSX_TRANSITIONAL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_XLSX_DOCUMENT_SCHEMA;
 
-    async fn initial_snapshot() -> XlsxSnapshot {
+    fn initial_snapshot() -> XlsxSnapshot {
         XlsxSnapshot::default()
     }
 
@@ -145,7 +145,7 @@ impl ArtifactEditor for XlsxTransitionalEditor {
     /// the exact cell the table rendered at that position), parses the edited text through
     /// `parse_xlsx_cell_value`, then dispatches a single `XlsxMutation::SetCell`. An out-of-range
     /// row is a documented no-op (`Emit::default()`), never a panic.
-    async fn handle(
+    fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -160,7 +160,7 @@ impl ArtifactEditor for XlsxTransitionalEditor {
         Ok(Emit { artifact_mutations: vec![XlsxMutation::SetCell { sheet_name, row: cell_row, col: cell_col, value: parsed }], description: Some(description), ..Default::default() })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
             _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),

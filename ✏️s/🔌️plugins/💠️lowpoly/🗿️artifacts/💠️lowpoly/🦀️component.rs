@@ -14,7 +14,7 @@ pub const LOWPOLY_PAINT_TEXTURE_SIZE: usize = 1024;
 pub const LOWPOLY_DOCUMENT_SCHEMA: &str = "lowpoly.document";
 
 /// @emoji 🎨️ An opaque-white RGBA buffer sized for one paint layer.
-pub async fn empty_paint_pixels() -> Vec<u8> {
+pub fn empty_paint_pixels() -> Vec<u8> {
     let mut pixels = vec![0u8; LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4];
     for chunk in pixels.chunks_mut(4) {
         chunk[0] = 255;
@@ -31,11 +31,11 @@ mod pixels_base64 {
     use base64::Engine;
     use serde::{Deserialize, Deserializer, Serializer};
 
-    pub async fn serialize<S: Serializer>(pixels: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
+    pub fn serialize<S: Serializer>(pixels: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(&base64::engine::general_purpose::STANDARD.encode(pixels))
     }
 
-    pub async fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
         let encoded = String::deserialize(deserializer)?;
         if encoded.is_empty() {
             return Ok(super::empty_paint_pixels());
@@ -75,7 +75,7 @@ pub struct LowpolyPaintLayer {
 }
 
 impl LowpolyPaintLayer {
-    pub async fn new(name: &str) -> Self {
+    pub fn new(name: &str) -> Self {
         Self { name: name.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), pixels: empty_paint_pixels() }
     }
 }
@@ -87,7 +87,7 @@ impl LowpolyPaintLayer {
 /// IS the change signal. Shared by `snapshot_from_mesh_json` and the app's kernel session
 /// (`⚙️engine::LowpolyDocument::sync_meshes_to_snapshot`, `add_primitive`), which both need the
 /// identical rule so the same geometry always resolves to the same handle.
-pub async fn mesh_child_handle(object_id: &str, mesh_json: &str) -> store::ArtifactChild<SemioMeshSnapshot> {
+pub fn mesh_child_handle(object_id: &str, mesh_json: &str) -> store::ArtifactChild<SemioMeshSnapshot> {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     mesh_json.hash(&mut hasher);
@@ -137,7 +137,7 @@ pub struct LowpolyObject {
 }
 
 impl Identified<String> for LowpolyObject {
-    async fn id(&self) -> &String {
+    fn id(&self) -> &String {
         &self.id
     }
 }
@@ -200,7 +200,7 @@ pub struct LowpolyObjectPatch {
 }
 
 impl Patchable<LowpolyObjectPatch> for LowpolyObject {
-    async fn apply_patch(&mut self, patch: &LowpolyObjectPatch) {
+    fn apply_patch(&mut self, patch: &LowpolyObjectPatch) {
         if let Some(value) = &patch.name {
             self.name = value.clone();
         }
@@ -215,7 +215,7 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
         }
     }
 
-    async fn diff_patch(&self, other: &Self) -> Option<LowpolyObjectPatch> {
+    fn diff_patch(&self, other: &Self) -> Option<LowpolyObjectPatch> {
         let patch = LowpolyObjectPatch {
             name: (self.name != other.name).then(|| other.name.clone()),
             smooth_shading: (self.smooth_shading != other.smooth_shading).then_some(other.smooth_shading),
@@ -227,7 +227,7 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
 }
 
 /// 🖌️ Applies a paint-layers sub-delta onto one object.
-pub async fn apply_paint_layers_delta(object: &mut LowpolyObject, delta: &crate::artifacts::lowpoly::diff::schema::LowpolyPaintLayersDelta) -> protocol::MutationApplyResult<()> {
+pub fn apply_paint_layers_delta(object: &mut LowpolyObject, delta: &crate::artifacts::lowpoly::diff::schema::LowpolyPaintLayersDelta) -> protocol::MutationApplyResult<()> {
     let mut layers = object.paint_layers.clone();
     let mut removed = std::collections::BTreeSet::new();
     for (position, index) in delta.removed.iter().copied().enumerate() {
@@ -295,7 +295,7 @@ pub const LOWPOLY_DIALECT: semio_framework_plugin::app::Dialect = semio_framewor
 //#region 🔖️ArtifactKind
 /// 🧱️ The two artifact kinds this plugin contributes — lifted out of the old ui crate's manifest
 /// builder chain so the app's `🔖️Manifest` region can stitch it in as a single passthrough.
-pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "3d.lowpoly".into(),
         name: "3D Lowpoly".into(),
@@ -337,7 +337,7 @@ pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has no field for
 /// (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's artifact-scoped
 /// function set.
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
@@ -377,7 +377,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
     Ok(definition)
 }
 
-pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::lowpoly::schema::lowpoly_artifact_schema_descriptor())
         .inferences([crate::artifacts::lowpoly::standards::v1::subsets::any::schema::inferences::lowpoly_artifact_inference_descriptor()])
@@ -390,7 +390,7 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
 /// `OnceLock`-backed `io_registry::entries()` convention.
-async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {

@@ -106,7 +106,7 @@ mod tests {
     /// Translation channel (2 keyframes) and a CubicSpline Weights channel (2 keyframes, arity 2)
     /// -- exercises tangent-stripping and node-name resolution in one real-world-shaped fixture.
     async fn real_world_gltf() -> GltfSnapshot {
-        let mut b = GltfDocBuilder::empty().await;
+        let mut b = GltfDocBuilder::empty();
         b.set_asset_version("2.0");
         let n0 = b.add_node(None);
         let n1 = b.add_node(None);

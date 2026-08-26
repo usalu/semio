@@ -28,10 +28,38 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu"
       }
     },
+    "test-preview-generated": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-preview-generated",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu"
+      }
+    },
     "check-browser-worker": {
       "executor": "nx:run-commands",
       "options": {
         "command": "bun ./📜️script.ts check-browser-worker",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu"
+      }
+    },
+    "generate-frame-worker": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts generate-frame-worker",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu"
+      }
+    },
+    "preview-generated": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts preview-generated",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu"
+      }
+    },
+    "check-frame-worker": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts check-frame-worker",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu"
       }
     },
@@ -51,6 +79,7 @@
     },
     "wasm": {
       "executor": "nx:run-commands",
+      "dependsOn": ["generate-frame-worker"],
       "options": {
         "command": "bun ./📜️script.ts wasm",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu"
@@ -58,6 +87,7 @@
     },
     "serve": {
       "executor": "nx:run-commands",
+      "dependsOn": ["generate-frame-worker"],
       "options": {
         "command": "bun ./📜️script.ts serve",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",
@@ -66,6 +96,7 @@
     },
     "dev": {
       "executor": "nx:run-commands",
+      "dependsOn": ["generate-frame-worker"],
       "options": {
         "command": "bun ./📜️script.ts dev",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",

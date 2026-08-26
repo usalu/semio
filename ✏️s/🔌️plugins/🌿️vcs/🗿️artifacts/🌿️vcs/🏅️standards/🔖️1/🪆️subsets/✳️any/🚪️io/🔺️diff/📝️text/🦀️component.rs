@@ -13,7 +13,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 pub use crate::artifacts::vcs::schema::diff::*;
 
 //#region 🔖️Apply
-pub async fn apply_tags_delta(tags: &[String], delta: &VcsTagsDelta) -> protocol::MutationApplyResult<Vec<String>> {
+pub fn apply_tags_delta(tags: &[String], delta: &VcsTagsDelta) -> protocol::MutationApplyResult<Vec<String>> {
     for (index, tag) in delta.removed.iter().enumerate() {
         if !tags.contains(tag) {
             return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed tag does not exist").at(["removed".to_string(), index.to_string()]));
@@ -40,7 +40,7 @@ pub async fn apply_tags_delta(tags: &[String], delta: &VcsTagsDelta) -> protocol
     Ok(next)
 }
 
-async fn absorb_tags_delta(target: &mut Option<VcsTagsDelta>, incoming: Option<VcsTagsDelta>) {
+fn absorb_tags_delta(target: &mut Option<VcsTagsDelta>, incoming: Option<VcsTagsDelta>) {
     if let Some(src) = incoming {
         match target {
             Some(dst) => {
@@ -54,7 +54,7 @@ async fn absorb_tags_delta(target: &mut Option<VcsTagsDelta>, incoming: Option<V
 
 impl VcsDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &VcsArtifact) -> protocol::MutationApplyResult<VcsArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &VcsArtifact) -> protocol::MutationApplyResult<VcsArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -90,7 +90,7 @@ impl VcsDiff {
 }
 
 impl MutationDiff<VcsSnapshot> for VcsDiff {
-    async fn apply(&self, snapshot: &VcsSnapshot) -> protocol::MutationApplyResult<VcsSnapshot> {
+    fn apply(&self, snapshot: &VcsSnapshot) -> protocol::MutationApplyResult<VcsSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -117,7 +117,7 @@ impl MutationDiff<VcsSnapshot> for VcsDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -147,7 +147,7 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn empty_diff_is_a_no_operation() {
+    fn empty_diff_is_a_no_operation() {
         let base = crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot();
         let diff = VcsDiff::default();
         assert_eq!(diff.apply(&base).expect("valid mutation diff"), base);

@@ -24,12 +24,12 @@ pub mod derived_composition {
         type Snapshot = XlsxSnapshot;
         const WRITES: Dialect = DIALECT_STRICT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_STRICT, DEP_ZIP, DEP_XML]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = semio_framework_plugin::resolve_ready(XlsxAnyComposer::compose(sources))?;
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = XlsxAnyComposer::compose(sources)?;
             let checks = check_strict_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -115,10 +115,10 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn conforming_builder_snapshot_composes_and_stamps_strict() {
-            let snapshot = XlsxStrictBuilder::new(XlsxWorkbook::default()).build().await.expect("conforming strict construction must build");
+            let snapshot = XlsxStrictBuilder::new(XlsxWorkbook::default()).build().expect("conforming strict construction must build");
             let bytes = conforming_pack_bytes(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = XlsxStrictComposerComposition::compose(&sources).await.expect("clean document must compose to strict");
+            let composed = XlsxStrictComposerComposition::compose(&sources).expect("clean document must compose to strict");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
@@ -127,7 +127,7 @@ pub mod derived_composition {
             let snapshot = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(XlsxWorkbook::default());
             let bytes = <XlsxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let err = XlsxStrictComposerComposition::compose(&sources).await.expect_err("a Transitional-shaped workbook.xml must not stamp strict");
+            let err = XlsxStrictComposerComposition::compose(&sources).expect_err("a Transitional-shaped workbook.xml must not stamp strict");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_NAMESPACE_MISMATCH && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
@@ -137,7 +137,7 @@ pub mod derived_composition {
             // `regenerate_workbook_parts` always re-emits Transitional-shaped bytes, so a round trip
             // honestly re-reports the Strict conformance-attribute violation -- not a false positive,
             // the wire bytes genuinely no longer declare Strict.
-            let snapshot = XlsxStrictBuilder::new(XlsxWorkbook::default()).build().await.expect("build");
+            let snapshot = XlsxStrictBuilder::new(XlsxWorkbook::default()).build().expect("build");
             let bytes = <XlsxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let diagnostics = XlsxStrictValidator::validate(&IoPayload::Binary(bytes)).await;
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_CONFORMANCE_ATTRIBUTE && d.severity == Severity::Error), "got {diagnostics:?}");

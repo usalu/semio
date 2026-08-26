@@ -138,7 +138,7 @@ impl ArtifactEditor for DeflateEditor {
     const DIALECT: Dialect = DEFLATE_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_DEFLATE_DOCUMENT_SCHEMA;
 
-    async fn initial_snapshot() -> DeflateSnapshot {
+    fn initial_snapshot() -> DeflateSnapshot {
         DeflateSnapshot::default()
     }
 
@@ -146,7 +146,7 @@ impl ArtifactEditor for DeflateEditor {
     /// emits BOTH `SetCompressionParams` and `SetPresetDictionary` as one gesture. A malformed
     /// summary (missing/unparsable required field) is a documented no-op (`Emit::default()`), never
     /// a partial apply.
-    async fn handle(
+    fn handle(
         command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -159,7 +159,7 @@ impl ArtifactEditor for DeflateEditor {
         Ok(Emit { artifact_mutations: vec![DeflateMutation::SetCompressionParams { method, window_bits, level_hint }, DeflateMutation::SetPresetDictionary { dict_id }], description: Some("Set compression header".into()), ..Default::default() })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
             _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),

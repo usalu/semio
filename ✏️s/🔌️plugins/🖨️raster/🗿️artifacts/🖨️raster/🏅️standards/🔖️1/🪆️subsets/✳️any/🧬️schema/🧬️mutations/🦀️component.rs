@@ -56,13 +56,13 @@ pub enum RasterMutation {
 /// ⚡️ Convenience wrapper kept for existing in-plugin callers (`RasterBuilderConstruction::mutate`,
 /// the WASM bridge) — `diff().apply()` in one call, now delegating to the derive's real
 /// `Mutation`/`MutationDiff` impls instead of a hand-written match.
-pub async fn apply_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> protocol::MutationApplyResult<RasterSnapshot> {
+pub fn apply_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> protocol::MutationApplyResult<RasterSnapshot> {
     protocol::MutationDiff::apply(protocol::Mutation::diff(mutation, snapshot).diff(), snapshot)
 }
 
 /// ⚡️ Convenience wrapper mirroring `apply_raster_mutation` — forwards to the derive's real
 /// `Mutation::inverse`.
-pub async fn inverse_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Vec<RasterMutation> {
+pub fn inverse_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Vec<RasterMutation> {
     protocol::Mutation::inverse(mutation, snapshot)
 }
 
@@ -80,7 +80,7 @@ mod tests {
     use protocol::SemanticMutation;
     use store::{create_document_envelope, ArtifactCommand};
 
-    async fn pixel_layer(id: &str, name: &str) -> RasterLayerNode {
+    fn pixel_layer(id: &str, name: &str) -> RasterLayerNode {
         RasterLayerNode::Pixel { id: id.into(), name: name.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(512), height: Some(512), image_key: None }
     }
 
@@ -97,7 +97,7 @@ mod tests {
         78, 68, 174, 66, 96, 130,
     ];
 
-    async fn round_trip(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> RasterSnapshot {
+    fn round_trip(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> RasterSnapshot {
         let (forward, _messages) = vcs::apply_mutation(snapshot, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in mutation.inverse(snapshot) {
@@ -110,7 +110,7 @@ mod tests {
 
     /// ⚖️ One value per `RasterMutation` variant — the closed set the semantics/round-trip tests
     /// iterate, mirroring `din16798`'s own `every_mutation()` fixture.
-    async fn every_mutation() -> Vec<RasterMutation> {
+    fn every_mutation() -> Vec<RasterMutation> {
         vec![
             RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }),
             RasterMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { layer_id: "l1".into() }),
@@ -206,7 +206,7 @@ mod tests {
     }
 
     //#region 🔖️OpText
-    async fn representative_raster_document() -> RasterSnapshot {
+    fn representative_raster_document() -> RasterSnapshot {
         let mut assets = RasterOwnedMap::new();
         assets.insert("asset-1".into(), crate::artifacts::raster::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() }));
         let mut params = RasterOwnedMap::new();

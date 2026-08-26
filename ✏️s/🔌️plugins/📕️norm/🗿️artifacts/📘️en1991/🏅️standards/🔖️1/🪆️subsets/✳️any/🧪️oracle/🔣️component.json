@@ -23,6 +23,362 @@
     {
       "id": "en1991-1-any",
       "capability": "en1991-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-accidental-mass-t",
+          "sourceMutationDirectoryName": "🎚️change-accidental-mass-t",
+          "mutationDirectoryName": "🎚️change-accidental-mass-t",
+          "scenarios": [
+            {
+              "id": "lightens-impact-vehicle-to-12-5-t",
+              "directoryName": "🧪️lightens-impact-vehicle-to-12-5-t"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-accidental-speed-km-h",
+          "sourceMutationDirectoryName": "🕹️change-accidental-speed-km-h",
+          "mutationDirectoryName": "🕹️change-accidental-speed-km-h",
+          "scenarios": [
+            {
+              "id": "lowers-impact-speed-to-50-km-h",
+              "directoryName": "🧪️lowers-impact-speed-to-50-km-h"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-annex",
+          "sourceMutationDirectoryName": "🧫change-annex",
+          "mutationDirectoryName": "🧫change-annex",
+          "scenarios": [
+            {
+              "id": "switches-national-annex-to-en",
+              "directoryName": "🧪️switches-national-annex-to-en"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-area-m2",
+          "sourceMutationDirectoryName": "🧪change-area-m2",
+          "mutationDirectoryName": "🧪change-area-m2",
+          "scenarios": [
+            {
+              "id": "enlarges-loaded-area-to-360-m2",
+              "directoryName": "🧪️enlarges-loaded-area-to-360-m2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-assumed-gk-kn-m2",
+          "sourceMutationDirectoryName": "🎢change-assumed-gk-kn-m2",
+          "mutationDirectoryName": "🎢change-assumed-gk-kn-m2",
+          "scenarios": [
+            {
+              "id": "raises-assumed-gk-to-7-5-kn-m2",
+              "directoryName": "🧪️raises-assumed-gk-to-7-5-kn-m2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-lane",
+          "sourceMutationDirectoryName": "❄️change-bridge-lane",
+          "mutationDirectoryName": "❄️change-bridge-lane",
+          "scenarios": [
+            {
+              "id": "widens-carriageway-to-3-notional-lanes",
+              "directoryName": "🧪️widens-carriageway-to-3-notional-lanes"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-lane-width-m",
+          "sourceMutationDirectoryName": "🗺️change-bridge-lane-width-m",
+          "mutationDirectoryName": "🗺️change-bridge-lane-width-m",
+          "scenarios": [
+            {
+              "id": "widens-notional-lane-to-3-5-m",
+              "directoryName": "🧪️widens-notional-lane-to-3-5-m"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-moment-resistance-knm",
+          "sourceMutationDirectoryName": "📡change-bridge-moment-resistance-knm",
+          "mutationDirectoryName": "📡change-bridge-moment-resistance-knm",
+          "scenarios": [
+            {
+              "id": "raises-bridge-moment-resistance-to-4500-knm",
+              "directoryName": "🧪️raises-bridge-moment-resistance-to-4500-knm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-span-m",
+          "sourceMutationDirectoryName": "🎯change-bridge-span-m",
+          "mutationDirectoryName": "🎯change-bridge-span-m",
+          "scenarios": [
+            {
+              "id": "lengthens-bridge-span-to-36-m",
+              "directoryName": "🧪️lengthens-bridge-span-to-36-m"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-category",
+          "sourceMutationDirectoryName": "🧭change-category",
+          "mutationDirectoryName": "🧭change-category",
+          "scenarios": [
+            {
+              "id": "reclassifies-imposed-load-to-category-d",
+              "directoryName": "🧪️reclassifies-imposed-load-to-category-d"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-cd",
+          "sourceMutationDirectoryName": "🔆change-cd",
+          "mutationDirectoryName": "🔆change-cd",
+          "scenarios": [
+            {
+              "id": "lowers-dynamic-factor-cd-to-0-875",
+              "directoryName": "🧪️lowers-dynamic-factor-cd-to-0-875"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-construction-activity",
+          "sourceMutationDirectoryName": "🪟change-construction-activity",
+          "mutationDirectoryName": "🪟change-construction-activity",
+          "scenarios": [
+            {
+              "id": "switches-construction-activity-to-concreting",
+              "directoryName": "🧪️switches-construction-activity-to-concreting"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-crane-class",
+          "sourceMutationDirectoryName": "🔀change-crane-class",
+          "mutationDirectoryName": "🔀change-crane-class",
+          "scenarios": [
+            {
+              "id": "upgrades-crane-to-class-hc3",
+              "directoryName": "🧪️upgrades-crane-to-class-hc3"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-cs",
+          "sourceMutationDirectoryName": "🔥change-cs",
+          "mutationDirectoryName": "🔥change-cs",
+          "scenarios": [
+            {
+              "id": "raises-size-factor-cs-to-1-125",
+              "directoryName": "🧪️raises-size-factor-cs-to-1-125"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-delta-tk",
+          "sourceMutationDirectoryName": "⚡change-delta-tk",
+          "mutationDirectoryName": "⚡change-delta-tk",
+          "scenarios": [
+            {
+              "id": "raises-thermal-delta-tk-to-45-k",
+              "directoryName": "🧪️raises-thermal-delta-tk-to-45-k"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-en-sk-kn-m2",
+          "sourceMutationDirectoryName": "🏗️change-en-sk-kn-m2",
+          "mutationDirectoryName": "🏗️change-en-sk-kn-m2",
+          "scenarios": [
+            {
+              "id": "raises-en-characteristic-snow-load-to-1-25-kn-m2",
+              "directoryName": "🧪️raises-en-characteristic-snow-load-to-1-25-kn-m2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-en-vbms",
+          "sourceMutationDirectoryName": "📈change-en-vbms",
+          "mutationDirectoryName": "📈change-en-vbms",
+          "scenarios": [
+            {
+              "id": "raises-en-basic-wind-speed-to-30-m-s",
+              "directoryName": "🧪️raises-en-basic-wind-speed-to-30-m-s"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fire-curve",
+          "sourceMutationDirectoryName": "🔭change-fire-curve",
+          "mutationDirectoryName": "🔭change-fire-curve",
+          "scenarios": [
+            {
+              "id": "switches-fire-curve-to-hydrocarbon",
+              "directoryName": "🧪️switches-fire-curve-to-hydrocarbon"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fire-member-capacity-c",
+          "sourceMutationDirectoryName": "🏛️change-fire-member-capacity-c",
+          "mutationDirectoryName": "🏛️change-fire-member-capacity-c",
+          "scenarios": [
+            {
+              "id": "raises-fire-member-capacity-to-700-c",
+              "directoryName": "🧪️raises-fire-member-capacity-to-700-c"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fire-resistance-min",
+          "sourceMutationDirectoryName": "🧱change-fire-resistance-min",
+          "mutationDirectoryName": "🧱change-fire-resistance-min",
+          "scenarios": [
+            {
+              "id": "extends-fire-resistance-to-120-min",
+              "directoryName": "🧪️extends-fire-resistance-to-120-min"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-hoist-class",
+          "sourceMutationDirectoryName": "🧊change-hoist-class",
+          "mutationDirectoryName": "🧊change-hoist-class",
+          "scenarios": [
+            {
+              "id": "upgrades-hoist-to-class-hc4",
+              "directoryName": "🧪️upgrades-hoist-to-class-hc4"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-hoisting-speed-ms",
+          "sourceMutationDirectoryName": "🌬️change-hoisting-speed-ms",
+          "mutationDirectoryName": "🌬️change-hoisting-speed-ms",
+          "scenarios": [
+            {
+              "id": "speeds-hoisting-to-1-25-m-s",
+              "directoryName": "🧪️speeds-hoisting-to-1-25-m-s"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-self-weight-material",
+          "sourceMutationDirectoryName": "🏷️change-self-weight-material",
+          "mutationDirectoryName": "🏷️change-self-weight-material",
+          "scenarios": [
+            {
+              "id": "switches-self-weight-material-to-structural-steel",
+              "directoryName": "🧪️switches-self-weight-material-to-structural-steel"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-self-weight-thickness-m",
+          "sourceMutationDirectoryName": "🧮change-self-weight-thickness-m",
+          "mutationDirectoryName": "🧮change-self-weight-thickness-m",
+          "scenarios": [
+            {
+              "id": "thickens-self-weight-layer-to-0-375-m",
+              "directoryName": "🧪️thickens-self-weight-layer-to-0-375-m"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-silo-bulk-density-kn-m3",
+          "sourceMutationDirectoryName": "🌗change-silo-bulk-density-kn-m3",
+          "mutationDirectoryName": "🌗change-silo-bulk-density-kn-m3",
+          "scenarios": [
+            {
+              "id": "raises-silo-bulk-density-to-10-5-kn-m3",
+              "directoryName": "🧪️raises-silo-bulk-density-to-10-5-kn-m3"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-silo-height-m",
+          "sourceMutationDirectoryName": "🎛️change-silo-height-m",
+          "mutationDirectoryName": "🎛️change-silo-height-m",
+          "scenarios": [
+            {
+              "id": "raises-silo-to-18-m",
+              "directoryName": "🧪️raises-silo-to-18-m"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-silo-hydraulic-radius-m",
+          "sourceMutationDirectoryName": "📊change-silo-hydraulic-radius-m",
+          "mutationDirectoryName": "📊change-silo-hydraulic-radius-m",
+          "scenarios": [
+            {
+              "id": "widens-silo-hydraulic-radius-to-2-25-m",
+              "directoryName": "🧪️widens-silo-hydraulic-radius-to-2-25-m"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-silo-k",
+          "sourceMutationDirectoryName": "🔬change-silo-k",
+          "mutationDirectoryName": "🔬change-silo-k",
+          "scenarios": [
+            {
+              "id": "raises-silo-lateral-pressure-ratio-k-to-0-625",
+              "directoryName": "🧪️raises-silo-lateral-pressure-ratio-k-to-0-625"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-silo-mu",
+          "sourceMutationDirectoryName": "📉change-silo-mu",
+          "mutationDirectoryName": "📉change-silo-mu",
+          "scenarios": [
+            {
+              "id": "raises-silo-wall-friction-mu-to-0-625",
+              "directoryName": "🧪️raises-silo-wall-friction-mu-to-0-625"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-snow-altitude-m",
+          "sourceMutationDirectoryName": "🌡️change-snow-altitude-m",
+          "mutationDirectoryName": "🌡️change-snow-altitude-m",
+          "scenarios": [
+            {
+              "id": "lifts-snow-altitude-to-780-m",
+              "directoryName": "🧪️lifts-snow-altitude-to-780-m"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-snow-zone",
+          "sourceMutationDirectoryName": "💧change-snow-zone",
+          "mutationDirectoryName": "💧change-snow-zone",
+          "scenarios": [
+            {
+              "id": "moves-site-to-snow-zone-3",
+              "directoryName": "🧪️moves-site-to-snow-zone-3"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-wind-zone",
+          "sourceMutationDirectoryName": "🌞change-wind-zone",
+          "mutationDirectoryName": "🌞change-wind-zone",
+          "scenarios": [
+            {
+              "id": "moves-site-to-wind-zone-4",
+              "directoryName": "🧪️moves-site-to-wind-zone-4"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "change-area-m2",
         "change-category",

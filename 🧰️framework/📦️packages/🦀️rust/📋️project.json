@@ -50,6 +50,13 @@
         "forwardAllArgs": true
       }
     },
+    "preview-generated": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts preview-generated"
+      }
+    },
     "check": {
       "executor": "nx:run-commands",
       "options": {

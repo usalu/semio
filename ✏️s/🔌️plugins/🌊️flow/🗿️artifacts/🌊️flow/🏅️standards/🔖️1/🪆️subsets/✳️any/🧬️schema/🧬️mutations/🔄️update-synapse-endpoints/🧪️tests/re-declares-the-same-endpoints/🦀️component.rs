@@ -34,10 +34,10 @@ fn expected_after() -> FlowSnapshot {
 /// synapse `synapse-1` already wired on exactly the four endpoint values the committed payload
 /// re-declares.
 fn before() -> FlowSnapshot {
-    let snapshot: FlowSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FlowSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let widgets = vec![Widget::InputNote { id: "note-alpha".into(), text: "Alpha".into() }, Widget::InputNote { id: "note-beta".into(), text: "Beta".into() }];
     let synapses = vec![SynapseSpec { id: "synapse-1".into(), from: "note-alpha".into(), to: "note-beta".into(), from_port: "out".into(), to_port: "in".into() }];
-    cache_flow_content(&snapshot.content.child_id, widgets, synapses, BTreeMap::new());
+    cache_flow_content(&mut snapshot.content, widgets, synapses, BTreeMap::new());
     snapshot
 }
 

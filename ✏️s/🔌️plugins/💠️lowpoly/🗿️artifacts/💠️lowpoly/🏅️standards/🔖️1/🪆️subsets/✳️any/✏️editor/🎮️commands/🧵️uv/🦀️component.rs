@@ -16,7 +16,7 @@ pub mod unwrap_active {
     #[dsl(keyword = "unwrap-active")]
     pub struct UnwrapActive {}
 
-    pub async fn handle(_payload: &UnwrapActive, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(_payload: &UnwrapActive, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(mesh_edit(doc.snapshot, cfg.snapshot, ctx, move |doc| {
             doc.active_mesh_mut().map_err(|e| e.to_string())?.unwrap_uv().map_err(map_kernel_err)?;
             doc.sync_meshes_to_snapshot().map_err(|e| e.to_string())
@@ -36,7 +36,7 @@ pub mod mark_uv_seam {
         pub edge_ids: Option<Vec<u32>>,
     }
 
-    pub async fn handle(payload: &MarkUvSeam, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &MarkUvSeam, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let (projection, config) = (doc.snapshot, cfg.snapshot);
         let seam = payload.seam.unwrap_or(true);
         // 🕹️ Falls back to the mesh domain's CURRENT selection (`LowpolyScratch::current_selection`,
@@ -59,7 +59,7 @@ pub mod clear_seam {
     #[dsl(keyword = "clear-seam")]
     pub struct ClearSeam {}
 
-    pub async fn handle(_payload: &ClearSeam, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(_payload: &ClearSeam, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         mark_uv_seam::handle(&mark_uv_seam::MarkUvSeam { seam: Some(false), edge_ids: None }, doc, cfg, ctx)
     }
 }
@@ -74,7 +74,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn unwrap_active_resyncs_mesh_json() {
         let mut a = app();
-        dispatch(&mut a, LowpolyCommand::UnwrapActive(super::unwrap_active::UnwrapActive {}));
+        dispatch(&mut a, LowpolyCommand::UnwrapActive(super::unwrap_active::UnwrapActive {})).await;
         // unwrap is idempotent-ish on an already-unwrapped mesh, so just assert it runs without error and
         // keeps the object count stable.
         assert_eq!(a.snapshot().expect("projection").objects.len(), 1);
@@ -83,7 +83,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn clear_seam_delegates_to_mark_uv_seam_with_seam_false() {
         let mut a = app();
-        dispatch(&mut a, LowpolyCommand::ClearSeam(super::clear_seam::ClearSeam {}));
+        dispatch(&mut a, LowpolyCommand::ClearSeam(super::clear_seam::ClearSeam {})).await;
         assert_eq!(a.snapshot().expect("projection").objects.len(), 1);
     }
 }

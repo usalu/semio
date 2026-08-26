@@ -29,19 +29,19 @@ impl Default for PlaybookInference {
 }
 
 impl protocol::Inference<PlaybookSnapshot> for PlaybookInference {
-    async fn infer(snapshot: &PlaybookSnapshot) -> Self {
+    fn infer(snapshot: &PlaybookSnapshot) -> Self {
         Self { topology: compute_playbook_topology(&snapshot.steps()) }
     }
 }
 
 impl protocol::InferenceSpec<PlaybookSnapshot> for PlaybookInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.playbook.playbook.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.playbook.playbook.inference.topology", reads: &["steps"] }]
     }
 }
@@ -81,10 +81,10 @@ mod tests {
     /// 🧸️ Built via `PlaybookStep`/`PlaybookBlock` construction (not raw JSON with a `"steps"` key —
     /// `PlaybookSnapshot` no longer has that field; it composes `document`/`flow` children instead)
     /// and minted through `playbook_snapshot_with_steps` so the working-scene cache is seeded.
-    async fn step_with_conditional_block() -> PlaybookSnapshot {
+    fn step_with_conditional_block() -> PlaybookSnapshot {
         use crate::artifacts::playbook::PlaybookBlock;
 
-        async fn block(id: &str, kind: &str, condition: Option<crate::artifacts::playbook::PlaybookExpr>) -> PlaybookBlock {
+        fn block(id: &str, kind: &str, condition: Option<crate::artifacts::playbook::PlaybookExpr>) -> PlaybookBlock {
             PlaybookBlock {
                 id: id.into(),
                 label: id.into(),

@@ -13,7 +13,7 @@ const PLAYBOOK_PLAY_CONTROLLER_ID: &str = "playbook-play";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: PLAYBOOK_PLAY_WINDOW_BUILDER.into(),
         label: LocalizedLabel::native("Builder", "Builder"),
@@ -35,7 +35,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn builtin_palette_tuples() -> Vec<(&'static str, &'static str, &'static str)> {
+fn builtin_palette_tuples() -> Vec<(&'static str, &'static str, &'static str)> {
     PLAYBOOK_BUILTIN_KINDS.iter().map(|kind| (*kind, *kind, "circle")).collect()
 }
 
@@ -51,7 +51,7 @@ struct PlaybookBlockKindTopicPayload {
 const PLAYBOOK_BLOCK_KIND_TOPIC: &str = "playbook.blockKind";
 
 /// 🗂️ Reads the open `TopicContribution` (`"playbook.blockKind"` topic) shape per entry.
-async fn extension_palette_entries(config: &PlaybookConfig) -> Vec<(String, String, String)> {
+fn extension_palette_entries(config: &PlaybookConfig) -> Vec<(String, String, String)> {
     parse_contributions(&config.contributions_json)
         .into_iter()
         .filter_map(|entry| {
@@ -62,12 +62,12 @@ async fn extension_palette_entries(config: &PlaybookConfig) -> Vec<(String, Stri
         .collect()
 }
 
-async fn build_palette(config: &PlaybookConfig) -> Vec<BlockPaletteEntry> {
+fn build_palette(config: &PlaybookConfig) -> Vec<BlockPaletteEntry> {
     let builtins = builtin_palette_tuples();
     crate::playbook::build_palette(&builtins, &extension_palette_entries(config))
 }
 
-async fn playbook_builder_config() -> crate::playbook::PlaybookBuilderConfig {
+fn playbook_builder_config() -> crate::playbook::PlaybookBuilderConfig {
     crate::playbook::PlaybookBuilderConfig { action_namespace: "playbook-builder", controller_id: PLAYBOOK_PLAY_CONTROLLER_ID, labels: crate::playbook::PLAYBOOK_BUILDER_LABELS_EN }
 }
 
@@ -75,7 +75,7 @@ async fn playbook_builder_config() -> crate::playbook::PlaybookBuilderConfig {
 /// `InteractionView` (a known SDK gap — matches `forms`'/`note`'s render-surface precedent), so this
 /// block-list surface's own selected-card highlight (`render_playbook_builder`'s `selected_id`) can no
 /// longer be driven from live framework selection — it always renders with none highlighted now.
-pub async fn render(spec: &PlaybookSnapshot, config: &PlaybookConfig) -> UiNode {
+pub fn render(spec: &PlaybookSnapshot, config: &PlaybookConfig) -> UiNode {
     let kernel = spec.as_kernel();
     crate::playbook::render_playbook_builder(PLAYBOOK_PLAY_SURFACE_BUILDER, &kernel, &build_palette(config), None, &playbook_builder_config())
 }
@@ -112,8 +112,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_builder_emits_playbook_list_component_scene() {
-        let mut app = playbook_app();
-        let json = render_body(&mut app, BODY_BUILDER);
+        let mut app = playbook_app().await;
+        let json = render_body(&mut app, BODY_BUILDER).await;
         assert!(json.contains(r#""componentKind":"block-list""#));
         assert!(json.contains(&format!(r#""surfaceId":"{PLAYBOOK_PLAY_SURFACE_BUILDER}""#)));
     }

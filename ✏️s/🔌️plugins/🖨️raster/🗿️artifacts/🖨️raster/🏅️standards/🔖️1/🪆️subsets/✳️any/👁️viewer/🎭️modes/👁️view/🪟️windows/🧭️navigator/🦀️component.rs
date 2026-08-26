@@ -20,7 +20,7 @@ pub const RASTER_VIEW_BODY_NAVIGATOR: &str = "raster.view.navigator";
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::raster::create_raster_viewer`. Own distinct
 /// id/body_key (`ImageWindowKit::window_kind()` is already claimed by the Composite window in this
 /// manifest) but the same `SurfaceKind::Canvas2d`/icon shape the kit itself declares.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: RASTER_VIEW_WINDOW_NAVIGATOR.into(),
         label: LocalizedLabel::native("Navigator", "Navigator"),
@@ -44,7 +44,7 @@ pub async fn definition() -> WindowKindDefinition {
 /// 👁️ Same real composited pixels the Composite window shows — a navigator/minimap is a scaled-down
 /// view of the same content, not different content; the host renderer handles the scale-down
 /// presentation, not this pure snapshot read.
-pub async fn render(document: &RasterSnapshot) -> UiNode {
+pub fn render(document: &RasterSnapshot) -> UiNode {
     ImageWindowKit::render(&composite::composited_image_view(document))
 }
 //#endregion 🔖️Render

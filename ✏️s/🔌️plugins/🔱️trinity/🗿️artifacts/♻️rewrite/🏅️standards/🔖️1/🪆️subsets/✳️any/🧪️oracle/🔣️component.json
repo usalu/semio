@@ -23,6 +23,87 @@
     {
       "id": "rewrite-1-any",
       "capability": "rewrite-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-parameter-binding",
+          "sourceMutationDirectoryName": "🔧️change-parameter-binding",
+          "mutationDirectoryName": "🔧️change-parameter-binding",
+          "scenarios": [
+            {
+              "id": "retitles-the-caption-binding",
+              "directoryName": "🧪️retitles-the-caption-binding"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-rule-layout-point",
+          "sourceMutationDirectoryName": "📐️change-rule-layout-point",
+          "mutationDirectoryName": "📐️change-rule-layout-point",
+          "scenarios": [
+            {
+              "id": "nudges-the-capsule-var-off-the-shaft",
+              "directoryName": "🧪️nudges-the-capsule-var-off-the-shaft"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-before-fixture",
+          "sourceMutationDirectoryName": "🖼️edit-before-fixture",
+          "mutationDirectoryName": "🖼️edit-before-fixture",
+          "scenarios": [
+            {
+              "id": "swaps-in-a-two-node-before-graph",
+              "directoryName": "🧪️swaps-in-a-two-node-before-graph"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-lhs",
+          "sourceMutationDirectoryName": "🔍️edit-lhs",
+          "mutationDirectoryName": "🔍️edit-lhs",
+          "scenarios": [
+            {
+              "id": "narrows-the-lhs-pattern-to-a-shaft-neighbour",
+              "directoryName": "🧪️narrows-the-lhs-pattern-to-a-shaft-neighbour"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-rhs",
+          "sourceMutationDirectoryName": "🎯️edit-rhs",
+          "mutationDirectoryName": "🎯️edit-rhs",
+          "scenarios": [
+            {
+              "id": "rewrites-the-rhs-to-set-a-second-property",
+              "directoryName": "🧪️rewrites-the-rhs-to-set-a-second-property"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-parameter-binding",
+          "sourceMutationDirectoryName": "🧹️remove-parameter-binding",
+          "mutationDirectoryName": "🧹️remove-parameter-binding",
+          "scenarios": [
+            {
+              "id": "drops-the-repeat-binding",
+              "directoryName": "🧪️drops-the-repeat-binding"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-rule-layout-point",
+          "sourceMutationDirectoryName": "🗑️remove-rule-layout-point",
+          "mutationDirectoryName": "🗑️remove-rule-layout-point",
+          "scenarios": [
+            {
+              "id": "clears-the-shaft-layout-point",
+              "directoryName": "🧪️clears-the-shaft-layout-point"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "edit-before-fixture",
         "edit-lhs",

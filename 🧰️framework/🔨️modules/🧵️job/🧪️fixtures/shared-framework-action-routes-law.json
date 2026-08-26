@@ -1,0 +1,39 @@
+{
+  "schema": "semio.framework.plugin.shared-framework-action-routes.v1",
+  "routes": [
+    { "id": "copy", "factory": "FrameworkCopyJobFactory", "schemaId": "framework.reserved.copy.v1", "descriptorDisposition": "migrated", "routeIndex": 7, "maximumRawBytes": 8192, "maximumItems": 4096, "workUnits": 256, "maximumOutputBytes": 1048576 },
+    { "id": "cut", "factory": "FrameworkCutJobFactory", "schemaId": "framework.reserved.cut.v1", "descriptorDisposition": "migrated", "routeIndex": 8, "maximumRawBytes": 8192, "maximumItems": 4096, "workUnits": 256, "maximumOutputBytes": 1048576 },
+    { "id": "paste", "factory": "FrameworkPasteJobFactory", "schemaId": "framework.reserved.paste.v1", "descriptorDisposition": "migrated", "routeIndex": 9, "maximumRawBytes": 1048576, "maximumItems": 4096, "workUnits": 4096, "maximumOutputBytes": 4194304 },
+    { "id": "noteShellCommand", "factory": "FrameworkNoteShellCommandJobFactory", "schemaId": "framework.reserved.noteShellCommand.v1", "descriptorDisposition": "migrated", "routeIndex": 11, "maximumRawBytes": 65536, "maximumItems": 64, "workUnits": 4096, "maximumOutputBytes": 65536 },
+    { "id": "setHistoryCommandFilter", "factory": "FrameworkSetHistoryCommandFilterJobFactory", "schemaId": "framework.reserved.setHistoryCommandFilter.v1", "descriptorDisposition": "migrated", "routeIndex": 12, "maximumRawBytes": 4096, "maximumItems": 16, "workUnits": 1024, "maximumOutputBytes": 4096 },
+    { "id": "recordTutorial", "factory": "FrameworkRecordTutorialJobFactory", "schemaId": "framework.reserved.recordTutorial.v1", "descriptorDisposition": "migrated", "routeIndex": 13, "maximumRawBytes": 4096, "maximumItems": 16, "workUnits": 1024, "maximumOutputBytes": 4096 },
+    { "id": "clearSelection", "factory": "FrameworkClearSelectionJobFactory", "schemaId": "framework.reserved.clearSelection.v1", "descriptorDisposition": "migrated", "routeIndex": 14, "maximumRawBytes": 4096, "maximumItems": 4096, "workUnits": 256, "maximumOutputBytes": 65536 },
+    { "id": "interactionHover", "factory": "FrameworkInteractionHoverJobFactory", "schemaId": "framework.reserved.interactionHover.v1", "descriptorDisposition": "migrated", "routeIndex": 15, "maximumRawBytes": 65536, "maximumItems": 4096, "workUnits": 256, "maximumOutputBytes": 65536 },
+    { "id": "interactionSelect", "factory": "FrameworkInteractionSelectJobFactory", "schemaId": "framework.reserved.interactionSelect.v1", "descriptorDisposition": "migrated", "routeIndex": 16, "maximumRawBytes": 65536, "maximumItems": 4096, "workUnits": 256, "maximumOutputBytes": 65536 },
+    { "id": "selectAll", "factory": "FrameworkSelectAllJobFactory", "schemaId": "framework.reserved.selectAll.v1", "descriptorDisposition": "migrated", "routeIndex": 17, "maximumRawBytes": 4096, "maximumItems": 4096, "workUnits": 256, "maximumOutputBytes": 65536 },
+    { "id": "setInteractionGranularity", "factory": "FrameworkSetInteractionGranularityJobFactory", "schemaId": "framework.reserved.setInteractionGranularity.v1", "descriptorDisposition": "migrated", "routeIndex": 18, "maximumRawBytes": 16384, "maximumItems": 64, "workUnits": 1024, "maximumOutputBytes": 16384 },
+    { "id": "setSelectionMode", "factory": "FrameworkSetSelectionModeJobFactory", "schemaId": "framework.reserved.setSelectionMode.v1", "descriptorDisposition": "migrated", "routeIndex": 19, "maximumRawBytes": 16384, "maximumItems": 64, "workUnits": 1024, "maximumOutputBytes": 16384 }
+  ],
+  "descriptorLaws": [
+    { "id": "exact-window-owner-primary", "ownerKind": "windowAction", "ownerId": "app-a/main", "actionIds": ["copy", "cut", "paste", "noteShellCommand", "setHistoryCommandFilter", "recordTutorial", "clearSelection", "interactionHover", "interactionSelect", "selectAll", "setInteractionGranularity", "setSelectionMode"], "initial": "missing", "expected": "migrated" },
+    { "id": "exact-window-owner-secondary", "ownerKind": "windowAction", "ownerId": "app-b/preview", "actionIds": ["copy", "cut", "paste", "noteShellCommand", "setHistoryCommandFilter", "recordTutorial", "clearSelection", "interactionHover", "interactionSelect", "selectAll", "setInteractionGranularity", "setSelectionMode"], "initial": "missing", "expected": "migrated" },
+    { "id": "near-id-window-owner", "ownerKind": "windowAction", "ownerId": "app-a/main", "actionIds": ["copy-local", "Copy"], "initial": "missing", "expected": "missing" },
+    { "id": "unaccepted-window-owner", "ownerKind": "windowAction", "ownerId": "app-a/main", "actionIds": ["localAction"], "initial": "missing", "expected": "missing" },
+    { "id": "exact-app-command-owner", "ownerKind": "appCommand", "ownerId": "app-a", "actionIds": ["copy", "setSelectionMode"], "initial": "missing", "expected": "missing" },
+    { "id": "exact-mode-command-owner", "ownerKind": "modeCommand", "ownerId": "app-a/edit", "actionIds": ["paste", "interactionSelect"], "initial": "missing", "expected": "missing" }
+  ],
+  "hostileLaws": [
+    { "id": "empty", "kind": "rawAdmission", "value": 0, "maximum": 4096, "expected": "accepted" },
+    { "id": "maximum", "kind": "rawAdmission", "value": 4096, "maximum": 4096, "expected": "accepted" },
+    { "id": "maximum-plus-one", "kind": "rawAdmission", "value": 4097, "maximum": 4096, "expected": "rejected" },
+    { "id": "cancel-before-transfer", "kind": "cancellation", "expected": "cancelled" },
+    { "id": "cancel-after-transfer", "kind": "cancellation", "expected": "cancelled" },
+    { "id": "aba-generation", "kind": "freshness", "operation": 7, "generation": 11, "liveGeneration": 13, "expected": "rejected" },
+    { "id": "exact-generation", "kind": "freshness", "operation": 7, "generation": 11, "liveGeneration": 11, "expected": "accepted" },
+    { "id": "wrong-factory", "kind": "identity", "expected": "rejected" },
+    { "id": "one-semantic-unit", "kind": "progress", "value": 1, "maximum": 1, "expected": "checkpoint" },
+    { "id": "zero-close-credit", "kind": "close", "maximumItems": 0, "maximumBytes": 0, "expected": "retained" },
+    { "id": "interrupted-close", "kind": "close", "maximumItems": 1, "maximumBytes": 1, "expected": "retained" },
+    { "id": "repeated-terminal-close", "kind": "close", "maximumItems": 1, "maximumBytes": 4096, "expected": "terminal" }
+  ]
+}

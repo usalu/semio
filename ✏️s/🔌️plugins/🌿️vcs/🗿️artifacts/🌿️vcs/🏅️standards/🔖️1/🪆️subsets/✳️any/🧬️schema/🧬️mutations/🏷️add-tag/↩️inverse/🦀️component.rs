@@ -3,7 +3,7 @@ use crate::artifacts::vcs::mutations::VcsDemoMutation;
 use crate::artifacts::vcs::VcsSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::mutation::AddTag, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
+pub fn inverse(payload: &super::mutation::AddTag, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
     if base.tags.iter().any(|existing| existing == &payload.tag) {
         Vec::new()
     } else {

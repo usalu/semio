@@ -15,6 +15,9 @@
     {
       "id": "tiff-6-0-baseline",
       "capability": "tiff-6-0-baseline-mutate",
+      "standardDirectoryName": "🔖️6.0",
+      "subsetDirectoryName": "✳️baseline",
+      "vectors": [],
       "kinds": ["no-mutation", "set-snapshot", "set-compression", "set-photometric-interpretation", "set-bits-per-sample", "insert-tile-tags", "remove-tile-tags", "set-strip-offsets", "remove-strip-offsets"]
     }
   ]

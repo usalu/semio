@@ -6,7 +6,7 @@ use crate::artifacts::lowpoly::diff::diff_objects_add;
 use crate::artifacts::lowpoly::{LowpolyDiff, LowpolySnapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &CreateObject, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {
+pub fn diff(payload: &CreateObject, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {
     if base.objects.iter().any(|object| object.id == payload.object.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An object with id \"{}\" already exists.", payload.object.id), [payload.object.id.clone()]);
     }

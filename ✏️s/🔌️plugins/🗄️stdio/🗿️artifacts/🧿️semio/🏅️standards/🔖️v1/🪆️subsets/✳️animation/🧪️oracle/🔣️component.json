@@ -18,6 +18,21 @@
     {
       "id": "semio-v1-animation",
       "capability": "semio-v1-animation-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️animation",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "steps-the-spin-channel-and-appends-a-keyframe",
+              "directoryName": "🧪️steps-the-spin-channel-and-appends-a-keyframe"
+            }
+          ]
+        }
+      ],
       "kinds": ["no-mutation", "set-snapshot", "insert-timeline", "remove-timeline", "set-timeline-name", "insert-channel", "remove-channel", "set-channel-target", "set-channel-interpolation", "insert-keyframe", "remove-keyframe", "set-keyframe-time", "set-keyframe-value"]
     }
   ]

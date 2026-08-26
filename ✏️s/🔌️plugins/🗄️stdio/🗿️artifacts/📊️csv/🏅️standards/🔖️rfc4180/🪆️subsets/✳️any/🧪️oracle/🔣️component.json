@@ -24,6 +24,21 @@
     {
       "id": "csv-rfc4180-any",
       "capability": "csv-rfc4180-mutate",
+      "standardDirectoryName": "🔖️rfc4180",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "corrects-the-area-cell-and-quotes-it",
+              "directoryName": "🧪️corrects-the-area-cell-and-quotes-it"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

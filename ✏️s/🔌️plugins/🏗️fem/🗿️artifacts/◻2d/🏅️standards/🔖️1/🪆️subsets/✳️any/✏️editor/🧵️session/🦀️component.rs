@@ -7,7 +7,7 @@ use crate::mesh::{MeshJob, MeshOpts, PlanarDomain, TriMesh2};
 use crate::model::Element;
 use crate::sparse::{PcgJob, PcgJobConstruction};
 use semio_framework::kernel::{Effect, JobPlacement};
-use semio_framework_job::{CommitValidation, InteractiveJob, Operation, OperationId, StepBudget, StepContext, StepOutcome};
+use semio_framework_job::{CommitValidation, InteractiveJob, Operation, OperationId, RetainedJobPayload, StepBudget, StepContext, StepOutcome};
 use semio_framework_plugin::reactor::jobs::{BoundedJob, BoundedJobFactory, JobBudget, JobStep};
 use semio_framework_plugin::{AppRenderOperationContext, ArtifactView, PluginCloseStep};
 use std::cell::RefCell;
@@ -934,6 +934,37 @@ struct MountedState {
     fault: Option<Vec<u8>>,
 }
 
+fn close_retained_payload(payload: &mut RetainedJobPayload) {
+    while !payload.terminal_is_empty() {
+        let _ = payload.close_step(1, usize::MAX);
+    }
+}
+
+fn take_retained_payload(mut payload: RetainedJobPayload, maximum_bytes: usize) -> Option<Vec<u8>> {
+    if payload.len() > maximum_bytes {
+        close_retained_payload(&mut payload);
+        return None;
+    }
+    let mut bytes = Vec::with_capacity(payload.len());
+    for page in 0..payload.page_count() {
+        bytes.extend_from_slice(payload.page(page)?);
+    }
+    close_retained_payload(&mut payload);
+    Some(bytes)
+}
+
+fn retained_payload_byte(payload: &RetainedJobPayload, index: usize) -> Option<u8> {
+    let mut offset = index;
+    for page in 0..payload.page_count() {
+        let bytes = payload.page(page)?;
+        if offset < bytes.len() {
+            return bytes.get(offset).copied();
+        }
+        offset -= bytes.len();
+    }
+    None
+}
+
 impl MountedState {
     fn new(identity: MountedIdentity, snapshot: store::SnapshotRead<Fem2dSnapshot>, admitted_items: usize, admitted_bytes: usize) -> Self {
         Self {
@@ -1122,313 +1153,332 @@ impl MountedState {
         }
         let now = semio_framework_job::default_now_ms();
         let deadline = now.saturating_add(u64::from(budget.deadline_ms).min(8));
-        let mut cx = StepContext::new(self.identity.operation, self.identity.generation, StepBudget::new(budget.fuel.max(1), deadline), self.cancel.clone(), semio_framework_job::default_now_ms, &mut self.preview_sequence);
-        if cx.should_yield() {
-            return JobStep::Running(None);
-        }
-        if let Some(step) = self.drive_visual_one(&mut cx) {
-            return step;
-        }
-        match self.stage {
-            MountedStage::PrepareGraph => {
-                const PLANS: [FemStagePlan; 8] = [
-                    FemStagePlan { stage: FemJobStage::ValidateReferences, units: 1 },
-                    FemStagePlan { stage: FemJobStage::BuildDofMap, units: 1 },
-                    FemStagePlan { stage: FemJobStage::OrderEquations, units: 1 },
-                    FemStagePlan { stage: FemJobStage::Assemble, units: 1 },
-                    FemStagePlan { stage: FemJobStage::Factor, units: 1 },
-                    FemStagePlan { stage: FemJobStage::Solve, units: 1 },
-                    FemStagePlan { stage: FemJobStage::Recover, units: 1 },
-                    FemStagePlan { stage: FemJobStage::Finalize, units: 1 },
-                ];
-                if self.graph_plans.capacity() == 0 {
-                    if self.graph_plans.try_reserve_exact(PLANS.len()).is_err() || self.graph_plans.capacity() * std::mem::size_of::<FemStagePlan>() > SESSION_OWNER_PAGE_BYTES {
-                        return self.fail(b"fem2d.graph-plan-allocation".to_vec());
-                    }
-                } else if let Some(plan) = PLANS.get(self.graph_plans.len()).copied() {
-                    self.graph_plans.push(plan);
-                } else {
-                    self.graph = Some(FemJobGraph::new(self.identity.operation(), std::mem::take(&mut self.graph_plans), 1));
-                    self.stage = MountedStage::Graph;
-                }
-                cx.consume_fuel(1);
-                self.progress(b"fem2d.graph-admitted")
+        let mut preview_sequence = self.preview_sequence;
+        let result = (|| {
+            let mut cx = StepContext::new(self.identity.operation, self.identity.generation, StepBudget::new(budget.fuel.max(1), deadline), self.cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+            if cx.should_yield() {
+                return JobStep::Running(None);
             }
-            MountedStage::Graph => match self.graph.as_mut().expect("graph stage owns graph").step(&mut cx) {
-                StepOutcome::Complete(candidate) => {
-                    self.stage = MountedStage::PrepareDomain;
-                    if candidate.output.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES {
-                        JobStep::Running(Some(candidate.output))
-                    } else {
-                        self.fail(b"fem2d.graph-output-capacity".to_vec())
-                    }
-                }
-                StepOutcome::PreviewReady(bytes) | StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: bytes, .. }) if bytes.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES => JobStep::Running(Some(bytes)),
-                StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => self.fail(b"fem2d.graph-output-capacity".to_vec()),
-                StepOutcome::Yield => self.progress(b"fem2d.graph-yield"),
-                StepOutcome::Cancelled => self.fail(b"fem2d.graph-cancelled".to_vec()),
-                StepOutcome::Fault(fault) => self.fail(fault.detail),
-            },
-            MountedStage::PrepareDomain => match self.prepare_domain_one() {
-                Ok(false) => {
-                    cx.consume_fuel(1);
-                    self.progress(b"fem2d.domain")
-                }
-                Ok(true) => {
-                    let snapshot = self.snapshot.as_ref().expect("preflight retains snapshot");
-                    if let (Some(region), Some(domain)) = (snapshot.regions.first(), self.domain.take()) {
-                        if self.visual.region_quality.insert(region.id.clone(), RegionVisualQuality::Unmeshed).is_err() {
-                            return self.fail(b"fem2d.visual-region-capacity".to_vec());
+            if let Some(step) = self.drive_visual_one(&mut cx) {
+                return step;
+            }
+            match self.stage {
+                MountedStage::PrepareGraph => {
+                    const PLANS: [FemStagePlan; 8] = [
+                        FemStagePlan { stage: FemJobStage::ValidateReferences, units: 1 },
+                        FemStagePlan { stage: FemJobStage::BuildDofMap, units: 1 },
+                        FemStagePlan { stage: FemJobStage::OrderEquations, units: 1 },
+                        FemStagePlan { stage: FemJobStage::Assemble, units: 1 },
+                        FemStagePlan { stage: FemJobStage::Factor, units: 1 },
+                        FemStagePlan { stage: FemJobStage::Solve, units: 1 },
+                        FemStagePlan { stage: FemJobStage::Recover, units: 1 },
+                        FemStagePlan { stage: FemJobStage::Finalize, units: 1 },
+                    ];
+                    if self.graph_plans.capacity() == 0 {
+                        if self.graph_plans.try_reserve_exact(PLANS.len()).is_err() || self.graph_plans.capacity() * std::mem::size_of::<FemStagePlan>() > SESSION_OWNER_PAGE_BYTES {
+                            return self.fail(b"fem2d.graph-plan-allocation".to_vec());
                         }
-                        self.visual.state = FemVisualState::Unmeshed;
-                        self.visual_dirty = true;
-                        self.mesh = Some(MeshJob::new_bounded(domain, MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 }, self.identity.operation(), SESSION_MAXIMUM_MESH_POINTS, SESSION_MAXIMUM_MESH_TRIANGLES));
-                        self.stage = MountedStage::Mesh;
+                    } else if let Some(plan) = PLANS.get(self.graph_plans.len()).cloned() {
+                        self.graph_plans.push(plan);
                     } else {
-                        self.stage = MountedStage::BuildModel;
+                        self.graph = Some(FemJobGraph::new(self.identity.operation(), std::mem::take(&mut self.graph_plans), 1));
+                        self.stage = MountedStage::Graph;
                     }
                     cx.consume_fuel(1);
-                    self.progress(b"fem2d.domain-complete")
+                    self.progress(b"fem2d.graph-admitted")
                 }
-                Err(detail) => self.fail(detail.to_vec()),
-            },
-            MountedStage::Mesh => match self.mesh.as_mut().expect("mesh stage owns mesh").step(&mut cx) {
-                StepOutcome::Complete(candidate) => {
-                    if let Some(region) = self.snapshot.as_ref().and_then(|snapshot| snapshot.regions.first()) {
-                        if !self.visual.region_quality.update(&region.id, RegionVisualQuality::Final) {
-                            return self.fail(b"fem2d.visual-region-capacity".to_vec());
+                MountedStage::Graph => match self.graph.as_mut().expect("graph stage owns graph").step(&mut cx) {
+                    StepOutcome::Complete(candidate) => {
+                        self.stage = MountedStage::PrepareDomain;
+                        let semio_framework_job::CommitCandidate { mut state, output } = candidate;
+                        close_retained_payload(&mut state);
+                        match take_retained_payload(output, SESSION_MAXIMUM_OUTPUT_BYTES) {
+                            Some(bytes) => JobStep::Running(Some(bytes)),
+                            None => self.fail(b"fem2d.graph-output-capacity".to_vec()),
                         }
-                        self.visual.state = FemVisualState::Refined;
-                        self.visual_dirty = true;
                     }
-                    self.model_build = Some(MountedModelBuild::new(self.mesh.as_mut().and_then(MeshJob::take_completed_mesh)));
-                    self.stage = MountedStage::BuildModel;
-                    if candidate.output.capacity() > SESSION_MAXIMUM_OUTPUT_BYTES {
-                        self.progress(b"fem2d.mesh-complete")
-                    } else {
-                        JobStep::Running(Some(candidate.output))
-                    }
-                }
-                StepOutcome::PreviewReady(bytes) => {
-                    if let Some(region) = self.snapshot.as_ref().and_then(|snapshot| snapshot.regions.first()) {
-                        let quality = match bytes.get(8) {
-                            Some(0) => RegionVisualQuality::Coarse,
-                            Some(1) => RegionVisualQuality::Refined,
-                            Some(2) => RegionVisualQuality::Final,
-                            _ => RegionVisualQuality::Unmeshed,
-                        };
-                        if !self.visual.region_quality.update(&region.id, quality) {
-                            return self.fail(b"fem2d.visual-region-capacity".to_vec());
-                        }
-                        self.visual.state = match quality {
-                            RegionVisualQuality::Unmeshed => FemVisualState::Unmeshed,
-                            RegionVisualQuality::Coarse => FemVisualState::Coarse,
-                            RegionVisualQuality::Refined | RegionVisualQuality::Final => FemVisualState::Refined,
-                        };
-                        self.visual_dirty = true;
-                    }
-                    if bytes.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES {
-                        JobStep::Running(Some(bytes))
-                    } else {
-                        self.progress(b"fem2d.mesh-preview")
-                    }
-                }
-                StepOutcome::CheckpointReady(checkpoint) if checkpoint.state.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES => JobStep::Running(Some(checkpoint.state)),
-                StepOutcome::CheckpointReady(_) | StepOutcome::Yield => self.progress(b"fem2d.mesh-yield"),
-                StepOutcome::Cancelled => self.fail(b"fem2d.mesh-cancelled".to_vec()),
-                StepOutcome::Fault(fault) => self.fail(fault.detail),
-            },
-            MountedStage::BuildModel => {
-                let snapshot = self.snapshot.as_ref().expect("preflight retains snapshot");
-                if self.model_build.is_none() {
-                    self.model_build = Some(MountedModelBuild::new(None));
-                    cx.consume_fuel(1);
-                    return self.progress(b"fem2d.model-admitted");
-                }
-                match self.model_build.as_mut().expect("model builder admitted above").step_one(snapshot) {
+                    StepOutcome::PreviewReady(payload) | StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: payload, .. }) => match take_retained_payload(payload, SESSION_MAXIMUM_OUTPUT_BYTES) {
+                        Some(bytes) => JobStep::Running(Some(bytes)),
+                        None => self.fail(b"fem2d.graph-output-capacity".to_vec()),
+                    },
+                    StepOutcome::Yield => self.progress(b"fem2d.graph-yield"),
+                    StepOutcome::Cancelled => self.fail(b"fem2d.graph-cancelled".to_vec()),
+                    StepOutcome::Fault(fault) => self.fail(take_retained_payload(fault.detail, SESSION_MAXIMUM_FAULT_BYTES).unwrap_or_else(|| b"fem2d.graph-fault-capacity".to_vec())),
+                },
+                MountedStage::PrepareDomain => match self.prepare_domain_one() {
                     Ok(false) => {
                         cx.consume_fuel(1);
-                        self.progress(b"fem2d.model-building")
+                        self.progress(b"fem2d.domain")
                     }
                     Ok(true) => {
-                        let model = std::sync::Arc::new(self.model_build.as_mut().and_then(MountedModelBuild::take_complete).expect("complete model transfers exactly once"));
-                        self.assembly_build = Some(AssemblyJobConstruction::new_owned(model, self.identity.operation(), 1));
-                        self.stage = MountedStage::PrepareAssembly;
-                        self.visual.state = FemVisualState::Assembling;
-                        cx.consume_fuel(1);
-                        self.progress(b"fem2d.model-built")
-                    }
-                    Err(error) => self.fail(error),
-                }
-            }
-            MountedStage::PrepareAssembly => match self.assembly_build.as_mut().expect("assembly construction retained").step_one() {
-                Ok(false) => {
-                    cx.consume_fuel(1);
-                    self.progress(b"fem2d.assembly-preparing")
-                }
-                Ok(true) => {
-                    self.assembly = self.assembly_build.as_mut().and_then(AssemblyJobConstruction::take_complete);
-                    if self.assembly.is_none() {
-                        return self.fail(b"fem2d.assembly-construction-false-terminal".to_vec());
-                    }
-                    self.stage = MountedStage::Assembly;
-                    cx.consume_fuel(1);
-                    self.progress(b"fem2d.assembly-admitted")
-                }
-                Err(error) => self.fail(error.to_string().into_bytes()),
-            },
-            MountedStage::Assembly => match self.assembly.as_mut().expect("assembly stage owns assembly").step(&mut cx) {
-                StepOutcome::Complete(candidate) => {
-                    let assembly = self.assembly.take().expect("assembly owner retained");
-                    let csr_build = match AssemblyCsrBuild::new(assembly) {
-                        Ok(builder) => builder,
-                        Err(assembly) => {
-                            self.assembly = Some(assembly);
-                            return self.fail(b"fem2d.assembly-false-terminal".to_vec());
+                        let snapshot = self.snapshot.as_ref().expect("preflight retains snapshot");
+                        if let (Some(region), Some(domain)) = (snapshot.regions.first(), self.domain.take()) {
+                            if self.visual.region_quality.insert(region.id.clone(), RegionVisualQuality::Unmeshed).is_err() {
+                                return self.fail(b"fem2d.visual-region-capacity".to_vec());
+                            }
+                            self.visual.state = FemVisualState::Unmeshed;
+                            self.visual_dirty = true;
+                            self.mesh = Some(MeshJob::new_bounded(domain, MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 }, self.identity.operation(), SESSION_MAXIMUM_MESH_POINTS, SESSION_MAXIMUM_MESH_TRIANGLES));
+                            self.stage = MountedStage::Mesh;
+                        } else {
+                            self.stage = MountedStage::BuildModel;
                         }
+                        cx.consume_fuel(1);
+                        self.progress(b"fem2d.domain-complete")
+                    }
+                    Err(detail) => self.fail(detail.to_vec()),
+                },
+                MountedStage::Mesh => match self.mesh.as_mut().expect("mesh stage owns mesh").step(&mut cx) {
+                    StepOutcome::Complete(candidate) => {
+                        if let Some(region) = self.snapshot.as_ref().and_then(|snapshot| snapshot.regions.first()) {
+                            if !self.visual.region_quality.update(&region.id, RegionVisualQuality::Final) {
+                                return self.fail(b"fem2d.visual-region-capacity".to_vec());
+                            }
+                            self.visual.state = FemVisualState::Refined;
+                            self.visual_dirty = true;
+                        }
+                        self.model_build = Some(MountedModelBuild::new(self.mesh.as_mut().and_then(MeshJob::take_completed_mesh)));
+                        self.stage = MountedStage::BuildModel;
+                        let semio_framework_job::CommitCandidate { mut state, output } = candidate;
+                        close_retained_payload(&mut state);
+                        match take_retained_payload(output, SESSION_MAXIMUM_OUTPUT_BYTES) {
+                            Some(bytes) => JobStep::Running(Some(bytes)),
+                            None => self.progress(b"fem2d.mesh-complete"),
+                        }
+                    }
+                    StepOutcome::PreviewReady(payload) => {
+                        if let Some(region) = self.snapshot.as_ref().and_then(|snapshot| snapshot.regions.first()) {
+                            let quality = match retained_payload_byte(&payload, 8) {
+                                Some(0) => RegionVisualQuality::Coarse,
+                                Some(1) => RegionVisualQuality::Refined,
+                                Some(2) => RegionVisualQuality::Final,
+                                _ => RegionVisualQuality::Unmeshed,
+                            };
+                            if !self.visual.region_quality.update(&region.id, quality) {
+                                return self.fail(b"fem2d.visual-region-capacity".to_vec());
+                            }
+                            self.visual.state = match quality {
+                                RegionVisualQuality::Unmeshed => FemVisualState::Unmeshed,
+                                RegionVisualQuality::Coarse => FemVisualState::Coarse,
+                                RegionVisualQuality::Refined | RegionVisualQuality::Final => FemVisualState::Refined,
+                            };
+                            self.visual_dirty = true;
+                        }
+                        match take_retained_payload(payload, SESSION_MAXIMUM_OUTPUT_BYTES) {
+                            Some(bytes) => JobStep::Running(Some(bytes)),
+                            None => self.progress(b"fem2d.mesh-preview"),
+                        }
+                    }
+                    StepOutcome::CheckpointReady(checkpoint) => match take_retained_payload(checkpoint.state, SESSION_MAXIMUM_OUTPUT_BYTES) {
+                        Some(bytes) => JobStep::Running(Some(bytes)),
+                        None => self.progress(b"fem2d.mesh-yield"),
+                    },
+                    StepOutcome::Yield => self.progress(b"fem2d.mesh-yield"),
+                    StepOutcome::Cancelled => self.fail(b"fem2d.mesh-cancelled".to_vec()),
+                    StepOutcome::Fault(fault) => self.fail(take_retained_payload(fault.detail, SESSION_MAXIMUM_FAULT_BYTES).unwrap_or_else(|| b"fem2d.mesh-fault-capacity".to_vec())),
+                },
+                MountedStage::BuildModel => {
+                    let snapshot = self.snapshot.as_ref().expect("preflight retains snapshot");
+                    if self.model_build.is_none() {
+                        self.model_build = Some(MountedModelBuild::new(None));
+                        cx.consume_fuel(1);
+                        return self.progress(b"fem2d.model-admitted");
+                    }
+                    match self.model_build.as_mut().expect("model builder admitted above").step_one(snapshot) {
+                        Ok(false) => {
+                            cx.consume_fuel(1);
+                            self.progress(b"fem2d.model-building")
+                        }
+                        Ok(true) => {
+                            let model = std::sync::Arc::new(self.model_build.as_mut().and_then(MountedModelBuild::take_complete).expect("complete model transfers exactly once"));
+                            self.assembly_build = Some(AssemblyJobConstruction::new_owned(model, self.identity.operation(), 1));
+                            self.stage = MountedStage::PrepareAssembly;
+                            self.visual.state = FemVisualState::Assembling;
+                            cx.consume_fuel(1);
+                            self.progress(b"fem2d.model-built")
+                        }
+                        Err(error) => self.fail(error),
+                    }
+                }
+                MountedStage::PrepareAssembly => match self.assembly_build.as_mut().expect("assembly construction retained").step_one() {
+                    Ok(false) => {
+                        cx.consume_fuel(1);
+                        self.progress(b"fem2d.assembly-preparing")
+                    }
+                    Ok(true) => {
+                        self.assembly = self.assembly_build.as_mut().and_then(AssemblyJobConstruction::take_complete);
+                        if self.assembly.is_none() {
+                            return self.fail(b"fem2d.assembly-construction-false-terminal".to_vec());
+                        }
+                        self.stage = MountedStage::Assembly;
+                        cx.consume_fuel(1);
+                        self.progress(b"fem2d.assembly-admitted")
+                    }
+                    Err(error) => self.fail(error.to_string().into_bytes()),
+                },
+                MountedStage::Assembly => match self.assembly.as_mut().expect("assembly stage owns assembly").step(&mut cx) {
+                    StepOutcome::Complete(candidate) => {
+                        let assembly = self.assembly.take().expect("assembly owner retained");
+                        let csr_build = match AssemblyCsrBuild::new(assembly) {
+                            Ok(builder) => builder,
+                            Err(assembly) => {
+                                self.assembly = Some(assembly);
+                                return self.fail(b"fem2d.assembly-false-terminal".to_vec());
+                            }
+                        };
+                        self.csr_build = Some(csr_build);
+                        self.stage = MountedStage::BuildCsr;
+                        let semio_framework_job::CommitCandidate { mut state, output } = candidate;
+                        close_retained_payload(&mut state);
+                        match take_retained_payload(output, SESSION_MAXIMUM_OUTPUT_BYTES) {
+                            Some(bytes) => JobStep::Running(Some(bytes)),
+                            None => self.progress(b"fem2d.assembly-complete"),
+                        }
+                    }
+                    StepOutcome::PreviewReady(payload) | StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: payload, .. }) => match take_retained_payload(payload, SESSION_MAXIMUM_OUTPUT_BYTES) {
+                        Some(bytes) => JobStep::Running(Some(bytes)),
+                        None => self.progress(b"fem2d.assembly-yield"),
+                    },
+                    StepOutcome::Yield => self.progress(b"fem2d.assembly-yield"),
+                    StepOutcome::Cancelled => self.fail(b"fem2d.assembly-cancelled".to_vec()),
+                    StepOutcome::Fault(fault) => self.fail(take_retained_payload(fault.detail, SESSION_MAXIMUM_FAULT_BYTES).unwrap_or_else(|| b"fem2d.assembly-fault-capacity".to_vec())),
+                },
+                MountedStage::BuildCsr => match self.csr_build.as_mut().expect("CSR builder retained").step_one() {
+                    Ok(false) => {
+                        cx.consume_fuel(1);
+                        self.progress(b"fem2d.csr-building")
+                    }
+                    Ok(true) => {
+                        let matrix = self.csr_build.as_mut().and_then(AssemblyCsrBuild::take_complete).expect("complete CSR transfers exactly once");
+                        self.pcg_build = Some(PcgJobConstruction::new(self.identity.operation(), matrix));
+                        self.stage = MountedStage::PreparePcg;
+                        cx.consume_fuel(1);
+                        self.progress(b"fem2d.csr-complete")
+                    }
+                    Err(detail) => self.fail(detail.to_vec()),
+                },
+                MountedStage::PreparePcg => match self.pcg_build.as_mut().expect("PCG builder retained").step_one() {
+                    Ok(false) => {
+                        cx.consume_fuel(1);
+                        self.progress(b"fem2d.pcg-preparing")
+                    }
+                    Ok(true) => {
+                        self.pcg = self.pcg_build.as_mut().and_then(PcgJobConstruction::take_complete);
+                        if self.pcg.is_none() {
+                            return self.fail(b"fem2d.pcg-false-terminal".to_vec());
+                        }
+                        self.stage = MountedStage::Pcg;
+                        cx.consume_fuel(1);
+                        self.progress(b"fem2d.pcg-admitted")
+                    }
+                    Err(detail) => self.fail(detail.to_vec()),
+                },
+                MountedStage::Pcg => match self.pcg.as_mut().expect("pcg stage owns pcg").step(&mut cx) {
+                    StepOutcome::Complete(candidate) => {
+                        if let Some(job) = self.pcg.as_ref() {
+                            let (completed, total, residual, tolerance, converged) = job.visual_progress();
+                            self.visual.progress_completed = completed;
+                            self.visual.progress_total = total;
+                            self.visual.residual_norm = residual;
+                            self.visual.tolerance = tolerance;
+                            self.visual.converged = converged;
+                            self.visual.state = if converged { FemVisualState::SolvingConverged } else { FemVisualState::SolvingUnconverged };
+                        }
+                        self.visual_field_cursor = 0;
+                        self.visual_pcg_complete = true;
+                        self.stage = MountedStage::SyncPcgVisual;
+                        let semio_framework_job::CommitCandidate { mut state, output } = candidate;
+                        close_retained_payload(&mut state);
+                        match take_retained_payload(output, SESSION_MAXIMUM_OUTPUT_BYTES) {
+                            Some(bytes) => JobStep::Running(Some(bytes)),
+                            None => self.progress(b"fem2d.pcg-complete"),
+                        }
+                    }
+                    StepOutcome::PreviewReady(payload) | StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: payload, .. }) => {
+                        if let Some(job) = self.pcg.as_ref() {
+                            let (completed, total, residual, tolerance, converged) = job.visual_progress();
+                            self.visual.progress_completed = completed;
+                            self.visual.progress_total = total;
+                            self.visual.residual_norm = residual;
+                            self.visual.tolerance = tolerance;
+                            self.visual.converged = converged;
+                            self.visual.state = if converged { FemVisualState::SolvingConverged } else { FemVisualState::SolvingUnconverged };
+                        }
+                        self.visual_field_cursor = 0;
+                        self.visual_pcg_complete = false;
+                        self.stage = MountedStage::SyncPcgVisual;
+                        match take_retained_payload(payload, SESSION_MAXIMUM_OUTPUT_BYTES) {
+                            Some(bytes) => JobStep::Running(Some(bytes)),
+                            None => self.progress(b"fem2d.pcg-output-capacity"),
+                        }
+                    }
+                    StepOutcome::Yield => self.progress(b"fem2d.pcg-yield"),
+                    StepOutcome::Cancelled => self.fail(b"fem2d.pcg-cancelled".to_vec()),
+                    StepOutcome::Fault(fault) => self.fail(take_retained_payload(fault.detail, SESSION_MAXIMUM_FAULT_BYTES).unwrap_or_else(|| b"fem2d.pcg-fault-capacity".to_vec())),
+                },
+                MountedStage::SyncPcgVisual => {
+                    let Some(snapshot) = self.snapshot.as_ref() else { return self.fail(b"fem2d.visual-snapshot-owner".to_vec()) };
+                    let Some(node) = snapshot.nodes.get(self.visual_field_cursor) else {
+                        self.visual_dirty = true;
+                        self.stage = if self.visual_pcg_complete { MountedStage::CommitReady } else { MountedStage::Pcg };
+                        cx.consume_fuel(1);
+                        return self.progress(b"fem2d.visual-field-page-complete");
                     };
-                    self.csr_build = Some(csr_build);
-                    self.stage = MountedStage::BuildCsr;
-                    if candidate.output.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES {
-                        JobStep::Running(Some(candidate.output))
+                    let base = self.visual_field_cursor * 3;
+                    let Some(tx) = self.pcg.as_ref().and_then(|job| job.visual_scalar(base)) else { return self.fail(b"fem2d.visual-tx-scalar".to_vec()) };
+                    let Some(ty) = self.pcg.as_ref().and_then(|job| job.visual_scalar(base + 1)) else { return self.fail(b"fem2d.visual-ty-scalar".to_vec()) };
+                    let field = crate::editor::fem2d::modes::edit::windows::model::NodeLiveField {
+                        node_id: node.id.clone(),
+                        displacement: [tx.displacement, ty.displacement],
+                        residual: [tx.residual, ty.residual],
+                        reaction: [tx.reaction, ty.reaction],
+                        contour: tx.contour.max(ty.contour),
+                        mode_shape: [tx.mode_estimate, ty.mode_estimate],
+                    };
+                    if let Some(target) = self.visual.fields.get_mut(self.visual_field_cursor) {
+                        *target = field;
                     } else {
-                        self.progress(b"fem2d.assembly-complete")
+                        self.visual.fields.push(field);
                     }
-                }
-                StepOutcome::PreviewReady(bytes) | StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: bytes, .. }) if bytes.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES => JobStep::Running(Some(bytes)),
-                StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) | StepOutcome::Yield => self.progress(b"fem2d.assembly-yield"),
-                StepOutcome::Cancelled => self.fail(b"fem2d.assembly-cancelled".to_vec()),
-                StepOutcome::Fault(fault) => self.fail(fault.detail),
-            },
-            MountedStage::BuildCsr => match self.csr_build.as_mut().expect("CSR builder retained").step_one() {
-                Ok(false) => {
+                    self.visual_field_cursor += 1;
                     cx.consume_fuel(1);
-                    self.progress(b"fem2d.csr-building")
+                    self.progress(b"fem2d.visual-field-entry")
                 }
-                Ok(true) => {
-                    let matrix = self.csr_build.as_mut().and_then(AssemblyCsrBuild::take_complete).expect("complete CSR transfers exactly once");
-                    self.pcg_build = Some(PcgJobConstruction::new(self.identity.operation(), matrix));
-                    self.stage = MountedStage::PreparePcg;
-                    cx.consume_fuel(1);
-                    self.progress(b"fem2d.csr-complete")
-                }
-                Err(detail) => self.fail(detail.to_vec()),
-            },
-            MountedStage::PreparePcg => match self.pcg_build.as_mut().expect("PCG builder retained").step_one() {
-                Ok(false) => {
-                    cx.consume_fuel(1);
-                    self.progress(b"fem2d.pcg-preparing")
-                }
-                Ok(true) => {
-                    self.pcg = self.pcg_build.as_mut().and_then(PcgJobConstruction::take_complete);
-                    if self.pcg.is_none() {
-                        return self.fail(b"fem2d.pcg-false-terminal".to_vec());
+                MountedStage::CommitReady => {
+                    let validation = current_identity(self.identity.app_instance_id);
+                    let store_is_current = self.snapshot.as_ref().is_some_and(|snapshot| snapshot.commit_authority_matches(self.identity.generation.0, self.identity.canonical_base_revision));
+                    if validation != Some(self.identity) || !store_is_current || self.cancel.is_cancelled_now() {
+                        return self.fail(b"fem2d.session-stale-commit".to_vec());
                     }
-                    self.stage = MountedStage::Pcg;
-                    cx.consume_fuel(1);
-                    self.progress(b"fem2d.pcg-admitted")
-                }
-                Err(detail) => self.fail(detail.to_vec()),
-            },
-            MountedStage::Pcg => match self.pcg.as_mut().expect("pcg stage owns pcg").step(&mut cx) {
-                StepOutcome::Complete(candidate) => {
-                    if let Some(job) = self.pcg.as_ref() {
-                        let (completed, total, residual, tolerance, converged) = job.visual_progress();
-                        self.visual.progress_completed = completed;
-                        self.visual.progress_total = total;
-                        self.visual.residual_norm = residual;
-                        self.visual.tolerance = tolerance;
-                        self.visual.converged = converged;
-                        self.visual.state = if converged { FemVisualState::SolvingConverged } else { FemVisualState::SolvingUnconverged };
-                    }
-                    self.visual_field_cursor = 0;
-                    self.visual_pcg_complete = true;
-                    self.stage = MountedStage::SyncPcgVisual;
-                    if candidate.output.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES {
-                        JobStep::Running(Some(candidate.output))
-                    } else {
-                        self.progress(b"fem2d.pcg-complete")
-                    }
-                }
-                StepOutcome::PreviewReady(bytes) | StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: bytes, .. }) if bytes.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES => {
-                    if let Some(job) = self.pcg.as_ref() {
-                        let (completed, total, residual, tolerance, converged) = job.visual_progress();
-                        self.visual.progress_completed = completed;
-                        self.visual.progress_total = total;
-                        self.visual.residual_norm = residual;
-                        self.visual.tolerance = tolerance;
-                        self.visual.converged = converged;
-                        self.visual.state = if converged { FemVisualState::SolvingConverged } else { FemVisualState::SolvingUnconverged };
-                    }
-                    self.visual_field_cursor = 0;
-                    self.visual_pcg_complete = false;
-                    self.stage = MountedStage::SyncPcgVisual;
-                    JobStep::Running(Some(bytes))
-                }
-                StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) | StepOutcome::Yield => self.progress(b"fem2d.pcg-yield"),
-                StepOutcome::Cancelled => self.fail(b"fem2d.pcg-cancelled".to_vec()),
-                StepOutcome::Fault(fault) => self.fail(fault.detail),
-            },
-            MountedStage::SyncPcgVisual => {
-                let Some(snapshot) = self.snapshot.as_ref() else { return self.fail(b"fem2d.visual-snapshot-owner".to_vec()) };
-                let Some(node) = snapshot.nodes.get(self.visual_field_cursor) else {
+                    self.visual.validated_final = self.visual.converged;
+                    self.visual.state = if self.visual.validated_final { FemVisualState::ValidatedFinal } else { FemVisualState::SolvingUnconverged };
                     self.visual_dirty = true;
-                    self.stage = if self.visual_pcg_complete { MountedStage::CommitReady } else { MountedStage::Pcg };
+                    self.stage = MountedStage::PublishFinalVisual;
                     cx.consume_fuel(1);
-                    return self.progress(b"fem2d.visual-field-page-complete");
-                };
-                let base = self.visual_field_cursor * 3;
-                let Some(tx) = self.pcg.as_ref().and_then(|job| job.visual_scalar(base)) else { return self.fail(b"fem2d.visual-tx-scalar".to_vec()) };
-                let Some(ty) = self.pcg.as_ref().and_then(|job| job.visual_scalar(base + 1)) else { return self.fail(b"fem2d.visual-ty-scalar".to_vec()) };
-                let field = crate::editor::fem2d::modes::edit::windows::model::NodeLiveField {
-                    node_id: node.id.clone(),
-                    displacement: [tx.displacement, ty.displacement],
-                    residual: [tx.residual, ty.residual],
-                    reaction: [tx.reaction, ty.reaction],
-                    contour: tx.contour.max(ty.contour),
-                    mode_shape: [tx.mode_estimate, ty.mode_estimate],
-                };
-                if let Some(target) = self.visual.fields.get_mut(self.visual_field_cursor) {
-                    *target = field;
-                } else {
-                    self.visual.fields.push(field);
+                    self.progress(b"fem2d.final-visual-requested")
                 }
-                self.visual_field_cursor += 1;
-                cx.consume_fuel(1);
-                self.progress(b"fem2d.visual-field-entry")
-            }
-            MountedStage::CommitReady => {
-                let validation = current_identity(self.identity.app_instance_id);
-                let store_is_current = self.snapshot.as_ref().is_some_and(|snapshot| snapshot.commit_authority_matches(self.identity.generation.0, self.identity.canonical_base_revision));
-                if validation != Some(self.identity) || !store_is_current || self.cancel.is_cancelled_now() {
-                    return self.fail(b"fem2d.session-stale-commit".to_vec());
+                MountedStage::PublishFinalVisual => {
+                    let validation = current_identity(self.identity.app_instance_id);
+                    let store_is_current = self.snapshot.as_ref().is_some_and(|snapshot| snapshot.commit_authority_matches(self.identity.generation.0, self.identity.canonical_base_revision));
+                    if validation != Some(self.identity) || !store_is_current || self.cancel.is_cancelled_now() {
+                        return self.fail(b"fem2d.session-stale-final-visual".to_vec());
+                    }
+                    self.stage = MountedStage::Complete;
+                    let mut output = Vec::with_capacity(32);
+                    output.extend_from_slice(&self.identity.operation.0.to_le_bytes());
+                    output.extend_from_slice(&self.identity.base_revision.0.to_le_bytes());
+                    output.extend_from_slice(&self.identity.generation.0.to_le_bytes());
+                    output.extend_from_slice(&(self.admitted_items as u64).to_le_bytes());
+                    cx.consume_fuel(1);
+                    JobStep::Done(output)
                 }
-                self.visual.validated_final = self.visual.converged;
-                self.visual.state = if self.visual.validated_final { FemVisualState::ValidatedFinal } else { FemVisualState::SolvingUnconverged };
-                self.visual_dirty = true;
-                self.stage = MountedStage::PublishFinalVisual;
-                cx.consume_fuel(1);
-                self.progress(b"fem2d.final-visual-requested")
+                MountedStage::Complete => JobStep::Done(Vec::new()),
+                MountedStage::Fault => JobStep::Failed(self.fault.clone().unwrap_or_else(|| b"fem2d.session-fault".to_vec())),
+                MountedStage::Closing | MountedStage::Empty => JobStep::Failed(b"fem2d.session-closed".to_vec()),
             }
-            MountedStage::PublishFinalVisual => {
-                let validation = current_identity(self.identity.app_instance_id);
-                let store_is_current = self.snapshot.as_ref().is_some_and(|snapshot| snapshot.commit_authority_matches(self.identity.generation.0, self.identity.canonical_base_revision));
-                if validation != Some(self.identity) || !store_is_current || self.cancel.is_cancelled_now() {
-                    return self.fail(b"fem2d.session-stale-final-visual".to_vec());
-                }
-                self.stage = MountedStage::Complete;
-                let mut output = Vec::with_capacity(32);
-                output.extend_from_slice(&self.identity.operation.0.to_le_bytes());
-                output.extend_from_slice(&self.identity.base_revision.0.to_le_bytes());
-                output.extend_from_slice(&self.identity.generation.0.to_le_bytes());
-                output.extend_from_slice(&(self.admitted_items as u64).to_le_bytes());
-                cx.consume_fuel(1);
-                JobStep::Done(output)
-            }
-            MountedStage::Complete => JobStep::Done(Vec::new()),
-            MountedStage::Fault => JobStep::Failed(self.fault.clone().unwrap_or_else(|| b"fem2d.session-fault".to_vec())),
-            MountedStage::Closing | MountedStage::Empty => JobStep::Failed(b"fem2d.session-closed".to_vec()),
-        }
+        })();
+        self.preview_sequence = preview_sequence;
+        result
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
@@ -1597,7 +1647,7 @@ impl MountedState {
                         self.visual.fields.pop();
                         return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
                     }
-                    let bytes = self.visual.fields.capacity() * std::mem::size_of::<crate::model::NodeLiveField>();
+                    let bytes = self.visual.fields.capacity() * std::mem::size_of::<crate::editor::fem2d::modes::edit::windows::model::NodeLiveField>();
                     if bytes != 0 {
                         if bytes > maximum_bytes {
                             return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
@@ -1845,7 +1895,7 @@ impl SnapshotAdmissionCursor {
                     return Err(b"fem2d.session-node-capacity");
                 }
                 match snapshot.nodes.get(self.outer) {
-                    Some(node) => Some(bounded_string_capacities(&[&node.id, &node.name])?),
+                    Some(node) => Some(bounded_string_capacities(&[&node.id])?),
                     None => None,
                 }
             }
@@ -1854,9 +1904,7 @@ impl SnapshotAdmissionCursor {
                     return Err(b"fem2d.session-element-capacity");
                 }
                 match snapshot.elements.get(self.outer) {
-                    Some(FemElement::Bar { id, name, start, end, material_id, section_id }) | Some(FemElement::Beam { id, name, start, end, material_id, section_id }) => {
-                        Some(bounded_string_capacities(&[id, name, start, end, material_id, section_id])?)
-                    }
+                    Some(FemElement::Bar { id, start, end, material_id, section_id }) | Some(FemElement::Beam { id, start, end, material_id, section_id }) => Some(bounded_string_capacities(&[id, start, end, material_id, section_id])?),
                     None => None,
                 }
             }

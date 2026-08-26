@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "routes": [
+    {
+      "controller": "s.fem.fem2d@1/*#editor",
+      "documentSchema": "fem.2d",
+      "payloadSchema": "fem.2d.tool-command.v1",
+      "maximumRawBytes": 8192,
+      "maximumWorkItems": 4096,
+      "actions": [
+        "setAnalysisSettings",
+        "setCamera",
+        "setResultDisplay",
+        "setLocale"
+      ]
+    },
+    {
+      "controller": "s.fem.fem3d@1/*#editor",
+      "documentSchema": "fem.3d",
+      "payloadSchema": "fem.3d.tool-command.v1",
+      "maximumRawBytes": 8192,
+      "maximumWorkItems": 4096,
+      "actions": [
+        "setAnalysisSettings",
+        "setCamera",
+        "setResultDisplay"
+      ]
+    }
+  ]
+}

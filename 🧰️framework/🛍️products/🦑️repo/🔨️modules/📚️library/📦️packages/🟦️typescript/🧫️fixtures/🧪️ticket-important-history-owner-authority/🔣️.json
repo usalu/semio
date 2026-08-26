@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "closed-nonzero",
+      "ownerClaimed": true,
+      "manifestState": "closed",
+      "sourceByteLength": 7,
+      "expectedDisposition": "project",
+      "expectedDestinationSuffix": "📓️important/📝️.md"
+    },
+    {
+      "id": "invalid-manifest-nonzero",
+      "ownerClaimed": true,
+      "manifestState": "invalid",
+      "sourceByteLength": 7,
+      "expectedDisposition": "project",
+      "expectedDestinationSuffix": "📓️important/📝️.md"
+    },
+    {
+      "id": "missing-manifest-nonzero",
+      "ownerClaimed": true,
+      "manifestState": "missing",
+      "sourceByteLength": 7,
+      "expectedDisposition": "project",
+      "expectedDestinationSuffix": "📓️important/📝️.md"
+    },
+    {
+      "id": "missing-manifest-zero",
+      "ownerClaimed": true,
+      "manifestState": "missing",
+      "sourceByteLength": 0,
+      "expectedDisposition": "project",
+      "expectedDestinationSuffix": "📓️important/📝️.md"
+    },
+    {
+      "id": "open-nonzero",
+      "ownerClaimed": true,
+      "manifestState": "open",
+      "sourceByteLength": 7,
+      "expectedDisposition": "unclaimed",
+      "expectedDestinationSuffix": null
+    },
+    {
+      "id": "closed-zero",
+      "ownerClaimed": true,
+      "manifestState": "closed",
+      "sourceByteLength": 0,
+      "expectedDisposition": "unclaimed",
+      "expectedDestinationSuffix": null
+    },
+    {
+      "id": "counterfeit-owner",
+      "ownerClaimed": false,
+      "manifestState": "missing",
+      "sourceByteLength": 7,
+      "expectedDisposition": "unclaimed",
+      "expectedDestinationSuffix": null
+    }
+  ]
+}

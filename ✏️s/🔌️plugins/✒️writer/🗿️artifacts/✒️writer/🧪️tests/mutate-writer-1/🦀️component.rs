@@ -20,10 +20,9 @@
 //! `kinds_match_the_enum_and_the_catalog` keeps that honest.
 //!
 //! **Why `edit-text` needs one extra step and the other three do not.** `WriterSnapshot::document`
-//! is a composed `s.stdio.semio.document` child HANDLE, and the live body behind that handle lives
-//! in a thread-local working-scene cache rather than in the snapshot. `edit-text`'s diff oracle
-//! reads the current body off that cache to decide whether the edit is a no-op, so the handler
-//! seeds it before applying. The body it seeds is the committed payload's OWN `text` — that is
+//! is a composed `s.stdio.semio.document` child HANDLE, and its live body is local-only content
+//! owned by that exact handle. `edit-text`'s diff oracle reads the current body to decide whether
+//! the edit is a no-op, so the handler materializes it before applying. The body is the committed payload's OWN `text` — that is
 //! sound for exactly this vector and no other, because `warns-that-the-brief-body-is-unchanged` is
 //! by construction the case where the payload repeats the body already behind the handle. It is
 //! derived from the committed bytes, never transcribed beside them.
@@ -61,9 +60,11 @@ const EXAMPLE_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/�
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law;
-    use semio_s_plugin_writer::artifacts::writer::cache_writer_document_text;
+    use semio_s_plugin_writer::artifacts::writer::attach_writer_document_text;
     use semio_s_plugin_writer::artifacts::writer::standards::v1::subsets::any::io::snapshot::text::{parse_writer_dsl, print_writer_dsl};
-    use semio_s_plugin_writer::artifacts::writer::standards::v1::subsets::any::schema::mutations::{apply_writer_mutation_outcome, decode_writer_mutation_json, decode_writer_snapshot_json, encode_writer_snapshot_json, inverse_writer_mutation_steps, WriterMutation};
+    use semio_s_plugin_writer::artifacts::writer::standards::v1::subsets::any::schema::mutations::{
+        apply_writer_mutation_outcome, decode_writer_mutation_json, decode_writer_snapshot_json, encode_writer_snapshot_json, inverse_writer_mutation_steps, WriterMutation,
+    };
     use semio_s_plugin_writer::artifacts::writer::WriterSnapshot;
 
     //#region 🔖️VectorReading
@@ -95,12 +96,11 @@ mod subject {
         parse_json(&encode_writer_snapshot_json(snapshot))
     }
 
-    /// 🌱 Seeds the working-scene cache behind the before-snapshot's document handle with the
-    /// committed payload's own body, for the one kind whose diff oracle reads it. See this file's
-    /// module doc for why that is sound for `edit-text`'s vector specifically.
-    fn seed_working_scene(snapshot: &WriterSnapshot, mutation: &WriterMutation) {
+    /// 🌱 Materializes the before-snapshot's exact document handle with the committed payload's
+    /// body for the one kind whose diff oracle reads it.
+    fn seed_working_scene(snapshot: &mut WriterSnapshot, mutation: &WriterMutation) {
         if let WriterMutation::EditText(payload) = mutation {
-            cache_writer_document_text(&snapshot.document.child_id, &payload.text);
+            attach_writer_document_text(&mut snapshot.document, &payload.text);
         }
     }
 
@@ -116,11 +116,11 @@ mod subject {
     /// for every kind not named in `GUARD_VECTORS` — the mutation actually moved the projection.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let (kind, vector) = addressed(ctx)?;
-        let base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️component.json", &kind)?;
+        let mut base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️component.json", &kind)?;
         let expected = snapshot_at(ctx, &vector, "📸️snapshot/➡️after/🔣️component.json", &kind)?;
         let mutation = mutation_at(ctx, &vector, &kind)?;
         let declared = parse_json(&text_at(ctx, &vector, "🎯️outcome/🔣️component.json")?)?;
-        seed_working_scene(&base, &mutation);
+        seed_working_scene(&mut base, &mutation);
         let mut current = base.clone();
         let outcome = apply_writer_mutation_outcome(&mut current, &mutation);
         let raised: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
@@ -143,9 +143,9 @@ mod subject {
     /// tolerance and no ignored key.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let (kind, vector) = addressed(ctx)?;
-        let base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️component.json", &kind)?;
+        let mut base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️component.json", &kind)?;
         let mutation = mutation_at(ctx, &vector, &kind)?;
-        seed_working_scene(&base, &mutation);
+        seed_working_scene(&mut base, &mutation);
         let original = projection(&base)?;
         let mut current = base.clone();
         apply_writer_mutation_outcome(&mut current, &mutation);

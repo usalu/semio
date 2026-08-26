@@ -8,7 +8,7 @@
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::{artifact_kind, Procedural3dSnapshot, PROCEDURAL_3D_SCHEMA};
 use crate::editor::procedural3d::commands::{
-    add_generation, add_widget, delete_selection, flow_eval_resolve, flow_eval_tick, flow_tessellate_resolve, graph_pointer_down, move_media_node, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget,
+    add_generation, add_widget, delete_selection, flow_eval_tick, graph_pointer_down, move_media_node, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget,
     rename_generation, reorganize, rotate_selection, scale_selection, select_generation, set_active_example, set_active_utility, set_camera, set_locale, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun,
     translate_selection, update_generation_values, world_pointer_down,
 };
@@ -87,9 +87,7 @@ semio_framework_plugin::app_commands! {
         "selectGeneration" as "select-generation" => select_generation::SelectGeneration,
         "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
         "setLocale" as "locale" => set_locale::SetLocale,
-        "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick,
-        "flowEvalResolve" as "flow-eval-resolve" => flow_eval_resolve::FlowEvalResolve,
-        "flowTessellateResolve" as "flow-tessellate-resolve" => flow_tessellate_resolve::FlowTessellateResolve}
+        "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick}
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
@@ -202,25 +200,26 @@ impl ArtifactEditor for Procedural3dPlayApp {
             "setCamera" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "selectGeneration" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "setActiveUtility" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setLocale" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "flowEvalTick" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
         }
     }
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::procedural3d::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> Procedural3dSnapshot {
+    fn initial_snapshot() -> Procedural3dSnapshot {
         crate::artifacts::procedural3d::schema::default_snapshot()
     }
 
-    async fn io() -> Option<semio_framework_plugin::AppIo> {
-        Some(procedural3d_io().await)
+    fn io() -> Option<semio_framework_plugin::AppIo> {
+        Some(semio_framework::io::resolve_ready(procedural3d_io()))
     }
 
     /// 🎞️ `geometry:out` plus the inherited `document:out` default, replicated inline (overriding
     /// `export_media` shadows the trait's provided body for every port on this app).
-    async fn export_media(port: &str, doc: &ArtifactView<'_, Procedural3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, Procedural3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
             "geometry:out" => {
                 let mesh = export_mesh_from_document(doc.snapshot);
@@ -230,7 +229,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
                 })
             }
             "document:out" => {
-                let media_type = Self::io().await.map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
                 Ok(semio_framework_plugin::Media { media_type, payload: semio_framework_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -240,7 +239,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
 
     /// 🎞️ `"params:in"` — patches matching `InputSlider` widgets from a `{widgetId: number}` JSON
     /// object; unmatched keys/non-slider widgets are silently ignored.
-    async fn import_media(port: &str, media: &semio_framework_plugin::Media, doc: &ArtifactView<'_, Procedural3dSnapshot>) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &semio_framework_plugin::Media, doc: &ArtifactView<'_, Procedural3dSnapshot>) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "params:in" => {
                 let semio_framework_plugin::MediaPayload::Structured { json, .. } = &media.payload else {
@@ -264,14 +263,14 @@ impl ArtifactEditor for Procedural3dPlayApp {
         }
     }
 
-    async fn command_id(command: &Procedural3dCommand) -> &'static str {
+    fn command_id(command: &Procedural3dCommand) -> &'static str {
         command.command_id()
     }
 
     /// 🎯️ Maps host action id + JSON args onto `Procedural3dCommand` — preserved verbatim from the
     /// pre-migration hand-rolled dispatch so React/wgpu callers that still speak the stringly
     /// `{action,args}` wire (rather than `OpBinary` bytes) keep working unchanged.
-    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let args = args.cloned().unwrap_or(Value::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         let string_list = |key: &str| -> Vec<String> { args.get(key).and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect()).unwrap_or_default() };
@@ -358,14 +357,6 @@ impl ArtifactEditor for Procedural3dPlayApp {
             "setActiveUtility" => Ok(Procedural3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: str_arg(&["utilityId", "utility_id"]).unwrap_or_default() })),
             "setLocale" => Ok(Procedural3dCommand::SetLocale(set_locale::SetLocale { value: str_arg(&["value", "locale"]).unwrap_or_default() })),
             "flowEvalTick" => Ok(Procedural3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {})),
-            "flowEvalResolve" => Ok(Procedural3dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve {
-                node_hash: args.get("nodeHash").or_else(|| args.get("node_hash")).and_then(Value::as_u64).unwrap_or(0),
-                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_else(|| "{}".into()),
-            })),
-            "flowTessellateResolve" => Ok(Procedural3dCommand::FlowTessellateResolve(flow_tessellate_resolve::FlowTessellateResolve {
-                node_hash: args.get("nodeHash").or_else(|| args.get("node_hash")).and_then(Value::as_u64).unwrap_or(0),
-                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_else(|| "{}".into()),
-            })),
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
@@ -377,7 +368,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
     /// interaction domain directly (bypassing the `app_commands!`-generated `dispatch`, whose
     /// per-row `$module::handle(payload, doc, cfg, ctx)` signature is framework-fixed and has no
     /// `interaction` slot) — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
-    async fn handle(
+    fn handle(
         command: &Procedural3dCommand,
         doc: &ArtifactView<'_, Procedural3dSnapshot>,
         cfg: &ConfigView<'_, Procedural3dConfig>,
@@ -400,7 +391,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
     /// parented to its owning cluster's widget id — the DAG-parent-links transitive-hover source: hovering
     /// a Cluster's own tree item transitively covers every widget nested inside it). Synapses become
     /// "edge" targets, parented to nothing (edges are leaves, not containers).
-    async fn interaction_topology(doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>) -> InteractionTopology {
         fn walk_neuron(neuron: &flow::neural::Neuron, parent: String, ordered: &mut Vec<TopologyNode>) {
             ordered.push(TopologyNode { id: neuron.id.clone(), granularity: "node".into(), parent: Some(parent) });
             if let Some(tree) = &neuron.tree {
@@ -429,7 +420,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
     }
 
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes.
-    async fn pending_effects(doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>) -> Vec<Effect> {
+    fn pending_effects(doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>) -> Vec<Effect> {
         with_process_flow_eval_session(|session| {
             let host = flow::flow_host_with_session(&doc.snapshot.fixture, session);
             if session.sync(&host) {
@@ -440,7 +431,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
         })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = procedural3d_labels(config);
@@ -463,7 +454,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
         Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 
-    async fn window_measures(_doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let measures = edit_preview::preview_window_measures(config, procedural3d_action);
         HashMap::from([
@@ -480,32 +471,34 @@ impl ArtifactEditor for Procedural3dPlayApp {
     /// 🕹️ `context_menu` carries no `InteractionView` either (same gap as `render` — see ticket
     /// 26/08/14's w3b-summary.md), so the selection-dependent rows below always take the "nothing
     /// selected" branch rather than reading a stale/wrong selection.
-    async fn context_menu(
+    fn context_menu(
         request: &semio_framework_plugin::ContextMenuRequest,
         _doc: &ArtifactView<'_, Procedural3dSnapshot>,
         cfg: &ConfigView<'_, Procedural3dConfig>,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
-        let config = cfg.snapshot;
-        let labels = procedural3d_labels(config);
-        let is_de = config.locale.starts_with("de");
-        let selected: Vec<String> = Vec::new();
-        let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]).await;
-        let has_selection = !nodes.is_empty() || !edges.is_empty();
-        let mut menu = Menu::of(registry).await.action("reorganize").await;
-        if has_selection {
-            menu = menu.action("translateSelection").await.action("rotateSelection").await.action("scaleSelection").await;
-        }
-        menu = menu.group("create", |m| async { m.action("addWidget").await.action("addGeneration").await }).await;
-        if has_selection {
-            menu = menu.group("targets", |m| async { m.action("removeWidget").await.action("removeGeneration").await }).await;
-        }
-        menu = menu.group("methods", |m| async { m.action("renameGeneration").await.action("updateGenerationValues").await.action("patchFlowWidgets").await }).await;
-        if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit).await {
-            menu = menu.item(spec).await;
-        }
-        menu.build().await
+        semio_framework::io::resolve_ready(async {
+            let config = cfg.snapshot;
+            let labels = procedural3d_labels(config);
+            let is_de = config.locale.starts_with("de");
+            let selected: Vec<String> = Vec::new();
+            let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]).await;
+            let has_selection = !nodes.is_empty() || !edges.is_empty();
+            let mut menu = Menu::of(registry).await.action("reorganize").await;
+            if has_selection {
+                menu = menu.action("translateSelection").await.action("rotateSelection").await.action("scaleSelection").await;
+            }
+            menu = menu.group("create", |m| async { m.action("addWidget").await.action("addGeneration").await }).await;
+            if has_selection {
+                menu = menu.group("targets", |m| async { m.action("removeWidget").await.action("removeGeneration").await }).await;
+            }
+            menu = menu.group("methods", |m| async { m.action("renameGeneration").await.action("updateGenerationValues").await.action("patchFlowWidgets").await }).await;
+            if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit).await {
+                menu = menu.item(spec).await;
+            }
+            menu.build().await
+        })
     }
 }
 //#endregion 🔖️Procedural3dPlayApp
@@ -561,6 +554,7 @@ pub fn create_procedural3d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"))
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
             .view_action("selectGeneration", LocalizedLabel::native("Set Generation", "Generation auswählen"))
+            .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::Migrated)
             .action_interactive_job("deleteSelection", InteractiveJobClassification::Migrated)
@@ -587,6 +581,9 @@ pub fn create_procedural3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("selectGeneration", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveUtility", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
+            .action_interactive_job("flowEvalTick", InteractiveJobClassification::Migrated)
             .action_args("addWidget", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
                     ActionArgOption::new("neuron", LocalizedLabel::native("Neuron", "Neuron")),
@@ -639,7 +636,7 @@ pub fn create_procedural3d_app() -> semio_framework_plugin::AppDefinition {
             .window_kind_interactions(generate_preview::PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW, vec![InteractionRef::new("graph")])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            .config(semio_framework::io::resolve_ready(Procedural3dPlayApp::config_spec()))
+            .config(Procedural3dPlayApp::config_spec())
             .io(semio_framework::io::resolve_ready(procedural3d_io()))
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a
             // bare `AppDefinition`, not the old `App { definition, examples }` — there is no
@@ -1351,7 +1348,6 @@ mod tests {
             "active-utility",
             "locale",
             "flow-eval-tick",
-            "flow-eval-resolve",
         ];
         let commands = every_command();
         assert_eq!(commands.len(), expected_keywords.len(), "every_command() and expected_keywords must stay in the same declaration order");
@@ -1393,7 +1389,6 @@ mod tests {
             Procedural3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "rotate".into() }),
             Procedural3dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
             Procedural3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}),
-            Procedural3dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { node_hash: 42, output_json: "{}".into() }),
         ]
     }
     //#endregion 🔖️CommandSurface

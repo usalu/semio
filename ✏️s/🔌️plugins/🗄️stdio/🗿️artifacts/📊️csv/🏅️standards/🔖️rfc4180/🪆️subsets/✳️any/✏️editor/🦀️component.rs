@@ -98,14 +98,14 @@ impl ArtifactEditor for CsvEditor {
     const DIALECT: Dialect = CSV_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_CSV_DOCUMENT_SCHEMA;
 
-    async fn initial_snapshot() -> CsvSnapshot {
+    fn initial_snapshot() -> CsvSnapshot {
         CsvSnapshot::default()
     }
 
     /// ✏️ Maps the rendered grid's `row` back to `CsvSnapshot.records`' real index — `+1` when
     /// `has_header` (row 0 in the grid is `records[1]`), unchanged otherwise. Out-of-range is a
     /// documented no-op (`Emit::default()`), never a panic.
-    async fn handle(
+    fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -120,7 +120,7 @@ impl ArtifactEditor for CsvEditor {
         Ok(Emit { artifact_mutations: vec![CsvMutation::SetField { record_index, field_index: *column as usize, value: value.clone(), quoted }], description: Some(format!("Set cell {row},{column}")), ..Default::default() })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
             _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),

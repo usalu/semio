@@ -23,6 +23,32 @@
     {
       "id": "gisterrain-1-any",
       "capability": "gisterrain-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-exaggeration",
+          "sourceMutationDirectoryName": "🎚change-exaggeration",
+          "mutationDirectoryName": "🎚change-exaggeration",
+          "scenarios": [
+            {
+              "id": "raises-the-exaggeration-from-one-to-two-and-a-half",
+              "directoryName": "🧪️raises-the-exaggeration-from-one-to-two-and-a-half"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-imported-features",
+          "sourceMutationDirectoryName": "📥change-imported-features",
+          "mutationDirectoryName": "📥change-imported-features",
+          "scenarios": [
+            {
+              "id": "imports-a-single-harbor-position-descriptor",
+              "directoryName": "🧪️imports-a-single-harbor-position-descriptor"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "change-exaggeration",
         "change-imported-features"

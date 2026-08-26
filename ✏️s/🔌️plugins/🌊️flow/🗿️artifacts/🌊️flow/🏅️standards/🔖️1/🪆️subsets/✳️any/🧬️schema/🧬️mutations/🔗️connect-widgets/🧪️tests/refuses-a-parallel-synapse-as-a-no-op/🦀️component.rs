@@ -33,10 +33,10 @@ fn expected_after() -> FlowSnapshot {
 /// 🔗️ The committed `⬅️before`, with its composed child resolved to two widgets already joined by
 /// `synapse-1` on exactly the port pair the committed payload asks for again under a fresh id.
 fn before() -> FlowSnapshot {
-    let snapshot: FlowSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FlowSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let widgets = vec![Widget::InputNote { id: "note-alpha".into(), text: "Alpha".into() }, Widget::InputNote { id: "note-beta".into(), text: "Beta".into() }];
     let synapses = vec![SynapseSpec { id: "synapse-1".into(), from: "note-alpha".into(), to: "note-beta".into(), from_port: "out".into(), to_port: "in".into() }];
-    cache_flow_content(&snapshot.content.child_id, widgets, synapses, BTreeMap::new());
+    cache_flow_content(&mut snapshot.content, widgets, synapses, BTreeMap::new());
     snapshot
 }
 

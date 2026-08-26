@@ -28,11 +28,11 @@ pub mod derived_composition {
         type Snapshot = SemioDocumentSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT)
@@ -44,7 +44,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "SemioDocumentComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = SemioDocumentAnalyzer::analyze(&native).await;
+            let analysis = SemioDocumentAnalyzer::analyze(&native);
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "SemioDocumentComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -259,7 +259,7 @@ pub mod derived_composition {
             let snapshot = SemioDocumentSnapshot::default();
             let bytes = store::ArtifactPack::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = SemioDocumentComposerComposition::compose(&sources).await.expect("compose from native dialect");
+            let composed = SemioDocumentComposerComposition::compose(&sources).expect("compose from native dialect");
             assert_eq!(composed.snapshot, snapshot);
         }
 

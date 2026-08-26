@@ -102,6 +102,16 @@ mod tests {
         }
     }
 
+    /// 🧹 Retires the large fixed-page checkpoint in a frame disjoint from mounted session admission.
+    fn retire_checked_out_fill_checkpoint(session: &mut semio_framework_job::MountedWorkerJobSession<BoardFillJob>) {
+        let mut checkpoint = session.checked_out_job_mut().and_then(BoardFillJob::take_checkpoint).expect("field cursor checkpoint");
+        if let Some(mut placement) = checkpoint.take_pending_placement() {
+            while !placement.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {}
+            assert!(placement.terminal_is_empty());
+        }
+        close_fill_job(checkpoint.into_closing_job());
+    }
+
     fn run_fill_job(host: &BoardHost, count: u32, operation: Operation, worker_count: usize) -> (Vec<FillPlacementWitness>, Vec<u64>, infinite_canvas::BoardFillResult) {
         let job = BoardFillJob::with_operation(capture_fill_snapshot(host), count, operation);
         run_mounted_fill_job(job, worker_count)
@@ -210,7 +220,7 @@ mod tests {
         for _ in 0..FILL_TEST_PUMP_LIMIT {
             match pump_fill_session(&mut session, &pool) {
                 WorkerJobPoll::Submitted | WorkerJobPoll::Rejected | WorkerJobPoll::Idle => std::thread::yield_now(),
-                WorkerJobPoll::Outcome => {
+                WorkerJobPoll::Outcome | WorkerJobPoll::Terminal => {
                     let mut outcome = session.take_checked_out_outcome().expect("checkpoint outcome");
                     if matches!(outcome, StepOutcome::CheckpointReady(_)) {
                         checkpoint = session.checked_out_job_mut().and_then(BoardFillJob::take_checkpoint);
@@ -882,7 +892,7 @@ mod tests {
         for _ in 0..FILL_TEST_PUMP_LIMIT {
             match pump_fill_session(&mut session, &pool) {
                 WorkerJobPoll::Submitted | WorkerJobPoll::Rejected | WorkerJobPoll::Idle => std::thread::yield_now(),
-                WorkerJobPoll::Outcome => {
+                WorkerJobPoll::Outcome | WorkerJobPoll::Terminal => {
                     let mut outcome = session.take_checked_out_outcome().expect("field cursor outcome");
                     match &outcome {
                         StepOutcome::PreviewReady(_) => {
@@ -910,12 +920,7 @@ mod tests {
                             session.resume().expect("field cursor resume");
                         }
                         StepOutcome::CheckpointReady(_) => {
-                            let mut checkpoint = session.checked_out_job_mut().and_then(BoardFillJob::take_checkpoint).expect("field cursor checkpoint");
-                            if let Some(mut placement) = checkpoint.take_pending_placement() {
-                                while !placement.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {}
-                                assert!(placement.terminal_is_empty());
-                            }
-                            close_fill_job(checkpoint.into_closing_job());
+                            retire_checked_out_fill_checkpoint(&mut session);
                             while !outcome.terminal_is_empty() {
                                 let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
                             }
@@ -926,7 +931,7 @@ mod tests {
                         StepOutcome::Complete(_) | StepOutcome::Cancelled | StepOutcome::Fault(_) => panic!("field cursor job terminated before checkpoint"),
                     }
                 }
-                WorkerJobPoll::Terminal | WorkerJobPoll::Closing | WorkerJobPoll::TerminalEmpty | WorkerJobPoll::CheckedOut => panic!("field cursor session entered invalid phase"),
+                WorkerJobPoll::Closing | WorkerJobPoll::TerminalEmpty | WorkerJobPoll::CheckedOut => panic!("field cursor session entered invalid phase"),
             }
         }
         assert!(checkpointed);

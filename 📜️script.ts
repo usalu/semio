@@ -1,11 +1,14 @@
 #!/usr/bin/env bun
 /**
- * 🧭️ Monorepo command router: `bun ./📜️script.ts <verb> [segments…]` (e.g. `script.ts dev`, `script.ts dev mcp`, `script.ts generate neo4j compose`).
+ * 🧭️ Monorepo command router: `bun ./📜️script.ts <verb> [segments…]` (e.g. `script.ts dev`, `script.ts dev mcp`, `script.ts generate neo4j elements`).
  */
 import {
   Script,
   ScriptRouter,
   buildBudgetMs,
+  canonicalFilenameForKind,
+  canonicalFilenamesForKind,
+  canonicalStemmedFilenameForKind,
   coverageDir,
   coverageEnabled,
   daemonBudgetOpts,
@@ -16,8 +19,11 @@ import {
   dispatchPolicyArgv,
   dispatchSubcommand,
   defineLint,
+  fixedContractFilename,
+  fixedFilenameContractIdsForPath,
   loadTaxonomy,
   schemaFacetFormatEntries,
+  semanticDirectoryKindId,
   enforceCoverageThreshold,
   frameworkOsPlaygroundDevEnv,
   getWorkspaceRoot,
@@ -69,13 +75,22 @@ import {
   renderSemanticCensusMarkdown,
   renderSemanticDuplicatesJson,
   renderSemanticDuplicatesMarkdown,
-  renderSemanticTaxonomyReport,
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts";
+import {
+  applyTaxonomyPlan,
+  canonicalJson,
+  inventoryTaxonomy,
+  parseTaxonomyPlan,
+  planTaxonomy,
+  taxonomyPlanDigest,
+  verifyTaxonomy,
+} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
 import { createHash } from "node:crypto";
-import { existsSync, linkSync, lstatSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, linkSync, lstatSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { builtinModules } from "node:module";
-import { dirname, extname, join, relative, resolve, sep } from "node:path";
+import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import Ajv from "ajv";
 import { createServer } from "node:net";
 import { stat } from "node:fs/promises";
 import { resolveActiveScopes, STORY_SCOPES } from "./.storybook/scopes.ts";
@@ -98,7 +113,7 @@ const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, "./🧰️framework/🛍️pro
 const REPO_CLIENT_DIR = join("🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "💻️client");
 const REPO_CLIENT_GO = join(REPO_CLIENT_DIR, "⌨️cli");
 const REPO_MCP_GO = join(REPO_CLIENT_DIR, "🔌️mcp");
-process.env.NX_ISOLATE_PLUGINS ??= "false";
+process.env.NX_ISOLATE_PLUGINS = "false";
 
 /** 🦑️Builds the repo MCP client from the current source before execution. */
 function buildRepoMcpClient(root: string): string {
@@ -144,7 +159,7 @@ function runFrameworkOsPlaygroundDev(plugin: string, rest: string[] = []): void 
 export class NativeOsScript extends Script {
   run(segments: string[]): void {
     const cmd = segments[0] ?? "setup";
-    const env = { ...process.env, COMPOSE_REPO_ROOT: this.root };
+    const env = { ...process.env };
     if (process.platform === "win32") {
       const ps1 = join(NATIVE_BOOTSTRAP_DIR, "🪟️script.ps1");
       if (!existsSync(ps1)) {
@@ -458,7 +473,7 @@ export class DevScript extends Script {
       console.error(`[dev] unknown playground app ${JSON.stringify(segments.join(" "))} — regenerate the catalog with bun nx run @semio-tech/plugin-registry:generate if the variant should exist.`);
       process.exit(1);
     }
-    runCmd("bun", ["nx", "run", "@semio-tech/compose-desktop:dev"], { cwd: this.root, ...daemonBudgetOpts() });
+    runFrameworkOsPlaygroundDev("s");
   }
 
   private parseStorybookSegments(segments: string[]): { scope: string; args: string[] } {
@@ -473,8 +488,8 @@ export class DevScript extends Script {
       parsingScope = false;
       if (segment !== "--") args.push(segment);
     }
-    // A single scope arg may itself be a comma-list composing top-level scopes ("ui,compose/algorithm").
-    // Multiple space-separated args keep the old slash-join behavior for hierarchical nx targets ("compose" "algorithm" -> "compose/algorithm").
+    // A single scope arg may itself be a comma-list of top-level scopes ("ui,framework/os").
+    // Multiple space-separated args keep slash-join behavior for hierarchical scopes ("framework" "os" -> "framework/os").
     const scope = scopeSegments.length === 1 && scopeSegments[0]!.includes(",") ? scopeSegments[0]! : scopeSegments.join("/");
     const scopeIds = scope
       ? scope
@@ -555,10 +570,6 @@ export class DevScript extends Script {
 
   private runMcp(segments: string[]): void {
     const a = segments[0];
-    if (a === "engine") {
-      runCmd("bun", [join(this.root, "compose", "client", "bin", "engine", "📜️script.ts"), "dev", "mcp"], { cwd: this.root, ...daemonBudgetOpts() });
-      return;
-    }
     if (a === "neo4j") {
       this.runMcpNeo4j(segments.slice(1));
       return;
@@ -597,7 +608,7 @@ export class DevScript extends Script {
   private runMcpNeo4j(neoSegments: string[]): void {
     const { nameParts, passthrough } = partitionNeo4jGraphCliArgv(neoSegments);
     const hasName = nameParts.length > 0;
-    const graphDatabase = hasName ? joinNeo4jGraphDatabaseName(nameParts) : process.env.NEO4J_DATABASE || "compose";
+    const graphDatabase = hasName ? joinNeo4jGraphDatabaseName(nameParts) : process.env.NEO4J_DATABASE || defaultNeo4jGraphDatabaseName();
     const args = [...passthrough];
     if (hasName && !args.includes("--namespace")) args.push("--namespace", graphDatabase);
     runCmd("uvx", ["mcp-neo4j-cypher", ...args], {
@@ -655,6 +666,27 @@ export class NxScript extends Script {
 function taxonomyOption(args: readonly string[], name: string): string | undefined {
   const index = args.indexOf(name);
   return index >= 0 ? args[index + 1] : undefined;
+}
+
+function taxonomyContractFilename(taxonomy: ReturnType<typeof loadTaxonomy>, contractId: string): string {
+  const fixed = taxonomy.fixedFilenameContracts[contractId];
+  const filename = fixed ? fixedContractFilename(fixed) : taxonomy.configurableEntryContracts[contractId]?.filename;
+  if (!filename) throw new Error(`[taxonomy] unknown filename contract ${JSON.stringify(contractId)}.`);
+  return filename;
+}
+
+function taxonomyContractFilenames(taxonomy: ReturnType<typeof loadTaxonomy>, contractIds: readonly string[]): string[] {
+  return contractIds.map((contractId) => taxonomyContractFilename(taxonomy, contractId));
+}
+
+function taxonomyMappedFilename(taxonomy: ReturnType<typeof loadTaxonomy>, mapping: Readonly<Record<string, string>>, key: string, stem: "component" | "test"): string {
+  const fileKindId = mapping[key];
+  if (!fileKindId) throw new Error(`[taxonomy] no file-kind mapping for ${JSON.stringify(key)}.`);
+  return canonicalStemmedFilenameForKind(fileKindId, stem, taxonomy);
+}
+
+function taxonomyEcosystemEntryFilenames(taxonomy: ReturnType<typeof loadTaxonomy>, ecosystemId: string): string[] {
+  return taxonomyContractFilenames(taxonomy, taxonomy.ecosystems[ecosystemId]?.entryContractIds ?? []);
 }
 
 /** 🎫️ Resolves a ticket id through actual Unicode directory entries instead of constructing emoji mounts. */
@@ -783,7 +815,7 @@ export class LintScript extends Script {
       return;
     }
     runCmd("bun", ["nx", "run-many", "-t", "lint", "--all", "--exclude", "workspace"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    runCmd("bunx", ["dependency-cruiser", "compose", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
+    runCmd("bunx", ["dependency-cruiser", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
   }
 }
 //#endregion 🔖️LintScript
@@ -844,6 +876,8 @@ type ToolJobCoverageReport = {
   frameworkReservedRoutes: { id: string; status: "failClosedPendingFactory" }[];
   reservedImporterOwners: { owner: string; file: string; id: "import-media"; status: "failClosedPendingFactory" }[];
   globalPayloadStores: GlobalPayloadStoreInventoryRow[];
+  globalPayloadStoreExemptions: GlobalPayloadStoreInventoryRow[];
+  scanThenMonolithRows: { file: string; id: string; helper: string }[];
   literalRegistrations: number;
   acceptedCommandRows: ToolJobStaticRow[];
   acceptedReservedRoutes: string[];
@@ -903,11 +937,34 @@ function toolJobRustBlock(source: string, open: number): { body: string; end: nu
 
 type ToolJobStaticRow = { file: string; id: string; source: "literal" | "macro" };
 
+type ToolJobAppOwnedRow = { ownerFile: string; factoryFile: string; ownerTypeName: string; factory: string; toolId: string };
+
 type GlobalPayloadStoreKind = "child-content-scratch" | "resizable-operation-registry" | "fixed-operation-registry" | "abi-bridge-retention" | "mutable-entropy" | "mutable-payload";
 type GlobalPayloadStoreOwner = { name: string; rustType: string; kind: GlobalPayloadStoreKind };
 type GlobalPayloadStoreInventoryRow = { file: string; line: number; text: string; owners: GlobalPayloadStoreOwner[] };
 
-const TOOL_JOB_FRAMEWORK_RESERVED_IDS = ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint", "revertToCommand", "configuration-binary"] as const;
+const TOOL_JOB_FRAMEWORK_RESERVED_IDS = [
+  "undo",
+  "redo",
+  "commitCheckpoint",
+  "createAlternative",
+  "switchAlternative",
+  "checkoutCheckpoint",
+  "revertToCommand",
+  "copy",
+  "cut",
+  "paste",
+  "noteShellCommand",
+  "setHistoryCommandFilter",
+  "recordTutorial",
+  "clearSelection",
+  "interactionHover",
+  "interactionSelect",
+  "selectAll",
+  "setInteractionGranularity",
+  "setSelectionMode",
+  "configuration-binary",
+] as const;
 const TOOL_JOB_PLUGIN_RESERVED_IDS = ["copy", "cut", "paste", "import-media"] as const;
 const TOOL_JOB_RESERVED_IDS = [...TOOL_JOB_FRAMEWORK_RESERVED_IDS, ...TOOL_JOB_PLUGIN_RESERVED_IDS] as const;
 const TOOL_JOB_IMPORTER_INVENTORY = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/EVERY-TOOL-INTERACTIVE-JOB-MIGRATION/📊️p8yj-importer-cohorts.json";
@@ -989,9 +1046,26 @@ function toolJobGlobalPayloadStoreInventory(files: ReadonlyMap<string, string>):
   return rows;
 }
 
+/** 🗄️ Exempts only the shared, executable operation/generation registry contract. Bespoke arrays,
+ * registries, aliases, and annotation-only claims remain blockers until they use this authority. */
+function toolJobGlobalPayloadStoreIsSharedFixedAuthority(row: GlobalPayloadStoreInventoryRow): boolean {
+  return (
+    row.owners.length > 0 &&
+    row.owners.every(
+      (owner) =>
+        owner.kind === "fixed-operation-registry" &&
+        /(?:OnceLock\s*<\s*(?:std::sync::)?Mutex\s*<|RefCell\s*<)\s*semio_framework_job::FixedOperationRegistry\s*</.test(owner.rustType),
+    )
+  );
+}
+
 /** 🎯️ Enumerates macro and ordinary builder registrations without trusting a manifest disposition. */
 function toolJobStaticRows(files: ReadonlyMap<string, string>): ToolJobStaticRow[] {
   const rows: ToolJobStaticRow[] = [];
+  const constants = new Map<string, string>();
+  for (const source of files.values()) {
+    for (const match of source.matchAll(/(?:pub(?:\([^)]*\))?\s+)?const\s+([A-Z][A-Z0-9_]*)\s*:\s*&(?:'static\s+)?str\s*=\s*"([^"]+)"/g)) constants.set(match[1]!, match[2]!);
+  }
   for (const [file, source] of files) {
     const invocation = /^\s*(?:[A-Za-z_][A-Za-z0-9_]*::)*app_commands!\s*\{/gm;
     let match: RegExpExecArray | null;
@@ -1003,12 +1077,92 @@ function toolJobStaticRows(files: ReadonlyMap<string, string>): ToolJobStaticRow
       while ((item = row.exec(block.body))) rows.push({ file, id: item[1]!, source: "macro" });
       invocation.lastIndex = block.end;
     }
+    const typedVariants = /^\s*[A-Za-z_][A-Za-z0-9_]*_command_variants!\s*\{/gm;
+    while ((match = typedVariants.exec(source))) {
+      const block = toolJobRustBlock(source, source.indexOf("{", match.index));
+      if (!block) break;
+      const row = /^\s*[A-Za-z_][A-Za-z0-9_]*\s*=\s*(?:"([^"]+)"|(?:[A-Za-z_][A-Za-z0-9_]*::)*([A-Z][A-Z0-9_]*))\s*,?/gm;
+      let item: RegExpExecArray | null;
+      while ((item = row.exec(block.body))) {
+        const id = item[1] ?? constants.get(item[2] ?? "");
+        if (id) rows.push({ file, id, source: "literal" });
+      }
+      typedVariants.lastIndex = block.end;
+    }
     const literal = /\.(?:mutation|operation|view_action|shell_action)\(\s*"([^"]+)"|\.action_with\(\s*ActionDefinition(?:\s*\{[\s\S]{0,300}?\.\.)?::(?:new_catalog|bounded_catalog|new)\(\s*"([^"]+)"|\.(?:app_command|command_with)\(\s*CommandDefinition::(?:new_catalog|bounded_catalog|new)\(\s*"([^"]+)"/g;
     while ((match = literal.exec(source))) rows.push({ file, id: match[1] ?? match[2] ?? match[3]!, source: "literal" });
   }
   const unique = new Map<string, ToolJobStaticRow>();
   for (const row of rows) unique.set(`${row.file}\0${row.id}`, row);
   return [...unique.values()].sort((left, right) => left.file.localeCompare(right.file) || left.id.localeCompare(right.id));
+}
+
+/** 🧩️ Enumerates only command rows backed by an explicitly registered app-owned factory and builder. */
+function toolJobAppOwnedRows(files: ReadonlyMap<string, string>): ToolJobAppOwnedRow[] {
+  const stringConstants = new Map<string, Map<string, string>>();
+  const listConstants = new Map<string, Map<string, string[]>>();
+  for (const [file, source] of files) {
+    const strings = new Map<string, string>();
+    for (const match of source.matchAll(/(?:pub(?:\([^)]*\))?\s+)?const\s+([A-Z][A-Z0-9_]*)\s*:\s*&(?:'static\s+)?str\s*=\s*"([^"]+)"/g)) strings.set(match[1]!, match[2]!);
+    stringConstants.set(file, strings);
+    const lists = new Map<string, string[]>();
+    for (const match of source.matchAll(/(?:pub(?:\([^)]*\))?\s+)?const\s+([A-Z][A-Z0-9_]*)\s*:\s*&(?:'static\s+)?\[\s*&(?:'static\s+)?str\s*\]\s*=\s*&\[([^\]]*)\]\s*;/gs)) {
+      const ids: string[] = [];
+      for (const item of match[2]!.split(",")) {
+        const literal = item.match(/"([^"]+)"/)?.[1];
+        const constant = item.trim().match(/^(?:[A-Za-z_][A-Za-z0-9_]*::)*([A-Z][A-Z0-9_]*)$/)?.[1];
+        const id = literal ?? strings.get(constant ?? "");
+        if (id) ids.push(id);
+      }
+      lists.set(match[1]!, ids);
+    }
+    listConstants.set(file, lists);
+  }
+  const ownerFiles = new Map<string, { file: string; body: string }>();
+  for (const [file, source] of files) {
+    const owner = /impl\s+(?:semio_framework_plugin::)?ArtifactEditor\s+for\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/g;
+    let match: RegExpExecArray | null;
+    while ((match = owner.exec(source))) {
+      const open = source.indexOf("{", match.index);
+      const block = toolJobRustBlock(source, open);
+      if (!block) break;
+      ownerFiles.set(match[1]!, { file, body: block.body });
+      owner.lastIndex = block.end;
+    }
+  }
+  const production = [...files.values()].join("\n");
+  const rows: ToolJobAppOwnedRow[] = [];
+  for (const [factoryFile, source] of files) {
+    const implementation = /impl\s+(?:semio_framework_plugin::)?ArtifactOwnedToolJobFactory\s+for\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/g;
+    let match: RegExpExecArray | null;
+    while ((match = implementation.exec(source))) {
+      const factory = match[1]!;
+      const open = source.indexOf("{", match.index);
+      const block = toolJobRustBlock(source, open);
+      if (!block) break;
+      implementation.lastIndex = block.end;
+      const ownerTypeName = block.body.match(/type\s+Owner\s*=\s*(?:semio_framework_plugin::)?EditorApp<\s*([A-Za-z_][A-Za-z0-9_]*)\s*>\s*;/)?.[1];
+      const toolExpression = block.body.match(/const\s+TOOL_IDS\s*:\s*&'static\s*\[\s*&'static\s+str\s*\]\s*=\s*([^;]+);/s)?.[1]?.trim();
+      const owner = ownerTypeName ? ownerFiles.get(ownerTypeName) : undefined;
+      const registered = new RegExp(`registry\\.register\\(\\s*(?:[A-Za-z_][A-Za-z0-9_]*::)*${factory}::new\\(`).test(production);
+      const concrete = new RegExp(`impl\\s+(?:semio_framework::)?ToolJobFactory\\s+for\\s+${factory}\\s*\\{`).test(source) && source.includes("fn create_job") && source.includes("fn execution_contract");
+      const builder = !!owner && /fn\s+build_tool_job\s*\([^)]*request/s.test(owner.body) && owner.body.includes("request");
+      if (!owner || !registered || !concrete || !builder || !toolExpression) continue;
+      const localStrings = stringConstants.get(factoryFile) ?? new Map<string, string>();
+      const localLists = listConstants.get(factoryFile) ?? new Map<string, string[]>();
+      const ids = toolExpression.startsWith("&[")
+        ? toolExpression
+            .slice(2, toolExpression.lastIndexOf("]"))
+            .split(",")
+            .map((item) => item.match(/"([^"]+)"/)?.[1] ?? localStrings.get(item.trim().match(/(?:[A-Za-z_][A-Za-z0-9_]*::)*([A-Z][A-Z0-9_]*)/)?.[1] ?? ""))
+            .filter((id): id is string => !!id)
+        : localLists.get(toolExpression.match(/(?:[A-Za-z_][A-Za-z0-9_]*::)*([A-Z][A-Z0-9_]*)/)?.[1] ?? "") ?? [];
+      for (const toolId of ids) rows.push({ ownerFile: owner.file, factoryFile, ownerTypeName, factory, toolId });
+    }
+  }
+  const unique = new Map<string, ToolJobAppOwnedRow>();
+  for (const row of rows) unique.set(`${row.ownerFile}\0${row.toolId}`, row);
+  return [...unique.values()].sort((left, right) => left.ownerFile.localeCompare(right.ownerFile) || left.toolId.localeCompare(right.toolId));
 }
 
 /** 🔒️ Reads exact explicit dispositions; constructors never count as proof. */
@@ -1029,7 +1183,17 @@ function toolJobDispositions(files: ReadonlyMap<string, string>): Map<string, st
   return result;
 }
 
-type ToolJobProof = { sourceFile: string; ownerFile: string; ownerTypeName: string; controllerId: string; factory: string; toolId: string; documentSchema: string; values: readonly number[] };
+type ToolJobProof = {
+  sourceFile: string;
+  ownerFile: string;
+  ownerTypeName: string;
+  controllerId: string;
+  factory: string;
+  toolId: string;
+  documentSchema: string;
+  execution: "bounded" | "resumable";
+  values: readonly number[];
+};
 
 /** 📐️ Reads only owner-local typed bounded-first-step proof catalogs. */
 function toolJobProofs(files: ReadonlyMap<string, string>): ToolJobProof[] {
@@ -1045,17 +1209,17 @@ function toolJobProofs(files: ReadonlyMap<string, string>): ToolJobProof[] {
       const header = block.body.match(/owner:\s*([^,]+),\s*owner_file:\s*"([^"]+)",\s*controller:\s*"([^"]+)",\s*document_schema:\s*"([^"]+)",\s*factory:\s*"([^"]+)"/s);
       if (header) {
         const common = { sourceFile, ownerFile: header[2]!, ownerTypeName: header[1]!.replaceAll(/\s+/g, ""), controllerId: header[3]!, documentSchema: header[4]!, factory: header[5]! };
-        const mappedRows = [...block.body.matchAll(/"([^"]+)"\s*=>\s*semio_framework::ToolExecutionContract::(?:bounded_first_step|resumable)\(([^)]*)\)/g)];
+        const mappedRows = [...block.body.matchAll(/"([^"]+)"\s*=>\s*semio_framework::ToolExecutionContract::(bounded_first_step|resumable)\(([^)]*)\)/g)];
         for (const row of mappedRows) {
-          const values = valuesOf(row[2]!);
-          if (validValues(values)) proofs.push({ ...common, toolId: row[1]!, values });
+          const values = valuesOf(row[3]!);
+          if (validValues(values)) proofs.push({ ...common, toolId: row[1]!, execution: row[2] === "resumable" ? "resumable" : "bounded", values });
         }
         if (mappedRows.length === 0) {
           const sharedContract = block.body.match(/contract:\s*semio_framework::ToolExecutionContract::bounded_first_step\(([^)]*)\)/);
           const sharedTools = block.body.match(/tools:\s*\[([^\]]*)\]/s);
           const values = valuesOf(sharedContract?.[1] ?? "");
           if (sharedTools && validValues(values)) {
-            for (const tool of sharedTools[1]!.matchAll(/"([^"]+)"/g)) proofs.push({ ...common, toolId: tool[1]!, values });
+            for (const tool of sharedTools[1]!.matchAll(/"([^"]+)"/g)) proofs.push({ ...common, toolId: tool[1]!, execution: "bounded", values });
           }
         }
       }
@@ -1063,6 +1227,36 @@ function toolJobProofs(files: ReadonlyMap<string, string>): ToolJobProof[] {
     }
   }
   return proofs;
+}
+
+/** 🚧 Rejects resumable cursors that spend their yields only scanning inputs and then call the
+ * original one-shot reducer. Such a route moves the latency spike but does not split it. */
+function toolJobScanThenMonolithRows(files: ReadonlyMap<string, string>, proofs: readonly ToolJobProof[]): { file: string; id: string; helper: string }[] {
+  const rows: { file: string; id: string; helper: string }[] = [];
+  for (const [file, source] of files) {
+    const resumable = proofs.filter((proof) => proof.sourceFile === file && proof.execution === "resumable");
+    if (resumable.length === 0) continue;
+    const implementation = /impl(?:<[^>]+>)?\s+(?:semio_framework_plugin::retained_command::)?ArtifactCommandWork<[^{}]+>\s+for\s+[^\s<{]+(?:<[^>{]+>)?\s*\{/g;
+    let match: RegExpExecArray | null;
+    while ((match = implementation.exec(source))) {
+      const block = toolJobRustBlock(source, source.indexOf("{", match.index));
+      if (!block) break;
+      implementation.lastIndex = block.end;
+      if (!block.body.includes("ArtifactCommandWorkStep::Progress") || !block.body.includes("command-scan")) continue;
+      const called = [...block.body.matchAll(/\b([a-z_][a-z0-9_]*)\s*\(/g)].map((call) => call[1]!);
+      const helper = called.find((name) => {
+        const declaration = new RegExp(`(?:^|\\n)\\s*fn\\s+${name}\\s*\\(`, "m").exec(source);
+        if (!declaration) return false;
+        const open = source.indexOf("{", declaration.index);
+        const body = open < 0 ? undefined : toolJobRustBlock(source, open);
+        return !!body && /(?:command\s*)?\.dispatch\s*\(/.test(body.body);
+      });
+      if (!helper && !/(?:command\s*)?\.dispatch\s*\(/.test(block.body)) continue;
+      for (const proof of resumable) rows.push({ file, id: proof.toolId, helper: helper ?? "inline-dispatch" });
+      break;
+    }
+  }
+  return rows.sort((left, right) => left.file.localeCompare(right.file) || left.id.localeCompare(right.id));
 }
 
 function toolJobProofIdentity(proof: ToolJobProof): string {
@@ -1087,8 +1281,9 @@ function toolJobProofCatalogFailures(files: ReadonlyMap<string, string>, rows: r
     const ownerStart = owner ? source.indexOf(`impl ArtifactEditor for ${owner}`) : -1;
     const ownerOpen = ownerStart < 0 ? -1 : source.indexOf("{", ownerStart);
     const ownerImpl = ownerOpen < 0 ? undefined : toolJobRustBlock(source, ownerOpen);
-    const schemaExpression = ownerImpl?.body.match(/const\s+DOCUMENT_SCHEMA\s*:\s*&'static\s+str\s*=\s*(?:"([^"]+)"|([A-Z][A-Z0-9_]*))/);
-    const declaredSchema = schemaExpression?.[1] ?? constants.get(schemaExpression?.[2] ?? "");
+    const schemaExpression = ownerImpl?.body.match(/const\s+DOCUMENT_SCHEMA\s*:\s*&'static\s+str\s*=\s*(?:"([^"]+)"|((?:[A-Za-z_][A-Za-z0-9_]*::)*[A-Z][A-Z0-9_]*))/);
+    const schemaConstant = schemaExpression?.[2]?.split("::").at(-1) ?? "";
+    const declaredSchema = schemaExpression?.[1] ?? constants.get(schemaConstant);
     if (proof.sourceFile !== proof.ownerFile || !ownerImpl) failures.push(`forged bounded reducer owner/file authority ${identity}`);
     if (declaredSchema !== proof.documentSchema) failures.push(`forged bounded reducer document schema ${identity}`);
     const factoryPattern = new RegExp(`impl\\s+semio_framework::ToolJobFactory\\s+for\\s+${proof.factory.replaceAll(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}\\s*\\{`);
@@ -1159,9 +1354,9 @@ function toolJobFrameworkReservedRoutesExact(source: string): boolean {
     source.includes("fn build_reserved_tool_job(_request: ArtifactReservedToolJobRequest<Self>)") &&
     source.includes("A::register_tool_job_factories(&mut app_tool_registry)") &&
     source.includes("A::build_reserved_tool_job(request)") &&
-    !source.includes("registry.register(FrameworkCopyJobFactory::<A>::new(&controller_id))") &&
-    !source.includes("registry.register(FrameworkCutJobFactory::<A>::new(&controller_id))") &&
-    !source.includes("registry.register(FrameworkPasteJobFactory::<A>::new(&controller_id))") &&
+    source.includes("registry.register(FrameworkCopyJobFactory::<A>::new(&controller_id))") &&
+    source.includes("registry.register(FrameworkCutJobFactory::<A>::new(&controller_id))") &&
+    source.includes("registry.register(FrameworkPasteJobFactory::<A>::new(&controller_id))") &&
     !source.includes("registry.register(FrameworkImportMediaJobFactory::<A>::new(&controller_id))");
   const routeStateMachines = !/impl\s+FrameworkReservedCursor\s*\{[\s\S]*?fn\s+step\s*\(/.test(source) && source.includes('cx.set_stage(concat!("framework-reserved-", $route, "-envelope"))');
   const exactRunner =
@@ -1201,6 +1396,8 @@ function toolJobFrameworkReservedRoutesExact(source: string): boolean {
     !importBlock?.body.includes("serde_json::to_vec(&(port, media))") &&
     !importBlock?.body.includes("media.clone()") &&
     source.includes("framework reserved mounted worker transition was rejected") &&
+    source.includes("commit_framework_shared_host_route") &&
+    source.includes("self.validate_framework_reserved_commit(action, permit).await?") &&
     source.includes("framework route '{verb}' completed against a stale revision or generation");
   return block.body.includes("interactive-job.unknown-key") && noDirectBranches && exactGuard && exactRoutes && configurationExact && pluginSeamExact && routeStateMachines && exactRunner && commitPermit && binaryFailClosed && boundedPreparationAndHeldCommit;
 }
@@ -1256,7 +1453,7 @@ function toolJobFullOperationBounded(source: string): boolean {
     source.includes("fn acknowledge_result_page") &&
     source.includes("if page.token != token") &&
     source.includes("advance_typed_operation_publication_one") &&
-    source.includes("let mut mounted = self") &&
+    source.includes("let mut mounted =") &&
     source.includes(".remove(operation_id)") &&
     source.includes("self.tool_operations.insert_admitted(operation_id, mounted)") &&
     !!publisher &&
@@ -1429,7 +1626,7 @@ function toolJobChildContentRootExact(store: string, plugin: string): boolean {
     plugin.includes("stale_child_member_admission_cannot_cancel_a_reused_slot_generation") &&
     plugin.includes("incomplete_child_member_registry_drop_faults_in_release_instead_of_destroying_nested_owners") &&
     !plugin.includes("entry.snapshot.clone()") &&
-    dispatch.body.includes("let children = ChildContentView::clone(&self.child_content_root)") &&
+    dispatch.body.includes("let children = std::sync::Arc::new(ChildContentView::clone(&self.child_content_root)") &&
     !dispatch.body.includes("ChildContentView::new(&self.children)")
   );
 }
@@ -2163,12 +2360,16 @@ function toolJobRasterEnvelopeCallerRetainedExact(store: string, raster: string,
     raster.includes("pub(crate) fn require_empty_output_shell(&self) -> Result<(), &'static str>") &&
     raster.includes("self.layers.is_empty() && self.assets.is_empty()") &&
     raster.includes("Populated Raster snapshot output is forbidden; interactive production routes require the retained page output authority") &&
-    raster.includes("pub(crate) async fn enc_asset_map(map: &RasterOwnedMap<RasterAssetChild>) -> String") &&
-    raster.includes("pub(crate) async fn enc_params(params: &RasterOwnedMap<dsl::DslValue>) -> String") &&
-    raster.includes("async fn write_asset_map(out: &mut Vec<u8>, map: &RasterOwnedMap<RasterAssetChild>)") &&
-    raster.includes("async fn write_params(out: &mut Vec<u8>, params: &RasterOwnedMap<dsl::DslValue>)") &&
-    raster.includes("async fn print_raster_snapshot_body(s: &RasterSnapshot) -> String") &&
-    raster.includes("async fn encode_raster_snapshot_binary(s: &RasterSnapshot) -> Vec<u8>") &&
+    raster.includes("pub(crate) fn enc_asset_map(map: &RasterOwnedMap<RasterAssetChild>) -> String") &&
+    raster.includes("pub(crate) fn enc_params(params: &RasterOwnedMap<dsl::DslValue>) -> String") &&
+    raster.includes("fn write_asset_map(out: &mut Vec<u8>, map: &RasterOwnedMap<RasterAssetChild>)") &&
+    raster.includes("fn write_params(out: &mut Vec<u8>, params: &RasterOwnedMap<dsl::DslValue>)") &&
+    raster.includes("fn print_raster_snapshot_body(s: &RasterSnapshot) -> String") &&
+    raster.includes("fn encode_raster_snapshot_binary(s: &RasterSnapshot) -> Vec<u8>") &&
+    !raster.includes("async fn write_asset_map(out: &mut Vec<u8>, map: &RasterOwnedMap<RasterAssetChild>)") &&
+    !raster.includes("async fn write_params(out: &mut Vec<u8>, params: &RasterOwnedMap<dsl::DslValue>)") &&
+    !raster.includes("async fn print_raster_snapshot_body(s: &RasterSnapshot) -> String") &&
+    !raster.includes("async fn encode_raster_snapshot_binary(s: &RasterSnapshot) -> Vec<u8>") &&
     raster.includes("self.require_empty_output_shell().expect(RASTER_POPULATED_OUTPUT_ERROR);") &&
     raster.includes("self.require_empty_output_shell().map_err(|error| store::PackError::Schema(error.to_owned()))?;") &&
     rasterEmptyMapOutputGuards === 4 &&
@@ -2278,7 +2479,7 @@ function toolJobRasterEnvelopeCallerRetainedExact(store: string, raster: string,
   );
 }
 
-function toolJobDrawEnvelopeCallerRetainedExact(store: string, draw: string, editor: string, plugin: string): boolean {
+function toolJobDrawEnvelopeCallerRetainedExact(store: string, draw: string, editor: string, plugin: string, editorTestLaws: string = editor): boolean {
   const variants = [
     "SetLayerVisible(payload)",
     "SetLayerLocked(payload)",
@@ -2529,13 +2730,13 @@ function toolJobDrawEnvelopeCallerRetainedExact(store: string, draw: string, edi
     !store.includes("id.clone(), edit_digest") &&
     !draw.includes("drop(value.layers)") &&
     editor.includes("draw_document_store_initialization_job(envelope, operation, generation)") &&
-    editor.includes("draw_live_envelope_submit_recursive_clone_swap_displaced_store_and_exact_ack_succeed") &&
-    editor.includes("draw_live_envelope_cancel_closes_retained_pages_without_publication") &&
-    editor.includes("draw_live_envelope_rejects_single_and_final_edit_id_plus_one_before_mutation_candidate") &&
-    editor.includes("draw_live_initializer_candidate_container_commit_ack_cancel_stale_preserve_last_valid_and_exact_handle") &&
+    editorTestLaws.includes("draw_live_envelope_submit_recursive_clone_swap_displaced_store_and_exact_ack_succeed") &&
+    editorTestLaws.includes("draw_live_envelope_cancel_closes_retained_pages_without_publication") &&
+    editorTestLaws.includes("draw_live_envelope_rejects_single_and_final_edit_id_plus_one_before_mutation_candidate") &&
+    editorTestLaws.includes("draw_live_initializer_candidate_container_commit_ack_cancel_stale_preserve_last_valid_and_exact_handle") &&
     editor.includes("arena_boot_fault: Option<&'static str>") &&
     editor.includes("draw_mutation_arena_pool_fault") &&
-    editor.includes('"forwards": [crate::artifacts::draw::mutations::DrawMutation::RenameLayer') &&
+    editorTestLaws.includes('"forwards": [crate::artifacts::draw::mutations::DrawMutation::RenameLayer') &&
     editor.includes("pub struct DrawEnvelopeLoadHandle") &&
     editor.includes("source: &js_sys::Uint8Array") &&
     editor.includes("begin_artifact_envelope_ingress(maximum_pages, maximum_bytes)") &&
@@ -2884,7 +3085,7 @@ function toolJobSegmentedTerminalDrainExact(source: string): boolean {
   return !!block && block.body.includes("let chunk = output.chunks.take_chunk()?") && block.body.includes("if chunk.is_none()") && block.body.includes("self.segmented_downloads.remove(operation_id)") && !block.body.includes("chunks_remaining() == 0") && source.includes("segmented_download_remains_addressable_until_terminal_none_is_observed") && source.includes("take-segmented-download-chunk: async func(instance-id: u32, operation-id: u64) -> result<option<list<u8>>, plugin-error>") && source.includes("async fn take_segmented_download_chunk(instance_id: u32, operation_id: u64) -> Result<Option<Vec<u8>>") && source.includes("plugin_take_segmented_download_chunk(runtime, instance_id, operation_id)") && source.includes(".map_err($crate::component::component::plugin_error)") && !source.includes("plugin_take_segmented_download_chunk(runtime, instance_id, operation_id))).ok().flatten()");
 }
 
-function toolJobPuzzleReservedRoutesExact(source: string): boolean {
+function toolJobPuzzleReservedRoutesExact(source: string, host: string): boolean {
   const declarations = [...source.matchAll(/puzzle5d_reserved_factory!\(\s*([A-Za-z0-9_]+),\s*"([^"]+)",\s*"([^"]+)"\s*\);/g)].map((match) => ({ factory: match[1]!, id: match[2]!, schema: match[3]! }));
   const ids = new Set(declarations.map((declaration) => declaration.id));
   if (declarations.length !== TOOL_JOB_PLUGIN_RESERVED_IDS.length || ids.size !== TOOL_JOB_PLUGIN_RESERVED_IDS.length || TOOL_JOB_PLUGIN_RESERVED_IDS.some((id) => !ids.has(id))) return false;
@@ -2893,7 +3094,8 @@ function toolJobPuzzleReservedRoutesExact(source: string): boolean {
   const implementation = implOpen < 0 ? undefined : toolJobRustBlock(source, implOpen);
   if (!implementation) return false;
   const exactFactories = declarations.every(
-    ({ factory, id }) =>
+    ({ factory, id, schema }) =>
+      schema === `puzzle.5d.reserved.${id}.v1` &&
       implementation.body.includes(`registry.register(${factory}::new(&controller_id))`) &&
       implementation.body.includes(`"${id}" =>`) &&
       source.includes(`impl ArtifactOwnedToolJobFactory for $factory`) &&
@@ -2901,8 +3103,107 @@ function toolJobPuzzleReservedRoutesExact(source: string): boolean {
       source.includes("const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA"),
   );
   const routeJobs = ["Puzzle5dCopyJob", "Puzzle5dCutJob", "Puzzle5dPasteJob", "Puzzle5dImportJob"];
-  const resumableJobs = routeJobs.every((job) => source.includes(`impl InteractiveJob for ${job}`)) && source.includes("CheckpointReady(") && source.includes("cx.is_cancelled()") && source.includes("PUZZLE5D_RESERVED_RAW_BYTES") && source.includes("PUZZLE5D_RESERVED_ITEMS") && source.includes("PUZZLE5D_RESERVED_OUTPUT_BYTES");
-  return exactFactories && resumableJobs && implementation.body.includes("ArtifactReservedToolInput::Media") && implementation.body.includes("ArtifactReservedToolJob::new(Puzzle5dImportJob::new(");
+  const routeBlocks = routeJobs.map((job) => {
+    const start = source.indexOf(`impl InteractiveJob for ${job}`);
+    const open = start < 0 ? -1 : source.indexOf("{", start);
+    return open < 0 ? undefined : toolJobRustBlock(source, open);
+  });
+  const resumableJobs = routeBlocks.every(
+    (block) =>
+      !!block &&
+      block.body.includes("cx.is_cancelled()") &&
+      block.body.includes("StepOutcome::Cancelled") &&
+      block.body.includes("commit.prepare(&self.") &&
+      block.body.indexOf("commit.prepare(&self.") < block.body.indexOf("completion.complete(") &&
+      block.body.includes("commit.take_output()") &&
+      block.body.includes("CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output }") &&
+      block.body.includes("fn begin_close(&mut self)") &&
+      block.body.includes(".begin_close()") &&
+      block.body.includes("fn terminal_is_empty(&self) -> bool"),
+  );
+  const fixedIngress =
+    source.includes("const PUZZLE5D_RESERVED_PAGE_BYTES: usize = 4_096") &&
+    (source.match(/raw_page: \[u8; PUZZLE5D_RESERVED_PAGE_BYTES\]/g) ?? []).length === 3 &&
+    source.includes("fn puzzle5d_preflight_reserved_wire(raw: Vec<u8>, maximum_bytes: usize) -> Result<Vec<u8>, (Fault, Vec<u8>)>") &&
+    source.includes("if raw.len() > maximum_bytes") &&
+    source.includes("Err((Fault::from(\"puzzle5d reserved wire exceeds its exact route cap before fixed-page copy\"), raw))") &&
+    source.indexOf("let end = cursor.checked_add(units)") < source.indexOf("page[..units].copy_from_slice(&raw[*cursor..end])") &&
+    implementation.body.includes("let raw = std::mem::take(&mut request.raw_wire)") &&
+    implementation.body.includes("puzzle5d_preflight_reserved_wire(raw, request.contract.max_raw_wire_bytes)") &&
+    implementation.body.includes("Err((fault, rejected))") &&
+    implementation.body.includes("drop(rejected)");
+  const retainedProtocol =
+    source.includes("keys: [ToolFactoryKey; 1]") &&
+    source.includes("struct Puzzle5dCommitEnvelope") &&
+    source.includes("RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput)") &&
+    source.includes("writer.write_slice_page(cx, raw, &mut self.cursor)") &&
+    source.includes("Err(writer) =>") &&
+    source.includes("*self.writer = Some(writer)") &&
+    source.includes("fn take_output(&mut self) -> Option<RetainedJobPayload>") &&
+    source.includes("self.commit.close_step(maximum_items, maximum_bytes)") &&
+    source.includes("self.commit.terminal_is_empty()") &&
+    source.includes("state[1..9].copy_from_slice(&(cursor as u64).to_le_bytes())") &&
+    source.includes("state[9..17].copy_from_slice(&progress.to_le_bytes())") &&
+    source.includes("Err(rejected) =>") &&
+    source.includes("drop(rejected.into_source())") &&
+    source.includes("reserved_wire_exact_max_and_plus_one_preflight_return_the_original_owner");
+  const hostProtocol =
+    host.includes("async fn run_framework_reserved_job") &&
+    host.includes("proof.admits::<A>(&admission)") &&
+    host.includes("operation.base_revision != base_revision || operation.generation != generation") &&
+    host.includes("checkpoint.applied_progress < checkpoint_progress") &&
+    host.includes("!retained_payload_eq_slice(&candidate.output, raw)") &&
+    host.includes("session.resume()") &&
+    host.includes("session.begin_close()") &&
+    host.includes("WorkerJobCloseStep::Complete if session.terminal_is_empty()") &&
+    host.includes("self.validate_framework_reserved_commit(action, permit).await?") &&
+    host.includes("permit.is_cancelled().await") &&
+    host.includes("completion.take_emit()?") &&
+    host.includes("Self::ensure_reserved_emit_bounded(") &&
+    host.includes("permit.finish()");
+  return exactFactories && resumableJobs && fixedIngress && retainedProtocol && hostProtocol && implementation.body.includes("ArtifactReservedToolInput::Media") && implementation.body.includes("ArtifactReservedToolJob::new(Puzzle5dImportJob::new(");
+}
+
+function toolJobPuzzleReservedRoutesSelfTests(): number {
+  const source = `
+const PUZZLE5D_RESERVED_PAGE_BYTES: usize = 4_096;
+macro_rules! puzzle5d_reserved_factory { ($factory:ident, $tool:literal, $schema:literal) => { struct $factory { keys: [ToolFactoryKey; 1] } impl ArtifactOwnedToolJobFactory for $factory { type Owner = EditorApp<Puzzle5dPlayApp>; const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA; } } }
+puzzle5d_reserved_factory!(Puzzle5dCopyJobFactory, "copy", "puzzle.5d.reserved.copy.v1");
+puzzle5d_reserved_factory!(Puzzle5dCutJobFactory, "cut", "puzzle.5d.reserved.cut.v1");
+puzzle5d_reserved_factory!(Puzzle5dPasteJobFactory, "paste", "puzzle.5d.reserved.paste.v1");
+puzzle5d_reserved_factory!(Puzzle5dImportJobFactory, "import-media", "puzzle.5d.reserved.import-media.v1");
+fn puzzle5d_preflight_reserved_wire(raw: Vec<u8>, maximum_bytes: usize) -> Result<Vec<u8>, (Fault, Vec<u8>)> { if raw.len() > maximum_bytes { return Err((Fault::from("puzzle5d reserved wire exceeds its exact route cap before fixed-page copy"), raw)); } Ok(raw) }
+fn ingress(cursor: &mut usize, units: usize, raw: &[u8], page: &mut [u8]) { let end = cursor.checked_add(units); page[..units].copy_from_slice(&raw[*cursor..end]); }
+fn payload() { match admission { Err(rejected) => { drop(rejected.into_source()); } } }
+fn checkpoint(cursor: usize, progress: u64) { state[1..9].copy_from_slice(&(cursor as u64).to_le_bytes()); state[9..17].copy_from_slice(&progress.to_le_bytes()); }
+struct Puzzle5dCommitEnvelope { raw_page: [u8; PUZZLE5D_RESERVED_PAGE_BYTES] }
+impl Puzzle5dCommitEnvelope { fn new() { RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput); writer.write_slice_page(cx, raw, &mut self.cursor); match writer.finish() { Err(writer) => { *self.writer = Some(writer); } } } fn take_output(&mut self) -> Option<RetainedJobPayload> {} fn close() { self.commit.close_step(maximum_items, maximum_bytes); self.commit.terminal_is_empty(); } }
+struct Clipboard { raw_page: [u8; PUZZLE5D_RESERVED_PAGE_BYTES] }
+struct Paste { raw_page: [u8; PUZZLE5D_RESERVED_PAGE_BYTES] }
+fn reserved_wire_exact_max_and_plus_one_preflight_return_the_original_owner() {}
+impl ArtifactEditor for Puzzle5dPlayApp { fn routes() { registry.register(Puzzle5dCopyJobFactory::new(&controller_id)); registry.register(Puzzle5dCutJobFactory::new(&controller_id)); registry.register(Puzzle5dPasteJobFactory::new(&controller_id)); registry.register(Puzzle5dImportJobFactory::new(&controller_id)); match id { "copy" => {}, "cut" => {}, "paste" => {}, "import-media" => { ArtifactReservedToolInput::Media; ArtifactReservedToolJob::new(Puzzle5dImportJob::new(; } } let raw = std::mem::take(&mut request.raw_wire); puzzle5d_preflight_reserved_wire(raw, request.contract.max_raw_wire_bytes); Err((fault, rejected)); drop(rejected); } }
+${["Copy", "Cut", "Paste", "Import"].map((name) => `impl InteractiveJob for Puzzle5d${name}Job { fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome { if cx.is_cancelled() { return StepOutcome::Cancelled; } self.commit.prepare(&self.raw, cx); completion.complete(output); let output = self.commit.take_output(); CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output } } fn begin_close(&mut self) { self.commit.begin_close(); } fn terminal_is_empty(&self) -> bool { self.commit.terminal_is_empty() } }`).join("\n")}
+`;
+  const host = `async fn run_framework_reserved_job() { proof.admits::<A>(&admission); operation.base_revision != base_revision || operation.generation != generation; checkpoint.applied_progress < checkpoint_progress; !retained_payload_eq_slice(&candidate.output, raw); session.resume(); session.begin_close(); WorkerJobCloseStep::Complete if session.terminal_is_empty(); self.validate_framework_reserved_commit(action, permit).await?; permit.is_cancelled().await; completion.take_emit()?; Self::ensure_reserved_emit_bounded(action); permit.finish(); }`;
+  const exact = (candidate = source, candidateHost = host) => toolJobPuzzleReservedRoutesExact(candidate, candidateHost);
+  if (!exact()) throw new Error("[verify interactivity tool-jobs] self-test Puzzle5d retained reserved routes valid fixture was falsely rejected.");
+  const mutations: readonly [string, () => boolean][] = [
+    ["route factory omitted", () => exact(source.replace('puzzle5d_reserved_factory!(Puzzle5dCopyJobFactory, "copy", "puzzle.5d.reserved.copy.v1");', ""))],
+    ["route registration omitted", () => exact(source.replace("registry.register(Puzzle5dCutJobFactory::new(&controller_id));", ""))],
+    ["resizable factory keys restored", () => exact(source.replace("keys: [ToolFactoryKey; 1]", "keys: Vec<ToolFactoryKey>"))],
+    ["fixed-page ingress removed", () => exact(source.replace("raw_page: [u8; PUZZLE5D_RESERVED_PAGE_BYTES]", "raw_page: Vec<u8>"))],
+    ["copy precedes ingress preflight", () => exact(source.replace("let end = cursor.checked_add(units); page[..units].copy_from_slice(&raw[*cursor..end]);", "page[..units].copy_from_slice(&raw[*cursor..end]); let end = cursor.checked_add(units);"))],
+    ["max plus one owner law omitted", () => exact(source.replace("reserved_wire_exact_max_and_plus_one_preflight_return_the_original_owner", "reserved_wire_smoke"))],
+    ["route cancellation omitted", () => exact(source.replace("if cx.is_cancelled() { return StepOutcome::Cancelled; }", ""))],
+    ["commit output parity omitted", () => exact(source.replace("let output = self.commit.take_output();", "let output = RetainedJobPayload::empty(JobPayloadStream::CommitOutput);"))],
+    ["completion precedes retained output preparation", () => exact(source.replace("self.commit.prepare(&self.raw, cx); completion.complete(output);", "completion.complete(output); self.commit.prepare(&self.raw, cx);"))],
+    ["checkpoint progress omitted", () => exact(source.replace("state[9..17].copy_from_slice(&progress.to_le_bytes());", ""))],
+    ["host freshness omitted", () => exact(source, host.replace("operation.base_revision != base_revision || operation.generation != generation", "false"))],
+    ["host exact output ACK omitted", () => exact(source, host.replace("!retained_payload_eq_slice(&candidate.output, raw)", "false"))],
+    ["host terminal close witness omitted", () => exact(source, host.replace("WorkerJobCloseStep::Complete if session.terminal_is_empty()", "WorkerJobCloseStep::Complete"))],
+  ];
+  for (const [name, mutation] of mutations) if (mutation()) throw new Error(`[verify interactivity tool-jobs] self-test Puzzle5d ${name} was falsely accepted.`);
+  return mutations.length + 1;
 }
 
 function toolJobSegmentedQueueHardBounded(source: string): boolean {
@@ -4351,7 +4652,7 @@ function toolJobFem2dMountedSessionExact(session: string, editor: string, model:
   const pluginOpen = pluginStart < 0 ? -1 : pluginRoot.indexOf("{", pluginStart);
   const plugin = pluginOpen < 0 ? undefined : toolJobRustBlock(pluginRoot, pluginOpen);
   const snapshotAdmission = frameworkPlugin.indexOf("let snapshot_is_admitted = {");
-  const snapshotIssue = frameworkPlugin.indexOf("self.store.snapshot_read().await", snapshotAdmission);
+  const snapshotIssue = frameworkPlugin.indexOf("self.store.snapshot_read()", snapshotAdmission);
   const renderStart = model.indexOf("pub fn render_with_progress(");
   const renderOpen = renderStart < 0 ? -1 : model.indexOf("{", renderStart);
   const render = renderOpen < 0 ? undefined : toolJobRustBlock(model, renderOpen);
@@ -4414,7 +4715,7 @@ function toolJobFem2dMountedSessionExact(session: string, editor: string, model:
     reconcile.body.includes("JobPlacement::Isolated") &&
     !reconcile.body.includes("run_to_completion") &&
     !reconcile.body.includes("block_on") &&
-    editor.includes("async fn pending_effects(") &&
+    editor.includes("fn pending_effects(") &&
     editor.includes("crate::editor::fem2d::session::reconcile(doc)") &&
     editor.includes("session::with_live_visual(doc.render_operation()") &&
     editor.includes("model_window::render_with_progress(doc.snapshot, camera, visual)") &&
@@ -4959,13 +5260,14 @@ function toolJobCoverageSelfTests(): number {
     const rows = toolJobStaticRows(files);
     const dispositions = toolJobDispositions(files);
     const proofs = toolJobProofs(files);
+    const appOwned = new Set(toolJobAppOwnedRows(files).map((row) => `${row.ownerFile}\0${row.toolId}`));
     const catalogClean = toolJobProofCatalogFailures(files, rows, dispositions, proofs).length === 0;
     const registered = new Set(rows.map((row) => row.id));
     const remaining = rows.filter((row) => {
       const disposition = dispositions.get(`${row.file}\0${row.id}`);
       const unbounded = /for\s+item\s+in\s+items\b|while\s+true\b/.test(sources[row.file] ?? "");
-      const proof = catalogClean ? proofs.find((candidate) => candidate.ownerFile === row.file && candidate.ownerTypeName.length > 0 && candidate.controllerId.length > 0 && candidate.factory === "BoundedFirstStepCommandJobFactory" && candidate.toolId === row.id && candidate.documentSchema.length > 0) : undefined;
-      return !["BatchOnlyPendingRewrite", "ForbiddenFromUi", "Deleted"].includes(disposition ?? "") && !(disposition === "Migrated" && proof && !unbounded);
+      const proof = catalogClean ? proofs.find((candidate) => candidate.ownerFile === row.file && candidate.ownerTypeName.length > 0 && candidate.controllerId.length > 0 && candidate.factory.length > 0 && candidate.toolId === row.id && candidate.documentSchema.length > 0) : undefined;
+      return !["BatchOnlyPendingRewrite", "ForbiddenFromUi", "Deleted"].includes(disposition ?? "") && !(disposition === "Migrated" && proof && !unbounded && appOwned.has(`${row.file}\0${row.id}`));
     });
     for (const [file, source] of files) {
       for (const match of source.matchAll(/dispatch\(\s*"([^"]+)"/g)) if (!registered.has(match[1]!)) remaining.push({ file, id: match[1]!, source: "literal" });
@@ -4980,6 +5282,55 @@ function toolJobCoverageSelfTests(): number {
     ["default-migrated-builder", { "manifest.rs": 'fn bounded_catalog() { definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated; }', "plugin.rs": 'app_commands! { "solve" => solve::Payload }' }],
   ];
   for (const [name, sources] of fixtures) if (evaluate(sources).length === 0) throw new Error(`[verify interactivity tool-jobs] self-test ${name} was falsely accepted.`);
+  const checkpointFixturePath = join(
+    getWorkspaceRoot(),
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/🧪️artifact-retained-command-checkpoint-v1.json",
+  );
+  const checkpointFixture = JSON.parse(readFileSync(checkpointFixturePath, "utf8")) as {
+    format: string;
+    version: number;
+    workPhase: boolean;
+    rawPageCursor: number;
+    rawBytes: number;
+    workProgress: number;
+    contextDigest: number;
+    workspaceIdentity: number;
+    workState: number[];
+    encoded: number[];
+  };
+  const checkpointSchema = {
+    type: "object",
+    additionalProperties: false,
+    required: ["format", "version", "workPhase", "rawPageCursor", "rawBytes", "workProgress", "contextDigest", "workspaceIdentity", "workState", "encoded"],
+    properties: {
+      format: { const: "ARC1" },
+      version: { const: 3 },
+      workPhase: { type: "boolean" },
+      rawPageCursor: { type: "integer", minimum: 0 },
+      rawBytes: { type: "integer", minimum: 0 },
+      workProgress: { type: "integer", minimum: 0 },
+      contextDigest: { type: "integer", minimum: 0 },
+      workspaceIdentity: { type: "integer", minimum: 0 },
+      workState: { type: "array", maxItems: 464, items: { type: "integer", minimum: 0, maximum: 255 } },
+      encoded: { type: "array", minItems: 48, maxItems: 512, items: { type: "integer", minimum: 0, maximum: 255 } },
+    },
+  } as const;
+  const checkpointOracle = new Ajv({ allErrors: true, strict: true }).compile(checkpointSchema);
+  if (!checkpointOracle(checkpointFixture)) throw new Error(`[verify interactivity tool-jobs] self-test retained-command checkpoint Ajv oracle rejected the language-neutral fixture: ${checkpointOracle.errors?.map((error) => error.message).join(", ")}`);
+  const checkpointEncoded = new Uint8Array(48 + checkpointFixture.workState.length);
+  checkpointEncoded.set(new TextEncoder().encode(checkpointFixture.format), 0);
+  checkpointEncoded[4] = checkpointFixture.version;
+  checkpointEncoded[5] = Number(checkpointFixture.workPhase);
+  const checkpointView = new DataView(checkpointEncoded.buffer);
+  checkpointView.setBigUint64(8, BigInt(checkpointFixture.rawPageCursor), true);
+  checkpointView.setBigUint64(16, BigInt(checkpointFixture.rawBytes), true);
+  checkpointView.setBigUint64(24, BigInt(checkpointFixture.workProgress), true);
+  checkpointView.setBigUint64(32, BigInt(checkpointFixture.contextDigest), true);
+  checkpointView.setBigUint64(40, BigInt(checkpointFixture.workspaceIdentity), true);
+  checkpointEncoded.set(checkpointFixture.workState, 48);
+  if (JSON.stringify([...checkpointEncoded]) !== JSON.stringify(checkpointFixture.encoded)) throw new Error("[verify interactivity tool-jobs] self-test retained-command checkpoint language-neutral encoding drifted from Rust.");
+  const checkpointByteOverflow = { ...checkpointFixture, encoded: [...checkpointFixture.encoded.slice(0, -1), 256] };
+  if (checkpointOracle(checkpointByteOverflow)) throw new Error("[verify interactivity tool-jobs] self-test retained-command checkpoint byte plus-one was falsely accepted by the Ajv oracle.");
   const globalStoreFixture = toolJobProductionProtocolSource(`
 thread_local! {
   static SCRATCH: RefCell<HashMap<String, Vec<u8>>> = RefCell::new(HashMap::new());
@@ -4987,6 +5338,7 @@ thread_local! {
 }
 
 static LIVE_LEASES: OnceLock<Mutex<[Option<Lease>; 4]>> = OnceLock::new();
+static SHARED_LIVE: OnceLock<Mutex<semio_framework_job::FixedOperationRegistry<Lease, 4>>> = OnceLock::new();
 #[cfg(test)]
 fn hostile_owner() -> &'static Mutex<[Option<Vec<u8>>; 4]> {
   static HOSTILES: OnceLock<Mutex<[Option<Vec<u8>>; 4]>> = OnceLock::new();
@@ -4995,14 +5347,18 @@ fn hostile_owner() -> &'static Mutex<[Option<Vec<u8>>; 4]> {
 `);
   const globalStoreInventory = toolJobGlobalPayloadStoreInventory(new Map([["fixture.rs", globalStoreFixture]]));
   const globalStoreOwners = globalStoreInventory.flatMap((row) => row.owners.map((owner) => `${owner.name}:${owner.kind}`));
+  const globalStoreExemptions = globalStoreInventory.filter(toolJobGlobalPayloadStoreIsSharedFixedAuthority);
   if (
-    globalStoreInventory.length !== 2 ||
+    globalStoreInventory.length !== 3 ||
     !globalStoreOwners.includes("SCRATCH:child-content-scratch") ||
     !globalStoreOwners.includes("RETAINED_BRIDGE:abi-bridge-retention") ||
     !globalStoreOwners.includes("LIVE_LEASES:fixed-operation-registry") ||
-    globalStoreOwners.some((owner) => owner.startsWith("HOSTILES:"))
+    globalStoreOwners.some((owner) => owner.startsWith("HOSTILES:")) ||
+    globalStoreExemptions.length !== 1 ||
+    globalStoreExemptions[0]?.owners[0]?.name !== "SHARED_LIVE" ||
+    toolJobGlobalPayloadStoreIsSharedFixedAuthority({ file: "fixture.rs", line: 1, text: "thread_local! {", owners: [{ name: "FORGED", rustType: "RefCell<FixedOperationRegistry<Lease, 4>>", kind: "fixed-operation-registry" }] })
   )
-    throw new Error("[verify interactivity tool-jobs] process-global payload owner inventory lost exact kind or production/test separation.");
+    throw new Error("[verify interactivity tool-jobs] process-global payload owner inventory or exact shared fixed-authority exemption drifted.");
   const actorProgress = [
     "//#region 🎨️JobProgressOverlay",
     "pub const JOB_PROGRESS_ACTIVE_CAPACITY: usize = 64",
@@ -5118,7 +5474,7 @@ fn hostile_owner() -> &'static Mutex<[Option<Vec<u8>>; 4]> {
     "mounted_revision_restart_keeps_cancel_before_spawn",
     "mounted_close_and_capacity_are_fixed_and_terminal_witnessed",
   ].join("\n");
-  const femMountedEditor = "async fn pending_effects() { crate::editor::fem2d::session::reconcile(doc); } fn mounted_job_maintenance_step() {} fn mounted_job_close_step() {} fn mounted_jobs_terminal_is_empty() {} fn mounted_job_prepare_snapshot_read() {} session::with_live_visual(doc.render_operation(), |visual| model_window::render_with_progress(doc.snapshot, camera, visual));";
+  const femMountedEditor = "fn pending_effects() { crate::editor::fem2d::session::reconcile(doc); } fn mounted_job_maintenance_step() {} fn mounted_job_close_step() {} fn mounted_jobs_terminal_is_empty() {} fn mounted_job_prepare_snapshot_read() {} session::with_live_visual(doc.render_operation(), |visual| model_window::render_with_progress(doc.snapshot, camera, visual));";
   const femMountedModel = "pub struct Fem2dVisualJob {} Fem2dVisualJobStage::ReserveSnapshot; canvas2d_snapshot_begin(); self.output.admit_page(); canvas2d_snapshot_seal(token); Fem2dVisualJobStage::OrderRegionKey; Fem2dVisualJobStage::OrderElementKey; fn order_field_one(&mut self, visual: &Fem2dLiveVisual) {} Fem2dVisualJobStage::BuildRegion; fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {} fn mounted_visual_output_exact_maximum_plus_one_and_page_handback() {} fn fem2d_visual_job_maximum_plus_one_rejects_before_owner_transfer() {} fn fem2d_visual_job_stale_cancel_fault_and_device_close_preserve_last_valid() {} fn fem2d_visual_job_replay_accessibility_and_each_step_are_bounded() { assert!(packet_equal(&first, &second)); assert!(started.elapsed().as_micros() < 8_000); } pub fn render_with_progress() { progress.map(Fem2dMountedVisualLease::snapshot); }";
   const femMountedMesh = "MeshJobStage::ReservePreparation; MeshJobStage::ReserveEdgeAuthorities; fn advance_face_classification(&mut self) { triangulation.triangles.get(self.face_cursor); } MeshJobStage::Classify => { self.advance_face_classification(); } MeshJobStage::Finalize => {} fn mesh_mounted_classification_indexes_admit_maximum_reject_plus_one_and_close_exactly() {}";
   const femMountedRoot = 'pub fn plugin() { crate::editor::fem2d::session::initialize(); Plugin::<FemApps>::builder("fem"); }';
@@ -5127,7 +5483,7 @@ fn hostile_owner() -> &'static Mutex<[Option<Vec<u8>>; 4]> {
   const femMountedAnalyses = "pub struct AssemblyJobConstruction {} AssemblyConstructionStage::ValidateNodePairs; AssemblyConstructionStage::DiscoverDofs; AssemblyConstructionStage::CommitDofOwner; struct PendingElementBuild {} PendingElementBuildStage::ReserveIndices; PendingElementBuildStage::ReservePositions; PendingElementBuildStage::ReserveStiffnessCredit; PendingElementBuildStage::AllocateStiffness; PendingElementBuildStage::ObserveStiffnessBacking => {} PendingElementBuildStage::AdmitStiffnessBacking; fn advance_element_build(&mut self) {} fn reclaim_element_owner(&mut self) {} fn mounted_element_build_reserves_and_reclaims_one_exact_owner_per_turn() {} fn mounted_element_stiffness_observes_before_admit_and_retires_rejected_backing() {} pub struct AssemblyCsrBuild {}";
   const femMountedReactor = "Event::JobProgress { job, .. }; JOB_RENDER_BINDINGS.with; .try_surface(binding.instance, surface);";
   const femMountedStore = "pub fn commit_authority_matches() {} fn publish_authority() {} pub struct SnapshotReadReturn {} pub fn return_to_registry_witness() {}";
-  const femMountedFramework = "let snapshot_is_admitted = { A::mounted_job_prepare_snapshot_read(render_operation, snapshot.as_ref()) }; self.store.snapshot_read().await;";
+  const femMountedFramework = "let snapshot_is_admitted = { A::mounted_job_prepare_snapshot_read(render_operation, snapshot.as_ref()) }; self.store.snapshot_read();";
   const femExact = (session = femMountedSession, editor = femMountedEditor, reactor = femMountedReactor, store = femMountedStore, framework = femMountedFramework, analyses = femMountedAnalyses, model = femMountedModel, mesh = femMountedMesh) =>
     toolJobFem2dMountedSessionExact(session, editor, model, mesh, femMountedRoot, femMountedGlue, femMountedJobs, analyses, reactor, store, framework);
   if (!femExact()) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-valid was falsely rejected.");
@@ -5174,6 +5530,20 @@ fn hostile_owner() -> &'static Mutex<[Option<Vec<u8>>; 4]> {
     const ownerType = `Owner${owner.replaceAll(/[^A-Za-z0-9]/g, "")}`;
     return `impl ArtifactEditor for ${ownerType} { const DOCUMENT_SCHEMA: &'static str = "fixture.document"; }\nbounded_first_step_tool_proofs! { owner: semio_framework_plugin::EditorApp<${ownerType}>, owner_file: "${owner}", controller: "${controller}", document_schema: "fixture.document", factory: "BoundedFirstStepCommandJobFactory", tools: { "${id}" => semio_framework::ToolExecutionContract::bounded_first_step(${raw}, 1, 1, 64, 100), } }`;
   };
+  const scanThenMonolithSource = `${exactProof("owner.rs", "owner@1/*#editor", "scan").replace("bounded_first_step(64, 1, 1, 64, 100)", "resumable(64, 1, 1, 64, 100, 1, 1)")}
+fn scan_retained_reduce(command: &Command) { command.dispatch(); }
+impl ArtifactCommandWork<EditorApp<Ownerownerrs>> for ScanWork {
+  fn step(&mut self, command: &Command) { ArtifactCommandWorkStep::Progress { stage: "fixture-command-scan", preview: b"{}" }; scan_retained_reduce(command); }
+}`;
+  const scanThenMonolithFiles = new Map([["owner.rs", scanThenMonolithSource]]);
+  const scanThenMonolithProofs = toolJobProofs(scanThenMonolithFiles);
+  if (toolJobScanThenMonolithRows(scanThenMonolithFiles, scanThenMonolithProofs).length !== 1)
+    throw new Error("[verify interactivity tool-jobs] self-test scan-then-monolithic reducer was falsely accepted.");
+  if (toolJobScanThenMonolithRows(new Map([["owner.rs", scanThenMonolithSource.replace("scan_retained_reduce(command);", "workspace.step_one(command);")]]), scanThenMonolithProofs).length !== 0)
+    throw new Error("[verify interactivity tool-jobs] self-test segmented workspace reducer was falsely rejected.");
+  const restoredFinalDispatch = scanThenMonolithSource.replace("scan_retained_reduce(command);", "workspace.step_one(command);").replace("workspace.step_one(command);", "command.dispatch();");
+  if (toolJobScanThenMonolithRows(new Map([["owner.rs", restoredFinalDispatch]]), scanThenMonolithProofs).length !== 1)
+    throw new Error("[verify interactivity tool-jobs] self-test restored final one-shot dispatch was falsely accepted.");
   const duplicateOwner = {
     "owner-a.rs": `app_commands! { "same" => same::Payload }\n.action_interactive_job("same", InteractiveJobClassification::Migrated)\n${exactProof("owner-a.rs", "owner-a@1/*#editor", "same")}`,
     "owner-b.rs": 'app_commands! { "same" => same::Payload }\n.action_interactive_job("same", InteractiveJobClassification::Migrated)',
@@ -5181,13 +5551,53 @@ fn hostile_owner() -> &'static Mutex<[Option<Vec<u8>>; 4]> {
   const duplicateRemaining = evaluate(duplicateOwner);
   if (duplicateRemaining.length !== 2) throw new Error("[verify interactivity tool-jobs] self-test declaration-without-proof was falsely accepted.");
   const validCatalog = { "owner.rs": `app_commands! { "bounded" => bounded::Payload }\n.action_interactive_job("bounded", InteractiveJobClassification::Migrated)\n${exactProof("owner.rs", "owner@1/*#editor", "bounded")}` };
-  if (evaluate(validCatalog).length !== 0) throw new Error("[verify interactivity tool-jobs] self-test exact-dynamic-proof-catalog was falsely rejected.");
+  if (evaluate(validCatalog).length !== 1) throw new Error("[verify interactivity tool-jobs] self-test proof-only-route was falsely accepted as executable.");
+  const typedVariantCatalog = { "owner.rs": `const BOUNDED_ROUTE: &str = "bounded";\npuzzle3d_command_variants! { One = BOUNDED_ROUTE }\n.action_interactive_job("bounded", InteractiveJobClassification::Migrated)\n${exactProof("owner.rs", "owner@1/*#editor", "bounded")}` };
+  if (evaluate(typedVariantCatalog).length !== 1) throw new Error("[verify interactivity tool-jobs] self-test typed-command-variant-proof-only route was falsely accepted as executable.");
+  const unresolvedTypedVariant = new Map([["owner.rs", "puzzle3d_command_variants! { One = COPIED_UNRESOLVED_ROUTE }"]]);
+  if (toolJobStaticRows(unresolvedTypedVariant).length !== 0) throw new Error("[verify interactivity tool-jobs] self-test unresolved typed-command variant was falsely accepted.");
   const sharedProof = exactProof("owner.rs", "owner@1/*#editor", "bounded").replace(
     /tools:\s*\{\s*"bounded"\s*=>\s*(semio_framework::ToolExecutionContract::bounded_first_step\([^)]*\)),\s*\}/,
     'contract: $1, tools: ["bounded"]',
   );
   const sharedCatalog = { "owner.rs": `app_commands! { "bounded" => bounded::Payload }\n.action_interactive_job("bounded", InteractiveJobClassification::Migrated)\n${sharedProof}` };
-  if (evaluate(sharedCatalog).length !== 0) throw new Error("[verify interactivity tool-jobs] self-test shared-contract-proof-catalog was falsely rejected.");
+  if (evaluate(sharedCatalog).length !== 1) throw new Error("[verify interactivity tool-jobs] self-test shared-contract-proof-only route was falsely accepted as executable.");
+  const executableOwner = `
+${validCatalog["owner.rs"]}
+const APP_COMMAND_TOOL_IDS: &'static [&'static str] = &["bounded"];
+struct AppCommandJobFactory;
+impl ToolJobFactory for AppCommandJobFactory {
+  type Payload = Payload;
+  type Job = Job;
+  fn execution_contract(&self) -> ToolExecutionContract { contract() }
+  fn create_job(&mut self, operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> { job(operation, payload) }
+}
+impl ArtifactOwnedToolJobFactory for AppCommandJobFactory {
+  type Owner = semio_framework_plugin::EditorApp<Ownerownerrs>;
+  const TOOL_IDS: &'static [&'static str] = APP_COMMAND_TOOL_IDS;
+}
+impl ArtifactEditor for Ownerownerrs {
+  fn register_tool_job_factories(registry: &mut Registry) { registry.register(AppCommandJobFactory::new("owner")); }
+  fn build_tool_job(request: Request) -> Result<Option<ToolOperationSpec>, Fault> { build(request) }
+}`;
+  if (evaluate({ "owner.rs": executableOwner }).length !== 0) throw new Error("[verify interactivity tool-jobs] self-test exact app-owned executable route was falsely rejected.");
+  const qualifiedSchemaOwner = `const FIXTURE_DOCUMENT_SCHEMA: &str = "fixture.document";\n${executableOwner.replace(
+    'const DOCUMENT_SCHEMA: &\'static str = "fixture.document";',
+    "const DOCUMENT_SCHEMA: &'static str = crate::schema::FIXTURE_DOCUMENT_SCHEMA;",
+  )}`;
+  const qualifiedSchemaFiles = new Map([["owner.rs", qualifiedSchemaOwner]]);
+  const qualifiedSchemaFailures = toolJobProofCatalogFailures(
+    qualifiedSchemaFiles,
+    toolJobStaticRows(qualifiedSchemaFiles),
+    toolJobDispositions(qualifiedSchemaFiles),
+    toolJobProofs(qualifiedSchemaFiles),
+  );
+  if (qualifiedSchemaFailures.some((failure) => failure.includes("forged bounded reducer document schema")))
+    throw new Error("[verify interactivity tool-jobs] self-test qualified document-schema constant was falsely rejected.");
+  if (evaluate({ "owner.rs": executableOwner.replace("registry.register(AppCommandJobFactory::new(\"owner\"));", "") }).length === 0)
+    throw new Error("[verify interactivity tool-jobs] self-test app-owned factory without registration was falsely accepted.");
+  if (evaluate({ "owner.rs": executableOwner.replace("fn build_tool_job(request: Request) -> Result<Option<ToolOperationSpec>, Fault> { build(request) }", "") }).length === 0)
+    throw new Error("[verify interactivity tool-jobs] self-test app-owned factory without builder was falsely accepted.");
   const duplicateCatalog = { "owner.rs": validCatalog["owner.rs"]!.replace('tools: { "bounded" =>', 'tools: { "bounded" => semio_framework::ToolExecutionContract::bounded_first_step(64, 1, 1, 64, 100), "bounded" =>') };
   if (evaluate(duplicateCatalog).length === 0) throw new Error("[verify interactivity tool-jobs] self-test duplicate-proof was falsely accepted.");
   const forgedOwner = { "owner.rs": validCatalog["owner.rs"]!.replace("EditorApp<Ownerownerrs>", "EditorApp<ForgedOwner>") };
@@ -5336,7 +5746,7 @@ fn hostile_owner() -> &'static Mutex<[Option<Vec<u8>>; 4]> {
   const prematureSegmentRemoval = "async fn take_segmented_download_chunk(&mut self, operation_id: u64) { let chunk = output.chunks.take_chunk()?; if output.chunks.chunks_remaining() == 0 { self.segmented_downloads.remove(&operation_id); } } segmented_download_remains_addressable_until_terminal_none_is_observed";
   if (toolJobSegmentedTerminalDrainExact(prematureSegmentRemoval)) throw new Error("[verify interactivity tool-jobs] self-test premature-segmented-terminal-removal was falsely accepted.");
   const genericPluginReserved = 'puzzle5d_reserved_factory!(CopyFactory, "copy", "copy.v1"); puzzle5d_reserved_factory!(CutFactory, "cut", "cut.v1"); puzzle5d_reserved_factory!(PasteFactory, "paste", "paste.v1"); puzzle5d_reserved_factory!(ImportFactory, "import-media", "import.v1"); impl ArtifactEditor for Puzzle5dPlayApp { fn register_tool_job_factories() {} fn build_reserved_tool_job() { ArtifactReservedToolInput::Media; ArtifactReservedToolJob::new(GenericJob); } } impl InteractiveJob for GenericJob { fn step() { CheckpointReady(()); cx.is_cancelled(); } }';
-  if (toolJobPuzzleReservedRoutesExact(genericPluginReserved)) throw new Error("[verify interactivity tool-jobs] self-test generic-plugin-reserved-job was falsely accepted.");
+  if (toolJobPuzzleReservedRoutesExact(genericPluginReserved, "")) throw new Error("[verify interactivity tool-jobs] self-test generic-plugin-reserved-job was falsely accepted.");
   const terminalMediaSerialization = "async fn poll_owned_media_export() { pending_step.try_recv(); serde_json::to_vec(&media); active.output_credit.validate_terminal(); validate_media_export_structure(&media); }";
   if (toolJobMediaExportBounded(terminalMediaSerialization)) throw new Error("[verify interactivity tool-jobs] self-test terminal-media-serialization was falsely accepted.");
   const underCredit = "async fn poll_owned_media_export() { pending_step.try_recv(); active.output_credit.validate_terminal(); } struct RuntimeAppCell<PA: PluginApp>; dropping_a_pending_owner_restores_the_instance_collection_and_wakes_the_waiter; a_pending_instance_does_not_block_an_unrelated_instance_cell; submitted_first_step_can_be_polled_pending_without_panicking_or_double_submitting;";
@@ -5743,12 +6153,12 @@ fn hostile_owner() -> &'static Mutex<[Option<Vec<u8>>; 4]> {
     "pub(crate) fn require_empty_output_shell(&self) -> Result<(), &'static str>",
     "self.layers.is_empty() && self.assets.is_empty()",
     "Populated Raster snapshot output is forbidden; interactive production routes require the retained page output authority",
-    "pub(crate) async fn enc_asset_map(map: &RasterOwnedMap<RasterAssetChild>) -> String",
-    "pub(crate) async fn enc_params(params: &RasterOwnedMap<dsl::DslValue>) -> String",
-    "async fn write_asset_map(out: &mut Vec<u8>, map: &RasterOwnedMap<RasterAssetChild>)",
-    "async fn write_params(out: &mut Vec<u8>, params: &RasterOwnedMap<dsl::DslValue>)",
-    "async fn print_raster_snapshot_body(s: &RasterSnapshot) -> String",
-    "async fn encode_raster_snapshot_binary(s: &RasterSnapshot) -> Vec<u8>",
+    "pub(crate) fn enc_asset_map(map: &RasterOwnedMap<RasterAssetChild>) -> String",
+    "pub(crate) fn enc_params(params: &RasterOwnedMap<dsl::DslValue>) -> String",
+    "fn write_asset_map(out: &mut Vec<u8>, map: &RasterOwnedMap<RasterAssetChild>)",
+    "fn write_params(out: &mut Vec<u8>, params: &RasterOwnedMap<dsl::DslValue>)",
+    "fn print_raster_snapshot_body(s: &RasterSnapshot) -> String",
+    "fn encode_raster_snapshot_binary(s: &RasterSnapshot) -> Vec<u8>",
     'assert!(map.is_empty(), "{RASTER_POPULATED_OUTPUT_ERROR}");',
     'assert!(params.is_empty(), "{RASTER_POPULATED_OUTPUT_ERROR}");',
     'assert!(map.is_empty(), "{RASTER_POPULATED_OUTPUT_ERROR}");',
@@ -5806,6 +6216,18 @@ fn hostile_owner() -> &'static Mutex<[Option<Vec<u8>>; 4]> {
     "close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)",
   ].join("\n");
   if (!toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test retained-Raster-envelope-route was falsely rejected.");
+  for (const signature of [
+    "pub(crate) fn enc_asset_map(map: &RasterOwnedMap<RasterAssetChild>) -> String",
+    "pub(crate) fn enc_params(params: &RasterOwnedMap<dsl::DslValue>) -> String",
+    "fn write_asset_map(out: &mut Vec<u8>, map: &RasterOwnedMap<RasterAssetChild>)",
+    "fn write_params(out: &mut Vec<u8>, params: &RasterOwnedMap<dsl::DslValue>)",
+    "fn print_raster_snapshot_body(s: &RasterSnapshot) -> String",
+    "fn encode_raster_snapshot_binary(s: &RasterSnapshot) -> Vec<u8>",
+  ]) {
+    const suspended = signature.replace("fn ", "async fn ");
+    if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace(signature, suspended), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin))
+      throw new Error(`[verify interactivity tool-jobs] self-test Raster-immediate-signature ${signature} was falsely accepted as async.`);
+  }
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedRasterWasm.replace("preflight_artifact_envelope_ingress_page(handle.runtime_handle(), len)\n", ""), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-copy-without-preflight was falsely accepted.");
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedRasterWasm.replace("preflight_artifact_envelope_ingress_page(handle.runtime_handle(), len)\nconstruct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len\nlet mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]\nsource.copy_to(&mut bytes[..len])", "let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]\nsource.copy_to(&mut bytes[..len])\npreflight_artifact_envelope_ingress_page(handle.runtime_handle(), len)\nconstruct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-copy-before-preflight was falsely accepted.");
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedRasterWasm.replace("let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]", "let mut bytes = Vec::new()"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-fixed-page-owner-removal was falsely accepted.");
@@ -5880,15 +6302,15 @@ fn hostile_owner() -> &'static Mutex<[Option<Vec<u8>>; 4]> {
     }
 }`;
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, `${retainedRasterCodec}\n${restoredRasterOwnedMapSerializeLoop}`, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-public-populated-serde-loop-bound-restoration was falsely accepted.");
-  const restoredRasterEncAssetMapLoop = `pub(crate) async fn enc_asset_map(map: &RasterOwnedMap<RasterAssetChild>) -> String {
+  const restoredRasterEncAssetMapLoop = `pub(crate) fn enc_asset_map(map: &RasterOwnedMap<RasterAssetChild>) -> String {
     format!("[{}]", map.iter().map(|(k, v)| format!("[{},{}]", enc_str(k), enc_child(v))).collect::<Vec<_>>().join(","))
 }`;
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, `${retainedRasterCodec}\n${restoredRasterEncAssetMapLoop}`, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-snapshot-text-asset-map-whole-loop-restoration was falsely accepted.");
-  const restoredRasterEncParamsLoop = `pub(crate) async fn enc_params(params: &RasterOwnedMap<dsl::DslValue>) -> String {
+  const restoredRasterEncParamsLoop = `pub(crate) fn enc_params(params: &RasterOwnedMap<dsl::DslValue>) -> String {
     format!("[{}]", params.iter().map(|(k, v)| format!("[{},{}]", enc_str(k), hex_encode(&serde_json::to_vec(v).unwrap_or_default()))).collect::<Vec<_>>().join(","))
 }`;
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, `${retainedRasterCodec}\n${restoredRasterEncParamsLoop}`, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-snapshot-text-parameter-map-whole-loop-restoration was falsely accepted.");
-  const restoredRasterWriteAssetMapLoop = `async fn write_asset_map(out: &mut Vec<u8>, map: &RasterOwnedMap<RasterAssetChild>) {
+  const restoredRasterWriteAssetMapLoop = `fn write_asset_map(out: &mut Vec<u8>, map: &RasterOwnedMap<RasterAssetChild>) {
     store::pack_rt::write_varint_u64(out, map.len() as u64);
     for (k, v) in map {
         write_str_lp(out, k);
@@ -5896,7 +6318,7 @@ fn hostile_owner() -> &'static Mutex<[Option<Vec<u8>>; 4]> {
     }
 }`;
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, `${retainedRasterCodec}\n${restoredRasterWriteAssetMapLoop}`, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-snapshot-pack-asset-map-whole-loop-restoration was falsely accepted.");
-  const restoredRasterWriteParamsLoop = `async fn write_params(out: &mut Vec<u8>, params: &RasterOwnedMap<dsl::DslValue>) {
+  const restoredRasterWriteParamsLoop = `fn write_params(out: &mut Vec<u8>, params: &RasterOwnedMap<dsl::DslValue>) {
     store::pack_rt::write_varint_u64(out, params.len() as u64);
     for (k, v) in params {
         write_str_lp(out, k);
@@ -6193,6 +6615,15 @@ fn hostile_owner() -> &'static Mutex<[Option<Vec<u8>>; 4]> {
     "cancel_artifact_envelope_load(handle.runtime_handle())",
   ].join("\n");
   if (!toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test retained-Draw-envelope-route was falsely rejected.");
+  const retainedDrawProductionEditor = retainedDrawEditor
+    .replace("draw_live_envelope_submit_recursive_clone_swap_displaced_store_and_exact_ack_succeed", "")
+    .replace("draw_live_envelope_cancel_closes_retained_pages_without_publication", "")
+    .replace("draw_live_envelope_rejects_single_and_final_edit_id_plus_one_before_mutation_candidate", "")
+    .replace("draw_live_initializer_candidate_container_commit_ack_cancel_stale_preserve_last_valid_and_exact_handle", "")
+    .replace('"forwards": [crate::artifacts::draw::mutations::DrawMutation::RenameLayer', "");
+  if (!toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawProductionEditor, retainedWriterPlugin, retainedDrawEditor)) {
+    throw new Error("[verify interactivity tool-jobs] self-test production-stripped Draw editor with raw cfg(test) law witnesses was falsely rejected.");
+  }
   const retainedDrawSemanticFields = [
     "FillStyle::Solid { color }",
     "FillStyle::LinearGradient { x1, y1, x2, y2, stops }",
@@ -6507,7 +6938,7 @@ async fn run_job_on_worker() { WorkerJobSession::try_new(relay, params); self.re
   if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("const GUEST_RELAY_MOUNTED_SLOTS: usize = 16", "slots: Vec<GuestRelayMountedSession>"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-fixed-mounted-registry-removal was falsely accepted.");
   if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("self.relay_registry.mount(index, mounted_generation, owner);", "loop { session.step().await; }"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-run-loop-restoration was falsely accepted.");
   if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("guest_cold_relay_registry_max_plus_one_generation_and_zero_pump_are_exact", "guest_cold_relay_registry_smoke"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-max-plus-one-generation-fixture-removal was falsely accepted.");
-  return fixtures.length + 365;
+  return fixtures.length + 383 + toolJobPuzzleReservedRoutesSelfTests();
 }
 
 function toolJobFixedOperationRegistryExact(source: string): boolean {
@@ -6738,6 +7169,103 @@ function toolJobFixedOperationFixtureRun(root: string): FixedOperationFixtureOut
   return { schema: fixture.schema, results };
 }
 
+type SharedFrameworkActionRouteFixture = {
+  schema: string;
+  routes: Array<{ id: string; factory: string; schemaId: string; descriptorDisposition: "migrated"; routeIndex: number; maximumRawBytes: number; maximumItems: number; workUnits: number; maximumOutputBytes: number }>;
+  descriptorLaws: Array<{
+    id: string;
+    ownerKind: "windowAction" | "appCommand" | "modeCommand";
+    ownerId: string;
+    actionIds: string[];
+    initial: "missing" | "migrated";
+    expected: "missing" | "migrated";
+  }>;
+  hostileLaws: Array<{
+    id: string;
+    kind: "rawAdmission" | "cancellation" | "freshness" | "identity" | "progress" | "close";
+    value?: number;
+    maximum?: number;
+    operation?: number;
+    generation?: number;
+    liveGeneration?: number;
+    maximumItems?: number;
+    maximumBytes?: number;
+    expected: "accepted" | "rejected" | "cancelled" | "checkpoint" | "retained" | "terminal";
+  }>;
+};
+
+function toolJobSharedFrameworkActionFixtureRun(root: string): { schema: string; routes: string[]; descriptor: string[]; hostile: string[] } {
+  const fixture = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/shared-framework-action-routes-law.json")) as SharedFrameworkActionRouteFixture;
+  const schema = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/shared-framework-action-routes.schema.json")) as Record<string, unknown>;
+  if (schema.$schema !== "https://json-schema.org/draft/2020-12/schema" || schema.$id !== "semio://framework/plugin/shared-framework-action-routes/v1")
+    throw new Error("[verify interactivity tool-jobs shared-action-fixture] schema identity is not exact.");
+  if (fixture.schema !== "semio.framework.plugin.shared-framework-action-routes.v1" || fixture.routes.length !== 12)
+    throw new Error("[verify interactivity tool-jobs shared-action-fixture] fixture root is not exact.");
+  const expectedIds = TOOL_JOB_FRAMEWORK_RESERVED_IDS.filter((id) => !["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint", "revertToCommand", "configuration-binary"].includes(id)).sort();
+  const actualIds = fixture.routes.map((route) => route.id).sort();
+  if (actualIds.join("\0") !== expectedIds.join("\0") || new Set(fixture.routes.map((route) => route.factory)).size !== 12 || new Set(fixture.routes.map((route) => route.routeIndex)).size !== 12)
+    throw new Error("[verify interactivity tool-jobs shared-action-fixture] route identities are not an exact bijection.");
+  const source = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs");
+  const production = new Map(toolJobReservedSpecs(source).map((route) => [route.id, route]));
+  for (const route of fixture.routes) {
+    const row = production.get(route.id);
+    if (!row || row.factory !== route.factory || row.values.join("\0") !== [route.maximumRawBytes, route.maximumItems, route.workUnits, route.maximumOutputBytes].join("\0"))
+      throw new Error(`[verify interactivity tool-jobs shared-action-fixture] ${route.id} differs from its production factory contract.`);
+    if (route.schemaId !== `framework.reserved.${route.id}.v1` || route.descriptorDisposition !== "migrated" || !source.includes(`registry.register(${route.factory}::<A>::new(&controller_id))`))
+      throw new Error(`[verify interactivity tool-jobs shared-action-fixture] ${route.id} lacks exact schema or live registration identity.`);
+    if (!source.includes(`FrameworkSharedActionDescriptorRoute { action_id: "${route.id}", schema_id: "${route.schemaId}" }`))
+      throw new Error(`[verify interactivity tool-jobs shared-action-fixture] ${route.id} lacks its schema-driven descriptor disposition route.`);
+  }
+  const dispositionJoinStart = source.indexOf("fn join_framework_shared_action_dispositions(definition: &mut AppDefinition)");
+  const dispositionJoinEnd = source.indexOf("//#endregion", dispositionJoinStart);
+  const dispositionJoin = source.slice(dispositionJoinStart, dispositionJoinEnd);
+  if (
+    dispositionJoinStart < 0 ||
+    dispositionJoinEnd < dispositionJoinStart ||
+    !dispositionJoin.includes("definition.window_kinds.iter_mut()") ||
+    !dispositionJoin.includes("window.actions") ||
+    dispositionJoin.includes("definition.commands") ||
+    dispositionJoin.includes("definition.modes") ||
+    !source.includes("join_framework_shared_action_dispositions(&mut app.definition);") ||
+    !source.includes("join_framework_shared_action_dispositions(&mut factory_definition);")
+  )
+    throw new Error("[verify interactivity tool-jobs shared-action-fixture] descriptor disposition join is not exact across manifest and runtime factory definitions.");
+  const dispositionById = new Map(fixture.routes.map((route) => [route.id, route.descriptorDisposition]));
+  const requiredDescriptorLawIds = ["exact-app-command-owner", "exact-mode-command-owner", "exact-window-owner-primary", "exact-window-owner-secondary", "near-id-window-owner", "unaccepted-window-owner"];
+  if (fixture.descriptorLaws.map((law) => law.id).sort().join("\0") !== requiredDescriptorLawIds.join("\0"))
+    throw new Error("[verify interactivity tool-jobs shared-action-fixture] descriptor law identities are not exact.");
+  const descriptor = fixture.descriptorLaws.map((law) => {
+    if (!law.ownerId.includes("/") && law.ownerKind === "windowAction") throw new Error(`[verify interactivity tool-jobs shared-action-fixture] ${law.id} lacks an exact window owner placement.`);
+    if (law.id.startsWith("exact-window-owner") && law.actionIds.slice().sort().join("\0") !== actualIds.join("\0"))
+      throw new Error(`[verify interactivity tool-jobs shared-action-fixture] ${law.id} does not cover every accepted shared action id.`);
+    for (const actionId of law.actionIds) {
+      const result = law.ownerKind === "windowAction" ? dispositionById.get(actionId) ?? law.initial : law.initial;
+      if (result !== law.expected) throw new Error(`[verify interactivity tool-jobs shared-action-fixture] descriptor law ${law.id} changed ${law.ownerKind} ${law.ownerId}/${actionId} to ${result}.`);
+    }
+    return `${law.id}:${law.ownerKind}:${law.ownerId}:${law.expected}`;
+  });
+  const requiredHostileIds = ["aba-generation", "cancel-after-transfer", "cancel-before-transfer", "empty", "exact-generation", "interrupted-close", "maximum", "maximum-plus-one", "one-semantic-unit", "repeated-terminal-close", "wrong-factory", "zero-close-credit"];
+  if (fixture.hostileLaws.map((law) => law.id).sort().join("\0") !== requiredHostileIds.join("\0"))
+    throw new Error("[verify interactivity tool-jobs shared-action-fixture] hostile law identities are not exact.");
+  const hostile = fixture.hostileLaws.map((law) => {
+    let result: SharedFrameworkActionRouteFixture["hostileLaws"][number]["expected"];
+    if (law.kind === "rawAdmission") result = (law.value ?? -1) <= (law.maximum ?? -1) ? "accepted" : "rejected";
+    else if (law.kind === "cancellation") result = "cancelled";
+    else if (law.kind === "freshness") result = law.generation === law.liveGeneration ? "accepted" : "rejected";
+    else if (law.kind === "identity") result = "rejected";
+    else if (law.kind === "progress") result = (law.value ?? 0) > 0 && law.value === law.maximum ? "checkpoint" : "rejected";
+    else result = law.maximumItems === 1 && (law.maximumBytes ?? 0) >= 4_096 ? "terminal" : "retained";
+    if (result !== law.expected) throw new Error(`[verify interactivity tool-jobs shared-action-fixture] hostile law ${law.id} differs from its expected result.`);
+    return `${law.id}:${result}`;
+  });
+  const shell = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs");
+  const accepted = shell.indexOf("program.handle_action(session.instance_id, &action_json, &session.view_state).await?");
+  const armed = shell.indexOf("if record_tutorial_after_acceptance", accepted);
+  if (accepted < 0 || armed < accepted || shell.slice(0, accepted).includes("if action.action == semio_framework::RECORD_TUTORIAL_ACTION_ID {\n            self.tutorial_start_recording();"))
+    throw new Error("[verify interactivity tool-jobs shared-action-fixture] recordTutorial arms before the accepted retained route.");
+  return { schema: fixture.schema, routes: fixture.routes.map((route) => `${route.id}:${route.factory}:${route.schemaId}:${route.descriptorDisposition}`), descriptor, hostile };
+}
+
 function toolJobFixedOperationRustFixtureSource(root: string): string {
   toolJobFixedOperationFixtureRun(root);
   const fixture = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/fixed-operation-registry-law.json")) as FixedOperationFixture;
@@ -6820,7 +7348,7 @@ function toolJobDrawGestureOperationOwnerExact(drawEditor: string, drawConfig: s
   const frameworkOwner = [
     "fn build_instance_operation_owner() -> Box<dyn ArtifactInstanceOperationOwner>",
     "instance_operation_owner: ArtifactInstanceOperationOwnerHandle",
-    "A::render_with_instance_operation_owner(&self.instance_operation_owner",
+    "A::render_with_request_context(&self.instance_operation_owner",
     "MountedWorkerJobSession::try_new",
   ];
   return (
@@ -6883,7 +7411,7 @@ impl ArtifactEditor for DrawPlayApp {
 trait ArtifactApp { fn build_instance_operation_owner() -> Box<dyn ArtifactInstanceOperationOwner>; }
 struct VcsArtifactApp { instance_operation_owner: ArtifactInstanceOperationOwnerHandle }
 struct Request { instance_operation_owner: request.instance_operation_owner }
-fn render() { A::render_with_instance_operation_owner(&self.instance_operation_owner); }
+fn render() { A::render_with_request_context(&self.instance_operation_owner); }
 fn mount() { MountedWorkerJobSession::try_new(); }
 `;
   const config = "struct DrawConfig { locale: String } enum DrawConfigMutation { SetLocale(String) }";
@@ -6906,7 +7434,7 @@ fn mount() { MountedWorkerJobSession::try_new(); }
     [`${editor}\nfn interaction_targets_json() {}`, config, proto, framework],
     [editor.replace("if DRAW_GESTURE_TOOL_IDS.contains(&command.command_id())", "if false"), config, proto, framework],
     [`${editor}\nstatic TRACE_POINTER_JOBS: OnceLock<Map> = OnceLock::new();`, config, proto, framework],
-    [editor, config, proto, framework.replace("A::render_with_instance_operation_owner(&self.instance_operation_owner", "A::render")],
+    [editor, config, proto, framework.replace("A::render_with_request_context(&self.instance_operation_owner", "A::render")],
   ] as const;
   for (const [hostileEditor, hostileConfig, hostileProto, hostileFramework] of hostile) {
     if (toolJobDrawGestureOperationOwnerExact(hostileEditor, hostileConfig, hostileProto, hostileFramework)) throw new Error("[verify interactivity tool-jobs] Draw persisted-operation hostile fixture was falsely accepted.");
@@ -6992,8 +7520,8 @@ function toolJobFemLiveVisualPublicationExact(
   const modelRender = rustBody(fem3dModel, "pub fn render_with_progress(");
   const resultsRender = rustBody(fem3dResults, "pub fn render_with_progress(");
   const viewerRender = rustBody(fem3dViewerModel, "pub fn render(");
-  const editorRender = rustBody(fem3dEditor, "async fn render(");
-  const viewerDispatch = rustBody(fem3dViewer, "async fn render(");
+  const editorRender = rustBody(fem3dEditor, "fn render(");
+  const viewerDispatch = rustBody(fem3dViewer, "fn render(");
   const viewerApp = region(frameworkPlugin, "pub struct ViewerApp<V: ArtifactViewer>", "//#endregion 🔖️ViewerApp");
   const prepared = rustBody(frameworkWorld, "pub fn step_world3d_snapshot(");
   const cleanRender = (body: string) => [".to_string(", "fem3d_scene_parts(", "mesh_preview", "serde_json", ".sort", ".collect"].every((token) => !body.includes(token));
@@ -7382,7 +7910,7 @@ function toolJobFemLiveVisualPublicationExact(
     viewerApp.includes("V::mounted_job_close_step(instance_id, maximum_items, maximum_bytes)") &&
     viewerApp.includes("V::mounted_jobs_terminal_is_empty(instance_id)") &&
     viewerApp.includes("V::mounted_job_prepare_snapshot_read(operation, snapshot)") &&
-    viewerApp.includes("V::pending_effects(doc, cfg).await") &&
+    viewerApp.includes("V::pending_effects(doc, cfg)") &&
     !!prepared &&
     prepared.body.includes("world3d_snapshot_with_page(cursor.lease, cursor.page") &&
     prepared.body.includes("page.item(usize::from(cursor.item)).copied()") &&
@@ -7558,7 +8086,7 @@ function toolJobFemLiveVisualPublicationSelfTests(
     ["viewer mounted authority", exact({ fem3dViewer: mutate(fem3dViewer, "crate::artifacts::fem3d::live_visual::with_live_visual(doc.render_operation(), model::render)", "model::render(None)") })],
     ["viewer lease handoff", exact({ fem3dViewerModel: mutate(fem3dViewerModel, "scene.snapshot = visual.map(", "let snapshot = visual.map(") })],
     ["viewer mounted hook forwarding", exact({ frameworkPlugin: mutate(frameworkPlugin, "V::mounted_job_prepare_snapshot_read(operation, snapshot)", "false") })],
-    ["viewer pending effect forwarding", exact({ frameworkPlugin: mutate(frameworkPlugin, "V::pending_effects(doc, cfg).await", "Vec::new()") })],
+    ["viewer pending effect forwarding", exact({ frameworkPlugin: mutate(frameworkPlugin, "V::pending_effects(doc, cfg)", "Vec::new()") })],
     ["prepared instance admission", exact({ frameworkWorld: mutate(frameworkWorld, "world3d_draw_rebuild_admit_instance(state, 0, id, model, color, false, false)", "Ok(())") })],
     ["prepared atomic seal", exact({ frameworkWorld: mutate(frameworkWorld, "world3d_draw_rebuild_seal(state)", "Ok(())") })],
     ["prepared lease swap", exact({ frameworkWorld: mutate(frameworkWorld, "state.snapshot_lease = Some(cursor.lease)", "state.snapshot_lease = None") })],
@@ -7567,8 +8095,110 @@ function toolJobFemLiveVisualPublicationSelfTests(
   return hardenedCount + mutations.length;
 }
 
+//#region 🧵️ Artifact Retained Command Checkpoint
+function toolJobArtifactRetainedCommandExact(source: string): boolean {
+  const checkpointStart = source.indexOf("    fn checkpoint(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {");
+  const checkpointOpen = checkpointStart < 0 ? -1 : source.indexOf("{", checkpointStart);
+  const checkpoint = checkpointOpen < 0 ? undefined : toolJobRustBlock(source, checkpointOpen);
+  const required = [
+    "pub const ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES: usize = 512;",
+    "const ARTIFACT_COMMAND_CHECKPOINT_HEADER_BYTES: usize = 48;",
+    'const ARTIFACT_COMMAND_CHECKPOINT_MAGIC: [u8; 4] = *b"ARC1";',
+    "fn encode_artifact_command_checkpoint(",
+    "fn decode_artifact_command_checkpoint(",
+    "bytes[4] != 3",
+    "context_digest != current_context_digest",
+    "workspace_identity != current_workspace_identity",
+    "fn workspace_identity(&self) -> u64",
+    "fn checkpoint(&self, _target: &mut [u8]) -> Result<usize, Fault>",
+    "fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault>",
+    "CheckpointPages,",
+    "CheckpointRetire,",
+    "WirePages,",
+    "Decode,",
+    "Preflight,",
+    "Work,",
+    "Publish,",
+    "checkpoint_input: Option<RetainedToolWireInput>",
+    "checkpoint_bytes: [u8; ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES]",
+    "checkpoint_pending: bool",
+    "context: Option<Arc<ArtifactOwnedToolJobContext<A>>>",
+    "pub fn from_wire_with_checkpoint(",
+    "pub fn try_new_with_context(",
+    "ArtifactRetainedCommandPhase::CheckpointPages =>",
+    "ArtifactRetainedCommandPhase::CheckpointRetire =>",
+    "checked_add(page.len()).filter(|end| *end <= ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES)",
+    "decode_artifact_command_checkpoint(bytes, self.maximum_raw_bytes, input.page_count(), input.declared_bytes(), current_context_digest, current_workspace_identity)",
+    "context_digest: self.context.as_ref().map_or(0, |context| context.identity_digest())",
+    "workspace_identity: self.work.as_ref().map_or(0, |work| work.workspace_identity())",
+    "self.work.as_mut().ok_or_else(|| Fault::from(\"retained-command-checkpoint-work-absent\"))?.restore(checkpoint.work)?",
+    "self.raw.clear();",
+    "self.raw_page_cursor = 0;",
+    "self.checkpoint_pending = true;",
+    "StepOutcome::CheckpointReady(Checkpoint",
+    "checkpoint.begin_close();",
+    "self.checkpoint_input.is_none()",
+    "checkpoint_binary_matches_schema_fixture_and_byteorder_oracle",
+    "checkpoint_decode_rejects_context_workspace_and_reserved_byte_drift",
+  ];
+  return (
+    required.every((fragment) => source.includes(fragment)) &&
+    checkpoint !== undefined &&
+    checkpoint.body.includes("let mut state = [0_u8; ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES]") &&
+    checkpoint.body.includes("let mut work_state = [0_u8; ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES - ARTIFACT_COMMAND_CHECKPOINT_HEADER_BYTES]") &&
+    checkpoint.body.includes("work.checkpoint(&mut work_state)") &&
+    !checkpoint.body.includes("to_vec()") &&
+    !source.includes("checkpoint: Vec<u8>") &&
+    !source.includes("checkpoint_bytes: Vec<u8>")
+  );
+}
+
+function toolJobArtifactRetainedCommandRuntimeLawExact(source: string): boolean {
+  return [
+    "shared_retained_command_checkpoint_resumes_exact_cursor_and_cancels_with_bounded_close",
+    "bus.dispatch_wire_retained_with_spec(",
+    "bytes.get(4) == Some(&3) && bytes.get(5) == Some(&1) && bytes.get(48) == Some(&1)",
+    "TEST_RETAINED_COMMAND_STEP_CALLS.load(std::sync::atomic::Ordering::SeqCst), 2",
+    "semio_framework_job::StepOutcome::Cancelled",
+    "original.job.terminal_is_empty()",
+    "resumed.job.terminal_is_empty()",
+    "cancelled.job.terminal_is_empty()",
+  ].every((fragment) => source.includes(fragment));
+}
+
+function toolJobArtifactRetainedCommandSelfTests(source: string, runtimeLawSource: string): number {
+  if (!toolJobArtifactRetainedCommandExact(source)) throw new Error("[verify interactivity tool-jobs] live shared retained command checkpoint was falsely rejected.");
+  if (!toolJobArtifactRetainedCommandRuntimeLawExact(runtimeLawSource)) throw new Error("[verify interactivity tool-jobs] live shared retained command runtime replay law was falsely rejected.");
+  const mutations: readonly [string, string, string][] = [
+    ["resizable work checkpoint", "let mut work_state = [0_u8; ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES - ARTIFACT_COMMAND_CHECKPOINT_HEADER_BYTES];", "let mut work_state = Vec::new();"],
+    ["resume constructor", "pub fn from_wire_with_checkpoint(", "pub fn from_wire_without_checkpoint("],
+    ["checkpoint close owner", "checkpoint.begin_close();", "drop(checkpoint);"],
+    ["terminal checkpoint owner", "&& self.checkpoint_input.is_none()", "&& true"],
+    ["work cursor restore", ".restore(checkpoint.work)?", ".restore(&[])?"],
+    ["context identity restore", "context_digest != current_context_digest", "false"],
+    ["workspace identity restore", "workspace_identity != current_workspace_identity", "false"],
+    ["checkpoint version", "bytes[4] != 3", "bytes[4] != 2"],
+    ["checkpoint maximum", "pub const ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES: usize = 512;", "pub const ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES: usize = usize::MAX;"],
+  ];
+  for (const [name, from, to] of mutations) {
+    if (!source.includes(from)) throw new Error(`[verify interactivity tool-jobs] shared retained checkpoint mutation source missing: ${name}.`);
+    if (toolJobArtifactRetainedCommandExact(source.replace(from, to))) throw new Error(`[verify interactivity tool-jobs] shared retained checkpoint mutation ${name} was falsely accepted.`);
+  }
+  const runtimeMutations: readonly [string, string, string][] = [
+    ["runtime replay cursor", "TEST_RETAINED_COMMAND_STEP_CALLS.load(std::sync::atomic::Ordering::SeqCst), 2", "TEST_RETAINED_COMMAND_STEP_CALLS.load(std::sync::atomic::Ordering::SeqCst), 3"],
+    ["runtime cancellation", "semio_framework_job::StepOutcome::Cancelled", "semio_framework_job::StepOutcome::Yield"],
+  ];
+  for (const [name, from, to] of runtimeMutations) {
+    if (!runtimeLawSource.includes(from)) throw new Error(`[verify interactivity tool-jobs] shared retained runtime mutation source missing: ${name}.`);
+    if (toolJobArtifactRetainedCommandRuntimeLawExact(runtimeLawSource.replaceAll(from, to))) throw new Error(`[verify interactivity tool-jobs] shared retained runtime mutation ${name} was falsely accepted.`);
+  }
+  return mutations.length + runtimeMutations.length + 2;
+}
+//#endregion 🧵️ Artifact Retained Command Checkpoint
+
 /** 🎯️ Phase-8 source/runtime contract census used by `verify interactivity tool-jobs`. */
 function toolJobCoverageRun(root: string): ToolJobCoverageReport {
+  toolJobSharedFrameworkActionFixtureRun(root);
   const macroFiles = new Set<string>();
   const fixtureMacroFiles = new Set<string>();
   const commandRows: { file: string; id: string }[] = [];
@@ -7604,6 +8234,8 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const intentionalWriterDuplicates = duplicateRows.filter((row) => row.file.includes("✏️s/🔌️plugins/✒️writer/") && row.id === "setEditorSetting");
   const productionFiles = new Map(policyAllRustFiles(root).filter((file) => file.includes("✏️s/🔌️plugins/") && !file.includes("/🧪️tests/")).map((file) => [file, toolJobProductionProtocolSource(policyReadFileSafe(root, file))]));
   const staticRows = toolJobStaticRows(productionFiles);
+  const appOwnedRows = toolJobAppOwnedRows(productionFiles);
+  const appOwnedKeys = new Set(appOwnedRows.map((row) => `${row.ownerFile}\0${row.toolId}`));
   const dispositions = toolJobDispositions(productionFiles);
   const batchOnlyRows = commandRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "BatchOnlyPendingRewrite").length;
   const forbiddenRows = commandRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "ForbiddenFromUi").length;
@@ -7612,6 +8244,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const platform = policyReadFileSafe(root, "🧰️framework/🔨️modules/🖥️platform/🦀️component.rs");
   const glue = policyReadFileSafe(root, "🧰️framework/📦️packages/🦀️rust/📦️glue.rs");
   const plugin = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs");
+  const artifactRetainedCommand = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️component.rs");
   const store = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs");
   const vcs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️component.rs");
   const causal = policyReadFileSafe(root, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️component.rs");
@@ -7671,18 +8304,22 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const rasterEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
   const rasterWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
   const drawEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧰️owned/🦀️component.rs");
-  const drawEditor = [
+  const drawEditorSources = [
     "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
     "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs",
     "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🦀️component.rs",
-  ]
-    .map((file) => toolJobProductionSource(policyReadFileSafe(root, file)))
+  ].map((file) => policyReadFileSafe(root, file));
+  const drawEditorTestLaws = drawEditorSources[0] ?? "";
+  const drawEditor = drawEditorSources
+    .map(toolJobProductionSource)
     .join("\n");
   const drawConfig = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs");
   const drawConfigProto = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🛰️component.proto");
   const allRustFiles = new Map(policyAllRustFiles(root).map((file) => [file, policyReadFileSafe(root, file)]));
   const proofs = toolJobProofs(productionFiles);
   const proofIdentities = new Set(proofs.map(toolJobProofIdentity));
+  const scanThenMonolithRows = toolJobScanThenMonolithRows(productionFiles, proofs);
+  const scanThenMonolithKeys = new Set(scanThenMonolithRows.map((row) => `${row.file}\0${row.id}`));
   let fixedOperationFixture: FixedOperationFixtureOutput | undefined;
   let fixedOperationRustFixtureFresh = false;
   try {
@@ -7692,7 +8329,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   } catch {
     fixedOperationFixture = undefined;
   }
-  const selfTests = toolJobCoverageSelfTests() + toolJobFixedOperationRegistrySelfTests(jobRuntime) + toolJobDrawGestureOperationOwnerSelfTests() + (fixedOperationFixture?.results.length ?? 0) + Number(fixedOperationRustFixtureFresh);
+  const selfTests = toolJobCoverageSelfTests() + toolJobFixedOperationRegistrySelfTests(jobRuntime) + toolJobDrawGestureOperationOwnerSelfTests() + toolJobArtifactRetainedCommandSelfTests(artifactRetainedCommand, plugin) + (fixedOperationFixture?.results.length ?? 0) + Number(fixedOperationRustFixtureFresh);
   const factoryContracts: { file: string; line: number; factory: string; status: "explicit" | "missing" }[] = [];
   for (const [file, source] of allRustFiles) {
     const implementation = /impl(?:<[^>]+>)?\s+(?:semio_framework::)?ToolJobFactory\s+for\s+([^\s<{]+(?:<[^>{]+>)?)\s*\{/g;
@@ -7704,8 +8341,11 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
       implementation.lastIndex = block.end;
     }
   }
-  const globalPayloadStores = toolJobGlobalPayloadStoreInventory(productionFiles);
+  const globalPayloadStoreInventory = toolJobGlobalPayloadStoreInventory(productionFiles);
+  const globalPayloadStoreExemptions = globalPayloadStoreInventory.filter(toolJobGlobalPayloadStoreIsSharedFixedAuthority);
+  const globalPayloadStores = globalPayloadStoreInventory.filter((row) => !toolJobGlobalPayloadStoreIsSharedFixedAuthority(row));
   const failures: string[] = [];
+  if (!toolJobArtifactRetainedCommandExact(artifactRetainedCommand) || !toolJobArtifactRetainedCommandRuntimeLawExact(plugin)) failures.push("shared app-owned retained command shell lacks fixed ARC1 checkpoints, bounded restore/replay, incremental close, executable runtime replay/cancel laws, or hostile laws");
   if (!toolJobFixedOperationRegistryExact(jobRuntime)) failures.push("fixed operation scheduler authority lacks exact operation/generation admission, owner handback, bounded close, or hostile laws");
   if (!fixedOperationFixture) failures.push("fixed operation scheduler authority lacks its schema-first empty/single/max/max+1/collision/cancel/stale/ABA/interrupted-close executable fixture");
   if (!fixedOperationRustFixtureFresh) failures.push("production FixedOperationRegistry does not execute the exact generated language-neutral law stream");
@@ -7725,7 +8365,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (!toolJobDecodeAfterAdmission(plugin)) failures.push("a typed action, command, or intent decoder runs before exact wire admission");
   if (!toolJobQualifiedProofBeforeDecode(plugin)) failures.push("a typed JSON or intent route decodes before selecting its exact qualified proof identity");
   const frameworkReservedExact = toolJobFrameworkReservedRoutesExact(plugin);
-  const puzzleReservedExact = toolJobPuzzleReservedRoutesExact(puzzle5d);
+  const puzzleReservedExact = toolJobPuzzleReservedRoutesExact(puzzle5d, plugin);
   const importPreparationBounded = toolJobImportPreparationBounded(plugin);
   const fullToolOperationBounded = toolJobFullOperationBounded(plugin);
   if (!frameworkReservedExact) failures.push("framework-owned reserved routes lack exact route-specific resumable factories, direct-branch closure, binary fail-closure, or commit-held cancellation");
@@ -7743,7 +8383,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (!toolJobTrinityRewriteEnvelopeCallerRetainedExact(store, jackEnvelopeCodec, jackEditor, trinityRewrite, plugin)) failures.push("Trinity Rewrite envelope caller lacks the Jack-owned fixed-page operation store, generation handle, bounded progress/cancel/close, exact rejected-page handback, or completion acknowledgement");
   if (!toolJobGisMapEnvelopeCallerRetainedExact(store, gisMapEnvelopeCodec, gisMapEditor, gisMapWasm, plugin)) failures.push("GIS Map `.spr`/`.ops` envelope caller lacks the shared retained edit decoder, exact drawing/image/value child retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
   if (!toolJobRasterEnvelopeCallerRetainedExact(store, rasterEnvelopeCodec, rasterEditor, rasterWasm, plugin)) failures.push("Raster `.spr`/`.ops` envelope caller lacks the shared retained edit decoder, recursive domain retirement, preflight-before-copy fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
-  if (!toolJobDrawEnvelopeCallerRetainedExact(store, drawEnvelopeCodec, drawEditor, plugin)) failures.push("Draw `.spr`/`.ops` envelope caller lacks recursive layer/style/asset preflight, one-item clone/retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
+  if (!toolJobDrawEnvelopeCallerRetainedExact(store, drawEnvelopeCodec, drawEditor, plugin, drawEditorTestLaws)) failures.push("Draw `.spr`/`.ops` envelope caller lacks recursive layer/style/asset preflight, one-item clone/retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
   if (!toolJobChildRetirementInventoryExact(root, allRustFiles)) failures.push("child snapshot retirement domain cohorts or callsites do not match the exact machine-readable owner inventory");
   if (!toolJobPeerInteractionRootsExact(plugin, store, channel)) failures.push("peer ingress, app-typed presence, or interaction roots lack reserve-before-decode retained per-entry publication, atomic validated commit, or O(1) immutable capture");
   if (!toolJobPagedIngressExact(kernel, reactor, plugin, pluginHost, channel, componentWit, mcpWorkspace, runHost, wgpuHost)) failures.push("paged command ingress lacks fixed-page ownership, retained streaming decode/fault closure, generic multi-page ACK ordering, or terminal-close registries across MCP/run/WGPU callers");
@@ -7800,6 +8440,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (/pub fn bounded_catalog\([\s\S]{0,500}?InteractiveJobClassification::Migrated/.test(manifest)) failures.push("bounded_catalog still self-certifies Migrated");
   if (factoryContracts.some((factory) => factory.status === "missing")) failures.push(`${factoryContracts.filter((factory) => factory.status === "missing").length} ToolJobFactory implementation(s) lack explicit execution contracts`);
   if (globalPayloadStores.length > 0) failures.push(`${globalPayloadStores.length} process-global payload store candidate(s) require operation-owned state or an explicit static exemption`);
+  if (scanThenMonolithRows.length > 0) failures.push(`${scanThenMonolithRows.length} resumable route(s) only scan inputs before invoking a monolithic reducer; see scanThenMonolithRows ledger`);
   if (/"typed-command"\.to_string\(\)/.test(inner?.body ?? "")) failures.push("typed-command dispatch fallback remains");
   const publisherStart = plugin.lastIndexOf("async fn publish_mounted_typed_operation_unit");
   const publisherOpen = publisherStart < 0 ? -1 : plugin.indexOf("{", publisherStart);
@@ -7810,10 +8451,31 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const remainingCommands = staticRows
     .filter((row) => {
       const disposition = dispositions.get(`${row.file}\0${row.id}`);
-      const proof = proofs.find((candidate) => candidate.ownerFile === row.file && candidate.ownerTypeName.length > 0 && candidate.controllerId.length > 0 && candidate.factory === "BoundedFirstStepCommandJobFactory" && candidate.toolId === row.id && candidate.documentSchema.length > 0);
-      return !["BatchOnlyPendingRewrite", "ForbiddenFromUi", "Deleted"].includes(disposition ?? "") && !(fullToolOperationBounded && disposition === "Migrated" && proof && proofIdentities.has(toolJobProofIdentity(proof)));
+      const proof = proofs.find((candidate) => candidate.ownerFile === row.file && candidate.ownerTypeName.length > 0 && candidate.controllerId.length > 0 && candidate.factory.length > 0 && candidate.toolId === row.id && candidate.documentSchema.length > 0);
+      return (
+        !["BatchOnlyPendingRewrite", "ForbiddenFromUi", "Deleted"].includes(disposition ?? "") &&
+        !(
+          fullToolOperationBounded &&
+          disposition === "Migrated" &&
+          proof &&
+          proofIdentities.has(toolJobProofIdentity(proof)) &&
+          appOwnedKeys.has(`${row.file}\0${row.id}`) &&
+          !scanThenMonolithKeys.has(`${row.file}\0${row.id}`)
+        )
+      );
     })
-    .map((row) => ({ ...row, reason: dispositions.get(`${row.file}\0${row.id}`) === "Migrated" ? "owner-local handler proof exists but full prepare/job/commit operation is not bounded" : "no explicit factory, bounded-first-step proof, or fail-closed disposition" }));
+    .map((row) => {
+      const disposition = dispositions.get(`${row.file}\0${row.id}`);
+      const reason =
+        disposition !== "Migrated"
+          ? "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+          : !appOwnedKeys.has(`${row.file}\0${row.id}`)
+            ? "classification proof exists but no exact registered app-owned retained reducer factory and builder"
+            : scanThenMonolithKeys.has(`${row.file}\0${row.id}`)
+              ? "resumable route scans inputs then invokes a monolithic reducer"
+              : "owner-local retained route exists but full prepare/job/commit operation is not bounded";
+      return { ...row, reason };
+    });
   const remainingCommandKeys = new Set(remainingCommands.map((row) => `${row.file}\0${row.id}`));
   const acceptedCommandRows = [
     ...staticRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "Migrated" && !remainingCommandKeys.has(`${row.file}\0${row.id}`)),
@@ -7851,13 +8513,15 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
     forbiddenRows,
     deletedRows,
     productionFactories: factoryContracts.length,
-    productionRegistrations: (plugin.match(/BoundedFirstStepCommandJobFactory::<A>::from_proof/g) ?? []).length,
+    productionRegistrations: appOwnedRows.length,
     productionDispatches: (plugin.match(/\.tool_jobs\s*\.dispatch\(/g) ?? []).length,
     aliases: (actionBus.match(/register_alias\(/g) ?? []).length,
     factoryContracts,
     frameworkReservedRoutes,
     reservedImporterOwners: reservedImporters.pending,
     globalPayloadStores,
+    globalPayloadStoreExemptions,
+    scanThenMonolithRows,
     literalRegistrations: staticRows.filter((row) => row.source === "literal").length,
     acceptedCommandRows,
     acceptedReservedRoutes: [
@@ -7947,9 +8611,12 @@ export class VerifyScript extends Script {
     const mode = args[0];
     if (mode !== "report" && mode !== "enforce") throw new Error(`[verify taxonomy] expected report or enforce, got ${JSON.stringify(mode)}.`);
     const scope = taxonomyOption(args, "--scope");
-    const census = buildSemanticCensus(this.root, { scope });
-    process.stdout.write(renderSemanticTaxonomyReport(census, scope));
-    if (mode === "enforce" && census.problems.some((problem) => problem.severity === "error")) throw new Error(`[verify taxonomy enforce] ${census.problems.filter((problem) => problem.severity === "error").length} error finding(s).`);
+    const verification = verifyTaxonomy({ repoRoot: this.root, ...(scope ? { scope } : {}) });
+    const errors = verification.violations.filter((violation) => violation.severity === "error");
+    const warnings = verification.violations.filter((violation) => violation.severity === "warning");
+    console.log(`[verify taxonomy ${mode}] clean=${verification.clean} errors=${errors.length} warnings=${warnings.length}${scope ? ` scope=${scope}` : ""}`);
+    for (const violation of verification.violations) console.log(`[verify taxonomy ${mode}] ${violation.severity} ${violation.code} ${violation.path}: ${violation.message}`);
+    if (mode === "enforce" && !verification.clean) throw new Error(`[verify taxonomy enforce] ${errors.length} error finding(s), ${warnings.length} warning finding(s).`);
   }
 
   /**
@@ -8201,6 +8868,10 @@ export class VerifyScript extends Script {
 
   /** 🎯️ Permanent Phase-8 generated inventory, factory-registration, and no-bypass gate. */
   private runToolJobCoverage(args: string[]): void {
+    if (args.includes("--shared-action-fixture-only")) {
+      console.log(JSON.stringify(toolJobSharedFrameworkActionFixtureRun(this.root)));
+      return;
+    }
     if (args.includes("--fixed-operation-rust-fixture-source-only")) {
       process.stdout.write(toolJobFixedOperationRustFixtureSource(this.root));
       return;
@@ -8272,10 +8943,12 @@ export class VerifyScript extends Script {
     }
     if (args.includes("--self-test")) {
       const jobRuntime = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🦀️component.rs");
+      const artifactRetainedCommand = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️component.rs");
       const fixture = toolJobFixedOperationFixtureRun(this.root);
       const rustFixture = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/fixed-operation-registry-cases.rs");
       if (rustFixture !== toolJobFixedOperationRustFixtureSource(this.root)) throw new Error("[verify interactivity tool-jobs] generated fixed-operation Rust fixture is stale.");
-      console.log(`[verify interactivity tool-jobs] self-tests=${toolJobCoverageSelfTests() + toolJobFixedOperationRegistrySelfTests(jobRuntime) + toolJobDrawGestureOperationOwnerSelfTests() + fixture.results.length + 1} clean.`);
+      const plugin = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs");
+      console.log(`[verify interactivity tool-jobs] self-tests=${toolJobCoverageSelfTests() + toolJobFixedOperationRegistrySelfTests(jobRuntime) + toolJobDrawGestureOperationOwnerSelfTests() + toolJobArtifactRetainedCommandSelfTests(artifactRetainedCommand, plugin) + fixture.results.length + 1} clean.`);
       return;
     }
     const formatIndex = args.indexOf("--format");
@@ -8397,11 +9070,11 @@ export class VerifyScript extends Script {
 
   private async runGate(): Promise<void> {
     // Deliberately calls dependency-cruiser directly rather than `LintScript`/`nx run-many -t lint --all`:
-    // several unrelated projects (repo/client/vscode, compose-js, …) have pre-existing broken eslint configs,
+    // several unrelated projects have pre-existing broken eslint configs,
     // and framework-renderer-wgpu:lint has known pending color-literal violations (see spawn_task follow-ups) —
     // this gate must stay a meaningful, currently-green signal for refactor sessions, not inherit that noise.
     console.log("[verify] dependency-cruiser boundaries…");
-    runCmd("bunx", ["dependency-cruiser", "compose", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
+    runCmd("bunx", ["dependency-cruiser", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
     console.log("[verify] generated catalog freshness…");
     // nx orchestrators: exempt — leaves individually budgeted.
     runCmd("bun", ["nx", "run", "@semio-tech/plugin-registry:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
@@ -8639,7 +9312,7 @@ export class VerifyScript extends Script {
         if (entry.name === "globals.css" || entry.name === "🎨️globals.css") found.push(full);
       }
     };
-    for (const top of [".storybook", "compose", "♻️mit-bestand", "✏️s", "🧰️framework"]) {
+    for (const top of [".storybook", "♻️mit-bestand", "✏️s", "🧰️framework"]) {
       const abs = join(this.root, top);
       if (existsSync(abs)) visit(abs, 0);
     }
@@ -9151,13 +9824,16 @@ const INTERACTIVITY_AUDIT_WORLD3D_FILE = "🧰️framework/🛍️products/💻�
 
 /**
  * ⏱️ The "single sanctioned runtime module" the thread/pool-construction rule (category
- * `thread-pool`) is scoped OUTSIDE of — this is a repo-wide check (minus `compose/`), unlike the
+ * `thread-pool`) is scoped OUTSIDE of — this is an authored-production-roots check, unlike the
  * `blocking-bridge`/`sync-*` categories which are scoped to [[INTERACTIVITY_AUDIT_UI_ROOTS]] only.
  * The async primitives crate is the only sanctioned root because it owns the process-wide
  * `WorkerPool` worker constructors. Every service, product, plugin, and domain module remains in
  * scope so an implicit or explicit private scheduler cannot escape the one-pool invariant.
  */
 const INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS = ["🧰️framework/🔨️modules/⏳️async/"] as const;
+
+/** 🏭️ Authored product roots whose Rust sources can execute in an interactive product process. */
+const INTERACTIVITY_AUDIT_PRODUCTION_ROOTS = ["✏️s", "🧰️framework", "🌎️hub"] as const;
 
 /**
  * 🚦️ Severity for `verify interactivity`: `"warn"` reports and always exits 0 (Phase 0 — this
@@ -9171,7 +9847,7 @@ type InteractivityAuditCategory = "blocking-bridge" | "sync-fs" | "sync-net" | "
 
 type InteractivityAuditPatternDef = { category: InteractivityAuditCategory; re: RegExp; label: string; scope: "ui" | "runtime-repo-wide" };
 
-/** ⏱️ Every forbidden call pattern, its category, and which scope rule scans it (`"ui"` → [[INTERACTIVITY_AUDIT_UI_ROOTS]] only; `"runtime-repo-wide"` → whole repo minus `compose/` minus [[INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS]]). */
+/** ⏱️ Every forbidden call pattern, its category, and which scope rule scans it (`"ui"` → [[INTERACTIVITY_AUDIT_UI_ROOTS]] only; `"runtime-repo-wide"` → [[INTERACTIVITY_AUDIT_PRODUCTION_ROOTS]] minus [[INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS]]). */
 const INTERACTIVITY_AUDIT_PATTERNS: readonly InteractivityAuditPatternDef[] = [
   { category: "blocking-bridge", re: /\bblock_on\s*\(/, label: "block_on(", scope: "ui" },
   { category: "blocking-bridge", re: /\brun_blocking\s*\(/, label: "run_blocking(", scope: "ui" },
@@ -9257,11 +9933,10 @@ function interactivityIsRuntimeSanctioned(relPath: string): boolean {
   return INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS.some((root) => relPath.startsWith(root));
 }
 
-/** ⏱️True for authored runtime sources; build scripts, fixtures, test trees, ticket scratch, and compose never execute in an interactive product process. */
+/** ⏱️True for authored runtime sources; build scripts, fixtures, and test trees never execute in an interactive product process. */
 function interactivityIsRuntimeSource(relPath: string): boolean {
   return (
-    !relPath.startsWith("compose/") &&
-    !relPath.startsWith(".🧬semio/") &&
+    INTERACTIVITY_AUDIT_PRODUCTION_ROOTS.some((root) => relPath === root || relPath.startsWith(`${root}/`)) &&
     !relPath.includes("/🧫️fixtures/") &&
     !relPath.includes("/🧪️tests/") &&
     !relPath.includes("/tests/") &&
@@ -9269,6 +9944,14 @@ function interactivityIsRuntimeSource(relPath: string): boolean {
     !relPath.includes("/examples/") &&
     !relPath.endsWith("/build.rs")
   );
+}
+
+/** 🧪️Proves runtime discovery admits authored product roots and rejects repo-local scratch/archive roots. */
+function interactivityRuntimeSourceSelfTests(): void {
+  if (!interactivityIsRuntimeSource("🧰️framework/🔨️modules/runtime/🦀️component.rs")) throw new Error("[verify interactivity] authored framework runtime source was falsely excluded.");
+  if (!interactivityIsRuntimeSource("✏️s/🔌️plugins/example/🦀️component.rs")) throw new Error("[verify interactivity] authored plugin runtime source was falsely excluded.");
+  for (const relPath of ["temp/compose/hostile/🦀️component.rs", "compose/hostile/🦀️component.rs", "♻️mit-bestand/hostile/🦀️component.rs", ".🧬semio/hostile/🦀️component.rs"])
+    if (interactivityIsRuntimeSource(relPath)) throw new Error(`[verify interactivity] non-production source ${relPath} was falsely admitted.`);
 }
 
 /** ⏱️Masks line and nested block comments after literals have been masked, preserving block depth across lines. */
@@ -9354,9 +10037,10 @@ function interactivityScanFile(repoRoot: string, relPath: string, patterns: read
   return findings;
 }
 
-/** ⏱️Full forbidden-call scan: `blocking-bridge`/`sync-*` categories over [[INTERACTIVITY_AUDIT_UI_ROOTS]]; `thread-pool` repo-wide (minus `compose/` and [[INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS]]). */
+/** ⏱️Full forbidden-call scan: `blocking-bridge`/`sync-*` categories over [[INTERACTIVITY_AUDIT_UI_ROOTS]]; `thread-pool` over [[INTERACTIVITY_AUDIT_PRODUCTION_ROOTS]] minus [[INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS]]. */
 function interactivityAuditScan(repoRoot: string): InteractivityFinding[] {
-  const allRustFiles = policyAllRustFiles(repoRoot).filter(interactivityIsRuntimeSource);
+  interactivityRuntimeSourceSelfTests();
+  const allRustFiles = policyWalkRelFiles(repoRoot, INTERACTIVITY_AUDIT_PRODUCTION_ROOTS, (_path, name) => name.endsWith(".rs")).filter(interactivityIsRuntimeSource);
   const uiPatterns = INTERACTIVITY_AUDIT_PATTERNS.filter((p) => p.scope === "ui");
   const runtimePatterns = INTERACTIVITY_AUDIT_PATTERNS.filter((p) => p.scope === "runtime-repo-wide");
   const findings: InteractivityFinding[] = [];
@@ -15798,7 +16482,14 @@ function dependencyClassifyOracleEntry(entry: DependencyBaselineEntry, oracleIds
 function dependencyOracleRegistryPackages(repoRoot: string): Map<string, string[]> {
   const map = new Map<string, string[]>();
   const taxonomy = repoTaxonomy(repoRoot);
-  const manifests = [String(taxonomy.testOracleRegistryPath ?? ""), ...dependencyDiscoverContributionManifests(repoRoot, String(taxonomy.testContributionDirName ?? ""), String(taxonomy.testContributionFilename ?? ""))];
+  const oracleRegistry = taxonomy.testOracleRegistryLocation;
+  const oracleRegistryPath = oracleRegistry
+    ? `${oracleRegistry.directoryPath}/${canonicalFilenameForKind(oracleRegistry.fileKindId, taxonomy)}`
+    : "";
+  const contributionFilename = taxonomy.testContributionFileKindId
+    ? canonicalFilenameForKind(taxonomy.testContributionFileKindId, taxonomy)
+    : "";
+  const manifests = [oracleRegistryPath, ...dependencyDiscoverContributionManifests(repoRoot, String(taxonomy.testContributionDirName ?? ""), contributionFilename)];
   for (const manifest of manifests) {
     if (manifest === "") continue;
     const content = policyReadFileSafe(repoRoot, manifest);
@@ -15961,16 +16652,6 @@ function dependencyCollectPython(repoRoot: string, record: (ecosystem: Dependenc
   }
 }
 
-/** 🐍️The root Python manifest is Composition-scoped only when its declared UV workspace is non-empty and every member stays below `compose/`. */
-function dependencyIsRootCompositionPython(content: string): boolean {
-  if (!/^\s*\[tool\.uv\.workspace\]\s*$/mu.test(content)) return false;
-  const workspace = content.slice(content.search(/^\s*\[tool\.uv\.workspace\]\s*$/mu));
-  const members = workspace.match(/^\s*members\s*=\s*\[([^\]]*)\]/mu)?.[1];
-  if (members === undefined) return false;
-  const paths = [...members.matchAll(/["']([^"']+)["']/gu)].map((match) => match[1]!.replace(/^\.\//u, ""));
-  return paths.length > 0 && paths.every((path) => path === "compose" || path.startsWith("compose/"));
-}
-
 type DependencyTruthDisposition = "literal-external" | "first-party" | "composition-scoped" | "mandated-toolchain";
 type DependencyTruthEntry = DependencyBaselineEntry & { disposition: DependencyTruthDisposition; rationale: string; literalExternalUsers?: string[]; mandatedToolchainUsers?: string[] };
 type DependencyTruthEcosystemSummary = { ecosystem: DependencyEcosystem; raw: number; thirdParty: number; firstParty: number; compositionScoped: number; mandatedToolchain: number; corrected: number; literalExternal: number; productionReachable: number; kinds: Record<DependencyKind, number> };
@@ -16072,13 +16753,12 @@ function dependencyToolchainLockVersions(content: string): Map<string, string> {
 }
 
 /** 🔒️Classifies only the narrow audited exceptions; every other third-party identity remains literal external inventory. */
-function dependencyTruthReportFromEntries(thirdParty: readonly DependencyBaselineEntry[], firstParty: readonly DependencyBaselineEntry[], rootPythonContent: string, rootPackageContent: string, lockContent = ""): DependencyTruthReport {
+function dependencyTruthReportFromEntries(thirdParty: readonly DependencyBaselineEntry[], firstParty: readonly DependencyBaselineEntry[], rootPackageContent: string, lockContent = ""): DependencyTruthReport {
   const toolchain = dependencyTruthRootToolchain(rootPackageContent);
   const lockVersions = dependencyToolchainLockVersions(lockContent);
   const authorizedRows: DependencyToolchainRow[] = [];
   const unauthorizedRows: DependencyToolchainRow[] = [];
   const classifiedThirdParty: DependencyTruthEntry[] = thirdParty.map((entry) => {
-    if (entry.ecosystem === "python" && entry.users.length > 0 && entry.users.every((user) => user === "pyproject.toml") && dependencyIsRootCompositionPython(rootPythonContent)) return { ...entry, disposition: "composition-scoped", rationale: "root pyproject.toml declares a compose-only UV workspace" };
     if (entry.ecosystem === "js" && DEPENDENCY_MANDATED_NX_PACKAGES.has(entry.name)) {
       const declarations = dependencyTruthDeclarations(entry);
       const exactAuthorized = declarations.filter((declaration) => toolchain.nxPackages.has(entry.name) && DEPENDENCY_AUTHORIZED_TOOLCHAIN_MANIFESTS.has(declaration.user) && declaration.kind === "repository-tooling");
@@ -16149,7 +16829,7 @@ function dependencyTruthReport(repoRoot: string, thirdParty = dependencyFreezeCu
       existing.productionReachable ||= entry.productionReachable;
     }
   });
-  return dependencyTruthReportFromEntries(thirdParty, [...firstPartyByKey.values()], policyReadFileSafe(repoRoot, "pyproject.toml"), policyReadFileSafe(repoRoot, "package.json"), policyReadFileSafe(repoRoot, "bun.lock"));
+  return dependencyTruthReportFromEntries(thirdParty, [...firstPartyByKey.values()], policyReadFileSafe(repoRoot, "package.json"), policyReadFileSafe(repoRoot, "bun.lock"));
 }
 
 function dependencyTruthSummaryText(report: DependencyTruthReport): string {
@@ -16193,11 +16873,10 @@ function dependencyTruthSelfTests(): number {
   if (oracleOnly.kinds.join() !== "test-oracle" || oracleOnly.oracleConflictUsers) throw new Error("[verify dependencies self-test] isolated test-only oracle was not classified as an oracle.");
   const entry = (ecosystem: DependencyEcosystem, name: string, kind: DependencyKind, user: string, version = "1"): DependencyBaselineEntry => ({ ecosystem, name, version, kinds: [kind], users: [user], productionReachable: kind === "production-runtime" || kind === "production-build", declarations: [{ user, version, kind }] });
   const mixedEntry = (name: string): DependencyBaselineEntry => ({ ecosystem: "js", name, version: "1", kinds: ["repository-tooling"], users: ["package.json", "product/package.json"], productionReachable: false, declarations: [{ user: "package.json", version: "1", kind: "repository-tooling" }, { user: "product/package.json", version: "2", kind: "repository-tooling" }] });
-  const rootPython = "[project]\nname = \"composition\"\ndependencies = []\n[tool.uv.workspace]\nmembers = [\"compose/py\", \"compose/engine\"]\n";
   const rootPackage = JSON.stringify({ packageManager: "bun@1.2.5", engines: { bun: ">=1.2.0" }, devDependencies: { nx: "1", "@nx/devkit": "1", "@nx/js": "1", eslint: "1" } });
   const lock = JSON.stringify({ workspaces: { "": { devDependencies: { nx: "1", "@nx/devkit": "1", "@nx/js": "1", eslint: "1" } }, product: { devDependencies: { nx: "2", "@nx/devkit": "2" } } } });
-  const rootOwnerReport = dependencyTruthReportFromEntries([entry("js", "nx", "repository-tooling", "package.json")], [], rootPython, rootPackage, lock);
-  const nonRootOwnerReport = dependencyTruthReportFromEntries([entry("js", "nx", "repository-tooling", "product/package.json", "2")], [], rootPython, rootPackage, lock);
+  const rootOwnerReport = dependencyTruthReportFromEntries([entry("js", "nx", "repository-tooling", "package.json")], [], rootPackage, lock);
+  const nonRootOwnerReport = dependencyTruthReportFromEntries([entry("js", "nx", "repository-tooling", "product/package.json", "2")], [], rootPackage, lock);
   if (!rootOwnerReport.entries.mandatedToolchain.some((item) => item.name === "nx") || rootOwnerReport.toolchainConflicts.length !== 0) throw new Error("[verify dependencies self-test] authorized root Nx runner row was not precisely excepted.");
   if (!nonRootOwnerReport.entries.literalExternal.some((item) => item.name === "nx") || nonRootOwnerReport.toolchainConflicts[0]?.user !== "product/package.json") throw new Error("[verify dependencies self-test] unauthorized non-root Nx runner row escaped literal-external inventory.");
   const report = dependencyTruthReportFromEntries(
@@ -16211,12 +16890,11 @@ function dependencyTruthSelfTests(): number {
       oracleRuntime,
     ],
     [entry("go", "github.com/example/first", "production-runtime", "consumer/go.mod")],
-    rootPython,
     rootPackage,
     lock,
   );
-  if (!report.entries.compositionScoped.some((item) => item.name === "composition-runner")) throw new Error("[verify dependencies self-test] root Composition Python dependency was not scoped explicitly.");
-  if (!report.entries.literalExternal.some((item) => item.name === "product-python")) throw new Error("[verify dependencies self-test] external Python dependency outside the root Composition project was hidden.");
+  if (!report.entries.literalExternal.some((item) => item.name === "composition-runner")) throw new Error("[verify dependencies self-test] root Python dependency escaped literal-external inventory.");
+  if (!report.entries.literalExternal.some((item) => item.name === "product-python")) throw new Error("[verify dependencies self-test] external product Python dependency was hidden.");
   if (!report.entries.firstParty.some((item) => item.name === "github.com/example/first") || report.entries.literalExternal.some((item) => item.name === "github.com/example/first")) throw new Error("[verify dependencies self-test] synthetic first-party Go identity reached literal-external inventory.");
   if (!report.entries.mandatedToolchain.some((item) => item.name === "@nx/js") || report.entries.mandatedToolchain.some((item) => item.name === "@nx/devkit")) throw new Error("[verify dependencies self-test] mixed Nx ownership was incorrectly classified as an identity-wide exception.");
   const mixedDevkit = report.entries.literalExternal.find((item) => item.name === "@nx/devkit");
@@ -17147,10 +17825,7 @@ export class BuildScript extends Script {
   run(segments: string[]): void {
     const slice = segments[0];
     const single: Record<string, string> = {
-      "3dm": "@semio-tech/compose-3dm-ui:build",
       assets: "@semio-tech/assets:build",
-      desktop: "@semio-tech/compose-desktop:build",
-      engine: "@semio-tech/compose-engine:build",
       storybook: "workspace:build-storybook",
       "coda-desktop": "@semio-tech/coda-desktop:build",
       "repo-cli": "@semio-tech/repo-client:build",
@@ -17168,10 +17843,6 @@ export class BuildScript extends Script {
       assertNoOwnedStorybookMdx(this.root);
       runCmd("bunx", ["storybook", "build", "-c", ".storybook", "--output-dir", "storybook-static"], { cwd: this.root });
       assertUiStorybookDiscovery(this.root);
-      return;
-    }
-    if (slice === "sites") {
-      runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio-tech/compose-sketchpad-play", "@semio-tech/compose-sketchpad-docs"], { cwd: this.root, env: semioShipEnv(), ...orchestratorBudgetOpts() });
       return;
     }
     const target = single[slice];
@@ -17338,10 +18009,6 @@ export class PublishScript extends Script {
   run(segments: string[]): void {
     const slice = segments[0];
     const map: Record<string, string> = {
-      desktop: "@semio-tech/compose-desktop:publish",
-      play: "@semio-tech/compose-sketchpad-play:publish",
-      sketchpad: "@semio-tech/compose-sketchpad:publish",
-      docs: "@semio-tech/compose-sketchpad-docs:publish",
       "coda-desktop": "@semio-tech/coda-desktop:publish",
     };
     if (!slice) {
@@ -17358,29 +18025,6 @@ export class PublishScript extends Script {
 }
 //#endregion 🔖️PublishScript
 
-//#region 🔖️QueryScript
-export class QueryScript extends Script {
-  run(segments: string[]): void {
-    const sub = segments[0] ?? "test";
-    const queryDir = join(this.root, "compose/client/lib/query");
-    if (sub === "build") {
-      runCmd(bun, [join(queryDir, "📜️script.ts"), "build"], { cwd: this.root });
-      return;
-    }
-    if (sub === "wasm") {
-      runCmd(bun, [join(queryDir, "📜️script.ts"), "wasm"], { cwd: this.root });
-      return;
-    }
-    if (sub === "test") {
-      runCmd(bun, [join(queryDir, "📜️script.ts"), "test", ...segments.slice(1)], { cwd: this.root });
-      return;
-    }
-    console.error(`[query] unknown subcommand ${JSON.stringify(sub)}`);
-    process.exit(1);
-  }
-}
-//#endregion 🔖️QueryScript
-
 //#region 🔖️PurgeScript
 export class PurgeScript extends Script {
   run(segments: string[]): void {
@@ -17388,7 +18032,7 @@ export class PurgeScript extends Script {
       console.error("[purge] usage: bun ./📜️script.ts purge neo4j");
       process.exit(1);
     }
-    const database = process.env.NEO4J_DATABASE || "compose";
+    const database = process.env.NEO4J_DATABASE || defaultNeo4jGraphDatabaseName();
     const uri = process.env.NEO4J_URI || "bolt://localhost:7687";
     const user = process.env.NEO4J_USERNAME || "neo4j";
     const password = process.env.NEO4J_PASSWORD || "password";
@@ -17418,6 +18062,586 @@ type CleanRemoval = {
   bytes: number;
 };
 
+type TaxonomyCliFormat = "human" | "json";
+export type TaxonomyCliOperation = "inventory" | "plan" | "apply" | "verify";
+
+const TAXONOMY_CLI_ARTIFACT_DIRECTORIES: Readonly<Record<TaxonomyCliOperation, Readonly<{ json: string; markdown: string }>>> = {
+  inventory: { json: "📊️taxonomy-inventory", markdown: "📓️taxonomy-inventory" },
+  plan: { json: "📊️taxonomy-plan", markdown: "📓️taxonomy-plan" },
+  apply: { json: "📊️taxonomy-apply", markdown: "📓️taxonomy-apply" },
+  verify: { json: "📊️taxonomy-verification", markdown: "📓️taxonomy-verification" },
+};
+
+export type TaxonomyCliOptions = {
+  baseline?: string;
+  cancelFile?: string;
+  digest?: string;
+  failOnWarning: boolean;
+  format: TaxonomyCliFormat;
+  plan?: string;
+  resume?: string;
+  scope?: string;
+  ticket?: string;
+  workers?: number;
+};
+
+function taxonomyCliOptions(args: readonly string[]): TaxonomyCliOptions {
+  const options: TaxonomyCliOptions = { failOnWarning: false, format: "human" };
+  const values: Readonly<Record<string, keyof Omit<TaxonomyCliOptions, "failOnWarning" | "format" | "workers">>> = {
+    "--baseline": "baseline",
+    "--cancel-file": "cancelFile",
+    "--digest": "digest",
+    "--plan": "plan",
+    "--resume": "resume",
+    "--scope": "scope",
+    "--ticket": "ticket",
+  };
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index]!;
+    if (arg === "--fail-on-warning") {
+      options.failOnWarning = true;
+      continue;
+    }
+    if (arg === "--format") {
+      const format = args[++index];
+      if (format !== "human" && format !== "json") throw new Error(`[clean taxonomy] --format must be human or json, got ${JSON.stringify(format)}.`);
+      options.format = format;
+      continue;
+    }
+    if (arg === "--workers") {
+      const workers = Number(args[++index]);
+      if (!Number.isSafeInteger(workers) || workers < 1) throw new Error("[clean taxonomy] --workers must be a positive integer.");
+      options.workers = workers;
+      continue;
+    }
+    const key = values[arg];
+    if (!key) throw new Error(`[clean taxonomy] unknown option ${JSON.stringify(arg)}.`);
+    const value = args[++index];
+    if (!value || value.startsWith("--")) throw new Error(`[clean taxonomy] ${arg} requires a value.`);
+    options[key] = value;
+  }
+  return options;
+}
+
+/** 🔒️ Rejects authority-bearing options outside their exact taxonomy operation. */
+export function taxonomyCliValidateOperationOptions(operation: TaxonomyCliOperation, options: TaxonomyCliOptions): void {
+  const restricted: readonly [keyof TaxonomyCliOptions, string, readonly TaxonomyCliOperation[]][] = [
+    ["baseline", "--baseline", ["plan"]],
+    ["digest", "--digest", ["apply"]],
+    ["plan", "--plan", ["plan", "apply"]],
+    ["resume", "--resume", ["apply"]],
+    ["scope", "--scope", ["inventory", "plan", "verify"]],
+    ["workers", "--workers", ["inventory", "plan", "verify"]],
+  ];
+  for (const [key, option, operations] of restricted) {
+    if (options[key] !== undefined && !operations.includes(operation)) throw new Error(`[clean taxonomy ${operation}] ${option} is not valid for this operation.`);
+  }
+  if (options.failOnWarning && operation !== "verify") throw new Error(`[clean taxonomy ${operation}] --fail-on-warning is not valid for this operation.`);
+}
+
+/** 🚫️ Resolves one CLI path lexically and rejects opaque prefixes before filesystem access. */
+export function taxonomyCliGuardedPath(root: string, path: string | undefined, option: "--plan" | "--cancel-file" | "--resume"): string | undefined {
+  if (!path) return undefined;
+  const workspaceRoot = resolve(root);
+  const absolute = resolve(workspaceRoot, path);
+  const workspaceRelative = relative(workspaceRoot, absolute).replaceAll("\\", "/").normalize("NFC");
+  if (workspaceRelative === ".." || workspaceRelative.startsWith("../") || isAbsolute(workspaceRelative)) throw new Error(`[clean taxonomy] ${option} must remain inside the repository.`);
+  if (workspaceRelative === "compose" || workspaceRelative.startsWith("compose/") || workspaceRelative === "temp/compose" || workspaceRelative.startsWith("temp/compose/")) throw new Error(`[clean taxonomy] ${option} cannot access opaque path ${JSON.stringify(workspaceRelative)}.`);
+  const segments = workspaceRelative.split("/").filter(Boolean);
+  let ancestor = workspaceRoot;
+  for (let index = 0; index < segments.length; index += 1) {
+    ancestor = join(ancestor, segments[index]!);
+    let state: ReturnType<typeof lstatSync> | null = null;
+    try {
+      state = lstatSync(ancestor);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+    if (!state) break;
+    if (state.isSymbolicLink()) throw new Error(`[clean taxonomy] ${option} cannot traverse symlink ${JSON.stringify(segments.slice(0, index + 1).join("/"))}.`);
+    if (index < segments.length - 1 && !state.isDirectory()) throw new Error(`[clean taxonomy] ${option} has a non-directory ancestor ${JSON.stringify(segments.slice(0, index + 1).join("/"))}.`);
+    if (index === segments.length - 1 && state.isDirectory()) throw new Error(`[clean taxonomy] ${option} must name a file path.`);
+  }
+  return absolute;
+}
+
+function taxonomyCliTicket(root: string, ticket: string | undefined): string | undefined {
+  return ticket ? taxonomyTicketDirectory(root, ticket) : undefined;
+}
+
+function taxonomyCliArtifactPath(ticketDir: string, operation: TaxonomyCliOperation, format: "json" | "markdown"): string {
+  const directory = TAXONOMY_CLI_ARTIFACT_DIRECTORIES[operation][format];
+  return join(ticketDir, directory, format === "json" ? "🔣️.json" : "📝️.md");
+}
+
+//#region 📊️TaxonomyInventoryShards
+export const TAXONOMY_INVENTORY_SHARD_MAX_BYTES = 5 * 1024 * 1024;
+
+export interface TaxonomyInventoryShardDescriptor {
+  readonly path: string;
+  readonly digest: string;
+  readonly ownerId: string;
+  readonly part: number;
+  readonly entryCount: number;
+  readonly bytes: number;
+  readonly firstSourcePath: string;
+  readonly lastSourcePath: string;
+}
+
+export interface TaxonomyInventoryShardManifest {
+  readonly schemaVersion: 1;
+  readonly inventoryMetadata: Readonly<Record<string, unknown>>;
+  readonly inventoryCanonicalDigest: string;
+  readonly entryCount: number;
+  readonly violationCount: number;
+  readonly violationsDigest: string;
+  readonly shardLedgerDigest: string;
+  readonly shards: readonly TaxonomyInventoryShardDescriptor[];
+}
+
+export interface TaxonomyInventoryArtifactShard {
+  readonly descriptor: TaxonomyInventoryShardDescriptor;
+  readonly content: string;
+}
+
+export interface TaxonomyInventoryArtifactShards {
+  readonly manifest: TaxonomyInventoryShardManifest;
+  readonly manifestContent: string;
+  readonly shards: readonly TaxonomyInventoryArtifactShard[];
+}
+
+export interface TaxonomyInventoryShardValidation {
+  readonly inventory: Readonly<Record<string, unknown>>;
+  readonly entryCount: number;
+  readonly violationCount: number;
+}
+
+export interface TaxonomyInventoryShardProgress {
+  readonly phase: "write-shards";
+  readonly current: number;
+  readonly total: number;
+  readonly path?: string;
+}
+
+function taxonomyCliRecord(value: unknown, label: string): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} must be an object.`);
+  return value as Record<string, unknown>;
+}
+
+function taxonomyCliExactKeys(value: Record<string, unknown>, keys: readonly string[], label: string): void {
+  const actual = Object.keys(value).sort();
+  const expected = [...keys].sort();
+  if (canonicalJson(actual) !== canonicalJson(expected)) throw new Error(`${label} must have exact keys ${expected.join(", ")}.`);
+}
+
+function taxonomyCliSha256(value: string | Uint8Array): string {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+function taxonomyCliCanonicalArrayDigest(values: readonly unknown[]): string {
+  const hash = createHash("sha256");
+  hash.update("[");
+  for (let index = 0; index < values.length; index += 1) {
+    if (index > 0) hash.update(",");
+    hash.update(canonicalJson(values[index]));
+  }
+  hash.update("]");
+  return hash.digest("hex");
+}
+
+/** 🧱️ Yields canonical inventory bytes without encoding either large array as one value. */
+export function* taxonomyInventoryCanonicalChunks(value: unknown): Generator<string> {
+  const inventory = taxonomyCliRecord(value, "Inventory");
+  const fields: { readonly key: string; readonly encoded?: string; readonly rows?: readonly unknown[] }[] = [];
+  for (const key of Object.keys(inventory).sort()) {
+    if ((key === "entries" || key === "violations") && Array.isArray(inventory[key])) {
+      fields.push({ key, rows: inventory[key] as readonly unknown[] });
+      continue;
+    }
+    const encoded = canonicalJson(inventory[key]);
+    if (typeof encoded === "string") fields.push({ key, encoded });
+  }
+  yield "{";
+  for (let fieldIndex = 0; fieldIndex < fields.length; fieldIndex += 1) {
+    const field = fields[fieldIndex]!;
+    if (fieldIndex > 0) yield ",";
+    yield canonicalJson(field.key);
+    yield ":";
+    if (field.rows) {
+      yield "[";
+      const rows = field.rows;
+      for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+        if (rowIndex > 0) yield ",";
+        yield canonicalJson(rows[rowIndex]);
+      }
+      yield "]";
+    } else yield field.encoded!;
+  }
+  yield "}";
+}
+
+/** 🧮️ Hashes canonical inventory bytes incrementally without constructing the full JSON document. */
+export function taxonomyInventoryIncrementalCanonicalDigest(value: unknown): string {
+  const hash = createHash("sha256");
+  for (const chunk of taxonomyInventoryCanonicalChunks(value)) hash.update(chunk);
+  return hash.digest("hex");
+}
+
+function taxonomyCliByteCompare(left: string, right: string): number {
+  return Buffer.compare(Buffer.from(left), Buffer.from(right));
+}
+
+function taxonomyCliStableViolations(entries: readonly Record<string, unknown>[]): readonly Record<string, unknown>[] {
+  const unique = new Map<string, Record<string, unknown>>();
+  for (const entry of entries) {
+    if (!Array.isArray(entry.violations)) throw new Error(`Inventory entry ${JSON.stringify(entry.sourcePath)} must have a violations array.`);
+    for (const value of entry.violations) {
+      const violation = taxonomyCliRecord(value, `Inventory entry ${JSON.stringify(entry.sourcePath)} violation`);
+      for (const key of ["path", "code", "severity", "message"] as const) if (typeof violation[key] !== "string") throw new Error(`Inventory violation ${key} must be a string.`);
+      unique.set(`${violation.path}\0${violation.code}\0${violation.severity}\0${violation.message}`, violation);
+    }
+  }
+  return [...unique.values()].sort((left, right) => {
+    for (const key of ["path", "code", "severity", "message"] as const) {
+      const comparison = taxonomyCliByteCompare(String(left[key]), String(right[key]));
+      if (comparison !== 0) return comparison;
+    }
+    return 0;
+  });
+}
+
+function taxonomyCliInventoryEntries(inventory: Record<string, unknown>): readonly Record<string, unknown>[] {
+  if (!Array.isArray(inventory.entries)) throw new Error("Inventory entries must be an array.");
+  return inventory.entries.map((value, index) => {
+    const entry = taxonomyCliRecord(value, `Inventory entry ${index}`);
+    if (typeof entry.sourcePath !== "string" || entry.sourcePath.length === 0 || entry.sourcePath !== entry.sourcePath.normalize("NFC")) throw new Error(`Inventory entry ${index} sourcePath must be non-empty NFC.`);
+    if (typeof entry.ownerId !== "string" || entry.ownerId.length === 0 || entry.ownerId !== entry.ownerId.normalize("NFC")) throw new Error(`Inventory entry ${index} ownerId must be non-empty NFC.`);
+    return entry;
+  });
+}
+
+function taxonomyCliInventoryMetadata(inventory: Record<string, unknown>): Readonly<Record<string, unknown>> {
+  return Object.fromEntries(Object.entries(inventory).filter(([key]) => key !== "entries" && key !== "violations"));
+}
+
+/** 🧩️ Builds deterministic lossless owner shards without filesystem access. */
+export function buildTaxonomyInventoryArtifactShards(value: unknown): TaxonomyInventoryArtifactShards {
+  const inventory = taxonomyCliRecord(value, "Inventory");
+  const entries = taxonomyCliInventoryEntries(inventory);
+  if (!Array.isArray(inventory.violations)) throw new Error("Inventory violations must be an array.");
+  const sourcePaths = new Set<string>();
+  const owners = new Map<string, Record<string, unknown>[]>();
+  for (const entry of entries) {
+    const sourcePath = String(entry.sourcePath);
+    if (sourcePaths.has(sourcePath)) throw new Error(`Duplicate inventory sourcePath ${JSON.stringify(sourcePath)}.`);
+    sourcePaths.add(sourcePath);
+    const ownerId = String(entry.ownerId);
+    const rows = owners.get(ownerId) ?? [];
+    rows.push(entry);
+    owners.set(ownerId, rows);
+  }
+  const stableViolations = taxonomyCliStableViolations(entries);
+  if (stableViolations.length !== inventory.violations.length || taxonomyCliCanonicalArrayDigest(stableViolations) !== taxonomyCliCanonicalArrayDigest(inventory.violations)) throw new Error("Inventory top-level violations must equal the canonical violations derived from entries.");
+  const shards: TaxonomyInventoryArtifactShard[] = [];
+  for (const [ownerId, ownerEntries] of [...owners].sort(([left], [right]) => taxonomyCliByteCompare(left, right))) {
+    ownerEntries.sort((left, right) => taxonomyCliByteCompare(String(left.sourcePath), String(right.sourcePath)));
+    const prefixBytes = Buffer.byteLength('{"entries":[');
+    const suffix = `],"ownerId":${canonicalJson(ownerId)},"schemaVersion":1}\n`;
+    const suffixBytes = Buffer.byteLength(suffix);
+    let part = 0;
+    let rows: Record<string, unknown>[] = [];
+    let rowJson: string[] = [];
+    let bytes = prefixBytes + suffixBytes;
+    const flush = (): void => {
+      if (rows.length === 0) return;
+      const content = `{"entries":[${rowJson.join(",")}],"ownerId":${canonicalJson(ownerId)},"schemaVersion":1}\n`;
+      const payloadBytes = Buffer.byteLength(content);
+      if (payloadBytes >= TAXONOMY_INVENTORY_SHARD_MAX_BYTES) throw new Error(`Inventory shard for ${JSON.stringify(ownerId)} is not strictly below ${TAXONOMY_INVENTORY_SHARD_MAX_BYTES} bytes.`);
+      const digest = taxonomyCliSha256(content);
+      const descriptor: TaxonomyInventoryShardDescriptor = {
+        path: `📊️shards/🔖️${digest}/🔣️.json`,
+        digest,
+        ownerId,
+        part,
+        entryCount: rows.length,
+        bytes: payloadBytes,
+        firstSourcePath: String(rows[0]!.sourcePath),
+        lastSourcePath: String(rows.at(-1)!.sourcePath),
+      };
+      shards.push({ descriptor, content });
+      part += 1;
+      rows = [];
+      rowJson = [];
+      bytes = prefixBytes + suffixBytes;
+    };
+    for (const entry of ownerEntries) {
+      const json = canonicalJson(entry);
+      const entryBytes = Buffer.byteLength(json);
+      const separatorBytes = rows.length === 0 ? 0 : 1;
+      if (rows.length > 0 && bytes + separatorBytes + entryBytes >= TAXONOMY_INVENTORY_SHARD_MAX_BYTES) flush();
+      if (bytes + entryBytes >= TAXONOMY_INVENTORY_SHARD_MAX_BYTES) throw new Error(`Inventory entry exceeds the shard byte limit: ${entry.sourcePath}`);
+      rows.push(entry);
+      rowJson.push(json);
+      bytes += (rows.length === 1 ? 0 : 1) + entryBytes;
+    }
+    flush();
+  }
+  const descriptors = shards.map((shard) => shard.descriptor);
+  const manifest: TaxonomyInventoryShardManifest = {
+    schemaVersion: 1,
+    inventoryMetadata: taxonomyCliInventoryMetadata(inventory),
+    inventoryCanonicalDigest: taxonomyInventoryIncrementalCanonicalDigest(inventory),
+    entryCount: entries.length,
+    violationCount: stableViolations.length,
+    violationsDigest: taxonomyCliCanonicalArrayDigest(stableViolations),
+    shardLedgerDigest: taxonomyCliSha256(canonicalJson(descriptors)),
+    shards: descriptors,
+  };
+  const result: TaxonomyInventoryArtifactShards = { manifest, manifestContent: `${canonicalJson(manifest)}\n`, shards };
+  validateTaxonomyInventoryArtifactShards(result);
+  return result;
+}
+
+/** 🛡️ Validates canonical bytes, ordering, digests, counts, uniqueness and available shard closure. */
+export function validateTaxonomyInventoryArtifactShards(value: TaxonomyInventoryArtifactShards, availableShardPaths: readonly string[] = value.shards.map((shard) => shard.descriptor.path)): TaxonomyInventoryShardValidation {
+  const manifest = taxonomyCliRecord(value.manifest, "Inventory shard manifest") as unknown as TaxonomyInventoryShardManifest;
+  taxonomyCliExactKeys(manifest as unknown as Record<string, unknown>, ["schemaVersion", "inventoryMetadata", "inventoryCanonicalDigest", "entryCount", "violationCount", "violationsDigest", "shardLedgerDigest", "shards"], "Inventory shard manifest");
+  if (manifest.schemaVersion !== 1) throw new Error("Inventory shard manifest schemaVersion must be 1.");
+  const metadata = taxonomyCliRecord(manifest.inventoryMetadata, "Inventory shard metadata");
+  if ("entries" in metadata || "violations" in metadata) throw new Error("Inventory shard metadata cannot contain entries or violations.");
+  if (!Array.isArray(manifest.shards)) throw new Error("Inventory shard descriptors must be an array.");
+  if (!Number.isSafeInteger(manifest.entryCount) || manifest.entryCount < 0 || !Number.isSafeInteger(manifest.violationCount) || manifest.violationCount < 0) throw new Error("Inventory shard counts must be non-negative safe integers.");
+  if (!/^[a-f0-9]{64}$/u.test(manifest.inventoryCanonicalDigest) || !/^[a-f0-9]{64}$/u.test(manifest.violationsDigest) || !/^[a-f0-9]{64}$/u.test(manifest.shardLedgerDigest)) throw new Error("Inventory shard manifest digests must be lowercase SHA-256.");
+  const manifestContent = `${canonicalJson(manifest)}\n`;
+  if (value.manifestContent !== manifestContent) throw new Error("Inventory shard manifest bytes are not canonical.");
+  if (Buffer.byteLength(manifestContent) >= TAXONOMY_INVENTORY_SHARD_MAX_BYTES) throw new Error("Inventory shard manifest is not strictly below the shard byte limit.");
+  if (taxonomyCliSha256(canonicalJson(manifest.shards)) !== manifest.shardLedgerDigest) throw new Error("Inventory shard ledger digest mismatch.");
+  if (!Array.isArray(value.shards) || value.shards.length !== manifest.shards.length) throw new Error("Inventory shard payload count does not match the manifest.");
+  const expectedOrder = [...manifest.shards].sort((left, right) => taxonomyCliByteCompare(left.ownerId, right.ownerId) || left.part - right.part);
+  if (canonicalJson(expectedOrder) !== canonicalJson(manifest.shards)) throw new Error("Inventory shard descriptors are not in byte-sorted owner/part order.");
+  const available = [...availableShardPaths].sort(taxonomyCliByteCompare);
+  if (available.length !== new Set(available).size) throw new Error("Available inventory shard paths contain duplicates.");
+  const declaredPaths = manifest.shards.map((descriptor) => descriptor.path).sort(taxonomyCliByteCompare);
+  if (canonicalJson(available) !== canonicalJson(declaredPaths)) throw new Error("Available inventory shard paths contain missing or unreferenced shards.");
+  const entries: Record<string, unknown>[] = [];
+  const sourcePaths = new Set<string>();
+  const descriptorPaths = new Set<string>();
+  const descriptorDigests = new Set<string>();
+  const nextPart = new Map<string, number>();
+  for (let index = 0; index < manifest.shards.length; index += 1) {
+    const descriptor = taxonomyCliRecord(manifest.shards[index], `Inventory shard descriptor ${index}`) as unknown as TaxonomyInventoryShardDescriptor;
+    taxonomyCliExactKeys(descriptor as unknown as Record<string, unknown>, ["path", "digest", "ownerId", "part", "entryCount", "bytes", "firstSourcePath", "lastSourcePath"], `Inventory shard descriptor ${index}`);
+    if (typeof descriptor.ownerId !== "string" || descriptor.ownerId.length === 0 || descriptor.ownerId !== descriptor.ownerId.normalize("NFC")) throw new Error(`Inventory shard descriptor ${index} ownerId must be non-empty NFC.`);
+    if (!Number.isSafeInteger(descriptor.part) || descriptor.part < 0 || descriptor.part !== (nextPart.get(descriptor.ownerId) ?? 0)) throw new Error(`Inventory shard parts for ${JSON.stringify(descriptor.ownerId)} must be contiguous from zero.`);
+    nextPart.set(descriptor.ownerId, descriptor.part + 1);
+    if (!Number.isSafeInteger(descriptor.entryCount) || descriptor.entryCount < 1 || !Number.isSafeInteger(descriptor.bytes) || descriptor.bytes < 1 || descriptor.bytes >= TAXONOMY_INVENTORY_SHARD_MAX_BYTES) throw new Error(`Inventory shard descriptor ${index} has invalid counts or bytes.`);
+    if (!/^[a-f0-9]{64}$/u.test(descriptor.digest) || descriptor.path !== `📊️shards/🔖️${descriptor.digest}/🔣️.json`) throw new Error(`Inventory shard descriptor ${index} path/digest identity is invalid.`);
+    if (descriptorPaths.has(descriptor.path) || descriptorDigests.has(descriptor.digest)) throw new Error(`Inventory shard descriptor ${index} duplicates a path or digest.`);
+    descriptorPaths.add(descriptor.path);
+    descriptorDigests.add(descriptor.digest);
+    const shard = value.shards[index];
+    if (!shard || canonicalJson(shard.descriptor) !== canonicalJson(descriptor)) throw new Error(`Inventory shard payload ${index} descriptor mismatch.`);
+    if (Buffer.byteLength(shard.content) !== descriptor.bytes || taxonomyCliSha256(shard.content) !== descriptor.digest) throw new Error(`Inventory shard payload ${index} byte/digest mismatch.`);
+    const envelope = taxonomyCliRecord(JSON.parse(shard.content) as unknown, `Inventory shard envelope ${index}`);
+    taxonomyCliExactKeys(envelope, ["entries", "ownerId", "schemaVersion"], `Inventory shard envelope ${index}`);
+    if (envelope.schemaVersion !== 1 || envelope.ownerId !== descriptor.ownerId || !Array.isArray(envelope.entries)) throw new Error(`Inventory shard envelope ${index} identity is invalid.`);
+    if (`${canonicalJson(envelope)}\n` !== shard.content) throw new Error(`Inventory shard payload ${index} is not canonical JSON.`);
+    const shardEntries = envelope.entries.map((entry, entryIndex) => taxonomyCliRecord(entry, `Inventory shard ${index} entry ${entryIndex}`));
+    if (shardEntries.length !== descriptor.entryCount) throw new Error(`Inventory shard payload ${index} entry count mismatch.`);
+    for (let entryIndex = 0; entryIndex < shardEntries.length; entryIndex += 1) {
+      const entry = shardEntries[entryIndex]!;
+      if (entry.ownerId !== descriptor.ownerId || typeof entry.sourcePath !== "string" || entry.sourcePath.length === 0 || entry.sourcePath !== entry.sourcePath.normalize("NFC")) throw new Error(`Inventory shard ${index} entry ${entryIndex} identity is invalid.`);
+      if (entryIndex > 0 && taxonomyCliByteCompare(String(shardEntries[entryIndex - 1]!.sourcePath), entry.sourcePath) >= 0) throw new Error(`Inventory shard ${index} entries are not strictly sourcePath byte-sorted.`);
+      if (sourcePaths.has(entry.sourcePath)) throw new Error(`Duplicate inventory sourcePath ${JSON.stringify(entry.sourcePath)} across shards.`);
+      sourcePaths.add(entry.sourcePath);
+      entries.push(entry);
+    }
+    if (descriptor.firstSourcePath !== shardEntries[0]!.sourcePath || descriptor.lastSourcePath !== shardEntries.at(-1)!.sourcePath) throw new Error(`Inventory shard payload ${index} boundary mismatch.`);
+  }
+  if (entries.length !== manifest.entryCount) throw new Error("Inventory shard manifest entry count mismatch.");
+  entries.sort((left, right) => taxonomyCliByteCompare(String(left.sourcePath), String(right.sourcePath)));
+  const violations = taxonomyCliStableViolations(entries);
+  if (violations.length !== manifest.violationCount || taxonomyCliCanonicalArrayDigest(violations) !== manifest.violationsDigest) throw new Error("Inventory shard violation count/digest mismatch.");
+  const inventory = { ...metadata, entries, violations };
+  if (taxonomyInventoryIncrementalCanonicalDigest(inventory) !== manifest.inventoryCanonicalDigest) throw new Error("Reconstructed inventory canonical digest mismatch.");
+  return { inventory, entryCount: entries.length, violationCount: violations.length };
+}
+
+function taxonomyCliShardPayloadPaths(root: string): string[] {
+  const paths: string[] = [];
+  for (const entry of readdirSync(root, { withFileTypes: true }).sort((left, right) => taxonomyCliByteCompare(left.name, right.name))) {
+    if (entry.name === "🔣️.json" && entry.isFile()) continue;
+    if (!entry.isDirectory() || !/^🔖️[a-f0-9]{64}$/u.test(entry.name)) {
+      paths.push(`📊️shards/${entry.name}`);
+      continue;
+    }
+    const children = readdirSync(join(root, entry.name), { withFileTypes: true });
+    for (const child of children) paths.push(`📊️shards/${entry.name}/${child.name}`);
+  }
+  return paths.sort(taxonomyCliByteCompare);
+}
+
+function taxonomyCliValidatePublishedShardRoot(root: string): TaxonomyInventoryShardManifest | null {
+  const manifestPath = join(root, "🔣️.json");
+  const available = taxonomyCliShardPayloadPaths(root);
+  if (!existsSync(manifestPath)) {
+    if (available.length > 0) throw new Error("Inventory shard root has unreferenced payload or staging evidence without a manifest.");
+    return null;
+  }
+  const manifestState = lstatSync(manifestPath);
+  if (!manifestState.isFile() || manifestState.isSymbolicLink()) throw new Error("Inventory shard manifest must be a real file.");
+  const content = readFileSync(manifestPath, "utf8");
+  const manifest = taxonomyCliRecord(JSON.parse(content) as unknown, "Published inventory shard manifest") as unknown as TaxonomyInventoryShardManifest;
+  if (`${canonicalJson(manifest)}\n` !== content || Buffer.byteLength(content) >= TAXONOMY_INVENTORY_SHARD_MAX_BYTES) throw new Error("Published inventory shard manifest is not canonical or exceeds the byte limit.");
+  if (!Array.isArray(manifest.shards) || taxonomyCliSha256(canonicalJson(manifest.shards)) !== manifest.shardLedgerDigest) throw new Error("Published inventory shard manifest ledger is invalid.");
+  const declared = manifest.shards.map((descriptor) => descriptor.path).sort(taxonomyCliByteCompare);
+  if (canonicalJson(available) !== canonicalJson(declared)) throw new Error("Published inventory shard root contains missing or unreferenced shards.");
+  for (const descriptor of manifest.shards) {
+    if (!/^[a-f0-9]{64}$/u.test(descriptor.digest) || descriptor.path !== `📊️shards/🔖️${descriptor.digest}/🔣️.json`) throw new Error(`Published inventory shard descriptor is invalid: ${descriptor.path}`);
+    const directory = join(root, `🔖️${descriptor.digest}`);
+    const path = join(directory, "🔣️.json");
+    const directoryState = lstatSync(directory);
+    const fileState = lstatSync(path);
+    if (!directoryState.isDirectory() || directoryState.isSymbolicLink() || !fileState.isFile() || fileState.isSymbolicLink()) throw new Error(`Published inventory shard must be a real directory/file pair: ${descriptor.path}`);
+    const bytes = readFileSync(path);
+    if (bytes.byteLength !== descriptor.bytes || taxonomyCliSha256(bytes) !== descriptor.digest) throw new Error(`Published inventory shard digest collision or corruption: ${descriptor.path}`);
+  }
+  return manifest;
+}
+
+/** 📦️ Publishes immutable verified payloads before one atomic manifest rename. */
+export function publishTaxonomyInventoryArtifactShards(dataRoot: string, inventory: unknown, progress?: (event: TaxonomyInventoryShardProgress) => void): TaxonomyInventoryShardManifest {
+  const build = buildTaxonomyInventoryArtifactShards(inventory);
+  const total = build.shards.length + 1;
+  progress?.({ phase: "write-shards", current: 0, total });
+  if (existsSync(dataRoot)) {
+    const state = lstatSync(dataRoot);
+    if (!state.isDirectory() || state.isSymbolicLink()) throw new Error(`Inventory artifact root must be a real directory: ${dataRoot}`);
+  } else mkdirSync(dataRoot, { recursive: true });
+  const shardRoot = join(dataRoot, "📊️shards");
+  if (existsSync(shardRoot)) {
+    const state = lstatSync(shardRoot);
+    if (!state.isDirectory() || state.isSymbolicLink()) throw new Error(`Inventory shard root must be a real directory: ${shardRoot}`);
+  } else mkdirSync(shardRoot);
+  taxonomyCliValidatePublishedShardRoot(shardRoot);
+  for (let index = 0; index < build.shards.length; index += 1) {
+    const shard = build.shards[index]!;
+    const directory = join(shardRoot, `🔖️${shard.descriptor.digest}`);
+    const path = join(directory, "🔣️.json");
+    if (existsSync(directory)) {
+      const directoryState = lstatSync(directory);
+      if (!directoryState.isDirectory() || directoryState.isSymbolicLink()) throw new Error(`Inventory shard digest collision: ${shard.descriptor.path}`);
+      const children = readdirSync(directory, { withFileTypes: true });
+      if (children.length !== 1 || children[0]!.name !== "🔣️.json" || !children[0]!.isFile()) throw new Error(`Inventory shard digest directory is not exact: ${shard.descriptor.path}`);
+      const fileState = lstatSync(path);
+      const bytes = readFileSync(path);
+      if (!fileState.isFile() || fileState.isSymbolicLink() || bytes.byteLength !== shard.descriptor.bytes || taxonomyCliSha256(bytes) !== shard.descriptor.digest || bytes.toString("utf8") !== shard.content) throw new Error(`Inventory shard digest collision: ${shard.descriptor.path}`);
+    } else {
+      const staging = join(shardRoot, `.inventory-shard-${shard.descriptor.digest}.staging`);
+      if (existsSync(staging)) throw new Error(`Retained failed inventory shard staging evidence blocks publication: ${staging}`);
+      mkdirSync(staging);
+      const stagingPath = join(staging, "🔣️.json");
+      writeFileSync(stagingPath, shard.content, { flag: "wx" });
+      const written = readFileSync(stagingPath);
+      if (written.byteLength !== shard.descriptor.bytes || taxonomyCliSha256(written) !== shard.descriptor.digest) throw new Error(`Written inventory shard failed verification: ${shard.descriptor.path}`);
+      renameSync(staging, directory);
+    }
+    progress?.({ phase: "write-shards", current: index + 1, total, path: shard.descriptor.path });
+  }
+  for (const shard of build.shards) {
+    const path = join(shardRoot, `🔖️${shard.descriptor.digest}`, "🔣️.json");
+    const bytes = readFileSync(path);
+    if (bytes.byteLength !== shard.descriptor.bytes || taxonomyCliSha256(bytes) !== shard.descriptor.digest) throw new Error(`Inventory shard failed pre-manifest verification: ${shard.descriptor.path}`);
+  }
+  const manifestDigest = taxonomyCliSha256(build.manifestContent);
+  const stagingManifest = join(shardRoot, `.inventory-manifest-${manifestDigest}.staging`);
+  const manifestPath = join(shardRoot, "🔣️.json");
+  if (existsSync(stagingManifest)) throw new Error(`Retained failed inventory manifest staging evidence blocks publication: ${stagingManifest}`);
+  writeFileSync(stagingManifest, build.manifestContent, { flag: "wx" });
+  if (readFileSync(stagingManifest, "utf8") !== build.manifestContent) throw new Error("Written inventory shard manifest failed byte verification.");
+  renameSync(stagingManifest, manifestPath);
+  const retained = new Set(build.shards.map((shard) => `🔖️${shard.descriptor.digest}`));
+  for (const entry of readdirSync(shardRoot, { withFileTypes: true })) {
+    if (entry.isDirectory() && /^🔖️[a-f0-9]{64}$/u.test(entry.name) && !retained.has(entry.name)) rmSync(join(shardRoot, entry.name), { recursive: true, force: true });
+  }
+  taxonomyCliValidatePublishedShardRoot(shardRoot);
+  progress?.({ phase: "write-shards", current: total, total, path: "📊️shards/🔣️.json" });
+  return build.manifest;
+}
+//#endregion 📊️TaxonomyInventoryShards
+
+function taxonomyCliWriteJson(path: string, value: unknown): void {
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, `${canonicalJson(value)}\n`);
+}
+
+function taxonomyCliWriteSummary(ticketDir: string | undefined, operation: TaxonomyCliOperation, title: string, rows: readonly string[]): void {
+  if (!ticketDir) return;
+  const path = taxonomyCliArtifactPath(ticketDir, operation, "markdown");
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, [`# ${title}`, "", ...rows, ""].join("\n"));
+}
+
+function taxonomyCliInventoryOptions(root: string, options: TaxonomyCliOptions, cancelFile: string | undefined, ticketDir?: string) {
+  return {
+    repoRoot: root,
+    ...(ticketDir ? { ticketDir } : {}),
+    ...(options.scope ? { scope: options.scope } : {}),
+    ...(cancelFile ? { cancelFile } : {}),
+    ...(options.workers ? { workers: options.workers } : {}),
+  };
+}
+
+export interface TaxonomyCliPlanOperationCounts {
+  readonly moves: number;
+  readonly embeddedTicketRoots: number;
+  readonly embeddedTicketRootRelocations: number;
+  readonly symlinkTargetEdits: number;
+  readonly evidenceRemovals: number;
+  readonly edits: number;
+  readonly regenerations: number;
+}
+
+/** 📊️ Captures every root mutation group shown by plan reports. */
+export function taxonomyCliPlanOperationCounts(plan: Readonly<Record<keyof TaxonomyCliPlanOperationCounts, readonly unknown[]>>): TaxonomyCliPlanOperationCounts {
+  return {
+    moves: plan.moves.length,
+    embeddedTicketRoots: plan.embeddedTicketRoots.length,
+    embeddedTicketRootRelocations: plan.embeddedTicketRootRelocations.length,
+    symlinkTargetEdits: plan.symlinkTargetEdits.length,
+    evidenceRemovals: plan.evidenceRemovals.length,
+    edits: plan.edits.length,
+    regenerations: plan.regenerations.length,
+  };
+}
+
+/** 📝️ Renders every plan operation group for the Markdown evidence. */
+export function taxonomyCliPlanOperationSummaryRows(counts: TaxonomyCliPlanOperationCounts): readonly string[] {
+  return [
+    `- Moves: ${counts.moves}`,
+    `- Embedded ticket roots: ${counts.embeddedTicketRoots}`,
+    `- Embedded ticket-root relocations: ${counts.embeddedTicketRootRelocations}`,
+    `- Symlink target edits: ${counts.symlinkTargetEdits}`,
+    `- Evidence removals: ${counts.evidenceRemovals}`,
+    `- Edits: ${counts.edits}`,
+    `- Regenerations: ${counts.regenerations}`,
+  ];
+}
+
+/** ⌨️ Renders every plan operation group for the human console. */
+export function taxonomyCliPlanOperationConsoleFields(counts: TaxonomyCliPlanOperationCounts): string {
+  return `moves=${counts.moves} roots=${counts.embeddedTicketRoots} relocations=${counts.embeddedTicketRootRelocations} symlinks=${counts.symlinkTargetEdits} removals=${counts.evidenceRemovals} edits=${counts.edits} regenerations=${counts.regenerations}`;
+}
+
+/** ✅️ Makes every non-committed apply terminal state fail after evidence publication. */
+export function taxonomyCliRequireCommittedApply(state: string): void {
+  if (state !== "committed") throw new Error(`[clean taxonomy apply] terminal state ${JSON.stringify(state)} is not committed.`);
+}
+
+function taxonomyCliPrintJson(value: unknown): void {
+  process.stdout.write(`${canonicalJson(value)}\n`);
+}
+
 /**
  * 🧹Workspace cleaner: misplaced emoji mounts, ticket junk, oversized build artifacts — never
  * map/hub/space, and never the cache except through its own child-level policies.
@@ -17429,6 +18653,10 @@ type CleanRemoval = {
  */
 export class CleanScript extends Script {
   run(segments: string[]): void {
+    if (segments[0] === "taxonomy") {
+      this.runTaxonomy(segments.slice(1));
+      return;
+    }
     const dry = segments.includes("--dry") || segments.includes("dry");
     if (segments[0] === "test") {
       // 🧪️ Marker-guarded removal of generated test state, delegated to its owner. Never descends
@@ -17463,6 +18691,102 @@ export class CleanScript extends Script {
       ...report.skippedProtected.map((p) => `[clean] protected ${p}`),
     ];
     for (const line of lines) console.log(line);
+  }
+
+  private runTaxonomy(args: string[]): void {
+    const operation = args[0];
+    if (operation !== "inventory" && operation !== "plan" && operation !== "apply" && operation !== "verify") {
+      throw new Error(`[clean taxonomy] expected inventory, plan, apply or verify, got ${JSON.stringify(operation)}.`);
+    }
+    const options = taxonomyCliOptions(args.slice(1));
+    taxonomyCliValidateOperationOptions(operation, options);
+    const planArgumentPath = operation === "plan" || operation === "apply" ? taxonomyCliGuardedPath(this.root, options.plan, "--plan") : undefined;
+    const resumeArgumentPath = operation === "apply" ? taxonomyCliGuardedPath(this.root, options.resume, "--resume") : undefined;
+    const cancelArgumentPath = taxonomyCliGuardedPath(this.root, options.cancelFile, "--cancel-file");
+    const ticketDir = taxonomyCliTicket(this.root, options.ticket);
+    const inventoryOptions = taxonomyCliInventoryOptions(this.root, options, cancelArgumentPath, ticketDir);
+    if (operation === "inventory") {
+      const inventory = inventoryTaxonomy(inventoryOptions);
+      if (ticketDir) publishTaxonomyInventoryArtifactShards(dirname(taxonomyCliArtifactPath(ticketDir, "inventory", "json")), inventory, (event) => {
+        if (event.current === 0 || event.current === event.total || event.current % 100 === 0) console.error(`[clean taxonomy progress] inventory ${event.phase} ${event.current}/${event.total}${event.path ? ` ${event.path}` : ""}`);
+      });
+      taxonomyCliWriteSummary(ticketDir, "inventory", "Taxonomy Inventory", [
+        `- Source tree digest: \`${inventory.sourceTreeDigest}\``,
+        `- Entries: ${inventory.entries.length}`,
+        `- Violations: ${inventory.entries.reduce((count, entry) => count + entry.violations.length, 0)}`,
+      ]);
+      if (options.format === "json") taxonomyCliPrintJson(inventory);
+      else console.log(`[clean taxonomy inventory] entries=${inventory.entries.length} source=${inventory.sourceTreeDigest}${ticketDir ? ` -> ${ticketDir}` : ""}`);
+      return;
+    }
+    if (operation === "plan") {
+      if (!options.baseline) throw new Error("[clean taxonomy plan] --baseline <commit> is required.");
+      const inventory = inventoryTaxonomy(inventoryOptions);
+      const plan = planTaxonomy(inventory, {
+        baselineCommit: options.baseline,
+        excludedTreeDigests: [],
+      });
+      const counts = taxonomyCliPlanOperationCounts(plan);
+      const planPath = planArgumentPath ?? (ticketDir ? taxonomyCliArtifactPath(ticketDir, "plan", "json") : undefined);
+      if (planPath) taxonomyCliWriteJson(planPath, plan);
+      taxonomyCliWriteSummary(ticketDir, "plan", "Taxonomy Plan", [
+        `- Baseline: \`${plan.baselineCommit}\``,
+        `- Plan digest: \`${plan.planDigest}\``,
+        ...taxonomyCliPlanOperationSummaryRows(counts),
+        `- Unresolved: ${plan.unresolved.length}`,
+      ]);
+      if (options.format === "json" || !planPath) taxonomyCliPrintJson(plan);
+      else console.log(`[clean taxonomy plan] ${taxonomyCliPlanOperationConsoleFields(counts)} unresolved=${plan.unresolved.length} digest=${plan.planDigest} -> ${planPath}`);
+      if (plan.unresolved.length > 0) throw new Error(`[clean taxonomy plan] blocked by ${plan.unresolved.length} unresolved decision(s).`);
+      return;
+    }
+    if (operation === "apply") {
+      if (!ticketDir) throw new Error("[clean taxonomy apply] --ticket <ticket-id> is required.");
+      const planPath = planArgumentPath;
+      if (!planPath) throw new Error("[clean taxonomy apply] --plan <path> is required.");
+      const plan = parseTaxonomyPlan(JSON.parse(readFileSync(planPath, "utf8")) as unknown);
+      if (plan.excludedTreeDigests.length > 0) throw new Error("[clean taxonomy apply] opaque tree digest opt-in is forbidden from the root CLI.");
+      const digest = taxonomyPlanDigest(plan);
+      if (plan.planDigest !== digest) throw new Error(`[clean taxonomy apply] stored plan digest ${plan.planDigest} does not match ${digest}.`);
+      if (options.digest && options.digest !== digest) throw new Error(`[clean taxonomy apply] --digest ${options.digest} does not match ${digest}.`);
+      if (plan.unresolved.length > 0) throw new Error(`[clean taxonomy apply] plan contains ${plan.unresolved.length} unresolved decision(s).`);
+      const result = applyTaxonomyPlan(plan, {
+        repoRoot: this.root,
+        ticketDir,
+        planArtifactPath: planPath,
+        expectedPlanDigest: options.digest ?? digest,
+        ...(cancelArgumentPath ? { cancelFile: cancelArgumentPath } : {}),
+        ...(resumeArgumentPath ? { resumeJournal: resumeArgumentPath } : {}),
+      });
+      taxonomyCliWriteJson(taxonomyCliArtifactPath(ticketDir, "apply", "json"), result);
+      taxonomyCliWriteSummary(ticketDir, "apply", "Taxonomy Apply", [
+        `- Plan digest: \`${result.planDigest}\``,
+        `- State: ${result.state}`,
+        `- Applied moves: ${result.appliedMoves}`,
+        `- Applied embedded ticket-root relocations: ${result.appliedEmbeddedTicketRootRelocations}`,
+        `- Applied symlink target edits: ${result.appliedSymlinkTargetEdits}`,
+        `- Applied evidence removals: ${result.appliedEvidenceRemovals}`,
+        `- Applied edits: ${result.appliedEdits}`,
+        `- Applied regenerations: ${result.appliedRegenerations}`,
+        `- Journal: \`${relative(ticketDir, result.journalPath)}\``,
+      ]);
+      if (options.format === "json") taxonomyCliPrintJson(result);
+      else console.log(`[clean taxonomy apply] state=${result.state} moves=${result.appliedMoves} relocations=${result.appliedEmbeddedTicketRootRelocations} symlinks=${result.appliedSymlinkTargetEdits} removals=${result.appliedEvidenceRemovals} edits=${result.appliedEdits} regenerations=${result.appliedRegenerations} journal=${result.journalPath}`);
+      taxonomyCliRequireCommittedApply(result.state);
+      return;
+    }
+    const verification = verifyTaxonomy(inventoryOptions);
+    if (ticketDir) taxonomyCliWriteJson(taxonomyCliArtifactPath(ticketDir, "verify", "json"), verification);
+    const errors = verification.violations.filter((violation) => violation.severity === "error").length;
+    const warnings = verification.violations.length - errors;
+    taxonomyCliWriteSummary(ticketDir, "verify", "Taxonomy Verification", [
+      `- Clean: ${verification.clean}`,
+      `- Errors: ${errors}`,
+      `- Warnings: ${warnings}`,
+    ]);
+    if (options.format === "json") taxonomyCliPrintJson(verification);
+    else console.log(`[clean taxonomy verify] clean=${verification.clean} errors=${errors} warnings=${warnings}${ticketDir ? ` -> ${ticketDir}` : ""}`);
+    if (!verification.clean || errors > 0 || (options.failOnWarning && warnings > 0)) throw new Error(`[clean taxonomy verify] errors=${errors} warnings=${warnings}.`);
   }
 }
 
@@ -17883,7 +19207,7 @@ export class ExamplesScript extends Script {
       const slug = root.split("/").pop() ?? root;
       const hasAssets = existsSync(join(this.root, root, taxonomy.exampleAssetsDirName));
       const hasTests = existsSync(join(this.root, root, taxonomy.exampleTestsDirName));
-      const rustLeaf = taxonomy.exampleLeafFilenames?.["🦀️rust"] ?? "🦀️component.rs";
+      const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🦀️rust", "component");
       const hasLeaf = existsSync(join(this.root, root, rustLeaf));
       console.log(`${root}  leaf=${hasLeaf ? "yes" : "no"} assets=${hasAssets ? "yes" : "no"} tests=${hasTests ? "yes" : "no"} slug=${slug}`);
     }
@@ -18035,16 +19359,19 @@ function newResolveChildDir(parentAbs: string, wantStripped: string): string | u
  * 📸️snapshot/🔺️diff, a wildcard-slug-ready empty facet marker for 🧬️mutations/💡️inferences (their real
  * content is per-mutation/per-inference emoji slugs, which `new subset` also cannot know in advance). */
 function newScaffoldIoTree(repoRoot: string, ioRel: string, taxonomy: ReturnType<typeof loadTaxonomy>, created: string[], skipped: string[], dryRun: boolean): void {
-  newScaffoldWriteIfAbsent(repoRoot, `${ioRel}/🦀️component.rs`, newScaffoldRustLeaf("io root (io() -> IoDeclaration stub)"), created, skipped, dryRun);
-  newScaffoldWriteIfAbsent(repoRoot, `${ioRel}/🟦️component.ts`, newScaffoldTsLeaf("io root (IoEntryDescriptor[] mirror)"), created, skipped, dryRun);
+  const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust", "component");
+  const typescriptLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript", "component");
+  const emptyMarker = canonicalFilenameForKind(taxonomy.windowEmptyFacetFileKindId, taxonomy);
+  newScaffoldWriteIfAbsent(repoRoot, `${ioRel}/${rustLeaf}`, newScaffoldRustLeaf("io root (io() -> IoDeclaration stub)"), created, skipped, dryRun);
+  newScaffoldWriteIfAbsent(repoRoot, `${ioRel}/${typescriptLeaf}`, newScaffoldTsLeaf("io root (IoEntryDescriptor[] mirror)"), created, skipped, dryRun);
   for (const kind of taxonomy.ioSemanticCollectionDirNames ?? []) {
     const kindRel = `${ioRel}/${kind}`;
     if (kind === "🧬️mutations" || kind === "💡️inferences") {
-      newScaffoldWriteIfAbsent(repoRoot, `${kindRel}/${taxonomy.windowEmptyFacetFilename}`, newScaffoldEmptyFacetMarkdown(kind), created, skipped, dryRun);
+      newScaffoldWriteIfAbsent(repoRoot, `${kindRel}/${emptyMarker}`, newScaffoldEmptyFacetMarkdown(kind), created, skipped, dryRun);
       continue;
     }
     for (const rep of taxonomy.representationDirs ?? []) {
-      newScaffoldWriteIfAbsent(repoRoot, `${kindRel}/${rep}/🦀️component.rs`, newScaffoldRustLeaf(`${kind}/${rep} native codec`), created, skipped, dryRun);
+      newScaffoldWriteIfAbsent(repoRoot, `${kindRel}/${rep}/${rustLeaf}`, newScaffoldRustLeaf(`${kind}/${rep} native codec`), created, skipped, dryRun);
     }
   }
 }
@@ -18052,35 +19379,45 @@ function newScaffoldIoTree(repoRoot: string, ioRel: string, taxonomy: ReturnType
 function newScaffoldSubsetTree(repoRoot: string, subsetRel: string, taxonomy: ReturnType<typeof loadTaxonomy>, dryRun: boolean): { created: string[]; skipped: string[] } {
   const created: string[] = [];
   const skipped: string[] = [];
-  newScaffoldWriteIfAbsent(repoRoot, `${subsetRel}/🦀️component.rs`, newScaffoldRustLeaf("subset root (subset() -> SubsetDeclaration stub; mounts schema/io/viewer/editor/examples)"), created, skipped, dryRun);
-  newScaffoldWriteIfAbsent(repoRoot, `${subsetRel}/🟦️component.ts`, newScaffoldTsLeaf("subset root"), created, skipped, dryRun);
-  newScaffoldWriteIfAbsent(repoRoot, `${subsetRel}/🧬️schema/🦀️component.rs`, newScaffoldRustLeaf("schema root — own Snapshot/Diff/Mutation types, no codecs"), created, skipped, dryRun);
-  newScaffoldWriteIfAbsent(repoRoot, `${subsetRel}/🧬️schema/🟦️component.ts`, newScaffoldTsLeaf("schema root"), created, skipped, dryRun);
+  const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust", "component");
+  const typescriptLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript", "component");
+  const emptyMarker = canonicalFilenameForKind(taxonomy.windowEmptyFacetFileKindId, taxonomy);
+  newScaffoldWriteIfAbsent(repoRoot, `${subsetRel}/${rustLeaf}`, newScaffoldRustLeaf("subset root (subset() -> SubsetDeclaration stub; mounts schema/io/viewer/editor/examples)"), created, skipped, dryRun);
+  newScaffoldWriteIfAbsent(repoRoot, `${subsetRel}/${typescriptLeaf}`, newScaffoldTsLeaf("subset root"), created, skipped, dryRun);
+  newScaffoldWriteIfAbsent(repoRoot, `${subsetRel}/🧬️schema/${rustLeaf}`, newScaffoldRustLeaf("schema root — own Snapshot/Diff/Mutation types, no codecs"), created, skipped, dryRun);
+  newScaffoldWriteIfAbsent(repoRoot, `${subsetRel}/🧬️schema/${typescriptLeaf}`, newScaffoldTsLeaf("schema root"), created, skipped, dryRun);
   newScaffoldIoTree(repoRoot, `${subsetRel}/🚪️io`, taxonomy, created, skipped, dryRun);
   for (const role of taxonomy.surfaceRoles) {
     const surfaceRel = `${subsetRel}/${taxonomy.surfaceDirNames[role]}`;
-    newScaffoldWriteIfAbsent(repoRoot, `${surfaceRel}/🦀️component.rs`, newScaffoldRustLeaf(`${role} surface`), created, skipped, dryRun);
-    newScaffoldWriteIfAbsent(repoRoot, `${surfaceRel}/🟦️component.ts`, newScaffoldTsLeaf(`${role} surface`), created, skipped, dryRun);
+    newScaffoldWriteIfAbsent(repoRoot, `${surfaceRel}/${rustLeaf}`, newScaffoldRustLeaf(`${role} surface`), created, skipped, dryRun);
+    newScaffoldWriteIfAbsent(repoRoot, `${surfaceRel}/${typescriptLeaf}`, newScaffoldTsLeaf(`${role} surface`), created, skipped, dryRun);
   }
-  newScaffoldWriteIfAbsent(repoRoot, `${subsetRel}/📚️examples/${taxonomy.windowEmptyFacetFilename}`, newScaffoldEmptyFacetMarkdown("examples"), created, skipped, dryRun);
+  newScaffoldWriteIfAbsent(repoRoot, `${subsetRel}/📚️examples/${emptyMarker}`, newScaffoldEmptyFacetMarkdown("examples"), created, skipped, dryRun);
   return { created, skipped };
 }
 
 function newScaffoldStandardTree(repoRoot: string, standardRel: string, dryRun: boolean): { created: string[]; skipped: string[] } {
   const created: string[] = [];
   const skipped: string[] = [];
-  newScaffoldWriteIfAbsent(repoRoot, `${standardRel}/🦀️component.rs`, newScaffoldRustLeaf("standard root (standard() -> StandardDeclaration stub; mounts subsets)"), created, skipped, dryRun);
-  newScaffoldWriteIfAbsent(repoRoot, `${standardRel}/🟦️component.ts`, newScaffoldTsLeaf("standard root"), created, skipped, dryRun);
+  const taxonomy = loadTaxonomy();
+  const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust", "component");
+  const typescriptLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript", "component");
+  const subsetsManifest = canonicalFilenameForKind(taxonomy.subsetsManifestFileKindId, taxonomy);
+  newScaffoldWriteIfAbsent(repoRoot, `${standardRel}/${rustLeaf}`, newScaffoldRustLeaf("standard root (standard() -> StandardDeclaration stub; mounts subsets)"), created, skipped, dryRun);
+  newScaffoldWriteIfAbsent(repoRoot, `${standardRel}/${typescriptLeaf}`, newScaffoldTsLeaf("standard root"), created, skipped, dryRun);
   const manifest = { standard: policyStripEmoji(standardRel.split("/").pop() ?? ""), subsets: { "*": {} } };
-  newScaffoldWriteIfAbsent(repoRoot, `${standardRel}/🪆️subsets/🔣️component.json`, `${JSON.stringify(manifest, null, 2)}\n`, created, skipped, dryRun);
+  newScaffoldWriteIfAbsent(repoRoot, `${standardRel}/🪆️subsets/${subsetsManifest}`, `${JSON.stringify(manifest, null, 2)}\n`, created, skipped, dryRun);
   return { created, skipped };
 }
 
 function newScaffoldArtifactTree(repoRoot: string, artRel: string, dryRun: boolean): { created: string[]; skipped: string[] } {
   const created: string[] = [];
   const skipped: string[] = [];
-  newScaffoldWriteIfAbsent(repoRoot, `${artRel}/🦀️component.rs`, newScaffoldRustLeaf("artifact root (artifact() -> ArtifactDeclaration stub; mounts standards)"), created, skipped, dryRun);
-  newScaffoldWriteIfAbsent(repoRoot, `${artRel}/🟦️component.ts`, newScaffoldTsLeaf("artifact root"), created, skipped, dryRun);
+  const taxonomy = loadTaxonomy();
+  const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust", "component");
+  const typescriptLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript", "component");
+  newScaffoldWriteIfAbsent(repoRoot, `${artRel}/${rustLeaf}`, newScaffoldRustLeaf("artifact root (artifact() -> ArtifactDeclaration stub; mounts standards)"), created, skipped, dryRun);
+  newScaffoldWriteIfAbsent(repoRoot, `${artRel}/${typescriptLeaf}`, newScaffoldTsLeaf("artifact root"), created, skipped, dryRun);
   return { created, skipped };
 }
 
@@ -18201,7 +19538,6 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("publish", PublishScript)
   .register("purge", PurgeScript)
   .register("clean", CleanScript)
-  .register("query", QueryScript)
   .register("micro-commit", MicroCommitScript)
   .register("commit", CommitScript);
 
@@ -18216,8 +19552,8 @@ import { join } from "node:path";
 
 const NEO4J_VERSION = "5.26.26";
 
-/** 🏗️Product graphs only (compose stack); not arbitrary developer databases. */
-export const NEO4J_PRODUCT_GRAPH_DATABASE_SPECS = [["compose"], ["elements"], ["coda"], ["reuse"]] as const;
+/** 🏗️Product graphs exported by the current workspace; not arbitrary developer databases. */
+export const NEO4J_PRODUCT_GRAPH_DATABASE_SPECS = [["elements"], ["coda"], ["reuse"]] as const;
 
 /** 🗑️Env key: comma-separated extra Bolt graph names for `bun run generate` and native `.🧬semio/🦑️repo/🛂️manifest/*.cypher` stubs. */
 export const NEO4J_EXTRA_GRAPH_DATABASES_ENV = "NEO4J_EXTRA_GRAPH_DATABASES";
@@ -18225,6 +19561,11 @@ export const NEO4J_EXTRA_GRAPH_DATABASES_ENV = "NEO4J_EXTRA_GRAPH_DATABASES";
 /** 🔗️Bolt user graph name from argv segments after `neo4j` / `generate neo4j` (hyphen join). */
 export function joinNeo4jGraphDatabaseName(parts: readonly string[]): string {
   return parts.join("-");
+}
+
+/** 🧭️Current default product graph for Neo4j commands that omit a database name. */
+export function defaultNeo4jGraphDatabaseName(): string {
+  return joinNeo4jGraphDatabaseName(NEO4J_PRODUCT_GRAPH_DATABASE_SPECS[0]);
 }
 
 /** 🔀️Parses `NEO4J_EXTRA_GRAPH_DATABASES` into trimmed non-empty graph names. */
@@ -18375,7 +19716,7 @@ export class Neo4jCypherExport {
       console.error(`[generate:neo4j] unexpected extra arguments (use only graph name segments before any -flags): ${JSON.stringify(passthrough)}`);
       return false;
     }
-    const joined = nameParts.length > 0 ? joinNeo4jGraphDatabaseName(nameParts) : (process.env.NEO4J_DATABASE ?? "compose");
+    const joined = nameParts.length > 0 ? joinNeo4jGraphDatabaseName(nameParts) : (process.env.NEO4J_DATABASE ?? defaultNeo4jGraphDatabaseName());
     const allowed = neo4jExportDatabaseNameSet(process.env);
     if (!allowed.has(joined)) {
       const hint = parseExtraNeo4jGraphDatabaseNamesFromEnv(process.env).length === 0 ? ` Set ${NEO4J_EXTRA_GRAPH_DATABASES_ENV} to a comma-separated list of extra Bolt graph names (e.g. metabolism,mydb).` : "";
@@ -18477,7 +19818,7 @@ function policyPluginOwnerDirs(repoRoot: string): readonly string[] {
  * 🔑Canonical `<pluginId>` scope key for a path inside a discovered plugin owner — the ASCII plugin slug,
  * stable across the legacy per-module-crate layout AND the Shape V2 one-package-per-plugin layout, so
  * allowlists keyed off it survive the crate move untouched (see the master ticket's discovery contract).
- * Returns `""` for a path outside every plugin owner (framework/hub/compose keep their own scope
+ * Returns `""` for a path outside every plugin owner (framework and hub trees keep their own scope
  * identity — this function is deliberately plugin-scoped, matching every allowlist that uses it).
  */
 function policyScopeKey(repoRoot: string, relPath: string): string {
@@ -18510,8 +19851,8 @@ function policyFileSuffix(tailSegments: readonly string[], defaultFile: string):
  * `<pluginId>/<appOrArtifact>/<component>` only when that disambiguator differs from the plugin id
  * itself (most plugins are single-app/single-artifact, where it doesn't — the 2-part key is the common
  * case, matching the discovery contract's `<pluginId>/<component>` shape). Falls back to the path
- * unchanged when no recognized owner/component shape is found (e.g. a path this wave's rename doesn't
- * touch, such as `compose/client/lib/rs/lib.rs`).
+ * unchanged when no recognized owner/component shape is found (for example, a path this wave's rename
+ * does not touch).
  */
 function policyNormalizeRelPath(relPath: string): string {
   const norm = relPath.startsWith("./") ? relPath.slice(2) : relPath;
@@ -18533,7 +19874,7 @@ function policyNormalizeRelPath(relPath: string): string {
       const component = policyCanonicalComponent(moduleSeg);
       return (appId && appId !== pluginId ? `${pluginId}/${appId}/${component}` : `${pluginId}/${component}`) + suffix;
     }
-    // Non-plugin owner (framework/compose/...): best-effort <ownerId>/<component>, not this rename's
+    // Non-plugin owner: best-effort <ownerId>/<component>, not this rename's
     // primary target this wave, but kept collision-free via the same file suffix.
     const ownerId = policyStripEmoji(ownerChain[ownerChain.length - 1] ?? "");
     if (ownerId) return `${ownerId}/${policyCanonicalComponent(moduleSeg)}${suffix}`;
@@ -18587,11 +19928,11 @@ function policyCrateEntryPath(repoRoot: string, manifestDirRel: string, ownerRel
       }
     }
   }
-  for (const entry of loadTaxonomy().ecosystems["🦀️rust"]?.entryFilenames ?? []) {
+  for (const entry of taxonomyEcosystemEntryFilenames(loadTaxonomy(), "🦀️rust")) {
     if (existsSync(join(repoRoot, manifestDirRel, entry))) return `${manifestDirRel}/${entry}`;
     if (existsSync(join(repoRoot, ownerRel, entry))) return `${ownerRel}/${entry}`;
   }
-  return `${manifestDirRel}/📦️glue.rs`;
+  throw new Error(`[taxonomy] no declared Rust package entry exists below ${manifestDirRel}.`);
 }
 
 /**
@@ -18607,7 +19948,8 @@ function policyCrateEntryPath(repoRoot: string, manifestDirRel: string, ownerRel
 function policyDiscoverCrateDirs(repoRoot: string): PolicyCrateRef[] {
   const taxonomy = loadTaxonomy();
   const forbiddenSegments = new Set<string>(taxonomy.forbiddenPathSegments);
-  const legacyEntryFilename = taxonomy.entryFilenames["🦀️rust"] ?? "📦️glue.rs";
+  const legacyEntryFilename = taxonomyEcosystemEntryFilenames(taxonomy, "🦀️rust")[0];
+  if (!legacyEntryFilename) throw new Error("[taxonomy] Rust ecosystem declares no configurable entry contract.");
   const found = new Map<string, PolicyCrateRef>();
 
   for (const pkg of discoverPackages(repoRoot, taxonomy)) {
@@ -18855,7 +20197,6 @@ const POLICY_PACK_COMPLETENESS_ALLOWLIST = new Set<string>([]);
  */
 const POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST = new Set<string>([
   "architect/spine",
-  "compose/client/lib/rs/lib.rs",
   "os/dsl",
   "products/os",
   "lowpoly/spr",
@@ -18921,7 +20262,6 @@ const POLICY_DIFF_COMPLETENESS_ALLOWLIST = new Set<string>([
   "os/playbook",
   "products/os",
   "os/store",
-  "compose/client/lib/rs/lib.rs",
   "trinity/rewrite/op",
   "trinity/ram",
   "remodel/op",
@@ -19388,7 +20728,7 @@ const POLICY_CARGO_DEP_RE = /^([\w.-]+)\s*=\s*\{[^\n]*?\bpath\s*=\s*"([^"]+)"[^\
  * directories (dead in the same way the discoverer below it was) — replaced with the structural check
  * that actually expresses the rule's intent: coupling is only a concern for dependencies that resolve
  * *inside* a discovered plugin owner (`policyScopeKey` returns `""` for anything else —
- * framework/compose/hub/repo infra is always allowed by construction, no prefix list to keep in sync).
+ * framework, hub, and repository infrastructure is always allowed by construction, with no prefix list to keep in sync).
  */
 function policyAppCouplingBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const crateDirSet = new Set(crates.map((c) => c.dir));
@@ -19981,8 +21321,7 @@ function policyProtocolMigrationBreaches(repoRoot: string): BreachRecord[] {
     let m: RegExpExecArray | null;
     POLICY_PROTOCOL_MIGRATION_QUALIFIED_RE.lastIndex = 0;
     while ((m = POLICY_PROTOCOL_MIGRATION_QUALIFIED_RE.exec(content))) {
-      // Skip "crate::vcs::X" — a crate's own nested module happening to be named "vcs" (e.g.
-      // compose's GraphQL "vcs" entity module) is not the external "vcs" crate's root.
+      // Skip "crate::vcs::X" — a crate's own nested module named "vcs" is not the external crate root.
       if (content.slice(Math.max(0, m.index - 7), m.index) === "crate::") continue;
       const line = lineOf(m.index);
       if (isCommentLine(line) || seenLines.has(line)) continue;
@@ -20049,22 +21388,19 @@ function policyDiscoverCargoTomlFiles(repoRoot: string): string[] {
   return found.sort();
 }
 
-/** 🛡️Directory prefixes always allowed to carry a `db`/`db_*` Cargo dependency: the db family itself and the os hub server. Compose hub crates (`compose/**​/hub/**`) are matched structurally in `policyDbAllowedDir` since they aren't one fixed prefix. */
+/** 🛡️Directory prefixes allowed to carry a `db`/`db_*` Cargo dependency: the db family itself and the os hub server. */
 const POLICY_DB_SERVER_ONLY_ALLOWED_PREFIXES = ["db/", "hub/"];
 
-/** 🛡️True if `dir` (a repo-relative directory, trailing "/") may depend on `db`/`db_*`: under `db/` itself, under the os hub server, or any compose crate whose path runs through a `hub/` segment. */
+/** 🛡️True if `dir` (a repo-relative directory, trailing "/") may depend on `db`/`db_*`. */
 function policyDbAllowedDir(dir: string): boolean {
-  if (POLICY_DB_SERVER_ONLY_ALLOWED_PREFIXES.some((p) => dir.startsWith(p))) return true;
-  const segments = dir.split("/").filter(Boolean);
-  return segments[0] === "compose" && segments.includes("hub");
+  return POLICY_DB_SERVER_ONLY_ALLOWED_PREFIXES.some((prefix) => dir.startsWith(prefix));
 }
 
 const POLICY_DB_DEP_RE = /^(db(?:_[a-z0-9]+)*)\s*=\s*\{[^\n]*?\bpath\s*=\s*"([^"]+)"[^\n]*\}\s*$/gm;
 
 /**
- * 📏️db/ server-only rule: no `db`/`db_*` family Cargo dependency may live outside `db/` itself, the
- * `os-hub` server (`hub/`), or a compose hub crate (`compose/**​/hub/**`) — db is
- * server-side storage for the hubs; clients keep local-first backbones (`vcs` + `store`) and
+ * 📏️db/ server-only rule: no `db`/`db_*` family Cargo dependency may live outside `db/` itself or the
+ * `os-hub` server (`hub/`) — db is server-side storage for the hubs; clients keep local-first backbones (`vcs` + `store`) and
  * only ever reach db indirectly over the wire. `policyAppCouplingBreaches`'s plugin-tree coupling check
  * deliberately does not special-case `db/` so this stays the one gate that enforces it.
  */
@@ -20085,8 +21421,8 @@ function policyDbServerOnlyBreaches(repoRoot: string): BreachRecord[] {
         kind: "protocol-migration/db-server-only",
         scope: relPath,
         priority: "high",
-        reason: "db is server-side storage for the hubs — only db/ itself, hub/, and compose's hub crates may depend on a db/db_* crate; clients keep local-first backbones (vcs + store) and only ever reach db indirectly over the wire.",
-        solution: `Remove the "${depName}" dependency from ${relPath}, or if this crate genuinely is a hub server, move/confirm it under db/, hub/, or a compose/**/hub/** directory.`,
+        reason: "db is server-side storage for the hubs — only db/ itself and hub/ may depend on a db/db_* crate; clients keep local-first backbones (vcs + store) and only ever reach db indirectly over the wire.",
+        solution: `Remove the "${depName}" dependency from ${relPath}, or if this crate genuinely is a hub server, move or confirm it under db/ or hub/.`,
       });
     }
   }
@@ -20862,6 +22198,8 @@ function policyTaxonomyDirsBreaches(repoRoot: string, crates: readonly PolicyCra
  */
 export function policyWindowCompletenessBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const taxonomy = loadTaxonomy();
+  const emptyMarker = canonicalFilenameForKind(taxonomy.windowEmptyFacetFileKindId, taxonomy);
+  const componentFilenames = new Set(Object.values(taxonomy.componentFileKinds).map((fileKindId) => canonicalStemmedFilenameForKind(fileKindId, "component", taxonomy)));
   const breaches: BreachRecord[] = [];
   for (const crate of crates) {
     if (crate.shape !== "taxonomy") continue;
@@ -20883,13 +22221,13 @@ export function policyWindowCompletenessBreaches(repoRoot: string, crates: reado
                   scope: `${scopeId}/${policyStripEmoji(window.name)}`,
                   priority: "high",
                   reason: `Every window must explicitly carry ${taxonomy.windowRequiredChildDirs.join(", ")}; an empty capability is valid, an absent capability is not.`,
-                  solution: `Add ${capabilityDir}/${taxonomy.windowEmptyFacetFilename}; replace the marker with specific item directories when the facet gains members.`,
+                  solution: `Add ${capabilityDir}/${emptyMarker}; replace the marker with specific item directories when the facet gains members.`,
                 });
                 continue;
               }
               const members = policyReaddirSafe(repoRoot, capabilityDir).filter((candidate) => candidate.isDirectory);
-              const markerRel = `${capabilityDir}/${taxonomy.windowEmptyFacetFilename}`;
-              for (const filename of new Set(Object.values(taxonomy.taxonomyLeafFilenames))) {
+              const markerRel = `${capabilityDir}/${emptyMarker}`;
+              for (const filename of componentFilenames) {
                 if (!existsSync(join(repoRoot, capabilityDir, filename))) continue;
                 breaches.push({
                   id: `taxonomy-window-facet-component-${capabilityDir}-${filename}`,
@@ -20905,7 +22243,7 @@ export function policyWindowCompletenessBreaches(repoRoot: string, crates: reado
                 if (!existsSync(join(repoRoot, markerRel))) {
                   breaches.push({
                     id: `taxonomy-window-empty-facet-${capabilityDir}`,
-                    summary: `Empty window facet "${capabilityDir}" is missing marker "${taxonomy.windowEmptyFacetFilename}"`,
+                    summary: `Empty window facet "${capabilityDir}" is missing marker "${emptyMarker}"`,
                     kind: "taxonomy/window-empty-facet",
                     scope: `${scopeId}/${policyStripEmoji(window.name)}/${policyStripEmoji(required)}`,
                     priority: "high",
@@ -20918,7 +22256,7 @@ export function policyWindowCompletenessBreaches(repoRoot: string, crates: reado
               if (existsSync(join(repoRoot, markerRel))) {
                 breaches.push({
                   id: `taxonomy-window-populated-facet-marker-${capabilityDir}`,
-                  summary: `Populated window facet "${capabilityDir}" still contains empty marker "${taxonomy.windowEmptyFacetFilename}"`,
+                  summary: `Populated window facet "${capabilityDir}" still contains empty marker "${emptyMarker}"`,
                   kind: "taxonomy/window-empty-facet",
                   scope: `${scopeId}/${policyStripEmoji(window.name)}/${policyStripEmoji(required)}`,
                   priority: "high",
@@ -20929,8 +22267,8 @@ export function policyWindowCompletenessBreaches(repoRoot: string, crates: reado
               for (const member of members) {
                 const unit = { name: member.name, rel: `${capabilityDir}/${member.name}` };
                 for (const lang of taxonomy.windowComponentLangs) {
-                  const filename = taxonomy.taxonomyLeafFilenames[lang];
-                  if (!filename || existsSync(join(repoRoot, unit.rel, filename))) continue;
+                  const filename = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, lang, "component");
+                  if (existsSync(join(repoRoot, unit.rel, filename))) continue;
                   breaches.push({
                     id: `taxonomy-window-component-${unit.rel}-${lang}`,
                     summary: `"${unit.rel}" is missing required ${lang} component leaf "${filename}"`,
@@ -20959,7 +22297,7 @@ export function policyWindowCompletenessBreaches(repoRoot: string, crates: reado
  * state-owning scope, so it declares every `modeRequiredChildDirs` member explicitly — its `🪟️windows`
  * collection plus its own three state lanes (`🎚️config` persisted-local, `👥️presence`
  * ephemeral-shared, `🫧️transient` ephemeral-local). An empty child is valid and carries only the
- * tracked `windowEmptyFacetFilename` marker; an absent child is not, and a child that is both empty
+ * tracked `windowEmptyFacetFileKindId` marker; an absent child is not, and a child that is both empty
  * and populated is a contradiction. Ticket 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION
  * wave A0: before it, `modeChildDirs` did not exist at all and a mode declared no children whatsoever.
  * Optional structural capabilities such as `🎮️commands` remain in `modeChildDirs` without forcing
@@ -20968,6 +22306,7 @@ export function policyWindowCompletenessBreaches(repoRoot: string, crates: reado
 export function policyModeCompletenessBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const taxonomy = loadTaxonomy();
   const required: readonly string[] = taxonomy.modeRequiredChildDirs ?? taxonomy.modeChildDirs ?? [];
+  const emptyMarker = canonicalFilenameForKind(taxonomy.windowEmptyFacetFileKindId, taxonomy);
   const breaches: BreachRecord[] = [];
   if (required.length === 0) return breaches;
   for (const crate of crates) {
@@ -20982,7 +22321,7 @@ export function policyModeCompletenessBreaches(repoRoot: string, crates: readonl
             const actual = new Set(policyReaddirSafe(repoRoot, modeDir).filter((candidate) => candidate.isDirectory).map((candidate) => candidate.name));
             for (const child of required) {
               const childDir = `${modeDir}/${child}`;
-              const markerRel = `${childDir}/${taxonomy.windowEmptyFacetFilename}`;
+              const markerRel = `${childDir}/${emptyMarker}`;
               if (!actual.has(child)) {
                 breaches.push({
                   id: `taxonomy-mode-completeness-${modeDir}-${child}`,
@@ -20991,7 +22330,7 @@ export function policyModeCompletenessBreaches(repoRoot: string, crates: readonl
                   scope: `${scopeId}/${policyStripEmoji(mode.name)}`,
                   priority: "high",
                   reason: `Every mode must explicitly carry ${required.join(", ")}; an empty child is valid, an absent child is not.`,
-                  solution: `Add ${childDir}/${taxonomy.windowEmptyFacetFilename}; replace the marker with specific item directories when the child gains members.`,
+                  solution: `Add ${childDir}/${emptyMarker}; replace the marker with specific item directories when the child gains members.`,
                 });
                 continue;
               }
@@ -21000,7 +22339,7 @@ export function policyModeCompletenessBreaches(repoRoot: string, crates: readonl
                 if (!existsSync(join(repoRoot, markerRel))) {
                   breaches.push({
                     id: `taxonomy-mode-empty-child-${childDir}`,
-                    summary: `Empty mode child "${childDir}" is missing marker "${taxonomy.windowEmptyFacetFilename}"`,
+                    summary: `Empty mode child "${childDir}" is missing marker "${emptyMarker}"`,
                     kind: "taxonomy/mode-empty-child",
                     scope: `${scopeId}/${policyStripEmoji(mode.name)}/${policyStripEmoji(child)}`,
                     priority: "high",
@@ -21013,7 +22352,7 @@ export function policyModeCompletenessBreaches(repoRoot: string, crates: readonl
               if (existsSync(join(repoRoot, markerRel))) {
                 breaches.push({
                   id: `taxonomy-mode-populated-child-marker-${childDir}`,
-                  summary: `Populated mode child "${childDir}" still contains empty marker "${taxonomy.windowEmptyFacetFilename}"`,
+                  summary: `Populated mode child "${childDir}" still contains empty marker "${emptyMarker}"`,
                   kind: "taxonomy/mode-empty-child",
                   scope: `${scopeId}/${policyStripEmoji(mode.name)}/${policyStripEmoji(child)}`,
                   priority: "high",
@@ -21085,8 +22424,10 @@ function policyValidateExampleUnit(
       });
     }
   }
-  const rustLeaf = taxonomy.exampleLeafFilenames?.["🦀️rust"] ?? "🦀️component.rs";
-  const tsLeaf = taxonomy.exampleLeafFilenames?.["🟦️typescript"] ?? "🟦️component.ts";
+  const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🦀️rust", "component");
+  const tsLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🟦️typescript", "component");
+  const rustTest = taxonomyMappedFilename(taxonomy, taxonomy.exampleTestFileKinds, "🦀️rust", "test");
+  const tsTest = taxonomyMappedFilename(taxonomy, taxonomy.exampleTestFileKinds, "🟦️typescript", "test");
   if (!existsSync(join(repoRoot, exampleRel, rustLeaf))) {
     breaches.push({
       id: `semio-examples-leaf-rs-${exampleRel}`,
@@ -21146,11 +22487,9 @@ function policyValidateExampleUnit(
       scope,
       priority,
       reason: "Every example unit carries co-located tests under 🧪️tests/.",
-      solution: `Add ${testsRel}/ with ${taxonomy.exampleTestLeafFilenames?.["🦀️rust"] ?? "🦀️test.rs"} and ${taxonomy.exampleTestLeafFilenames?.["🟦️typescript"] ?? "🟦️test.ts"}.`,
+      solution: `Add ${testsRel}/ with ${rustTest} and ${tsTest}.`,
     });
   } else {
-    const rustTest = taxonomy.exampleTestLeafFilenames?.["🦀️rust"] ?? "🦀️test.rs";
-    const tsTest = taxonomy.exampleTestLeafFilenames?.["🟦️typescript"] ?? "🟦️test.ts";
     if (!existsSync(join(repoRoot, testsRel, rustTest))) {
       breaches.push({
         id: `semio-examples-test-rs-${exampleRel}`,
@@ -21185,6 +22524,7 @@ function policyValidateExampleUnit(
 function policySemioArtifactExamplesBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const taxonomy = loadTaxonomy();
   const examplesDir = "📚️examples";
+  const rustExampleLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🦀️rust", "component");
   const breaches: BreachRecord[] = [];
   for (const crate of crates) {
     if (crate.shape !== "taxonomy") continue;
@@ -21215,7 +22555,7 @@ function policySemioArtifactExamplesBreaches(repoRoot: string, crates: readonly 
           scope: artScope,
           priority,
           reason: "Every artifact must ship at least one emoji-slug example unit.",
-          solution: `Add ${examplesRel}/<emoji-slug>/{${taxonomy.exampleLeafFilenames?.["🦀️rust"] ?? "🦀️component.rs"}, ${taxonomy.exampleAssetsDirName}/, ${taxonomy.exampleTestsDirName}/}.`,
+          solution: `Add ${examplesRel}/<emoji-slug>/{${rustExampleLeaf}, ${taxonomy.exampleAssetsDirName}/, ${taxonomy.exampleTestsDirName}/}.`,
         });
         continue;
       }
@@ -21264,10 +22604,14 @@ function policySemioArtifactExamplesBreaches(repoRoot: string, crates: readonly 
 
 function policyComponentFileBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const taxonomy = loadTaxonomy();
-  const leafFilename = taxonomy.taxonomyLeafFilenames["🦀️rust"] ?? "🦀️component.rs";
-  const sourceExtension = taxonomy.ecosystems["🦀️rust"]?.sourceExtension ?? ".rs";
-  const tsLeafFilename = taxonomy.ecosystems["🟦️typescript"]?.leafFilename ?? taxonomy.taxonomyLeafFilenames["🟦️typescript"] ?? "🟦️component.ts";
-  const tsSourceExtension = taxonomy.ecosystems["🟦️typescript"]?.sourceExtension ?? ".ts";
+  const rustFileKindId = taxonomy.componentFileKinds["🦀️rust"]!;
+  const typescriptFileKindId = taxonomy.componentFileKinds["🟦️typescript"]!;
+  const leafFilename = canonicalStemmedFilenameForKind(rustFileKindId, "component", taxonomy);
+  const sourceExtensions = taxonomy.fileKinds[rustFileKindId]!.extensionChains;
+  const sourceExtension = sourceExtensions[0]!;
+  const tsLeafFilename = canonicalStemmedFilenameForKind(typescriptFileKindId, "component", taxonomy);
+  const tsSourceExtensions = taxonomy.fileKinds[typescriptFileKindId]!.extensionChains;
+  const tsSourceExtension = tsSourceExtensions[0]!;
   const artifactFacetDirs = new Set(taxonomy.artifactComponentDirs ?? []);
   const breaches: BreachRecord[] = [];
   for (const crate of crates) {
@@ -21277,10 +22621,10 @@ function policyComponentFileBreaches(repoRoot: string, crates: readonly PolicyCr
     const walk = (relDir: string): void => {
       const entries = policyReaddirSafe(repoRoot, relDir);
       const parentName = relDir.split("/").pop() ?? "";
-      const hasRustFile = entries.some((e) => !e.isDirectory && e.name.endsWith(sourceExtension));
-      const hasTsFile = entries.some((e) => !e.isDirectory && e.name.endsWith(tsSourceExtension));
-      const exampleRustLeaf = taxonomy.exampleLeafFilenames["🦀️rust"] ?? leafFilename;
-      const exampleTsLeaf = taxonomy.exampleLeafFilenames["🟦️typescript"] ?? tsLeafFilename;
+      const hasRustFile = entries.some((e) => !e.isDirectory && sourceExtensions.some((extension) => e.name.endsWith(extension)));
+      const hasTsFile = entries.some((e) => !e.isDirectory && tsSourceExtensions.some((extension) => e.name.endsWith(extension)));
+      const exampleRustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🦀️rust", "component");
+      const exampleTsLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🟦️typescript", "component");
       if (policyIsExampleSlugDir(relDir)) {
         if (hasRustFile && !entries.some((e) => !e.isDirectory && e.name === exampleRustLeaf)) {
           breaches.push({
@@ -21325,8 +22669,8 @@ function policyComponentFileBreaches(repoRoot: string, crates: readonly PolicyCr
             kind: "taxonomy/component-file",
             scope: crate.pluginId || crate.ownerRel,
             priority: policyNewSurfacePriority(crate, "medium"),
-            reason: `Discovery contract: artifact facet dirs carry the TypeScript taxonomy leaf (${tsLeafFilename}) alongside ${leafFilename} and any mapped artifactSpecFilenames entry.`,
-            solution: `Rename ${relDir}'s primary TypeScript facade to ${tsLeafFilename} (normative 📖️/📡️ *.semio specs mapped in artifactSpecFilenames may stay as siblings).`,
+            reason: `Discovery contract: artifact facet dirs carry the TypeScript taxonomy leaf (${tsLeafFilename}) alongside ${leafFilename} and any mapped artifactSpecFileKinds entry.`,
+            solution: `Rename ${relDir}'s primary TypeScript facade to ${tsLeafFilename} (normative 📖️/📡️ *.semio specs mapped in artifactSpecFileKinds may stay as siblings).`,
           });
         }
       }
@@ -21341,10 +22685,10 @@ function policyComponentFileBreaches(repoRoot: string, crates: readonly PolicyCr
 
 /**
  * 📏️Anti-inlining tripwire (Single-File-Repo hazard ruling, master ticket): a migrated package's entry
- * `📦️glue.rs` must stay wiring-only (`#[path]` mod declarations + `plugin_exports!(plugin::plugin)`) — no
+ * configured Rust package entry must stay wiring-only (`#[path]` mod declarations + `plugin_exports!(plugin::plugin)`) — no
  * non-trivial `fn`/`impl` body content beyond `taxonomy.libWiringLineBudget`. Catches the exact
  * regression this repo has hit twice before: an agent following the (now-scoped) "single file repo" goal
- * inlining split `#[path]` modules back into `glue.rs`. Plugin identity lives at the plugin root via
+ * inlining split `#[path]` modules back into the package entry. Plugin identity lives at the plugin root via
  * `Plugin::builder`, never `semio_plugin!{}`.
  */
 const POLICY_FN_OR_IMPL_OPEN_RE = /^\s*(?:pub(?:\([^)]*\))?\s+)?(?:async\s+)?(?:fn\s+\w+\s*(?:<[^>]*>)?\s*\([^;{]*\)[^;{]*|impl(?:<[^>]*>)?\s+[^;{]+)\{\s*$/;
@@ -21377,12 +22721,12 @@ function policyTaxonomyLibShapeBreaches(repoRoot: string, crates: readonly Polic
     if (bodyLines <= lineBudget) continue;
     breaches.push({
       id: `taxonomy-lib-shape-${crate.libRelPath}`,
-      summary: `"${crate.libRelPath}" has ~${bodyLines} lines of fn/impl body content — a migrated package's glue.rs must stay wiring-only`,
+      summary: `"${crate.libRelPath}" has ~${bodyLines} lines of fn/impl body content — a migrated package entry must stay wiring-only`,
       kind: "taxonomy/lib-shape",
       scope: crate.pluginId || crate.ownerRel,
       priority: policyNewSurfacePriority(crate, "medium"),
-      reason: "Single-File-Repo hazard ruling: a taxonomy package's 📦️glue.rs is #[path] mod wiring + plugin_exports!(plugin::plugin) only — real logic lives in taxonomy component files at the plugin root, never inlined back.",
-      solution: `Move the non-trivial fn/impl bodies out of ${crate.libRelPath} into their owning taxonomy component file(s) at the plugin root; glue.rs should only declare "#[path = \"...\"] mod ...;" and call plugin_exports!(plugin::plugin).`,
+      reason: "Single-File-Repo hazard ruling: a taxonomy package entry is #[path] mod wiring + plugin_exports!(plugin::plugin) only — real logic lives in taxonomy component files at the plugin root, never inlined back.",
+      solution: `Move the non-trivial fn/impl bodies out of ${crate.libRelPath} into their owning taxonomy component file(s) at the plugin root; the package entry should only declare "#[path = \"...\"] mod ...;" and call plugin_exports!(plugin::plugin).`,
     });
   }
   return breaches;
@@ -21391,8 +22735,7 @@ function policyTaxonomyLibShapeBreaches(repoRoot: string, crates: readonly Polic
 /**
  * 📏️TS analogue of `policyTaxonomyLibShapeBreaches`, added by ticket
  * `26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE` (Single-File-Repo hazard ruling, scope note 2): a
- * `"taxonomy"`-area TypeScript package's entry file (`taxonomy.entryFilenames["🟦️typescript"]`, e.g.
- * `🟦️glue.ts`) must stay a wiring-only re-export barrel — counts non-import/export/comment/blank lines
+ * `"taxonomy"`-area TypeScript package's configured entry file must stay a wiring-only re-export barrel — counts non-import/export/comment/blank lines
  * and flags a breach past `libWiringLineBudget`. Warn-only (`priority: "medium"`) and still vacuous
  * today: the graduated area state is `"clean"` and no area has graduated yet (that flip is the W6
  * activation step of that ticket). The literal it compares against used to be `"taxonomy"`, a value that
@@ -21404,7 +22747,7 @@ const POLICY_BARREL_WIRING_LINE_RE = /^\s*(\/\/.*)?$|^\s*export\s+(type\s+)?(\*|
 
 function policyTaxonomyBarrelShapeBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
-  const entryFilename = taxonomy.entryFilenames["🟦️typescript"];
+  const entryFilename = taxonomyEcosystemEntryFilenames(taxonomy, "🟦️typescript")[0];
   if (!entryFilename) return [];
   const breaches: BreachRecord[] = [];
   for (const pkg of discoverPackages(repoRoot, taxonomy)) {
@@ -21463,44 +22806,20 @@ function policyBannedNameStemBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
-/** 🧷️Names whose exact spelling is owned by an ecosystem or taxonomy contract. */
-function policyEmojiFixedFilenames(): ReadonlySet<string> {
-  const taxonomy = loadTaxonomy();
-  const names = new Set<string>([
-    ...taxonomy.packagingFileNames,
-    ...taxonomy.rootDataFileNames,
-    ...taxonomy.rootDocFileNames,
-    ...Object.values(taxonomy.taxonomyLeafFilenames),
-    ...Object.values(taxonomy.entryFilenames),
-    ...Object.values(taxonomy.exampleLeafFilenames),
-    ...Object.values(taxonomy.exampleTestLeafFilenames),
-    "Cargo.lock",
-    "bun.lock",
-    "bun.lockb",
-    "package-lock.json",
-    "pnpm-lock.yaml",
-    "yarn.lock",
-    "rust-toolchain.toml",
-    "rustfmt.toml",
-    "clippy.toml",
-    "go.work",
-    "go.work.sum",
-    "next-env.d.ts",
-    "vite-env.d.ts",
-    "components.json",
-    "post-checkout",
-    "post-commit",
-    "post-merge",
-    "post-rewrite",
-    "prepare-commit-msg",
-  ]);
-  const visit = (value: unknown): void => {
-    if (typeof value === "string" && /\.[a-z0-9]+$/i.test(value)) names.add(value);
-    else if (Array.isArray(value)) value.forEach(visit);
-    else if (value && typeof value === "object") Object.values(value).forEach(visit);
-  };
-  visit(taxonomy);
-  return names;
+/** 🧷️Whether an exact filename contract applies at this precise scope. */
+function policyFilenameContractApplies(relDir: string, name: string, taxonomy: ReturnType<typeof loadTaxonomy>): boolean {
+  const segments = relDir.split("/").filter(Boolean);
+  const packagesIndex = segments.lastIndexOf(taxonomy.packagesDirName);
+  const ecosystemId = packagesIndex >= 0 ? segments[packagesIndex + 1] : undefined;
+  for (const contract of Object.values(taxonomy.configurableEntryContracts)) {
+    if (contract.filename === name && contract.ecosystemId === ecosystemId && packagesIndex === segments.length - 2) return true;
+  }
+  const path = relDir ? `${relDir}/${name}` : name;
+  return fixedFilenameContractIdsForPath(path, taxonomy, {
+    packageRoot: packagesIndex === segments.length - 2,
+    ecosystemId,
+    parentDirectoryKindId: semanticDirectoryKindId(segments.at(-1) ?? "", taxonomy) ?? undefined,
+  }).length > 0;
 }
 
 /** 🏭️Generated and framework-owned trees whose entry names are not repository taxonomy. */
@@ -21511,11 +22830,10 @@ function policyEmojiEntryIsGeneratedOrFrameworkOwned(relDir: string, name: strin
 }
 
 /** 🪪️Whether an entry is free to adopt the repository's emoji-prefixed identity. */
-function policyEmojiEntryIsRenamable(relDir: string, name: string, isDirectory: boolean, fixedFilenames: ReadonlySet<string>): boolean {
+function policyEmojiEntryIsRenamable(relDir: string, name: string, isDirectory: boolean, taxonomy: ReturnType<typeof loadTaxonomy>): boolean {
   if (!name || name.startsWith(".") || policyEmojiEntryIsGeneratedOrFrameworkOwned(relDir, name)) return false;
   if (isDirectory) return true;
-  const taxonomy = loadTaxonomy();
-  return !fixedFilenames.has(name) && !taxonomy.packagingFileSuffixes.some((suffix) => name.endsWith(suffix));
+  return !policyFilenameContractApplies(relDir, name, taxonomy);
 }
 
 /** 🎭️Families whose shared leading emoji is a structural kind marker rather than a sibling identity.
@@ -21556,8 +22874,7 @@ function policyEmojiPrefixNeedsVs16(name: string): boolean {
 /** ✅️Every renamable entry in a clean taxonomy area has a VS16 emoji identity unique among its siblings. */
 export function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
-  if (taxonomy.requireEmojiPrefixWithVs16 !== true) return [];
-  const fixedFilenames = policyEmojiFixedFilenames();
+  if (taxonomy.variationSelectorPolicy.requiredAfterEmoji !== true) return [];
   const breaches: BreachRecord[] = [];
   const cleanRoots = Object.entries(taxonomy.areas)
     .filter(([, state]) => state === "clean")
@@ -21567,7 +22884,7 @@ export function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
     const seen = new Map<string, string>();
     for (const entry of policyReaddirSafe(repoRoot, relDir)) {
       const childRel = `${relDir}/${entry.name}`;
-      const renamable = policyEmojiEntryIsRenamable(relDir, entry.name, entry.isDirectory, fixedFilenames);
+      const renamable = policyEmojiEntryIsRenamable(relDir, entry.name, entry.isDirectory, taxonomy);
       const hasPrefix = policyHasLeadingEmoji(entry.name);
       if (renamable && !hasPrefix) {
         breaches.push({
@@ -21586,7 +22903,7 @@ export function policyEmojiPrefixBreaches(repoRoot: string): BreachRecord[] {
           kind: "taxonomy/emoji-prefix",
           scope: childRel,
           priority: "high",
-          reason: "taxonomy.requireEmojiPrefixWithVs16 requires emoji presentation on Latin-stemmed renamable entries.",
+          reason: "taxonomy.variationSelectorPolicy requires canonical emoji presentation on renamable entries.",
           solution: `Rename the leading emoji so it includes U+FE0F, preserving the stem and references.`,
         });
       }
@@ -21849,7 +23166,11 @@ const POLICY_PLUGIN_CLOSED_SHAPE_LEGACY_FACETS: Readonly<Record<string, string>>
 function policyPluginClosedShapeBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
   const allowedDirs = new Set<string>([...taxonomy.pluginChildDirs, taxonomy.artifactsDirName, taxonomy.packagesDirName, ...taxonomy.rootDataDirNames]);
-  const allowedFiles = new Set<string>(["🦀️component.rs", ...taxonomy.rootDocFileNames, ...taxonomy.rootDataFileNames]);
+  const allowedFiles = new Set<string>([
+    taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust", "component"),
+    ...taxonomyContractFilenames(taxonomy, taxonomy.rootDocumentContractIds),
+    ...taxonomyContractFilenames(taxonomy, taxonomy.rootDataContractIds),
+  ]);
   const breaches: BreachRecord[] = [];
   let owners: ReturnType<typeof readdirSync>;
   try {
@@ -22938,7 +24259,7 @@ export function policySubsetConformanceBreaches(repoRoot: string): BreachRecord[
  * 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET, contract §6 "Policies" (W0/W1,
  * add-only). Four rules over the new `👁️viewer`/`✏️editor` subset-surface axis, driven entirely by
  * `🔣️taxonomy.json` (`viewerDirName`/`editorDirName`/`surfaceRoles`/`surfaceDirNames`/
- * `windowLeafLangs`/`taxonomyLeafFilenames`) — never a hardcoded emoji literal for the axis itself.
+ * `windowLeafLangs` and ecosystem component file-kind IDs) — never a hardcoded emoji literal for the axis itself.
  * `policySubsetSurfaceCompletenessBreaches` and `policyViewerPurityBreaches` land at `"medium"`/`"high"`
  * respectively per the contract; `policyOsConfigShapeBreaches` locks a facet that already shipped
  * (C4), so it fails the gate like any other completed-shape lock.
@@ -22952,7 +24273,10 @@ export function policySubsetConformanceBreaches(repoRoot: string): BreachRecord[
 export function policySubsetSurfaceCompletenessBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
   const breaches: BreachRecord[] = [];
-  const scaffoldLeafNames = new Set([taxonomy.taxonomyLeafFilenames["🦀️rust"], taxonomy.taxonomyLeafFilenames["🟦️typescript"]].filter((name): name is string => !!name));
+  const scaffoldLeafNames = new Set([
+    taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust", "component"),
+    taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript", "component"),
+  ]);
   for (const subRel of policyListTopLevelSubsetDirs(repoRoot)) {
     if (!existsSync(join(repoRoot, subRel, "🧬️schema"))) continue;
     for (const role of taxonomy.surfaceRoles) {
@@ -22976,7 +24300,7 @@ export function policySubsetSurfaceCompletenessBreaches(repoRoot: string): Breac
         const windowsRel = `${modesRel}/${mode.name}/${taxonomy.windowsDirName}`;
         for (const w of policyReaddirSafe(repoRoot, windowsRel).filter((e) => e.isDirectory)) {
           const windowDir = `${windowsRel}/${w.name}`;
-          if (taxonomy.windowLeafLangs.every((lang) => existsSync(join(repoRoot, windowDir, taxonomy.taxonomyLeafFilenames[lang] ?? "")))) hasCompleteWindow = true;
+          if (taxonomy.windowLeafLangs.every((lang) => existsSync(join(repoRoot, windowDir, taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, lang, "component"))))) hasCompleteWindow = true;
         }
       }
       if (!hasCompleteWindow) {
@@ -23124,15 +24448,16 @@ export function policyOsConfigShapeBreaches(repoRoot: string): BreachRecord[] {
     return breaches;
   }
   for (const format of schemaFacetFormatEntries(repoRoot, schemaRel, taxonomy).map(([, f]) => f)) {
-    if (existsSync(join(repoRoot, schemaRel, format.leafFilename))) continue;
+    const leafFilename = canonicalFilenameForKind(format.fileKindId, taxonomy);
+    if (existsSync(join(repoRoot, schemaRel, leafFilename))) continue;
     breaches.push({
-      id: `os-config-shape-schema-leaf-${format.leafFilename}`,
-      summary: `"${schemaRel}" is missing required schema leaf "${format.leafFilename}"`,
+      id: `os-config-shape-schema-leaf-${leafFilename}`,
+      summary: `"${schemaRel}" is missing required schema leaf "${leafFilename}"`,
       kind: "taxonomy/os-config-shape",
       scope: "os/config",
       priority: "high",
       reason: `Every schemaFormats leaf for facet kind 🧬️data is frozen for ${POLICY_OS_CONFIG_SCHEMA_ID}.`,
-      solution: `Add ${schemaRel}/${format.leafFilename}.`,
+      solution: `Add ${schemaRel}/${leafFilename}.`,
     });
   }
   const rootRust = policyReadFileSafe(repoRoot, schemaRel, "🦀️component.rs");
@@ -24764,7 +26089,7 @@ function policyInferenceFamilyRootCompletenessBreaches(repoRoot: string): Breach
   const breaches: BreachRecord[] = [];
   for (const inferencesRel of policyFindAllInferencesDirs(repoRoot)) {
     const artRel = policyArtifactRootOfInferencesDir(inferencesRel);
-    const rootLeaves = schemaFacetFormatEntries(repoRoot, inferencesRel, taxonomy).map(([, f]) => f.leafFilename);
+    const rootLeaves = schemaFacetFormatEntries(repoRoot, inferencesRel, taxonomy).map(([, format]) => canonicalFilenameForKind(format.fileKindId, taxonomy));
     for (const leaf of rootLeaves) {
       const rel = `${inferencesRel}/${leaf}`;
       if (existsSync(join(repoRoot, rel))) continue;
@@ -25531,7 +26856,7 @@ function policyLoadSchemaFacetLeaves(
   const expected = policyExpectedSchemaTypeNameForFacetPath(facetRel);
   const out: { formatId: string; leafFilename: string; fieldCasing: string; relPath: string; extract: PolicySchemaLeafExtract | null }[] = [];
   for (const [formatId, format] of schemaFacetFormatEntries(repoRoot, facetRel, taxonomy)) {
-    const leafFilename = format.leafFilename;
+    const leafFilename = canonicalFilenameForKind(format.fileKindId, taxonomy);
     const relPath = `${facetRel}/${leafFilename}`;
     const abs = join(repoRoot, relPath);
     if (!existsSync(abs)) {
@@ -25574,7 +26899,7 @@ function policyLoadSchemaFacetLeaves(
  */
 function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
-  const normativeByFacet = taxonomy.artifactSchemaSpecFilenames ?? {};
+  const normativeByFacet = taxonomy.artifactSchemaSpecFileKinds ?? {};
   const breaches: BreachRecord[] = [];
   for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
     for (const facetRel of POLICY_SCHEMA_FACET_RELS) {
@@ -25592,11 +26917,12 @@ function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string): Breach
         continue;
       }
       for (const [formatId, format] of schemaFacetFormatEntries(repoRoot, facetAbs, taxonomy)) {
-        const leafRel = `${facetAbs}/${format.leafFilename}`;
+        const leafFilename = canonicalFilenameForKind(format.fileKindId, taxonomy);
+        const leafRel = `${facetAbs}/${leafFilename}`;
         if (existsSync(join(repoRoot, leafRel))) continue;
         breaches.push({
           id: `artifact-schema-leaf-missing-${leafRel}`,
-          summary: `"${facetAbs}" is missing schemaFormats leaf ${format.leafFilename} (${formatId})`,
+          summary: `"${facetAbs}" is missing schemaFormats leaf ${leafFilename} (${formatId})`,
           kind: "artifact-schema/facet-completeness",
           scope: artRel,
           priority: "high",
@@ -25604,8 +26930,9 @@ function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string): Breach
           solution: `Add handcrafted ${leafRel}.`,
         });
       }
-      const normative = normativeByFacet[facetRel];
-      if (normative) {
+      const normativeFileKindId = normativeByFacet[facetRel];
+      if (normativeFileKindId) {
+        const normative = canonicalFilenameForKind(normativeFileKindId, taxonomy);
         const normativeRel = `${facetAbs}/${normative}`;
         if (!existsSync(join(repoRoot, normativeRel))) {
           breaches.push({
@@ -25978,7 +27305,7 @@ function policyLoadAppSchemaFacetLeaves(
   const formats = taxonomy.schemaFormats ?? {};
   const out: { formatId: string; leafFilename: string; fieldCasing: string; relPath: string; extract: PolicySchemaLeafExtract | null }[] = [];
   for (const [formatId, format] of Object.entries(formats)) {
-    const leafFilename = format.leafFilename;
+    const leafFilename = canonicalFilenameForKind(format.fileKindId, taxonomy);
     const relPath = `${facetAbs}/${leafFilename}`;
     const abs = join(repoRoot, relPath);
     if (!existsSync(abs)) {
@@ -26025,7 +27352,7 @@ function policyAppSchemaFacetRole(kind: "config" | "presence"): string {
  */
 function policyAppSchemaFacetCompletenessBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
-  const normativeByFacet = taxonomy.surfaceSchemaSpecFilenames ?? {};
+  const normativeByFacet = taxonomy.surfaceSchemaSpecFileKinds ?? {};
   const breaches: BreachRecord[] = [];
   for (const owner of policyDiscoverAppSchemaOwners(repoRoot)) {
     const facets: { kind: "config" | "presence"; facetAbs: string }[] = [
@@ -26046,11 +27373,12 @@ function policyAppSchemaFacetCompletenessBreaches(repoRoot: string): BreachRecor
         continue;
       }
       for (const [formatId, format] of schemaFacetFormatEntries(repoRoot, facetAbs, taxonomy)) {
-        const leafRel = `${facetAbs}/${format.leafFilename}`;
+        const leafFilename = canonicalFilenameForKind(format.fileKindId, taxonomy);
+        const leafRel = `${facetAbs}/${leafFilename}`;
         if (existsSync(join(repoRoot, leafRel))) continue;
         breaches.push({
           id: `app-schema-leaf-missing-${leafRel}`,
-          summary: `"${facetAbs}" is missing schemaFormats leaf ${format.leafFilename} (${formatId})`,
+          summary: `"${facetAbs}" is missing schemaFormats leaf ${leafFilename} (${formatId})`,
           kind: "app-schema/facet-completeness",
           scope: owner.ownerRel,
           priority: "high",
@@ -26058,7 +27386,9 @@ function policyAppSchemaFacetCompletenessBreaches(repoRoot: string): BreachRecor
           solution: `Add handcrafted ${leafRel}.`,
         });
       }
-      const normative = normativeByFacet[policyAppSchemaFacetRole(kind)] ?? "🔣️component.json";
+      const normativeFileKindId = normativeByFacet[policyAppSchemaFacetRole(kind)];
+      if (!normativeFileKindId) throw new Error(`[taxonomy] no normative surface schema file kind for ${policyAppSchemaFacetRole(kind)}.`);
+      const normative = canonicalFilenameForKind(normativeFileKindId, taxonomy);
       const normativeRel = `${facetAbs}/${normative}`;
       if (!existsSync(join(repoRoot, normativeRel))) {
         breaches.push({
@@ -26908,7 +28238,8 @@ type PolicyStandardManifestGroup = {
 function policyGroupDialectsByStandard(repoRoot: string): PolicyStandardManifestGroup[] {
   const taxonomy = loadTaxonomy();
   const subsetsDirName = (taxonomy as any).subsetsDirName ?? POLICY_SUBSETS_DIR;
-  const manifestFilename = (taxonomy as any).subsetsManifestFilename ?? "🔣️component.json";
+  if (!taxonomy.subsetsManifestFileKindId) throw new Error("[taxonomy] subsets manifest file kind is not declared.");
+  const manifestFilename = canonicalFilenameForKind(taxonomy.subsetsManifestFileKindId, taxonomy);
   const groups = new Map<string, PolicyStandardManifestGroup>();
   for (const dialect of policyListArtifactDialectDirs(repoRoot)) {
     let group = groups.get(dialect.standardRel);
@@ -27092,11 +28423,12 @@ function policySchemaFormatLeafBreaches(
 ): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const [formatId, format] of schemaFacetFormatEntries(repoRoot, facetAbs, taxonomy)) {
-    const leafRel = `${facetAbs}/${format.leafFilename}`;
+    const leafFilename = canonicalFilenameForKind(format.fileKindId, taxonomy);
+    const leafRel = `${facetAbs}/${leafFilename}`;
     if (existsSync(join(repoRoot, leafRel))) continue;
     breaches.push({
       id: `stdio-schema-format-${leafRel}`,
-      summary: `"${facetAbs}" is missing schemaFormats leaf ${format.leafFilename} (${formatId})`,
+      summary: `"${facetAbs}" is missing schemaFormats leaf ${leafFilename} (${formatId})`,
       kind: "stdio-artifacts/schema-representation",
       scope: artRel,
       priority: "high",

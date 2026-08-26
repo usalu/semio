@@ -23,6 +23,395 @@
     {
       "id": "en1992-1-any",
       "capability": "en1992-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-ac-mm2",
+          "sourceMutationDirectoryName": "🐞change-ac-mm2",
+          "mutationDirectoryName": "🐞change-ac-mm2",
+          "scenarios": [
+            {
+              "id": "raises-a-c-mm2-to-168750-0",
+              "directoryName": "🧪️raises-a-c-mm2-to-168750-0"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-anchor-as-mm2",
+          "sourceMutationDirectoryName": "🦋change-anchor-as-mm2",
+          "mutationDirectoryName": "🦋change-anchor-as-mm2",
+          "scenarios": [
+            {
+              "id": "raises-anchor-a-s-mm2-to-157-0",
+              "directoryName": "🧪️raises-anchor-a-s-mm2-to-157-0"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-anchor-c1-mm",
+          "sourceMutationDirectoryName": "🐌change-anchor-c1-mm",
+          "mutationDirectoryName": "🐌change-anchor-c1-mm",
+          "scenarios": [
+            {
+              "id": "raises-anchor-c1-mm-to-137-5",
+              "directoryName": "🧪️raises-anchor-c1-mm-to-137-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-anchor-cracked",
+          "sourceMutationDirectoryName": "🐢change-anchor-cracked",
+          "mutationDirectoryName": "🐢change-anchor-cracked",
+          "scenarios": [
+            {
+              "id": "turns-anchor-cracked-on",
+              "directoryName": "🧪️turns-anchor-cracked-on"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-anchor-d-mm",
+          "sourceMutationDirectoryName": "🐬change-anchor-d-mm",
+          "mutationDirectoryName": "🐬change-anchor-d-mm",
+          "scenarios": [
+            {
+              "id": "raises-anchor-d-mm-to-16-0",
+              "directoryName": "🧪️raises-anchor-d-mm-to-16-0"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-anchor-f-uk-mpa",
+          "sourceMutationDirectoryName": "🐳change-anchor-f-uk-mpa",
+          "mutationDirectoryName": "🐳change-anchor-f-uk-mpa",
+          "scenarios": [
+            {
+              "id": "raises-anchor-f-uk-mpa-to-900-0",
+              "directoryName": "🧪️raises-anchor-f-uk-mpa-to-900-0"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-anchor-f-yk-mpa",
+          "sourceMutationDirectoryName": "🦈change-anchor-f-yk-mpa",
+          "mutationDirectoryName": "🦈change-anchor-f-yk-mpa",
+          "scenarios": [
+            {
+              "id": "raises-anchor-f-yk-mpa-to-720-0",
+              "directoryName": "🧪️raises-anchor-f-yk-mpa-to-720-0"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-anchor-h-ef-mm",
+          "sourceMutationDirectoryName": "🦭change-anchor-h-ef-mm",
+          "mutationDirectoryName": "🦭change-anchor-h-ef-mm",
+          "scenarios": [
+            {
+              "id": "raises-anchor-h-ef-mm-to-105-0",
+              "directoryName": "🧪️raises-anchor-h-ef-mm-to-105-0"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-anchor-n-ed-kn",
+          "sourceMutationDirectoryName": "🐊change-anchor-n-ed-kn",
+          "mutationDirectoryName": "🐊change-anchor-n-ed-kn",
+          "scenarios": [
+            {
+              "id": "raises-anchor-n-ed-kn-to-22-5",
+              "directoryName": "🧪️raises-anchor-n-ed-kn-to-22-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-anchor-v-ed-kn",
+          "sourceMutationDirectoryName": "🦎change-anchor-v-ed-kn",
+          "mutationDirectoryName": "🦎change-anchor-v-ed-kn",
+          "scenarios": [
+            {
+              "id": "raises-anchor-v-ed-kn-to-11-25",
+              "directoryName": "🧪️raises-anchor-v-ed-kn-to-11-25"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-as-mm2",
+          "sourceMutationDirectoryName": "🐍change-as-mm2",
+          "mutationDirectoryName": "🐍change-as-mm2",
+          "scenarios": [
+            {
+              "id": "raises-a-s-mm2-to-1608-5",
+              "directoryName": "🧪️raises-a-s-mm2-to-1608-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-b-mm",
+          "sourceMutationDirectoryName": "🦂change-b-mm",
+          "mutationDirectoryName": "🦂change-b-mm",
+          "scenarios": [
+            {
+              "id": "raises-b-mm-to-375-0",
+              "directoryName": "🧪️raises-b-mm-to-375-0"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-delta-sigma-s-mpa",
+          "sourceMutationDirectoryName": "🦟change-bridge-delta-sigma-s-mpa",
+          "mutationDirectoryName": "🦟change-bridge-delta-sigma-s-mpa",
+          "scenarios": [
+            {
+              "id": "raises-bridge-delta-sigma-s-mpa-to-132-5",
+              "directoryName": "🧪️raises-bridge-delta-sigma-s-mpa-to-132-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-sigma-c-mpa",
+          "sourceMutationDirectoryName": "🦗change-bridge-sigma-c-mpa",
+          "mutationDirectoryName": "🦗change-bridge-sigma-c-mpa",
+          "scenarios": [
+            {
+              "id": "raises-bridge-sigma-c-mpa-to-15-75",
+              "directoryName": "🧪️raises-bridge-sigma-c-mpa-to-15-75"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-d-mm",
+          "sourceMutationDirectoryName": "🕷️change-d-mm",
+          "mutationDirectoryName": "🕷️change-d-mm",
+          "scenarios": [
+            {
+              "id": "raises-d-mm-to-512-5",
+              "directoryName": "🧪️raises-d-mm-to-512-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-f-ck",
+          "sourceMutationDirectoryName": "🐜change-f-ck",
+          "mutationDirectoryName": "🐜change-f-ck",
+          "scenarios": [
+            {
+              "id": "raises-f-ck-to-45-0",
+              "directoryName": "🧪️raises-f-ck-to-45-0"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-f-yk",
+          "sourceMutationDirectoryName": "🦔change-f-yk",
+          "mutationDirectoryName": "🦔change-f-yk",
+          "scenarios": [
+            {
+              "id": "raises-f-yk-to-550-0",
+              "directoryName": "🧪️raises-f-yk-to-550-0"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fire-rating",
+          "sourceMutationDirectoryName": "🦇change-fire-rating",
+          "mutationDirectoryName": "🦇change-fire-rating",
+          "scenarios": [
+            {
+              "id": "switches-fire-rating-to-r120",
+              "directoryName": "🧪️switches-fire-rating-to-r120"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-hd-over-h",
+          "sourceMutationDirectoryName": "🦉change-hd-over-h",
+          "mutationDirectoryName": "🦉change-hd-over-h",
+          "scenarios": [
+            {
+              "id": "raises-hd-over-h-to-12-5",
+              "directoryName": "🧪️raises-hd-over-h-to-12-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-liquid-es-mpa",
+          "sourceMutationDirectoryName": "🐴change-liquid-es-mpa",
+          "mutationDirectoryName": "🐴change-liquid-es-mpa",
+          "scenarios": [
+            {
+              "id": "raises-liquid-e-s-mpa-to-205000-0",
+              "directoryName": "🧪️raises-liquid-e-s-mpa-to-205000-0"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-liquid-f-ct-eff-mpa",
+          "sourceMutationDirectoryName": "🐎change-liquid-f-ct-eff-mpa",
+          "mutationDirectoryName": "🐎change-liquid-f-ct-eff-mpa",
+          "scenarios": [
+            {
+              "id": "raises-liquid-f-ct-eff-mpa-to-3-25",
+              "directoryName": "🧪️raises-liquid-f-ct-eff-mpa-to-3-25"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-liquid-rho-p-eff",
+          "sourceMutationDirectoryName": "🦄change-liquid-rho-p-eff",
+          "mutationDirectoryName": "🦄change-liquid-rho-p-eff",
+          "scenarios": [
+            {
+              "id": "raises-liquid-rho-p-eff-to-0-0078125",
+              "directoryName": "🧪️raises-liquid-rho-p-eff-to-0-0078125"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-liquid-sigma-s-mpa",
+          "sourceMutationDirectoryName": "🐑change-liquid-sigma-s-mpa",
+          "mutationDirectoryName": "🐑change-liquid-sigma-s-mpa",
+          "scenarios": [
+            {
+              "id": "raises-liquid-sigma-s-mpa-to-235-5",
+              "directoryName": "🧪️raises-liquid-sigma-s-mpa-to-235-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-liquid-sr-max-mm",
+          "sourceMutationDirectoryName": "🐐change-liquid-sr-max-mm",
+          "mutationDirectoryName": "🐐change-liquid-sr-max-mm",
+          "scenarios": [
+            {
+              "id": "raises-liquid-s-r-max-mm-to-312-5",
+              "directoryName": "🧪️raises-liquid-s-r-max-mm-to-312-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-m-ed-knm",
+          "sourceMutationDirectoryName": "🐮change-m-ed-knm",
+          "mutationDirectoryName": "🐮change-m-ed-knm",
+          "scenarios": [
+            {
+              "id": "raises-m-ed-knm-to-187-5",
+              "directoryName": "🧪️raises-m-ed-knm-to-187-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-n-ed-kn",
+          "sourceMutationDirectoryName": "🐷change-n-ed-kn",
+          "mutationDirectoryName": "🐷change-n-ed-kn",
+          "scenarios": [
+            {
+              "id": "raises-n-ed-kn-to-62-5",
+              "directoryName": "🧪️raises-n-ed-kn-to-62-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-p-kn",
+          "sourceMutationDirectoryName": "🐗change-p-kn",
+          "mutationDirectoryName": "🐗change-p-kn",
+          "scenarios": [
+            {
+              "id": "raises-p-kn-to-45-5",
+              "directoryName": "🧪️raises-p-kn-to-45-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-provided-axis-distance-mm",
+          "sourceMutationDirectoryName": "🦌change-provided-axis-distance-mm",
+          "mutationDirectoryName": "🦌change-provided-axis-distance-mm",
+          "scenarios": [
+            {
+              "id": "raises-provided-axis-distance-mm-to-42-5",
+              "directoryName": "🧪️raises-provided-axis-distance-mm-to-42-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-rho-l",
+          "sourceMutationDirectoryName": "🐘change-rho-l",
+          "mutationDirectoryName": "🐘change-rho-l",
+          "scenarios": [
+            {
+              "id": "raises-rho-l-to-0-015625",
+              "directoryName": "🧪️raises-rho-l-to-0-015625"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-span-m",
+          "sourceMutationDirectoryName": "🦏change-span-m",
+          "mutationDirectoryName": "🦏change-span-m",
+          "scenarios": [
+            {
+              "id": "raises-span-m-to-7-5",
+              "directoryName": "🧪️raises-span-m-to-7-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-tightness-class",
+          "sourceMutationDirectoryName": "🦛change-tightness-class",
+          "mutationDirectoryName": "🦛change-tightness-class",
+          "scenarios": [
+            {
+              "id": "switches-tightness-class-to-tc2",
+              "directoryName": "🧪️switches-tightness-class-to-tc2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-udl-kn-m",
+          "sourceMutationDirectoryName": "🐪change-udl-kn-m",
+          "mutationDirectoryName": "🐪change-udl-kn-m",
+          "scenarios": [
+            {
+              "id": "raises-udl-kn-m-to-26-25",
+              "directoryName": "🧪️raises-udl-kn-m-to-26-25"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-use-fem",
+          "sourceMutationDirectoryName": "🐫change-use-fem",
+          "mutationDirectoryName": "🐫change-use-fem",
+          "scenarios": [
+            {
+              "id": "turns-use-fem-on",
+              "directoryName": "🧪️turns-use-fem-on"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-v-ed-kn",
+          "sourceMutationDirectoryName": "🦒change-v-ed-kn",
+          "mutationDirectoryName": "🦒change-v-ed-kn",
+          "scenarios": [
+            {
+              "id": "raises-v-ed-kn-to-96-5",
+              "directoryName": "🧪️raises-v-ed-kn-to-96-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "🐝set-snapshot",
+          "mutationDirectoryName": "🐝set-snapshot",
+          "scenarios": [
+            {
+              "id": "switches-annex-to-en",
+              "directoryName": "🧪️switches-annex-to-en"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "change-annex",
         "change-m-ed-knm",

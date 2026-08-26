@@ -26,6 +26,9 @@
     {
       "id": "pdf-1-7-x",
       "capability": "pdf-1-7-x-mutate",
+      "standardDirectoryName": "🔖️1.7",
+      "subsetDirectoryName": "✳️x",
+      "vectors": [],
       "kinds": [
         "no-mutation",
         "set-snapshot",

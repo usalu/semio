@@ -126,7 +126,7 @@ export class TurnScheduler<TPayload, TBudget = unknown> {
    * the number of turns dropped. A turn already in flight (this actor is mid-`runTurn`) is untouched
    * here; that promise settles on its own, same contract as `ShardClient.terminate`'s in-flight
    * rejection. */
-  cancelQueued(actorId: string): number {
+  cancelQueued(actorId: string, onCancelled?: (payload: TPayload) => void): number {
     const mailbox = this.mailboxes.get(actorId);
     if (!mailbox) return 0;
     const counts = this.laneCounts.get(actorId)!;
@@ -134,6 +134,7 @@ export class TurnScheduler<TPayload, TBudget = unknown> {
     let envelope: MailboxEnvelope<TPayload> | undefined;
     while ((envelope = mailbox.popNext()) !== undefined) {
       counts[envelope.lane] -= 1;
+      onCancelled?.(envelope.payload);
       cancelled += 1;
     }
     return cancelled;
@@ -144,8 +145,8 @@ export class TurnScheduler<TPayload, TBudget = unknown> {
    * inheriting stale bookkeeping. Safe to call while a turn is in flight for this actor — only the
    * QUEUE is torn down; the in-flight promise still settles and its `finally` no-ops harmlessly since
    * `busyActors`/pump only ever re-read state, never assume the mailbox still exists. */
-  teardownActor(actorId: string): number {
-    const cancelled = this.cancelQueued(actorId);
+  teardownActor(actorId: string, onCancelled?: (payload: TPayload) => void): number {
+    const cancelled = this.cancelQueued(actorId, onCancelled);
     this.mailboxes.delete(actorId);
     this.laneCounts.delete(actorId);
     return cancelled;
@@ -334,10 +335,12 @@ if (import.meta.vitest) {
 
     it("teardownActor cancels queued work and forgets the actor so a later enqueue starts fresh", async () => {
       const { scheduler, order } = harness();
+      const cancelledPayloads: string[] = [];
       scheduler.enqueue("y", { lane: "Interactive", payload: "y-1" });
       scheduler.enqueue("y", { lane: "Interactive", payload: "y-2" });
-      const cancelled = scheduler.teardownActor("y");
+      const cancelled = scheduler.teardownActor("y", (payload) => cancelledPayloads.push(payload));
       expect(cancelled).toBe(2);
+      expect(cancelledPayloads).toEqual(["y-1", "y-2"]);
       expect(scheduler.pendingCount("y")).toBe(0);
       await flush();
       expect(order).toHaveLength(0); // nothing ever dispatched — torn down before the first pump

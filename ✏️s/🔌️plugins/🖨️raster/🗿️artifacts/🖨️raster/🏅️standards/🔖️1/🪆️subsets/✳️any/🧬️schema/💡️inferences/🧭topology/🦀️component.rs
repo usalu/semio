@@ -11,13 +11,13 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Topology
-async fn layer_id(layer: &RasterLayerNode) -> &str {
+fn layer_id(layer: &RasterLayerNode) -> &str {
     match layer {
         RasterLayerNode::Pixel { id, .. } | RasterLayerNode::Group { id, .. } | RasterLayerNode::Adjustment { id, .. } => id,
     }
 }
 
-async fn walk(layers: &[RasterLayerNode], level: u32, topo_order: &mut Vec<String>, depth: &mut BTreeMap<String, u32>) {
+fn walk(layers: &[RasterLayerNode], level: u32, topo_order: &mut Vec<String>, depth: &mut BTreeMap<String, u32>) {
     for layer in layers {
         let id = layer_id(layer).to_string();
         topo_order.push(id.clone());
@@ -39,7 +39,7 @@ pub struct RasterTopology {
 }
 
 /// 🧮️ Computes [`RasterTopology`] via a pre-order walk of `layers`' `Group.children` nesting.
-pub async fn compute_raster_topology(snapshot: &RasterSnapshot) -> RasterTopology {
+pub fn compute_raster_topology(snapshot: &RasterSnapshot) -> RasterTopology {
     let mut topo_order = Vec::new();
     let mut depth = BTreeMap::new();
     walk(&snapshot.layers, 0, &mut topo_order, &mut depth);
@@ -54,15 +54,15 @@ mod tests {
     use super::*;
     use crate::artifacts::raster::{RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
-    async fn pixel_layer(id: &str) -> RasterLayerNode {
+    fn pixel_layer(id: &str) -> RasterLayerNode {
         RasterLayerNode::Pixel { id: id.into(), name: id.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: None, height: None, image_key: None }
     }
 
-    async fn group_layer(id: &str, children: Vec<RasterLayerNode>) -> RasterLayerNode {
+    fn group_layer(id: &str, children: Vec<RasterLayerNode>) -> RasterLayerNode {
         RasterLayerNode::Group { id: id.into(), name: id.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children }
     }
 
-    async fn snapshot(layers: Vec<RasterLayerNode>) -> RasterSnapshot {
+    fn snapshot(layers: Vec<RasterLayerNode>) -> RasterSnapshot {
         RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: "test".into(), title: None, layers, assets: Default::default() }
     }
 

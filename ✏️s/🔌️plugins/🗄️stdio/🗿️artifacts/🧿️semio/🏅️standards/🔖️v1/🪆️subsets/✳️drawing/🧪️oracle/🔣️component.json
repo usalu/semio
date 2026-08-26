@@ -18,6 +18,197 @@
     {
       "id": "semio-v1-drawing",
       "capability": "semio-v1-drawing-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️drawing",
+      "vectors": [
+        {
+          "mutationId": "change-stroke-color",
+          "sourceMutationDirectoryName": "🖌️change-stroke-color",
+          "mutationDirectoryName": "🖌️change-stroke-color",
+          "scenarios": [
+            {
+              "id": "recolours-the-primary-styles-stroke-to-translucent-white",
+              "directoryName": "🧪️recolours-the-primary-styles-stroke-to-translucent-white"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-stroke-width",
+          "sourceMutationDirectoryName": "📐change-stroke-width",
+          "mutationDirectoryName": "📐change-stroke-width",
+          "scenarios": [
+            {
+              "id": "thickens-the-primary-styles-stroke",
+              "directoryName": "🧪️thickens-the-primary-styles-stroke"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-layer",
+          "sourceMutationDirectoryName": "🌱create-layer",
+          "mutationDirectoryName": "🌱create-layer",
+          "scenarios": [
+            {
+              "id": "inserts-a-second-layer-above-the-base-layer",
+              "directoryName": "🧪️inserts-a-second-layer-above-the-base-layer"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-node",
+          "sourceMutationDirectoryName": "➕create-node",
+          "mutationDirectoryName": "➕create-node",
+          "scenarios": [
+            {
+              "id": "appends-a-caption-text-node-to-the-layer-root",
+              "directoryName": "🧪️appends-a-caption-text-node-to-the-layer-root"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-layer",
+          "sourceMutationDirectoryName": "🗑️delete-layer",
+          "mutationDirectoryName": "🗑️delete-layer",
+          "scenarios": [
+            {
+              "id": "removes-the-leading-layer-and-keeps-the-overlay",
+              "directoryName": "🧪️removes-the-leading-layer-and-keeps-the-overlay"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-node",
+          "sourceMutationDirectoryName": "➖delete-node",
+          "mutationDirectoryName": "➖delete-node",
+          "scenarios": [
+            {
+              "id": "removes-the-text-node-from-the-layer-root",
+              "directoryName": "🧪️removes-the-text-node-from-the-layer-root"
+            }
+          ]
+        },
+        {
+          "mutationId": "drag-nodes",
+          "sourceMutationDirectoryName": "🖐️drag-nodes",
+          "mutationDirectoryName": "🖐️drag-nodes",
+          "scenarios": [
+            {
+              "id": "drags-the-text-node-and-the-nested-group-by-the-same-offset",
+              "directoryName": "🧪️drags-the-text-node-and-the-nested-group-by-the-same-offset"
+            }
+          ]
+        },
+        {
+          "mutationId": "flatten",
+          "sourceMutationDirectoryName": "🫓flatten",
+          "mutationDirectoryName": "🫓flatten",
+          "scenarios": [
+            {
+              "id": "flattens-an-identity-nested-group-into-its-leaves",
+              "directoryName": "🧪️flattens-an-identity-nested-group-into-its-leaves"
+            }
+          ]
+        },
+        {
+          "mutationId": "group",
+          "sourceMutationDirectoryName": "🧷group",
+          "mutationDirectoryName": "🧷group",
+          "scenarios": [
+            {
+              "id": "groups-the-two-leading-children-into-a-new-group",
+              "directoryName": "🧪️groups-the-two-leading-children-into-a-new-group"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-node",
+          "sourceMutationDirectoryName": "📍move-node",
+          "mutationDirectoryName": "📍move-node",
+          "scenarios": [
+            {
+              "id": "moves-the-text-node-to-a-new-origin",
+              "directoryName": "🧪️moves-the-text-node-to-a-new-origin"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-nodes",
+          "sourceMutationDirectoryName": "🔀reorder-nodes",
+          "mutationDirectoryName": "🔀reorder-nodes",
+          "scenarios": [
+            {
+              "id": "moves-the-leading-path-node-to-the-end-of-the-layer-root",
+              "directoryName": "🧪️moves-the-leading-path-node-to-the-end-of-the-layer-root"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-fill",
+          "sourceMutationDirectoryName": "🪣replace-fill",
+          "mutationDirectoryName": "🪣replace-fill",
+          "scenarios": [
+            {
+              "id": "repaints-the-primary-styles-fill-from-red-to-blue",
+              "directoryName": "🧪️repaints-the-primary-styles-fill-from-red-to-blue"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-path",
+          "sourceMutationDirectoryName": "🛤️replace-path",
+          "mutationDirectoryName": "🛤️replace-path",
+          "scenarios": [
+            {
+              "id": "swaps-the-open-path-for-a-closed-triangle",
+              "directoryName": "🧪️swaps-the-open-path-for-a-closed-triangle"
+            }
+          ]
+        },
+        {
+          "mutationId": "rotate",
+          "sourceMutationDirectoryName": "🔄rotate",
+          "mutationDirectoryName": "🔄rotate",
+          "scenarios": [
+            {
+              "id": "rotates-the-nested-group-a-half-turn-about-z",
+              "directoryName": "🧪️rotates-the-nested-group-a-half-turn-about-z"
+            }
+          ]
+        },
+        {
+          "mutationId": "scale",
+          "sourceMutationDirectoryName": "📏scale",
+          "mutationDirectoryName": "📏scale",
+          "scenarios": [
+            {
+              "id": "scales-the-nested-group-non-uniformly",
+              "directoryName": "🧪️scales-the-nested-group-non-uniformly"
+            }
+          ]
+        },
+        {
+          "mutationId": "unflatten",
+          "sourceMutationDirectoryName": "🎈unflatten",
+          "mutationDirectoryName": "🎈unflatten",
+          "scenarios": [
+            {
+              "id": "restores-the-captured-hierarchy-over-the-flat-group",
+              "directoryName": "🧪️restores-the-captured-hierarchy-over-the-flat-group"
+            }
+          ]
+        },
+        {
+          "mutationId": "ungroup",
+          "sourceMutationDirectoryName": "💫ungroup",
+          "mutationDirectoryName": "💫ungroup",
+          "scenarios": [
+            {
+              "id": "dissolves-the-nested-group-into-its-parent",
+              "directoryName": "🧪️dissolves-the-nested-group-into-its-parent"
+            }
+          ]
+        }
+      ],
       "kinds": ["create-layer", "delete-layer", "create-node", "delete-node", "move-node", "drag-nodes", "rotate", "scale", "reorder-nodes", "group", "ungroup", "flatten", "unflatten", "replace-path", "replace-fill", "change-stroke-color", "change-stroke-width"]
     }
   ]

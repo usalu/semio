@@ -1,0 +1,13 @@
+{
+  "$schema": "./flow-scene-owner.schema.json",
+  "schemaVersion": 1,
+  "ownedSlots": 1,
+  "maximumCases": 5,
+  "cases": [
+    { "law": "cloneIdentity", "leftText": "A", "rightText": "A" },
+    { "law": "instanceIsolation", "leftText": "A", "rightText": "B" },
+    { "law": "abaIsolation", "leftText": "A", "rightText": "B" },
+    { "law": "wireOmission", "leftText": "A", "rightText": "" },
+    { "law": "boundedClose", "leftText": "A", "rightText": "" }
+  ]
+}

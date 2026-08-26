@@ -34,13 +34,13 @@ fn expected_after() -> FlowSnapshot {
 /// pair of synapses; `synapse-1` leads at index 0, which is exactly where the committed payload asks
 /// to put it.
 fn before() -> FlowSnapshot {
-    let snapshot: FlowSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FlowSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let widgets = vec![Widget::InputNote { id: "note-alpha".into(), text: "Alpha".into() }, Widget::InputNote { id: "note-beta".into(), text: "Beta".into() }];
     let synapses = vec![
         SynapseSpec { id: "synapse-1".into(), from: "note-alpha".into(), to: "note-beta".into(), from_port: "out".into(), to_port: "in".into() },
         SynapseSpec { id: "synapse-2".into(), from: "note-beta".into(), to: "note-alpha".into(), from_port: "out".into(), to_port: "in".into() },
     ];
-    cache_flow_content(&snapshot.content.child_id, widgets, synapses, BTreeMap::new());
+    cache_flow_content(&mut snapshot.content, widgets, synapses, BTreeMap::new());
     snapshot
 }
 

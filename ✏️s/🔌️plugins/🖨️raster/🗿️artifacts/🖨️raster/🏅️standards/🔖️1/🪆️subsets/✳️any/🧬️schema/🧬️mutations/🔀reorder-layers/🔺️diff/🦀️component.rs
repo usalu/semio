@@ -8,7 +8,7 @@ use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot};
 
 //#region 🔖️Diff
 /// 📐️ Finds `target_id`'s current `(parent_id, index)` address, recursing into groups.
-async fn locate(layers: &[RasterLayerNode], parent_id: Option<&str>, target_id: &str) -> Option<(Option<String>, usize)> {
+fn locate(layers: &[RasterLayerNode], parent_id: Option<&str>, target_id: &str) -> Option<(Option<String>, usize)> {
     for (index, layer) in layers.iter().enumerate() {
         if layer_node_id(layer) == target_id {
             return Some((parent_id.map(str::to_string), index));
@@ -22,7 +22,7 @@ async fn locate(layers: &[RasterLayerNode], parent_id: Option<&str>, target_id: 
     None
 }
 
-pub async fn diff(payload: &ReorderLayers, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+pub fn diff(payload: &ReorderLayers, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
     if find_layer(&base.layers, &payload.layer_id).is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.layer_id), [payload.layer_id.clone()]);
     }

@@ -18,6 +18,175 @@
     {
       "id": "semio-v1-kit",
       "capability": "semio-v1-kit-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️kit",
+      "vectors": [
+        {
+          "mutationId": "add-design",
+          "sourceMutationDirectoryName": "🆕add-design",
+          "mutationDirectoryName": "🆕add-design",
+          "scenarios": [
+            {
+              "id": "adds-an-empty-roof-design",
+              "directoryName": "🧪️adds-an-empty-roof-design"
+            }
+          ]
+        },
+        {
+          "mutationId": "add-type",
+          "sourceMutationDirectoryName": "➕add-type",
+          "mutationDirectoryName": "➕add-type",
+          "scenarios": [
+            {
+              "id": "appends-a-slab-type-to-the-catalogue",
+              "directoryName": "🧪️appends-a-slab-type-to-the-catalogue"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-representation",
+          "sourceMutationDirectoryName": "🔗bind-representation",
+          "mutationDirectoryName": "🔗bind-representation",
+          "scenarios": [
+            {
+              "id": "binds-a-second-representation-to-an-existing-type",
+              "directoryName": "🧪️binds-a-second-representation-to-an-existing-type"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-representation-pin",
+          "sourceMutationDirectoryName": "📌change-representation-pin",
+          "mutationDirectoryName": "📌change-representation-pin",
+          "scenarios": [
+            {
+              "id": "repins-the-representation-from-head-to-a-checkpoint",
+              "directoryName": "🧪️repins-the-representation-from-head-to-a-checkpoint"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-model",
+          "sourceMutationDirectoryName": "🏛️create-model",
+          "mutationDirectoryName": "🏛️create-model",
+          "scenarios": [
+            {
+              "id": "attaches-a-second-model-child",
+              "directoryName": "🧪️attaches-a-second-model-child"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-object",
+          "sourceMutationDirectoryName": "🏗️create-object",
+          "mutationDirectoryName": "🏗️create-object",
+          "scenarios": [
+            {
+              "id": "attaches-a-second-object-child",
+              "directoryName": "🧪️attaches-a-second-object-child"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-properties",
+          "sourceMutationDirectoryName": "🏷️create-properties",
+          "mutationDirectoryName": "🏷️create-properties",
+          "scenarios": [
+            {
+              "id": "attaches-a-properties-child-to-a-kit-that-has-none",
+              "directoryName": "🧪️attaches-a-properties-child-to-a-kit-that-has-none"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-model",
+          "sourceMutationDirectoryName": "💣delete-model",
+          "mutationDirectoryName": "💣delete-model",
+          "scenarios": [
+            {
+              "id": "detaches-the-only-model-child-and-keeps-the-object-child",
+              "directoryName": "🧪️detaches-the-only-model-child-and-keeps-the-object-child"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-object",
+          "sourceMutationDirectoryName": "🪓delete-object",
+          "mutationDirectoryName": "🪓delete-object",
+          "scenarios": [
+            {
+              "id": "detaches-the-only-object-child-and-keeps-the-model-child",
+              "directoryName": "🧪️detaches-the-only-object-child-and-keeps-the-model-child"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-properties",
+          "sourceMutationDirectoryName": "🚫delete-properties",
+          "mutationDirectoryName": "🚫delete-properties",
+          "scenarios": [
+            {
+              "id": "detaches-the-properties-child-and-leaves-every-other-collection-alone",
+              "directoryName": "🧪️detaches-the-properties-child-and-leaves-every-other-collection-alone"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-design",
+          "sourceMutationDirectoryName": "🖊️edit-design",
+          "mutationDirectoryName": "🖊️edit-design",
+          "scenarios": [
+            {
+              "id": "replaces-the-designs-pieces-and-connections-in-one-step",
+              "directoryName": "🧪️replaces-the-designs-pieces-and-connections-in-one-step"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-design",
+          "sourceMutationDirectoryName": "🗑️remove-design",
+          "mutationDirectoryName": "🗑️remove-design",
+          "scenarios": [
+            {
+              "id": "removes-the-only-design-together-with-its-pieces",
+              "directoryName": "🧪️removes-the-only-design-together-with-its-pieces"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-type",
+          "sourceMutationDirectoryName": "➖remove-type",
+          "mutationDirectoryName": "➖remove-type",
+          "scenarios": [
+            {
+              "id": "removes-the-column-type-and-keeps-the-beam-type",
+              "directoryName": "🧪️removes-the-column-type-and-keeps-the-beam-type"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-type",
+          "sourceMutationDirectoryName": "✏️rename-type",
+          "mutationDirectoryName": "✏️rename-type",
+          "scenarios": [
+            {
+              "id": "renames-the-beam-type-without-recategorising-it",
+              "directoryName": "🧪️renames-the-beam-type-without-recategorising-it"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-representation",
+          "sourceMutationDirectoryName": "✂️unbind-representation",
+          "mutationDirectoryName": "✂️unbind-representation",
+          "scenarios": [
+            {
+              "id": "unbinds-the-leading-representation-and-keeps-the-trailing-one",
+              "directoryName": "🧪️unbinds-the-leading-representation-and-keeps-the-trailing-one"
+            }
+          ]
+        }
+      ],
       "kinds": ["create-object", "delete-object", "create-model", "delete-model", "create-properties", "delete-properties", "bind-representation", "unbind-representation", "change-representation-pin", "add-type", "remove-type", "rename-type", "add-design", "remove-design", "edit-design"]
     }
   ]

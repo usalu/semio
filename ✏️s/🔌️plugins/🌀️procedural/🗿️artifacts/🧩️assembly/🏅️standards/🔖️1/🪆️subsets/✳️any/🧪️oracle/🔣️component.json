@@ -24,6 +24,109 @@
     {
       "id": "assembly-1-any",
       "capability": "assembly-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-seed",
+          "sourceMutationDirectoryName": "🎲change-seed",
+          "mutationDirectoryName": "🎲change-seed",
+          "scenarios": [
+            {
+              "id": "reseeds-the-solve-from-7-to-99",
+              "directoryName": "🧪️reseeds-the-solve-from-7-to-99"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-weight",
+          "sourceMutationDirectoryName": "🔢change-weight",
+          "mutationDirectoryName": "🔢change-weight",
+          "scenarios": [
+            {
+              "id": "raises-the-wall-module-selection-bias",
+              "directoryName": "🧪️raises-the-wall-module-selection-bias"
+            }
+          ]
+        },
+        {
+          "mutationId": "connect-slots",
+          "sourceMutationDirectoryName": "🔗connect-slots",
+          "mutationDirectoryName": "🔗connect-slots",
+          "scenarios": [
+            {
+              "id": "joins-slot-b-to-slot-c-at-index-1",
+              "directoryName": "🧪️joins-slot-b-to-slot-c-at-index-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-rule",
+          "sourceMutationDirectoryName": "🌱create-rule",
+          "mutationDirectoryName": "🌱create-rule",
+          "scenarios": [
+            {
+              "id": "appends-a-rule-forbidding-roof-over-wall",
+              "directoryName": "🧪️appends-a-rule-forbidding-roof-over-wall"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-slot",
+          "sourceMutationDirectoryName": "🌱create-slot",
+          "mutationDirectoryName": "🌱create-slot",
+          "scenarios": [
+            {
+              "id": "appends-slot-c-at-index-2",
+              "directoryName": "🧪️appends-slot-c-at-index-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-rule",
+          "sourceMutationDirectoryName": "🗑️delete-rule",
+          "mutationDirectoryName": "🗑️delete-rule",
+          "scenarios": [
+            {
+              "id": "removes-the-wall-roof-rule",
+              "directoryName": "🧪️removes-the-wall-roof-rule"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-slot",
+          "sourceMutationDirectoryName": "🗑️delete-slot",
+          "mutationDirectoryName": "🗑️delete-slot",
+          "scenarios": [
+            {
+              "id": "removes-slot-a-and-cascades-edge-ab",
+              "directoryName": "🧪️removes-slot-a-and-cascades-edge-ab"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-slots",
+          "sourceMutationDirectoryName": "✂️disconnect-slots",
+          "mutationDirectoryName": "✂️disconnect-slots",
+          "scenarios": [
+            {
+              "id": "severs-edge-ab-leaving-both-slots",
+              "directoryName": "🧪️severs-edge-ab-leaving-both-slots"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-weight",
+          "sourceMutationDirectoryName": "🗑️remove-weight",
+          "mutationDirectoryName": "🗑️remove-weight",
+          "scenarios": [
+            {
+              "id": "drops-the-wall-module-weight-override",
+              "directoryName": "🧪️drops-the-wall-module-weight-override"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-slot",
         "delete-slot",

@@ -1625,21 +1625,29 @@ impl ToolJobFactory for BoundedFirstStepCommandJobFactory {
         crate::retained_command::puzzle_command_contract()
     }
 
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(crate::retained_command::RetainedPuzzleCommandJob::new(payload))
+    fn create_job(&mut self, operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(crate::retained_command::RetainedPuzzleCommandJob::new(operation, payload))
     }
 
     fn create_job_from_wire_pages_with_payload(
         &mut self,
-        _operation: semio_framework_job::Operation,
+        operation: semio_framework_job::Operation,
         payload: Self::Payload,
         input: semio_framework::action_bus::RetainedToolWireInput,
         checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
     ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
-        if checkpoint.is_some() || input.declared_bytes() > crate::retained_command::PUZZLE_COMMAND_RAW_BYTES {
-            return Err((ToolJobFactoryError::new("Puzzle 2d retained command rejects checkpoint or oversized wire owner"), input, checkpoint));
+        if input.declared_bytes() > crate::retained_command::PUZZLE_COMMAND_RAW_BYTES {
+            return Err((ToolJobFactoryError::new("Puzzle 2d retained command rejects an oversized wire owner"), input, checkpoint));
         }
-        Ok(crate::retained_command::RetainedPuzzleCommandJob::from_wire(payload, input))
+        match checkpoint {
+            Some(checkpoint) => {
+                if let Err(error) = crate::retained_command::RetainedPuzzleCommandJob::validate_wire_checkpoint(operation, &payload, &input, &checkpoint) {
+                    return Err((error, input, Some(checkpoint)));
+                }
+                Ok(crate::retained_command::RetainedPuzzleCommandJob::from_validated_wire_checkpoint(operation, payload, input, checkpoint))
+            }
+            None => Ok(crate::retained_command::RetainedPuzzleCommandJob::from_wire(operation, payload, input)),
+        }
     }
 }
 
@@ -1680,7 +1688,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         registry.register(BoundedFirstStepCommandJobFactory::new(&controller_id))
     }
 
-    async fn build_tool_job(request: semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+    fn build_tool_job(request: semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
         if !PUZZLE2D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
@@ -1712,21 +1720,21 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// puzzle's plugin root used to reach `.setup()` for — `register_document_app`/`document_app`
     /// now call this automatically the moment `Puzzle2dPlayApp` is bound to a plugin, exactly like
     /// `🗒️note`'s own `app_schema` override.
-    async fn app_schema() -> Option<artifact_schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<artifact_schema::AppSchemaDescriptor> {
         Some(crate::editor::puzzle2d::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> Puzzle2dPlaySnapshot {
+    fn initial_snapshot() -> Puzzle2dPlaySnapshot {
         set_active_example::warm_examples();
         Puzzle2dPlaySnapshot(serde_json::to_value(default_empty_fixture()).unwrap_or(Value::Null))
     }
 
     /// 🏷️ Maps each `Puzzle2dCommand` variant back to the action id it was declared under.
-    async fn command_id(command: &Puzzle2dCommand) -> &'static str {
+    fn command_id(command: &Puzzle2dCommand) -> &'static str {
         command.action_id()
     }
 
-    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let window_id = args.and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(Value::as_str).map(str::to_string);
         Puzzle2dCommand::try_from_action(action, args.cloned(), window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 2D action '{action}'")))
     }
@@ -1735,13 +1743,13 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         set_fill_count::prepare_snapshot_read(operation, snapshot)
     }
 
-    async fn pending_effects(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> Vec<Effect> {
+    fn pending_effects(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> Vec<Effect> {
         set_fill_count::reconcile_snapshot_read(doc, cfg)
     }
 
     /// 🎬️ Dispatches mounted fill continuations before document materialization; ordinary commands then
     /// sync the board host, delegate to `🎮️commands/*`, replay host events, and derive granular deltas.
-    async fn handle(
+    fn handle(
         command: &Puzzle2dCommand,
         doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle2dConfig>,
@@ -1775,7 +1783,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         let before = doc.snapshot.0.clone();
         let active_utility = puzzle2d_active_utility(config, window_id);
         let mut scene = Self::scene_for(before.clone(), config, window_id);
-        let selection = interaction.selection(PUZZLE2D_INTERACTION_DOMAIN).await;
+        let selection = interaction.selection(PUZZLE2D_INTERACTION_DOMAIN);
         // 🐚️ ArtifactApp::handle is pure (no &self) — rebuild a fresh BoardHost from the document
         // each call. The previous last_synced_fixture cache lived on &self and cannot return.
         let host = RefCell::new(BoardHost::default());
@@ -1856,11 +1864,9 @@ impl ArtifactEditor for Puzzle2dPlayApp {
 
     /// 🔌️ Declares puzzle2d's typed media I/O surface — the implicit document ports plus `kit:in`
     /// (see `import_media` below for why it stays `NotImplemented`) and `design:out`.
-    async fn io() -> Option<AppIo> {
-        Some(
-            AppIo::from_document("puzzle.2d", MediaType { class: MediaClass::TwoD, form: MediaForm::Design }, ArtifactPresentation { id: "2d.puzzle".into(), name: "2D Puzzle".into(), dimension: "2d".into(), component_kind: "puzzle2d".into() })
-                .await
-                .with_ports(vec![
+    fn io() -> Option<AppIo> {
+        let io = semio_framework::io::resolve_ready(AppIo::from_document("puzzle.2d", MediaType { class: MediaClass::TwoD, form: MediaForm::Design }, ArtifactPresentation { id: "2d.puzzle".into(), name: "2D Puzzle".into(), dimension: "2d".into(), component_kind: "puzzle2d".into() }));
+        Some(semio_framework::io::resolve_ready(io.with_ports(vec![
                     MediaPortSpec {
                         id: "kit:in".into(),
                         label: "Kit Catalog".into(),
@@ -1879,9 +1885,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
                         required: false,
                         multiplicity: PortMultiplicity::Many,
                     },
-                ])
-                .await,
-        )
+                ])))
     }
 
     /// 🚧️ `kit:in` is declared (see `io()`) so a future producer/consumer pairing is possible, but
@@ -1890,11 +1894,11 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// vocabulary — meshes, 3D vortex positions, cable/attraction kinds), unlike puzzle3d's `kit:in`,
     /// which DOES share block3d's object-kind vocabulary. There is no honest mapping to fabricate, so
     /// this always reports `NotImplemented` — no normalization is attempted.
-    async fn import_media(_port: &str, _media: &Media, _doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(_port: &str, _media: &Media, _doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, MediaError> {
         Err(MediaError::NotImplemented)
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let config = cfg.snapshot;
         let document_json = doc.snapshot.0.to_string();
         // 🪟️ `body_key` already determines the pane deterministically, so the active utility resolves
@@ -1919,7 +1923,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 
-    async fn window_engagements(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
         let labels = puzzle2d_labels(config);
         // 🪟️ One entry per live window INSTANCE of each pane kind — see `window_instance_ids`'s
@@ -1935,7 +1939,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             .collect()
     }
 
-    async fn window_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let labels = puzzle2d_labels(config);
         PUZZLE2D_PANES
@@ -1954,14 +1958,14 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             .collect()
     }
 
-    async fn tool_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn tool_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let envelope = Self::scene_for(doc.snapshot.0.clone(), config, None);
         let labels = puzzle2d_labels(config);
         HashMap::from([(fill::TOOL_ID.to_string(), vec![fill::measures(&envelope, labels)])])
     }
 
-    async fn context_menu(
+    fn context_menu(
         request: &semio_framework_plugin::ContextMenuRequest,
         doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle2dConfig>,
@@ -1970,7 +1974,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         let config = cfg.snapshot;
         let is_de = is_de_locale(config);
         let selected: Vec<String> = request.surface.as_ref().map(|surface| surface.selection.iter().flat_map(|g| g.ids.iter().cloned()).collect()).unwrap_or_default();
-        puzzle2d_context_menu_items(registry, &doc.snapshot.0, &selected, is_de).await
+        semio_framework::io::resolve_ready(puzzle2d_context_menu_items(registry, &doc.snapshot.0, &selected, is_de))
     }
 }
 //#endregion 🔖️PlayApp
@@ -2195,9 +2199,9 @@ pub(crate) mod testkit {
                 | "setSelectionMode"
                 | "setInteractionGranularity"
         ) {
-            return app.handle_action(action, args, &meta("local")).await;
+            return semio_framework::io::resolve_ready(app.handle_action(action, args, &meta("local")));
         }
-        app.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &meta("local")).await
+        semio_framework::io::resolve_ready(app.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &meta("local")))
     }
 
     /// 🧵️ Drives the same host-owned `DispatchAction` continuation used in production until the example is complete.
@@ -2208,15 +2212,15 @@ pub(crate) mod testkit {
                 _ => None,
             });
             let Some(args) = next else { return step };
-            result = dispatch(app, set_active_example::STEP_ACTION_ID, args.as_ref(), None).await.expect("advance example load");
+            result = dispatch(app, set_active_example::STEP_ACTION_ID, args.as_ref(), None).expect("advance example load");
             assert!(result.mutations.len() <= set_active_example::MAX_MUTATIONS_PER_STEP, "one resumable example step exceeded its fixed semantic mutation bound");
         }
         panic!("example load did not finish within its deterministic step bound");
     }
 
     pub fn load_example(app: &mut Puzzle2dApp, example_id: &str) -> usize {
-        let result = dispatch(app, "setActiveExample", Some(&json!({ "exampleId": example_id })), None).await.expect("begin example load");
-        finish_example_load(app, result).await
+        let result = dispatch(app, "setActiveExample", Some(&json!({ "exampleId": example_id })), None).expect("begin example load");
+        finish_example_load(app, result)
     }
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionSelect`
@@ -2224,12 +2228,12 @@ pub(crate) mod testkit {
     /// deleted `setSelection` action.
     pub fn select_id(app: &mut Puzzle2dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
         let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
-        dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None).await
+        dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None)
     }
 
     pub fn concrete_forest_app() -> Puzzle2dApp {
         let mut app = app();
-        load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID).await;
+        load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
         app
     }
 
@@ -2239,14 +2243,14 @@ pub(crate) mod testkit {
         let mut stack = vec![&tree.root];
         while let Some(node) = stack.pop() {
             if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
-                if surface.doc_schema == <semio_framework_ui_scene::Board2dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA {
+                if surface.doc_schema.as_str() == <semio_framework_ui_scene::Board2dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA {
                     let scene: semio_framework_ui_scene::Board2dScene = semio_framework_ui_scene::decode(surface).expect("decode board scene");
                     return serde_json::to_string(&json!({ "schema": surface.doc_schema, "board2d": scene })).expect("serialize board scene");
                 }
             }
             stack.extend(node.children.iter());
         }
-        serde_json::to_string(&tree).expect("serialize rendered node")
+        serde_json::to_string(&tree.root).expect("serialize rendered node")
     }
 
     /// 🧾️ A standalone `Puzzle2dScene` for the measure/engagement builders that take one directly.
@@ -2401,7 +2405,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn add_node_action_emits_upsert_op_and_appends_node() {
         let mut app = app();
-        let result = dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).await.expect("add node");
+        let result = dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).expect("add node");
         assert_eq!(result.mutations.len(), 1, "addNode must emit exactly one granular operation");
         assert_eq!(fixture_nodes(&fixture_of(&app)).len(), 1);
     }
@@ -2409,26 +2413,26 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_active_example_loads_concrete_forest_via_operations() {
         let mut app = app();
-        let begin = dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None).await.expect("begin example load");
+        let begin = dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None).expect("begin example load");
         assert!(begin.mutations.is_empty(), "the initiating interaction step must only enqueue resumable work");
         assert!(begin.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == set_active_example::STEP_ACTION_ID)));
-        finish_example_load(&mut app, begin).await;
+        finish_example_load(&mut app, begin);
         assert!(!fixture_nodes(&fixture_of(&app)).is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn newer_example_load_supersedes_a_stale_continuation() {
         let mut app = app();
-        let stale_begin = dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None).await.expect("begin stale load");
+        let stale_begin = dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None).expect("begin stale load");
         let stale_args = stale_begin.requested_effects.into_iter().find_map(|effect| match effect {
             Effect::DispatchAction { action, args, .. } if action == set_active_example::STEP_ACTION_ID => args.map(|value| semio_framework::from_dsl_value::<Value>(value).expect("stale args decode")),
             _ => None,
         });
-        let active_begin = dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID })), None).await.expect("begin active load");
-        let stale = dispatch(&mut app, set_active_example::STEP_ACTION_ID, stale_args.as_ref(), None).await.expect("stale step is a no-op");
+        let active_begin = dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID })), None).expect("begin active load");
+        let stale = dispatch(&mut app, set_active_example::STEP_ACTION_ID, stale_args.as_ref(), None).expect("stale step is a no-op");
         assert!(stale.mutations.is_empty());
         assert!(stale.requested_effects.is_empty());
-        finish_example_load(&mut app, active_begin).await;
+        finish_example_load(&mut app, active_begin);
         assert!(!fixture_edges(&fixture_of(&app)).is_empty());
     }
 
@@ -2437,28 +2441,28 @@ mod tests {
     /// `serde_json::Value` bridge impls).
     #[semio_framework_async_macros::async_test]
     async fn puzzle2d_play_projection_pack_round_trips() {
-        let app = concrete_forest_app().await;
+        let app = concrete_forest_app();
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&semio_framework::io::resolve_ready(app.snapshot()).expect("projection"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn select_then_delete_selection_removes_the_node() {
         let mut app = app_with_registry();
-        dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).await.expect("add node");
+        dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).expect("add node");
         let node_id = first_node_id(&app);
-        select_id(&mut app, PUZZLE2D_GRANULARITY_NODE, &node_id).await.expect("select");
-        dispatch(&mut app, "deleteSelection", None, None).await.expect("delete");
+        select_id(&mut app, PUZZLE2D_GRANULARITY_NODE, &node_id).expect("select");
+        dispatch(&mut app, "deleteSelection", None, None).expect("delete");
         assert!(fixture_nodes(&fixture_of(&app)).is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = app();
-        dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).await.expect("add");
+        dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).expect("add");
         assert_eq!(fixture_nodes(&fixture_of(&app)).len(), 1);
-        dispatch(&mut app, "undo", None, None).await.expect("undo");
+        dispatch(&mut app, "undo", None, None).expect("undo");
         assert_eq!(fixture_nodes(&fixture_of(&app)).len(), 0);
-        dispatch(&mut app, "redo", None, None).await.expect("redo");
+        dispatch(&mut app, "redo", None, None).expect("redo");
         assert_eq!(fixture_nodes(&fixture_of(&app)).len(), 1);
     }
     //#endregion 🔖️Operations
@@ -2479,7 +2483,7 @@ mod tests {
         let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None)).await.expect("store");
         let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
         store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::puzzle2d::mutations::create_node(node, None)], description: None }).await.expect("apply");
-        let envelope = store.envelope().await;
+        let envelope = store.envelope();
         let edit: &Edit<Puzzle2dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
         semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle2dSnapshot, Puzzle2dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())).await;
     }
@@ -2492,12 +2496,12 @@ mod tests {
     async fn set_camera_is_session_only_and_never_undoable() {
         let mut app = app();
         for x in [1.0, 2.0, 3.0] {
-            let result = dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "x": x, "y": 0.0, "zoom": 1.0 } })), None).await.expect("camera");
+            let result = dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "x": x, "y": 0.0, "zoom": 1.0 } })), None).expect("camera");
             assert!(result.mutations.is_empty(), "setCamera must never produce a document operation");
         }
         let rendered = render_body(&mut app, overview::BODY_KEY);
         assert_eq!(rendered_camera(&rendered).0, 3.0, "the camera must update immediately in the rendered scene");
-        let undo = dispatch(&mut app, "undo", None, None).await.expect("undo");
+        let undo = dispatch(&mut app, "undo", None, None).expect("undo");
         assert!(undo.mutations.is_empty(), "there is no document edit to undo");
         let rendered_after_undo = render_body(&mut app, overview::BODY_KEY);
         assert_eq!(rendered_camera(&rendered_after_undo).0, 3.0, "the camera is session state — undo must not revert it");
@@ -2510,13 +2514,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn repeated_actions_do_not_duplicate_edges() {
         let mut app = app();
-        load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID).await;
+        load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID);
         let edge_count = |app: &Puzzle2dApp| fixture_edges(&fixture_of(app)).len();
         let before = edge_count(&app);
         assert!(before > 0, "fixture must have edges for this regression test to be meaningful");
         let node_id = first_node_id(&app);
         for _ in 0..5 {
-            dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None).await.expect("select");
+            dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None).expect("select");
         }
         assert_eq!(edge_count(&app), before, "selecting repeatedly must not grow the edges array");
     }
@@ -2526,12 +2530,12 @@ mod tests {
     /// selection to whatever the host held before the action (empty, on a fresh sync).
     #[semio_framework_async_macros::async_test]
     async fn apply_board_events_select_persists_across_the_next_action() {
-        let mut app = concrete_forest_app().await;
+        let mut app = concrete_forest_app();
         let node_id = first_node_id(&app);
-        dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None).await.expect("select");
+        dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None).expect("select");
         assert!(render_body(&mut app, overview::BODY_KEY).contains(&node_id), "selection must be visible immediately after the select action");
         // A second, unrelated action used to silently clear the selection via the stale `host.selection` re-sync.
-        dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), None).await.expect("no-operation");
+        dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), None).expect("no-operation");
         assert!(render_body(&mut app, overview::BODY_KEY).contains(&node_id), "selection must survive a subsequent unrelated action");
     }
 
@@ -2541,7 +2545,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn apply_board_events_camera_event_commits() {
         let mut app = app();
-        let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 5.0, "y": 6.0, "zoom": 1.2 } }]).to_string() })), None).await.expect("camera event");
+        let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 5.0, "y": 6.0, "zoom": 1.2 } }]).to_string() })), None).expect("camera event");
         assert!(result.mutations.is_empty(), "a camera board event must never produce a document operation");
         let (x, y, zoom) = rendered_camera(&render_body(&mut app, overview::BODY_KEY));
         assert_eq!(x, 5.0);
@@ -2554,9 +2558,9 @@ mod tests {
     /// made `before` and `after` genuinely diverge).
     #[semio_framework_async_macros::async_test]
     async fn select_action_emits_no_operations() {
-        let mut app = concrete_forest_app().await;
+        let mut app = concrete_forest_app();
         let node_id = first_node_id(&app);
-        let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None).await.expect("select");
+        let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None).expect("select");
         assert!(result.mutations.is_empty(), "selection must not produce document operations");
     }
     //#endregion 🔖️BoardEvents
@@ -2567,9 +2571,9 @@ mod tests {
     /// call degrades back to fetching everything on every select.
     #[semio_framework_async_macros::async_test]
     async fn select_action_declares_partial_ui_scope() {
-        let mut app = concrete_forest_app().await;
+        let mut app = concrete_forest_app();
         let node_id = first_node_id(&app);
-        let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None).await.expect("select");
+        let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None).expect("select");
         match result.ui_scope {
             UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, tools, labels } => {
                 // 🐢️ Regression: `window_bodies` must list the window *body keys* (matched against
@@ -2593,7 +2597,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn camera_event_declares_window_only_ui_scope() {
         let mut app = app();
-        let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 1.0, "y": 2.0, "zoom": 1.0 } }]).to_string() })), None).await.expect("camera event");
+        let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 1.0, "y": 2.0, "zoom": 1.0 } }]).to_string() })), None).expect("camera event");
         match result.ui_scope {
             UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, tools, labels } => {
                 assert_eq!(window_bodies.len(), 3);
@@ -2609,7 +2613,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn empty_board_events_declare_none_ui_scope() {
         let mut app = app();
-        let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), None).await.expect("no-operation");
+        let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), None).expect("no-operation");
         assert_eq!(result.ui_scope, UiDirtyScope::None);
     }
 
@@ -2618,7 +2622,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn add_node_action_declares_full_ui_scope() {
         let mut app = app();
-        let result = dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).await.expect("add node");
+        let result = dispatch(&mut app, "addNode", Some(&json!({ "kind": "node" })), None).expect("add node");
         assert!(matches!(result.ui_scope, UiDirtyScope::Full), "addNode must stay Full, got {:?}", result.ui_scope);
     }
     //#endregion 🔖️UiScope
@@ -2689,12 +2693,12 @@ mod tests {
         instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
         instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
 
-        dispatch(&mut instance_a, "addNode", Some(&json!({ "kind": "seed" })), None).await.expect("a adds node");
-        dispatch(&mut instance_b, "addNode", Some(&json!({ "kind": "other" })), None).await.expect("b adds node");
+        dispatch(&mut instance_a, "addNode", Some(&json!({ "kind": "seed" })), None).expect("a adds node");
+        dispatch(&mut instance_b, "addNode", Some(&json!({ "kind": "other" })), None).expect("b adds node");
 
         // A neutral history action always calls store.dispatch(), which pumps inbound operations first.
-        dispatch(&mut instance_a, "commitCheckpoint", None, None).await.expect("pump a");
-        dispatch(&mut instance_b, "commitCheckpoint", None, None).await.expect("pump b");
+        dispatch(&mut instance_a, "commitCheckpoint", None, None).expect("pump a");
+        dispatch(&mut instance_b, "commitCheckpoint", None, None).expect("pump b");
 
         assert_eq!(fixture_nodes(&fixture_of(&instance_a)).len(), 2, "instance A must contain both nodes");
         assert_eq!(fixture_nodes(&fixture_of(&instance_b)).len(), 2, "instance B must contain both nodes");
@@ -2705,7 +2709,7 @@ mod tests {
         let mut sender = app();
         let (near, mut far) = MemoryBackbone::pair("mem://puzzle2d-doc", "mem://puzzle2d-doc").await;
         sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach");
-        dispatch(&mut sender, "addNode", Some(&json!({ "kind": "seed" })), None).await.expect("add");
+        dispatch(&mut sender, "addNode", Some(&json!({ "kind": "seed" })), None).expect("add");
 
         let mut envelopes = Vec::new();
         for message in far.receive().await.expect("receive") {
@@ -2730,9 +2734,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn utility_switch_emits_no_ops_and_no_history() {
         let mut app = app_with_registry();
-        let result = dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": brush_utility::UTILITY_ID })), Some(overview::WINDOW_KIND_ID)).await.expect("switch utility");
+        let result = dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": brush_utility::UTILITY_ID })), Some(overview::WINDOW_KIND_ID)).expect("switch utility");
         assert!(result.mutations.is_empty(), "a utility switch must not produce document operations");
-        let can_undo = dispatch(&mut app, "undo", None, None).await;
+        let can_undo = dispatch(&mut app, "undo", None, None);
         assert!(can_undo.map_or(true, |r| r.mutations.is_empty()), "a utility switch must not have created a document undo step");
     }
 
@@ -2741,9 +2745,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn view_actions_emit_no_ops_through_the_registry() {
         let mut app = app_with_registry();
-        load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID).await;
+        load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
         let node_id = first_node_id(&app);
-        select_id(&mut app, PUZZLE2D_GRANULARITY_NODE, &node_id).await.expect("select");
+        select_id(&mut app, PUZZLE2D_GRANULARITY_NODE, &node_id).expect("select");
         let view_dispatches: Vec<(&str, Value)> = vec![
             ("setCamera", json!({ "camera": { "x": 7.0, "y": 8.0, "zoom": 1.5 } })),
             ("selectSameKind", Value::Null),
@@ -2764,7 +2768,7 @@ mod tests {
         ];
         for (action, args) in view_dispatches {
             let args_ref = (!args.is_null()).then_some(&args);
-            let result = dispatch(&mut app, action, args_ref, None).await.unwrap_or_else(|error| panic!("view action '{action}' must not error: {error:?}"));
+            let result = dispatch(&mut app, action, args_ref, None).unwrap_or_else(|error| panic!("view action '{action}' must not error: {error:?}"));
             assert!(result.mutations.is_empty(), "view action '{action}' must not emit document operations");
         }
     }
@@ -2776,7 +2780,7 @@ mod tests {
         use semio_framework_plugin::{ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, UiMenuRef};
 
         let mut app = app_with_registry();
-        load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID).await;
+        load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
         let node_id = first_node_id(&app);
         // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `context_menu` reads the
         // CLIENT-supplied `request.surface.selection` now (selection is framework-owned, no live

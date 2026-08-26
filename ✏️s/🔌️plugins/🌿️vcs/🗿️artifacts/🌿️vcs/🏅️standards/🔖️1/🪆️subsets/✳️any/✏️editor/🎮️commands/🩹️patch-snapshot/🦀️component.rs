@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Helpers
 /// 🩹️ Builds the `VcsDemoMutation` for a `patchSnapshot` field write — mirrors
 /// `shooting_ui::shot_patch_for_field`'s string-keyed field dispatch.
-async fn vcs_patch_operation_for_field(field: &str, value: &str) -> Option<VcsDemoMutation> {
+fn vcs_patch_operation_for_field(field: &str, value: &str) -> Option<VcsDemoMutation> {
     use crate::artifacts::vcs::mutations::{change_counter, change_notes, change_status, rename_vcs};
     match field {
         "title" => Some(rename_vcs(value.into())),
@@ -37,7 +37,7 @@ pub struct PatchSnapshot {
     pub value: String,
 }
 
-pub async fn handle(payload: &PatchSnapshot, _doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
+pub fn handle(payload: &PatchSnapshot, _doc: &ArtifactView<'_, VcsSnapshot>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault> {
     match vcs_patch_operation_for_field(&payload.field, &payload.value) {
         Some(operation) => Ok(Emit::mutations(vec![operation])),
         None => Ok(Emit::default()),
@@ -53,19 +53,19 @@ mod tests {
     use crate::editor::vcs::VcsCommand;
 
     #[semio_framework_async_macros::async_test]
-    async fn vcs_demo_command_op_text_round_trips() {
+    fn vcs_demo_command_op_text_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::PatchSnapshot(PatchSnapshot { field: "title".into(), value: "Renamed".into() }));
         store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::TextEdit(text_edit::TextEdit { text: "{}".into() }));
         store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::Edit(edit::Edit { text: "{}".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn vcs_demo_command_op_binary_agrees_with_text() {
+    fn vcs_demo_command_op_binary_agrees_with_text() {
         store::os_store::test_support::assert_op_text_binary_equivalence(&VcsCommand::PatchSnapshot(PatchSnapshot { field: "counter".into(), value: "3".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn text_edit_action_persists_projection_changes() {
+    fn text_edit_action_persists_projection_changes() {
         let mut instance = app();
         let before = instance.snapshot().expect("materialize snapshot");
         let mut edited = before.clone();
@@ -82,7 +82,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn edit_action_is_alias_for_text_edit() {
+    fn edit_action_is_alias_for_text_edit() {
         let mut instance = app();
         let before = instance.snapshot().expect("materialize snapshot");
         let mut edited = before;

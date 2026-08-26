@@ -20,6 +20,164 @@
     {
       "id": "dag-1-any",
       "capability": "dag-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-node-abbreviation",
+          "sourceMutationDirectoryName": "🔡change-node-abbreviation",
+          "mutationDirectoryName": "🔡change-node-abbreviation",
+          "scenarios": [
+            {
+              "id": "rejects-reabbreviating-a-missing-node",
+              "directoryName": "🧪️rejects-reabbreviating-a-missing-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-icon",
+          "sourceMutationDirectoryName": "🖼️change-node-icon",
+          "mutationDirectoryName": "🖼️change-node-icon",
+          "scenarios": [
+            {
+              "id": "rejects-reiconing-a-missing-node",
+              "directoryName": "🧪️rejects-reiconing-a-missing-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-name",
+          "sourceMutationDirectoryName": "🔤change-node-name",
+          "mutationDirectoryName": "🔤change-node-name",
+          "scenarios": [
+            {
+              "id": "rejects-renaming-the-label-of-a-missing-node",
+              "directoryName": "🧪️rejects-renaming-the-label-of-a-missing-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-operator-kind",
+          "sourceMutationDirectoryName": "🧮change-node-operator-kind",
+          "mutationDirectoryName": "🧮change-node-operator-kind",
+          "scenarios": [
+            {
+              "id": "rejects-rebinding-the-operator-of-a-missing-node",
+              "directoryName": "🧪️rejects-rebinding-the-operator-of-a-missing-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "connect-nodes",
+          "sourceMutationDirectoryName": "🔗connect-nodes",
+          "mutationDirectoryName": "🔗connect-nodes",
+          "scenarios": [
+            {
+              "id": "rejects-a-missing-source-node",
+              "directoryName": "🧪️rejects-a-missing-source-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-node",
+          "sourceMutationDirectoryName": "🌱create-node",
+          "mutationDirectoryName": "🌱create-node",
+          "scenarios": [
+            {
+              "id": "rejects-a-duplicate-node-id",
+              "directoryName": "🧪️rejects-a-duplicate-node-id"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-node",
+          "sourceMutationDirectoryName": "🗑️delete-node",
+          "mutationDirectoryName": "🗑️delete-node",
+          "scenarios": [
+            {
+              "id": "rejects-deleting-a-missing-node",
+              "directoryName": "🧪️rejects-deleting-a-missing-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-nodes",
+          "sourceMutationDirectoryName": "✂️disconnect-nodes",
+          "mutationDirectoryName": "✂️disconnect-nodes",
+          "scenarios": [
+            {
+              "id": "rejects-disconnecting-a-missing-edge",
+              "directoryName": "🧪️rejects-disconnecting-a-missing-edge"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-node",
+          "sourceMutationDirectoryName": "↔️move-node",
+          "mutationDirectoryName": "↔️move-node",
+          "scenarios": [
+            {
+              "id": "rejects-moving-a-missing-node",
+              "directoryName": "🧪️rejects-moving-a-missing-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-node",
+          "sourceMutationDirectoryName": "🏷️rename-node",
+          "mutationDirectoryName": "🏷️rename-node",
+          "scenarios": [
+            {
+              "id": "rejects-renaming-a-missing-node",
+              "directoryName": "🧪️rejects-renaming-a-missing-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-nodes",
+          "sourceMutationDirectoryName": "🔀reorder-nodes",
+          "mutationDirectoryName": "🔀reorder-nodes",
+          "scenarios": [
+            {
+              "id": "rejects-a-duplicate-id-in-the-order",
+              "directoryName": "🧪️rejects-a-duplicate-id-in-the-order"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-node-kind",
+          "sourceMutationDirectoryName": "🔁replace-node-kind",
+          "mutationDirectoryName": "🔁replace-node-kind",
+          "scenarios": [
+            {
+              "id": "rejects-rekinding-a-missing-node",
+              "directoryName": "🧪️rejects-rekinding-a-missing-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-node-properties",
+          "sourceMutationDirectoryName": "🗃️replace-node-properties",
+          "mutationDirectoryName": "🗃️replace-node-properties",
+          "scenarios": [
+            {
+              "id": "rejects-repropertying-a-missing-node",
+              "directoryName": "🧪️rejects-repropertying-a-missing-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-node",
+          "sourceMutationDirectoryName": "📐resize-node",
+          "mutationDirectoryName": "📐resize-node",
+          "scenarios": [
+            {
+              "id": "rejects-resizing-a-missing-node",
+              "directoryName": "🧪️rejects-resizing-a-missing-node"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-node",
         "delete-node",

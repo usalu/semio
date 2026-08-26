@@ -22,6 +22,21 @@
     {
       "id": "step-ap214-any",
       "capability": "step-ap214-any-mutate",
+      "standardDirectoryName": "🔖️ap214",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "restamps-the-product-long-name",
+              "directoryName": "🧪️restamps-the-product-long-name"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

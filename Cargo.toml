@@ -112,9 +112,6 @@ members = [
     "🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust",
     "🌎️hub/📦️packages/🦀️rust",
-    "compose/client/lib/rs",
-    "compose/client/lib/query/rs",
-    "compose/client/bin/gql/rs",
     "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust",
@@ -255,7 +252,7 @@ codegen-units = 1
 [profile.dev.package.semio-framework-math]
 codegen-units = 1
 
-# 🚀️ Ship profile for native binaries (`cargo build --release`, compose hub/gql, os-run in CI).
+# 🚀️ Ship profile for native binaries (`cargo build --release`, os-run in CI).
 # Dev loops use `[profile.dev]` only — see root `📜️script.ts` `os run` and wgpu native defaults.
 [profile.release]
 opt-level = 3

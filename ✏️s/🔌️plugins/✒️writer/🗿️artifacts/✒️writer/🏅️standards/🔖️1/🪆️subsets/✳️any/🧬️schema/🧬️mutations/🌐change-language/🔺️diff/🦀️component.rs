@@ -6,7 +6,7 @@ use crate::artifacts::writer::WriterSnapshot;
 //#region 🔖️Diff
 /// 🔺️ Sparse `language_id`-only delta, built directly from the payload — real handcrafted
 /// construction, never apply-then-capture, never a snapshot clone.
-pub async fn diff(payload: &ChangeLanguage, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
+pub fn diff(payload: &ChangeLanguage, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
     if base.language_id == payload.new_language_id {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Document language is already \"{}\".", payload.new_language_id));
     }

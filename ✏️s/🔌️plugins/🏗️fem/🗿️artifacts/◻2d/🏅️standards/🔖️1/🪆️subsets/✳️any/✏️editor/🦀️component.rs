@@ -19,10 +19,11 @@ use crate::editor::fem2d::modes::edit;
 use crate::editor::fem2d::modes::edit::windows::model as model_window;
 use crate::editor::fem2d::modes::edit::windows::results as results_window;
 use crate::model::{Dof, ElementResult};
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::{
-    built_text_node, create_default_layout, ActionArgDef, ActionArgOption, AppIo, ArtifactEditor, ArtifactView, ConfigSpec, ConfigView, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
-    MediaType, NoDraft, NoDraftMutation, PluginCloseStep,
+    built_text_node, create_default_layout, ActionArgDef, ActionArgOption, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigSpec, ConfigView,
+    DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, PluginCloseStep,
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -71,6 +72,90 @@ semio_framework_plugin::app_commands! {
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported at file top under its own flat name.
 //#endregion 🔖️Commands
+
+//#region 🧵️RetainedCommands
+const FEM2D_RETAINED_TOOL_IDS: &[&str] = &["setAnalysisSettings", "setCamera", "setResultDisplay", "setLocale"];
+const FEM2D_RETAINED_PAYLOAD_SCHEMA: &str = "fem.2d.tool-command.v1";
+const FEM2D_RETAINED_RAW_BYTES: usize = 8_192;
+const FEM2D_RETAINED_WORK_ITEMS: usize = 4_096;
+
+fn fem2d_retained_contract() -> ToolExecutionContract {
+    ToolExecutionContract::resumable(FEM2D_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500, 1, 1)
+}
+
+fn fem2d_retained_extent(_command: &Fem2dCommand, _snapshot: &Fem2dSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    Some(1)
+}
+
+fn fem2d_retained_reduce(
+    command: &Fem2dCommand,
+    snapshot: &Fem2dSnapshot,
+    config: &Fem2dConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, NoDraftMutation>, Fault> {
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+}
+
+struct Fem2dRetainedCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl Fem2dRetainedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: FEM2D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for Fem2dRetainedCommandJobFactory {
+    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<Fem2dPlayApp>>;
+    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<Fem2dPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        FEM2D_RETAINED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        fem2d_retained_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > FEM2D_RETAINED_RAW_BYTES || checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
+            return Err((ToolJobFactoryError::new("FEM2D retained command rejects an oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(match checkpoint {
+            Some(checkpoint) => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
+            None => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input),
+        })
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Fem2dRetainedCommandJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<Fem2dPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = FEM2D_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem2d::FEM_2D_SCHEMA;
+}
+//#endregion 🧵️RetainedCommands
 
 //#region 🔖️ExportImportHelpers
 /// 👁️ B1: `cfg`-driven counterpart of the deleted `ResultDisplay` `RefCell` — converts the flat
@@ -205,15 +290,63 @@ impl ArtifactEditor for Fem2dPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem2d::FEM_2D_SCHEMA;
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<Fem2dPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.fem.fem2d@1/*#editor",
+        document_schema: "fem.2d",
+        factory: "Fem2dRetainedCommandJobFactory",
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
+        tools: ["setAnalysisSettings", "setCamera", "setResultDisplay", "setLocale"]
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(Fem2dRetainedCommandJobFactory::new(&controller))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !FEM2D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id {
+            return Err(Fault::from("fem2d-command-tool-mismatch"));
+        }
+        let tool_id = request.command.command_id();
+        let work = Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, fem2d_retained_reduce, fem2d_retained_extent));
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            operation_context,
+            request.completion,
+            Fem2dCommand::command_id,
+            FEM2D_RETAINED_RAW_BYTES,
+            FEM2D_RETAINED_WORK_ITEMS,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
+
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::fem2d::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> Fem2dSnapshot {
+    fn initial_snapshot() -> Fem2dSnapshot {
         crate::artifacts::fem2d::schema::empty_fem2d_snapshot()
     }
 
-    async fn io() -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(fem2d_io())
     }
 
@@ -239,7 +372,7 @@ impl ArtifactEditor for Fem2dPlayApp {
     /// `Structured` payload — `MediaPayload::Structured.json` doesn't require a `pack`-encoded value. A
     /// document with no load cases, or a solve failure, is reported as `MediaError::Payload` rather than
     /// an empty/panicking export.
-    async fn export_media(port: &str, doc: &ArtifactView<'_, Fem2dSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, Fem2dSnapshot>) -> Result<Media, MediaError> {
         match port {
             "document:out" => {
                 let media_type = fem2d_io().document_media_type;
@@ -268,7 +401,7 @@ impl ArtifactEditor for Fem2dPlayApp {
     /// `"geometry:in"` decodes a minimal, app-owned `{"outline": [[f64;2]...], "holes": [[[f64;2]...]...]}`
     /// polygon-with-holes contract into a new `FemRegion` via `create-region`, defaulted to the
     /// document's first existing material if any, else an `"unassigned"` placeholder id.
-    async fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Fem2dSnapshot>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Fem2dSnapshot>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "document:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -299,11 +432,11 @@ impl ArtifactEditor for Fem2dPlayApp {
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    async fn command_id(command: &Fem2dCommand) -> &'static str {
+    fn command_id(command: &Fem2dCommand) -> &'static str {
         command.command_id()
     }
 
-    async fn handle(
+    fn handle(
         command: &Fem2dCommand,
         doc: &ArtifactView<'_, Fem2dSnapshot>,
         cfg: &ConfigView<'_, Fem2dConfig>,
@@ -314,7 +447,7 @@ impl ArtifactEditor for Fem2dPlayApp {
         command.dispatch(doc, cfg)
     }
 
-    async fn pending_effects(doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Vec<semio_framework::kernel::Effect> {
+    fn pending_effects(doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Vec<semio_framework::kernel::Effect> {
         crate::editor::fem2d::session::reconcile(doc)
     }
 
@@ -322,17 +455,18 @@ impl ArtifactEditor for Fem2dPlayApp {
     /// `thickness`/`meshSize` defaults are baked directly into its handler, not user-configurable
     /// settings) — declaring `ConfigSpec::empty()` explicitly keeps the typed channel surface
     /// consistent with the sibling apps' convention.
-    async fn config_spec() -> ConfigSpec {
-        semio_framework_plugin::resolve_ready(ConfigSpec::empty())
+    fn config_spec() -> ConfigSpec {
+        ConfigSpec::default()
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, Fem2dConfig>) -> semio_framework_plugin::ComponentTree {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, Fem2dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let camera = &cfg.snapshot.camera;
-        semio_framework_plugin::built_to_component_tree(match body_key {
+        match body_key {
             model_window::BODY_KEY => crate::editor::fem2d::session::with_live_visual(doc.render_operation(), |visual| model_window::render_with_progress(doc.snapshot, camera, visual)),
             results_window::BODY_KEY => results_window::render(doc.snapshot, &config_result_display(cfg.snapshot), camera),
-            _ => built_text_node(Label::data(format!("Unknown body: {body_key}"))),
-        })
+            _ => built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem2d unknown-body label admission failed")),
+        }
+        .map(semio_framework_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️Fem2dPlayApp
@@ -440,9 +574,13 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
             .action_args("setResultDisplay", crate::app_surface::result_display_action_args())
             .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
+            .action_interactive_job("setAnalysisSettings", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setResultDisplay", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
             // 🎯️ Typed channel surface — `config_spec()`/`fem2d_io()` are this same information's single
             // source of truth, reused here rather than duplicated.
-            .config(semio_framework_plugin::resolve_ready(Fem2dPlayApp::config_spec()))
+            .config(Fem2dPlayApp::config_spec())
             .io(fem2d_io())
             .build_definition()
 }

@@ -24,6 +24,230 @@
     {
       "id": "cad-1-any",
       "capability": "cad-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-active-model-definition",
+          "sourceMutationDirectoryName": "🎯change-active-model-definition",
+          "mutationDirectoryName": "🎯change-active-model-definition",
+          "scenarios": [
+            {
+              "id": "switches-the-active-pane-to-the-building-model",
+              "directoryName": "🧪️switches-the-active-pane-to-the-building-model"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-reference-hidden",
+          "sourceMutationDirectoryName": "👁change-reference-hidden",
+          "mutationDirectoryName": "👁change-reference-hidden",
+          "scenarios": [
+            {
+              "id": "hides-the-shape-reference",
+              "directoryName": "🧪️hides-the-shape-reference"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-reference-locked",
+          "sourceMutationDirectoryName": "🔒change-reference-locked",
+          "mutationDirectoryName": "🔒change-reference-locked",
+          "scenarios": [
+            {
+              "id": "unlocks-the-shape-reference",
+              "directoryName": "🧪️unlocks-the-shape-reference"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-reference-width",
+          "sourceMutationDirectoryName": "📏change-reference-width",
+          "mutationDirectoryName": "📏change-reference-width",
+          "scenarios": [
+            {
+              "id": "widens-the-shape-reference-plane",
+              "directoryName": "🧪️widens-the-shape-reference-plane"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-building-model",
+          "sourceMutationDirectoryName": "🏢create-building-model",
+          "mutationDirectoryName": "🏢create-building-model",
+          "scenarios": [
+            {
+              "id": "rehandles-the-occupied-building-slot",
+              "directoryName": "🧪️rehandles-the-occupied-building-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-drawing",
+          "sourceMutationDirectoryName": "📐️create-drawing",
+          "mutationDirectoryName": "📐️create-drawing",
+          "scenarios": [
+            {
+              "id": "appends-drawing-2",
+              "directoryName": "🧪️appends-drawing-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-energy-model",
+          "sourceMutationDirectoryName": "⚡create-energy-model",
+          "mutationDirectoryName": "⚡create-energy-model",
+          "scenarios": [
+            {
+              "id": "rehandles-the-occupied-energy-slot",
+              "directoryName": "🧪️rehandles-the-occupied-energy-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-node",
+          "sourceMutationDirectoryName": "➕create-node",
+          "mutationDirectoryName": "➕create-node",
+          "scenarios": [
+            {
+              "id": "appends-node-3",
+              "directoryName": "🧪️appends-node-3"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-shape-model",
+          "sourceMutationDirectoryName": "🧱create-shape-model",
+          "mutationDirectoryName": "🧱create-shape-model",
+          "scenarios": [
+            {
+              "id": "rehandles-the-occupied-shape-slot",
+              "directoryName": "🧪️rehandles-the-occupied-shape-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-structure-classic-model",
+          "sourceMutationDirectoryName": "🏛create-structure-classic-model",
+          "mutationDirectoryName": "🏛create-structure-classic-model",
+          "scenarios": [
+            {
+              "id": "rehandles-the-occupied-structure-classic-slot",
+              "directoryName": "🧪️rehandles-the-occupied-structure-classic-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-building-model",
+          "sourceMutationDirectoryName": "💥delete-building-model",
+          "mutationDirectoryName": "💥delete-building-model",
+          "scenarios": [
+            {
+              "id": "vacates-the-building-slot",
+              "directoryName": "🧪️vacates-the-building-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-drawing",
+          "sourceMutationDirectoryName": "🧹delete-drawing",
+          "mutationDirectoryName": "🧹delete-drawing",
+          "scenarios": [
+            {
+              "id": "removes-drawing-1",
+              "directoryName": "🧪️removes-drawing-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-energy-model",
+          "sourceMutationDirectoryName": "🔌delete-energy-model",
+          "mutationDirectoryName": "🔌delete-energy-model",
+          "scenarios": [
+            {
+              "id": "vacates-the-energy-slot",
+              "directoryName": "🧪️vacates-the-energy-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-node",
+          "sourceMutationDirectoryName": "🗑delete-node",
+          "mutationDirectoryName": "🗑delete-node",
+          "scenarios": [
+            {
+              "id": "removes-node-2",
+              "directoryName": "🧪️removes-node-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-shape-model",
+          "sourceMutationDirectoryName": "🧨delete-shape-model",
+          "mutationDirectoryName": "🧨delete-shape-model",
+          "scenarios": [
+            {
+              "id": "vacates-the-shape-slot",
+              "directoryName": "🧪️vacates-the-shape-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-structure-classic-model",
+          "sourceMutationDirectoryName": "💣delete-structure-classic-model",
+          "mutationDirectoryName": "💣delete-structure-classic-model",
+          "scenarios": [
+            {
+              "id": "vacates-the-structure-classic-slot",
+              "directoryName": "🧪️vacates-the-structure-classic-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-reference",
+          "sourceMutationDirectoryName": "📍move-reference",
+          "mutationDirectoryName": "📍move-reference",
+          "scenarios": [
+            {
+              "id": "moves-the-shape-reference-off-origin",
+              "directoryName": "🧪️moves-the-shape-reference-off-origin"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-node",
+          "sourceMutationDirectoryName": "🏷rename-node",
+          "mutationDirectoryName": "🏷rename-node",
+          "scenarios": [
+            {
+              "id": "relabels-the-root-node",
+              "directoryName": "🧪️relabels-the-root-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-reference-media",
+          "sourceMutationDirectoryName": "🖇replace-reference-media",
+          "mutationDirectoryName": "🖇replace-reference-media",
+          "scenarios": [
+            {
+              "id": "reattaches-the-shape-reference-to-a-new-plan",
+              "directoryName": "🧪️reattaches-the-shape-reference-to-a-new-plan"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-references",
+          "sourceMutationDirectoryName": "📎replace-references",
+          "mutationDirectoryName": "📎replace-references",
+          "scenarios": [
+            {
+              "id": "swaps-the-shape-reference-list",
+              "directoryName": "🧪️swaps-the-shape-reference-list"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-shape-model",
         "delete-shape-model",

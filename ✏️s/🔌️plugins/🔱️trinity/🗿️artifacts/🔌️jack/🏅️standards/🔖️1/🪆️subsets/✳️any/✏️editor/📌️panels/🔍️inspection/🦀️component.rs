@@ -9,15 +9,8 @@
 //! panel as an `interaction_domain`-bound tree the client filters by presence. Flagged, not silently
 //! dropped.
 
-use semio_framework_plugin::{ui_declarative_sections_to_tree, ui_text, Label, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::Label;
 
-pub(crate) fn render() -> UiNode {
-    ui_declarative_sections_to_tree(&[UiSectionNode {
-        id: "trinity-inspector.empty".into(),
-        label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
-        default_open: Some(true),
-        presence: UiPresence::default(),
-        children: vec![ui_text(Label::data("Select one or more pieces"))],
-        menu: None,
-    }])
+pub(crate) fn render() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    semio_framework_plugin::built_text_node(Label::data("Select one or more pieces")).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.inspection.label", "the fixed inspection label exceeds its UI bound"))
 }

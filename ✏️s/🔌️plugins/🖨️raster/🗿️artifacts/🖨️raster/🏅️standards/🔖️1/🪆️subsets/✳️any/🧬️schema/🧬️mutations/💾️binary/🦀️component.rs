@@ -3942,7 +3942,11 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                         semio_framework_job::StepOutcome::Cancelled
                     } else {
                         self.phase = RasterStoreInitializationPhase::Fault;
-                        semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: self.fault.take().unwrap_or_else(|| b"raster-store.initializer-fault".to_vec()) })
+                        let source = self.fault.take().unwrap_or_else(|| b"raster-store.initializer-fault".to_vec());
+                        let detail = cx
+                            .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, &source)
+                            .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                        semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
                     }
                 }
                 Err(error) => {
@@ -3955,7 +3959,13 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                 output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
             }),
             RasterStoreInitializationPhase::Cancelled => semio_framework_job::StepOutcome::Cancelled,
-            RasterStoreInitializationPhase::Fault => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: self.fault.clone().unwrap_or_else(|| b"raster-store.initializer-fault".to_vec()) }),
+            RasterStoreInitializationPhase::Fault => {
+                let source = self.fault.as_deref().unwrap_or(b"raster-store.initializer-fault");
+                let detail = cx
+                    .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, source)
+                    .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
+            }
         }
     }
 

@@ -13,20 +13,20 @@ pub struct ChangeStatus {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_status(new_status: String) -> VcsDemoMutation {
+pub fn change_status(new_status: String) -> VcsDemoMutation {
     VcsDemoMutation::ChangeStatus(ChangeStatus { new_status })
 }
 
 impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for ChangeStatus {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vcs", kind: "change-status", record: "ChangedVcsStatus" };
 
-    async fn diff(&self, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
+    fn diff(&self, base: &VcsSnapshot) -> protocol::MutationOutcome<VcsDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
+    fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change status to \"{}\"", self.new_status)
     }
 }

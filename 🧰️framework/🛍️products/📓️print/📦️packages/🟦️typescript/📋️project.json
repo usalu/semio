@@ -9,6 +9,13 @@
         "command": "bun ./📜️script.ts generate"
       }
     },
+    "preview-generated": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts preview-generated"
+      }
+    },
     "fonts": {
       "executor": "nx:run-commands",
       "options": {

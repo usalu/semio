@@ -2262,11 +2262,7 @@ fn check_values(values: &[Value], types: &[ValueType]) -> Result<(), CoreError> 
 }
 
 fn expect_type(value: Value, expected: ValueType) -> Result<(), CoreError> {
-    if value.value_type() == expected {
-        Ok(())
-    } else {
-        Err(CoreError::Trap(format!("expected {expected:?}, received {:?}", value.value_type())))
-    }
+    if value.value_type() == expected { Ok(()) } else { Err(CoreError::Trap(format!("expected {expected:?}, received {:?}", value.value_type()))) }
 }
 
 //#endregion ⚙️InstructionExecution
@@ -2372,12 +2368,19 @@ impl CoreInstance {
                 let source = pop(machine)?.as_i32()? as u32 as usize;
                 let destination = pop(machine)?.as_i32()? as u32 as usize;
                 if destination_memory != source_memory {
-                    let source_bytes = self.memories.get(source_memory as usize).ok_or_else(|| CoreError::Trap("memory.copy source memory is out of bounds".into()))?;
-                    let source_end = checked_end(source, length, source_bytes.bytes.len(), "memory.copy source")?;
-                    let copied = source_bytes.bytes[source..source_end].to_vec();
-                    let target = self.memories.get_mut(destination_memory as usize).ok_or_else(|| CoreError::Trap("memory.copy destination memory is out of bounds".into()))?;
-                    let destination_end = checked_end(destination, length, target.bytes.len(), "memory.copy destination")?;
-                    target.bytes[destination..destination_end].copy_from_slice(&copied);
+                    let source_index = source_memory as usize;
+                    let destination_index = destination_memory as usize;
+                    let source_bound = self.memories.get(source_index).ok_or_else(|| CoreError::Trap("memory.copy source memory is out of bounds".into()))?.bytes.len();
+                    let destination_bound = self.memories.get(destination_index).ok_or_else(|| CoreError::Trap("memory.copy destination memory is out of bounds".into()))?.bytes.len();
+                    let source_end = checked_end(source, length, source_bound, "memory.copy source")?;
+                    let destination_end = checked_end(destination, length, destination_bound, "memory.copy destination")?;
+                    if source_index < destination_index {
+                        let (source_memories, destination_memories) = self.memories.split_at_mut(destination_index);
+                        destination_memories[0].bytes[destination..destination_end].copy_from_slice(&source_memories[source_index].bytes[source..source_end]);
+                    } else {
+                        let (destination_memories, source_memories) = self.memories.split_at_mut(source_index);
+                        destination_memories[destination_index].bytes[destination..destination_end].copy_from_slice(&source_memories[0].bytes[source..source_end]);
+                    }
                 } else {
                     let memory = self.memories.get_mut(source_memory as usize).ok_or_else(|| CoreError::Trap("memory.copy memory is out of bounds".into()))?;
                     checked_end(source, length, memory.bytes.len(), "memory.copy source")?;
@@ -2837,19 +2840,11 @@ fn signed_div_i64(left: i64, right: i64) -> Result<i64, CoreError> {
 //#region 🔢️NumericSemantics
 
 fn canonical_f32(value: f32) -> f32 {
-    if value.is_nan() {
-        f32::from_bits(0x7fc0_0000)
-    } else {
-        value
-    }
+    if value.is_nan() { f32::from_bits(0x7fc0_0000) } else { value }
 }
 
 fn canonical_f64(value: f64) -> f64 {
-    if value.is_nan() {
-        f64::from_bits(0x7ff8_0000_0000_0000)
-    } else {
-        value
-    }
+    if value.is_nan() { f64::from_bits(0x7ff8_0000_0000_0000) } else { value }
 }
 
 fn round_ties_even_f32(value: f32) -> f32 {
@@ -2865,11 +2860,7 @@ fn wasm_min_f32(left: f32, right: f32) -> f32 {
         return f32::NAN;
     }
     if left == right {
-        if left == 0.0 && (left.is_sign_negative() || right.is_sign_negative()) {
-            -0.0
-        } else {
-            left
-        }
+        if left == 0.0 && (left.is_sign_negative() || right.is_sign_negative()) { -0.0 } else { left }
     } else if left < right {
         left
     } else {
@@ -2882,11 +2873,7 @@ fn wasm_max_f32(left: f32, right: f32) -> f32 {
         return f32::NAN;
     }
     if left == right {
-        if left == 0.0 && (!left.is_sign_negative() || !right.is_sign_negative()) {
-            0.0
-        } else {
-            left
-        }
+        if left == 0.0 && (!left.is_sign_negative() || !right.is_sign_negative()) { 0.0 } else { left }
     } else if left > right {
         left
     } else {
@@ -2899,11 +2886,7 @@ fn wasm_min_f64(left: f64, right: f64) -> f64 {
         return f64::NAN;
     }
     if left == right {
-        if left == 0.0 && (left.is_sign_negative() || right.is_sign_negative()) {
-            -0.0
-        } else {
-            left
-        }
+        if left == 0.0 && (left.is_sign_negative() || right.is_sign_negative()) { -0.0 } else { left }
     } else if left < right {
         left
     } else {
@@ -2916,11 +2899,7 @@ fn wasm_max_f64(left: f64, right: f64) -> f64 {
         return f64::NAN;
     }
     if left == right {
-        if left == 0.0 && (!left.is_sign_negative() || !right.is_sign_negative()) {
-            0.0
-        } else {
-            left
-        }
+        if left == 0.0 && (!left.is_sign_negative() || !right.is_sign_negative()) { 0.0 } else { left }
     } else if left > right {
         left
     } else {
@@ -2980,11 +2959,7 @@ fn saturating_i32_from_f64(value: f64, signed: bool) -> i32 {
     if value.is_nan() {
         return 0;
     }
-    if signed {
-        value.trunc().clamp(i32::MIN as f64, i32::MAX as f64) as i32
-    } else {
-        value.trunc().clamp(0.0, u32::MAX as f64) as u32 as i32
-    }
+    if signed { value.trunc().clamp(i32::MIN as f64, i32::MAX as f64) as i32 } else { value.trunc().clamp(0.0, u32::MAX as f64) as u32 as i32 }
 }
 
 fn saturating_i64_from_f32(value: f32, signed: bool) -> i64 {
@@ -2995,11 +2970,7 @@ fn saturating_i64_from_f64(value: f64, signed: bool) -> i64 {
     if value.is_nan() {
         return 0;
     }
-    if signed {
-        value.trunc().clamp(i64::MIN as f64, i64::MAX as f64) as i64
-    } else {
-        value.trunc().clamp(0.0, u64::MAX as f64) as u64 as i64
-    }
+    if signed { value.trunc().clamp(i64::MIN as f64, i64::MAX as f64) as i64 } else { value.trunc().clamp(0.0, u64::MAX as f64) as u64 as i64 }
 }
 
 //#endregion 🔢️NumericSemantics
@@ -3352,12 +3323,8 @@ fn pages_to_bytes(pages: u64) -> Result<usize, CoreError> {
 }
 
 fn checked_end(start: usize, length: usize, bound: usize, subject: &str) -> Result<usize, CoreError> {
-    let end = start.checked_add(length).ok_or_else(|| CoreError::Trap(format!("{subject} range overflow")))?;
-    if end > bound {
-        Err(CoreError::Trap(format!("{subject} is out of bounds")))
-    } else {
-        Ok(end)
-    }
+    let end = start as u128 + length as u128;
+    if end > bound as u128 { Err(CoreError::Trap(format!("{subject} is out of bounds: start={start} length={length} end={end} bound={bound}"))) } else { Ok(end as usize) }
 }
 
 fn stable_fingerprint(bytes: &[u8]) -> u64 {
@@ -3376,6 +3343,28 @@ fn stable_fingerprint(bytes: &[u8]) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const MEMORY_COPY_RANGES_JSON: &str = include_str!("🧪️fixtures/🔣️memory-copy-ranges.json");
+
+    #[derive(serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct MemoryCopyFixture {
+        version: u32,
+        cases: Vec<MemoryCopyCase>,
+    }
+
+    #[derive(serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct MemoryCopyCase {
+        name: String,
+        destination: u32,
+        source: u32,
+        length: u32,
+        grow_pages: u32,
+        outcome: String,
+        owned_error: Option<String>,
+        expected_bytes: Option<Vec<u8>>,
+    }
 
     fn module(sections: &[(u8, Vec<u8>)]) -> Vec<u8> {
         let mut bytes = b"\0asm\x01\0\0\0".to_vec();
@@ -3448,6 +3437,15 @@ mod tests {
         exports.extend(b"round");
         exports.extend([0, 0]);
         module(&[(1, function_type(&[0x7f], &[0x7f])), (3, vec![1, 0]), (5, vec![1, 1, 1, 2]), (7, exports), (10, one_function(&[0, 0x20, 0, 0x41, 0xfb, 0, 0x36, 2, 0, 0x20, 0, 0x28, 2, 0, 0x0b]))])
+    }
+
+    fn memory_copy_module() -> Vec<u8> {
+        let mut exports = vec![2, 6];
+        exports.extend(b"memory");
+        exports.extend([2, 0, 4]);
+        exports.extend(b"copy");
+        exports.extend([0, 0]);
+        module(&[(1, function_type(&[0x7f, 0x7f, 0x7f, 0x7f], &[0x7f])), (3, vec![1, 0]), (5, vec![1, 1, 1, 2]), (7, exports), (10, one_function(&[0, 0x20, 3, 0x40, 0, 0x1a, 0x20, 0, 0x20, 1, 0x20, 2, 0xfc, 10, 0, 0, 0x3f, 0, 0x0b]))])
     }
 
     fn passive_data_module() -> Vec<u8> {
@@ -3536,6 +3534,52 @@ mod tests {
         assert_eq!(&instance.memory(0).expect("memory")[64..68], &[123, 0, 0, 0]);
         assert_eq!(instance.grow_memory(0, 1), Some(1));
         assert_eq!(instance.grow_memory(0, 1), None);
+    }
+
+    #[test]
+    fn memory_copy_ranges_match_the_language_neutral_fixture_and_wasmtime() {
+        let fixture: MemoryCopyFixture = serde_json::from_str(MEMORY_COPY_RANGES_JSON).expect("memory.copy fixture must match its language-neutral schema");
+        assert_eq!(fixture.version, 1);
+        let bytes = memory_copy_module();
+        let module = Arc::new(CoreModule::parse(&bytes).expect("parse memory.copy module"));
+        let engine = wasmtime::Engine::default();
+        let oracle_module = wasmtime::Module::new(&engine, &bytes).expect("Wasmtime accepts memory.copy fixture module");
+        let seed = [1, 2, 3, 4, 5, 6, 7, 8];
+        for case in fixture.cases {
+            let mut owned = CoreInstance::instantiate(Arc::clone(&module)).expect("instantiate owned memory.copy module");
+            owned.memory_mut(0).expect("owned memory export")[..seed.len()].copy_from_slice(&seed);
+            owned.begin_export("copy", vec![Value::I32(case.destination as i32), Value::I32(case.source as i32), Value::I32(case.length as i32), Value::I32(case.grow_pages as i32)]).expect("begin owned memory.copy");
+            let owned_result = drive(&mut owned, 1);
+
+            let mut oracle_store = wasmtime::Store::new(&engine, ());
+            let oracle_instance = wasmtime::Instance::new(&mut oracle_store, &oracle_module, &[]).expect("instantiate Wasmtime memory.copy module");
+            let oracle_memory = oracle_instance.get_memory(&mut oracle_store, "memory").expect("Wasmtime memory export");
+            oracle_memory.write(&mut oracle_store, 0, &seed).expect("seed Wasmtime memory");
+            let oracle_copy = oracle_instance.get_typed_func::<(i32, i32, i32, i32), i32>(&mut oracle_store, "copy").expect("Wasmtime typed memory.copy export");
+            let oracle_result = oracle_copy.call(&mut oracle_store, (case.destination as i32, case.source as i32, case.length as i32, case.grow_pages as i32));
+
+            match case.outcome.as_str() {
+                "ok" => {
+                    assert_eq!(owned_result.unwrap_or_else(|error| panic!("owned {} unexpectedly trapped: {error}", case.name)).0, vec![Value::I32((1 + case.grow_pages) as i32)]);
+                    assert_eq!(oracle_result.unwrap_or_else(|error| panic!("Wasmtime {} unexpectedly trapped: {error}", case.name)), (1 + case.grow_pages) as i32);
+                    let expected = case.expected_bytes.as_deref().expect("successful fixture owns exact destination bytes");
+                    assert_eq!(expected.len(), case.length as usize, "fixture length differs for {}", case.name);
+                    let start = case.destination as usize;
+                    let end = start + case.length as usize;
+                    assert_eq!(&owned.memory(0).expect("owned memory")[start..end], expected, "owned bytes differ for {}", case.name);
+                    assert_eq!(&oracle_memory.data(&oracle_store)[start..end], expected, "Wasmtime bytes differ for {}", case.name);
+                }
+                "trap" => {
+                    let error = match owned_result.expect_err("owned interpreter must reject hostile memory.copy range") {
+                        CoreError::Trap(message) => message,
+                        other => panic!("owned {} returned non-trap error: {other}", case.name),
+                    };
+                    assert_eq!(error, case.owned_error.expect("trap fixture owns an exact diagnostic"), "owned diagnostic differs for {}", case.name);
+                    assert!(oracle_result.is_err(), "Wasmtime accepted hostile memory.copy range {}", case.name);
+                }
+                other => panic!("unknown memory.copy fixture outcome {other:?}"),
+            }
+        }
     }
 
     #[test]

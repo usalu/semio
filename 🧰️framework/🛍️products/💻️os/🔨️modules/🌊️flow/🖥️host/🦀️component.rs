@@ -1992,7 +1992,7 @@ impl FlowHost {
         if resolve_ready(store.dispatch(ArtifactCommand::Undo)).is_err() {
             return false;
         }
-        let Ok(mut restored) = resolve_ready(store.snapshot()) else {
+        let Ok(mut restored) = store.snapshot() else {
             return false;
         };
         restored.camera = camera;
@@ -2010,7 +2010,7 @@ impl FlowHost {
         if resolve_ready(store.dispatch(ArtifactCommand::Redo)).is_err() {
             return false;
         }
-        let Ok(mut restored) = resolve_ready(store.snapshot()) else {
+        let Ok(mut restored) = store.snapshot() else {
             return false;
         };
         restored.camera = camera;
@@ -2021,12 +2021,12 @@ impl FlowHost {
 
     /// ↩️ Whether a content undo step is available.
     pub fn can_undo(&self) -> bool {
-        self.pending_change || self.history_store.as_ref().is_some_and(|store| !resolve_ready(store.applied_edit_ids()).is_empty())
+        self.pending_change || self.history_store.as_ref().is_some_and(|store| !store.applied_edit_ids().is_empty())
     }
 
     /// ↪️ Whether a content redo step is available.
     pub fn can_redo(&self) -> bool {
-        self.history_store.as_ref().is_some_and(|store| !resolve_ready(store.redo_edit_ids()).is_empty())
+        self.history_store.as_ref().is_some_and(|store| !store.redo_edit_ids().is_empty())
     }
     // #endregion History
 }

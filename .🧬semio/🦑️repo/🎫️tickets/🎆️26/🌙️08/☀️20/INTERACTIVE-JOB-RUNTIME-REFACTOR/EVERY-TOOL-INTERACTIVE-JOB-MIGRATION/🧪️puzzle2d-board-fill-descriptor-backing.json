@@ -1,0 +1,57 @@
+{
+  "schema": "semio.puzzle2d.board-fill-descriptor-backing.v1",
+  "pageItems": 4,
+  "capacities": {
+    "hostHandles": 1024,
+    "placements": 1000,
+    "kindHandles": 16,
+    "sources": 17024,
+    "sourceDescriptorCount": 4256,
+    "virtualHandleDescriptorCount": 4000
+  },
+  "cases": [
+    {
+      "id": "exact-source-descriptor-length",
+      "capacity": 4256,
+      "expectedLength": 4256,
+      "expectedInlineMachineWords": 4
+    },
+    {
+      "id": "exact-virtual-handle-descriptor-length",
+      "capacity": 4000,
+      "expectedLength": 4000,
+      "expectedInlineMachineWords": 4
+    },
+    {
+      "id": "capacity-overflow-preflight",
+      "capacity": "usize::MAX",
+      "expected": "rejected-before-reserve"
+    },
+    {
+      "id": "empty-owner-close",
+      "items": 0,
+      "pages": 0,
+      "expected": "terminal-empty"
+    },
+    {
+      "id": "nested-transfer-frame-bound",
+      "types": [
+        "BoardFillSnapshotCapture",
+        "BoardFillSnapshotIngress",
+        "BoardFillPlacement",
+        "BoardFillCommitPlacement",
+        "BoardFillCommitCandidate",
+        "BoardFillCommitEncoder",
+        "BoardFillJobState",
+        "BoardFillCheckpoint",
+        "BoardFillJob",
+        "Result<BoardFillJob,BoardFillCheckpoint>",
+        "WorkerJobOutcome<BoardFillJob>",
+        "MountedWorkerJobSession<BoardFillJob>",
+        "WorkerJobSessionAdmissionRejected<BoardFillJob>",
+        "Result<MountedWorkerJobSession<BoardFillJob>,WorkerJobSessionAdmissionRejected<BoardFillJob>>"
+      ],
+      "maximumBytesEach": 32768
+    }
+  ]
+}

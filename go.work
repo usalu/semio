@@ -5,5 +5,4 @@ use (
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator
-	./compose/client/lib/go
 )

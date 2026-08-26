@@ -18,6 +18,21 @@
     {
       "id": "semio-v1-value",
       "capability": "semio-v1-value-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️value",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "retypes-a-map-member-and-repoints-a-graph-node",
+              "directoryName": "🧪️retypes-a-map-member-and-repoints-a-graph-node"
+            }
+          ]
+        }
+      ],
       "kinds": ["no-mutation", "set-snapshot", "set-value", "set-map-entry", "remove-map-entry", "insert-list-item", "remove-list-item", "set-node", "remove-node"]
     }
   ]

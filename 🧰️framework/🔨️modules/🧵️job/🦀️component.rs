@@ -37,17 +37,17 @@
 
 use std::future::Future;
 use std::mem::{ManuallyDrop, MaybeUninit};
-use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU32, AtomicU64, AtomicU8, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU8, AtomicU32, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, OnceLock};
 use std::task::{Context, Poll, Waker};
 use std::time::Instant;
 
 use semio_framework_async::ChannelPolicy;
-use semio_framework_trace::{record_cancelled, record_checkpoint, record_committed, record_failed, record_operation_started, record_preview_published, record_stage_changed, TraceEvent, Watchdog};
+use semio_framework_trace::{TraceEvent, Watchdog, record_cancelled, record_checkpoint, record_committed, record_failed, record_operation_started, record_preview_published, record_stage_changed};
 
 pub use semio_framework_async::CancelToken;
 pub use semio_framework_async::{Lane, ProcessKind, WorkerPool, WorkerPoolConfig};
-pub use semio_framework_trace::{allocate_operation_id, Generation, InteractiveStage, OperationId};
+pub use semio_framework_trace::{Generation, InteractiveStage, OperationId, allocate_operation_id};
 
 //#region 🔁️SyncPoll
 /// 🔁️ Polls `fut` exactly once with a no-op waker and returns its output, panicking on `Pending` —
@@ -141,11 +141,7 @@ pub enum CommitValidation {
 /// ✅️ Checks `op`'s base revision and generation against the document's current `live_revision`/
 /// `live_generation` — the ONLY gate a [`CommitCandidate`] passes through before it may be applied.
 pub fn validate_commit(op: &Operation, live_revision: RevisionId, live_generation: Generation) -> CommitValidation {
-    if op.base_revision == live_revision && op.generation == live_generation {
-        CommitValidation::Accepted
-    } else {
-        CommitValidation::Stale { live_revision, live_generation }
-    }
+    if op.base_revision == live_revision && op.generation == live_generation { CommitValidation::Accepted } else { CommitValidation::Stale { live_revision, live_generation } }
 }
 //#endregion 🪪️Identity
 
@@ -240,6 +236,14 @@ impl<T: FixedOperationOwner, const CAPACITY: usize> FixedOperationRegistry<T, CA
     pub fn get_mut(&mut self, key: FixedOperationKey) -> Option<&mut T> {
         let index = self.index(key);
         self.slots.get_mut(index)?.as_mut().filter(|entry| entry.key == key && !entry.closing).map(|entry| &mut entry.owner)
+    }
+
+    pub fn get_operation(&self, operation: OperationId) -> Option<(FixedOperationKey, &T)> {
+        self.slots.iter().flatten().find(|entry| entry.key.operation == operation && !entry.closing).map(|entry| (entry.key, &entry.owner))
+    }
+
+    pub fn get_operation_mut(&mut self, operation: OperationId) -> Option<(FixedOperationKey, &mut T)> {
+        self.slots.iter_mut().flatten().find(|entry| entry.key.operation == operation && !entry.closing).map(|entry| (entry.key, &mut entry.owner))
     }
 
     pub fn take(&mut self, key: FixedOperationKey) -> Option<T> {
@@ -500,6 +504,13 @@ mod fixed_operation_registry_tests {
         let mut registry = FixedOperationRegistry::<Owner, 4>::new(8);
         let stale = FixedOperationKey::new(OperationId(9), Generation(1));
         registry.admit(stale, Owner::new(21, 2)).expect("stale owner");
+        let (observed_key, observed) = registry.get_operation(OperationId(9)).expect("operation-owned lookup");
+        assert_eq!(observed_key, stale);
+        assert_eq!(observed.identity, 21);
+        let (_, observed_mut) = registry.get_operation_mut(OperationId(9)).expect("mutable operation-owned lookup");
+        observed_mut.identity = 23;
+        assert_eq!(registry.get(stale).expect("same exact owner").identity, 23);
+        assert!(registry.get_operation(OperationId(10)).is_none(), "another operation cannot observe the retained owner");
         assert!(registry.take(FixedOperationKey::new(OperationId(9), Generation(2))).is_none());
         for _ in 0..4 {
             let _ = registry.cancel_stale_step(OperationId(9), Generation(2));
@@ -1644,11 +1655,7 @@ impl JobScope {
     }
 
     pub fn assert_completable(&self) -> Result<(), JobChildCompletionFault> {
-        if self.has_live_children() {
-            Err(JobChildCompletionFault::LiveChildren)
-        } else {
-            Ok(())
-        }
+        if self.has_live_children() { Err(JobChildCompletionFault::LiveChildren) } else { Ok(()) }
     }
 
     pub fn begin_close(&self) {
@@ -2139,11 +2146,7 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
     }
 
     pub fn poll(&self) -> WorkerJobPoll {
-        if self.checked_out.is_some() {
-            WorkerJobPoll::CheckedOut
-        } else {
-            self.session.poll()
-        }
+        if self.checked_out.is_some() { WorkerJobPoll::CheckedOut } else { self.session.poll() }
     }
 
     pub fn pump_one(&mut self, pool: &WorkerPool, lane: Lane) -> Result<WorkerJobPoll, MountedWorkerJobPumpFault> {
@@ -2237,11 +2240,7 @@ impl<J: InteractiveJob + 'static> BatchJobSession<J> {
     }
 
     pub fn poll(&self) -> WorkerJobPoll {
-        if self.checked_out.is_some() {
-            WorkerJobPoll::CheckedOut
-        } else {
-            self.session.poll()
-        }
+        if self.checked_out.is_some() { WorkerJobPoll::CheckedOut } else { self.session.poll() }
     }
 
     pub fn take_outcome(&mut self) -> Option<StepOutcome> {
@@ -2437,11 +2436,7 @@ impl<J> WorkerJobSessionInner<J> {
         }
         let wake_now = unsafe {
             *self.waker.get() = Some(waker.clone());
-            if self.wake_pending.load(Ordering::Acquire) {
-                (&mut *self.waker.get()).take()
-            } else {
-                None
-            }
+            if self.wake_pending.load(Ordering::Acquire) { (&mut *self.waker.get()).take() } else { None }
         };
         self.wake_guard.store(false, Ordering::Release);
         if let Some(waker) = wake_now {
@@ -3285,11 +3280,7 @@ impl InteractiveJob for TortureJob {
             self.terminal_state = None;
             return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
-        if self.scope.terminal_is_empty() {
-            InteractiveJobCloseStep::Complete
-        } else {
-            InteractiveJobCloseStep::Blocked
-        }
+        if self.scope.terminal_is_empty() { InteractiveJobCloseStep::Complete } else { InteractiveJobCloseStep::Blocked }
     }
 
     fn terminal_is_empty(&self) -> bool {

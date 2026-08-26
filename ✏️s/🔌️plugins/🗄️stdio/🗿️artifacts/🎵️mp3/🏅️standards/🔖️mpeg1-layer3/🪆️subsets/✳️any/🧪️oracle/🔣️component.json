@@ -39,6 +39,21 @@
     {
       "id": "mp3-mpeg1-layer3-any",
       "capability": "mp3-mpeg1-layer3-mutate",
+      "standardDirectoryName": "🔖️mpeg1-layer3",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "retitles-the-id3v2-tit2-frame",
+              "directoryName": "🧪️retitles-the-id3v2-tit2-frame"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

@@ -23,12 +23,12 @@ pub mod derived_composition {
         type Snapshot = SvgSnapshot;
         const WRITES: Dialect = DIALECT_TINY;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_TINY, DEP_XML]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = semio_framework_plugin::resolve_ready(SvgAnyComposer::compose(sources))?;
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = SvgAnyComposer::compose(sources)?;
             let mut snapshot = inner.snapshot;
             if let Some(root) = snapshot.doc.root.as_mut() {
                 set_element_attr(root, "baseProfile", Some("tiny".into()));
@@ -105,7 +105,7 @@ pub mod derived_composition {
         async fn conforming_document_composes_and_stamps_tiny() {
             let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="10" height="10"/></svg>"#;
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(text) }];
-            let composed = SvgTinyComposerComposition::compose(&sources).await.expect("clean document must compose to tiny");
+            let composed = SvgTinyComposerComposition::compose(&sources).expect("clean document must compose to tiny");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
             match &composed.snapshot.doc.root {
                 Some(crate::artifacts::xml::schema::snapshot::XmlNode::Element { attrs, .. }) => {
@@ -120,7 +120,7 @@ pub mod derived_composition {
         async fn blocklisted_element_fails_compose_with_real_diagnostic() {
             let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><linearGradient id="g1"/></svg>"#;
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(text) }];
-            let err = SvgTinyComposerComposition::compose(&sources).await.expect_err("a document with a linearGradient must not stamp tiny");
+            let err = SvgTinyComposerComposition::compose(&sources).expect_err("a document with a linearGradient must not stamp tiny");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_ELEMENT && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
@@ -128,13 +128,13 @@ pub mod derived_composition {
         async fn blocklisted_attribute_fails_compose_with_real_diagnostic() {
             let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="10" height="10" filter="url(#f1)"/></svg>"#;
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(text) }];
-            let err = SvgTinyComposerComposition::compose(&sources).await.expect_err("a document with a filter attribute must not stamp tiny");
+            let err = SvgTinyComposerComposition::compose(&sources).expect_err("a document with a filter attribute must not stamp tiny");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_ATTRIBUTE && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_flags_no_hard_issue_on_a_clean_builder_document() {
-            let snapshot = SvgTinyBuilder::empty().await.build().await.expect("empty document builds clean");
+            let snapshot = SvgTinyBuilder::empty().build().expect("empty document builds clean");
             let bytes = <SvgSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let diagnostics = SvgTinyValidator::validate(&IoPayload::Binary(bytes)).await;
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a builder-clean document: {diagnostics:?}");

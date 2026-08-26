@@ -18,7 +18,7 @@
 //! about it is invented.
 
 use crate::artifacts::playbook::mutations::{apply_playbook_mutation, inverse_playbook_mutation, PlaybookMutation};
-use crate::artifacts::playbook::{cache_playbook_steps, PlaybookDiff, PlaybookSnapshot};
+use crate::artifacts::playbook::{attach_playbook_steps, PlaybookDiff, PlaybookSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -36,11 +36,11 @@ fn expected_after() -> PlaybookSnapshot {
 /// 🌱 The committed `⬅️before`, with its composed `flow` child resolved to a scene holding exactly
 /// the step the committed payload carries — the id collision `add-step` guards against.
 fn before() -> PlaybookSnapshot {
-    let snapshot: PlaybookSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: PlaybookSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let PlaybookMutation::AddStep(payload) = mutation() else {
         panic!("no-ops-on-a-duplicate-step-id's committed mutation must be an add-step");
     };
-    cache_playbook_steps(&snapshot.flow.child_id, vec![payload.step.clone()]);
+    attach_playbook_steps(&mut snapshot.flow, vec![payload.step.clone()]);
     snapshot
 }
 

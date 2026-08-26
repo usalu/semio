@@ -13,23 +13,23 @@ pub struct RemoveBlock {
 }
 
 /// 🏗️ Builder.
-pub async fn remove_block_operation(step_id: &str, block_id: &str) -> PlaybookMutation {
+pub fn remove_block_operation(step_id: &str, block_id: &str) -> PlaybookMutation {
     PlaybookMutation::RemoveBlock(RemoveBlock { step_id: step_id.into(), block_id: block_id.into() })
 }
 
 impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for RemoveBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "block", kind: "remove-block", record: "RemovedBlock" };
 
-    async fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
+    fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
+    fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Remove block \"{}\"", self.block_id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.step_id.clone(), self.block_id.clone()]
     }
 }

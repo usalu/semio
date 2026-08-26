@@ -23,6 +23,252 @@
     {
       "id": "en1997-1-any",
       "capability": "en1997-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-alpha-s",
+          "sourceMutationDirectoryName": "🌿change-alpha-s",
+          "mutationDirectoryName": "🌿change-alpha-s",
+          "scenarios": [
+            {
+              "id": "lowers-the-shaft-resistance-factor-to-0-5",
+              "directoryName": "🧪️lowers-the-shaft-resistance-factor-to-0-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-annex",
+          "sourceMutationDirectoryName": "🛏️change-annex",
+          "mutationDirectoryName": "🛏️change-annex",
+          "scenarios": [
+            {
+              "id": "switches-from-the-german-na-to-the-recommended-en-annex",
+              "directoryName": "🧪️switches-from-the-german-na-to-the-recommended-en-annex"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bm",
+          "sourceMutationDirectoryName": "🧹change-bm",
+          "mutationDirectoryName": "🧹change-bm",
+          "scenarios": [
+            {
+              "id": "widens-the-footing-to-2-5-m",
+              "directoryName": "🧪️widens-the-footing-to-2-5-m"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-c-kpa",
+          "sourceMutationDirectoryName": "🧽change-c-kpa",
+          "mutationDirectoryName": "🧽change-c-kpa",
+          "scenarios": [
+            {
+              "id": "gives-the-drained-sand-12-5-kpa-of-effective-cohesion",
+              "directoryName": "🧪️gives-the-drained-sand-12-5-kpa-of-effective-cohesion"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-design-approach",
+          "sourceMutationDirectoryName": "🛋️change-design-approach",
+          "mutationDirectoryName": "🛋️change-design-approach",
+          "scenarios": [
+            {
+              "id": "switches-from-design-approach-1-to-design-approach-2",
+              "directoryName": "🧪️switches-from-design-approach-1-to-design-approach-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-dfm",
+          "sourceMutationDirectoryName": "🧺change-dfm",
+          "mutationDirectoryName": "🧺change-dfm",
+          "scenarios": [
+            {
+              "id": "deepens-the-founding-level-to-2-m",
+              "directoryName": "🧪️deepens-the-founding-level-to-2-m"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-es-mpa",
+          "sourceMutationDirectoryName": "🪑change-es-mpa",
+          "mutationDirectoryName": "🪑change-es-mpa",
+          "scenarios": [
+            {
+              "id": "stiffens-the-soil-modulus-to-45-mpa",
+              "directoryName": "🧪️stiffens-the-soil-modulus-to-45-mpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-footing-area-m2",
+          "sourceMutationDirectoryName": "🧴change-footing-area-m2",
+          "mutationDirectoryName": "🧴change-footing-area-m2",
+          "scenarios": [
+            {
+              "id": "enlarges-the-footing-area-to-6-25-m2",
+              "directoryName": "🧪️enlarges-the-footing-area-to-6-25-m2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-gamma-kn-m3",
+          "sourceMutationDirectoryName": "🪠change-gamma-kn-m3",
+          "mutationDirectoryName": "🪠change-gamma-kn-m3",
+          "scenarios": [
+            {
+              "id": "raises-the-soil-unit-weight-to-20-kn-m3",
+              "directoryName": "🧪️raises-the-soil-unit-weight-to-20-kn-m3"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-h-ed-kn",
+          "sourceMutationDirectoryName": "🪥change-h-ed-kn",
+          "mutationDirectoryName": "🪥change-h-ed-kn",
+          "scenarios": [
+            {
+              "id": "raises-the-design-horizontal-load-to-120-kn",
+              "directoryName": "🧪️raises-the-design-horizontal-load-to-120-kn"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-n-pile-ed-kn",
+          "sourceMutationDirectoryName": "🛁change-n-pile-ed-kn",
+          "mutationDirectoryName": "🛁change-n-pile-ed-kn",
+          "scenarios": [
+            {
+              "id": "raises-the-design-pile-axial-load-to-1200-kn",
+              "directoryName": "🧪️raises-the-design-pile-axial-load-to-1200-kn"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-nu",
+          "sourceMutationDirectoryName": "🪞change-nu",
+          "mutationDirectoryName": "🪞change-nu",
+          "scenarios": [
+            {
+              "id": "raises-poissons-ratio-to-0-375",
+              "directoryName": "🧪️raises-poissons-ratio-to-0-375"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-phi-deg",
+          "sourceMutationDirectoryName": "🧼change-phi-deg",
+          "mutationDirectoryName": "🧼change-phi-deg",
+          "scenarios": [
+            {
+              "id": "raises-the-friction-angle-to-35-degrees",
+              "directoryName": "🧪️raises-the-friction-angle-to-35-degrees"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-pile-base-area-m2",
+          "sourceMutationDirectoryName": "🌳change-pile-base-area-m2",
+          "mutationDirectoryName": "🌳change-pile-base-area-m2",
+          "scenarios": [
+            {
+              "id": "doubles-the-pile-base-area-to-0-5-m2",
+              "directoryName": "🧪️doubles-the-pile-base-area-to-0-5-m2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-pile-dm",
+          "sourceMutationDirectoryName": "🍀change-pile-dm",
+          "mutationDirectoryName": "🍀change-pile-dm",
+          "scenarios": [
+            {
+              "id": "enlarges-the-pile-diameter-to-0-75-m",
+              "directoryName": "🧪️enlarges-the-pile-diameter-to-0-75-m"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-pile-lm",
+          "sourceMutationDirectoryName": "🌵change-pile-lm",
+          "mutationDirectoryName": "🌵change-pile-lm",
+          "scenarios": [
+            {
+              "id": "lengthens-the-pile-to-15-m",
+              "directoryName": "🧪️lengthens-the-pile-to-15-m"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-pile-n-profiles",
+          "sourceMutationDirectoryName": "🌲change-pile-n-profiles",
+          "mutationDirectoryName": "🌲change-pile-n-profiles",
+          "scenarios": [
+            {
+              "id": "adds-a-third-investigated-ground-profile",
+              "directoryName": "🧪️adds-a-third-investigated-ground-profile"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-qb-kpa",
+          "sourceMutationDirectoryName": "🌴change-qb-kpa",
+          "mutationDirectoryName": "🌴change-qb-kpa",
+          "scenarios": [
+            {
+              "id": "raises-the-unit-base-resistance-to-3200-kpa",
+              "directoryName": "🧪️raises-the-unit-base-resistance-to-3200-kpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-qs-kpa",
+          "sourceMutationDirectoryName": "🌾change-qs-kpa",
+          "mutationDirectoryName": "🌾change-qs-kpa",
+          "scenarios": [
+            {
+              "id": "raises-the-unit-shaft-resistance-to-120-kpa",
+              "directoryName": "🧪️raises-the-unit-shaft-resistance-to-120-kpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-settlement-limit-mm",
+          "sourceMutationDirectoryName": "🚿change-settlement-limit-mm",
+          "mutationDirectoryName": "🚿change-settlement-limit-mm",
+          "scenarios": [
+            {
+              "id": "relaxes-the-settlement-limit-to-40-mm",
+              "directoryName": "🧪️relaxes-the-settlement-limit-to-40-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-v-ed-kn",
+          "sourceMutationDirectoryName": "🪒change-v-ed-kn",
+          "mutationDirectoryName": "🪒change-v-ed-kn",
+          "scenarios": [
+            {
+              "id": "raises-the-design-vertical-load-to-750-kn",
+              "directoryName": "🧪️raises-the-design-vertical-load-to-750-kn"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-z-investigated-m",
+          "sourceMutationDirectoryName": "🍁change-z-investigated-m",
+          "mutationDirectoryName": "🍁change-z-investigated-m",
+          "scenarios": [
+            {
+              "id": "deepens-the-investigated-depth-to-12-m",
+              "directoryName": "🧪️deepens-the-investigated-depth-to-12-m"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "change-v-ed-kn",
         "change-h-ed-kn",

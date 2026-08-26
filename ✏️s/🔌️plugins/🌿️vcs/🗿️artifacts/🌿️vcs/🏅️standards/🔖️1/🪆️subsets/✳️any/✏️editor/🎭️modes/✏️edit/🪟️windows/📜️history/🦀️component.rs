@@ -11,7 +11,7 @@ const VCS_PLAY_SURFACE_HISTORY: &str = "vcs.play.history";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::vcs::create_vcs_app`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: VCS_PLAY_WINDOW_HISTORY.into(),
         label: LocalizedLabel::native("History", "Verlauf"),
@@ -34,7 +34,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(history: &HistoryView) -> UiNode {
+pub fn render(history: &HistoryView) -> UiNode {
     build_graph_timeline_scene(VCS_PLAY_SURFACE_HISTORY, VCS_PLAY_APP_ID, GraphTimelineScene { columns_json: serde_json::to_string(&history.columns).unwrap_or_else(|_| "[]".into()) })
 }
 //#endregion 🔖️Render
@@ -46,7 +46,7 @@ mod tests {
     use crate::editor::vcs::testkit::{app, render as render_body};
 
     #[semio_framework_async_macros::async_test]
-    async fn renders_history_scene() {
+    fn renders_history_scene() {
         let mut instance = app();
         let json = render_body(&mut instance, VCS_PLAY_BODY_HISTORY);
         assert!(json.contains("graph-timeline"), "missing graph-timeline surface kind: {json}");

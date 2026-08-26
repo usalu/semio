@@ -20,6 +20,98 @@
     {
       "id": "sequence-1-any",
       "capability": "sequence-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-step-collapsed",
+          "sourceMutationDirectoryName": "🗂️change-step-collapsed",
+          "mutationDirectoryName": "🗂️change-step-collapsed",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-step-is-already-collapsed",
+              "directoryName": "🧪️no-ops-when-the-step-is-already-collapsed"
+            }
+          ]
+        },
+        {
+          "mutationId": "connect-steps",
+          "sourceMutationDirectoryName": "🔗connect-steps",
+          "mutationDirectoryName": "🔗connect-steps",
+          "scenarios": [
+            {
+              "id": "rejects-connecting-a-step-to-itself",
+              "directoryName": "🧪️rejects-connecting-a-step-to-itself"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-step",
+          "sourceMutationDirectoryName": "🌱create-step",
+          "mutationDirectoryName": "🌱create-step",
+          "scenarios": [
+            {
+              "id": "rejects-a-duplicate-step-id",
+              "directoryName": "🧪️rejects-a-duplicate-step-id"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-step",
+          "sourceMutationDirectoryName": "🗑️delete-step",
+          "mutationDirectoryName": "🗑️delete-step",
+          "scenarios": [
+            {
+              "id": "rejects-deleting-a-missing-step",
+              "directoryName": "🧪️rejects-deleting-a-missing-step"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-steps",
+          "sourceMutationDirectoryName": "✂️disconnect-steps",
+          "mutationDirectoryName": "✂️disconnect-steps",
+          "scenarios": [
+            {
+              "id": "rejects-disconnecting-a-missing-edge",
+              "directoryName": "🧪️rejects-disconnecting-a-missing-edge"
+            }
+          ]
+        },
+        {
+          "mutationId": "duplicate-step",
+          "sourceMutationDirectoryName": "🧬duplicate-step",
+          "mutationDirectoryName": "🧬duplicate-step",
+          "scenarios": [
+            {
+              "id": "rejects-when-the-new-id-already-exists",
+              "directoryName": "🧪️rejects-when-the-new-id-already-exists"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-step-params",
+          "sourceMutationDirectoryName": "🔧edit-step-params",
+          "mutationDirectoryName": "🔧edit-step-params",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-params-are-already-identical",
+              "directoryName": "🧪️no-ops-when-the-params-are-already-identical"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-step",
+          "sourceMutationDirectoryName": "📍move-step",
+          "mutationDirectoryName": "📍move-step",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-step-is-already-at-that-position",
+              "directoryName": "🧪️no-ops-when-the-step-is-already-at-that-position"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-step",
         "delete-step",

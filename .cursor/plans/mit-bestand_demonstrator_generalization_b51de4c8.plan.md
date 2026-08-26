@@ -87,7 +87,7 @@ The three brands set `replayIntroductionOnLoad`, which would auto-open the intro
 ## 5. Build assembly and deployment
 Apps keep root-absolute runtime URLs (`/plugin-modules/…`, `/mesh/…`, `/♻️mit-bestand/…` — these are a data-level convention, including inside documents), so apps are built with default base `/` and merged at the domain root:
 - Each app brand's `distDir` points at a staging dir under `♻️mit-bestand/🧺️demonstrator/` build output; `cnameHost` moves off the app brands.
-- The demonstrator `📜️script.ts build` runs the three `framework-os-dev` variant builds plus the landing build, then assembles one `dist/`: landing at root, each app's entry html at `<slug>/index.html` (plain `index.html` so static hosts serve directory indexes), all other trees (hashed `assets/`, `plugin-modules/<pluginId>`, `mesh/`, fixtures, brand assets) merged at root, plus `.nojekyll` and one `CNAME`/`🌐️CNAME` with the host.
+- The demonstrator `📜️script.ts build` runs the three `framework-os-dev` variant builds plus the landing build, then assembles one `dist/`: landing at root, each app's entry html at `<slug>/index.html` (plain `index.html` so static hosts serve directory indexes), all other trees (hashed `assets/`, `plugin-modules/<pluginId>`, `mesh/`, fixtures, brand assets) merged at root, plus `.nojekyll` and one `CNAME` with the host.
 
 ## 6. Wiring (zero-touch)
 - Root [package.json](package.json): workspace entry + `dev:mit-bestand:demonstrator`, `dev:mit-bestand:generator`, `dev:mit-bestand:koordinator`, `build:mit-bestand:demonstrator` (replacing/renaming the aggregator-only build script); keep `dev:mit-bestand:aggregator`.

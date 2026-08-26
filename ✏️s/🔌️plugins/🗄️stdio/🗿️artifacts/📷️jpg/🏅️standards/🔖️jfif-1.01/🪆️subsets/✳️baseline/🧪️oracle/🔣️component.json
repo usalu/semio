@@ -15,6 +15,9 @@
     {
       "id": "jpg-jfif-1-01-baseline",
       "capability": "jpg-jfif-1-01-baseline-mutate",
+      "standardDirectoryName": "🔖️jfif-1.01",
+      "subsetDirectoryName": "✳️baseline",
+      "vectors": [],
       "kinds": ["no-mutation", "set-snapshot", "set-sof-marker", "set-sample-precision", "set-arithmetic", "insert-huffman-table", "remove-huffman-table", "insert-frame-component", "remove-frame-component", "set-component-sampling"]
     }
   ]

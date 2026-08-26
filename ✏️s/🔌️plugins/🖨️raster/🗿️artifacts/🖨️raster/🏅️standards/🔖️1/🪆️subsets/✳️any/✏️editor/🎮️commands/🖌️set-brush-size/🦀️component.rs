@@ -12,6 +12,6 @@ pub struct SetBrushSize {
     pub value: f64,
 }
 
-pub async fn handle(payload: &SetBrushSize, _doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+pub fn handle(payload: &SetBrushSize, _doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     Ok(Emit::config(vec![RasterConfigMutation::SetBrushSize { value: payload.value }]))
 }

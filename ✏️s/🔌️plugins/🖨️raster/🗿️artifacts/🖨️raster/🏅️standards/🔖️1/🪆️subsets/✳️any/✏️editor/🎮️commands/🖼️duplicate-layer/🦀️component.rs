@@ -18,7 +18,7 @@ pub struct DuplicateLayer {
 /// select itself here — the `"layers"` domain's selection is framework-owned `InteractionState` now,
 /// only ever mutated by the framework's own injected `interactionSelect` handling, never by an app
 /// command's `Emit::config_mutations`.
-pub async fn handle(payload: &DuplicateLayer, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+pub fn handle(payload: &DuplicateLayer, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     let document = doc.snapshot;
     match find_layer(&document.layers, &payload.layer_id) {
         Some(layer) => {

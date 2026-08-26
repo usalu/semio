@@ -30,6 +30,21 @@
     {
       "id": "dxf-r12-any",
       "capability": "dxf-r12-mutate",
+      "standardDirectoryName": "🔖️r12",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "widens-the-circle-entity-radius",
+              "directoryName": "🧪️widens-the-circle-entity-radius"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

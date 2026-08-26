@@ -439,9 +439,8 @@ impl PatchTracker {
 
     pub fn drive_one(&self) -> bool {
         let mut state = self.state.borrow_mut();
-        let Some(index) = (0..SURFACE_RECONCILE_ADMISSION_SLOTS)
-            .map(|offset| (state.drive_cursor + offset) % SURFACE_RECONCILE_ADMISSION_SLOTS)
-            .find(|index| state.slots[*index].as_ref().is_some_and(|slot| slot.producer.is_some() || slot.job.is_some()))
+        let Some(index) =
+            (0..SURFACE_RECONCILE_ADMISSION_SLOTS).map(|offset| (state.drive_cursor + offset) % SURFACE_RECONCILE_ADMISSION_SLOTS).find(|index| state.slots[*index].as_ref().is_some_and(|slot| slot.producer.is_some() || slot.job.is_some()))
         else {
             return has_work(&state);
         };
@@ -866,7 +865,9 @@ mod tests {
     use semio_framework_ui_runtime::TreeNode;
 
     fn leaf(key: &str, text: &str) -> ComponentTree {
-        ComponentTree::new(TreeNode::new(key, ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label::from(text), emphasize: None, data_attributes: None })))
+        let value = ui_contract::UiText::try_from_str(text).expect("bounded test text");
+        let root = TreeNode::try_new(key, ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(value), emphasize: None, data_attributes: None })).unwrap_or_else(|_| panic!("bounded test tree"));
+        ComponentTree { root }
     }
 
     fn finish(tracker: &PatchTracker) -> Option<ui_contract::UiPatch> {
@@ -900,7 +901,8 @@ mod tests {
         for (index, terminal) in state.terminals.iter_mut().enumerate() {
             *terminal = Some(TerminalSlot {
                 instance: Some(instance),
-                authority: SurfaceReconcileTerminal::try_from_reconciler(SurfaceReconciler::new(format!("{instance}:terminal-{index}")), generation + index as u64).expect("fixed terminal admission"),
+                authority: SurfaceReconcileTerminal::try_from_reconciler(SurfaceReconciler::new(ui_contract::SurfaceId::try_from(format!("{instance}:terminal-{index}")).expect("bounded surface fixture")), generation + index as u64)
+                    .expect("fixed terminal admission"),
                 close: true,
             });
         }
@@ -958,8 +960,8 @@ mod tests {
         let tracker = PatchTracker::new();
         let published = published(&tracker, "71:ack");
         let revision = published.revision().0;
-        let published = published.acknowledge("72:wrong", revision).expect_err("wrong instance is inert");
-        let ack = published.acknowledge("71:ack", revision).expect("exact published owner creates ACK authority");
+        let published = published.acknowledge("72:wrong", revision).err().unwrap_or_else(|| panic!("wrong instance is inert"));
+        let ack = published.acknowledge("71:ack", revision).unwrap_or_else(|_| panic!("exact published owner creates ACK authority"));
         {
             let mut state = tracker.state.borrow_mut();
             let slot = state.slots.iter_mut().flatten().find(|slot| slot.surface.as_ref() == "71:ack").expect("published surface");
@@ -974,8 +976,8 @@ mod tests {
             slot.generation = published.generation();
             slot.acknowledged_revision = ui_contract::UiRevision(revision);
         }
-        let ack = published.acknowledge("71:ack", revision).expect("restored published owner remains exact");
-        let ack = tracker.mark_published_ack(ack).expect_err("duplicate ACK is inert");
+        let ack = published.acknowledge("71:ack", revision).unwrap_or_else(|_| panic!("restored published owner remains exact"));
+        let ack = tracker.mark_published_ack(ack).err().unwrap_or_else(|| panic!("duplicate ACK is inert"));
         assert!(ack.into_published().matches("71:ack", revision), "duplicate refusal preserves exact authority");
     }
 
@@ -993,7 +995,7 @@ mod tests {
                     preview_sequence: 0,
                     acknowledged_revision: ui_contract::UiRevision::default(),
                     cancel: semio_framework_job::root_cancel_token(),
-                    reconciler: Some(SurfaceReconciler::new(format!("{index}:main"))),
+                    reconciler: Some(SurfaceReconciler::new(ui_contract::SurfaceId::try_from(format!("{index}:main")).expect("bounded surface fixture"))),
                     producer: None,
                     job: None,
                 });
@@ -1066,8 +1068,8 @@ mod tests {
         tracker.begin("1:second".into(), leaf("root", "b")).expect("second");
         let first = finish(&tracker).expect("first ready");
         let second = finish(&tracker).expect("second ready");
-        assert_eq!(first.surface.0, "1:first");
-        assert_eq!(second.surface.0, "1:second");
+        assert_eq!(first.surface.0.as_str(), "1:first");
+        assert_eq!(second.surface.0.as_str(), "1:second");
     }
 
     #[test]
@@ -1110,7 +1112,8 @@ mod tests {
         {
             let mut state = tracker.state.borrow_mut();
             let target = state.terminals.iter_mut().find(|slot| slot.is_none()).expect("terminal capacity");
-            *target = Some(TerminalSlot { instance: Some(12), authority: SurfaceReconcileTerminal::try_from_reconciler(SurfaceReconciler::new("12:terminal"), 90_012).expect("fixed terminal admission"), close: true });
+            let surface = ui_contract::SurfaceId::try_from("12:terminal").expect("bounded surface fixture");
+            *target = Some(TerminalSlot { instance: Some(12), authority: SurfaceReconcileTerminal::try_from_reconciler(SurfaceReconciler::new(surface), 90_012).expect("fixed terminal admission"), close: true });
         }
         tracker.begin_close_instance(12);
         assert!(tracker.take_ready_patch().is_none(), "close prevents stale ready publication");
@@ -1130,8 +1133,12 @@ mod tests {
         {
             let mut state = tracker.state.borrow_mut();
             for (index, terminal) in state.terminals.iter_mut().enumerate() {
-                *terminal =
-                    Some(TerminalSlot { instance: Some(44), authority: SurfaceReconcileTerminal::try_from_reconciler(SurfaceReconciler::new(format!("44:terminal-{index}")), 100_000 + index as u64).expect("fixed terminal admission"), close: false });
+                *terminal = Some(TerminalSlot {
+                    instance: Some(44),
+                    authority: SurfaceReconcileTerminal::try_from_reconciler(SurfaceReconciler::new(ui_contract::SurfaceId::try_from(format!("44:terminal-{index}")).expect("bounded surface fixture")), 100_000 + index as u64)
+                        .expect("fixed terminal admission"),
+                    close: false,
+                });
             }
         }
         let generation = tracker.begin("44:active".into(), leaf("root", "active")).expect("active");
@@ -1179,7 +1186,7 @@ mod tests {
                 preview_sequence: 0,
                 acknowledged_revision: ui_contract::UiRevision::default(),
                 cancel: semio_framework_job::root_cancel_token(),
-                reconciler: Some(SurfaceReconciler::new("53:idle")),
+                reconciler: Some(SurfaceReconciler::new(ui_contract::SurfaceId::try_from("53:idle").expect("bounded surface fixture"))),
                 producer: None,
                 job: None,
             });
@@ -1223,7 +1230,7 @@ mod tests {
                 preview_sequence: 0,
                 acknowledged_revision: ui_contract::UiRevision::default(),
                 cancel: semio_framework_job::root_cancel_token(),
-                reconciler: Some(SurfaceReconciler::new("62:idle")),
+                reconciler: Some(SurfaceReconciler::new(ui_contract::SurfaceId::try_from("62:idle").expect("bounded surface fixture"))),
                 producer: None,
                 job: None,
             });

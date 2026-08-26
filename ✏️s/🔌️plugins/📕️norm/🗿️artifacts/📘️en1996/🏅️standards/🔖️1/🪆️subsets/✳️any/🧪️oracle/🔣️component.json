@@ -23,6 +23,252 @@
     {
       "id": "en1996-1-any",
       "capability": "en1996-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-annex",
+          "sourceMutationDirectoryName": "🔨change-annex",
+          "mutationDirectoryName": "🔨change-annex",
+          "scenarios": [
+            {
+              "id": "switches-from-the-german-na-to-the-recommended-en-annex",
+              "directoryName": "🧪️switches-from-the-german-na-to-the-recommended-en-annex"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-area-mm2",
+          "sourceMutationDirectoryName": "⬅️change-area-mm2",
+          "mutationDirectoryName": "⬅️change-area-mm2",
+          "scenarios": [
+            {
+              "id": "enlarges-the-gross-area-to-640000-mm2",
+              "directoryName": "🧪️enlarges-the-gross-area-to-640000-mm2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bed-joint-thickness-mm",
+          "sourceMutationDirectoryName": "🔥change-bed-joint-thickness-mm",
+          "mutationDirectoryName": "🔥change-bed-joint-thickness-mm",
+          "scenarios": [
+            {
+              "id": "thickens-the-bed-joint-to-the-15-mm-upper-limit",
+              "directoryName": "🧪️thickens-the-bed-joint-to-the-15-mm-upper-limit"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-design-situation",
+          "sourceMutationDirectoryName": "🧱change-design-situation",
+          "mutationDirectoryName": "🧱change-design-situation",
+          "scenarios": [
+            {
+              "id": "switches-the-design-situation-to-seismic",
+              "directoryName": "🧪️switches-the-design-situation-to-seismic"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-exposure",
+          "sourceMutationDirectoryName": "💧change-exposure",
+          "mutationDirectoryName": "💧change-exposure",
+          "scenarios": [
+            {
+              "id": "moves-the-wall-to-exposure-class-mx3",
+              "directoryName": "🧪️moves-the-wall-to-exposure-class-mx3"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-f-vk-mpa",
+          "sourceMutationDirectoryName": "✂️change-f-vk-mpa",
+          "mutationDirectoryName": "✂️change-f-vk-mpa",
+          "scenarios": [
+            {
+              "id": "raises-the-characteristic-shear-strength-to-0-375-mpa",
+              "directoryName": "🧪️raises-the-characteristic-shear-strength-to-0-375-mpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fire-resistance-min",
+          "sourceMutationDirectoryName": "🧊change-fire-resistance-min",
+          "mutationDirectoryName": "🧊change-fire-resistance-min",
+          "scenarios": [
+            {
+              "id": "raises-the-fire-resistance-requirement-from-r60-to-r90",
+              "directoryName": "🧪️raises-the-fire-resistance-requirement-from-r60-to-r90"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fk-mpa",
+          "sourceMutationDirectoryName": "🟩change-fk-mpa",
+          "mutationDirectoryName": "🟩change-fk-mpa",
+          "scenarios": [
+            {
+              "id": "raises-the-characteristic-compressive-strength-to-7-5-mpa",
+              "directoryName": "🧪️raises-the-characteristic-compressive-strength-to-7-5-mpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-h-ed-kn",
+          "sourceMutationDirectoryName": "↔️change-h-ed-kn",
+          "mutationDirectoryName": "↔️change-h-ed-kn",
+          "scenarios": [
+            {
+              "id": "raises-the-design-sliding-force-to-26-kn",
+              "directoryName": "🧪️raises-the-design-sliding-force-to-26-kn"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-h-ef-mm",
+          "sourceMutationDirectoryName": "⚡change-h-ef-mm",
+          "mutationDirectoryName": "⚡change-h-ef-mm",
+          "scenarios": [
+            {
+              "id": "lengthens-the-effective-height-to-2750-mm",
+              "directoryName": "🧪️lengthens-the-effective-height-to-2750-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-m-ed-knm",
+          "sourceMutationDirectoryName": "📐change-m-ed-knm",
+          "mutationDirectoryName": "📐change-m-ed-knm",
+          "scenarios": [
+            {
+              "id": "raises-the-design-bending-moment-to-12-5-knm",
+              "directoryName": "🧪️raises-the-design-bending-moment-to-12-5-knm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-masonry-class",
+          "sourceMutationDirectoryName": "🗺️change-masonry-class",
+          "mutationDirectoryName": "🗺️change-masonry-class",
+          "scenarios": [
+            {
+              "id": "downgrades-manufacturing-control-to-class-4",
+              "directoryName": "🧪️downgrades-manufacturing-control-to-class-4"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-mortar",
+          "sourceMutationDirectoryName": "🌬️change-mortar",
+          "mutationDirectoryName": "🌬️change-mortar",
+          "scenarios": [
+            {
+              "id": "upgrades-the-general-purpose-mortar-to-m10",
+              "directoryName": "🧪️upgrades-the-general-purpose-mortar-to-m10"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-mu",
+          "sourceMutationDirectoryName": "🏗️change-mu",
+          "mutationDirectoryName": "🏗️change-mu",
+          "scenarios": [
+            {
+              "id": "raises-the-bed-joint-friction-coefficient-to-0-625",
+              "directoryName": "🧪️raises-the-bed-joint-friction-coefficient-to-0-625"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-n-ed-kn",
+          "sourceMutationDirectoryName": "🔽change-n-ed-kn",
+          "mutationDirectoryName": "🔽change-n-ed-kn",
+          "scenarios": [
+            {
+              "id": "raises-the-design-axial-force-to-320-kn",
+              "directoryName": "🧪️raises-the-design-axial-force-to-320-kn"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-shear-area-mm2",
+          "sourceMutationDirectoryName": "📏change-shear-area-mm2",
+          "mutationDirectoryName": "📏change-shear-area-mm2",
+          "scenarios": [
+            {
+              "id": "enlarges-the-shear-area-to-384000-mm2",
+              "directoryName": "🧪️enlarges-the-shear-area-to-384000-mm2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-storeys",
+          "sourceMutationDirectoryName": "❄️change-storeys",
+          "mutationDirectoryName": "❄️change-storeys",
+          "scenarios": [
+            {
+              "id": "adds-a-third-storey-at-the-simplified-method-limit",
+              "directoryName": "🧪️adds-a-third-storey-at-the-simplified-method-limit"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-t-ef-mm",
+          "sourceMutationDirectoryName": "🔆change-t-ef-mm",
+          "mutationDirectoryName": "🔆change-t-ef-mm",
+          "scenarios": [
+            {
+              "id": "raises-the-effective-thickness-to-300-mm",
+              "directoryName": "🧪️raises-the-effective-thickness-to-300-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-unit",
+          "sourceMutationDirectoryName": "🌡️change-unit",
+          "mutationDirectoryName": "🌡️change-unit",
+          "scenarios": [
+            {
+              "id": "switches-the-masonry-unit-from-clay-to-calcium-silicate",
+              "directoryName": "🧪️switches-the-masonry-unit-from-clay-to-calcium-silicate"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-v-ed-kn",
+          "sourceMutationDirectoryName": "🔼change-v-ed-kn",
+          "mutationDirectoryName": "🔼change-v-ed-kn",
+          "scenarios": [
+            {
+              "id": "raises-the-design-shear-force-to-48-kn",
+              "directoryName": "🧪️raises-the-design-shear-force-to-48-kn"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-wall-thickness-mm",
+          "sourceMutationDirectoryName": "🎢change-wall-thickness-mm",
+          "mutationDirectoryName": "🎢change-wall-thickness-mm",
+          "scenarios": [
+            {
+              "id": "thickens-the-wall-to-300-mm",
+              "directoryName": "🧪️thickens-the-wall-to-300-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-z-mm3",
+          "sourceMutationDirectoryName": "➡️change-z-mm3",
+          "mutationDirectoryName": "➡️change-z-mm3",
+          "scenarios": [
+            {
+              "id": "raises-the-section-modulus-to-9500000-mm3",
+              "directoryName": "🧪️raises-the-section-modulus-to-9500000-mm3"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "change-m-ed-knm",
         "change-n-ed-kn",

@@ -11143,7 +11143,7 @@ type Ticket struct {
 	Slug          string                `json:"-" yaml:"-"`
 	Title         string                `json:"title" yaml:"title"`
 	Emoji         string                `json:"emoji,omitempty" yaml:"emoji,omitempty"`
-	Status        TicketStatus          `json:"status,omitempty" yaml:"status,omitempty"`
+	Status        TicketStatus          `json:"status" yaml:"status"`
 	Description   string                `json:"description,omitempty" yaml:"description,omitempty"`
 	Summary       string                `json:"summary,omitempty" yaml:"summary,omitempty"`
 	Management    *TicketManagementData `json:"github,omitempty" yaml:"github,omitempty"`
@@ -11183,13 +11183,13 @@ func isTicketInteractionKind(kind string, expected string) bool {
 	return false
 }
 
-// 📋️UnmarshalJSON MUST handle both legacy and current ticket JSON layouts.
+// 📋️UnmarshalJSON MUST require an explicit valid ticket status.
 func (t *Ticket) UnmarshalJSON(data []byte) error {
 	type TicketAlias struct {
 		Title       string                `json:"title"`
 		Emoji       string                `json:"emoji,omitempty"`
 		Description string                `json:"description,omitempty"`
-		Status      TicketStatus          `json:"status,omitempty"`
+		Status      TicketStatus          `json:"status"`
 		Summary     string                `json:"summary,omitempty"`
 		Management  *TicketManagementData `json:"github,omitempty"`
 		Goal        string                `json:"goal,omitempty"`
@@ -11205,6 +11205,9 @@ func (t *Ticket) UnmarshalJSON(data []byte) error {
 	}{}
 	if err := json.Unmarshal(data, aux); err != nil {
 		return err
+	}
+	if !aux.Status.IsValid() {
+		return fmt.Errorf("ticket status must be explicitly \"open\" or \"closed\"")
 	}
 	*t = Ticket{
 		Title:       aux.Title,
@@ -11252,19 +11255,8 @@ func (t *Ticket) UnmarshalJSON(data []byte) error {
 			}
 		}
 	}
-	if t.Status == "" && len(t.Interactions) > 0 {
-		lastKind := t.Interactions[len(t.Interactions)-1].Kind
-		if isTicketInteractionKind(lastKind, "ticket.close") {
-			t.Status = TicketStatusClosed
-		} else {
-			t.Status = TicketStatusOpen
-		}
-	}
 	for _, agent := range t.Agents {
 		appendTicketSessionID(t, agent.Session)
-	}
-	if t.Status == "" {
-		t.Status = TicketStatusOpen
 	}
 
 	if t.Goal != "" && strings.Contains(t.Goal, emojiText(EmojiGoal)) {
@@ -11288,6 +11280,9 @@ func (t *Ticket) UnmarshalJSON(data []byte) error {
 
 // 😀️MarshalJSON converts internal filesystem paths to repo emoji IDs for serialization.
 func (t Ticket) MarshalJSON() ([]byte, error) {
+	if !t.Status.IsValid() {
+		return nil, fmt.Errorf("ticket status must be explicitly \"open\" or \"closed\"")
+	}
 	type TicketAlias Ticket
 	alias := TicketAlias(t)
 
@@ -22331,7 +22326,155 @@ func GetTicketPath(year, month, day int, slug string) string {
 // 📥️GetImportantFilePath MUST return the stored value without modification.
 // 📥️GetImportantFilePath returns the important file path of the value.
 func GetImportantFilePath(year, month, day int, slug string) string {
-	return filepath.Join(GetTicketPath(year, month, day, slug), "📌️important.md")
+	return filepath.Join(GetTicketPath(year, month, day, slug), "📌️important", "📝️.md")
+}
+
+type ticketImportantPreimage struct {
+	path string
+	dir  string
+	mode os.FileMode
+}
+
+type ticketImportantCreation struct {
+	path        string
+	dir         string
+	fileCreated bool
+	dirCreated  bool
+}
+
+// 🧷️canonicalTicketImportantPath returns and stores the ticket-owned important document path.
+func canonicalTicketImportantPath(ticket *Ticket) (string, error) {
+	if ticket == nil {
+		return "", fmt.Errorf("ticket is nil")
+	}
+	if ticket.Slug == "" {
+		return "", fmt.Errorf("ticket slug is required")
+	}
+	ticket.ImportantPath = GetImportantFilePath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
+	return ticket.ImportantPath, nil
+}
+
+// 🔎️inspectTicketImportantDocument requires the canonical document to be an exact empty regular-file bundle.
+func inspectTicketImportantDocument(ticket *Ticket) (ticketImportantPreimage, error) {
+	path, err := canonicalTicketImportantPath(ticket)
+	if err != nil {
+		return ticketImportantPreimage{}, err
+	}
+	info, err := os.Lstat(path)
+	if err != nil {
+		return ticketImportantPreimage{}, fmt.Errorf("cannot finish ticket: required important document %s is unavailable: %w", path, err)
+	}
+	if !info.Mode().IsRegular() {
+		return ticketImportantPreimage{}, fmt.Errorf("cannot finish ticket: important document %s is not a regular file", path)
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ticketImportantPreimage{}, fmt.Errorf("cannot finish ticket: read important document %s: %w", path, err)
+	}
+	if len(data) != 0 {
+		return ticketImportantPreimage{}, fmt.Errorf("cannot finish ticket: important document %s is not empty", path)
+	}
+	dir := filepath.Dir(path)
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return ticketImportantPreimage{}, fmt.Errorf("cannot finish ticket: read important directory %s: %w", dir, err)
+	}
+	if len(entries) != 1 || entries[0].Name() != filepath.Base(path) {
+		return ticketImportantPreimage{}, fmt.Errorf("cannot finish ticket: important directory %s must contain only %s", dir, filepath.Base(path))
+	}
+	return ticketImportantPreimage{path: path, dir: dir, mode: info.Mode()}, nil
+}
+
+// 🔄️restoreTicketImportantDocument restores an empty document without overwriting an existing node.
+func restoreTicketImportantDocument(preimage ticketImportantPreimage) error {
+	if err := os.MkdirAll(preimage.dir, 0755); err != nil {
+		return err
+	}
+	file, err := os.OpenFile(preimage.path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, preimage.mode.Perm())
+	if err != nil {
+		return err
+	}
+	return file.Close()
+}
+
+// 🗑️removeTicketImportantDocument removes the exact empty document bundle and restores it on partial failure.
+func removeTicketImportantDocument(preimage ticketImportantPreimage) error {
+	if err := os.Remove(preimage.path); err != nil {
+		return err
+	}
+	if err := os.Remove(preimage.dir); err != nil {
+		if restoreErr := restoreTicketImportantDocument(preimage); restoreErr != nil {
+			return fmt.Errorf("remove important directory: %w; restore important document: %v", err, restoreErr)
+		}
+		return fmt.Errorf("remove important directory: %w", err)
+	}
+	return nil
+}
+
+// ✨️ensureTicketImportantDocument preserves an existing regular document or exclusively creates an empty one.
+func ensureTicketImportantDocument(ticket *Ticket) (ticketImportantCreation, error) {
+	path, err := canonicalTicketImportantPath(ticket)
+	if err != nil {
+		return ticketImportantCreation{}, err
+	}
+	creation := ticketImportantCreation{path: path, dir: filepath.Dir(path)}
+	info, err := os.Lstat(path)
+	if err == nil {
+		if !info.Mode().IsRegular() {
+			return creation, fmt.Errorf("important document %s is not a regular file", path)
+		}
+		if _, err := os.ReadFile(path); err != nil {
+			return creation, fmt.Errorf("read important document %s: %w", path, err)
+		}
+		return creation, nil
+	}
+	if !os.IsNotExist(err) {
+		return creation, err
+	}
+	dirInfo, dirErr := os.Lstat(creation.dir)
+	if dirErr == nil {
+		if !dirInfo.IsDir() || dirInfo.Mode()&os.ModeSymlink != 0 {
+			return creation, fmt.Errorf("important directory %s is not a physical directory", creation.dir)
+		}
+	} else if os.IsNotExist(dirErr) {
+		if err := os.MkdirAll(creation.dir, 0755); err != nil {
+			return creation, err
+		}
+		creation.dirCreated = true
+	} else {
+		return creation, dirErr
+	}
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+	if err != nil {
+		if creation.dirCreated {
+			_ = os.Remove(creation.dir)
+		}
+		return ticketImportantCreation{}, err
+	}
+	if err := file.Close(); err != nil {
+		_ = os.Remove(path)
+		if creation.dirCreated {
+			_ = os.Remove(creation.dir)
+		}
+		return ticketImportantCreation{}, err
+	}
+	creation.fileCreated = true
+	return creation, nil
+}
+
+// ↩️rollbackTicketImportantCreation removes only nodes created by the current reopen operation.
+func rollbackTicketImportantCreation(creation ticketImportantCreation) error {
+	if creation.fileCreated {
+		if err := os.Remove(creation.path); err != nil && !os.IsNotExist(err) {
+			return err
+		}
+	}
+	if creation.dirCreated {
+		if err := os.Remove(creation.dir); err != nil && !os.IsNotExist(err) {
+			return err
+		}
+	}
+	return nil
 }
 
 // 🛤️GetTicketJsonPath MUST return the stored value without modification.
@@ -22482,8 +22625,10 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 
 	newFolderPath := GetTicketPath(ticket.Year, ticket.Month, ticket.Day, slug)
 	if slug != ticket.Slug {
-		if FileExists(newFolderPath) {
+		if _, err := os.Lstat(newFolderPath); err == nil {
 			return fmt.Errorf("ticket folder already exists: %s", newFolderPath)
+		} else if !os.IsNotExist(err) {
+			return err
 		}
 		if err := EnsureDir(filepath.Dir(newFolderPath)); err != nil {
 			return err
@@ -22607,6 +22752,11 @@ func CreateTicket(emoji, title, prompt, llm, effort, client, draft string, noIss
 	}
 
 	ticketDir := GetTicketPath(year, month, day, slug)
+	if _, err := os.Lstat(ticketDir); err == nil {
+		return nil, fmt.Errorf("ticket folder already exists: %s", ticketDir)
+	} else if !os.IsNotExist(err) {
+		return nil, err
+	}
 	if err := EnsureDir(ticketDir); err != nil {
 		return nil, err
 	}
@@ -23320,6 +23470,12 @@ func ghListOpenIssuesWithLabel(label string) ([]string, error) {
 // 🔲️SaveTicket MUST persist the ticket atomically to the data store.
 // 💾️SaveTicket persists ticket to the data store.
 func SaveTicket(ticket *Ticket) error {
+	if ticket == nil {
+		return fmt.Errorf("ticket is nil")
+	}
+	if !ticket.Status.IsValid() {
+		return fmt.Errorf("ticket status must be explicitly \"open\" or \"closed\"")
+	}
 	jsonBytes, err := json.MarshalIndent(ticket, "", "  ")
 	if err != nil {
 		return err
@@ -25310,6 +25466,12 @@ func ticketArtifactUnderDeleted(path string, deleted map[string]bool) bool {
 
 // 🔖️FinishTicket MUST return a non-nil error when the operation fails.
 func FinishTicket(ticket *Ticket, summary string, files []string, noManagement bool, bulk bool) error {
+	if ticket == nil {
+		return fmt.Errorf("ticket is nil")
+	}
+	if !ticket.Status.IsValid() {
+		return fmt.Errorf("ticket status must be explicitly \"open\" or \"closed\"")
+	}
 	if ticket.Status != TicketStatusOpen {
 		return fmt.Errorf("ticket is not open")
 	}
@@ -25327,24 +25489,20 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 		}
 	}
 
-	if !bulk && FileExists(ticket.ImportantPath) {
-		importantContent, err := ReadTextFile(ticket.ImportantPath)
-		if err == nil && strings.TrimSpace(importantContent) != "" {
-			return fmt.Errorf("cannot finish ticket: %s is not empty. Please complete all compulsory actions", filepath.Base(ticket.ImportantPath))
-		}
-
-		if err := os.Remove(ticket.ImportantPath); err != nil {
-			writeWarningf("Failed to delete %s: %v", filepath.Base(ticket.ImportantPath), err)
-		}
+	importantPreimage, err := inspectTicketImportantDocument(ticket)
+	if err != nil {
+		return err
 	}
 
 	var tickFilesResult *TicketDiffs
-	var err error
 	if (!bulk || len(files) > 0) && !noManagement {
 		tickFilesResult, err = ComputeTicketFiles(ticket, files)
 		if err != nil {
 			return err
 		}
+	}
+	if err := moveTicketPlanIntoFolder(ticket); err != nil {
+		return err
 	}
 
 	if ticket.Management != nil && ticket.Management.Issue != "" && !noManagement {
@@ -25402,8 +25560,6 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 		}
 	}
 
-	ticket.Summary = summary
-	ticket.Status = TicketStatusClosed
 	now := time.Now()
 	nowStr := now.Format("2006-01-02 15:04:05")
 	closeClient := ""
@@ -25437,7 +25593,7 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 			addInteractionFile(path)
 		}
 	}
-	ticket.Interactions = append(ticket.Interactions, Interaction{
+	closeInteraction := Interaction{
 		Kind:       "ticket.close",
 		Author:     GetGitAuthorAlias(),
 		System:     GetSystem(),
@@ -25446,11 +25602,26 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 		Date:       nowStr,
 		Summary:    summary,
 		Files:      interactionFiles,
-	})
-	if err := moveTicketPlanIntoFolder(ticket); err != nil {
+	}
+	if _, err := inspectTicketImportantDocument(ticket); err != nil {
 		return err
 	}
+	if err := removeTicketImportantDocument(importantPreimage); err != nil {
+		return fmt.Errorf("remove important document: %w", err)
+	}
+	previousSummary := ticket.Summary
+	previousStatus := ticket.Status
+	previousInteractions := append([]Interaction(nil), ticket.Interactions...)
+	ticket.Summary = summary
+	ticket.Status = TicketStatusClosed
+	ticket.Interactions = append(ticket.Interactions, closeInteraction)
 	if err := SaveTicket(ticket); err != nil {
+		ticket.Summary = previousSummary
+		ticket.Status = previousStatus
+		ticket.Interactions = previousInteractions
+		if restoreErr := restoreTicketImportantDocument(importantPreimage); restoreErr != nil {
+			return fmt.Errorf("save ticket: %w; restore important document: %v", err, restoreErr)
+		}
 		return err
 	}
 	if err := purgeOversizedTicketArtifacts(ticket.FolderPath); err != nil {
@@ -25472,14 +25643,22 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 
 // 🔖️ReopenTicket MUST return a non-nil error when the operation fails.
 func ReopenTicket(ticket *Ticket, prompt, llm, effort, client, draft string, goal string, parent string, noManagement bool, mcpKind McpClientKind, planID, specID string) error {
-	if ticket.Status == TicketStatusOpen {
+	if ticket == nil {
+		return fmt.Errorf("ticket is nil")
+	}
+	if !ticket.Status.IsValid() {
+		return fmt.Errorf("ticket status must be explicitly \"open\" or \"closed\"")
+	}
+	if ticket.Status != TicketStatusClosed {
 		return fmt.Errorf("ticket is already open")
 	}
+	nextGoal := ticket.Goal
 	if goal != "" {
-		ticket.Goal = goal
+		nextGoal = goal
 	}
+	nextParent := ticket.Parent
 	if parent != "" {
-		ticket.Parent = parent
+		nextParent = parent
 	}
 	var llmSlug string
 	var effortSlug string
@@ -25549,6 +25728,17 @@ func ReopenTicket(ticket *Ticket, prompt, llm, effort, client, draft string, goa
 		}
 	}
 
+	importantCreation, err := ensureTicketImportantDocument(ticket)
+	if err != nil {
+		return err
+	}
+	previousGoal := ticket.Goal
+	previousParent := ticket.Parent
+	previousStatus := ticket.Status
+	previousInteractions := append([]Interaction(nil), ticket.Interactions...)
+	previousSessions := append([]string(nil), ticket.Sessions...)
+	ticket.Goal = nextGoal
+	ticket.Parent = nextParent
 	ticket.Interactions = append(ticket.Interactions, interaction)
 	appendTicketSessionID(ticket, currentTicketSessionID())
 	ticket.Status = TicketStatusOpen
@@ -25567,6 +25757,14 @@ func ReopenTicket(ticket *Ticket, prompt, llm, effort, client, draft string, goa
 	postTicketPlanComment(ticket, noManagement)
 
 	if err := SaveTicket(ticket); err != nil {
+		ticket.Goal = previousGoal
+		ticket.Parent = previousParent
+		ticket.Status = previousStatus
+		ticket.Interactions = previousInteractions
+		ticket.Sessions = previousSessions
+		if rollbackErr := rollbackTicketImportantCreation(importantCreation); rollbackErr != nil {
+			return fmt.Errorf("save ticket: %w; rollback important document: %v", err, rollbackErr)
+		}
 		return err
 	}
 	ticketID := FormatTicketRelPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug)

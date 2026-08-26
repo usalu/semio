@@ -947,7 +947,7 @@ pub fn fem2d_live_visual_layers(doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -
         let (x1, y1) = screen_2d(b.x, b.y);
         layers.push(json!({ "kind": "line", "id": format!("assembling-{id}"), "x0": x0, "y0": y0, "x1": x1, "y1": y1, "color": "#a855f7" }));
     }
-    let mut fields = visual.fields.clone()?;
+    let mut fields = visual.fields.clone();
     fields.sort_by(|a, b| a.node_id.cmp(&b.node_id));
     for field in fields {
         let Some(node) = find_node_2d(&doc.nodes, &field.node_id) else { continue };

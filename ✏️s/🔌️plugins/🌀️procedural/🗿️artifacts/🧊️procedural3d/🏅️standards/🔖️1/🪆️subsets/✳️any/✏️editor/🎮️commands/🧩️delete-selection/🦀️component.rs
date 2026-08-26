@@ -39,5 +39,5 @@ pub fn apply(
     interaction: &InteractionView<'_>,
     _session: &mut FlowEvalSession,
 ) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
-    Ok(delete_selected(&doc.snapshot.fixture, &semio_framework::io::resolve_ready(interaction.selection("graph")).ids))
+    Ok(delete_selected(&doc.snapshot.fixture, &interaction.selection("graph").ids))
 }

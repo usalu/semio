@@ -17,7 +17,7 @@ const WRITER_PANEL_TAB_ARTIFACT_OUTLINE_ID: &str = "framework.panel.document.out
 
 //#region 🔖️Definition
 /// 🌳️ Nested children of the document tab — demonstrates the recursive panel-tab tree (stacked tab rows)?.
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -64,12 +64,9 @@ fn jack_ast_to_tree_item(node: &JackAstNode) -> semio_framework_plugin::UiAssemb
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "writer AST row admission failed"))
 }
 
-pub async fn render(document: &WriterSnapshot, _config: &WriterConfig, labels: &WriterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(document: &WriterSnapshot, _config: &WriterConfig, labels: &WriterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     if document.language_id != "jack" {
-        let items = crate::editor::writer::ui_node_list([
-            tree_item("writer-document.id", Label::data(document.id.clone())),
-            tree_item("writer-document.language", Label::data(document.language_id.clone())),
-        ])?;
+        let items = crate::editor::writer::ui_node_list([tree_item("writer-document.id", Label::data(document.id.clone())), tree_item("writer-document.language", Label::data(document.language_id.clone()))])?;
         return PanelTreeBuilder::new("writer-document")?.section("writer-document.meta", Some(labels.document.into()), true, items)?.build();
     }
     let root = parse_jack_ast(&writer_text(document));

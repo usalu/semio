@@ -40,6 +40,10 @@
     "directory": "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript"
   },
   "bundleKind": "library",
+  "semio": {
+    "role": "plugin",
+    "id": "semio-s-plugin-fem-ts"
+  },
   "nx": {
     "includedScripts": []
   }

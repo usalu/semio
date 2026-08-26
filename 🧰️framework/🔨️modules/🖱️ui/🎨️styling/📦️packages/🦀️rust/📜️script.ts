@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** @emoji ⚙️ Reads `framework/ui/styling/🔣️tokens.json`; emits palette CSS, TS, C#, Rust, and Python styling artifacts. */
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest, getWorkspaceRoot } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { parseUiTheme, resolveThemeMetrics, resolveThemePaint, type ThemePaintRef, type UiTheme } from "../🟦️typescript/📦️index.ts";
@@ -12,10 +12,10 @@ const stylingRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 const stylingOwnerRoot = join(stylingRoot, "..", "..");
 const tokensPath = join(stylingOwnerRoot, "🔣️tokens.json");
 const generatedCssDir = join(stylingOwnerRoot, "🤖️generated");
-const tsStylingDir = join(stylingRoot, "..", "..", "🟦️typescript", "🎨️styling");
 const netPaletteDir = join(stylingOwnerRoot, "net", "Elements.Styling", "Generated");
-const pyGeneratedPath = join(stylingRoot, "..", "..", "🐍️python", "🎨️styling", "🎨️styling", "🤖️generated.py");
+const pyGeneratedPath = join(stylingOwnerRoot, "📦️packages", "🐍️python", "🎨️styling", "🤖️generated.py");
 const rustGeneratedPath = join(stylingOwnerRoot, "🤖️generated.rs");
+const adaptersManifestPath = join(stylingOwnerRoot, "🛂️adapters.manifest.json");
 const repoRoot = getWorkspaceRoot();
 
 /** @emoji 📁️ Canonical `framework/ui/asset` directory (fonts, cursors, …). */
@@ -767,30 +767,85 @@ export async function fetchElementsFonts(): Promise<void> {
   console.log(`framework/ui/styling: fonts ready under framework/ui/asset (${wrote} downloaded, ${tokens.fontFaces.length} total)`);
 }
 
-/** @emoji 🎨️ Writes all styling artifacts from {@link 🔣️tokens.json}. */
-export function generateStylingArtifacts(): void {
+type StylingArtifact = { path: string; content: string };
+type StylingAdapterManifest = { tokens: string; adapters: readonly { outputs: readonly string[] }[] };
+
+/** @emoji 🧾️ Renders the complete cross-language styling output manifest without writing files. */
+export function renderStylingArtifacts(): readonly StylingArtifact[] {
   const tokens = loadTokens();
   const resolvedAppearances = resolveAppearances(tokens);
-  mkdirSync(generatedCssDir, { recursive: true });
-  mkdirSync(netPaletteDir, { recursive: true });
-  mkdirSync(dirname(pyGeneratedPath), { recursive: true });
   const fonts = emitPaletteFonts(tokens);
   const theme = emitPaletteTheme(tokens);
   const presenceCss = emitPalettePresence(tokens);
   const paletteCss = `${fonts}\n${theme}\n${presenceCss}`;
-  writeFileSync(join(generatedCssDir, "palette-fonts.css"), fonts, "utf8");
-  writeFileSync(join(generatedCssDir, "palette-🎨️theme.css"), theme, "utf8");
-  writeFileSync(join(generatedCssDir, "palette-presence.css"), presenceCss, "utf8");
-  writeFileSync(join(stylingOwnerRoot, "🎨️palette.css"), paletteCss, "utf8");
-  writeFileSync(join(generatedCssDir, "🟦️tokens.generated.ts"), emitTypeScriptTokens(tokens, resolvedAppearances), "utf8");
-  const cs = emitCSharp(tokens);
-  writeFileSync(join(netPaletteDir, "Palette.g.cs"), cs, "utf8");
-  writeFileSync(rustGeneratedPath, emitRust(tokens, resolvedAppearances), "utf8");
-  writeFileSync(pyGeneratedPath, emitPython(tokens, resolvedAppearances), "utf8");
+  return [
+    { path: join(generatedCssDir, "palette-fonts.css"), content: fonts },
+    { path: join(generatedCssDir, "palette-🎨️theme.css"), content: theme },
+    { path: join(generatedCssDir, "palette-presence.css"), content: presenceCss },
+    { path: join(stylingOwnerRoot, "🎨️palette.css"), content: paletteCss },
+    { path: join(generatedCssDir, "🟦️tokens.generated.ts"), content: emitTypeScriptTokens(tokens, resolvedAppearances) },
+    { path: join(netPaletteDir, "Palette.g.cs"), content: emitCSharp(tokens) },
+    { path: rustGeneratedPath, content: emitRust(tokens, resolvedAppearances) },
+    { path: pyGeneratedPath, content: emitPython(tokens, resolvedAppearances) },
+  ];
+}
+
+/** @emoji 📋️ Proves the adapter manifest declares exactly the artifacts emitted by the shared renderer. */
+function validateStylingOutputManifest(artifacts: readonly StylingArtifact[]): void {
+  const manifest = JSON.parse(readFileSync(adaptersManifestPath, "utf8")) as StylingAdapterManifest;
+  if (manifest.tokens !== "🔣️tokens.json") throw new Error(`styling adapter manifest tokens must be 🔣️tokens.json, got ${JSON.stringify(manifest.tokens)}`);
+  const declared = manifest.adapters.flatMap((adapter) => adapter.outputs).sort();
+  const rendered = artifacts.map((artifact) => relative(stylingOwnerRoot, artifact.path)).sort();
+  if (new Set(declared).size !== declared.length) throw new Error("styling adapter manifest contains duplicate outputs");
+  if (JSON.stringify(declared) !== JSON.stringify(rendered)) throw new Error(`styling adapter manifest mismatch:\ndeclared=${JSON.stringify(declared)}\nrendered=${JSON.stringify(rendered)}`);
+}
+
+/** @emoji 🎨️ Writes all styling artifacts from the same byte plan used by the freshness check. */
+export function generateStylingArtifacts(): void {
+  const artifacts = renderStylingArtifacts();
+  validateStylingOutputManifest(artifacts);
+  for (const root of [generatedCssDir, netPaletteDir]) {
+    if (!existsSync(root)) continue;
+    const expected = new Set(artifacts.filter((artifact) => dirname(artifact.path) === root).map((artifact) => artifact.path));
+    for (const name of readdirSync(root)) if (!expected.has(join(root, name))) rmSync(join(root, name), { recursive: true, force: true });
+  }
+  for (const artifact of artifacts) {
+    mkdirSync(dirname(artifact.path), { recursive: true });
+    writeFileSync(artifact.path, artifact.content, "utf8");
+  }
   validatePremadeThemes();
 }
 
-const premadeThemeDir = join(stylingRoot, "theme");
+/** 🧾️ Emits the canonical multi-language styling byte plan and stale removals without writes. */
+class PreviewGeneratedScript extends BundleScript {
+  run(): void {
+    const repoRoot = getWorkspaceRoot();
+    const artifacts = renderStylingArtifacts();
+    validateStylingOutputManifest(artifacts);
+    const directoryRoots = [generatedCssDir, netPaletteDir];
+    const nodes = [
+      ...directoryRoots.map((path) => ({ bytesBase64: "", mode: 0o755, nodeKind: "directory" as const, path: relative(repoRoot, path).replaceAll("\\", "/").normalize("NFC") })),
+      ...artifacts.map((artifact) => ({ bytesBase64: Buffer.from(artifact.content).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: relative(repoRoot, artifact.path).replaceAll("\\", "/").normalize("NFC") })),
+    ].sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
+    const staleRemovals = directoryRoots.flatMap((root) => {
+      if (!existsSync(root)) return [];
+      const expected = new Set(artifacts.filter((artifact) => dirname(artifact.path) === root).map((artifact) => artifact.path));
+      return readdirSync(root).filter((name) => !expected.has(join(root, name))).map((name) => relative(repoRoot, join(root, name)).replaceAll("\\", "/").normalize("NFC"));
+    }).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
+    process.stdout.write(`${JSON.stringify({ contractId: "styling-tokens", nodes, schemaVersion: 1, staleRemovals })}\n`);
+  }
+}
+
+/** @emoji 🧪️ Fails closed when a declared styling artifact is missing or byte-stale. */
+export function checkStylingArtifacts(): void {
+  const artifacts = renderStylingArtifacts();
+  validateStylingOutputManifest(artifacts);
+  validatePremadeThemes();
+  const stale = artifacts.filter((artifact) => !existsSync(artifact.path) || readFileSync(artifact.path, "utf8") !== artifact.content).map((artifact) => relative(stylingOwnerRoot, artifact.path));
+  if (stale.length > 0) throw new Error(`framework/ui/styling generated artifacts are stale:\n${stale.map((path) => `  ${path}`).join("\n")}`);
+}
+
+const premadeThemeDir = join(stylingOwnerRoot, "🎨️theme");
 
 /** @emoji 🔎️ Parses and resolves every premade `*.theme.json` so a broken preset fails `generate` instead of shipping. */
 function validatePremadeThemes(): void {
@@ -815,6 +870,14 @@ class GenerateScript extends BundleScript {
   run(): void {
     generateStylingArtifacts();
     console.log("framework/ui/styling: wrote generated CSS/TS/C#/Rust/Python styling artifacts");
+  }
+}
+
+/** @emoji ✅️ Checks the complete adapter-owned output set without rewriting it. */
+class CheckGeneratedScript extends BundleScript {
+  run(): void {
+    checkStylingArtifacts();
+    console.log("framework/ui/styling: generated artifacts are fresh");
   }
 }
 
@@ -1068,6 +1131,8 @@ class CheckNoRawColorsScript extends BundleScript {
 if (import.meta.main) {
   const router = new ScriptRouter(import.meta.dir)
     .register("generate", GenerateScript)
+    .register("preview-generated", PreviewGeneratedScript)
+    .register("check-generated", CheckGeneratedScript)
     .register("fonts", FontsScript)
     .register("test", TestScript)
     .register("check-no-px", CheckNoPxScript)

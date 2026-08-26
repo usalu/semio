@@ -14,7 +14,7 @@ const RASTER_PLAY_SURFACE_NAVIGATOR: &str = "raster.play.navigator";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::raster::create_raster_app`. No `🎚️options` node:
 /// the navigator has no live chrome measures of its own.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: RASTER_PLAY_WINDOW_NAVIGATOR.into(),
         label: LocalizedLabel::native("Navigator", "Navigator"),
@@ -35,7 +35,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(document: &RasterDocument, config: &RasterConfig) -> UiNode {
+pub fn render(document: &RasterDocument, config: &RasterConfig) -> UiNode {
     build_paint_2d_scene(RASTER_PLAY_SURFACE_NAVIGATOR, crate::editor::raster::RASTER_PLAY_CONTROLLER_ID, raster_scene(document, config, config.active_utility_id.as_str(), "navigator"))
 }
 //#endregion 🔖️Render

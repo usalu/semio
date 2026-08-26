@@ -26,7 +26,7 @@ fn mutation() -> VcsDemoMutation {
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
 #[semio_framework_async_macros::async_test]
-async fn applies_to_committed_after() {
+fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_vcs_mutation(&mut snapshot, &mutation()).expect("change-counter applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-counter/sets-counter-to-seven: applied state differs from committed after-snapshot");
@@ -35,7 +35,7 @@ async fn applies_to_committed_after() {
 /// 🔢 `change-counter` is an ABSOLUTE set of the `counter` scalar, not an increment: 3 becomes the
 /// payload's 7, never 3 + 7.
 #[semio_framework_async_macros::async_test]
-async fn counter_is_set_absolutely_not_incremented() {
+fn counter_is_set_absolutely_not_incremented() {
     let base = before();
     assert_eq!(base.counter, 3, "sets-counter-to-seven's before-snapshot must start at 3 for this assertion to mean anything");
     let mut snapshot = base.clone();
@@ -50,7 +50,7 @@ async fn counter_is_set_absolutely_not_incremented() {
 
 /// ↩️ The inverse is a `change-counter` back to BASE's own counter value.
 #[semio_framework_async_macros::async_test]
-async fn inverse_restores_the_previous_counter() {
+fn inverse_restores_the_previous_counter() {
     let base = before();
     let mutation = mutation();
     let inverse = inverse_vcs_mutation(&base, &mutation);
@@ -65,7 +65,7 @@ async fn inverse_restores_the_previous_counter() {
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: VcsSnapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
@@ -80,7 +80,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ The declared outcome matches the diff builder: a clean apply, and the sparse diff pins the
 /// `counter` field alone.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-counter/sets-counter-to-seven declares an applied outcome");
     let produced = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(&mutation(), &before());
@@ -91,7 +91,7 @@ async fn declared_outcome_holds() {
 /// 🔺️ The produced diff is EXACTLY the committed one: the `counter` lane carries the ABSOLUTE new
 /// value 7, never a delta of +4 — the wire format has no increment shape to express one in.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let outcome = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
@@ -104,7 +104,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical: it decodes to the artifact's own diff type and
 /// re-encodes byte-for-byte, so the file is a faithful `VcsDiff`, not prose that merely resembles one.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::vcs::VcsDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -114,7 +114,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff DIRECTLY to `before` yields the committed `after` — the diff is a
 /// complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::vcs::VcsDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::vcs::VcsDiff as protocol::MutationDiff<VcsSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-counter/sets-counter-to-seven: committed diff did not carry before to after");

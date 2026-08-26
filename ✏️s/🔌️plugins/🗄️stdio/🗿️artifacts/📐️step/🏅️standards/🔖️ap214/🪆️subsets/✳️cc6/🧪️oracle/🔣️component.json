@@ -26,6 +26,9 @@
     {
       "id": "step-ap214-cc6",
       "capability": "step-ap214-cc6-mutate",
+      "standardDirectoryName": "🔖️ap214",
+      "subsetDirectoryName": "✳️cc6",
+      "vectors": [],
       "kinds": [
         "no-mutation",
         "set-snapshot",

@@ -28,7 +28,7 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub async fn vcs_play_labels(cfg: &VcsDemoConfig) -> &'static VcsPlayLabels {
+pub fn vcs_play_labels(cfg: &VcsDemoConfig) -> &'static VcsPlayLabels {
     semio_framework_plugin::resolve_labels_for_locale::<VcsPlayLabels>(&cfg.locale)
 }
 //#endregion 🔖️Resolvers
@@ -39,7 +39,7 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn labels_resolve_native_english_and_german_from_the_config_locale() {
+    fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(vcs_play_labels(&VcsDemoConfig::default()).commit.as_str(), "Commit");
         assert_eq!(vcs_play_labels(&VcsDemoConfig { locale: "de-DE".into(), ..VcsDemoConfig::default() }).undo.as_str(), "Rückgängig");
     }

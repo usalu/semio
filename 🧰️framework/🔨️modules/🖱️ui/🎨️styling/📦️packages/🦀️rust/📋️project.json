@@ -10,6 +10,20 @@
         "forwardAllArgs": true
       }
     },
+    "preview-generated": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts preview-generated"
+      }
+    },
+    "check-generated": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check-generated"
+      }
+    },
     "fonts": {
       "executor": "nx:run-commands",
       "options": {

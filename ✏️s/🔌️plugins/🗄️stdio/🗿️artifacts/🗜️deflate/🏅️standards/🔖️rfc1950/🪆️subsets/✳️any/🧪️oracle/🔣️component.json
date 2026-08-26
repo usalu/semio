@@ -26,6 +26,21 @@
     {
       "id": "deflate-rfc1950-any",
       "capability": "deflate-rfc1950-mutate",
+      "standardDirectoryName": "🔖️rfc1950",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "raises-the-flevel-hint-and-extends-the-payload",
+              "directoryName": "🧪️raises-the-flevel-hint-and-extends-the-payload"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

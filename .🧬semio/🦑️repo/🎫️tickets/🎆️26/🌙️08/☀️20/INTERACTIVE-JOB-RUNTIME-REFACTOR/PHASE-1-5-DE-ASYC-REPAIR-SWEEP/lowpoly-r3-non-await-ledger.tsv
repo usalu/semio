@@ -1,0 +1,57 @@
+E0053	method `render` has an incompatible type for trait	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs	71
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/👁️show-edges/🦀️component.rs	12
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs	43
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🗂️select/🦀️component.rs	26
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️model/🦀️component.rs	84
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs	43
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🗂️select/🦀️component.rs	26
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🗂️select/🦀️component.rs	38
+E0631	type mismatch in function arguments	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🌞️sun/🦀️component.rs	11
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs	81
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🗂️select/🦀️component.rs	38
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs	81
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs	102
+E0277	the trait bound `semio_framework_ui_contract::Label: From<semio_framework_plugin::Label>` is not satisfied	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs	29
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs	102
+E0277	the trait bound `semio_framework_ui_contract::Label: From<LabelText>` is not satisfied	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs	35
+E0277	the trait bound `semio_framework_ui_contract::Label: From<semio_framework_plugin::Label>` is not satisfied	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️layers/🦀️component.rs	26
+E0277	the trait bound `semio_framework_ui_contract::Label: From<LabelText>` is not satisfied	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️layers/🦀️component.rs	32
+E0599	no associated function or constant named `data` found for struct `semio_framework_ui_contract::Label` in the current scope	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs	45
+E0277	the trait bound `semio_framework_ui_contract::Label: From<&str>` is not satisfied	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs	60
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs	69
+E0599	no method named `ok_or_else` found for enum `Result<T, E>` in the current scope	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs	73
+E0599	no associated function or constant named `data` found for struct `semio_framework_ui_contract::Label` in the current scope	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs	82
+E0277	the trait bound `semio_framework_ui_contract::Label: From<LabelText>` is not satisfied	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs	102
+E0369	binary operation `==` cannot be applied to type `impl Future<Output = &'static str>`	/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/macros/mod.rs	46
+E0277	`impl Future<Output = &'static str>` doesn't implement `Debug`	/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/macros/mod.rs	51
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️fixture/🦀️component.rs	72
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💬️engagement/🦀️component.rs	43
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/./././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️fixture/🦀️component.rs	76
+E0308	arguments to this function are incorrect	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️component.rs	865
+E0308	arguments to this function are incorrect	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️component.rs	926
+E0277	`&std::sync::Arc<BTreeMap<std::string::String, std::string::String>>` is not an iterator	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️component.rs	753
+E0277	`&std::sync::Arc<BTreeMap<std::string::String, std::string::String>>` is not an iterator	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️component.rs	809
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1531
+E0689	can't call method `saturating_add` on ambiguous numeric type `{integer}`	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	709
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	816
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	819
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	174
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	174
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1308
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1313
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	195
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	195
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	230
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	231
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	238
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	246
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	247
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	260
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	261
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1714
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1715
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1418
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1424
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1434
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1467
+E0308	mismatched types	✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/././../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1486

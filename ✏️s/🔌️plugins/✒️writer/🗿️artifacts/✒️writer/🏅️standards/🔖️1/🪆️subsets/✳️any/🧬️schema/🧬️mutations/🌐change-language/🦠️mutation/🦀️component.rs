@@ -16,22 +16,22 @@ pub struct ChangeLanguage {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_language(new_language_id: String) -> WriterMutation {
+pub fn change_language(new_language_id: String) -> WriterMutation {
     WriterMutation::ChangeLanguage(ChangeLanguage { new_language_id })
 }
 
 impl MutationKind<WriterSnapshot, WriterMutation> for ChangeLanguage {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "language", kind: "change-language", record: "ChangedLanguage" };
 
-    async fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
+    fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
         super::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &WriterSnapshot) -> Vec<WriterMutation> {
+    fn inverse(&self, base: &WriterSnapshot) -> Vec<WriterMutation> {
         super::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change document language to \"{}\"", self.new_language_id)
     }
 }

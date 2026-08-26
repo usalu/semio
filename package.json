@@ -37,27 +37,6 @@
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
-    "compose/client/bin/engine",
-    "compose/client/bin/gql",
-    "compose/client/lib/go",
-    "compose/client/lib/js",
-    "compose/client/lib/net/Compose",
-    "compose/client/lib/py",
-    "compose/client/lib/query",
-    "compose/client/lib/react",
-    "compose/client/lib/rs",
-    "compose/client/lib/rs/pkg",
-    "compose/client/lib/sketchpad/doc",
-    "compose/client/lib/sketchpad/js",
-    "compose/client/lib/sketchpad/play",
-    "compose/client/schema/sqlite",
-    "compose/client/ui/3dm/Compose.Rhino",
-    "compose/client/ui/3dm/ui",
-    "compose/client/ui/desktop",
-    "compose/client/ui/gh/Compose.Grasshopper",
-    "compose/client/ui/vscode",
-    "compose/dev/algorithm",
-    "compose/fixture",
     "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
     "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
@@ -73,7 +52,7 @@
   "engines": {
     "bun": ">=1.2.0"
   },
-  "packageManager": "bun@1.2.5",
+  "packageManager": "bun@1.3.14",
   "scripts": {
     "postinstall": "bun ./📜️script.ts setup postinstall",
     "nx": "bun ./📜️script.ts nx",
@@ -84,9 +63,6 @@
     "dev:storybook:ui": "bun nx run workspace:dev-storybook-ui",
     "dev:storybook:puzzle": "bun nx run workspace:dev-storybook-puzzle",
     "dev:storybook:puzzle:2d": "bun nx run workspace:dev-storybook-puzzle-2d",
-    "dev:storybook:compose": "bun nx run workspace:dev-storybook-compose",
-    "dev:storybook:compose:algorithms": "bun nx run workspace:dev-storybook-compose-algorithms",
-    "dev:storybook:compose:ui": "bun nx run workspace:dev-storybook-compose-ui",
     "dev:storybook:styling": "bun nx run workspace:dev-storybook-styling",
     "dev:storybook:puzzle:3d": "bun nx run workspace:dev-storybook-puzzle-3d",
     "dev:storybook:puzzle:5d": "bun nx run workspace:dev-storybook-puzzle-5d",
@@ -162,9 +138,6 @@
     "cpp:test": "bun nx run workspace:cpp-test --",
     "publish": "bun ./📜️script.ts publish",
     "purge": "bun ./📜️script.ts purge",
-    "query:build": "bun nx run @semio-tech/compose-query:build",
-    "query:test": "bun nx run @semio-tech/compose-query:test",
-    "query:wasm": "bun ./📜️script.ts query wasm",
     "wasm:flow-core": "nx run semio-framework-os-flow-core:wasm"
   },
   "devDependencies": {
@@ -229,7 +202,6 @@
   },
   "overrides": {
     "@semio-tech/assets": "workspace:*",
-    "@semio-tech/compose-js": "workspace:*",
     "diff": "^8.0.3",
     "tmp": "^0.2.5"
   }

@@ -33,17 +33,17 @@ mod wasm_bridge {
 
         #[wasm_bindgen(js_name = projectionJson)]
         pub async fn snapshot_json(&self) -> Result<String, JsValue> {
-            self.store.borrow().snapshot_json().await.map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
         pub async fn envelope_json(&self) -> Result<String, JsValue> {
-            self.store.borrow().envelope_json().await.map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = generation)]
         pub async fn generation(&self) -> u32 {
-            self.store.borrow().generation().await as u32
+            self.store.borrow().generation() as u32
         }
     }
 }

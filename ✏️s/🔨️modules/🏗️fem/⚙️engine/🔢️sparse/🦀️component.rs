@@ -335,7 +335,7 @@ pub fn ldlt_factor(a: &CscSym) -> Result<LdltFactor, SparseError> {
         ldlt_column(a, &mut map_cols, &mut d, &mut row_lists, j)?;
     }
 
-    let l_cols = map_cols.into_iter().map(BTreeMap::into_iter).collect();
+    let l_cols = map_cols.into_iter().map(|column| column.into_iter().collect()).collect();
     Ok(LdltFactor { n, l_cols, d })
 }
 
@@ -2166,7 +2166,7 @@ impl ModalInputConstruction {
                     return Err(b"modal-input-mass-order");
                 }
                 if self.row < n {
-                    let value = self.mass.as_ref().map(|mass| mass.get(self.row)).or_else(|| self.mounted_mass.as_ref().and_then(|mass| mass.get(self.row))).ok_or(b"modal-input-mass-owner")?;
+                    let value = self.mass.as_ref().map(|mass| mass.get(self.row)).or_else(|| self.mounted_mass.as_ref().and_then(|mass| mass.get(self.row))).ok_or(b"modal-input-mass-owner" as &'static [u8])?;
                     if !value.is_finite() || value <= 0.0 {
                         return Err(b"modal-input-mass-value");
                     }
@@ -2184,7 +2184,7 @@ impl ModalInputConstruction {
                     let end = matrix.indptr[self.row + 1] as usize;
                     if self.entry < end {
                         if matrix.indices[self.entry] as usize >= self.row {
-                            self.upper_count = self.upper_count.checked_add(1).ok_or(b"modal-input-upper-overflow")?;
+                            self.upper_count = self.upper_count.checked_add(1).ok_or(b"modal-input-upper-overflow" as &'static [u8])?;
                         }
                         self.entry += 1;
                     } else {
@@ -2249,7 +2249,7 @@ impl ModalInputConstruction {
             }
             ModalInputStage::CopyMountedMass => {
                 if self.row < n {
-                    let value = self.mounted_mass.as_ref().and_then(|mass| mass.get(self.row)).ok_or(b"modal-input-mounted-mass-owner")?;
+                    let value = self.mounted_mass.as_ref().and_then(|mass| mass.get(self.row)).ok_or(b"modal-input-mounted-mass-owner" as &'static [u8])?;
                     self.mass_values.push(value);
                     self.row += 1;
                 } else {
@@ -2566,7 +2566,7 @@ impl InteractiveJob for PcgJob {
             return StepOutcome::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return StepOutcome::Fault(JobFault { detail: b"stale-fem-pcg-operation".to_vec() });
+            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
         }
         context.set_stage("fem.pcg");
         let mut units = 0;
@@ -2587,15 +2587,27 @@ impl InteractiveJob for PcgJob {
             }
         }
         if self.state.stage == PcgStage::Complete {
-            return StepOutcome::Complete(CommitCandidate { state: self.checkpoint_bytes(), output: serde_json::to_vec(&self.preview()).expect("pcg output is serializable") });
+            let bytes = serde_json::to_vec(&self.preview()).expect("pcg output is serializable");
+            return match context.payload_from_bytes(JobPayloadStream::CommitOutput, &bytes) {
+                Ok(output) => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output }),
+                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+            };
         }
         if self.state.preview_due {
             self.state.preview_due = false;
-            return StepOutcome::PreviewReady(serde_json::to_vec(&self.preview()).expect("pcg preview is serializable"));
+            let bytes = serde_json::to_vec(&self.preview()).expect("pcg preview is serializable");
+            return match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
+                Ok(preview) => StepOutcome::PreviewReady(preview),
+                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+            };
         }
         if self.state.checkpoint_due {
             self.state.checkpoint_due = false;
-            return StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: self.checkpoint_bytes(), applied_progress: self.state.iteration as u64 });
+            let bytes = self.checkpoint_bytes();
+            return match context.payload_from_bytes(JobPayloadStream::CheckpointState, &bytes) {
+                Ok(state) => StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state, applied_progress: self.state.iteration as u64 }),
+                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+            };
         }
         StepOutcome::Yield
     }

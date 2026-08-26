@@ -18,6 +18,21 @@
     {
       "id": "semio-v1-audio",
       "capability": "semio-v1-audio-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️audio",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "rerates-to-48-khz-and-rewrites-the-right-channel",
+              "directoryName": "🧪️rerates-to-48-khz-and-rewrites-the-right-channel"
+            }
+          ]
+        }
+      ],
       "kinds": ["no-mutation", "set-snapshot", "set-sample-rate", "set-format", "insert-channel", "remove-channel", "set-channel-samples", "insert-tag", "remove-tag", "set-tag-value"]
     }
   ]

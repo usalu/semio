@@ -18,6 +18,142 @@
     {
       "id": "semio-v1-image",
       "capability": "semio-v1-image-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️image",
+      "vectors": [
+        {
+          "mutationId": "insert-frame",
+          "sourceMutationDirectoryName": "➕️insert-frame",
+          "mutationDirectoryName": "➕️insert-frame",
+          "scenarios": [
+            {
+              "id": "appends-a-second-frame-at-the-end",
+              "directoryName": "🧪️appends-a-second-frame-at-the-end"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-frame",
+          "sourceMutationDirectoryName": "🔀️move-frame",
+          "mutationDirectoryName": "🔀️move-frame",
+          "scenarios": [
+            {
+              "id": "moves-the-last-frame-to-the-front",
+              "directoryName": "🧪️moves-the-last-frame-to-the-front"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-frame",
+          "sourceMutationDirectoryName": "📄remove-frame",
+          "mutationDirectoryName": "📄remove-frame",
+          "scenarios": [
+            {
+              "id": "removes-the-leading-frame",
+              "directoryName": "🧪️removes-the-leading-frame"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-metadata-entry",
+          "sourceMutationDirectoryName": "🗑️remove-metadata-entry",
+          "mutationDirectoryName": "🗑️remove-metadata-entry",
+          "scenarios": [
+            {
+              "id": "removes-the-comment-entry-and-keeps-the-author-entry",
+              "directoryName": "🧪️removes-the-comment-entry-and-keeps-the-author-entry"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-bit-depth",
+          "sourceMutationDirectoryName": "🔢️set-bit-depth",
+          "mutationDirectoryName": "🔢️set-bit-depth",
+          "scenarios": [
+            {
+              "id": "raises-the-source-bit-depth-to-sixteen",
+              "directoryName": "🧪️raises-the-source-bit-depth-to-sixteen"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-colorspace",
+          "sourceMutationDirectoryName": "🌈️set-colorspace",
+          "mutationDirectoryName": "🌈️set-colorspace",
+          "scenarios": [
+            {
+              "id": "records-the-source-colorspace-as-rgba",
+              "directoryName": "🧪️records-the-source-colorspace-as-rgba"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-dimensions",
+          "sourceMutationDirectoryName": "📐️set-dimensions",
+          "mutationDirectoryName": "📐️set-dimensions",
+          "scenarios": [
+            {
+              "id": "widens-the-frameless-canvas-to-four-by-two",
+              "directoryName": "🧪️widens-the-frameless-canvas-to-four-by-two"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-frame-delay",
+          "sourceMutationDirectoryName": "⏱️set-frame-delay",
+          "mutationDirectoryName": "⏱️set-frame-delay",
+          "scenarios": [
+            {
+              "id": "slows-the-second-frame-down",
+              "directoryName": "🧪️slows-the-second-frame-down"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-frame-pixels",
+          "sourceMutationDirectoryName": "🟪️set-frame-pixels",
+          "mutationDirectoryName": "🟪️set-frame-pixels",
+          "scenarios": [
+            {
+              "id": "repaints-the-only-frame-black",
+              "directoryName": "🧪️repaints-the-only-frame-black"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-icc",
+          "sourceMutationDirectoryName": "🎨️set-icc",
+          "mutationDirectoryName": "🎨️set-icc",
+          "scenarios": [
+            {
+              "id": "attaches-an-icc-profile-where-there-was-none",
+              "directoryName": "🧪️attaches-an-icc-profile-where-there-was-none"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-metadata-entry",
+          "sourceMutationDirectoryName": "🏷️set-metadata-entry",
+          "mutationDirectoryName": "🏷️set-metadata-entry",
+          "scenarios": [
+            {
+              "id": "rewrites-the-existing-author-entry",
+              "directoryName": "🧪️rewrites-the-existing-author-entry"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📸️set-snapshot",
+          "mutationDirectoryName": "📸️set-snapshot",
+          "scenarios": [
+            {
+              "id": "retargets-the-document-onto-a-grayscale-sixteen-bit-variant",
+              "directoryName": "🧪️retargets-the-document-onto-a-grayscale-sixteen-bit-variant"
+            }
+          ]
+        }
+      ],
       "kinds": ["no-mutation", "set-snapshot", "set-dimensions", "set-colorspace", "set-bit-depth", "set-icc", "insert-frame", "remove-frame", "move-frame", "set-frame-delay", "set-frame-pixels", "set-metadata-entry", "remove-metadata-entry"]
     }
   ]

@@ -20,6 +20,21 @@
     {
       "id": "semio-v1-any",
       "capability": "semio-v1-any-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "replaces-the-envelope-wrapping-a-value-subset",
+              "directoryName": "🧪️replaces-the-envelope-wrapping-a-value-subset"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

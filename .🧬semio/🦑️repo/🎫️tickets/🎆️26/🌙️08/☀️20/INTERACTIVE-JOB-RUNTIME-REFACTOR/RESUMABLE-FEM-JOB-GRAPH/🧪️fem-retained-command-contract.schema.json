@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://fem/retained-command-contract/v1",
+  "type": "object",
+  "required": ["version", "routes"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "routes": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "controller": { "const": "s.fem.fem2d@1/*#editor" },
+              "documentSchema": { "const": "fem.2d" },
+              "payloadSchema": { "const": "fem.2d.tool-command.v1" },
+              "actions": {
+                "const": ["setAnalysisSettings", "setCamera", "setResultDisplay", "setLocale"]
+              }
+            }
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "controller": { "const": "s.fem.fem3d@1/*#editor" },
+              "documentSchema": { "const": "fem.3d" },
+              "payloadSchema": { "const": "fem.3d.tool-command.v1" },
+              "actions": {
+                "const": ["setAnalysisSettings", "setCamera", "setResultDisplay"]
+              }
+            }
+          },
+          "minContains": 1,
+          "maxContains": 1
+        }
+      ],
+      "items": {
+        "type": "object",
+        "required": ["controller", "documentSchema", "payloadSchema", "maximumRawBytes", "maximumWorkItems", "actions"],
+        "additionalProperties": false,
+        "properties": {
+          "controller": { "enum": ["s.fem.fem2d@1/*#editor", "s.fem.fem3d@1/*#editor"] },
+          "documentSchema": { "enum": ["fem.2d", "fem.3d"] },
+          "payloadSchema": { "enum": ["fem.2d.tool-command.v1", "fem.3d.tool-command.v1"] },
+          "maximumRawBytes": { "const": 8192 },
+          "maximumWorkItems": { "const": 4096 },
+          "actions": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 4,
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    }
+  }
+}

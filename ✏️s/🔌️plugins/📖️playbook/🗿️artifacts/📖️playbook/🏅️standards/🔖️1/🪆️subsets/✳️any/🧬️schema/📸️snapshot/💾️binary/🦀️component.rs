@@ -10,12 +10,12 @@ use crate::artifacts::playbook::PlaybookSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `PlaybookSnapshot` to its binary pack form.
-pub async fn encode(document: &PlaybookSnapshot) -> Vec<u8> {
+pub fn encode(document: &PlaybookSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `PlaybookSnapshot` from its binary pack form.
-pub async fn decode(bytes: &[u8]) -> Result<PlaybookSnapshot, PackError> {
+pub fn decode(bytes: &[u8]) -> Result<PlaybookSnapshot, PackError> {
     <PlaybookSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -52,8 +52,8 @@ mod tests {
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let mut store: ArtifactStore<PlaybookSnapshot, PlaybookMutation> = ArtifactStore::new(create_document_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook-demo", empty_playbook_snapshot(), None)).expect("valid artifact store fixture");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![change_title_operation(Some("Recipe".into()))], description: None }).expect("apply");
+        let mut store: ArtifactStore<PlaybookSnapshot, PlaybookMutation> = ArtifactStore::new(create_document_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook-demo", empty_playbook_snapshot(), None)).await.expect("valid artifact store fixture");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![change_title_operation(Some("Recipe".into()))], description: None }).await.expect("apply");
         let edit: &Edit<PlaybookMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<PlaybookSnapshot, PlaybookMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }

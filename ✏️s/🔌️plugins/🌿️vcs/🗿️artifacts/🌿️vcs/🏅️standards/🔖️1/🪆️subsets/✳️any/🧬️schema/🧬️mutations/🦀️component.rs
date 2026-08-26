@@ -44,7 +44,7 @@ pub const KINDS: &[&str] = &["rename-vcs", "change-counter", "change-notes", "ch
 /// point (mirrors dag's `apply_dag_mutation`/puzzle5d's `apply_puzzle5d_mutation`). A rejecting
 /// diff carries an empty `VcsDiff`, so the snapshot is left untouched and `Ok(())` is still
 /// returned; read [`protocol::MutationOutcome::messages`] to distinguish the two.
-pub async fn apply_vcs_mutation(snapshot: &mut VcsSnapshot, mutation: &VcsDemoMutation) -> protocol::MutationApplyResult<()> {
+pub fn apply_vcs_mutation(snapshot: &mut VcsSnapshot, mutation: &VcsDemoMutation) -> protocol::MutationApplyResult<()> {
     use store::MutationDiff;
     let next = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(mutation, snapshot).diff().apply(snapshot)?;
     *snapshot = next;
@@ -52,7 +52,7 @@ pub async fn apply_vcs_mutation(snapshot: &mut VcsSnapshot, mutation: &VcsDemoMu
 }
 
 /// ↩️ The typed mutation steps that undo `mutation` against `snapshot`.
-pub async fn inverse_vcs_mutation(snapshot: &VcsSnapshot, mutation: &VcsDemoMutation) -> Vec<VcsDemoMutation> {
+pub fn inverse_vcs_mutation(snapshot: &VcsSnapshot, mutation: &VcsDemoMutation) -> Vec<VcsDemoMutation> {
     <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::inverse(mutation, snapshot)
 }
 //#endregion 🔖️Apply
@@ -93,28 +93,28 @@ mod tests {
     use protocol::{Mutation, MutationDiff, MutationKind, SemanticMutation};
 
     #[semio_framework_async_macros::async_test]
-    async fn vcs_demo_mutation_round_trips_store() {
+    fn vcs_demo_mutation_round_trips_store() {
         let mut store = store::ArtifactStore::<VcsSnapshot, VcsDemoMutation>::new(store::create_document_envelope("vcs.document", "vcs", empty_vcs_snapshot(), None)).expect("valid artifact store fixture");
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![change_counter(3)], description: None }).expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").counter, 3);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn rename_vcs_inverse_law_holds() {
+    fn rename_vcs_inverse_law_holds() {
         let base = empty_vcs_snapshot();
         let mutation = rename_vcs("Renamed".into());
         assert_mutation_inverse_law(&base, &mutation);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn change_counter_inverse_law_holds() {
+    fn change_counter_inverse_law_holds() {
         let base = empty_vcs_snapshot();
         let mutation = change_counter(42);
         assert_mutation_inverse_law(&base, &mutation);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn add_tag_then_remove_tag_inverse_laws_hold() {
+    fn add_tag_then_remove_tag_inverse_laws_hold() {
         let base = empty_vcs_snapshot();
         assert_mutation_inverse_law(&base, &add_tag("wip".into()));
         let mut with_tag = base.clone();
@@ -123,7 +123,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn change_notes_diff_absorb_law_holds() {
+    fn change_notes_diff_absorb_law_holds() {
         let base = empty_vcs_snapshot();
         let d1 = change_notes("first".into()).diff(&base).into_parts().0;
         let mid = d1.apply(&base).expect("valid mutation diff");
@@ -132,7 +132,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn add_tag_is_a_noop_when_base_already_has_the_tag() {
+    fn add_tag_is_a_noop_when_base_already_has_the_tag() {
         let mut base = empty_vcs_snapshot();
         base.tags.push("wip".into());
         let payload = AddTag { tag: "wip".into() };
@@ -149,7 +149,7 @@ mod tests {
     /// introduces no Fatal path (no `duplicate-id`/`invariant` verb in its vocabulary).
     /// `assert_outcome_policy_matrix` is not landed under that name — only `assert_policy_matrix`.
     #[semio_framework_async_macros::async_test]
-    async fn remove_tag_missing_target_is_error() {
+    fn remove_tag_missing_target_is_error() {
         let base = empty_vcs_snapshot();
         let mutation = VcsDemoMutation::RemoveTag(RemoveTag { tag: "gone".into() });
         protocol::testkit::assert_missing_target_is_error(&base, &mutation);
@@ -174,7 +174,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn dispatch_registers_semantic_descriptors() {
+    fn dispatch_registers_semantic_descriptors() {
         register_vcs_demo_mutation_descriptors();
         for kind in VcsDemoMutation::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);

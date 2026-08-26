@@ -26,6 +26,21 @@
     {
       "id": "gif-89a-any",
       "capability": "gif-89a-mutate",
+      "standardDirectoryName": "🔖️89a",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "slows-the-second-frame-and-marks-it-do-not-dispose",
+              "directoryName": "🧪️slows-the-second-frame-and-marks-it-do-not-dispose"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

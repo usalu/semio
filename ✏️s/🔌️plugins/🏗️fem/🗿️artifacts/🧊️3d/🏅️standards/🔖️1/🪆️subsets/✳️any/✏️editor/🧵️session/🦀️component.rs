@@ -4,7 +4,7 @@ use crate::analyses::{AssemblyCsrBuild, AssemblyJob, AssemblyJobConstruction, Mo
 use crate::artifacts::fem3d::{element_id, load_id, Fem3dSnapshot, FemElement, FemLoad};
 use crate::elements3d::Tet4;
 use crate::mesh::{MeshJob, MeshOpts, MountedPlanarDomain};
-use crate::model::{Bar3, Dof, Elements, Frame3, Node};
+use crate::model::{Bar3, Dof, Element, Elements, Frame3, Node};
 use crate::sparse::{Csr, LdltJob, ModalInputConstruction, MountedScalarSlots, PcgJob, PcgJobConstruction, SubspaceIterationJob};
 use semio_framework::kernel::{Effect, JobPlacement};
 use semio_framework_job::{Generation, InteractiveJob, OperationId, RetainedJobPayload, RevisionId, StepBudget, StepContext, StepOutcome};
@@ -1268,7 +1268,7 @@ impl Fem3dNumericalChild {
                     self.dof_cursor = 0;
                 } else {
                     let dof = [Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz][self.dof_cursor];
-                    if let Some((full, compact)) = self.assembly.as_ref().and_then(|assembly| assembly.visual_equation_indices(&self.analysis_node_ids[self.node_cursor], dof)) {
+                    if let Some((full, compact)) = self.assembly.as_ref().and_then(|assembly| self.analysis_node_ids.get(self.node_cursor).and_then(|node_id| assembly.visual_equation_indices(node_id, dof))) {
                         self.full_equations[self.node_cursor][self.dof_cursor] = Some(full);
                         self.equations[self.node_cursor][self.dof_cursor] = compact;
                         if let Some(compact) = compact {
@@ -2911,7 +2911,7 @@ impl MountedState {
         }
         if !self.numerical_done {
             let freshness = self.identity.freshness(0);
-            let operation = self.identity.operation();
+            let operation = semio_framework_job::Operation::new(self.identity.operation, self.identity.base_revision, self.identity.generation, self.identity.job);
             let Some(snapshot) = self.snapshot.as_ref() else { return self.fail(b"fem3d.numerical-snapshot-owner".to_vec()) };
             let Some(solver) = self.solver.as_mut() else { return self.fail(b"fem3d.numerical-solver-owner".to_vec()) };
             let step = self.numerical.as_mut().map(|numerical| numerical.step(snapshot, solver, &mut self.backing, freshness, operation, &mut cx));

@@ -20,6 +20,120 @@
     {
       "id": "wires-1-any",
       "capability": "wires-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-node-kind",
+          "sourceMutationDirectoryName": "🏷️change-node-kind",
+          "mutationDirectoryName": "🏷️change-node-kind",
+          "scenarios": [
+            {
+              "id": "reports-a-no-op-when-the-kind-already-reads-topic",
+              "directoryName": "🧪️reports-a-no-op-when-the-kind-already-reads-topic"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-shape",
+          "sourceMutationDirectoryName": "🔷change-node-shape",
+          "mutationDirectoryName": "🔷change-node-shape",
+          "scenarios": [
+            {
+              "id": "reports-a-no-op-when-the-shape-already-reads-circle",
+              "directoryName": "🧪️reports-a-no-op-when-the-shape-already-reads-circle"
+            }
+          ]
+        },
+        {
+          "mutationId": "connect-nodes",
+          "sourceMutationDirectoryName": "🔗connect-nodes",
+          "mutationDirectoryName": "🔗connect-nodes",
+          "scenarios": [
+            {
+              "id": "rejects-an-edge-whose-source-node-is-absent",
+              "directoryName": "🧪️rejects-an-edge-whose-source-node-is-absent"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-node",
+          "sourceMutationDirectoryName": "🌱create-node",
+          "mutationDirectoryName": "🌱create-node",
+          "scenarios": [
+            {
+              "id": "rejects-a-node-id-the-board-already-holds",
+              "directoryName": "🧪️rejects-a-node-id-the-board-already-holds"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-node",
+          "sourceMutationDirectoryName": "🗑️delete-node",
+          "mutationDirectoryName": "🗑️delete-node",
+          "scenarios": [
+            {
+              "id": "rejects-deleting-a-node-the-board-never-held",
+              "directoryName": "🧪️rejects-deleting-a-node-the-board-never-held"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-nodes",
+          "sourceMutationDirectoryName": "✂️disconnect-nodes",
+          "mutationDirectoryName": "✂️disconnect-nodes",
+          "scenarios": [
+            {
+              "id": "rejects-cutting-an-edge-the-board-never-carried",
+              "directoryName": "🧪️rejects-cutting-an-edge-the-board-never-carried"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-node-text",
+          "sourceMutationDirectoryName": "✏️edit-node-text",
+          "mutationDirectoryName": "✏️edit-node-text",
+          "scenarios": [
+            {
+              "id": "reports-a-no-op-when-the-label-is-retyped-verbatim",
+              "directoryName": "🧪️reports-a-no-op-when-the-label-is-retyped-verbatim"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-node",
+          "sourceMutationDirectoryName": "🧭move-node",
+          "mutationDirectoryName": "🧭move-node",
+          "scenarios": [
+            {
+              "id": "reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero",
+              "directoryName": "🧪️reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-node",
+          "sourceMutationDirectoryName": "📐resize-node",
+          "mutationDirectoryName": "📐resize-node",
+          "scenarios": [
+            {
+              "id": "reports-a-no-op-when-the-radius-already-matches",
+              "directoryName": "🧪️reports-a-no-op-when-the-radius-already-matches"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-node-root",
+          "sourceMutationDirectoryName": "🚩set-node-root",
+          "mutationDirectoryName": "🚩set-node-root",
+          "scenarios": [
+            {
+              "id": "reports-a-no-op-when-an-unflagged-node-is-set-to-not-root",
+              "directoryName": "🧪️reports-a-no-op-when-an-unflagged-node-is-set-to-not-root"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-node",
         "delete-node",

@@ -1,8 +1,8 @@
 {
   "macroHostFiles": 50,
   "macroInvocations": 50,
-  "commandRows": 775,
-  "uniqueCommandRows": 773,
+  "commandRows": 774,
+  "uniqueCommandRows": 772,
   "duplicateRows": [
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
@@ -16,15 +16,33 @@
   "fixtureMacroHostFiles": 1,
   "fixtureMacroInvocations": 2,
   "fixtureCommandRows": 4,
-  "boundedRows": 0,
+  "boundedRows": 194,
   "batchOnlyRows": 0,
-  "forbiddenRows": 0,
+  "forbiddenRows": 1,
   "deletedRows": 0,
-  "productionFactories": 11,
-  "productionRegistrations": 1,
+  "productionFactories": 24,
+  "productionRegistrations": 199,
   "productionDispatches": 3,
   "aliases": 4,
   "factoryContracts": [
+    {
+      "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "line": 657,
+      "factory": "WriterCommandJobFactory",
+      "status": "explicit"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "line": 380,
+      "factory": "Procedural2dBoundedCommandJobFactory",
+      "status": "explicit"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "line": 434,
+      "factory": "Procedural2dResumableCommandJobFactory",
+      "status": "explicit"
+    },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs",
       "line": 570,
@@ -44,88 +62,115 @@
       "status": "explicit"
     },
     {
+      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "line": 112,
+      "factory": "Fem2dRetainedCommandJobFactory",
+      "status": "explicit"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "line": 109,
+      "factory": "Fem3dRetainedCommandJobFactory",
+      "status": "explicit"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "line": 729,
+      "factory": "Process3dBoundedCommandJobFactory",
+      "status": "explicit"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "line": 783,
+      "factory": "Process3dResumableCommandJobFactory",
+      "status": "explicit"
+    },
+    {
       "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🦀️component.rs",
-      "line": 2460,
+      "line": 2609,
       "factory": "LayoutMediaExportJobFactory",
       "status": "explicit"
     },
     {
       "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🦀️component.rs",
-      "line": 2497,
+      "line": 2646,
       "factory": "LayoutExportJobFactory",
       "status": "explicit"
     },
     {
+      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "line": 671,
+      "factory": "DrawGestureOperationJobFactory",
+      "status": "explicit"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "line": 1608,
+      "factory": "BoundedFirstStepCommandJobFactory",
+      "status": "explicit"
+    },
+    {
       "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "line": 112,
+      "line": 115,
       "factory": "$factory",
       "status": "explicit"
     },
     {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "line": 7538,
+      "factory": "BoundedFirstStepCommandJobFactory",
+      "status": "explicit"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "line": 6098,
+      "factory": "BoundedFirstStepCommandJobFactory",
+      "status": "explicit"
+    },
+    {
       "file": "🧰️framework/🔨️modules/🎯️action-bus/🦀️component.rs",
-      "line": 554,
+      "line": 855,
       "factory": "EchoFactory",
       "status": "explicit"
     },
     {
       "file": "🧰️framework/🔨️modules/🎯️action-bus/🦀️component.rs",
-      "line": 647,
+      "line": 948,
       "factory": "NumberFactory",
       "status": "explicit"
     },
     {
+      "file": "🧰️framework/🔨️modules/🎯️action-bus/🦀️component.rs",
+      "line": 1102,
+      "factory": "RetainedNumberFactory",
+      "status": "explicit"
+    },
+    {
       "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
-      "line": 14097,
+      "line": 14490,
       "factory": "$factory<A>",
       "status": "explicit"
     },
     {
       "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
-      "line": 14236,
+      "line": 14678,
       "factory": "FrameworkConfigurationBinaryJobFactory<A>",
       "status": "explicit"
     },
     {
       "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
-      "line": 15438,
-      "factory": "BoundedFirstStepCommandJobFactory<A>",
+      "line": 16364,
+      "factory": "TypedCommandFullOperationJobFactory<A>",
+      "status": "explicit"
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
+      "line": 30492,
+      "factory": "TestRetainedCommandFactory",
       "status": "explicit"
     }
   ],
-  "frameworkReservedRoutes": [
-    {
-      "id": "undo",
-      "status": "failClosedPendingFactory"
-    },
-    {
-      "id": "redo",
-      "status": "failClosedPendingFactory"
-    },
-    {
-      "id": "commitCheckpoint",
-      "status": "failClosedPendingFactory"
-    },
-    {
-      "id": "createAlternative",
-      "status": "failClosedPendingFactory"
-    },
-    {
-      "id": "switchAlternative",
-      "status": "failClosedPendingFactory"
-    },
-    {
-      "id": "checkoutCheckpoint",
-      "status": "failClosedPendingFactory"
-    },
-    {
-      "id": "revertToCommand",
-      "status": "failClosedPendingFactory"
-    },
-    {
-      "id": "configuration-binary",
-      "status": "failClosedPendingFactory"
-    }
-  ],
+  "frameworkReservedRoutes": [],
   "reservedImporterOwners": [
     {
       "owner": "Procedural2dPlayApp",
@@ -341,350 +386,1481 @@
   "globalPayloadStores": [
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️component.rs",
-      "line": 151,
-      "text": "thread_local! {"
+      "line": 152,
+      "text": "OnceLock<Mutex<",
+      "owners": [
+        {
+          "name": "WRITER_SCRATCH",
+          "rustType": "OnceLock<Mutex<HashMap<String, Arc<str>>>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🦀️component.rs",
       "line": 317,
-      "text": "thread_local! {"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "MATH_SCRATCH",
+          "rustType": "RefCell<HashMap<String, MathematicalWorkingScene>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-      "line": 288,
-      "text": "OnceLock<std::sync::Mutex<"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-      "line": 312,
-      "text": "OnceLock<std::sync::Mutex<"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-      "line": 298,
-      "text": "OnceLock<std::sync::Mutex<"
+      "line": 219,
+      "text": "OnceLock<std::sync::Mutex<",
+      "owners": [
+        {
+          "name": "LEASES",
+          "rustType": "std::sync::OnceLock<std::sync::Mutex<[Option<Procedural2dPublicationLease>; PROCEDURAL2D_PUBLICATION_SLOTS]>>",
+          "kind": "fixed-operation-registry"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-      "line": 322,
-      "text": "OnceLock<std::sync::Mutex<"
+      "line": 225,
+      "text": "OnceLock<std::sync::Mutex<",
+      "owners": [
+        {
+          "name": "LEASES",
+          "rustType": "std::sync::OnceLock<std::sync::Mutex<[Option<Procedural3dPublicationLease>; PROCEDURAL3D_PUBLICATION_SLOTS]>>",
+          "kind": "fixed-operation-registry"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️component.rs",
       "line": 177,
-      "text": "thread_local! {"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/🦀️component.rs",
-      "line": 291,
-      "text": "thread_local! {"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "FLOW_SCRATCH",
+          "rustType": "RefCell<HashMap<String, FlowWorkingScene>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️component.rs",
       "line": 518,
-      "text": "thread_local! {"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "SHOOTING_EMBLEM_SCRATCH",
+          "rustType": "std::cell::RefCell<std::collections::HashMap<String, SemioImageSnapshot>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs",
       "line": 325,
-      "text": "thread_local! {"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "BRIDGE",
+          "rustType": "RefCell<SequenceBridge<SequenceDomainAdapter>>",
+          "kind": "abi-bridge-retention"
+        },
+        {
+          "name": "RETAINED",
+          "rustType": "RefCell<Option<RetainedMessage>>",
+          "kind": "abi-bridge-retention"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🦀️component.rs",
       "line": 255,
-      "text": "thread_local! {"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "SEQUENCE_SCRATCH",
+          "rustType": "RefCell<HashMap<String, SequenceWorkingScene>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs",
-      "line": 2116,
-      "text": "thread_local! {"
+      "line": 2164,
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "MOUNTED",
+          "rustType": "RefCell<MountedRegistry>",
+          "kind": "fixed-operation-registry"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs",
       "line": 2048,
-      "text": "thread_local! {"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "FEM3D_BACKING_RECOVERY",
+          "rustType": "RefCell<Fem3dBackingRecovery>",
+          "kind": "fixed-operation-registry"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs",
       "line": 3371,
-      "text": "thread_local! {"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "MOUNTED",
+          "rustType": "RefCell<Registry>",
+          "kind": "fixed-operation-registry"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️component.rs",
       "line": 73,
-      "text": "thread_local! {"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "PROGRAM_BENCHMARKS_SCRATCH",
+          "rustType": "std::cell::RefCell<std::collections::HashMap<String, Vec<BenchmarkRecord>>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️component.rs",
       "line": 160,
-      "text": "thread_local! {"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "PROGRAM_KNOWLEDGE_SCRATCH",
+          "rustType": "std::cell::RefCell<std::collections::HashMap<String, Vec<KnowledgeRecord>>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
       "line": 227,
-      "text": "OnceLock<std::sync::Mutex<"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-      "line": 251,
-      "text": "OnceLock<std::sync::Mutex<"
+      "text": "OnceLock<std::sync::Mutex<",
+      "owners": [
+        {
+          "name": "LEASES",
+          "rustType": "std::sync::OnceLock<std::sync::Mutex<[Option<Process3dPublicationLease>; PROCESS3D_PUBLICATION_SLOTS]>>",
+          "kind": "fixed-operation-registry"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "line": 153,
-      "text": "thread_local! {"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "LOWPOLY_SCRATCH",
+          "rustType": "std::cell::RefCell<LowpolyScratch>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️component.rs",
       "line": 209,
-      "text": "thread_local! {"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "WIRES_SCRATCH",
+          "rustType": "std::cell::RefCell<std::collections::HashMap<String, WiresWorkingScene>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs",
       "line": 37,
-      "text": "OnceLock<Mutex<"
+      "text": "OnceLock<Mutex<",
+      "owners": [
+        {
+          "name": "TRY_VALUE_BLOBS",
+          "rustType": "OnceLock<Mutex<BTreeMap<String, TryValueBlob>>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs",
       "line": 45,
-      "text": "OnceLock<Mutex<"
+      "text": "OnceLock<Mutex<",
+      "owners": [
+        {
+          "name": "TRY_VALUES_BATCHES",
+          "rustType": "OnceLock<Mutex<BTreeMap<String, TryValuesBatch>>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-value/🦀️component.rs",
       "line": 147,
-      "text": "OnceLock<Mutex<"
+      "text": "OnceLock<Mutex<",
+      "owners": [
+        {
+          "name": "TRY_VALUE_SESSIONS",
+          "rustType": "OnceLock<Mutex<BTreeMap<FormsJobKey, TryValueSession>>>",
+          "kind": "resizable-operation-registry"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-value/🦀️component.rs",
       "line": 148,
-      "text": "OnceLock<Mutex<"
+      "text": "OnceLock<Mutex<",
+      "owners": [
+        {
+          "name": "ACTIVE_TRY_VALUE_GENERATIONS",
+          "rustType": "OnceLock<Mutex<BTreeMap<(String, String, String), u64>>>",
+          "kind": "resizable-operation-registry"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-value/🦀️component.rs",
-      "line": 350,
-      "text": "OnceLock<Mutex<"
+      "line": 344,
+      "text": "OnceLock<Mutex<",
+      "owners": [
+        {
+          "name": "FORMS_INPUT_REGISTRY",
+          "rustType": "OnceLock<Mutex<FormsInputRegistry>>",
+          "kind": "fixed-operation-registry"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-values/🦀️component.rs",
       "line": 17,
-      "text": "OnceLock<Mutex<"
+      "text": "OnceLock<Mutex<",
+      "owners": [
+        {
+          "name": "ACTIVE_BULK_GENERATIONS",
+          "rustType": "OnceLock<Mutex<BTreeMap<(String, String, String), u64>>>",
+          "kind": "resizable-operation-registry"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-values/🦀️component.rs",
       "line": 28,
-      "text": "OnceLock<Mutex<"
+      "text": "OnceLock<Mutex<",
+      "owners": [
+        {
+          "name": "BULK_SESSIONS",
+          "rustType": "OnceLock<Mutex<BTreeMap<BulkJobKey, BulkSession>>>",
+          "kind": "resizable-operation-registry"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🦀️component.rs",
       "line": 382,
-      "text": "thread_local! {"
-    },
-    {
-      "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs",
-      "line": 56,
-      "text": "thread_local! {"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "FORMS_SCRATCH",
+          "rustType": "RefCell<HashMap<String, FormsWorkingScene>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🦀️component.rs",
       "line": 67,
-      "text": "thread_local! {"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "EN1990_QK_SCRATCH",
+          "rustType": "RefCell<HashMap<String, Vec<En1990QkEntry>>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🦀️component.rs",
       "line": 95,
-      "text": "thread_local! {"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "DIN18599_CLIMATE_SCRATCH",
+          "rustType": "std::cell::RefCell<std::collections::HashMap<String, MonthlyClimate>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️component.rs",
       "line": 217,
-      "text": "thread_local! {"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "PLAYBOOK_SCRATCH",
+          "rustType": "RefCell<HashMap<String, Vec<PlaybookStep>>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🦀️component.rs",
       "line": 202,
-      "text": "thread_local! {"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "IMPERATIVE_FLOW_SCRATCH",
+          "rustType": "RefCell<HashMap<String, Path>>",
+          "kind": "child-content-scratch"
+        },
+        {
+          "name": "IMPERATIVE_SEED_SCRATCH",
+          "rustType": "RefCell<HashMap<String, BTreeMap<String, Value>>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚀️run-reconstruction/🦀️component.rs",
       "line": 347,
-      "text": "OnceLock<Mutex<"
+      "text": "OnceLock<Mutex<",
+      "owners": [
+        {
+          "name": "RECONSTRUCTION_SESSIONS",
+          "rustType": "OnceLock<Mutex<ReconstructionSessions>>",
+          "kind": "mutable-payload"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs",
       "line": 421,
-      "text": "OnceLock<Mutex<"
+      "text": "OnceLock<Mutex<",
+      "owners": [
+        {
+          "name": "REMODEL_PRIVATE_ASSET_STAGING",
+          "rustType": "OnceLock<Mutex<BTreeMap<String, RemodelAssetBlob>>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs",
-      "line": 552,
-      "text": "OnceLock<Mutex<"
-    },
-    {
-      "file": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs",
-      "line": 817,
-      "text": "OnceLock<Mutex<"
+      "line": 537,
+      "text": "OnceLock<Mutex<",
+      "owners": [
+        {
+          "name": "REMODEL_PRIVATE_MESH_STAGING",
+          "rustType": "OnceLock<Mutex<BTreeMap<String, RemodelMeshBlob>>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/🦀️component.rs",
       "line": 1708,
-      "text": "thread_local! {"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "REGISTRY",
+          "rustType": "RefCell<Registry>",
+          "kind": "fixed-operation-registry"
+        },
+        {
+          "name": "RECOVERY",
+          "rustType": "RefCell<[Option<RecoveryRecord>; SHELL_SLOTS]>",
+          "kind": "fixed-operation-registry"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️component.rs",
       "line": 303,
-      "text": "thread_local! {"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "JACK_SCRATCH",
+          "rustType": "std::cell::RefCell<std::collections::HashMap<String, JackWorkingScene>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️component.rs",
       "line": 152,
-      "text": "thread_local! {"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs",
-      "line": 608,
-      "text": "OnceLock<Mutex<"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs",
-      "line": 609,
-      "text": "OnceLock<Mutex<"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "line": 174,
-      "text": "OnceLock<Mutex<"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "line": 175,
-      "text": "OnceLock<Mutex<"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "DAG_SCRATCH",
+          "rustType": "std::cell::RefCell<std::collections::HashMap<String, DagWorkingScene>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧰️owned/🦀️component.rs",
-      "line": 1092,
-      "text": "OnceLock<std::sync::Mutex<"
+      "line": 1093,
+      "text": "OnceLock<std::sync::Mutex<",
+      "owners": [
+        {
+          "name": "DRAW_MUTATION_ARENA_POOL",
+          "rustType": "std::sync::OnceLock<std::sync::Mutex<DrawMutationArenaProcessState>>",
+          "kind": "fixed-operation-registry"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️component.rs",
       "line": 588,
-      "text": "thread_local! {"
+      "text": "thread_local! {",
+      "owners": [
+        {
+          "name": "RASTER_SCRATCH",
+          "rustType": "std::cell::RefCell<std::collections::HashMap<String, SemioImageSnapshot>>",
+          "kind": "child-content-scratch"
+        }
+      ]
     },
     {
       "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️component.rs",
-      "line": 291,
-      "text": "OnceLock<Mutex<"
+      "line": 355,
+      "text": "OnceLock<Mutex<",
+      "owners": [
+        {
+          "name": "REGISTRY",
+          "rustType": "OnceLock<Mutex<FillEnvelopeRegistry>>",
+          "kind": "fixed-operation-registry"
+        }
+      ]
     }
   ],
-  "literalRegistrations": 648,
-  "remainingCommands": [
+  "globalPayloadStoreExemptions": [],
+  "literalRegistrations": 706,
+  "acceptedCommandRows": [
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "commitRename",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "macro"
     },
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "engagementInput",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "macro"
     },
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "engagementSubmit",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "macro"
     },
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "formatDocument",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "literal"
     },
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "lintDocument",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "literal"
     },
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "openDocument",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "recordTutorial",
+      "source": "macro"
     },
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "requestCompletions",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "macro"
     },
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setActiveExample",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "literal"
     },
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setCamera",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "macro"
     },
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setEditorSelection",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "macro"
     },
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setEditorSetting",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "macro"
     },
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setFixtureJson",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "macro"
     },
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setLocale",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "macro"
     },
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setSnapshot",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "macro"
     },
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setSnapshotJson",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "macro"
     },
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setText",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "macro"
     },
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "textEdit",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "macro"
     },
     {
       "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "toggleLineNumbers",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "macro"
     },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "addGeneration",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "addWidget",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "canvasPointerDown",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "canvasPointerMove",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "canvasPointerUp",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "canvasWheel",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "connectMediaPorts",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "flowEvalTick",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "generate",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "moveMediaNode",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "nodeGraphEdit",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "nodeGraphViewport",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "removeGeneration",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "removeWidget",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "renameGeneration",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "reorganize",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "selectGeneration",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setEvalOutputs",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setShowMode",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "updateGenerationValues",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setAnalysisSettings",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setCamera",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setLocale",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setResultDisplay",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setAnalysisSettings",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setCamera",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setResultDisplay",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "addStep",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "addWorkshopMachine",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "engagementAbort",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "engagementInput",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "engagementSubmit",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "exportModel",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "importModelFile",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "loadModelRequest",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "moveStep",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "patchInspector",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "removeSelectedStep",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "removeStep",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "removeWorkshopMachine",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setActiveExample",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setActiveUtility",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setCamera",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setContributions",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setCursor",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setLocale",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setSnapshot",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setStepEnabled",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setStock",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setSunAzimuth",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setSunElevation",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setSunIntensity",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "stepCursor",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "stepCursorBack",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "stepCursorForward",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "toggleSun",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "updateStep",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "updateWorkshopMachine",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "worldFaceDragEnd",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "worldPointerDown",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "canvasCommitDraft",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "canvasDoubleClick",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "canvasEscape",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "canvasPointerDown",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "canvasPointerMove",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "canvasPointerUp",
+      "source": "macro"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "addNode",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "forceLayout",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setActiveExample",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "addBrushObject",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "addBrushPart",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "addNode",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "addPartKind",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "applyBoardEvents",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "canvasPointerDown",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "createFastener",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "cycleBrushCandidate",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "deleteFastener",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "editFastener",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "engagementAbort",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "engagementControlSelect",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "engagementInput",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "engagementSubmit",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "focusSelection",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "patchFastener",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "patchGrip",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "patchPart",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "proximityConnect",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "registerBrushMesh",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "retargetFastener",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "rotateSelection",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "scaleSelection",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "selectSameKind",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setActiveExample",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setBrushPlacementOverlapBudget",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setCamera",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setCamera2d",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setCamera3d",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setFillCount",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setGridFactor",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setGridSnapEnabled",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setLodMode",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setObjectKindWeight",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setSuggestionOffset",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setSunAzimuth",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setSunElevation",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setSunIntensity",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setVortexKindWeight",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "toggleSun",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "translateSelection",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "worldPointerDown",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "worldRelocate",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "acceptSuggestion",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "addBrushObject",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "addObjectKind",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "addTargetVolume",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "closeVortexSuggestions",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "createAttraction",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "cycleBrushCandidate",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "cycleBrushCandidateBack",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "deleteAttraction",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "deleteSelection",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "deleteTargetVolume",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "duplicateSelection",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "engagementAbort",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "engagementControlSelect",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "engagementInput",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "engagementRepeatLast",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "engagementSubmit",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "fillBuildTick",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "focusSelection",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "hoverSuggestion",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "openAddObjectDialog",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "openVortexSuggestions",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "patchInspector",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "registerBrushMesh",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "relocateTargetVolume",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "rotateSelection",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "scaleSelection",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "selectSameKindSelection",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setActiveExample",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setBrushPlacementOverlapBudget",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setCamera",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setChunkSize",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setFillCount",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setFillCountStep",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setFixtureJson",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setGridSnapEnabled",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setGridSpacing",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setGridVisible",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setLodAutomatic",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setLodDepthVariable",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setLodManual",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setObjectKindWeight",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setProjection",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setProjectionParam",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setProximityRadius",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setSelectableKind",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setSelectionFlag",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setSunAzimuth",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setSunElevation",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setSunIntensity",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setTargetVolumeFlag",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setTransformGumballFlag",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setVortexDirection",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setVortexKindWeight",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setVortexShow",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setVoxelDims",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "suggestionsTick",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "toggleSun",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "transformBegin",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "transformEnd",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "translateSelection",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "worldPointerDown",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "worldRelocate",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗀️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "copy",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗀️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "cut",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗀️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "paste",
+      "source": "literal"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗀️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "import-media",
+      "source": "literal"
+    }
+  ],
+  "acceptedReservedRoutes": [
+    "undo",
+    "redo",
+    "commitCheckpoint",
+    "createAlternative",
+    "switchAlternative",
+    "checkoutCheckpoint",
+    "revertToCommand",
+    "copy",
+    "cut",
+    "paste",
+    "noteShellCommand",
+    "setHistoryCommandFilter",
+    "recordTutorial",
+    "clearSelection",
+    "interactionHover",
+    "interactionSelect",
+    "selectAll",
+    "setInteractionGranularity",
+    "setSelectionMode",
+    "configuration-binary"
+  ],
+  "remainingCommands": [
     {
       "file": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "nodeGraphEdit",
@@ -728,316 +1904,178 @@
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "addGeneration",
-      "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "addWidget",
-      "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "canvasPointerDown",
-      "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "canvasPointerMove",
-      "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "canvasPointerUp",
-      "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "canvasWheel",
-      "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "connectMediaPorts",
-      "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "flowEvalTick",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "generate",
-      "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "moveMediaNode",
-      "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "nodeGraphEdit",
-      "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "nodeGraphViewport",
-      "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "removeGeneration",
-      "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "removeWidget",
-      "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "renameGeneration",
-      "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "reorganize",
-      "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "selectGeneration",
-      "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setEvalOutputs",
-      "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setLocale",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setShowMode",
-      "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "updateGenerationValues",
-      "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "addGeneration",
       "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "addWidget",
       "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "deleteSelection",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "flowEvalResolve",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "flowEvalTick",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "flowTessellateResolve",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "graphPointerDown",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "moveMediaNode",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "nodeGraphEdit",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "nodeGraphViewport",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "patchFlowWidgets",
       "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "removeGeneration",
       "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "removeWidget",
       "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "renameGeneration",
       "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "reorganize",
       "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "rotateSelection",
       "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "scaleSelection",
       "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "selectGeneration",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setActiveExample",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setActiveUtility",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setCamera",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setLocale",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "literal",
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setLodMode",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setShowMode",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setSunAzimuth",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setSunElevation",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setSunIntensity",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "toggleSun",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "translateSelection",
       "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "updateGenerationValues",
       "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "worldPointerDown",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
@@ -1079,13 +2117,13 @@
       "file": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "duplicateWidget",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "duplicateWidgetStep",
       "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
@@ -1283,85 +2321,85 @@
       "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "fitWorld",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "focusFeature",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "openSource",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "patchPositions",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "patchRoute",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "patchRoutes",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setActiveExample",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setCamera",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setLayerStrokeScale",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setLocale",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "source": "literal",
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setLodMode",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setRenderMode",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setVectorStyle",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "toggleLayerVisibility",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
@@ -1769,7 +2807,7 @@
       "file": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "changeSchema",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
@@ -1959,30 +2997,6 @@
     },
     {
       "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setAnalysisSettings",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setCamera",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setLocale",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setResultDisplay",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setSelfWeight",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
@@ -2068,24 +3082,6 @@
     {
       "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setActiveExample",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setAnalysisSettings",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setCamera",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setResultDisplay",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
@@ -2219,204 +3215,6 @@
       "file": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setAdjacencyKind",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "addStep",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "addWorkshopMachine",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "engagementAbort",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "engagementInput",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "engagementSubmit",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "exportModel",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "importModelFile",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "loadModelRequest",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "moveStep",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "patchInspector",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "removeSelectedStep",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "removeStep",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "removeWorkshopMachine",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setActiveExample",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setActiveUtility",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setCamera",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setContributions",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setCursor",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setLocale",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setSnapshot",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setStepEnabled",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setStock",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setSunAzimuth",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setSunElevation",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setSunIntensity",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "stepCursor",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "stepCursorBack",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "stepCursorForward",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "toggleSun",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "updateStep",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "updateWorkshopMachine",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "worldFaceDragEnd",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "worldPointerDown",
-      "source": "macro",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
@@ -2909,7 +3707,7 @@
       "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setTryValue",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
@@ -2921,7 +3719,7 @@
       "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setTryValueStep",
       "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
@@ -3065,169 +3863,169 @@
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "addNode",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "addObject",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "applyTransformation",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "deleteObject",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "duplicateObject",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "engagementAbort",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "engagementInput",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "engagementPossibleSelect",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "engagementRepeatLast",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "engagementSubmit",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "focusModelDefinition",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "importCadFile",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "loadRawRequest",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "patchCadPlayReference",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "patchObject",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "patchSelection",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "referenceHover",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "renameNode",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "rotateSelection",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "saveCurrent",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "saveInPlay",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "saveSelected",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "scaleSelection",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setActiveExample",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setActiveUtility",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setCamera",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setContributions",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setDislocateOption",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
@@ -3239,43 +4037,43 @@
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setNodeSelection",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setProjection",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setProjectionParam",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setReferenceSelection",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setSunAzimuth",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setSunElevation",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setSunIntensity",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
@@ -3287,25 +4085,25 @@
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "toggleSun",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "translateSelection",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "worldPointerDown",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "worldPointerMove",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
@@ -3581,55 +4379,55 @@
       "file": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "addBlock",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "addStep",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "moveBlock",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "moveStep",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "removeBlock",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "removeStep",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setContributions",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setLocale",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "updatePlaybook",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
@@ -3713,7 +4511,7 @@
       "file": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "advanceReconstruction",
       "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
@@ -3839,19 +4637,19 @@
       "file": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "retryStage",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "runReconstruction",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "runStage",
       "source": "literal",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
@@ -4079,42 +4877,6 @@
       "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "addLayer",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "canvasCommitDraft",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "canvasDoubleClick",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "canvasEscape",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "canvasPointerDown",
-      "source": "macro",
-      "reason": "owner-local handler proof exists but full prepare/job/commit operation is not bounded"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "canvasPointerMove",
-      "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "canvasPointerUp",
-      "source": "macro",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
@@ -4545,595 +5307,277 @@
     },
     {
       "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "addNode",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "forceLayout",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setActiveExample",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "addBrushObject",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "addBrushPart",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "addNode",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "addPartKind",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "applyBoardEvents",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "canvasPointerDown",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "brushCancelSlot",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "createFastener",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "brushCommitSlot",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "cycleBrushCandidate",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "brushCycleCandidate",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "deleteFastener",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "brushFillSessionAdopt",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "editFastener",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "brushFillSessionBegin",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "brushFillSessionCancel",
+      "source": "literal",
+      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "brushFillSessionClear",
+      "source": "literal",
+      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "brushFillSessionDiscard",
+      "source": "literal",
+      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "brushFillSessionRetry",
+      "source": "literal",
+      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "brushFillSessionStep",
+      "source": "literal",
+      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "brushOpenSlot",
+      "source": "literal",
+      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "brushSetCandidateIndex",
+      "source": "literal",
+      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "deleteSelection",
+      "source": "literal",
+      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "duplicateSelection",
+      "source": "literal",
+      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "engagementAbort",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "engagementControlSelect",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "engagementInput",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "engagementSubmit",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "focusSelection",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "patchFastener",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "lodScaleJson",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "patchGrip",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "patchInspectorNodes",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "patchPart",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "redrawHandles",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "proximityConnect",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "reorganize",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "registerBrushMesh",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "retargetFastener",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "rotateSelection",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "scaleSelection",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "selectSameKind",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setActiveExample",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setActiveExampleStep",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setBrushPlacementOverlapBudget",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setBrushKindWeights",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setBrushNodeSize",
+      "source": "literal",
+      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setCamera",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setCamera2d",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setCamera3d",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setFillCount",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setGridFactor",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setGridSnapEnabled",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setLodMode",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setLocale",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setObjectKindWeight",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setLodModeForPane",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setSelectionFlag",
+      "source": "literal",
+      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setSuggestionOffset",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setSunAzimuth",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setTerminology",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
       "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setSunElevation",
+      "id": "deleteSelection",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
       "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setSunIntensity",
+      "id": "duplicateSelection",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
       "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setVortexKindWeight",
+      "id": "importComposeKit",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
       "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "toggleSun",
+      "id": "selectSameKindSelection",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
       "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "translateSelection",
+      "id": "setFixtureJson",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
       "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "worldPointerDown",
+      "id": "setSelectionFlag",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
       "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "worldRelocate",
+      "id": "zoomToSelection",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
       "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "acceptSuggestion",
+      "id": "setLocale",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
     {
       "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "addBrushObject",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "addObjectKind",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "addTargetVolume",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "closeVortexSuggestions",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "createAttraction",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "cycleBrushCandidate",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "cycleBrushCandidateBack",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "engagementAbort",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "engagementControlSelect",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "engagementInput",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "engagementRepeatLast",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "engagementSubmit",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "fillBuildTick",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "focusSelection",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "hoverSuggestion",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "openAddObjectDialog",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "patchInspector",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "registerBrushMesh",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "relocateTargetVolume",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "rotateSelection",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "scaleSelection",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setActiveExample",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setBrushPlacementOverlapBudget",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setCamera",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setChunkSize",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setFillCount",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setGridSnapEnabled",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setGridSpacing",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setGridVisible",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setLodAutomatic",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setLodDepthVariable",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setLodManual",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setObjectKindWeight",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setProjection",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setProjectionParam",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setProximityRadius",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setSelectableKind",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setSunAzimuth",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setSunElevation",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setSunIntensity",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setTransformGumballFlag",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setVortexDirection",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setVortexKindWeight",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setVortexShow",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "setVoxelDims",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "suggestionsTick",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "toggleSun",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "transformBegin",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "transformEnd",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "translateSelection",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "worldPointerDown",
-      "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-    },
-    {
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-      "id": "worldRelocate",
+      "id": "setTerminology",
       "source": "literal",
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     },
@@ -5795,73 +6239,73 @@
       "file": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "curateAdd",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "curateRemove",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "curateSetCount",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "dropOnCurated",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "dropOnPool",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setActiveExample",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setContributions",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setDocument",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setFilterMinAvailability",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setFilterModule",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setFilterQuery",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "setFilterTypology",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
@@ -5873,68 +6317,19 @@
       "file": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "sortTable",
       "source": "macro",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     },
     {
       "file": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
       "id": "stockFromCatalogue",
       "source": "literal",
-      "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
+      "reason": "classification proof exists but no exact registered app-owned retained reducer factory and builder"
     }
   ],
-  "selfTests": 365,
+  "selfTests": 464,
   "failures": [
-    "framework-owned reserved routes lack exact route-specific resumable factories, direct-branch closure, binary fail-closure, or commit-held cancellation",
-    "shared import submission serializes or clones the whole media envelope before resumable job construction",
-    "shared typed-command preparation or commit application remains outside the resumable job protocol",
-    "incomplete typed-command route is reachable before preparation or retains no saturation-safe persistent operation foundation",
-    "document, presence, or transient command preparation lacks exact O(1) immutable event-maintained roots",
-    "generated member create/open permits a missing, partial, default, or wrapper-bypassable snapshot/whole-store disposal owner",
-    "artifact store structural owners still use resizable string-key indexes, deep direct replacement, or lack bounded conflict/backbone/DAG/history disassembly and terminal Drop authority",
-    "ArtifactEnvelope ingress retains public serde Deserialize or lacks fixed-page owned preflight/decode/error-close authority across every production caller",
-    "Present envelope representative caller exposes a raw job/whole-string Wasm route or lacks fixed app-retained worker/result/close ownership",
-    "Writer envelope caller lacks retained fixed-page ingress, initializer recovery, maintenance publication, cancellation, or exact completion acknowledgement",
-    "Jack `.spr`/`.ops` envelope caller lacks the shared retained edit decoder, exact child retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement",
-    "Trinity Rewrite envelope caller lacks the Jack-owned fixed-page operation store, generation handle, bounded progress/cancel/close, exact rejected-page handback, or completion acknowledgement",
-    "GIS Map `.spr`/`.ops` envelope caller lacks the shared retained edit decoder, exact drawing/image/value child retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement",
-    "Raster `.spr`/`.ops` envelope caller lacks the shared retained edit decoder, recursive domain retirement, preflight-before-copy fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement",
-    "Draw `.spr`/`.ops` envelope caller lacks recursive layer/style/asset preflight, one-item clone/retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement",
-    "peer ingress, app-typed presence, or interaction roots lack reserve-before-decode retained per-entry publication, atomic validated commit, or O(1) immutable capture",
-    "paged command ingress lacks fixed-page ownership, retained streaming decode/fault closure, generic multi-page ACK ordering, or terminal-close registries across MCP/run/WGPU callers",
-    "actor Job publications lack a fixed preview/progress overlay, independent autonomous-shard authority, presenter-adopted ACK, exact rejected-owner handback, or app/fault/realm retirement",
-    "universal retained job ownership still permits optional job close, post-work fault allocation, legacy drains/constructors, resizable Native I/O outputs, or future-driven mounted session progress",
-    "live FEM2D revisions lack a fixed generation-tagged retained worker session, mounted visual/mesh/stiffness backing, exact snapshot-return witness, or live visual consumer",
-    "owned media export lacks nonblocking per-instance polling, exact sealed structural output credit, or pending/drop/isolation regressions",
-    "runtime instance/actor authority still grows, hashes, scans, shifts, blocks, or drops the detached app on InstanceClose",
-    "instance close still permits implicit nested payload destruction or lacks saturation-safe bounded cleanup job ownership",
-    "reactor task/request/open-instance close still scans resizable maps/vectors, retains ready queues, or wakes an unbounded waiter list",
-    "extra bounded reducer proof lacks its exact Migrated declaration ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000semio_framework_plugin::EditorApp<Procedural3dPlayApp>\u0000s.procedural.procedural3d@1/*#editor\u0000BoundedFirstStepCommandJobFactory\u0000setActiveUtility\u0000procedural.3d.tool-command.v1",
-    "extra bounded reducer proof lacks its exact Migrated declaration ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000semio_framework_plugin::EditorApp<Procedural3dPlayApp>\u0000s.procedural.procedural3d@1/*#editor\u0000BoundedFirstStepCommandJobFactory\u0000flowEvalTick\u0000procedural.3d.tool-command.v1",
-    "Migrated declaration has 0 exact bounded reducer proofs ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000addGeneration",
-    "Migrated declaration has 0 exact bounded reducer proofs ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000addWidget",
-    "Migrated declaration has 0 exact bounded reducer proofs ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000canvasPointerDown",
-    "Migrated declaration has 0 exact bounded reducer proofs ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000canvasPointerMove",
-    "Migrated declaration has 0 exact bounded reducer proofs ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000canvasPointerUp",
-    "Migrated declaration has 0 exact bounded reducer proofs ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000canvasWheel",
-    "Migrated declaration has 0 exact bounded reducer proofs ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000connectMediaPorts",
-    "Migrated declaration has 0 exact bounded reducer proofs ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000generate",
-    "Migrated declaration has 0 exact bounded reducer proofs ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000moveMediaNode",
-    "Migrated declaration has 0 exact bounded reducer proofs ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000nodeGraphEdit",
-    "Migrated declaration has 0 exact bounded reducer proofs ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000nodeGraphViewport",
-    "Migrated declaration has 0 exact bounded reducer proofs ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000removeGeneration",
-    "Migrated declaration has 0 exact bounded reducer proofs ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000removeWidget",
-    "Migrated declaration has 0 exact bounded reducer proofs ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000renameGeneration",
-    "Migrated declaration has 0 exact bounded reducer proofs ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000reorganize",
-    "Migrated declaration has 0 exact bounded reducer proofs ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000selectGeneration",
-    "Migrated declaration has 0 exact bounded reducer proofs ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000setEvalOutputs",
-    "Migrated declaration has 0 exact bounded reducer proofs ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000setShowMode",
-    "Migrated declaration has 0 exact bounded reducer proofs ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs\u0000updateGenerationValues",
-    "runtime activation or public DFF admission drops the compiler-derived owner witness or exact controller/owner/factory/tool/schema proof identity",
-    "production typed dispatch is not one explicitly admitted WorkerJobSession turn",
-    "47 process-global payload store candidate(s) require operation-owned state or an explicit static exemption",
-    "commit freshness is not validated immediately before result exposure",
-    "8 framework-reserved route(s) remain fail-closed pending explicit resumable factories",
+    "37 process-global payload store candidate(s) require operation-owned state or an explicit static exemption",
     "35 app-owned import-media route(s) remain fail-closed pending explicit resumable factories",
-    "884 live command registration(s) remain fail-closed; see remainingCommands ledger"
+    "744 live command registration(s) remain fail-closed; see remainingCommands ledger"
   ]
 }

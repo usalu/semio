@@ -18,13 +18,14 @@ use crate::editor::rewrite::presence::{RewritePresence, RewritePresenceMutation}
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionKind, AppActionRegistry, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, Dialect, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider,
     HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, NodeGraphViewport, PanelGroup, SelectionMethod,
-    SelectionMode, SelectionSpec, SurfaceKind, TopologyNode, UiNode, WindowMeasure, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    SelectionMode, SelectionSpec, TopologyNode, WindowMeasure, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 // 🩹️ `InteractionView` is not re-exported at `semio_framework_plugin`'s crate root (unlike
 // `ConfigView`/`ArtifactView`/`DraftView`) — only reachable through its owning `app` submodule
 // (itself `pub mod`). Flagged as a likely framework oversight, not fixed here (framework file).
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
 use std::collections::{BTreeMap, HashMap};
 use store::EngineHandles;
 use store::{ArtifactDsl, ArtifactPack};
@@ -116,6 +117,16 @@ pub(crate) fn reset_document_effect(state: &RewriteSnapshot) -> semio_framework_
 
 pub(crate) fn rewrite_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     semio_framework_plugin::ActionFactory::new(TRINITY_REWRITE_PLAY_CONTROLLER_ID).action(action, args)
+}
+
+/// 🪟️ Binds window chrome through its retained renderer action descriptor.
+pub(crate) fn rewrite_window_action(action: &str, args: Option<serde_json::Value>) -> semio_framework_plugin::ActionDescriptor {
+    semio_framework_plugin::ActionDescriptor { controller_id: TRINITY_REWRITE_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }
+}
+
+/// 🏷️ Admits resolved Rewrite text into the semantic UI contract.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
+    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "Rewrite UI label admission failed"))
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
@@ -340,7 +351,7 @@ fn trinity_rewrite_lod_measure(window_id: &str, current_mode: &str) -> WindowMea
         let name = row.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
         Some(semio_framework_plugin::MeasureSelectItem { id: id.clone(), value: id, label: name })
     }));
-    WindowMeasure::Select { id: format!("{window_id}-lod"), label: Some("LOD".into()), value: current_mode.into(), items, on_change: rewrite_action("setLodMode", Some(serde_json::json!({ "windowId": window_id }))) }
+    WindowMeasure::Select { id: format!("{window_id}-lod"), label: Some("LOD".into()), value: current_mode.into(), items, on_change: rewrite_window_action("setLodMode", Some(serde_json::json!({ "windowId": window_id }))) }
 }
 
 /// 🕹️ `selection`/`hover` are left unset: `ArtifactApp::render` has no `InteractionView` (only
@@ -353,10 +364,10 @@ pub(crate) fn render_fixture_graph(surface_id: &str, window_id: &str, fixture_js
     let fixture = parse_fixture_json(fixture_json).unwrap_or_else(|| JackSnapshot::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap());
     let (nodes, edges, fixture_viewport) = crate::editor::jack::fixture_to_workflow(&fixture);
     let viewport = camera_override.map_or(fixture_viewport, |camera| NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom });
-    semio_framework_plugin::build_node_graph_scene(
+    semio_framework_plugin::scene_surface(
         surface_id,
-        TRINITY_REWRITE_PLAY_CONTROLLER_ID,
-        semio_framework_plugin::NodeGraphScene { lod_json: rewrite_lod_json_for_window(cfg, window_id), editable: editable.then_some(true), ..semio_framework_plugin::NodeGraphScene::base(nodes, edges, viewport) },
+        SemanticSurfaceKind::NodeGraph,
+        &semio_framework_plugin::NodeGraphScene { lod_json: rewrite_lod_json_for_window(cfg, window_id), editable: editable.then_some(true), ..semio_framework_plugin::NodeGraphScene::base(nodes, edges, viewport) },
     )
 }
 //#endregion 🔖️Render
@@ -584,7 +595,7 @@ impl ArtifactEditor for TrinityRewritePlayApp {
         let state = doc.snapshot;
         let config = cfg.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::editor::rewrite::terminology::TrinityRewriteLabels>(&config.locale);
-        match body_key {
+        let root = match body_key {
             TRINITY_REWRITE_PLAY_BODY_BEFORE => edit::windows::before::render(state, config),
             TRINITY_REWRITE_PLAY_BODY_AFTER => edit::windows::after::render(state, config),
             TRINITY_REWRITE_PLAY_BODY_LHS => edit::windows::lhs::render(state, config),
@@ -594,8 +605,9 @@ impl ArtifactEditor for TrinityRewritePlayApp {
             TRINITY_REWRITE_PLAY_BODY_DOCUMENT => crate::editor::rewrite::panels::document::render(state, config, labels),
             TRINITY_REWRITE_PLAY_BODY_CATALOGUE => crate::editor::rewrite::panels::catalogue::render(labels),
             TRINITY_REWRITE_PLAY_BODY_INSPECTION => crate::editor::rewrite::panels::inspection::render(),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.body.label", "the fixed Trinity body label exceeds its UI bound")),
+        }?;
+        Ok(semio_framework_plugin::built_to_component_tree(root))
     }
 
     fn window_measures(_doc: &ArtifactView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
@@ -702,16 +714,16 @@ pub fn create_rewrite_app() -> semio_framework_plugin::AppDefinition {
             .icon_id("trinity-rewrite")
             .mode_def(edit::definition())
             .default_mode_id(edit::TRINITY_REWRITE_MODE_EDIT)
-            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_BEFORE, LocalizedLabel::native("Before", "Vorher"), TRINITY_REWRITE_PLAY_BODY_BEFORE, SurfaceKind::NodeGraph, "git-branch")
-            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_AFTER, LocalizedLabel::native("After", "Nachher"), TRINITY_REWRITE_PLAY_BODY_AFTER, SurfaceKind::NodeGraph, "arrow-right")
-            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_LHS, LocalizedLabel::native("LHS", "LHS"), TRINITY_REWRITE_PLAY_BODY_LHS, SurfaceKind::NodeGraph, "trinity-lhs")
-            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_RHS, LocalizedLabel::native("RHS", "RHS"), TRINITY_REWRITE_PLAY_BODY_RHS, SurfaceKind::NodeGraph, "trinity-rhs")
-            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_JACK, LocalizedLabel::native("Jack", "Jack"), TRINITY_REWRITE_PLAY_BODY_JACK, SurfaceKind::TextEditor, "document-jack")
+            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_BEFORE, LocalizedLabel::native("Before", "Vorher"), TRINITY_REWRITE_PLAY_BODY_BEFORE, SemanticSurfaceKind::NodeGraph, "git-branch")
+            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_AFTER, LocalizedLabel::native("After", "Nachher"), TRINITY_REWRITE_PLAY_BODY_AFTER, SemanticSurfaceKind::NodeGraph, "arrow-right")
+            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_LHS, LocalizedLabel::native("LHS", "LHS"), TRINITY_REWRITE_PLAY_BODY_LHS, SemanticSurfaceKind::NodeGraph, "trinity-lhs")
+            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_RHS, LocalizedLabel::native("RHS", "RHS"), TRINITY_REWRITE_PLAY_BODY_RHS, SemanticSurfaceKind::NodeGraph, "trinity-rhs")
+            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_JACK, LocalizedLabel::native("Jack", "Jack"), TRINITY_REWRITE_PLAY_BODY_JACK, SemanticSurfaceKind::TextEditor, "document-jack")
             .window_kind(
                 TRINITY_REWRITE_PLAY_WINDOW_PARAMETERS,
                 LocalizedLabel::native("Parameters", "Parameter"),
                 TRINITY_REWRITE_PLAY_BODY_PARAMETERS,
-                SurfaceKind::Canvas2d,
+                SemanticSurfaceKind::Canvas2d,
                 "settings-2",
             )
             .default_layout(edit::layout())

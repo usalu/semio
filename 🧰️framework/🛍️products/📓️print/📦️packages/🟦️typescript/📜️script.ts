@@ -1,16 +1,36 @@
 #!/usr/bin/env bun
 /** 🖨️ `@semio-tech/print` router: `bun ./📜️script.ts generate|fonts|build|watch|test`. */
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { LatexTokenStylesheetGenerationCommand } from "../../🎮️commands/🎨latex-token-stylesheet-generation/🟦️component.ts";
 import { PrintFontProvisioningCommand } from "../../🎮️commands/🔤print-font-provisioning/🟦️component.ts";
 import { TemplatePdfBuildCommand } from "../../🎮️commands/🖨️template-pdf-build/🟦️component.ts";
 import { TemplatePdfWatchCommand } from "../../🎮️commands/👁️template-pdf-watch/🟦️component.ts";
 import { PrintPipelineVerificationCommand } from "../../🎮️commands/🧪️print-pipeline-verification/🟦️component.ts";
+import { renderPrintLatexTokenStylesheet } from "../../🔨️modules/🎨print-design-token-paints/🟦️component.ts";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
 
 //#region 🖨️RouterAdapters
+function latexTokenTarget(repoRoot: string): { readonly path: string; readonly content: string } {
+  const tokenPath = join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️tokens.json");
+  const tokens = JSON.parse(readFileSync(tokenPath, "utf8")) as Parameters<typeof renderPrintLatexTokenStylesheet>[0];
+  return { path: join(repoRoot, "🧰️framework/🛍️products/📓️print/🖋️latex/semio-tokens.sty"), content: renderPrintLatexTokenStylesheet(tokens) };
+}
+
 class GenerateScript extends BundleScript {
   run(): void {
-    new LatexTokenStylesheetGenerationCommand(this.root, this.repoRoot).run();
+    const target = latexTokenTarget(this.repoRoot);
+    mkdirSync(dirname(target.path), { recursive: true });
+    writeFileSync(target.path, target.content, "utf8");
+    console.log("print: wrote latex/semio-tokens.sty");
+  }
+}
+
+/** 🧾️ Emits the canonical read-only generator protocol from the same LaTeX renderer as generate. */
+class PreviewGeneratedScript extends BundleScript {
+  run(): void {
+    const target = latexTokenTarget(this.repoRoot);
+    const nodes = [{ bytesBase64: Buffer.from(target.content).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: relative(this.repoRoot, target.path).replaceAll("\\", "/").normalize("NFC") }];
+    process.stdout.write(`${JSON.stringify({ contractId: "print-latex-tokens", nodes, schemaVersion: 1, staleRemovals: [] })}\n`);
   }
 }
 
@@ -41,6 +61,7 @@ class TestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir)
   .register("generate", GenerateScript)
+  .register("preview-generated", PreviewGeneratedScript)
   .register("fonts", FontsScript)
   .register("build", BuildScript)
   .register("watch", WatchScript)

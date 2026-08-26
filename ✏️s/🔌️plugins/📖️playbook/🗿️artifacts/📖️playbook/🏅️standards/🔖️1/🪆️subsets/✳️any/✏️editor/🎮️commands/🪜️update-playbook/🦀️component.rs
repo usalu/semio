@@ -12,6 +12,6 @@ pub struct UpdatePlaybook {
     pub value: String,
 }
 
-pub async fn handle(payload: &UpdatePlaybook, _doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
+pub fn handle(payload: &UpdatePlaybook, _doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
     Ok(Emit::amend(vec![change_title_operation(Some(payload.value.clone()).filter(|title| !title.is_empty()))], "playbook.title"))
 }

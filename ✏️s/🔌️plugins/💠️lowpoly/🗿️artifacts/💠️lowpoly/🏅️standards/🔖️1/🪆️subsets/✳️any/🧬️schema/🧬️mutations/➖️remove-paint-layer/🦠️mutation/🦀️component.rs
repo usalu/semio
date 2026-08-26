@@ -16,16 +16,16 @@ pub struct RemovePaintLayer {
 impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for RemovePaintLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "paint-layer", kind: "remove-paint-layer", record: "RemovedPaintLayer" };
 
-    async fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
+    fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Remove paint layer {} from object \"{}\"", self.index, self.object_id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]
     }
 }

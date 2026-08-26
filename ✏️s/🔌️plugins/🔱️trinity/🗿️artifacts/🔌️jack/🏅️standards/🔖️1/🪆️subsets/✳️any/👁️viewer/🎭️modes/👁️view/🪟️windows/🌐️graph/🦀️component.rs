@@ -6,7 +6,8 @@
 //! and emits no mutations by construction (`ViewEmit`).
 
 use crate::artifacts::jack::{JackSnapshot, Node, PortDirection};
-use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, WindowKindDefinition, WindowOptions};
+use semio_framework_ui_contract::{Buildable, HasBase, SurfaceKind};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "trinity-jack-view-graph";
@@ -62,9 +63,9 @@ fn node_to_record(node: &Node) -> NodeGraphNodeRecord {
     }
 }
 
-/// 👁️ Pure `JackSnapshot -> UiNode` read: no selection, no LOD, no query text — the viewer renders
+/// 👁️ Pure `JackSnapshot -> BuiltNode` read: no selection, no LOD, no query text — the viewer renders
 /// the live fixture graph exactly as it stands.
-pub fn render(document: &JackSnapshot) -> UiNode {
+pub fn render(document: &JackSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let nodes: Vec<NodeGraphNodeRecord> = document.nodes().iter().map(node_to_record).collect();
     let edges: Vec<NodeGraphEdgeRecord> = document
         .edges()
@@ -76,7 +77,14 @@ pub fn render(document: &JackSnapshot) -> UiNode {
         })
         .collect();
     let viewport = NodeGraphViewport { x: document.camera.x, y: document.camera.y, zoom: document.camera.zoom };
-    build_node_graph_scene(SURFACE_ID, TRINITY_JACK_VIEW_CONTROLLER_ID, NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) })
+    let mut scene = NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) };
+    scene.controls_json = Some(serde_json::json!({ "controllerId": TRINITY_JACK_VIEW_CONTROLLER_ID }).to_string());
+    let props = semio_framework_ui_scene::encode(SurfaceKind::NodeGraph, &scene).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.encode", "Trinity node-graph scene admission failed"))?;
+    semio_framework_ui_contract::surface(props)
+        .try_id(SURFACE_ID)
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.id", "Trinity node-graph surface id admission failed"))?
+        .try_build()
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.build", "Trinity node-graph surface admission failed"))
 }
 //#endregion 🔖️Render
 

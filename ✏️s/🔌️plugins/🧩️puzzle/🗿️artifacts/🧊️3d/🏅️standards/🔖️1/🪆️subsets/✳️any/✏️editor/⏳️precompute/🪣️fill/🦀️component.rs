@@ -353,7 +353,8 @@ impl FillPreviewJsonPass {
             self.advance_field();
             return FillPreviewJsonUnit::bytes(b",\"candidateGhost\":null");
         };
-        match self.subfield {
+        let active_subfield = self.subfield;
+        let unit = match active_subfield {
             0 => {
                 self.subfield = 1;
                 FillPreviewJsonUnit::bytes(b",\"candidateGhost\":{")
@@ -378,13 +379,11 @@ impl FillPreviewJsonPass {
                 self.advance_field();
                 FillPreviewJsonUnit::bytes(b"}")
             }
+        }?;
+        if self.string_phase == 0 && matches!(active_subfield, 1 | 2 | 4) {
+            self.subfield += 1;
         }
-        .map(|unit| {
-            if self.string_phase == 0 && matches!(self.subfield, 1 | 2 | 4) {
-                self.subfield += 1;
-            }
-            unit
-        })
+        Ok(unit)
     }
 
     fn candidate_page(&mut self, preview: &FillBuildPreview, color: &str, status_label: &str) -> Result<FillPreviewJsonUnit, ()> {

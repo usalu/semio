@@ -35,9 +35,9 @@ fn expected_after() -> FlowSnapshot {
 /// `note-beta` sits in the last slot, index 1, which is where the payload's out-of-range index 9
 /// clamps to.
 fn before() -> FlowSnapshot {
-    let snapshot: FlowSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FlowSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let widgets = vec![Widget::InputNote { id: "note-alpha".into(), text: "Alpha".into() }, Widget::InputNote { id: "note-beta".into(), text: "Beta".into() }];
-    cache_flow_content(&snapshot.content.child_id, widgets, Vec::new(), BTreeMap::new());
+    cache_flow_content(&mut snapshot.content, widgets, Vec::new(), BTreeMap::new());
     snapshot
 }
 

@@ -51,8 +51,12 @@ fn apply_operations(fixture: &FlowFixture, sub_operations: &[Value], selected: &
 /// command through `apply` below instead), so `"deleteSelection"` sub-operations degrade to treating
 /// the selection as empty.
 pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+    apply_selected(payload, doc, &[])
+}
+
+pub fn apply_selected(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Procedural2dSnapshot>, selected: &[String]) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
     let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
-    Ok(apply_operations(&doc.snapshot.fixture, &sub_operations, &[]))
+    Ok(apply_operations(&doc.snapshot.fixture, &sub_operations, selected))
 }
 
 /// 🕹️ `"deleteSelection"` reads the `graph` domain's current selection instead of a deleted config
@@ -65,6 +69,5 @@ pub fn apply(
     interaction: &InteractionView<'_>,
     _session: &mut FlowEvalSession,
 ) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
-    let sub_operations: Vec<Value> = serde_json::from_str(&payload.operations_json).unwrap_or_default();
-    Ok(apply_operations(&doc.snapshot.fixture, &sub_operations, &semio_framework::io::resolve_ready(interaction.selection("graph")).ids))
+    apply_selected(payload, doc, &interaction.selection("graph").ids)
 }

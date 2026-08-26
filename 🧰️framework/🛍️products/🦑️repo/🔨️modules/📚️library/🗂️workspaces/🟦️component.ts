@@ -17,8 +17,8 @@ const MANIFEST_FILENAME = "package.json";
 const CARGO_MANIFEST_FILENAME = "Cargo.toml";
 
 /** 🧺️ Directory names never descended into — build/vendor/scratch trees, never real workspace source.
- * Includes legacy `compose` (same isolation as `DISCOVERY_SKIP_DIRS`) so workspace generation never
- * re-integrates the legacy technology island. */
+ * Includes the schema-owned opaque `compose` boundary (same isolation as `DISCOVERY_SKIP_DIRS`) so
+ * workspace generation cannot reintroduce its intentionally deleted memberships. */
 const WORKSPACE_SCAN_SKIP_DIR_NAMES = new Set(["node_modules", "target", "dist", "build", "🤖️generated", "storybook-static", "temp", "coverage", "🔌️plugin-modules", ".🧬semio", "compose"]);
 
 /** 🧻️ wasm-pack's generated npm-wrapper dir name — gitignored, present only once built, handled

@@ -646,6 +646,7 @@ interface PluginTurnPayload {
 const PLUGIN_TURN_MAILBOX_CAPACITY = 32;
 
 const pendingCoalescedTurns = new Map<string, PluginTurnPayload>();
+const tearingDownPluginActors = new Set<string>();
 
 let sharedPluginTurnScheduler: TurnScheduler<PluginTurnPayload, ShardBudget> | null = null;
 /** 🧵️ Reads `getShardClient()` INSIDE `runTurn` (not once at construction) purely so a test can swap
@@ -662,7 +663,7 @@ function getPluginTurnScheduler(): TurnScheduler<PluginTurnPayload, ShardBudget>
         for (const waiter of payload.waiters) waiter.resolve(result);
       } catch (error) {
         for (const waiter of payload.waiters) waiter.reject(error);
-        throw error; // 🔁️ rethrown so `onTurnError` also observes it — diagnostics only, every waiter already settled above.
+        if (!tearingDownPluginActors.has(actorId)) throw error;
       }
     },
     onTurnError: (actorId, error) => console.error(`[DEBUG] PluginRuntime: turn failed for actor ${actorId}`, error),
@@ -716,6 +717,17 @@ function submitPluginTurn(actorId: string, events: readonly ShardEventEnvelope[]
     const backpressure = scheduler.enqueue(actorId, { lane, payload });
     if (backpressure.kind === "rejected") reject(new Error(`[DEBUG] PluginRuntime: actor ${actorId}'s turn queue is full — rejected rather than growing unbounded`));
   });
+}
+
+function teardownPluginActor(actorId: string): void {
+  const fault = new Error(`plugin actor ${actorId} disposed`);
+  tearingDownPluginActors.add(actorId);
+  getPluginTurnScheduler().teardownActor(actorId, (payload) => {
+    if (payload.coalesceMapKey) pendingCoalescedTurns.delete(payload.coalesceMapKey);
+    for (const waiter of payload.waiters) waiter.reject(fault);
+  });
+  getThunkScheduler().teardownActor(`command-ingress:${actorId}`, (payload) => payload.reject(fault));
+  setTimeout(() => tearingDownPluginActors.delete(actorId), 0);
 }
 
 function wireTurnStatusTag(status: unknown): string {
@@ -926,6 +938,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       actorIdByInstance.delete(instanceId);
       retainedWindowByActor.delete(actorId);
       pendingTurnEffects.delete(instanceId);
+      teardownPluginActor(actorId);
       shardClient.dispose(actorId);
     },
     takeSegmentedDownloadChunk: (instanceId, operationId) => shardClient.takeSegmentedDownloadChunk(requireActorId(instanceId), instanceId, operationId),
@@ -936,6 +949,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     dispose: () => {
       for (const actorId of actorIdByInstance.values()) {
         retainedWindowByActor.delete(actorId);
+        teardownPluginActor(actorId);
         shardClient.dispose(actorId);
       }
       actorIdByInstance.clear();
@@ -2491,6 +2505,26 @@ if (import.meta.vitest) {
           );
           expect(dispatchCount).toBe(1);
           for (const result of results) expect(result.effects).toEqual(results[0]!.effects);
+        },
+      );
+    });
+
+    it("teardown rejects queued turn waiters before disposing the actor transport", async () => {
+      let release!: () => void;
+      const gate = new Promise<unknown>((resolve) => {
+        release = () => resolve({ uiPatches: [], effects: [], nextWake: null });
+      });
+      await withFakeShardClient(
+        async () => gate,
+        async () => {
+          const actorId = "turn-test-teardown-actor";
+          const inFlight = submitPluginTurn(actorId, [{ kind: "app-command", payload: { marker: "in-flight" } }], "Interactive");
+          await flushMicrotasks();
+          const queued = submitPluginTurn(actorId, [{ kind: "app-command", payload: { marker: "queued" } }], "Interactive");
+          teardownPluginActor(actorId);
+          await expect(queued).rejects.toThrow(`plugin actor ${actorId} disposed`);
+          release();
+          await expect(inFlight).resolves.toMatchObject({ uiPatches: [], effects: [] });
         },
       );
     });

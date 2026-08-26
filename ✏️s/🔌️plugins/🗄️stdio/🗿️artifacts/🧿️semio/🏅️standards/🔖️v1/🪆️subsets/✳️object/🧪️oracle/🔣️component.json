@@ -18,6 +18,109 @@
     {
       "id": "semio-v1-object",
       "capability": "semio-v1-object-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️object",
+      "vectors": [
+        {
+          "mutationId": "create-brep",
+          "sourceMutationDirectoryName": "🧱create-brep",
+          "mutationDirectoryName": "🧱create-brep",
+          "scenarios": [
+            {
+              "id": "attaches-a-brep-child-to-an-object-that-has-none",
+              "directoryName": "🧪️attaches-a-brep-child-to-an-object-that-has-none"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-mesh",
+          "sourceMutationDirectoryName": "🕸️create-mesh",
+          "mutationDirectoryName": "🕸️create-mesh",
+          "scenarios": [
+            {
+              "id": "attaches-a-mesh-child-to-an-object-that-has-none",
+              "directoryName": "🧪️attaches-a-mesh-child-to-an-object-that-has-none"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-properties",
+          "sourceMutationDirectoryName": "🏷️create-properties",
+          "mutationDirectoryName": "🏷️create-properties",
+          "scenarios": [
+            {
+              "id": "attaches-a-properties-child-to-an-object-that-has-none",
+              "directoryName": "🧪️attaches-a-properties-child-to-an-object-that-has-none"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-brep",
+          "sourceMutationDirectoryName": "💥delete-brep",
+          "mutationDirectoryName": "💥delete-brep",
+          "scenarios": [
+            {
+              "id": "detaches-the-brep-child-and-leaves-the-mesh-child-alone",
+              "directoryName": "🧪️detaches-the-brep-child-and-leaves-the-mesh-child-alone"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-mesh",
+          "sourceMutationDirectoryName": "🧨delete-mesh",
+          "mutationDirectoryName": "🧨delete-mesh",
+          "scenarios": [
+            {
+              "id": "detaches-the-mesh-child-and-leaves-the-brep-child-alone",
+              "directoryName": "🧪️detaches-the-mesh-child-and-leaves-the-brep-child-alone"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-properties",
+          "sourceMutationDirectoryName": "🚫delete-properties",
+          "mutationDirectoryName": "🚫delete-properties",
+          "scenarios": [
+            {
+              "id": "detaches-the-properties-child-and-leaves-the-mesh-child-alone",
+              "directoryName": "🧪️detaches-the-properties-child-and-leaves-the-mesh-child-alone"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-object",
+          "sourceMutationDirectoryName": "🚚move-object",
+          "mutationDirectoryName": "🚚move-object",
+          "scenarios": [
+            {
+              "id": "moves-the-object-to-a-new-translation",
+              "directoryName": "🧪️moves-the-object-to-a-new-translation"
+            }
+          ]
+        },
+        {
+          "mutationId": "rotate-object",
+          "sourceMutationDirectoryName": "🔄rotate-object",
+          "mutationDirectoryName": "🔄rotate-object",
+          "scenarios": [
+            {
+              "id": "rotates-the-object-a-half-turn-about-z",
+              "directoryName": "🧪️rotates-the-object-a-half-turn-about-z"
+            }
+          ]
+        },
+        {
+          "mutationId": "scale-object",
+          "sourceMutationDirectoryName": "📏scale-object",
+          "mutationDirectoryName": "📏scale-object",
+          "scenarios": [
+            {
+              "id": "scales-the-object-non-uniformly",
+              "directoryName": "🧪️scales-the-object-non-uniformly"
+            }
+          ]
+        }
+      ],
       "kinds": ["move-object", "rotate-object", "scale-object", "create-brep", "delete-brep", "create-mesh", "delete-mesh", "create-properties", "delete-properties"]
     }
   ]

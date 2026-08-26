@@ -153,11 +153,11 @@ async fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
     assert_eq!(restored_json, expected_json, "snapshot pack must preserve signed numeric semantics");
     assert_fixture_bytes(&encode_dwg(&from_pack).expect("pack-restored export"), "pack-restored export");
 
-    let analysis = DwgAnalyzer::analyze(&[AnalyzeSource::Text(&dsl)]).await;
+    let analysis = DwgAnalyzer::analyze(&[AnalyzeSource::Text(&dsl)]);
     let analyzed = analysis.parts.snapshot.expect("analyzer snapshot");
     assert_fixture_bytes(&encode_dwg(&analyzed).expect("analyzer export"), "analyzer export");
     let dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId("*") };
-    let composition = crate::artifacts::dwg::standards::v_ac1024::subsets::any::io::derived_composition::DwgComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pack) }]).await.expect("composer snapshot");
+    let composition = crate::artifacts::dwg::standards::v_ac1024::subsets::any::io::derived_composition::DwgComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pack) }]).expect("composer snapshot");
     assert_fixture_bytes(&encode_dwg(&composition.snapshot).expect("composer export"), "composer export");
 
     let empty = DwgDiff::between(&original, &original);

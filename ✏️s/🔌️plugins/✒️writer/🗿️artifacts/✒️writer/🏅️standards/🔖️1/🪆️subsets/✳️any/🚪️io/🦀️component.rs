@@ -8,7 +8,7 @@ use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, Io
 use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
 
 //#region 🔖️Io
-pub async fn io() -> IoDeclaration {
+pub fn io() -> IoDeclaration {
     IoDeclaration {
         native: NativeCodecs {
             snapshot: LanguagePair { text: None, binary: None },
@@ -21,7 +21,7 @@ pub async fn io() -> IoDeclaration {
     }
 }
 
-async fn entries() -> &'static [IoEntry] {
+fn entries() -> &'static [IoEntry] {
     use crate::artifacts::writer::io::export::serializers::artifacts as export;
     use crate::artifacts::writer::io::import::deserializers::artifacts as import;
     static ENTRIES: std::sync::OnceLock<Vec<IoEntry>> = std::sync::OnceLock::new();

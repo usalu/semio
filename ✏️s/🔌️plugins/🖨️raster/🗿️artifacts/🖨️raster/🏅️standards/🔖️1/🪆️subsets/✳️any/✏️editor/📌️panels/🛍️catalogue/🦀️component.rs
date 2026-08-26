@@ -1,14 +1,14 @@
 //! 🛍️ Raster play app panel — the layer-kind catalogue.
 
 use crate::editor::raster::terminology::RasterPlayLabels;
-use semio_framework_plugin::{ui_declarative_sections_to_tree, ui_text, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const RASTER_PLAY_BODY_CATALOGUE: &str = "raster.play.catalogue";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -20,14 +20,12 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(labels: &RasterPlayLabels) -> UiNode {
-    ui_declarative_sections_to_tree(&[UiSectionNode {
-        id: "raster-catalogue".into(),
-        label: Some(labels.layer_kinds.into()),
-        default_open: Some(true),
-        presence: UiPresence::default(),
-        children: vec![ui_text(labels.catalogue_pixel), ui_text(labels.catalogue_group), ui_text(labels.catalogue_adjustment)],
-        menu: None,
-    }])
+pub fn render(labels: &RasterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let rows = crate::editor::raster::ui_node_list([
+        tree_item_desc("raster-catalogue.pixel", labels.catalogue_pixel, None)?,
+        tree_item_desc("raster-catalogue.group", labels.catalogue_group, None)?,
+        tree_item_desc("raster-catalogue.adjustment", labels.catalogue_adjustment, None)?,
+    ])?;
+    PanelTreeBuilder::new("raster-catalogue")?.section("raster-catalogue.layer-kinds", Some(labels.layer_kinds.into()), true, rows)?.build()
 }
 //#endregion 🔖️Render

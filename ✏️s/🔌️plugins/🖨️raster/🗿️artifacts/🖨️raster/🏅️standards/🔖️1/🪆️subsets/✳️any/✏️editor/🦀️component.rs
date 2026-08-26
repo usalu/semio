@@ -36,7 +36,7 @@ pub const RASTER_TREE_PREFIX: &str = "raster-play-layers";
 /// 🌳️ Encodes a layer as its tree-row id — shared by the document/masks panels (which render rows) and
 /// `moveLayer` (which decodes a drop target back into an id). More than one consumer, but this is UI row
 /// encoding, not artifact data, so it stays app-level rather than in `crate::artifacts::raster::schema`.
-pub async fn layer_row_id(layer: &RasterLayerNode) -> String {
+pub fn layer_row_id(layer: &RasterLayerNode) -> String {
     let segment = match layer {
         RasterLayerNode::Group { .. } => "group",
         RasterLayerNode::Adjustment { .. } => "adjustment",
@@ -45,18 +45,18 @@ pub async fn layer_row_id(layer: &RasterLayerNode) -> String {
     format!("{RASTER_TREE_PREFIX}.{segment}.{}", crate::artifacts::raster::schema::layer_node_id(layer))
 }
 
-pub async fn layer_id_from_tree_row_id(row_id: &str) -> Option<String> {
+pub fn layer_id_from_tree_row_id(row_id: &str) -> Option<String> {
     row_id.strip_prefix(&format!("{RASTER_TREE_PREFIX}.")).and_then(|rest| rest.split('.').nth(1)).map(str::to_string)
 }
 
-pub async fn mask_row_id(target_id: &str) -> String {
+pub fn mask_row_id(target_id: &str) -> String {
     format!("{RASTER_TREE_PREFIX}.mask.{target_id}")
 }
 
 /// 📡️ Document JSON for the WASM compositor, omitting embedded assets/utility/brush — mirrors
 /// premigration `rasterDocumentToSyncJson`. Takes `&RasterConfig` nowhere directly (assets live on the
 /// document), but stays app-level next to {@link raster_scene}, its only caller.
-async fn document_sync_json(document: &RasterSnapshot) -> String {
+fn document_sync_json(document: &RasterSnapshot) -> String {
     let mut value = serde_json::to_value(document).unwrap_or(Value::Null);
     if let Value::Object(ref mut map) = value {
         map.remove("assets");
@@ -73,7 +73,7 @@ async fn document_sync_json(document: &RasterSnapshot) -> String {
 /// real pixel bytes funnel through. A handle whose content is not (or no longer) cached is honestly
 /// omitted rather than serialized as an empty/garbage blob (documented staleness gap, matches every
 /// other exemplar in this ticket).
-async fn assets_json_from_document(document: &RasterSnapshot) -> String {
+fn assets_json_from_document(document: &RasterSnapshot) -> String {
     let resolved: std::collections::BTreeMap<String, crate::artifacts::raster::RasterImageAsset> =
         document.assets.keys().filter_map(|asset_id| crate::artifacts::raster::raster_asset(&document.assets, asset_id).map(|asset| (asset_id.clone(), asset))).collect();
     serde_json::to_string(&resolved).unwrap_or_else(|_| "{}".into())
@@ -89,7 +89,7 @@ async fn assets_json_from_document(document: &RasterSnapshot) -> String {
 /// `InteractionView` this wave (known SDK gap — see the ticket's `w3c-summary.md`) — left at neutral
 /// defaults here. The real sync happens below `render`, at the paint surface/host layer
 /// (`RasterHost::sync_interaction`, `🧰️framework/🔨️modules/🗺️surface/🎨️paint`), already migrated.
-pub async fn raster_scene(document: &RasterSnapshot, runtime: &RasterConfig, active_utility: &str, view_mode: &str) -> semio_framework_plugin::Paint2dScene {
+pub fn raster_scene(document: &RasterSnapshot, runtime: &RasterConfig, active_utility: &str, view_mode: &str) -> semio_framework_plugin::Paint2dScene {
     semio_framework_plugin::Paint2dScene {
         document_sync_json: document_sync_json(document),
         assets_json: assets_json_from_document(document),
@@ -248,15 +248,15 @@ impl ArtifactEditor for RasterPlayApp {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::raster::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> RasterSnapshot {
+    fn initial_snapshot() -> RasterSnapshot {
         crate::artifacts::raster::schema::empty_raster_document()
     }
 
-    async fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(raster_io())
     }
 
@@ -264,7 +264,7 @@ impl ArtifactEditor for RasterPlayApp {
     /// `raster_composite_media`) plus the inherited `document:out` default (the pack of
     /// `doc.snapshot`, replicated inline — overriding `export_media` shadows the trait's provided
     /// body for every port on this app, not just the new ones).
-    async fn export_media(port: &str, doc: &ArtifactView<'_, RasterSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, RasterSnapshot>) -> Result<Media, MediaError> {
         match port {
             "image:out" => raster_composite_media(doc.snapshot),
             "document:out" => {
@@ -281,7 +281,7 @@ impl ArtifactEditor for RasterPlayApp {
     /// bundled in one `Emit`, never a whole-document replace (`RasterMutation` has no such variant
     /// anymore). Falls through to the inherited `document:in` default (`MediaError::NotImplemented`,
     /// since `whole_document_operation` is no longer overridden) for any other port.
-    async fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RasterSnapshot>) -> Result<Emit<RasterMutation, RasterConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RasterSnapshot>) -> Result<Emit<RasterMutation, RasterConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "image:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -295,11 +295,11 @@ impl ArtifactEditor for RasterPlayApp {
         ]))
     }
 
-    async fn command_id(command: &RasterCommand) -> &'static str {
+    fn command_id(command: &RasterCommand) -> &'static str {
         command.command_id()
     }
 
-    async fn handle(
+    fn handle(
         command: &RasterCommand,
         doc: &ArtifactView<'_, RasterSnapshot>,
         cfg: &ConfigView<'_, RasterConfig>,
@@ -310,11 +310,11 @@ impl ArtifactEditor for RasterPlayApp {
         command.dispatch(doc, cfg)
     }
 
-    async fn window_measures(_doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(composite::RASTER_PLAY_WINDOW_COMPOSITE.into(), composite::window_measures(cfg.snapshot))])
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = raster_play_labels(config);
@@ -337,7 +337,7 @@ impl ArtifactEditor for RasterPlayApp {
 /// typed media I/O surface (`AppDefinition.io`) — mirrors the `2d.raster` `ArtifactKindSpec` literal
 /// `crate::artifacts::raster::artifact_kind` already declares, plus the app-specific `image:in`/
 /// `image:out` ports (see below).
-pub async fn raster_io() -> semio_framework::AppIo {
+pub fn raster_io() -> semio_framework::AppIo {
     semio_framework::AppIo {
         document_schema: RASTER_DOCUMENT_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
@@ -351,7 +351,7 @@ pub async fn raster_io() -> semio_framework::AppIo {
 /// 🔌️ `image:in` — accepts raster imagery from upstream producers (e.g. draw's `vector:out`,
 /// converted Vector→Raster) as a new composited layer. `Many`/optional: several upstream images may
 /// feed in, and the port may sit unconnected.
-pub async fn raster_image_in_port() -> semio_framework::MediaPortSpec {
+pub fn raster_image_in_port() -> semio_framework::MediaPortSpec {
     semio_framework::MediaPortSpec {
         id: "image:in".into(),
         label: "Image".into(),
@@ -367,7 +367,7 @@ pub async fn raster_image_in_port() -> semio_framework::MediaPortSpec {
 /// port surface; WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe). `kind_id: "2d.image"` — the
 /// shared framework-builtin interchange kind (declared on this app's `.artifact_kind(...)` below;
 /// `shooting`'s `photos:out` declares the identical shape, harmless duplicate registrations).
-pub async fn raster_image_out_port() -> semio_framework::MediaPortSpec {
+pub fn raster_image_out_port() -> semio_framework::MediaPortSpec {
     semio_framework::MediaPortSpec {
         id: "image:out".into(),
         label: "Image".into(),
@@ -386,7 +386,7 @@ pub async fn raster_image_out_port() -> semio_framework::MediaPortSpec {
 /// this pure headless compute node's reach — see that function's own doc), so its raw renderer
 /// output is canonicalized through the real `s.stdio.semio/v1/image` ↔ png round trip inside
 /// `🚪️io/🦀️component.rs` before leaving this port.
-pub async fn raster_composite_media(document: &RasterSnapshot) -> Result<Media, MediaError> {
+pub fn raster_composite_media(document: &RasterSnapshot) -> Result<Media, MediaError> {
     let value = serde_json::to_value(document).map_err(|error| MediaError::Payload("image:out".into(), error.to_string()))?;
     let (svg, width, height) = crate::artifacts::raster::io::raster_document_json_to_svg(&value).map_err(|error| MediaError::Payload("image:out".into(), error))?;
     let rendered = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height).map_err(|error| MediaError::Payload("image:out".into(), error))?;
@@ -400,13 +400,13 @@ pub async fn raster_composite_media(document: &RasterSnapshot) -> Result<Media, 
 //#region 🔖️Manifest
 /// 🛠️ An internal (non-palette) action declaration — the panel/pointer/gesture-bound vocabulary
 /// dispatched by the layer tree, catalogue drops and inspector, never a palette command.
-async fn raster_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> semio_framework_plugin::ActionDefinition {
+fn raster_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> semio_framework_plugin::ActionDefinition {
     semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog(id, label, kind) }
 }
 
 /// 🧰️ One composite-window utility declaration; ids must stay host-compatible (`paint*` prefix paints,
 /// `paintEraser` erases, `selectMarquee` selects) because the scene's active utility feeds `RasterHost`.
-async fn raster_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
+fn raster_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
     UtilityDefinition { group: Some(group.into()), category: Some(category), ..UtilityDefinition::new(id, label, icon) }
 }
 
@@ -419,7 +419,7 @@ async fn raster_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, 
 /// is no place left on this builder for the old `.example(...)`/`.workflow(...)` calls. Both are
 /// dropped here, not silently ported; the subset's own `📚️examples/🎬️demo` facet is the likely
 /// intended replacement mechanism (unconfirmed, per cad's same finding).
-pub async fn create_raster_app() -> AppDefinition {
+pub fn create_raster_app() -> AppDefinition {
     Editor::builder(crate::artifacts::raster::RASTER_DIALECT).document(["semio", "raster"])
             .artifact_kind(crate::artifacts::raster::artifact_kind())
             // 🖼️ `2d.image` — the interchange kind `image:out` produces (WORKFLOWS-END-TO-END-TYPED-PORTS
@@ -524,31 +524,31 @@ pub(crate) mod testkit {
     /// 🚧️ SDK GAP (`📓️w2-cad-report.md` "SDK gaps found" #3): `testkit::new_app_with_registry`'s
     /// signature is still `fn(manifest: fn() -> App)`, unchanged for this ticket; `create_raster_app`
     /// now returns `AppDefinition`. This tiny local wrapper adapts one to the other.
-    async fn raster_app_manifest_for_testkit() -> App {
+    fn raster_app_manifest_for_testkit() -> App {
         App { definition: create_raster_app(), examples: Vec::new() }
     }
 
-    pub async fn app() -> RasterApp {
+    pub fn app() -> RasterApp {
         framework_testkit::new_app::<EditorApp<RasterPlayApp>>()
     }
 
-    pub async fn app_with_registry() -> RasterApp {
+    pub fn app_with_registry() -> RasterApp {
         framework_testkit::new_app_with_registry::<EditorApp<RasterPlayApp>>(raster_app_manifest_for_testkit)
     }
 
-    pub async fn dispatch(app: &mut RasterApp, command: RasterCommand) -> InvocationResult {
+    pub fn dispatch(app: &mut RasterApp, command: RasterCommand) -> InvocationResult {
         app.dispatch_typed(command, &framework_testkit::meta("local")).expect("dispatch")
     }
 
-    pub async fn render(app: &mut RasterApp, body_key: &str) -> String {
+    pub fn render(app: &mut RasterApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).unwrap()
     }
 
-    pub async fn main_window_measures(app: &mut RasterApp) -> Vec<WindowMeasure> {
+    pub fn main_window_measures(app: &mut RasterApp) -> Vec<WindowMeasure> {
         app.window_measures().remove(composite::RASTER_PLAY_WINDOW_COMPOSITE).unwrap_or_default()
     }
 
-    pub async fn semio_app() -> RasterApp {
+    pub fn semio_app() -> RasterApp {
         let mut app = framework_testkit::new_app::<EditorApp<RasterPlayApp>>();
         let document = crate::artifacts::raster::schema::semio_example_document();
         let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", document, None);
@@ -645,8 +645,13 @@ mod tests {
         assert!(masks_json.contains("No masks"));
         let catalogue_json = render(&mut app, catalogue::RASTER_PLAY_BODY_CATALOGUE);
         assert!(catalogue_json.contains("Layer kinds"));
+        assert!(catalogue_json.contains("raster-catalogue.pixel"));
+        assert!(catalogue_json.contains("raster-catalogue.group"));
+        assert!(catalogue_json.contains("raster-catalogue.adjustment"));
         let properties_json = render(&mut app, inspection::RASTER_PLAY_BODY_PROPERTIES);
-        assert!(properties_json.contains("Schema:"));
+        assert!(properties_json.contains("raster-play-inspector.schema"));
+        assert!(properties_json.contains(RASTER_DOCUMENT_SCHEMA));
+        assert!(properties_json.contains("raster-play-inspector.brush"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -882,7 +887,7 @@ mod tests {
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order — TEMPLATE.md §7's
     /// permanent wire guard, feeding the round-trip/keyword-uniqueness/leading-token laws below.
-    async fn every_command() -> Vec<RasterCommand> {
+    fn every_command() -> Vec<RasterCommand> {
         vec![
             RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() }),
             RasterCommand::DropLayerKind(drop_layer_kind::DropLayerKind { kind: "group".into() }),

@@ -27,7 +27,7 @@ pub struct WriterInference {
 }
 
 impl protocol::Inference<WriterSnapshot> for WriterInference {
-    async fn infer(snapshot: &WriterSnapshot) -> Self {
+    fn infer(snapshot: &WriterSnapshot) -> Self {
         Self { outline: WriterOutline::compute(snapshot) }
     }
 }
@@ -42,13 +42,13 @@ impl Default for WriterInference {
 }
 
 impl protocol::InferenceSpec<WriterSnapshot> for WriterInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.writer.writer.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.writer.writer.inference.outline", reads: &["text"] }]
     }
 }
@@ -71,7 +71,7 @@ impl ArtifactInferrer for WriterInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.writer.writer.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `writer_artifact_schema_descriptor`'s registration.
-pub async fn writer_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn writer_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.writer.writer.inference",
         inference: schema::FacetLeaves {
@@ -89,7 +89,7 @@ pub async fn writer_artifact_inference_descriptor() -> schema::ArtifactInference
 /// 📡️ Semantic token payload for the text editor scene (LSP `data` array or grammar tokens) — derived
 /// straight from a `WriterSnapshot` (its `language_id`/`text` fields), so it lives here beside
 /// `WriterInference` rather than in `🧬️schema`'s text-only helpers.
-pub async fn language_tokens_json(document: &WriterSnapshot) -> Option<String> {
+pub fn language_tokens_json(document: &WriterSnapshot) -> Option<String> {
     let text = crate::artifacts::writer::writer_text(document);
     eprintln!("[DEBUG] writer.schema.inferences language_tokens_json language_id={} text_len={}", document.language_id, text.len());
     if let Some(spec) = dsl::language(&document.language_id) {
@@ -103,7 +103,7 @@ pub async fn language_tokens_json(document: &WriterSnapshot) -> Option<String> {
     None
 }
 
-pub async fn language_diagnostics_json(document: &WriterSnapshot, lint_signal: u32) -> Option<String> {
+pub fn language_diagnostics_json(document: &WriterSnapshot, lint_signal: u32) -> Option<String> {
     let text = crate::artifacts::writer::writer_text(document);
     if document.language_id == "jack" {
         let graph = example_graph();

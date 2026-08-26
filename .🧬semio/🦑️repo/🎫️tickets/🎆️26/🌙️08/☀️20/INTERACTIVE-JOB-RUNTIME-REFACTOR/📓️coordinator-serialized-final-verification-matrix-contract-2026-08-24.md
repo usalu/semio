@@ -18,8 +18,9 @@ It does not currently register the permanent `verify interactivity`,
 `verify interactivity tool-jobs`, or dependency-freeze commands. Before final execution, a
 file-disjoint packet must add these executable commands to `.vscode/launch.json` in the existing
 `4_gate` order and naming taxonomy. The commands must call `bun ./📜️script.ts`; no second script is
-allowed. Dependency verification must preserve the declared Compose exclusion and must not rewrite
-the baseline.
+allowed. The user's later all-app requirement supersedes the plan's earlier Compose exclusion, so
+dependency and runtime verification must cover every currently declared application surface without
+rewriting the baseline.
 
 ## One-owner Order
 
@@ -73,8 +74,9 @@ then restarts the matrix at stage 1 on the new quiescent tree.
 - Timing evidence must come from runtime instrumentation, not source constants or unit-test names.
 - Browser evidence must identify the exact route, locale, renderer, worker count, and observed
   callback/step maxima.
-- The matrix does not authorize modifying unrelated peer work, the dependency baseline, the shared
-  Git index, or Compose.
+- The matrix does not authorize modifying unrelated peer work, the dependency baseline, or the shared
+  Git index. Compose is in scope only where it remains a currently declared application surface under
+  the user's later all-app requirement.
 
 ## Closure Consequence
 

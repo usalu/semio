@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — the implicit document ports plus one
 /// extra input, `chapters:in` (Text×Document, kind `text.document`, `Many` — fans in from several
 /// upstream `writer` nodes' `"text:out"`).
-pub async fn playbook_io() -> semio_framework_plugin::AppIo {
+pub fn playbook_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: PLAYBOOK_DOCUMENT_SCHEMA.into(),
         document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Text, form: semio_framework_plugin::MediaForm::Document },

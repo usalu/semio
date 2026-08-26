@@ -30,6 +30,21 @@
     {
       "id": "xlsx-ecma-376-any",
       "capability": "xlsx-ecma-376-mutate",
+      "standardDirectoryName": "🔖️ecma-376",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "widens-the-total-formula-to-a-third-row",
+              "directoryName": "🧪️widens-the-total-formula-to-a-third-row"
+            }
+          ]
+        }
+      ],
       "kinds": ["no-mutation", "set-snapshot", "insert-sheet", "remove-sheet", "rename-sheet", "set-cell", "remove-cell", "insert-shared-string", "remove-shared-string", "set-shared-string"]
     }
   ],

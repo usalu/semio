@@ -12,7 +12,7 @@ pub struct SetFontPx {
     pub value: u32,
 }
 
-pub async fn handle(payload: &SetFontPx, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+pub fn handle(payload: &SetFontPx, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
     let config = cfg.snapshot;
     let mut settings = config.editor_settings.clone();
     settings.font_px = payload.value;

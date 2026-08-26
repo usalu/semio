@@ -5,7 +5,7 @@
 //! from the sibling editor surface (`policyViewerPurityBreaches` forbids it outright).
 
 use crate::artifacts::rewrite::RewriteSnapshot;
-use semio_framework_plugin::{UiNode, WindowKindDefinition};
+use semio_framework_plugin::WindowKindDefinition;
 // 🚧️ SDK GAP: `TextWindowKit`/`TextView`/`WindowKit` (contract §2.6) are not yet in
 // `semio_framework_plugin`'s curated crate-root re-export list (`🔌️plugin/🦀️component.rs`) — the
 // whole `//#region 🔖️WindowKits` region lives inside `pub mod app`, same gap category as
@@ -36,7 +36,7 @@ pub fn rule_text(state: &RewriteSnapshot) -> String {
     serde_json::to_string_pretty(&document).unwrap_or_default()
 }
 
-pub fn render(document: &RewriteSnapshot) -> UiNode {
+pub fn render(document: &RewriteSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     TextWindowKit::render(&TextView { text: rule_text(document), language: Some("json".into()), read_only: true })
 }
 //#endregion 🔖️Render

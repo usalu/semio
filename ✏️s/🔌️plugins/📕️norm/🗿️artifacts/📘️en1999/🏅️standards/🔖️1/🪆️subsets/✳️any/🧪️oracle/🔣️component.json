@@ -23,6 +23,296 @@
     {
       "id": "en1999-1-any",
       "capability": "en1999-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-a-mm2",
+          "sourceMutationDirectoryName": "🦂change-a-mm2",
+          "mutationDirectoryName": "🦂change-a-mm2",
+          "scenarios": [
+            {
+              "id": "enlarges-section-area-to-2250-mm2",
+              "directoryName": "🧪️enlarges-section-area-to-2250-mm2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-alloy",
+          "sourceMutationDirectoryName": "🦗change-alloy",
+          "mutationDirectoryName": "🦗change-alloy",
+          "scenarios": [
+            {
+              "id": "switches-alloy-to-aw7020t6",
+              "directoryName": "🧪️switches-alloy-to-aw7020t6"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-annex",
+          "sourceMutationDirectoryName": "🦘change-annex",
+          "mutationDirectoryName": "🦘change-annex",
+          "scenarios": [
+            {
+              "id": "switches-national-annex-to-en",
+              "directoryName": "🧪️switches-national-annex-to-en"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-beta-w",
+          "sourceMutationDirectoryName": "🐷change-beta-w",
+          "mutationDirectoryName": "🐷change-beta-w",
+          "scenarios": [
+            {
+              "id": "raises-weld-correlation-beta-w-to-0-75",
+              "directoryName": "🧪️raises-weld-correlation-beta-w-to-0-75"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-chi",
+          "sourceMutationDirectoryName": "🕷️change-chi",
+          "mutationDirectoryName": "🕷️change-chi",
+          "scenarios": [
+            {
+              "id": "lowers-buckling-chi-to-0-5",
+              "directoryName": "🧪️lowers-buckling-chi-to-0-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-delta-sigma-c",
+          "sourceMutationDirectoryName": "🐴change-delta-sigma-c",
+          "mutationDirectoryName": "🐴change-delta-sigma-c",
+          "scenarios": [
+            {
+              "id": "upgrades-detail-category-to-90-mpa",
+              "directoryName": "🧪️upgrades-detail-category-to-90-mpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-delta-sigma-ed",
+          "sourceMutationDirectoryName": "🦉change-delta-sigma-ed",
+          "mutationDirectoryName": "🦉change-delta-sigma-ed",
+          "scenarios": [
+            {
+              "id": "raises-fatigue-stress-range-to-62-5-mpa",
+              "directoryName": "🧪️raises-fatigue-stress-range-to-62-5-mpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fatigue-m",
+          "sourceMutationDirectoryName": "🐎change-fatigue-m",
+          "mutationDirectoryName": "🐎change-fatigue-m",
+          "scenarios": [
+            {
+              "id": "flattens-sn-slope-to-m-5",
+              "directoryName": "🧪️flattens-sn-slope-to-m-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-it-mm4",
+          "sourceMutationDirectoryName": "🐜change-it-mm4",
+          "mutationDirectoryName": "🐜change-it-mm4",
+          "scenarios": [
+            {
+              "id": "raises-torsion-constant-to-10240-mm4",
+              "directoryName": "🧪️raises-torsion-constant-to-10240-mm4"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-l-cr-mm",
+          "sourceMutationDirectoryName": "🦔change-l-cr-mm",
+          "mutationDirectoryName": "🦔change-l-cr-mm",
+          "scenarios": [
+            {
+              "id": "lengthens-buckling-length-to-4000-mm",
+              "directoryName": "🧪️lengthens-buckling-length-to-4000-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-m-ed-knm",
+          "sourceMutationDirectoryName": "🐍change-m-ed-knm",
+          "mutationDirectoryName": "🐍change-m-ed-knm",
+          "scenarios": [
+            {
+              "id": "raises-design-moment-to-9-5-knm",
+              "directoryName": "🧪️raises-design-moment-to-9-5-knm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-n-cycles",
+          "sourceMutationDirectoryName": "🦄change-n-cycles",
+          "mutationDirectoryName": "🦄change-n-cycles",
+          "scenarios": [
+            {
+              "id": "doubles-fatigue-cycles-to-2000000",
+              "directoryName": "🧪️doubles-fatigue-cycles-to-2000000"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-n-ed-kn",
+          "sourceMutationDirectoryName": "🦎change-n-ed-kn",
+          "mutationDirectoryName": "🦎change-n-ed-kn",
+          "scenarios": [
+            {
+              "id": "raises-axial-force-to-180-kn",
+              "directoryName": "🧪️raises-axial-force-to-180-kn"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-sheet-b-mm",
+          "sourceMutationDirectoryName": "🐗change-sheet-b-mm",
+          "mutationDirectoryName": "🐗change-sheet-b-mm",
+          "scenarios": [
+            {
+              "id": "widens-sheet-to-320-mm",
+              "directoryName": "🧪️widens-sheet-to-320-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-sheet-k-sigma",
+          "sourceMutationDirectoryName": "🐘change-sheet-k-sigma",
+          "mutationDirectoryName": "🐘change-sheet-k-sigma",
+          "scenarios": [
+            {
+              "id": "raises-sheet-plate-buckling-k-sigma-to-6-25",
+              "directoryName": "🧪️raises-sheet-plate-buckling-k-sigma-to-6-25"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-sheet-m-ed-knm",
+          "sourceMutationDirectoryName": "🦛change-sheet-m-ed-knm",
+          "mutationDirectoryName": "🦛change-sheet-m-ed-knm",
+          "scenarios": [
+            {
+              "id": "raises-sheet-design-moment-to-1-25-knm",
+              "directoryName": "🧪️raises-sheet-design-moment-to-1-25-knm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-sheet-t-mm",
+          "sourceMutationDirectoryName": "🦌change-sheet-t-mm",
+          "mutationDirectoryName": "🦌change-sheet-t-mm",
+          "scenarios": [
+            {
+              "id": "thickens-sheet-to-3-5-mm",
+              "directoryName": "🧪️thickens-sheet-to-3-5-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-sheet-w-el-mm3",
+          "sourceMutationDirectoryName": "🦏change-sheet-w-el-mm3",
+          "mutationDirectoryName": "🦏change-sheet-w-el-mm3",
+          "scenarios": [
+            {
+              "id": "raises-sheet-section-modulus-to-12800-mm3",
+              "directoryName": "🧪️raises-sheet-section-modulus-to-12800-mm3"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-shell-r-mm",
+          "sourceMutationDirectoryName": "🐫change-shell-r-mm",
+          "mutationDirectoryName": "🐫change-shell-r-mm",
+          "scenarios": [
+            {
+              "id": "widens-shell-radius-to-750-mm",
+              "directoryName": "🧪️widens-shell-radius-to-750-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-shell-t-mm",
+          "sourceMutationDirectoryName": "🐪change-shell-t-mm",
+          "mutationDirectoryName": "🐪change-shell-t-mm",
+          "scenarios": [
+            {
+              "id": "thickens-shell-to-6-25-mm",
+              "directoryName": "🧪️thickens-shell-to-6-25-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-sigma-ed-shell-mpa",
+          "sourceMutationDirectoryName": "🦒change-sigma-ed-shell-mpa",
+          "mutationDirectoryName": "🦒change-sigma-ed-shell-mpa",
+          "scenarios": [
+            {
+              "id": "raises-shell-design-stress-to-165-mpa",
+              "directoryName": "🧪️raises-shell-design-stress-to-165-mpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-theta-c",
+          "sourceMutationDirectoryName": "🦇change-theta-c",
+          "mutationDirectoryName": "🦇change-theta-c",
+          "scenarios": [
+            {
+              "id": "raises-fatigue-detail-theta-c-to-225-mpa",
+              "directoryName": "🧪️raises-fatigue-detail-theta-c-to-225-mpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-v-weld-ed-kn",
+          "sourceMutationDirectoryName": "🐑change-v-weld-ed-kn",
+          "mutationDirectoryName": "🐑change-v-weld-ed-kn",
+          "scenarios": [
+            {
+              "id": "raises-weld-shear-to-48-kn",
+              "directoryName": "🧪️raises-weld-shear-to-48-kn"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-w-el-mm3",
+          "sourceMutationDirectoryName": "🦟change-w-el-mm3",
+          "mutationDirectoryName": "🦟change-w-el-mm3",
+          "scenarios": [
+            {
+              "id": "raises-section-modulus-to-40000-mm3",
+              "directoryName": "🧪️raises-section-modulus-to-40000-mm3"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-weld-length-mm",
+          "sourceMutationDirectoryName": "🐮change-weld-length-mm",
+          "mutationDirectoryName": "🐮change-weld-length-mm",
+          "scenarios": [
+            {
+              "id": "lengthens-weld-to-200-mm",
+              "directoryName": "🧪️lengthens-weld-to-200-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-weld-throat-mm",
+          "sourceMutationDirectoryName": "🐐change-weld-throat-mm",
+          "mutationDirectoryName": "🐐change-weld-throat-mm",
+          "scenarios": [
+            {
+              "id": "thickens-weld-throat-to-6-5-mm",
+              "directoryName": "🧪️thickens-weld-throat-to-6-5-mm"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "change-n-ed-kn",
         "change-m-ed-knm",

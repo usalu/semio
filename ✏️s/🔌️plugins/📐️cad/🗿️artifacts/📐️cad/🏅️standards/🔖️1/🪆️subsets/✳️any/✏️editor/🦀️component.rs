@@ -33,10 +33,13 @@ use crate::editor::cad::terminology::{cad_is_de_locale, cad_labels};
 use base64::Engine as _;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{
-    tree_item_with_action, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DraftView, Emit,
-    Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, NoDraft, NoDraftMutation, PluginAssemblyError, UiNode, UiText, UiValue, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure, WorldSunConfig,
-    SET_ACTIVE_UTILITY_ACTION_ID,
+    tree_item_with_action, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppOperationContext, ArtifactOwnedToolJobFactory,
+    ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DraftView, EditorApp, Emit, Fault, Label, LocalizedLabel, Media,
+    MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, NoDraft, NoDraftMutation, PluginAssemblyError, UiNode, UiText, UiValue, UtilityCategory, UtilityDefinition, WindowEngagement,
+    WindowMeasure, WorldSunConfig, SET_ACTIVE_UTILITY_ACTION_ID,
 };
+use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
 // 🚧️ SDK GAP: `ArtifactEditor`/`Editor`/`Dialect` (ticket 26/08/16 contract §2.1/§2.4)? are not yet
 // in `semio_framework_plugin`'s curated crate-root re-export list (`🔌️plugin/🦀️component.rs:17858`)
@@ -1056,6 +1059,90 @@ impl CadPlayApp {
     }
 }
 
+//#region 🧵️RetainedCommands
+const CAD_HOST_CONFIGURATION_TOOL_IDS: &[&str] = &["setContributions"];
+const CAD_RETAINED_COMMAND_SCHEMA: &str = "cad.scene.tool-command.v1";
+const CAD_RETAINED_RAW_BYTES: usize = 8_192;
+const CAD_RETAINED_WORK_ITEMS: usize = 16_384;
+
+fn cad_host_configuration_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(CAD_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500)
+}
+
+fn cad_host_configuration_extent(_command: &CadCommand, _snapshot: &CadSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    Some(1)
+}
+
+fn cad_host_configuration_reduce(
+    command: &CadCommand,
+    snapshot: &CadSnapshot,
+    config: &CadConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> Result<Emit<CadMutation, CadConfigMutation, NoDraftMutation>, Fault> {
+    let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
+    let cfg = ConfigView { snapshot: config };
+    let mut ctx = CadDispatchCtx { interaction: CadInteractionSnapshot::default(), preview_operation: Some(CadPreviewOperationIdentity::from(operation)) };
+    command.dispatch(&doc, &cfg, &mut ctx)
+}
+
+struct CadHostConfigurationJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl CadHostConfigurationJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: CAD_HOST_CONFIGURATION_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for CadHostConfigurationJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<CadPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<CadPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        CAD_RETAINED_COMMAND_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        cad_host_configuration_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > CAD_RETAINED_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("CAD host configuration rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for CadHostConfigurationJobFactory {
+    type Owner = EditorApp<CadPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = CAD_HOST_CONFIGURATION_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;
+}
+//#endregion 🧵️RetainedCommands
+
 impl ArtifactEditor for CadPlayApp {
     type Snapshot = CadSnapshot;
     type Mutation = CadMutation;
@@ -1084,15 +1171,54 @@ impl ArtifactEditor for CadPlayApp {
         ]
     }
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller_id = registry.controller_id().to_string();
+        registry.register(CadHostConfigurationJobFactory::new(&controller_id))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !CAD_HOST_CONFIGURATION_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id {
+            return Err(Fault::from("cad-host-configuration-command-tool-mismatch"));
+        }
+        let tool_id = request.command.command_id();
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, cad_host_configuration_reduce, cad_host_configuration_extent));
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            request.context,
+            operation_context,
+            request.completion,
+            CadCommand::command_id,
+            CAD_RETAINED_RAW_BYTES,
+            CAD_RETAINED_WORK_ITEMS,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
+
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::cad::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> CadSnapshot {
+    fn initial_snapshot() -> CadSnapshot {
         forest_play_scene()
     }
 
-    async fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(cad_io())
     }
 
@@ -1105,7 +1231,7 @@ impl ArtifactEditor for CadPlayApp {
     /// geometry from any upstream 3D producer and inserts it as a new `CadObject` in the Shape pane,
     /// through the same brep kernel every other import path shares. Falls through to the default
     /// `document:in` importer for any other port.
-    async fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, CadSnapshot>) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, CadSnapshot>) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "geometry:in" {
             if port != "document:in" {
                 return Err(MediaError::NotImplemented);
@@ -1139,12 +1265,12 @@ impl ArtifactEditor for CadPlayApp {
     /// 🎞️ `brep:out` (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe): exports the cad document's current
     /// brep geometry (every pane's solids fused into one modelspace, same as `saveInPlay`'s STEP export)
     /// wrapped as `Media`. Falls through to the default whole-document `document:out` for any other port.
-    async fn export_media(port: &str, doc: &ArtifactView<'_, CadSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, CadSnapshot>) -> Result<Media, MediaError> {
         if port != "brep:out" {
             if port != "document:out" {
                 return Err(MediaError::NotImplemented);
             }
-            let media_type = Self::io().await.map_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, |io| io.document_media_type);
+            let media_type = Self::io().map_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, |io| io.document_media_type);
             let bytes = <CadSnapshot as store::ArtifactPack>::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
@@ -1164,11 +1290,11 @@ impl ArtifactEditor for CadPlayApp {
         Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "3d.cad".into(), json: base64::engine::general_purpose::STANDARD.encode(text.as_bytes()) } })
     }
 
-    async fn command_id(command: &CadCommand) -> &'static str {
+    fn command_id(command: &CadCommand) -> &'static str {
         command.command_id()
     }
 
-    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<CadCommand, Fault> {
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<CadCommand, Fault> {
         cad_command_from_action(action, args)
     }
 
@@ -1178,7 +1304,7 @@ impl ArtifactEditor for CadPlayApp {
         }))
     }
 
-    async fn handle(
+    fn handle(
         command: &CadCommand,
         doc: &ArtifactView<'_, CadSnapshot>,
         cfg: &ConfigView<'_, CadConfig>,
@@ -1186,13 +1312,13 @@ impl ArtifactEditor for CadPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, Fault> {
-        let selection = interaction.selection(CAD_INTERACTION_DOMAIN).await;
+        let selection = interaction.selection(CAD_INTERACTION_DOMAIN);
         let snapshot = CadInteractionSnapshot { granularity: selection.granularity.clone(), ids: selection.ids.clone(), anchor_id: selection.anchor_id.clone() };
         let mut ctx = CadDispatchCtx { interaction: snapshot, preview_operation: Some(CadPreviewOperationIdentity::from(doc.operation()?)) };
         command.dispatch(doc, cfg, &mut ctx)
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(&cfg.snapshot.contributions_json);
         let view = CadPlayView { document: doc.snapshot.clone(), runtime: cad_runtime_from_config(cfg.snapshot) };
         let labels = cad_labels(cfg.snapshot);
@@ -1217,7 +1343,7 @@ impl ArtifactEditor for CadPlayApp {
         }
     }
 
-    async fn window_engagements(doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> HashMap<String, WindowEngagement> {
         let view = CadPlayView { document: doc.snapshot.clone(), runtime: cad_runtime_from_config(cfg.snapshot) };
         let labels = cad_labels(cfg.snapshot);
         HashMap::from([
@@ -1230,7 +1356,7 @@ impl ArtifactEditor for CadPlayApp {
 
     /// 🪟️ Keyed by the 4 fixed window-KIND ids; each window collects its own measures from the edit
     /// mode's `🎚️options/*` components.
-    async fn window_measures(_doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let runtime = cad_runtime_from_config(cfg.snapshot);
         let is_de = cad_is_de_locale(cfg.snapshot);
         HashMap::from([
@@ -1247,8 +1373,8 @@ impl ArtifactEditor for CadPlayApp {
     /// (`cfg.snapshot.selected_object_ids`, now framework-owned and unreachable here) — always shows
     /// the section; a bare right-click with nothing selected is a documented reduced-fidelity gap
     /// (each action already no-ops on an empty selection at dispatch time)?.
-    async fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        Menu::of(registry).await.action("translateSelection").await.action("rotateSelection").await.action("scaleSelection").await.action("duplicateObject").await.destructive("deleteObject").await.build().await
+    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        semio_framework_plugin::resolve_ready(async { Menu::of(registry).await.action("translateSelection").await.action("rotateSelection").await.action("scaleSelection").await.action("duplicateObject").await.destructive("deleteObject").await.build().await })
     }
 }
 //#endregion 🔖️PlayApp
@@ -1296,7 +1422,12 @@ pub fn cad_interaction_definition() -> semio_framework_plugin::InteractionDefini
 
 pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::cad::CAD_DIALECT).document(["semio", "cad"])
-            .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
+            .command({
+                let mut definition = CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) };
+                definition.semantics.execution.interactive_job = semio_framework_plugin::InteractiveJobClassification::Migrated;
+                definition
+            })
+            .action_interactive_job("setContributions", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .artifact_kind(artifact_kind())
             .icon_id("box")
             .terminology("reuse")
@@ -1383,9 +1514,46 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             // this same `3d.cad`/Brep information's single source of truth, reused here rather than
             // duplicated; `config_spec()` stays empty (cad has no sticky-default settings analogous to
             // shooting's format defaults — every `CadConfig` field is session view-state, not a setting).
-            .config(semio_framework_plugin::resolve_ready(CadPlayApp::config_spec()))
+            .config(CadPlayApp::config_spec())
             .io(cad_io())
-            .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addObject", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchObject", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteObject", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("duplicateObject", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addNode", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("renameNode", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("translateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("rotateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("scaleSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("applyTransformation", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("importCadFile", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchCadPlayReference", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("focusModelDefinition", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("worldPointerDown", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setProjection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setProjectionParam", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setDislocateOption", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setNodeSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setReferenceSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("referenceHover", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementPossibleSelect", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementRepeatLast", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementAbort", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("worldPointerMove", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("toggleSun", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunAzimuth", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunElevation", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunIntensity", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveUtility", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("saveSelected", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("saveInPlay", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("saveCurrent", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("loadRawRequest", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`Viewer`/`.editor::<E>(def: AppDefinition)`
             // take a bare `AppDefinition`, not the old `App { definition, examples }` — there is no
             // `.example(...)`/`.workflow(...)` on this builder, so the old
@@ -1647,6 +1815,10 @@ mod tests {
             .expect("CAD contribution mutation");
         assert_eq!(mutation, CadConfigMutation::SetContributions { json: "[{\"id\":\"cad\"}]".into() });
         assert_eq!(<CadPlayApp as ArtifactEditor>::host_configuration_mutation("setActiveExample", None).expect("non-host action"), None);
+        let factory = CadHostConfigurationJobFactory::new("s.cad.cad@1/*#editor");
+        assert_eq!(ToolJobFactory::keys(&factory), &[ToolFactoryKey::new("s.cad.cad@1/*#editor", "setContributions")]);
+        assert_eq!(ToolJobFactory::payload_schema_id(&factory), CAD_RETAINED_COMMAND_SCHEMA);
+        assert_eq!(ToolJobFactory::classification(&factory), InteractiveJobClassification::Migrated);
     }
 
     /// ⚖️ LAW: the one-action spot check above is not enough — this is the framework's own harness,

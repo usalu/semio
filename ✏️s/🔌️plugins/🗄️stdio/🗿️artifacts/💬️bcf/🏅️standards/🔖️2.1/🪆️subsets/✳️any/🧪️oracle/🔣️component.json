@@ -43,6 +43,21 @@
     {
       "id": "bcf-2-1-any",
       "capability": "bcf-2-1-mutate",
+      "standardDirectoryName": "🔖️2.1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "closes-the-clash-topic-and-answers-its-comment",
+              "directoryName": "🧪️closes-the-clash-topic-and-answers-its-comment"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

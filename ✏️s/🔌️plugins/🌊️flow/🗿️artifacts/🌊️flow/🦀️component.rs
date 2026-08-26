@@ -18,8 +18,8 @@ use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, M
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{
     FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,
 };
-use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
+use std::sync::Arc;
 
 //#region 🔖️Types
 pub use crate::artifacts::flow::snapshot::schema::FlowSnapshot;
@@ -147,26 +147,15 @@ pub async fn flow_content_child_handle(widgets: &[Widget], synapses: &[SynapseSp
     let child_id = format!("flow-content-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
     let target = store::os_io::ArtifactRef { artifact_id: "flow-content".into(), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::ArtifactChild::new(child_id, target).with_local_owner(Arc::new(FlowWorkingScene { widgets: widgets.to_vec(), synapses: synapses.to_vec(), layout: layout.clone() }))
 }
 //#endregion 🔖️ContentBridge
 
 //#region 🔖️WorkingScene
-/// 🌱 Ephemeral, session-side working representation of the composed content child's live
-/// widgets/synapses/layout — NEVER persisted, NEVER a durable field on `FlowSnapshot` itself
-/// (matches the `EngineRep` contract: wholly derived, droppable at any instant, rebuilt from base).
-/// Exists because no `LinkResolver`/child-dispatch seam is wired into `ArtifactApp::handle` yet
-/// (checked directly against `🔌️plugin/🦀️component.rs` — same standing gap cad/lowpoly/writer's
-/// reports all document); until one exists, the only way a persisted content-addressed HANDLE can
-/// round-trip to real widgets/synapses/layout within one process is this cache, keyed by
-/// `FlowContentChild::child_id` — mirrors `WriterWorkingScene`/`LowpolyScratch.mesh_workspace`.
-///
-/// ⚠️ Same documented gap as lowpoly's `StaleMeshWorkspace`/writer's `WriterWorkingScene`: store-
-/// level undo/redo bypasses `ArtifactApp::handle` entirely, and a bare `parse_dsl`/`decode_pack` of
-/// persisted bytes recovers only the opaque handle, never the content (the child's real payload
-/// lives in its own, not-yet-resolvable, child store). `flow_working_scene`/`flow_working_scene_for_
-/// handle` fail soft (an empty scene) rather than panicking. A real fix needs child-document
-/// resolution, which no WASM-guest plugin in this repo has yet.
+/// 🌱 Immutable artifact-instance owner of one composed content child's live
+/// widgets/synapses/layout. The typed owner is retained by the exact `ArtifactChild`, omitted from
+/// every wire codec, and dies with its final child/snapshot clone. Durable child-id reuse therefore
+/// cannot replace or resolve another app instance's scene.
 #[derive(Clone, Debug, Default)]
 pub struct FlowWorkingScene {
     pub widgets: Vec<Widget>,
@@ -174,26 +163,14 @@ pub struct FlowWorkingScene {
     pub layout: BTreeMap<String, WidgetLayout>,
 }
 
-thread_local! {
-    static FLOW_SCRATCH: RefCell<HashMap<String, FlowWorkingScene>> = RefCell::new(HashMap::new());
+/// 📝 Replaces one exact child handle's local scene owner without publishing process state.
+pub fn cache_flow_content(handle: &mut FlowContentChild, widgets: Vec<Widget>, synapses: Vec<SynapseSpec>, layout: BTreeMap<String, WidgetLayout>) {
+    handle.set_local_owner(Arc::new(FlowWorkingScene { widgets, synapses, layout }));
 }
 
-/// 📝 Seeds the scratch cache for a handle — call whenever new widgets/synapses/layout content is
-/// about to become a document's `content` field (every mutation-diff/fixture builder in this plugin
-/// does, via [`flow_content_child_handle_and_cache`]).
-pub async fn cache_flow_content(child_id: &str, widgets: Vec<Widget>, synapses: Vec<SynapseSpec>, layout: BTreeMap<String, WidgetLayout>) {
-    FLOW_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), FlowWorkingScene { widgets, synapses, layout }));
-}
-
-#[cfg(test)]
-pub async fn clear_flow_process_state() {
-    FLOW_SCRATCH.with(|cache| cache.borrow_mut().clear());
-}
-
-/// 🔎 Reads the cached live scene for a content child handle — an empty scene (never a panic) when
-/// nothing has cached it yet (see this region's module doc comment for why that can happen).
+/// 🔎 Reads the exact child-local live scene, failing soft only for a wire-decoded unresolved handle.
 pub async fn flow_working_scene_for_handle(handle: &FlowContentChild) -> FlowWorkingScene {
-    FLOW_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned()).unwrap_or_default()
+    handle.local_owner::<FlowWorkingScene>().map(|scene| (*scene).clone()).unwrap_or_default()
 }
 
 /// 🔎 Reads the current document's live widgets/synapses/layout off its `content` child handle — the
@@ -203,14 +180,9 @@ pub async fn flow_working_scene(snapshot: &FlowSnapshot) -> FlowWorkingScene {
     flow_working_scene_for_handle(&snapshot.content)
 }
 
-/// 🏗️ Mints a new content-addressed handle AND seeds the scratch cache with its scene in one call —
-/// the standard way every mutation-diff/fixture builder in this plugin creates a `content` field
-/// value; never construct a handle without also caching, or [`flow_working_scene`] will read back
-/// empty.
+/// 🏗️ Mints a new content-addressed handle with its exact artifact-instance scene owner.
 pub async fn flow_content_child_handle_and_cache(widgets: Vec<Widget>, synapses: Vec<SynapseSpec>, layout: BTreeMap<String, WidgetLayout>) -> FlowContentChild {
-    let handle = flow_content_child_handle(&widgets, &synapses, &layout);
-    cache_flow_content(&handle.child_id, widgets, synapses, layout);
-    handle
+    flow_content_child_handle(&widgets, &synapses, &layout)
 }
 //#endregion 🔖️WorkingScene
 
@@ -239,6 +211,65 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn owner_handle(text: &str) -> FlowContentChild {
+        let target = store::os_io::ArtifactRef { artifact_id: "flow-content".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() } };
+        let scene = FlowWorkingScene { widgets: vec![Widget::InputNote { id: "note".into(), text: text.into() }], synapses: Vec::new(), layout: BTreeMap::new() };
+        FlowContentChild::new("flow-content-reused".into(), target).with_local_owner(Arc::new(scene))
+    }
+
+    fn owner_text(handle: &FlowContentChild) -> String {
+        let owner = handle.local_owner::<FlowWorkingScene>().expect("typed Flow owner");
+        let [Widget::InputNote { text, .. }] = owner.widgets.as_slice() else { panic!("one note fixture") };
+        text.clone()
+    }
+
+    #[test]
+    fn flow_scene_owner_fixture_is_language_neutral_and_bounded() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/flow-scene-owner-law.json")).expect("language-neutral Flow owner fixture");
+        assert_eq!(fixture["ownedSlots"], 1);
+        assert_eq!(fixture["maximumCases"], 5);
+        assert_eq!(fixture["cases"].as_array().map(Vec::len), Some(5));
+    }
+
+    #[test]
+    fn flow_scene_owner_holds_identity_isolation_aba_wire_omission_and_close() {
+        let left = owner_handle("A");
+        let clone = left.clone();
+        let left_owner = left.local_owner::<FlowWorkingScene>().expect("left owner");
+        let clone_owner = clone.local_owner::<FlowWorkingScene>().expect("clone owner");
+        assert!(Arc::ptr_eq(&left_owner, &clone_owner));
+
+        let right = owner_handle("B");
+        assert_eq!(left.child_id, right.child_id, "hostile durable identity must collide");
+        assert_eq!(owner_text(&left), "A");
+        assert_eq!(owner_text(&right), "B");
+        let stale_a = left.clone();
+        drop(left);
+        let reused_b = owner_handle("B");
+        assert_eq!(owner_text(&stale_a), "A", "stale A must not resolve reused B");
+        assert_eq!(owner_text(&reused_b), "B");
+
+        let wire = serde_json::to_value(&stale_a).expect("third-party serde wire oracle");
+        assert_eq!(wire.as_object().map(serde_json::Map::len), Some(2));
+        assert!(wire.get("localOwner").is_none());
+        let decoded: FlowContentChild = serde_json::from_value(wire).expect("third-party serde decode oracle");
+        assert!(decoded.local_owner::<FlowWorkingScene>().is_none());
+
+        drop(left_owner);
+        drop(clone_owner);
+        drop(clone);
+        drop(right);
+        drop(stale_a);
+        drop(reused_b);
+        let terminal = owner_handle("close");
+        let owner = terminal.local_owner::<FlowWorkingScene>().expect("close owner");
+        let witness = Arc::downgrade(&owner);
+        drop(owner);
+        assert!(witness.upgrade().is_some());
+        drop(terminal);
+        assert!(witness.upgrade().is_none(), "one exact child slot must close its scene owner");
+    }
 
     /// 🗂️ The manifest-facing `ArtifactKindSpec.schema` ("flow.artifact") is deliberately NOT
     /// `FLOW_DOCUMENT_SCHEMA` ("flow.fixture") — the former names the artifact kind in the OS media

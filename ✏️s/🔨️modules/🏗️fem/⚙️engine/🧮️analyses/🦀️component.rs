@@ -6,7 +6,7 @@
 use crate::algebra::{MatD, VecD};
 use crate::model::{BeamStation, Dof, Element, ElementContext, ElementResult, Elements, FemError, MemberUdl, NodalLoad, Node, NodeDisplacement, NodeReaction, PlaneStress, PlateMoments, ShellState, SolidStress, SolutionChecks, StaticResult, Support};
 use crate::sparse::{ldlt_factor, rcm_order, subspace_iteration, Coo, Csr, EigenPairs, LdltFactor};
-use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, Operation, StepContext, StepOutcome};
+use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, JobPayloadStream, Operation, RetainedJobPayload, StepContext, StepOutcome};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
@@ -514,15 +514,23 @@ impl InteractiveJob for FemJobGraph {
             return StepOutcome::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return StepOutcome::Fault(JobFault { detail: b"stale-fem-job-graph-operation".to_vec() });
+            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
         }
         if self.state.checkpoint_due {
             self.state.checkpoint_due = false;
-            return StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: self.checkpoint_bytes(), applied_progress: self.state.completed_units });
+            let bytes = self.checkpoint_bytes();
+            return match context.payload_from_bytes(JobPayloadStream::CheckpointState, &bytes) {
+                Ok(state) => StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state, applied_progress: self.state.completed_units }),
+                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+            };
         }
         if self.state.stage_cursor == self.state.plans.len() {
             let progress = self.progress();
-            return StepOutcome::Complete(CommitCandidate { state: self.checkpoint_bytes(), output: serde_json::to_vec(&progress).expect("fem graph output is serializable") });
+            let bytes = serde_json::to_vec(&progress).expect("fem graph output is serializable");
+            return match context.payload_from_bytes(JobPayloadStream::CommitOutput, &bytes) {
+                Ok(output) => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output }),
+                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+            };
         }
         let stage = self.state.plans[self.state.stage_cursor].stage;
         context.set_stage(stage.label());
@@ -549,9 +557,17 @@ impl InteractiveJob for FemJobGraph {
         }
         if self.state.stage_cursor == self.state.plans.len() {
             let progress = self.progress();
-            return StepOutcome::Complete(CommitCandidate { state: self.checkpoint_bytes(), output: serde_json::to_vec(&progress).expect("fem graph output is serializable") });
+            let bytes = serde_json::to_vec(&progress).expect("fem graph output is serializable");
+            return match context.payload_from_bytes(JobPayloadStream::CommitOutput, &bytes) {
+                Ok(output) => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output }),
+                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+            };
         }
-        StepOutcome::PreviewReady(serde_json::to_vec(&self.progress()).expect("fem graph preview is serializable"))
+        let bytes = serde_json::to_vec(&self.progress()).expect("fem graph preview is serializable");
+        match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
+            Ok(preview) => StepOutcome::PreviewReady(preview),
+            Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+        }
     }
 
     fn begin_close(&mut self) {}
@@ -2281,7 +2297,7 @@ impl AssemblyCsrBuild {
                     } else {
                         self.indices.push(entry.col);
                         self.values.push(entry.value);
-                        self.row_counts[entry.row as usize] = self.row_counts[entry.row as usize].checked_add(1).ok_or(b"fem.assembly-csr-row-overflow")?;
+                        self.row_counts[entry.row as usize] = self.row_counts[entry.row as usize].checked_add(1).ok_or(b"fem.assembly-csr-row-overflow" as &'static [u8])?;
                         self.last_key = Some(key);
                     }
                     self.merge_cursor += 1;
@@ -2298,7 +2314,7 @@ impl AssemblyCsrBuild {
             }
             AssemblyCsrBuildStage::Indptr => {
                 if let Some(count) = self.row_counts.get(self.row_cursor).copied() {
-                    let next = self.indptr.last().copied().unwrap_or(0).checked_add(count).ok_or(b"fem.assembly-csr-indptr-overflow")?;
+                    let next = self.indptr.last().copied().unwrap_or(0).checked_add(count).ok_or(b"fem.assembly-csr-indptr-overflow" as &'static [u8])?;
                     self.indptr.push(next);
                     self.row_cursor += 1;
                 } else {
@@ -2369,7 +2385,7 @@ impl InteractiveJob for AssemblyJob<'_> {
             return StepOutcome::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return StepOutcome::Fault(JobFault { detail: b"stale-fem-assembly-operation".to_vec() });
+            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
         }
         context.set_stage(self.state.pending_build.as_ref().map_or_else(|| self.state.stage.label(), |build| build.stage.label()));
         if self.state.checkpoint_due {
@@ -2377,14 +2393,22 @@ impl InteractiveJob for AssemblyJob<'_> {
             if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
                 return StepOutcome::Yield;
             }
-            return StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: self.checkpoint_bytes(), applied_progress: self.state.element_cursor as u64 });
+            let bytes = self.checkpoint_bytes();
+            return match context.payload_from_bytes(JobPayloadStream::CheckpointState, &bytes) {
+                Ok(state) => StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state, applied_progress: self.state.element_cursor as u64 }),
+                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+            };
         }
         if self.state.preview_due {
             self.state.preview_due = false;
             if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
                 return StepOutcome::Yield;
             }
-            return StepOutcome::PreviewReady(serde_json::to_vec(&self.preview()).expect("assembly preview is serializable"));
+            let bytes = serde_json::to_vec(&self.preview()).expect("assembly preview is serializable");
+            return match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
+                Ok(preview) => StepOutcome::PreviewReady(preview),
+                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+            };
         }
         if context.should_yield() {
             return StepOutcome::Yield;
@@ -2396,7 +2420,11 @@ impl InteractiveJob for AssemblyJob<'_> {
                     output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
                 });
             }
-            return StepOutcome::Complete(CommitCandidate { state: self.checkpoint_bytes(), output: serde_json::to_vec(&self.preview()).expect("assembly result is serializable") });
+            let bytes = serde_json::to_vec(&self.preview()).expect("assembly result is serializable");
+            return match context.payload_from_bytes(JobPayloadStream::CommitOutput, &bytes) {
+                Ok(output) => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output }),
+                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+            };
         }
         context.consume_fuel(1);
         match self.state.stage {
@@ -2408,7 +2436,7 @@ impl InteractiveJob for AssemblyJob<'_> {
                         } else {
                             let result = if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) { self.advance_element_build().map(|_| ()) } else { self.begin_borrowed_element() };
                             if let Err(error) = result {
-                                return StepOutcome::Fault(JobFault { detail: error.to_string().into_bytes() });
+                                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
                             }
                         }
                     } else {
@@ -2435,7 +2463,11 @@ impl InteractiveJob for AssemblyJob<'_> {
         }
         if self.state.preview_due {
             self.state.preview_due = false;
-            StepOutcome::PreviewReady(serde_json::to_vec(&self.preview()).expect("assembly preview is serializable"))
+            let bytes = serde_json::to_vec(&self.preview()).expect("assembly preview is serializable");
+            match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
+                Ok(preview) => StepOutcome::PreviewReady(preview),
+                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+            }
         } else {
             StepOutcome::Yield
         }

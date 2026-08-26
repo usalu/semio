@@ -35,28 +35,28 @@ pub mod derived_construction {
         type Mutation = StepMutation;
         type Diff = StepDiff;
 
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: StepSnapshot::default(), diagnostics: Vec::new() }
         }
 
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
 
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<StepSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<StepSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<StepSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<StepSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::step::schema::mutations::apply_step_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <StepDiff as protocol::MutationDiff<StepSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
@@ -66,7 +66,7 @@ pub mod derived_construction {
         /// silently at this layer (the composer, not the builder, is the facet that surfaces them as
         /// advisory `Diagnostic`s on a successful `Composition`); the `Err` path is only taken for
         /// hard ones.
-        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let Self { snapshot, mut diagnostics } = self;
             diagnostics.extend(check_cc4_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)));
             if diagnostics.is_empty() {
@@ -98,7 +98,7 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn conforming_construction_builds() {
-            let snapshot = StepCc4BuilderConstruction::from_snapshot(conforming_snapshot()).await.build().await.expect("conforming construction must build");
+            let snapshot = StepCc4BuilderConstruction::from_snapshot(conforming_snapshot()).build().expect("conforming construction must build");
             assert!(crate::artifacts::step::standards::v_ap214::engine::ladder::has_product_definition_chain(&snapshot.to_part21_document()));
         }
 
@@ -108,8 +108,8 @@ pub mod derived_construction {
             let mut doc = snapshot.to_part21_document();
             doc.instances.push(Part21Instance { id: 99, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])] });
             snapshot = StepSnapshot::from_part21_document(doc);
-            let (mutated, _diff) = StepCc4BuilderConstruction::from_snapshot(StepSnapshot::default()).await.mutate(StepMutation::SetSnapshot { snapshot }).await;
-            let err = mutated.build().await.expect_err("an ADVANCED_BREP_SHAPE_REPRESENTATION instance above rung 4 must fail build()");
+            let (mutated, _diff) = StepCc4BuilderConstruction::from_snapshot(StepSnapshot::default()).mutate(StepMutation::SetSnapshot { snapshot });
+            let err = mutated.build().expect_err("an ADVANCED_BREP_SHAPE_REPRESENTATION instance above rung 4 must fail build()");
             assert!(err.iter().any(|d| d.code.0 == CODE_LADDER));
         }
     }
@@ -181,12 +181,12 @@ pub mod derived_analysis {
         type Parts = StepParts;
         const DIALECT: Dialect = DIALECT;
 
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            StepAnyAnalyzer::sniff(source).await
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            StepAnyAnalyzer::sniff(source)
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = StepAnyAnalyzer::analyze(sources).await;
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let inner = StepAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {

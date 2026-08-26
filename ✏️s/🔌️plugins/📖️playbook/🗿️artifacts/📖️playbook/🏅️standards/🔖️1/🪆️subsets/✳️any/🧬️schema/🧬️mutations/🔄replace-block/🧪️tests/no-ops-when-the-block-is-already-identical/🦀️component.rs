@@ -14,7 +14,7 @@
 //! and the committed payload sets a genuinely multi-field block so the equality test has real work.
 
 use crate::artifacts::playbook::mutations::{apply_playbook_mutation, inverse_playbook_mutation, PlaybookMutation};
-use crate::artifacts::playbook::{cache_playbook_steps, PlaybookDiff, PlaybookSnapshot, PlaybookStep};
+use crate::artifacts::playbook::{attach_playbook_steps, PlaybookDiff, PlaybookSnapshot, PlaybookStep};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -33,11 +33,11 @@ fn expected_after() -> PlaybookSnapshot {
 /// the block the committed payload carries — the value identity `replace-block` answers with a
 /// warning.
 fn before() -> PlaybookSnapshot {
-    let snapshot: PlaybookSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: PlaybookSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let PlaybookMutation::ReplaceBlock(payload) = mutation() else {
         panic!("no-ops-when-the-block-is-already-identical's committed mutation must be a replace-block");
     };
-    cache_playbook_steps(&snapshot.flow.child_id, vec![PlaybookStep { id: payload.step_id.clone(), title: "Intro".into(), description: None, blocks: vec![payload.block.clone()] }]);
+    attach_playbook_steps(&mut snapshot.flow, vec![PlaybookStep { id: payload.step_id.clone(), title: "Intro".into(), description: None, blocks: vec![payload.block.clone()] }]);
     snapshot
 }
 

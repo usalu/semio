@@ -1,0 +1,7 @@
+[DEBUG] command=bun ./📜️script.ts verify interactivity apps --actions
+[DEBUG] exit=1
+[DEBUG] descriptors=32 extensions=4 apps=101 launch_only=57 surfaces=158 actions=4754 migrated=1973 missing=2781 launch_missing=0 discovery_failures=0 self_tests=25
+[DEBUG] disposition_failures=2781 production_join_failures=1011 accepted_commands=138 accepted_shared_routes=20 total_action_failures=3792
+[DEBUG] owned_shared_descriptor_rows=1488 owned_shared_migrated=554 owned_shared_missing=934
+[DEBUG] count_explanation=934 is the missing-only subset; 1488 is every current owner placement; 934+554=1488
+[DEBUG] descriptor_regeneration=blocked reason=semio-s-plugin-fem compile failure

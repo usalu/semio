@@ -18,6 +18,21 @@
     {
       "id": "semio-v1-model",
       "capability": "semio-v1-model-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️model",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "slides-the-wall-and-attaches-a-fire-rating-pset",
+              "directoryName": "🧪️slides-the-wall-and-attaches-a-fire-rating-pset"
+            }
+          ]
+        }
+      ],
       "kinds": ["no-mutation", "set-snapshot", "insert-spatial-node", "remove-spatial-node", "set-spatial-node", "insert-element", "remove-element", "set-element", "insert-relation", "remove-relation", "set-relation"]
     }
   ]

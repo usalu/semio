@@ -1,0 +1,4 @@
+[DEBUG] command=bun ./📜️script.ts verify interactivity --self-test
+[DEBUG] exit=0
+[DEBUG] descriptors=32 apps=101 launch_only=57 surfaces=158 actions=4754 launch_covered=101 launch_missing=0 launches=237 hostile_oracle_self_tests=25
+[DEBUG] severity=deny findings=1 blocking_bridge=1 unlisted=0 thread_pool=0 stale_allowlist=0 result=clean

@@ -15,12 +15,12 @@ use crate::artifacts::vcs::op::VcsDemoMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `VcsDemoMutation` to its binary state-patch form.
-pub async fn encode_op(operation: &VcsDemoMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &VcsDemoMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `VcsDemoMutation` from its binary state-patch form.
-pub async fn decode_op(bytes: &[u8]) -> Result<VcsDemoMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<VcsDemoMutation, protocol::ProtocolError> {
     VcsDemoMutation::decode_op(bytes)
 }
 
@@ -30,7 +30,7 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn op_binary_round_trips_and_agrees_with_text() {
+    fn op_binary_round_trips_and_agrees_with_text() {
         let operation = crate::artifacts::vcs::mutations::change_counter(7);
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");

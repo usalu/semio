@@ -10,7 +10,8 @@
     "workItems": 4096,
     "outputBytes": 262144,
     "stepMicros": 7500,
-    "semanticUnitsPerGrant": 1
+    "semanticUnitsPerGrant": 1,
+    "checkpointBytes": 112
   },
   "semanticCursors": {
     "addNode": ["boundedDecode", "oneNodeMutation", "publish", "closeOwner"],
@@ -57,6 +58,12 @@
     {"id": "retry", "control": "faultRetryAckClose", "expected": "onePublicationTerminalEmpty", "fingerprint": "0:0:0:0:0:0"},
     {"id": "close", "closeGrant": {"items": 1, "bytes": 1}, "expected": "incrementalTerminalEmpty", "fingerprint": "0:0:0:0:0:0"},
     {"id": "replay", "control": "runAckReplayAckClose", "expected": "sameSemanticDigest", "fingerprint": "0:0:0:0:0:0"},
+    {"id":"checkpointEmpty", "checkpointBytes":0, "control":"restoreCheckpoint", "expected":"rejectedExactHandback"},
+    {"id":"checkpointSingle", "checkpointBytes":1, "control":"restoreCheckpoint", "expected":"rejectedExactHandback"},
+    {"id":"checkpointMax", "checkpointBytes":112, "control":"checkpointRestoreResumeAckClose", "expected":"sameSemanticDigestTerminalEmpty"},
+    {"id":"checkpointMaxPlusOne", "checkpointBytes":113, "control":"restoreCheckpoint", "expected":"rejectedExactHandback"},
+    {"id":"checkpointCorrupt", "checkpointBytes":112, "mutation":"magic", "control":"restoreCheckpoint", "expected":"rejectedExactHandback"},
+    {"id":"checkpointInterruptedClose", "checkpointBytes":112, "boundary":"workProgress", "closeGrant":{"items":1,"bytes":16384}, "control":"checkpointRestoreCancelIncrementalClose", "expected":"terminalEmptyExactHandback"},
     {"id":"forceLayoutUtf8", "toolId":"forceLayout", "nodes":[{"id":"knoten-ä","x":0,"y":0},{"id":"knoten-ß","x":10,"y":10}], "expected":"deterministicFinitePositions", "control":"pollEachProgressAckClose", "fingerprint":"0:0:0:0:0:0"},
     {"id":"forceLayoutEmpty", "toolId":"forceLayout", "nodes":0, "edges":0, "expected":"terminalEmpty"},
     {"id":"forceLayoutSingle", "toolId":"forceLayout", "nodes":1, "edges":0, "expected":"oneFinitePositionTerminalEmpty"},

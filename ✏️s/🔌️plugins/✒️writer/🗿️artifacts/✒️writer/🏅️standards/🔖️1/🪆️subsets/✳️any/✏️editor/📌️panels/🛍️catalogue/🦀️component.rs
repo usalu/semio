@@ -1,14 +1,14 @@
 //! 🛍️ Writer play app panel — the language catalogue (currently a single static jack description).
 
 use crate::editor::writer::terminology::WriterPlayLabels;
-use semio_framework_plugin::{ui_declarative_sections_to_tree, ui_text, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::{tree_item, BuiltNode, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const WRITER_PLAY_BODY_CATALOGUE: &str = "writer.play.catalogue";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -20,8 +20,9 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(labels: &WriterPlayLabels) -> UiNode {
-    ui_declarative_sections_to_tree(&[UiSectionNode { id: "writer-catalogue".into(), label: Some(labels.language.into()), default_open: Some(true), children: vec![ui_text(labels.jack_description)], presence: UiPresence::default(), menu: None }])
+pub fn render(labels: &WriterPlayLabels) -> UiAssemblyResult<BuiltNode> {
+    let entries = crate::editor::writer::ui_node_list([tree_item("writer-catalogue.jack", Label::data(labels.jack_description.as_str()))])?;
+    PanelTreeBuilder::new("writer-catalogue")?.section("writer-catalogue.language", Some(labels.language.into()), true, entries)?.build()
 }
 //#endregion 🔖️Render
 

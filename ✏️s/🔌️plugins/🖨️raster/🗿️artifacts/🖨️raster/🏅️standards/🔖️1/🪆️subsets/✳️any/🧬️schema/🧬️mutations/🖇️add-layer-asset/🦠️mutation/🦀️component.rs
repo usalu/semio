@@ -25,19 +25,19 @@ pub struct AddLayerAsset {
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for AddLayerAsset {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "asset", kind: "add-layer-asset", record: "AddedLayerAsset" };
 
-    async fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         crate::artifacts::raster::mutations::add_layer_asset::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
+    fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
         crate::artifacts::raster::mutations::add_layer_asset::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Add asset {}", self.asset_id)
     }
 
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.asset_id.clone()]
     }
 }

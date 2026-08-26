@@ -1,0 +1,501 @@
+{
+  "files": [
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "beforeHash": "6285e24738a9e62302ee5e6f6663e31c589767b95b580a63ed696fe0d7bf74bf",
+      "afterHash": "89708b51f37d72b2e38490e014fd41a89adbef5c77957a8fb10a8f1a90ab86c4",
+      "edits": [
+        {
+          "start": 85280,
+          "end": 85362,
+          "before": "pub fn dispatch(app: &mut LowpolyApp, command: LowpolyCommand) -> InvocationResult",
+          "after": "pub async fn dispatch(app: &mut LowpolyApp, command: LowpolyCommand) -> InvocationResult",
+          "kind": "testkit-dispatch-async"
+        },
+        {
+          "start": 85416,
+          "end": 85416,
+          "before": "",
+          "after": ".await",
+          "kind": "dispatch-typed-await"
+        },
+        {
+          "start": 85447,
+          "end": 85508,
+          "before": "pub fn render(app: &mut LowpolyApp, body_key: &str) -> String",
+          "after": "pub async fn render(app: &mut LowpolyApp, body_key: &str) -> String",
+          "kind": "testkit-render-async"
+        },
+        {
+          "start": 85591,
+          "end": 85591,
+          "before": "",
+          "after": ".await",
+          "kind": "plugin-render-await"
+        },
+        {
+          "start": 86111,
+          "end": 86182,
+          "before": "pub fn select_face(app: &mut LowpolyApp, object_id: &str, face_id: u32)",
+          "after": "pub async fn select_face(app: &mut LowpolyApp, object_id: &str, face_id: u32)",
+          "kind": "testkit-select-face-async"
+        },
+        {
+          "start": 86626,
+          "end": 86626,
+          "before": "",
+          "after": ".await",
+          "kind": "handle-action-await"
+        },
+        {
+          "start": 110719,
+          "end": 110719,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-convergence-await"
+        },
+        {
+          "start": 111131,
+          "end": 111131,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-idempotence-await"
+        },
+        {
+          "start": 111363,
+          "end": 111398,
+          "before": "render(&mut a, \"lowpoly.play.nope\")",
+          "after": "render(&mut a, \"lowpoly.play.nope\").await",
+          "kind": "local-testkit-render-await"
+        },
+        {
+          "start": 114098,
+          "end": 114098,
+          "before": "",
+          "after": ".await",
+          "kind": "qualified-testkit-dispatch-await"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️camera/🦀️component.rs",
+      "beforeHash": "d6ae1b6f8a1723b553880b84620a858e10c1f5bacf14f06e54f8cc7ab48335c5",
+      "afterHash": "1a1386251118046f85fa29d2cfbc04aef9f9851ba476d2d8a87e75bb28a95e7e",
+      "edits": [
+        {
+          "start": 1574,
+          "end": 1574,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-dispatch-await"
+        },
+        {
+          "start": 1776,
+          "end": 1776,
+          "before": "",
+          "after": ".await",
+          "kind": "dispatch-typed-await"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔷️mesh-edit/🦀️component.rs",
+      "beforeHash": "33e38934fd03f62192484f97461086c6a33b63a6021289c094b58456f90a3173",
+      "afterHash": "8539ae8fa4599fc1ea79b7a062e2bd4121dda35245360a0026c6db5434aec489",
+      "edits": [
+        {
+          "start": 15334,
+          "end": 15334,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-select-face-await"
+        },
+        {
+          "start": 15437,
+          "end": 15437,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-dispatch-await"
+        },
+        {
+          "start": 15689,
+          "end": 15689,
+          "before": "",
+          "after": ".await",
+          "kind": "handle-action-await"
+        },
+        {
+          "start": 16335,
+          "end": 16335,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-select-face-await"
+        },
+        {
+          "start": 16383,
+          "end": 16383,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-select-face-await"
+        },
+        {
+          "start": 16495,
+          "end": 16495,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-dispatch-await"
+        },
+        {
+          "start": 16607,
+          "end": 16607,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-dispatch-await"
+        },
+        {
+          "start": 17302,
+          "end": 17302,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-dispatch-await"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧰️utility/🦀️component.rs",
+      "beforeHash": "863c0cab3878d02412c81f0e15ec98d64ee95134b10317829694e7ed419395b9",
+      "afterHash": "77598e4861bc8232f66cb6c630187d368bb7956d454a5e5392250477c4b42950",
+      "edits": [
+        {
+          "start": 3562,
+          "end": 3562,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-dispatch-await"
+        },
+        {
+          "start": 3766,
+          "end": 3766,
+          "before": "",
+          "after": ".await",
+          "kind": "handle-action-await"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧲️transform/🦀️component.rs",
+      "beforeHash": "a0e70463beb5e7cae763658b55e14ec4e4fa4eb85f601654a6acd1c84d4ead14",
+      "afterHash": "7262ff5e5fb0073ee3cb5e8558fc732d13a07f33202109cde64a2b65339b6366",
+      "edits": [
+        {
+          "start": 5341,
+          "end": 5341,
+          "before": "",
+          "after": ".await",
+          "kind": "dispatch-typed-await"
+        },
+        {
+          "start": 5570,
+          "end": 5570,
+          "before": "",
+          "after": ".await",
+          "kind": "dispatch-typed-await"
+        },
+        {
+          "start": 5800,
+          "end": 5800,
+          "before": "",
+          "after": ".await",
+          "kind": "dispatch-typed-await"
+        },
+        {
+          "start": 6189,
+          "end": 6189,
+          "before": "",
+          "after": ".await",
+          "kind": "dispatch-typed-await"
+        },
+        {
+          "start": 6509,
+          "end": 6509,
+          "before": "",
+          "after": ".await",
+          "kind": "handle-action-await"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️paint/🦀️component.rs",
+      "beforeHash": "e8ac71746030acb3056d46beb7361edc9ee80d7954dd9e74cc70d3048e0808e3",
+      "afterHash": "7a3818e21a4c3f03d0074142f4ca5816e9a438d2c998fc7a8ab9ea62b203a901",
+      "edits": [
+        {
+          "start": 11204,
+          "end": 11204,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-dispatch-await"
+        },
+        {
+          "start": 11836,
+          "end": 11836,
+          "before": "",
+          "after": ".await",
+          "kind": "dispatch-typed-await"
+        },
+        {
+          "start": 12041,
+          "end": 12041,
+          "before": "",
+          "after": ".await",
+          "kind": "dispatch-typed-await"
+        },
+        {
+          "start": 12239,
+          "end": 12239,
+          "before": "",
+          "after": ".await",
+          "kind": "dispatch-typed-await"
+        },
+        {
+          "start": 12495,
+          "end": 12495,
+          "before": "",
+          "after": ".await",
+          "kind": "dispatch-typed-await"
+        },
+        {
+          "start": 12816,
+          "end": 12816,
+          "before": "",
+          "after": ".await",
+          "kind": "handle-action-await"
+        },
+        {
+          "start": 13068,
+          "end": 13068,
+          "before": "",
+          "after": ".await",
+          "kind": "handle-action-await"
+        },
+        {
+          "start": 13639,
+          "end": 13639,
+          "before": "",
+          "after": ".await",
+          "kind": "dispatch-typed-await"
+        },
+        {
+          "start": 13883,
+          "end": 13883,
+          "before": "",
+          "after": ".await",
+          "kind": "dispatch-typed-await"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️patch-object/🦀️component.rs",
+      "beforeHash": "8e9a2d6d2ac44612bdf7f58e037de921e82d847f26b0879c3c83abdc47cd4a79",
+      "afterHash": "07c7d909fea3e836207ac6e0ab6e024d2db329db0ff7fb6278d8c06a73ba6515",
+      "edits": [
+        {
+          "start": 2826,
+          "end": 2826,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-dispatch-await"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-primitive/🦀️component.rs",
+      "beforeHash": "347dd619144f637d207aabb48e28914e2f6e557f58979f7d0d12f99cb3bab9a9",
+      "afterHash": "fb9a37eeac87e19b5bc205b1da57fa59617cc46b0c30f525414b2a4a71856174",
+      "edits": [
+        {
+          "start": 2870,
+          "end": 2870,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-dispatch-await"
+        },
+        {
+          "start": 3365,
+          "end": 3365,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-dispatch-await"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💬️engagement/🦀️component.rs",
+      "beforeHash": "1bcad81dd378a7fc84e442b24ab345045a232ba922df3ca89bb151a408017da6",
+      "afterHash": "9c55e88d4dfee42b99eda6b3b8ca51101e03a883f36a4d4db8713b34fa68c172",
+      "edits": [
+        {
+          "start": 4064,
+          "end": 4064,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-select-face-await"
+        },
+        {
+          "start": 4282,
+          "end": 4282,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-dispatch-await"
+        },
+        {
+          "start": 4716,
+          "end": 4716,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-dispatch-await"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️sun/🦀️component.rs",
+      "beforeHash": "393b520986be45d0c313b54cbca3fb6404632ff7173d04e0d47e2a1130e4d068",
+      "afterHash": "8e370bffded4a6cda7a7a1ac57bb2408ffff2f8fe36b2c20eeb1e4121766b4b1",
+      "edits": [
+        {
+          "start": 4002,
+          "end": 4002,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-dispatch-await"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️chrome/🦀️component.rs",
+      "beforeHash": "3299149fa74b37dd50bd5d2c7f1eaf1c010117986f460ba0cadb721cf1412c83",
+      "afterHash": "1d63c04a17c09fc688f23d1d01232e8a0696a4da8d7c34d581c01b9e1a5ff778",
+      "edits": [
+        {
+          "start": 1409,
+          "end": 1409,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-dispatch-await"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧵️uv/🦀️component.rs",
+      "beforeHash": "7a6bcc288db3107ba732d67119354f17a861d86d108ed6a2b54e7278aaf842a0",
+      "afterHash": "e18323b9593bb1fe35367a08904c6a2552ba511dfa2087eb514e3fe460c34805",
+      "edits": [
+        {
+          "start": 3425,
+          "end": 3425,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-dispatch-await"
+        },
+        {
+          "start": 3884,
+          "end": 3884,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-dispatch-await"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️fixture/🦀️component.rs",
+      "beforeHash": "454ab55b30ab2964fe729434b6ed98fa9bc3a3b228df8f7eedb1651295829048",
+      "afterHash": "a1434955188a4e0ece5ab1d5a87daf3420fb705031bc47d390987883e25b1464",
+      "edits": [
+        {
+          "start": 4371,
+          "end": 4371,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-dispatch-await"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️selection/🦀️component.rs",
+      "beforeHash": "1b0e66a5e82b9cbab7e91abdb89948e7d63a1f8e9e72f1ac800b0a2027310698",
+      "afterHash": "8777048a390c341535455896195c790e6f9867864363af316b8e95a7f05bf0ba",
+      "edits": [
+        {
+          "start": 3030,
+          "end": 3030,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-dispatch-await"
+        },
+        {
+          "start": 3450,
+          "end": 3450,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-dispatch-await"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️model/🦀️component.rs",
+      "beforeHash": "cffce7fd7ec739cdf6d407e44bff5601bbfa9381fbc11c1f8626c0a0d306c387",
+      "afterHash": "2ddeb9c6c6bacb3f4313ff9d3c0cdbcaae76f23ee340778855676c04c52bc842",
+      "edits": [
+        {
+          "start": 8517,
+          "end": 8517,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-render-await"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🦀️component.rs",
+      "beforeHash": "9b1d2f5dd08d4dd222e279932fad6971e8c46703b6b411add580fa0cf5f67013",
+      "afterHash": "c7c2e8929c0104daec4398ef8d6a7df19eb26a0d404bb6f3e07de13383b1b647",
+      "edits": [
+        {
+          "start": 5804,
+          "end": 5804,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-render-await"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs",
+      "beforeHash": "67524c25d65ff903511d302c12f7c05085b53bb7ca2375beee20a62b2e0a347a",
+      "afterHash": "ec8ae42f770f787d51bc4cc288831a2e5621490c69c6074518166022ea594a7d",
+      "edits": [
+        {
+          "start": 2532,
+          "end": 2532,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-render-await"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️layers/🦀️component.rs",
+      "beforeHash": "d0dc88f797bd7dbc7294059c262bfb3864cc4a33ab0811441e54b7043785843e",
+      "afterHash": "502f8833bbf542b96798f1f07ea9022eeca6a73a2fda7770e31b3ce3cd336872",
+      "edits": [
+        {
+          "start": 2502,
+          "end": 2502,
+          "before": "",
+          "after": ".await",
+          "kind": "testkit-render-await"
+        }
+      ]
+    }
+  ]
+}

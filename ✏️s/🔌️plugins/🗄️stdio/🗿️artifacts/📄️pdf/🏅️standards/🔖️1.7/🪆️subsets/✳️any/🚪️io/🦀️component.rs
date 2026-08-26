@@ -34,11 +34,11 @@ pub mod derived_composition {
         type Snapshot = PdfSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_BINARY, DEP_DEFLATE]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT || s.dialect == DEP_BINARY || s.dialect == DEP_DEFLATE)
@@ -50,7 +50,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "PdfComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = PdfAnalyzer::analyze(&native).await;
+            let analysis = PdfAnalyzer::analyze(&native);
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "PdfComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -3037,12 +3037,12 @@ mod tests {
         assert_eq!(restored, base);
         assert_original("mutation inverse native export", encode_pdf(&restored).expect("mutation inverse native export"));
 
-        let analysis = <PdfAnalyzer as ArtifactAnalyzer>::analyze(&[AnalyzeSource::Binary(&original)]).await;
+        let analysis = <PdfAnalyzer as ArtifactAnalyzer>::analyze(&[AnalyzeSource::Binary(&original)]);
         let analyzed = analysis.parts.snapshot.expect("analyzer snapshot");
         assert_original("analyzer native export", encode_pdf(&analyzed).expect("analyzer native export"));
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("*") };
         let sources = [ComposeSource { dialect: DIALECT, payload: AnalyzeSource::Binary(&original) }];
-        let composed = PdfComposerComposition::compose(&sources).await.expect("composer snapshot");
+        let composed = PdfComposerComposition::compose(&sources).expect("composer snapshot");
         assert_original("composer native export", encode_pdf(&composed.snapshot).expect("composer native export"));
     }
 

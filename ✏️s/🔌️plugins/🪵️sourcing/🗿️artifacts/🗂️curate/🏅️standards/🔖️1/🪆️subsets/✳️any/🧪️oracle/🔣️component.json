@@ -23,6 +23,43 @@
     {
       "id": "curate-1-any",
       "capability": "curate-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-curated-item-count",
+          "sourceMutationDirectoryName": "🔢change-curated-item-count",
+          "mutationDirectoryName": "🔢change-curated-item-count",
+          "scenarios": [
+            {
+              "id": "raises-the-glulam-beam-count-to-20",
+              "directoryName": "🧪️raises-the-glulam-beam-count-to-20"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-curated-item",
+          "sourceMutationDirectoryName": "🌱create-curated-item",
+          "mutationDirectoryName": "🌱create-curated-item",
+          "scenarios": [
+            {
+              "id": "appends-a-steel-plate-to-the-curation",
+              "directoryName": "🧪️appends-a-steel-plate-to-the-curation"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-curated-item",
+          "sourceMutationDirectoryName": "🗑️delete-curated-item",
+          "mutationDirectoryName": "🗑️delete-curated-item",
+          "scenarios": [
+            {
+              "id": "removes-the-clt-panel-from-the-curation",
+              "directoryName": "🧪️removes-the-clt-panel-from-the-curation"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-curated-item",
         "delete-curated-item",

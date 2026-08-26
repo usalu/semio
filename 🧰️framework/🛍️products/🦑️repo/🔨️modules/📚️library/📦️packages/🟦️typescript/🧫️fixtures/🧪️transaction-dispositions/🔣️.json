@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "expectedDispositionOperations": {
+    "embeddedTicketRoots": 3,
+    "embeddedTicketRootRelocations": 4,
+    "evidenceRemovals": 2,
+    "operationFamilies": ["moves", "embeddedTicketRoots", "embeddedTicketRootRelocations", "symlinkTargetEdits", "evidenceRemovals", "edits", "regenerations"]
+  },
+  "virtualPreimageNodes": [
+    { "path": "evidence/absent", "state": "absent" },
+    { "path": "evidence/directory", "state": "directory" },
+    { "path": "evidence/file.txt", "state": "file", "contentHash": "b5f7e7d285029324d9b3acae19cc05099271454ac98bfc059a92b0581625cd51", "mode": 420, "size": 9 },
+    { "path": "evidence/link", "state": "symlink", "contentHash": "9ecf8f3cdb71be421db2abe2a21b0f76cb76112f32a4c7226b64585c62cdba7f", "mode": 511, "size": 11, "target": "../file.txt" }
+  ],
+  "affectedStateCases": [
+    {
+      "id": "remove-redundant-evidence",
+      "pre": [{ "path": "evidence/redundant.txt", "state": "file", "contentHash": "b5f7e7d285029324d9b3acae19cc05099271454ac98bfc059a92b0581625cd51", "mode": 420, "size": 9 }],
+      "post": [{ "path": "evidence/redundant.txt", "state": "absent" }]
+    },
+    {
+      "id": "retarget-no-follow-symlink",
+      "pre": [{ "path": "evidence/link", "state": "symlink", "targetHash": "9ecf8f3cdb71be421db2abe2a21b0f76cb76112f32a4c7226b64585c62cdba7f", "targetSize": 11 }],
+      "post": [{ "path": "evidence/link", "state": "symlink", "targetHash": "aadf327c8267c09d6fffd87a1a80ad3c798469ff332b7a57b9e8c045d46b2af7", "targetSize": 8 }]
+    }
+  ],
+  "failureStages": ["after-staging", "after-embedded-root-staging", "after-moves", "after-relocations", "after-symlink-retargeting", "after-edits", "after-regenerations", "before-verify"],
+  "journalStates": ["prepared", "staging", "disposing", "installing", "retargeting", "editing", "regenerating", "verifying", "committed", "rolling-back", "rolled-back"],
+  "attemptLayout": {
+    "attemptsDirectory": "🔂️attempts",
+    "firstAttemptDirectory": "🔢️000001",
+    "stageDirectory": "🚧️stage",
+    "backupDirectory": "💾️backup",
+    "leaseDirectory": "🔒️lease",
+    "journalFilename": "🔣️.json"
+  },
+  "negativeDispositionCases": [
+    { "id": "embedded-residual-leaf", "expectedCode": "embedded-ticket-root-incomplete" },
+    { "id": "incoming-structured-reference", "expectedCode": "embedded-ticket-root-incoming-reference" },
+    { "id": "mismatched-evidence-role", "expectedCode": "evidence-semantic-identity-mismatch" },
+    { "id": "external-symlink-target", "expectedCode": "symlink-target-external" },
+    { "id": "mutable-path-ancestor-overlap", "expectedCode": "transaction-path-role-overlap" },
+    { "id": "virtual-sentinel-physical-delete", "expectedCode": "serialized-sentinel-authority-missing" }
+  ],
+  "virtualPathPolicyCases": [
+    { "id": "windows-con", "inputPath": "evidence/CON.ts", "physicalSourcePath": null, "expectedViolationCode": "windows-reserved-name", "sourceContentHash": "b5f7e7d285029324d9b3acae19cc05099271454ac98bfc059a92b0581625cd51" },
+    { "id": "windows-prn", "inputPath": "evidence/PRN.txt", "physicalSourcePath": null, "expectedViolationCode": "windows-reserved-name", "sourceContentHash": "b5f7e7d285029324d9b3acae19cc05099271454ac98bfc059a92b0581625cd51" },
+    { "id": "windows-aux", "inputPath": "evidence/AUX.json", "physicalSourcePath": null, "expectedViolationCode": "windows-reserved-name", "sourceContentHash": "b5f7e7d285029324d9b3acae19cc05099271454ac98bfc059a92b0581625cd51" },
+    { "id": "windows-nul", "inputPath": "evidence/NUL.bin", "physicalSourcePath": null, "expectedViolationCode": "windows-reserved-name", "sourceContentHash": "b5f7e7d285029324d9b3acae19cc05099271454ac98bfc059a92b0581625cd51" },
+    { "id": "windows-com1", "inputPath": "evidence/COM1.rs", "physicalSourcePath": null, "expectedViolationCode": "windows-reserved-name", "sourceContentHash": "b5f7e7d285029324d9b3acae19cc05099271454ac98bfc059a92b0581625cd51" },
+    { "id": "windows-com9", "inputPath": "evidence/COM9.rs", "physicalSourcePath": null, "expectedViolationCode": "windows-reserved-name", "sourceContentHash": "b5f7e7d285029324d9b3acae19cc05099271454ac98bfc059a92b0581625cd51" },
+    { "id": "windows-lpt1", "inputPath": "evidence/LPT1.ts", "physicalSourcePath": null, "expectedViolationCode": "windows-reserved-name", "sourceContentHash": "b5f7e7d285029324d9b3acae19cc05099271454ac98bfc059a92b0581625cd51" },
+    { "id": "windows-lpt9", "inputPath": "evidence/LPT9.ts", "physicalSourcePath": null, "expectedViolationCode": "windows-reserved-name", "sourceContentHash": "b5f7e7d285029324d9b3acae19cc05099271454ac98bfc059a92b0581625cd51" },
+    { "id": "trailing-dot", "inputPath": "evidence/name.", "physicalSourcePath": null, "expectedViolationCode": "trailing-dot-or-space", "sourceContentHash": "b5f7e7d285029324d9b3acae19cc05099271454ac98bfc059a92b0581625cd51" },
+    { "id": "trailing-space", "inputPath": "evidence/name ", "physicalSourcePath": null, "expectedViolationCode": "trailing-dot-or-space", "sourceContentHash": "b5f7e7d285029324d9b3acae19cc05099271454ac98bfc059a92b0581625cd51" }
+  ],
+  "symlinkFlavorCases": [
+    { "id": "posix-local", "repositoryRoot": "/work/repo", "target": "/work/repo/a/file.ts", "owned": true },
+    { "id": "posix-prefix-confusion", "repositoryRoot": "/work/repo", "target": "/work/repo-other/a.ts", "owned": false },
+    { "id": "windows-same-drive", "repositoryRoot": "C:\\work\\repo", "target": "C:\\work\\repo\\a\\file.ts", "owned": true },
+    { "id": "windows-other-drive", "repositoryRoot": "C:\\work\\repo", "target": "D:\\work\\repo\\a\\file.ts", "owned": false },
+    { "id": "unc-same-share", "repositoryRoot": "\\\\server\\share\\repo", "target": "\\\\server\\share\\repo\\a\\file.ts", "owned": true },
+    { "id": "unc-other-share", "repositoryRoot": "\\\\server\\share\\repo", "target": "\\\\server\\other\\repo\\a\\file.ts", "owned": false }
+  ]
+}

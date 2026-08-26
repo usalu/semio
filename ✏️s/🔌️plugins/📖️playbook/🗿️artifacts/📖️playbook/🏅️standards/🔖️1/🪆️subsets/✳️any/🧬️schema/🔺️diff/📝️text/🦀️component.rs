@@ -15,7 +15,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️Apply
 impl PlaybookDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &PlaybookArtifact) -> protocol::MutationApplyResult<PlaybookArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &PlaybookArtifact) -> protocol::MutationApplyResult<PlaybookArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -54,7 +54,7 @@ impl PlaybookDiff {
 }
 
 impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {
-    async fn apply(&self, snapshot: &PlaybookSnapshot) -> protocol::MutationApplyResult<PlaybookSnapshot> {
+    fn apply(&self, snapshot: &PlaybookSnapshot) -> protocol::MutationApplyResult<PlaybookSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -81,7 +81,7 @@ impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -108,18 +108,18 @@ impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {
 
 //#region 🔖️Builders
 /// 📸️ Whole-snapshot replacement diff.
-pub async fn diff_set_snapshot(snapshot: &PlaybookSnapshot) -> PlaybookDiff {
+pub fn diff_set_snapshot(snapshot: &PlaybookSnapshot) -> PlaybookDiff {
     PlaybookDiff { artifact: Some(Box::new(PlaybookArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 
 /// 🔺️ Mints new content-addressed `document`+`flow` handles for the whole-scene replacement
-/// `steps` and seeds the working-scene cache with them (`playbook_content_handles_and_cache`) —
+/// `steps` and seeds the working-scene cache with them (`playbook_content_handles`) —
 /// real handcrafted construction, never apply-then-capture. Every one of the nine step/block
 /// mutation triads' `🔺️diff` leaf reads the CURRENT scene off `base` (via `playbook_working_scene`),
 /// applies its own specific semantics to that scene, then calls this shared builder — mirrors
 /// writer's `diff_set_text`/flow's `diff_replace_content`.
-pub async fn diff_replace_content(title: Option<&str>, steps: Vec<PlaybookStep>) -> PlaybookDiff {
-    let (document, flow) = crate::artifacts::playbook::playbook_content_handles_and_cache(title, steps);
+pub fn diff_replace_content(title: Option<&str>, steps: Vec<PlaybookStep>) -> PlaybookDiff {
+    let (document, flow) = crate::artifacts::playbook::playbook_content_handles(title, steps);
     PlaybookDiff { document: Some(document), flow: Some(flow), ..Default::default() }
 }
 //#endregion 🔖️Builders

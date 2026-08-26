@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "toggle-line-numbers")]
 pub struct ToggleLineNumbers {}
 
-pub async fn handle(_payload: &ToggleLineNumbers, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+pub fn handle(_payload: &ToggleLineNumbers, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
     let config = cfg.snapshot;
     let mut settings = config.editor_settings.clone();
     settings.show_line_numbers = !settings.show_line_numbers;

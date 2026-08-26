@@ -78,39 +78,6 @@
         }
       }
     },
-    "dev-storybook-compose": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bun ./📜️script.ts dev storybook compose",
-        "forwardAllArgs": true,
-        "env": {
-          "STORYBOOK_PORT": "6010"
-        }
-      }
-    },
-    "dev-storybook-compose-algorithms": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bun ./📜️script.ts dev storybook compose algorithm",
-        "forwardAllArgs": true,
-        "env": {
-          "STORYBOOK_PORT": "6010"
-        }
-      }
-    },
-    "dev-storybook-compose-ui": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bun ./📜️script.ts dev storybook compose ui",
-        "forwardAllArgs": true,
-        "env": {
-          "STORYBOOK_PORT": "6010"
-        }
-      }
-    },
     "dev-storybook-styling": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -398,6 +365,42 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts clean coverage",
+        "forwardAllArgs": true
+      }
+    },
+    "clean-taxonomy-inventory": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts clean taxonomy inventory",
+        "forwardAllArgs": true
+      }
+    },
+    "clean-taxonomy-plan": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts clean taxonomy plan",
+        "forwardAllArgs": true
+      }
+    },
+    "clean-taxonomy-apply": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts clean taxonomy apply",
+        "forwardAllArgs": true
+      }
+    },
+    "clean-taxonomy-verify": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts clean taxonomy verify",
         "forwardAllArgs": true
       }
     },

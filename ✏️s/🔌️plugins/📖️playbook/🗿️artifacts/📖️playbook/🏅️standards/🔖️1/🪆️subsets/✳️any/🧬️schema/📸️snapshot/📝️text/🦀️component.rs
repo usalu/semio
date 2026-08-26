@@ -12,12 +12,12 @@ use crate::artifacts::playbook::PlaybookSnapshot;
 pub const FACADE_GENERATOR_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.playbook` DSL text into a `PlaybookSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<PlaybookSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<PlaybookSnapshot, store::TextError> {
     <PlaybookSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `PlaybookSnapshot` back to `.playbook` DSL text.
-pub async fn print_dsl(document: &PlaybookSnapshot) -> String {
+pub fn print_dsl(document: &PlaybookSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 

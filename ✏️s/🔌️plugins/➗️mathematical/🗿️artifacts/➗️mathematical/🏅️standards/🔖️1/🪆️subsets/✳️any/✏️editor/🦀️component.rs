@@ -27,12 +27,17 @@ use crate::editor::mathematical::config::{MathematicalConfig, MathematicalConfig
 use crate::editor::mathematical::modes::edit;
 use crate::editor::mathematical::modes::edit::windows::{geometry as geometry_window, graph as graph_window};
 use crate::editor::mathematical::presence::{MathematicalPresence, MathematicalPresenceMutation};
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
+use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_plugin::{
-    ui_text, ActionArgDef, ActionArgOption, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation,
-    SurfaceKind, UiComponentSceneNode, UiNode, UiPresence,
+    ui_text, ActionArgDef, ActionArgOption, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media,
+    MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence,
 };
 use serde_json::{json, Value};
+use std::collections::BTreeSet;
+use std::sync::Arc;
 use store::ArtifactPack;
 use store::EngineHandles;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord};
@@ -215,6 +220,806 @@ semio_framework_plugin::app_commands! {
 }
 //#endregion 🔖️Commands
 
+//#region 🧵️RetainedCommands
+const MATHEMATICAL_TOOL_IDS: &[&str] = &["setDocument", "setAlgorithm", "setDirected", "nodeGraphEdit", "nodeGraphViewport", "setPoints", "setLocale"];
+const MATHEMATICAL_RETAINED_PAYLOAD_SCHEMA: &str = "semio.mathematical/v1.tool-command.v1";
+const MATHEMATICAL_RETAINED_RAW_BYTES: usize = 65_536;
+const MATHEMATICAL_RETAINED_WORK_ITEMS: usize = 65_536;
+const MATHEMATICAL_MAX_NODES: usize = 256;
+const MATHEMATICAL_MAX_EDGES: usize = 512;
+const MATHEMATICAL_MAX_POINTS: usize = 1_024;
+const MATHEMATICAL_MAX_EDIT_JSON_BYTES: usize = 8_192;
+const MATHEMATICAL_MAX_EDIT_OPERATIONS: usize = 16;
+const MATHEMATICAL_MAX_DELETE_IDS: usize = 256;
+const MATHEMATICAL_MAX_TEXT_BYTES: usize = 256;
+const MATHEMATICAL_MAX_LOCALE_BYTES: usize = 64;
+
+fn mathematical_contract() -> ToolExecutionContract {
+    ToolExecutionContract::resumable(MATHEMATICAL_RETAINED_RAW_BYTES, 2_048, 1, MATHEMATICAL_RETAINED_WORK_ITEMS, 7_500, 1, 1)
+}
+
+fn mathematical_tool_identity(tool_id: &str) -> u64 {
+    tool_id.bytes().fold(0xcbf2_9ce4_8422_2325, |digest, byte| (digest ^ u64::from(byte)).wrapping_mul(0x1000_0000_01b3))
+}
+
+fn mathematical_operation_identity(tool_id: &str, operation: &AppOperationContext) -> u64 {
+    let mut identity = mathematical_tool_identity(tool_id);
+    let app_instance = operation.app_instance_id.to_le_bytes();
+    let operation_id = operation.operation_id.to_le_bytes();
+    let generation = operation.generation.to_le_bytes();
+    for bytes in [app_instance.as_slice(), operation.parent_document_id.as_bytes(), operation_id.as_slice(), generation.as_slice(), operation.canonical_base_revision.as_slice()] {
+        for byte in bytes {
+            identity = (identity ^ u64::from(*byte)).wrapping_mul(0x1000_0000_01b3);
+        }
+    }
+    identity
+}
+
+fn mathematical_graph_shape_admitted(graph: &MathematicalGraph) -> bool {
+    graph.nodes.len() <= MATHEMATICAL_MAX_NODES && graph.edges.len() <= MATHEMATICAL_MAX_EDGES && graph.algorithm.len() <= MATHEMATICAL_MAX_TEXT_BYTES && graph.algorithm_seed.as_ref().is_none_or(|seed| seed.len() <= MATHEMATICAL_MAX_TEXT_BYTES)
+}
+
+fn mathematical_edit_preflight(payload: &node_graph_edit::NodeGraphEdit) -> Option<usize> {
+    if payload.operations_json.len() > MATHEMATICAL_MAX_EDIT_JSON_BYTES {
+        return None;
+    }
+    let values = serde_json::from_str::<Vec<Value>>(&payload.operations_json).ok()?;
+    if values.len() > MATHEMATICAL_MAX_EDIT_OPERATIONS {
+        return None;
+    }
+    for value in &values {
+        MathematicalEditOperation::from_value(value).ok()?;
+    }
+    Some(values.len())
+}
+
+fn mathematical_command_extent(command: &MathematicalCommand, snapshot: &MathematicalSnapshot) -> Option<usize> {
+    let scene = crate::artifacts::mathematical::mathematical_scene_owner(snapshot)?;
+    if !mathematical_graph_shape_admitted(&scene.graph) || scene.geometry.points.len() > MATHEMATICAL_MAX_POINTS {
+        return None;
+    }
+    let extent = match command {
+        MathematicalCommand::NodeGraphViewport(_) => 1,
+        MathematicalCommand::SetLocale(payload) if payload.value.len() <= MATHEMATICAL_MAX_LOCALE_BYTES => 1,
+        MathematicalCommand::SetLocale(_) => return None,
+        MathematicalCommand::SetAlgorithm(payload) if payload.algorithm.len() <= MATHEMATICAL_MAX_TEXT_BYTES && payload.seed.as_ref().is_none_or(|seed| seed.len() <= MATHEMATICAL_MAX_TEXT_BYTES) => {
+            2_usize.checked_add(scene.graph.nodes.len())?.checked_add(scene.graph.edges.len())?
+        }
+        MathematicalCommand::SetAlgorithm(_) => return None,
+        MathematicalCommand::SetDirected(_) => 2_usize.checked_add(scene.graph.nodes.len())?.checked_add(scene.graph.edges.len())?,
+        MathematicalCommand::SetPoints(payload) if payload.geometry.points.len() <= MATHEMATICAL_MAX_POINTS => 2_usize.checked_add(payload.geometry.points.len())?,
+        MathematicalCommand::SetPoints(_) => return None,
+        MathematicalCommand::SetArtifact(payload)
+            if payload.graph.retained_node_count() <= MATHEMATICAL_MAX_NODES
+                && payload.graph.retained_edge_count() <= MATHEMATICAL_MAX_EDGES
+                && payload.geometry.points.len() <= MATHEMATICAL_MAX_POINTS
+                && payload.graph.retained_metadata().1.len() <= MATHEMATICAL_MAX_TEXT_BYTES
+                && payload.graph.retained_metadata().2.is_none_or(|seed| seed.len() <= MATHEMATICAL_MAX_TEXT_BYTES) =>
+        {
+            2_usize.checked_add(payload.graph.retained_node_count())?.checked_add(payload.graph.retained_edge_count())?.checked_add(payload.geometry.points.len())?
+        }
+        MathematicalCommand::SetArtifact(_) => return None,
+        MathematicalCommand::NodeGraphEdit(payload) => {
+            let operation_count = mathematical_edit_preflight(payload)?;
+            let delete_extent = operation_count.checked_mul(MATHEMATICAL_MAX_DELETE_IDS.checked_add(scene.graph.nodes.len().checked_mul(2)?)?.checked_add(scene.graph.edges.len().checked_mul(2)?)?.checked_add(8)?)?;
+            4_usize.checked_add(scene.graph.nodes.len())?.checked_add(scene.graph.edges.len())?.checked_add(payload.operations_json.len())?.checked_add(delete_extent)?
+        }
+    };
+    (extent != 0 && extent <= MATHEMATICAL_RETAINED_WORK_ITEMS).then_some(extent)
+}
+
+#[derive(Clone)]
+enum MathematicalEditOperation {
+    AddNode { x: f64, y: f64 },
+    Move { node_id: String, x: f64, y: f64 },
+    Connect { source: String, target: String },
+    DeleteSelection { ids: Vec<String> },
+    Ignore,
+}
+
+impl MathematicalEditOperation {
+    fn from_value(value: &Value) -> Result<Self, Fault> {
+        let text = |key: &str| value.get(key).and_then(Value::as_str).unwrap_or_default();
+        Ok(match text("operation") {
+            "addNode" => Self::AddNode { x: value.get("x").and_then(Value::as_f64).unwrap_or(0.0), y: value.get("y").and_then(Value::as_f64).unwrap_or(0.0) },
+            "move" => {
+                let node_id = text("nodeId");
+                if node_id.len() > MATHEMATICAL_MAX_TEXT_BYTES {
+                    return Err(Fault::from("mathematical-edit-node-id-capacity"));
+                }
+                match (value.get("x").and_then(Value::as_f64), value.get("y").and_then(Value::as_f64)) {
+                    (Some(x), Some(y)) if !node_id.is_empty() => Self::Move { node_id: node_id.to_string(), x, y },
+                    _ => Self::Ignore,
+                }
+            }
+            "connect" => {
+                let source = text("sourceNodeId");
+                let target = text("targetNodeId");
+                if source.len() > MATHEMATICAL_MAX_TEXT_BYTES || target.len() > MATHEMATICAL_MAX_TEXT_BYTES {
+                    return Err(Fault::from("mathematical-edit-edge-id-capacity"));
+                }
+                if source.is_empty() || target.is_empty() {
+                    Self::Ignore
+                } else {
+                    Self::Connect { source: source.to_string(), target: target.to_string() }
+                }
+            }
+            "deleteSelection" => {
+                let Some(values) = value.get("nodeIds").and_then(Value::as_array) else { return Ok(Self::Ignore) };
+                if values.len() > MATHEMATICAL_MAX_DELETE_IDS {
+                    return Err(Fault::from("mathematical-edit-delete-id-capacity"));
+                }
+                let mut ids = Vec::new();
+                ids.try_reserve_exact(values.len()).map_err(|_| Fault::from("mathematical-edit-delete-id-reserve"))?;
+                for value in values {
+                    let Some(id) = value.as_str() else { return Ok(Self::Ignore) };
+                    if id.len() > MATHEMATICAL_MAX_TEXT_BYTES {
+                        return Err(Fault::from("mathematical-edit-delete-id-capacity"));
+                    }
+                    ids.push(id.to_string());
+                }
+                Self::DeleteSelection { ids }
+            }
+            _ => Self::Ignore,
+        })
+    }
+
+    fn retained_bytes(&self) -> usize {
+        match self {
+            Self::AddNode { .. } | Self::Ignore => std::mem::size_of::<Self>(),
+            Self::Move { node_id, .. } => std::mem::size_of::<Self>() + node_id.capacity(),
+            Self::Connect { source, target } => std::mem::size_of::<Self>() + source.capacity() + target.capacity(),
+            Self::DeleteSelection { ids } => std::mem::size_of::<Self>() + ids.capacity() * std::mem::size_of::<String>() + ids.iter().map(|id| id.capacity()).sum::<usize>(),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum MathematicalWorkPhase {
+    Initialize,
+    Nodes,
+    Edges,
+    Points,
+    JsonBytes,
+    JsonDecode,
+    Operations,
+    Finish,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+enum MathematicalOperationPhase {
+    #[default]
+    Start,
+    MoveNodes,
+    BuildDeleteIds,
+    DeleteNodes,
+    ReverseNodes,
+    DeleteEdges,
+    ReverseEdges,
+}
+
+struct MathematicalRetainedCommandWork {
+    tool_id: &'static str,
+    operation_identity: u64,
+    extent: usize,
+    phase: MathematicalWorkPhase,
+    item_cursor: usize,
+    cursor: usize,
+    digest: u64,
+    replay_target: Option<(usize, u64)>,
+    graph: Option<MathematicalGraph>,
+    points: Vec<crate::artifacts::mathematical::MathematicalPoint>,
+    operations: Vec<MathematicalEditOperation>,
+    operation_phase: MathematicalOperationPhase,
+    operation_cursor: usize,
+    rewrite_nodes: Vec<crate::artifacts::mathematical::MathematicalNode>,
+    rewrite_edges: Vec<crate::artifacts::mathematical::MathematicalEdge>,
+    delete_ids: BTreeSet<String>,
+    graph_changed: bool,
+    geometry_changed: bool,
+    closing: bool,
+}
+
+impl MathematicalRetainedCommandWork {
+    fn new(tool_id: &'static str, operation_identity: u64, extent: usize) -> Self {
+        Self {
+            tool_id,
+            operation_identity,
+            extent,
+            phase: MathematicalWorkPhase::Initialize,
+            item_cursor: 0,
+            cursor: 0,
+            digest: 0xcbf2_9ce4_8422_2325,
+            replay_target: None,
+            graph: None,
+            points: Vec::new(),
+            operations: Vec::new(),
+            operation_phase: MathematicalOperationPhase::Start,
+            operation_cursor: 0,
+            rewrite_nodes: Vec::new(),
+            rewrite_edges: Vec::new(),
+            delete_ids: BTreeSet::new(),
+            graph_changed: false,
+            geometry_changed: false,
+            closing: false,
+        }
+    }
+
+    fn observe(&mut self, bytes: &[u8]) {
+        for byte in bytes {
+            self.digest = (self.digest ^ u64::from(*byte)).wrapping_mul(0x1000_0000_01b3);
+        }
+    }
+
+    fn progress<A: semio_framework_plugin::ArtifactApp>(&mut self, bytes: &[u8], stage: &'static str) -> Result<ArtifactCommandWorkStep<A>, Fault> {
+        self.observe(bytes);
+        self.cursor = self.cursor.checked_add(1).ok_or_else(|| Fault::from("mathematical-work-cursor-overflow"))?;
+        if self.cursor > self.extent {
+            return Err(Fault::from("mathematical-work-extent-overflow"));
+        }
+        if let Some((target, expected)) = self.replay_target {
+            if self.cursor == target {
+                if self.digest != expected {
+                    return Err(Fault::from("mathematical-work-replay-drift"));
+                }
+                self.replay_target = None;
+            }
+            return Ok(ArtifactCommandWorkStep::Replay { stage: "mathematical-command-replay", preview: br#"{"en":"Restoring Mathematical command","de":"Mathematik-Befehl wird wiederhergestellt"}"# });
+        }
+        Ok(ArtifactCommandWorkStep::Progress { stage, preview: br#"{"en":"Preparing Mathematical command","de":"Mathematik-Befehl wird vorbereitet"}"# })
+    }
+
+    fn source_scene(snapshot: &MathematicalSnapshot) -> Result<Arc<crate::artifacts::mathematical::MathematicalWorkingScene>, Fault> {
+        crate::artifacts::mathematical::mathematical_scene_owner(snapshot).ok_or_else(|| Fault::from("mathematical-command-scene-unresolved"))
+    }
+
+    fn initialize(&mut self, command: &MathematicalCommand, snapshot: &MathematicalSnapshot) -> Result<(), Fault> {
+        let source = Self::source_scene(snapshot)?;
+        match command {
+            MathematicalCommand::SetAlgorithm(payload) => {
+                let mut graph = MathematicalGraph { directed: source.graph.directed, nodes: Vec::new(), edges: Vec::new(), algorithm: payload.algorithm.clone(), algorithm_seed: payload.seed.clone() };
+                graph.nodes.try_reserve_exact(source.graph.nodes.len()).map_err(|_| Fault::from("mathematical-command-node-reserve"))?;
+                graph.edges.try_reserve_exact(source.graph.edges.len()).map_err(|_| Fault::from("mathematical-command-edge-reserve"))?;
+                self.graph = Some(graph);
+                self.phase = MathematicalWorkPhase::Nodes;
+            }
+            MathematicalCommand::SetDirected(payload) => {
+                let mut graph = MathematicalGraph { directed: payload.directed, nodes: Vec::new(), edges: Vec::new(), algorithm: source.graph.algorithm.clone(), algorithm_seed: source.graph.algorithm_seed.clone() };
+                graph.nodes.try_reserve_exact(source.graph.nodes.len()).map_err(|_| Fault::from("mathematical-command-node-reserve"))?;
+                graph.edges.try_reserve_exact(source.graph.edges.len()).map_err(|_| Fault::from("mathematical-command-edge-reserve"))?;
+                self.graph = Some(graph);
+                self.phase = MathematicalWorkPhase::Nodes;
+            }
+            MathematicalCommand::NodeGraphEdit(_) => {
+                let mut graph = MathematicalGraph { directed: source.graph.directed, nodes: Vec::new(), edges: Vec::new(), algorithm: source.graph.algorithm.clone(), algorithm_seed: source.graph.algorithm_seed.clone() };
+                graph.nodes.try_reserve_exact(source.graph.nodes.len()).map_err(|_| Fault::from("mathematical-command-node-reserve"))?;
+                graph.edges.try_reserve_exact(source.graph.edges.len()).map_err(|_| Fault::from("mathematical-command-edge-reserve"))?;
+                self.graph = Some(graph);
+                self.phase = MathematicalWorkPhase::Nodes;
+            }
+            MathematicalCommand::SetArtifact(payload) => {
+                let (directed, algorithm, seed) = payload.graph.retained_metadata();
+                let mut graph = MathematicalGraph { directed, nodes: Vec::new(), edges: Vec::new(), algorithm: algorithm.to_string(), algorithm_seed: seed.map(str::to_string) };
+                graph.nodes.try_reserve_exact(payload.graph.retained_node_count()).map_err(|_| Fault::from("mathematical-command-node-reserve"))?;
+                graph.edges.try_reserve_exact(payload.graph.retained_edge_count()).map_err(|_| Fault::from("mathematical-command-edge-reserve"))?;
+                self.graph_changed = directed != source.graph.directed
+                    || algorithm != source.graph.algorithm
+                    || seed != source.graph.algorithm_seed.as_deref()
+                    || payload.graph.retained_node_count() != source.graph.nodes.len()
+                    || payload.graph.retained_edge_count() != source.graph.edges.len();
+                self.geometry_changed = payload.geometry.points.len() != source.geometry.points.len();
+                self.points.try_reserve_exact(payload.geometry.points.len()).map_err(|_| Fault::from("mathematical-command-point-reserve"))?;
+                self.graph = Some(graph);
+                self.phase = MathematicalWorkPhase::Nodes;
+            }
+            MathematicalCommand::SetPoints(payload) => {
+                self.points.try_reserve_exact(payload.geometry.points.len()).map_err(|_| Fault::from("mathematical-command-point-reserve"))?;
+                self.phase = MathematicalWorkPhase::Points;
+            }
+            MathematicalCommand::NodeGraphViewport(_) | MathematicalCommand::SetLocale(_) => self.phase = MathematicalWorkPhase::Finish,
+        }
+        Ok(())
+    }
+
+    fn finish(&mut self, command: &MathematicalCommand) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault> {
+        use crate::artifacts::mathematical::schema::mutations::replace_graph::mutation::ReplaceGraph;
+        use crate::artifacts::mathematical::schema::mutations::replace_points::mutation::ReplacePoints;
+        Ok(match command {
+            MathematicalCommand::SetAlgorithm(_) => Emit::commit(vec![MathematicalMutation::ReplaceGraph(ReplaceGraph { graph: self.graph.take().ok_or_else(|| Fault::from("mathematical-command-graph-owner"))? })], "setAlgorithm"),
+            MathematicalCommand::SetDirected(_) => Emit::mutations(vec![MathematicalMutation::ReplaceGraph(ReplaceGraph { graph: self.graph.take().ok_or_else(|| Fault::from("mathematical-command-graph-owner"))? })]),
+            MathematicalCommand::NodeGraphEdit(_) if self.graph_changed => Emit::mutations(vec![MathematicalMutation::ReplaceGraph(ReplaceGraph { graph: self.graph.take().ok_or_else(|| Fault::from("mathematical-command-graph-owner"))? })]),
+            MathematicalCommand::NodeGraphEdit(_) => Emit::default(),
+            MathematicalCommand::SetPoints(_) => Emit::mutations(vec![MathematicalMutation::ReplacePoints(ReplacePoints { points: std::mem::take(&mut self.points) })]),
+            MathematicalCommand::SetArtifact(_) => {
+                let mut mutations = Vec::new();
+                if self.graph_changed {
+                    mutations.push(MathematicalMutation::ReplaceGraph(ReplaceGraph { graph: self.graph.take().ok_or_else(|| Fault::from("mathematical-command-graph-owner"))? }));
+                }
+                if self.geometry_changed {
+                    mutations.push(MathematicalMutation::ReplacePoints(ReplacePoints { points: std::mem::take(&mut self.points) }));
+                }
+                Emit::mutations(mutations)
+            }
+            MathematicalCommand::NodeGraphViewport(payload) => Emit::config(vec![MathematicalConfigMutation::SetCamera { camera: payload.camera.clone() }]),
+            MathematicalCommand::SetLocale(payload) => Emit::config(vec![MathematicalConfigMutation::SetLocale { value: payload.value.clone() }]),
+        })
+    }
+
+    fn close_vec_capacity<T>(values: &mut Vec<T>, maximum_items: usize, maximum_bytes: usize) -> Option<InteractiveJobCloseStep> {
+        if !values.is_empty() {
+            return None;
+        }
+        let bytes = values.capacity().saturating_mul(std::mem::size_of::<T>());
+        if bytes == 0 {
+            return None;
+        }
+        if maximum_items == 0 || maximum_bytes < bytes {
+            return Some(InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        *values = Vec::new();
+        Some(InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes })
+    }
+
+    fn advance_operation(&mut self) {
+        self.item_cursor += 1;
+        self.operation_cursor = 0;
+        self.operation_phase = MathematicalOperationPhase::Start;
+    }
+}
+
+impl ArtifactCommandWork<EditorApp<MathematicalPlayApp>> for MathematicalRetainedCommandWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn workspace_identity(&self) -> u64 {
+        self.operation_identity ^ (self.extent as u64).rotate_left(17)
+    }
+
+    fn extent(
+        &self,
+        command: &MathematicalCommand,
+        snapshot: &MathematicalSnapshot,
+        _interaction: &protocol::InteractionState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<MathematicalPlayApp>>>,
+    ) -> Option<usize> {
+        let extent = mathematical_command_extent(command, snapshot)?;
+        (extent == self.extent).then_some(extent)
+    }
+
+    fn step(
+        &mut self,
+        command: &MathematicalCommand,
+        snapshot: &MathematicalSnapshot,
+        _config: &MathematicalConfig,
+        _history: &semio_framework_plugin::HistoryView,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<MathematicalPlayApp>>>,
+        _operation: &AppOperationContext,
+    ) -> Result<ArtifactCommandWorkStep<EditorApp<MathematicalPlayApp>>, Fault> {
+        if mathematical_command_extent(command, snapshot) != Some(self.extent) || self.cursor > self.extent {
+            return Err(Fault::from("mathematical-command-extent-drift"));
+        }
+        let source = Self::source_scene(snapshot)?;
+        match self.phase {
+            MathematicalWorkPhase::Initialize => {
+                self.initialize(command, snapshot)?;
+                self.progress::<EditorApp<MathematicalPlayApp>>(self.tool_id.as_bytes(), "mathematical-command-initialize")
+            }
+            MathematicalWorkPhase::Nodes => {
+                let (count, node) = match command {
+                    MathematicalCommand::SetArtifact(payload) => (payload.graph.retained_node_count(), payload.graph.retained_node(self.item_cursor).cloned()),
+                    _ => (source.graph.nodes.len(), source.graph.nodes.get(self.item_cursor).cloned()),
+                };
+                if self.item_cursor >= count {
+                    self.item_cursor = 0;
+                    self.phase = MathematicalWorkPhase::Edges;
+                    return self.progress::<EditorApp<MathematicalPlayApp>>(b"nodes-complete", "mathematical-command-node-boundary");
+                }
+                let node = node.ok_or_else(|| Fault::from("mathematical-command-node-cursor"))?;
+                if node.id.len() > MATHEMATICAL_MAX_TEXT_BYTES || node.label.len() > MATHEMATICAL_MAX_TEXT_BYTES {
+                    return Err(Fault::from("mathematical-command-node-text-capacity"));
+                }
+                if let MathematicalCommand::SetArtifact(_) = command {
+                    self.graph_changed |= source.graph.nodes.get(self.item_cursor) != Some(&node);
+                }
+                self.observe(node.id.as_bytes());
+                self.graph.as_mut().ok_or_else(|| Fault::from("mathematical-command-graph-owner"))?.nodes.push(node);
+                self.item_cursor += 1;
+                self.progress::<EditorApp<MathematicalPlayApp>>(&self.item_cursor.to_le_bytes(), "mathematical-command-node")
+            }
+            MathematicalWorkPhase::Edges => {
+                let (count, edge) = match command {
+                    MathematicalCommand::SetArtifact(payload) => (payload.graph.retained_edge_count(), (self.item_cursor < payload.graph.retained_edge_count()).then(|| payload.graph.retained_edge(self.item_cursor)).transpose().map_err(Fault::from)?),
+                    _ => (source.graph.edges.len(), source.graph.edges.get(self.item_cursor).cloned()),
+                };
+                if self.item_cursor >= count {
+                    self.item_cursor = 0;
+                    self.phase = match command {
+                        MathematicalCommand::SetArtifact(_) => MathematicalWorkPhase::Points,
+                        MathematicalCommand::NodeGraphEdit(_) => MathematicalWorkPhase::JsonBytes,
+                        _ => MathematicalWorkPhase::Finish,
+                    };
+                    return self.progress::<EditorApp<MathematicalPlayApp>>(b"edges-complete", "mathematical-command-edge-boundary");
+                }
+                let edge = edge.ok_or_else(|| Fault::from("mathematical-command-edge-cursor"))?;
+                if edge.id.len() > MATHEMATICAL_MAX_TEXT_BYTES || edge.source.len() > MATHEMATICAL_MAX_TEXT_BYTES || edge.target.len() > MATHEMATICAL_MAX_TEXT_BYTES {
+                    return Err(Fault::from("mathematical-command-edge-text-capacity"));
+                }
+                if let MathematicalCommand::SetArtifact(_) = command {
+                    self.graph_changed |= source.graph.edges.get(self.item_cursor) != Some(&edge);
+                }
+                self.observe(edge.id.as_bytes());
+                self.graph.as_mut().ok_or_else(|| Fault::from("mathematical-command-graph-owner"))?.edges.push(edge);
+                self.item_cursor += 1;
+                self.progress::<EditorApp<MathematicalPlayApp>>(&self.item_cursor.to_le_bytes(), "mathematical-command-edge")
+            }
+            MathematicalWorkPhase::Points => {
+                let points = match command {
+                    MathematicalCommand::SetArtifact(payload) => &payload.geometry.points,
+                    MathematicalCommand::SetPoints(payload) => &payload.geometry.points,
+                    _ => return Err(Fault::from("mathematical-command-point-phase")),
+                };
+                if self.item_cursor >= points.len() {
+                    self.item_cursor = 0;
+                    self.phase = MathematicalWorkPhase::Finish;
+                    return self.progress::<EditorApp<MathematicalPlayApp>>(b"points-complete", "mathematical-command-point-boundary");
+                }
+                let point = points[self.item_cursor].clone();
+                if matches!(command, MathematicalCommand::SetArtifact(_)) {
+                    self.geometry_changed |= source.geometry.points.get(self.item_cursor) != Some(&point);
+                }
+                self.observe(&point.x.to_le_bytes());
+                self.observe(&point.y.to_le_bytes());
+                self.points.push(point);
+                self.item_cursor += 1;
+                self.progress::<EditorApp<MathematicalPlayApp>>(&self.item_cursor.to_le_bytes(), "mathematical-command-point")
+            }
+            MathematicalWorkPhase::JsonBytes => {
+                let MathematicalCommand::NodeGraphEdit(payload) = command else { return Err(Fault::from("mathematical-command-json-phase")) };
+                if self.item_cursor >= payload.operations_json.len() {
+                    self.item_cursor = 0;
+                    self.phase = MathematicalWorkPhase::JsonDecode;
+                    return self.progress::<EditorApp<MathematicalPlayApp>>(b"json-complete", "mathematical-command-json-boundary");
+                }
+                let byte = payload.operations_json.as_bytes()[self.item_cursor];
+                self.item_cursor += 1;
+                self.progress::<EditorApp<MathematicalPlayApp>>(&[byte], "mathematical-command-json-byte")
+            }
+            MathematicalWorkPhase::JsonDecode => {
+                let MathematicalCommand::NodeGraphEdit(payload) = command else { return Err(Fault::from("mathematical-command-json-decode")) };
+                let values = serde_json::from_str::<Vec<Value>>(&payload.operations_json).unwrap_or_default();
+                if values.len() > MATHEMATICAL_MAX_EDIT_OPERATIONS {
+                    return Err(Fault::from("mathematical-command-operation-capacity"));
+                }
+                self.operations.try_reserve_exact(values.len()).map_err(|_| Fault::from("mathematical-command-operation-reserve"))?;
+                for value in &values {
+                    self.operations.push(MathematicalEditOperation::from_value(value)?);
+                }
+                self.item_cursor = 0;
+                self.phase = MathematicalWorkPhase::Operations;
+                self.progress::<EditorApp<MathematicalPlayApp>>(&(values.len() as u64).to_le_bytes(), "mathematical-command-json-decode")
+            }
+            MathematicalWorkPhase::Operations => {
+                if self.item_cursor >= self.operations.len() {
+                    self.item_cursor = 0;
+                    self.phase = MathematicalWorkPhase::Finish;
+                    return self.progress::<EditorApp<MathematicalPlayApp>>(b"operations-complete", "mathematical-command-operation-boundary");
+                }
+                let operation = self.operations[self.item_cursor].clone();
+                match (&operation, self.operation_phase) {
+                    (_, MathematicalOperationPhase::Start) => match &operation {
+                        MathematicalEditOperation::AddNode { x, y } => {
+                            let graph = self.graph.as_mut().ok_or_else(|| Fault::from("mathematical-command-graph-owner"))?;
+                            let id = format!("n{}", graph.nodes.len());
+                            graph.nodes.push(crate::artifacts::mathematical::MathematicalNode { label: id.to_uppercase(), id, x: *x, y: *y });
+                            self.graph_changed = true;
+                            self.advance_operation();
+                        }
+                        MathematicalEditOperation::Move { .. } => self.operation_phase = MathematicalOperationPhase::MoveNodes,
+                        MathematicalEditOperation::Connect { source, target } => {
+                            let graph = self.graph.as_mut().ok_or_else(|| Fault::from("mathematical-command-graph-owner"))?;
+                            let id = format!("e{}", graph.edges.len());
+                            graph.edges.push(crate::artifacts::mathematical::MathematicalEdge { id, source: source.clone(), target: target.clone() });
+                            self.graph_changed = true;
+                            self.advance_operation();
+                        }
+                        MathematicalEditOperation::DeleteSelection { .. } => self.operation_phase = MathematicalOperationPhase::BuildDeleteIds,
+                        MathematicalEditOperation::Ignore => self.advance_operation(),
+                    },
+                    (MathematicalEditOperation::Move { node_id, x, y }, MathematicalOperationPhase::MoveNodes) => {
+                        let graph = self.graph.as_mut().ok_or_else(|| Fault::from("mathematical-command-graph-owner"))?;
+                        if self.operation_cursor >= graph.nodes.len() {
+                            self.advance_operation();
+                        } else {
+                            let node = &mut graph.nodes[self.operation_cursor];
+                            self.operation_cursor += 1;
+                            if node.id == *node_id {
+                                node.x = *x;
+                                node.y = *y;
+                                self.graph_changed = true;
+                                self.advance_operation();
+                            }
+                        }
+                    }
+                    (MathematicalEditOperation::DeleteSelection { ids }, MathematicalOperationPhase::BuildDeleteIds) => {
+                        if self.operation_cursor < ids.len() {
+                            self.delete_ids.insert(ids[self.operation_cursor].clone());
+                            self.operation_cursor += 1;
+                        } else {
+                            let graph = self.graph.as_mut().ok_or_else(|| Fault::from("mathematical-command-graph-owner"))?;
+                            self.rewrite_nodes = std::mem::take(&mut graph.nodes);
+                            graph.nodes.try_reserve_exact(self.rewrite_nodes.len()).map_err(|_| Fault::from("mathematical-command-node-rewrite-reserve"))?;
+                            self.operation_cursor = 0;
+                            self.operation_phase = MathematicalOperationPhase::DeleteNodes;
+                        }
+                    }
+                    (MathematicalEditOperation::DeleteSelection { .. }, MathematicalOperationPhase::DeleteNodes) => {
+                        if let Some(node) = self.rewrite_nodes.pop() {
+                            if self.delete_ids.contains(&node.id) {
+                                self.graph_changed = true;
+                            } else {
+                                self.graph.as_mut().ok_or_else(|| Fault::from("mathematical-command-graph-owner"))?.nodes.push(node);
+                            }
+                        } else {
+                            self.operation_cursor = 0;
+                            self.operation_phase = MathematicalOperationPhase::ReverseNodes;
+                        }
+                    }
+                    (MathematicalEditOperation::DeleteSelection { .. }, MathematicalOperationPhase::ReverseNodes) => {
+                        let graph = self.graph.as_mut().ok_or_else(|| Fault::from("mathematical-command-graph-owner"))?;
+                        if self.operation_cursor < graph.nodes.len() / 2 {
+                            let last = graph.nodes.len() - 1 - self.operation_cursor;
+                            graph.nodes.swap(self.operation_cursor, last);
+                            self.operation_cursor += 1;
+                        } else {
+                            self.rewrite_edges = std::mem::take(&mut graph.edges);
+                            graph.edges.try_reserve_exact(self.rewrite_edges.len()).map_err(|_| Fault::from("mathematical-command-edge-rewrite-reserve"))?;
+                            self.operation_cursor = 0;
+                            self.operation_phase = MathematicalOperationPhase::DeleteEdges;
+                        }
+                    }
+                    (MathematicalEditOperation::DeleteSelection { .. }, MathematicalOperationPhase::DeleteEdges) => {
+                        if let Some(edge) = self.rewrite_edges.pop() {
+                            if self.delete_ids.contains(&edge.source) || self.delete_ids.contains(&edge.target) {
+                                self.graph_changed = true;
+                            } else {
+                                self.graph.as_mut().ok_or_else(|| Fault::from("mathematical-command-graph-owner"))?.edges.push(edge);
+                            }
+                        } else {
+                            self.operation_cursor = 0;
+                            self.operation_phase = MathematicalOperationPhase::ReverseEdges;
+                        }
+                    }
+                    (MathematicalEditOperation::DeleteSelection { .. }, MathematicalOperationPhase::ReverseEdges) => {
+                        let graph = self.graph.as_mut().ok_or_else(|| Fault::from("mathematical-command-graph-owner"))?;
+                        if self.operation_cursor < graph.edges.len() / 2 {
+                            let last = graph.edges.len() - 1 - self.operation_cursor;
+                            graph.edges.swap(self.operation_cursor, last);
+                            self.operation_cursor += 1;
+                        } else {
+                            self.delete_ids.clear();
+                            self.advance_operation();
+                        }
+                    }
+                    _ => return Err(Fault::from("mathematical-command-operation-phase")),
+                }
+                self.progress::<EditorApp<MathematicalPlayApp>>(&self.item_cursor.to_le_bytes(), "mathematical-command-operation")
+            }
+            MathematicalWorkPhase::Finish => self.finish(command).map(ArtifactCommandWorkStep::Complete),
+        }
+    }
+
+    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
+        if target.len() < 40 {
+            return Err(Fault::from("mathematical-command-checkpoint-capacity"));
+        }
+        target[..40].fill(0);
+        target[..4].copy_from_slice(b"MRC1");
+        target[4] = self.phase as u8;
+        target[8..16].copy_from_slice(&(self.cursor as u64).to_le_bytes());
+        target[16..24].copy_from_slice(&self.digest.to_le_bytes());
+        target[24..32].copy_from_slice(&self.operation_identity.to_le_bytes());
+        target[32..40].copy_from_slice(&(self.extent as u64).to_le_bytes());
+        Ok(40)
+    }
+
+    fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
+        if checkpoint.len() != 40
+            || &checkpoint[..4] != b"MRC1"
+            || checkpoint[5..8] != [0, 0, 0]
+            || self.graph.is_some()
+            || !self.points.is_empty()
+            || !self.operations.is_empty()
+            || !self.rewrite_nodes.is_empty()
+            || !self.rewrite_edges.is_empty()
+            || !self.delete_ids.is_empty()
+        {
+            return Err(Fault::from("mathematical-command-checkpoint-invalid"));
+        }
+        let identity = u64::from_le_bytes(checkpoint[24..32].try_into().map_err(|_| Fault::from("mathematical-command-checkpoint-identity"))?);
+        let extent = u64::from_le_bytes(checkpoint[32..40].try_into().map_err(|_| Fault::from("mathematical-command-checkpoint-extent"))?);
+        let cursor = u64::from_le_bytes(checkpoint[8..16].try_into().map_err(|_| Fault::from("mathematical-command-checkpoint-cursor"))?);
+        if identity != self.operation_identity || extent != self.extent as u64 || cursor > self.extent as u64 {
+            return Err(Fault::from("mathematical-command-checkpoint-mismatch"));
+        }
+        self.phase = MathematicalWorkPhase::Initialize;
+        self.item_cursor = 0;
+        self.operation_cursor = 0;
+        self.operation_phase = MathematicalOperationPhase::Start;
+        self.cursor = 0;
+        self.digest = 0xcbf2_9ce4_8422_2325;
+        self.replay_target = (cursor != 0).then_some((cursor as usize, u64::from_le_bytes(checkpoint[16..24].try_into().map_err(|_| Fault::from("mathematical-command-checkpoint-digest"))?)));
+        Ok(())
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+        if !self.closing {
+            return InteractiveJobCloseStep::Blocked;
+        }
+        if let Some(operation) = self.operations.last() {
+            let bytes = operation.retained_bytes();
+            if maximum_items == 0 || maximum_bytes < bytes {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.operations.pop();
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+        }
+        if let Some(step) = Self::close_vec_capacity(&mut self.operations, maximum_items, maximum_bytes) {
+            return step;
+        }
+        if let Some(id) = self.delete_ids.first() {
+            let bytes = std::mem::size_of::<String>() + id.capacity();
+            if maximum_items == 0 || maximum_bytes < bytes {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.delete_ids.pop_first();
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+        }
+        if let Some(node) = self.rewrite_nodes.last() {
+            let bytes = std::mem::size_of_val(node) + node.id.capacity() + node.label.capacity();
+            if maximum_items == 0 || maximum_bytes < bytes {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.rewrite_nodes.pop();
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+        }
+        if let Some(step) = Self::close_vec_capacity(&mut self.rewrite_nodes, maximum_items, maximum_bytes) {
+            return step;
+        }
+        if let Some(edge) = self.rewrite_edges.last() {
+            let bytes = std::mem::size_of_val(edge) + edge.id.capacity() + edge.source.capacity() + edge.target.capacity();
+            if maximum_items == 0 || maximum_bytes < bytes {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.rewrite_edges.pop();
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+        }
+        if let Some(step) = Self::close_vec_capacity(&mut self.rewrite_edges, maximum_items, maximum_bytes) {
+            return step;
+        }
+        if let Some(point) = self.points.last() {
+            let bytes = std::mem::size_of_val(point);
+            if maximum_items == 0 || maximum_bytes < bytes {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.points.pop();
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+        }
+        if let Some(step) = Self::close_vec_capacity(&mut self.points, maximum_items, maximum_bytes) {
+            return step;
+        }
+        if let Some(graph) = self.graph.as_mut() {
+            if let Some(edge) = graph.edges.last() {
+                let bytes = std::mem::size_of_val(edge) + edge.id.capacity() + edge.source.capacity() + edge.target.capacity();
+                if maximum_items == 0 || maximum_bytes < bytes {
+                    return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                graph.edges.pop();
+                return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+            }
+            if let Some(step) = Self::close_vec_capacity(&mut graph.edges, maximum_items, maximum_bytes) {
+                return step;
+            }
+            if let Some(node) = graph.nodes.last() {
+                let bytes = std::mem::size_of_val(node) + node.id.capacity() + node.label.capacity();
+                if maximum_items == 0 || maximum_bytes < bytes {
+                    return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                graph.nodes.pop();
+                return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+            }
+            if let Some(step) = Self::close_vec_capacity(&mut graph.nodes, maximum_items, maximum_bytes) {
+                return step;
+            }
+            let bytes = std::mem::size_of::<MathematicalGraph>() + graph.algorithm.capacity() + graph.algorithm_seed.as_ref().map_or(0, String::capacity);
+            if maximum_items == 0 || maximum_bytes < bytes {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.graph = None;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+        }
+        InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
+            && self.graph.is_none()
+            && self.points.is_empty()
+            && self.points.capacity() == 0
+            && self.operations.is_empty()
+            && self.operations.capacity() == 0
+            && self.rewrite_nodes.is_empty()
+            && self.rewrite_nodes.capacity() == 0
+            && self.rewrite_edges.is_empty()
+            && self.rewrite_edges.capacity() == 0
+            && self.delete_ids.is_empty()
+    }
+}
+
+struct MathematicalCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl MathematicalCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: MATHEMATICAL_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for MathematicalCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<MathematicalPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<MathematicalPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        MATHEMATICAL_RETAINED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        mathematical_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > MATHEMATICAL_RETAINED_RAW_BYTES || checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
+            return Err((ToolJobFactoryError::new("Mathematical retained command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(match checkpoint {
+            Some(checkpoint) => ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
+            None => ArtifactRetainedCommandJob::from_wire(payload, input),
+        })
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for MathematicalCommandJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<MathematicalPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = MATHEMATICAL_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;
+}
+//#endregion 🧵️RetainedCommands
+
 //#region 🔖️MathematicalPlayApp
 /// 🧪️ B1: unit struct — the former `MathPlayRuntime`/`self.runtime` field now lives in
 /// `crate::editor::mathematical::config::MathematicalConfig` (see `ArtifactEditor::Config`), written
@@ -238,6 +1043,62 @@ impl ArtifactEditor for MathematicalPlayApp {
 
     const DIALECT: Dialect = MATHEMATICAL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<MathematicalPlayApp>,
+        owner_file: "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.mathematical.mathematical@1/*#editor",
+        document_schema: "semio.mathematical/v1",
+        factory: "MathematicalCommandJobFactory",
+        tools: {
+            "setDocument" => semio_framework::ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
+            "setAlgorithm" => semio_framework::ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
+            "setDirected" => semio_framework::ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
+            "nodeGraphEdit" => semio_framework::ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
+            "nodeGraphViewport" => semio_framework::ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
+            "setPoints" => semio_framework::ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
+            "setLocale" => semio_framework::ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1)
+        }
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(MathematicalCommandJobFactory::new(&controller))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !MATHEMATICAL_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id {
+            return Err(Fault::from("mathematical-command-tool-mismatch"));
+        }
+        let extent = mathematical_command_extent(&request.command, &request.snapshot).ok_or_else(|| Fault::from("mathematical-command-capacity"))?;
+        let tool_id = request.command.command_id();
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(MathematicalRetainedCommandWork::new(tool_id, mathematical_operation_identity(tool_id, &operation_context), extent));
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            operation_context,
+            request.completion,
+            MathematicalCommand::command_id,
+            MATHEMATICAL_RETAINED_RAW_BYTES,
+            MATHEMATICAL_RETAINED_WORK_ITEMS,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
 
     async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::mathematical::config::schema::app_schema_descriptor())
@@ -330,6 +1191,13 @@ pub async fn create_mathematical_app() -> semio_framework_plugin::AppDefinition 
         .view_action("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"))
         .mutation("setPoints", LocalizedLabel::native("Set Points", "Punkte festlegen"))
         .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
+        .action_interactive_job("setDocument", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setAlgorithm", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setDirected", InteractiveJobClassification::Migrated)
+        .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::Migrated)
+        .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setPoints", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
         // 📝️ Staged argument forms for the graph analysis controls.
         .action_args("setAlgorithm", vec![
             ActionArgDef::select("algorithm", LocalizedLabel::native("Algorithm", "Algorithmus"), vec![
@@ -398,6 +1266,174 @@ pub(crate) mod testkit {
 mod tests {
     use super::*;
     use crate::editor::mathematical::testkit::{math_app, math_app_with_registry};
+
+    //#region 🔖️RetainedCommands
+    fn retained_operation(generation: u64) -> AppOperationContext {
+        AppOperationContext { app_instance_id: 7, parent_document_id: "mathematical-retained-test".into(), operation_id: 11, generation, canonical_base_revision: [17; 32] }
+    }
+
+    fn graph_with_shape(node_count: usize, edge_count: usize) -> MathematicalGraph {
+        let nodes = (0..node_count).map(|index| crate::artifacts::mathematical::MathematicalNode { id: format!("n{index}"), label: format!("N{index}"), x: index as f64, y: -(index as f64) }).collect();
+        let edges = (0..edge_count).map(|index| crate::artifacts::mathematical::MathematicalEdge { id: format!("e{index}"), source: format!("n{}", index % node_count.max(1)), target: format!("n{}", (index + 1) % node_count.max(1)) }).collect();
+        MathematicalGraph { directed: true, nodes, edges, algorithm: "bfs".into(), algorithm_seed: Some("n0".into()) }
+    }
+
+    fn drive_retained(work: &mut MathematicalRetainedCommandWork, command: &MathematicalCommand, snapshot: &MathematicalSnapshot, operation: &AppOperationContext) -> serde_json::Value {
+        let config = MathematicalConfig::default();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let interaction = protocol::InteractionState::default();
+        let hover = semio_framework_plugin::app::InteractionHoverState::default();
+        loop {
+            match work.step(command, snapshot, &config, &history, &interaction, &hover, None, operation).expect("retained Mathematical turn") {
+                ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::Progress { .. } => {}
+                ArtifactCommandWorkStep::Complete(emit) => return serde_json::to_value(emit.artifact_mutations).expect("third-party serde mutation oracle"),
+                ArtifactCommandWorkStep::CompleteWithEphemeral { .. } => panic!("Mathematical commands do not publish ephemeral state"),
+            }
+        }
+    }
+
+    #[test]
+    fn retained_schema_contract_and_factory_identity_are_exact() {
+        let fixture: Value = serde_json::from_str(include_str!("../../../../../🧪️fixtures/mathematical-retained-command-law.json")).expect("language-neutral retained fixture");
+        assert_eq!(fixture["contract"]["workItems"], 65_536);
+        assert_eq!(fixture["contract"]["maximumStepMillis"], 8);
+        assert_eq!(fixture["actions"], serde_json::json!(MATHEMATICAL_TOOL_IDS));
+        assert_eq!(fixture["hostileCases"].as_array().map(Vec::len), Some(14));
+        let factory = MathematicalCommandJobFactory::new("s.mathematical.mathematical@1/*#editor");
+        let keys = <MathematicalCommandJobFactory as semio_framework::ToolJobFactory>::keys(&factory);
+        assert_eq!(keys.len(), MATHEMATICAL_TOOL_IDS.len());
+        for (key, tool_id) in keys.iter().zip(MATHEMATICAL_TOOL_IDS) {
+            assert_eq!(key.controller_id, "s.mathematical.mathematical@1/*#editor");
+            assert_eq!(key.tool_id, *tool_id);
+        }
+        assert_eq!(<MathematicalPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 7);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_semantic_maxima_accept_exact_and_reject_maximum_plus_one() {
+        let command = MathematicalCommand::SetDirected(set_directed::SetDirected { directed: false });
+        let maximum_nodes = crate::artifacts::mathematical::mathematical_snapshot_with_state(graph_with_shape(MATHEMATICAL_MAX_NODES, 0), MathematicalGeometry::default()).await;
+        let excessive_nodes = crate::artifacts::mathematical::mathematical_snapshot_with_state(graph_with_shape(MATHEMATICAL_MAX_NODES + 1, 0), MathematicalGeometry::default()).await;
+        assert!(mathematical_command_extent(&command, &maximum_nodes).is_some());
+        assert!(mathematical_command_extent(&command, &excessive_nodes).is_none());
+        let maximum_edges = crate::artifacts::mathematical::mathematical_snapshot_with_state(graph_with_shape(2, MATHEMATICAL_MAX_EDGES), MathematicalGeometry::default()).await;
+        let excessive_edges = crate::artifacts::mathematical::mathematical_snapshot_with_state(graph_with_shape(2, MATHEMATICAL_MAX_EDGES + 1), MathematicalGeometry::default()).await;
+        assert!(mathematical_command_extent(&command, &maximum_edges).is_some());
+        assert!(mathematical_command_extent(&command, &excessive_edges).is_none());
+
+        let snapshot = crate::artifacts::mathematical::mathematical_snapshot_with_state(MathematicalGraph::default(), MathematicalGeometry::default()).await;
+        let point = crate::artifacts::mathematical::MathematicalPoint { x: 1.0, y: 2.0 };
+        let maximum_points = MathematicalCommand::SetPoints(set_points::SetPoints { geometry: MathematicalGeometry { points: vec![point.clone(); MATHEMATICAL_MAX_POINTS] } });
+        let excessive_points = MathematicalCommand::SetPoints(set_points::SetPoints { geometry: MathematicalGeometry { points: vec![point; MATHEMATICAL_MAX_POINTS + 1] } });
+        assert!(mathematical_command_extent(&maximum_points, &snapshot).is_some());
+        assert!(mathematical_command_extent(&excessive_points, &snapshot).is_none());
+        let maximum_text = "a".repeat(MATHEMATICAL_MAX_TEXT_BYTES);
+        let excessive_text = "a".repeat(MATHEMATICAL_MAX_TEXT_BYTES + 1);
+        assert!(mathematical_command_extent(&MathematicalCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: maximum_text, seed: None }), &snapshot).is_some());
+        assert!(mathematical_command_extent(&MathematicalCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: excessive_text, seed: None }), &snapshot).is_none());
+        assert!(mathematical_command_extent(&MathematicalCommand::SetLocale(set_locale::SetLocale { value: "d".repeat(MATHEMATICAL_MAX_LOCALE_BYTES) }), &snapshot).is_some());
+        assert!(mathematical_command_extent(&MathematicalCommand::SetLocale(set_locale::SetLocale { value: "d".repeat(MATHEMATICAL_MAX_LOCALE_BYTES + 1) }), &snapshot).is_none());
+
+        let operations = |count: usize| serde_json::to_string(&vec![serde_json::json!({}); count]).expect("third-party JSON oracle");
+        assert!(mathematical_command_extent(&MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: operations(MATHEMATICAL_MAX_EDIT_OPERATIONS) }), &snapshot).is_some());
+        assert!(mathematical_command_extent(&MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: operations(MATHEMATICAL_MAX_EDIT_OPERATIONS + 1) }), &snapshot).is_none());
+        let delete = |count: usize| serde_json::to_string(&vec![serde_json::json!({ "operation": "deleteSelection", "nodeIds": (0..count).map(|index| format!("n{index}")).collect::<Vec<_>>() })]).expect("third-party delete JSON oracle");
+        assert!(mathematical_command_extent(&MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: delete(MATHEMATICAL_MAX_DELETE_IDS) }), &snapshot).is_some());
+        assert!(mathematical_command_extent(&MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: delete(MATHEMATICAL_MAX_DELETE_IDS + 1) }), &snapshot).is_none());
+        let exact_json = format!("[{}]", " ".repeat(MATHEMATICAL_MAX_EDIT_JSON_BYTES - 2));
+        let excessive_json = format!("[{}]", " ".repeat(MATHEMATICAL_MAX_EDIT_JSON_BYTES - 1));
+        assert_eq!(exact_json.len(), MATHEMATICAL_MAX_EDIT_JSON_BYTES);
+        assert_eq!(excessive_json.len(), MATHEMATICAL_MAX_EDIT_JSON_BYTES + 1);
+        assert!(mathematical_command_extent(&MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: exact_json }), &snapshot).is_some());
+        assert!(mathematical_command_extent(&MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: excessive_json }), &snapshot).is_none());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() {
+        let graph = graph_with_shape(8, 12);
+        let snapshot = crate::artifacts::mathematical::mathematical_snapshot_with_state(graph, MathematicalGeometry::default()).await;
+        let command = MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
+            operations_json: serde_json::to_string(&serde_json::json!([
+                { "operation": "move", "nodeId": "n7", "x": 41.0, "y": 42.0 },
+                { "operation": "deleteSelection", "nodeIds": ["n1", "n3"] },
+                { "operation": "addNode", "x": 5.0, "y": 6.0 }
+            ]))
+            .expect("third-party JSON oracle"),
+        });
+        let operation = retained_operation(13);
+        let extent = mathematical_command_extent(&command, &snapshot).expect("retained extent");
+        let identity = mathematical_operation_identity("nodeGraphEdit", &operation);
+        let mut uninterrupted = MathematicalRetainedCommandWork::new("nodeGraphEdit", identity, extent);
+        let config = MathematicalConfig::default();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let interaction = protocol::InteractionState::default();
+        let hover = semio_framework_plugin::app::InteractionHoverState::default();
+        for _ in 0..9 {
+            assert!(matches!(uninterrupted.step(&command, &snapshot, &config, &history, &interaction, &hover, None, &operation).expect("checkpoint prefix"), ArtifactCommandWorkStep::Progress { .. }));
+        }
+        let mut checkpoint = [0_u8; 40];
+        assert_eq!(uninterrupted.checkpoint(&mut checkpoint).expect("checkpoint"), 40);
+        let aba_operation = retained_operation(14);
+        let mut stale_aba = MathematicalRetainedCommandWork::new("nodeGraphEdit", mathematical_operation_identity("nodeGraphEdit", &aba_operation), extent);
+        assert!(stale_aba.restore(&checkpoint).is_err());
+        let mut wrong_action = MathematicalRetainedCommandWork::new("setDirected", mathematical_operation_identity("setDirected", &operation), extent);
+        assert!(wrong_action.restore(&checkpoint).is_err());
+
+        let mut replayed = MathematicalRetainedCommandWork::new("nodeGraphEdit", identity, extent);
+        replayed.restore(&checkpoint).expect("interrupted restore");
+        let uninterrupted_output = drive_retained(&mut uninterrupted, &command, &snapshot, &operation);
+        let replayed_output = drive_retained(&mut replayed, &command, &snapshot, &operation);
+        assert_eq!(uninterrupted_output, replayed_output, "serde_json oracle must observe exact replay output");
+
+        let mut cancelled_before = MathematicalRetainedCommandWork::new("nodeGraphEdit", identity, extent);
+        assert_eq!(cancelled_before.close_step(1, usize::MAX), InteractiveJobCloseStep::Blocked);
+        cancelled_before.begin_close();
+        assert_eq!(cancelled_before.close_step(1, usize::MAX), InteractiveJobCloseStep::Complete);
+        assert_eq!(cancelled_before.close_step(1, usize::MAX), InteractiveJobCloseStep::Complete);
+        let mut cancelled_after = MathematicalRetainedCommandWork::new("nodeGraphEdit", identity, extent);
+        assert!(matches!(cancelled_after.step(&command, &snapshot, &config, &history, &interaction, &hover, None, &operation).expect("cancel after admission"), ArtifactCommandWorkStep::Progress { .. }));
+        cancelled_after.begin_close();
+        assert!(matches!(cancelled_after.close_step(0, 0), InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }));
+        while !cancelled_after.terminal_is_empty() {
+            let _ = cancelled_after.close_step(1, usize::MAX);
+        }
+        assert_eq!(cancelled_after.close_step(1, usize::MAX), InteractiveJobCloseStep::Complete);
+        assert_eq!(cancelled_after.close_step(1, usize::MAX), InteractiveJobCloseStep::Complete);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_maximum_microturns_stay_below_eight_milliseconds() {
+        let graph = graph_with_shape(MATHEMATICAL_MAX_NODES, MATHEMATICAL_MAX_EDGES);
+        let snapshot = crate::artifacts::mathematical::mathematical_snapshot_with_state(graph, MathematicalGeometry::default()).await;
+        let ids = (0..MATHEMATICAL_MAX_DELETE_IDS).map(|index| format!("n{index}")).collect::<Vec<_>>();
+        let mut operations = vec![serde_json::json!({ "operation": "deleteSelection", "nodeIds": ids })];
+        operations.resize(MATHEMATICAL_MAX_EDIT_OPERATIONS, serde_json::json!({}));
+        let command = MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
+            operations_json: serde_json::to_string(&operations).expect("maximum JSON oracle"),
+        });
+        let operation = retained_operation(23);
+        let extent = mathematical_command_extent(&command, &snapshot).expect("maximum retained extent");
+        let mut work = MathematicalRetainedCommandWork::new("nodeGraphEdit", mathematical_operation_identity("nodeGraphEdit", &operation), extent);
+        let config = MathematicalConfig::default();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let interaction = protocol::InteractionState::default();
+        let hover = semio_framework_plugin::app::InteractionHoverState::default();
+        loop {
+            let started = std::time::Instant::now();
+            let step = work.step(&command, &snapshot, &config, &history, &interaction, &hover, None, &operation).expect("maximum retained turn");
+            assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum Mathematical microturn exceeded 8 ms");
+            if matches!(step, ArtifactCommandWorkStep::Complete(_)) {
+                break;
+            }
+        }
+        work.begin_close();
+        while !work.terminal_is_empty() {
+            let started = std::time::Instant::now();
+            let _ = work.close_step(1, usize::MAX);
+            assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum Mathematical close turn exceeded 8 ms");
+        }
+    }
+    //#endregion 🔖️RetainedCommands
 
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's

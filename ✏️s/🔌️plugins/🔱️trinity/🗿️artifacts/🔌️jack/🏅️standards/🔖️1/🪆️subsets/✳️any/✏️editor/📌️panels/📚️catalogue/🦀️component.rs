@@ -2,7 +2,7 @@
 
 use crate::editor::jack::config::JackConfig;
 use crate::editor::jack::terminology::TrinityJackLabels;
-use semio_framework_plugin::{tree_item, tree_item_with_action, Label, PanelTreeBuilder};
+use semio_framework_plugin::{tree_item, tree_item_with_action, PanelTreeBuilder};
 
 pub(crate) fn render(cfg: &JackConfig, labels: &TrinityJackLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let jack_action = crate::editor::jack::jack_action;
@@ -21,19 +21,21 @@ pub(crate) fn render(cfg: &JackConfig, labels: &TrinityJackLabels) -> semio_fram
     let builder = PanelTreeBuilder::new("trinity-jack-catalogue")?;
     let fixture_items = crate::editor::jack::ui_node_list(fixtures.iter().map(|(id, label)| {
         let args = crate::editor::jack::ui_value_map([("exampleId", crate::editor::jack::ui_value_text(id)?)])?;
-        tree_item_with_action(builder.item_id("fixture", id)?, Label::data(*label), Some(preset_query(id).into()), jack_action("setActiveExample", Some(args))?)
+        tree_item_with_action(builder.item_id("fixture", id)?, crate::editor::jack::ui_label(label)?, Some(preset_query(id).into()), jack_action("setActiveExample", Some(args))?)
     }))?;
     let example_items = crate::editor::jack::ui_node_list(examples.iter().map(|(id, label, query)| {
         let args = crate::editor::jack::ui_value_map([("query", crate::editor::jack::ui_value_text(query)?)])?;
-        tree_item_with_action(builder.item_id("example", id)?, Label::data(*label), Some((*query).into()), jack_action("loadExampleQuery", Some(args))?)
+        tree_item_with_action(builder.item_id("example", id)?, crate::editor::jack::ui_label(label)?, Some((*query).into()), jack_action("loadExampleQuery", Some(args))?)
     }))?;
-    let kind_items = crate::editor::jack::ui_node_list([tree_item("trinity-jack-catalogue.piece", labels.piece), tree_item("trinity-jack-catalogue.connection", labels.connection), tree_item("trinity-jack-catalogue.connector", labels.connector)])?;
-    let builder = builder.section("trinity-jack-catalogue.fixtures", Some(labels.fixtures.into()), true, fixture_items)?.section("trinity-jack-catalogue.examples", Some(labels.example_queries.into()), true, example_items)?.section(
-        "trinity-jack-catalogue.kinds",
-        Some(labels.manifest_kinds.into()),
-        false,
-        kind_items,
-    )?;
+    let kind_items = crate::editor::jack::ui_node_list([
+        tree_item("trinity-jack-catalogue.piece", crate::editor::jack::ui_label(labels.piece.as_str())?),
+        tree_item("trinity-jack-catalogue.connection", crate::editor::jack::ui_label(labels.connection.as_str())?),
+        tree_item("trinity-jack-catalogue.connector", crate::editor::jack::ui_label(labels.connector.as_str())?),
+    ])?;
+    let builder = builder
+        .section("trinity-jack-catalogue.fixtures", Some(labels.fixtures.as_str().into()), true, fixture_items)?
+        .section("trinity-jack-catalogue.examples", Some(labels.example_queries.as_str().into()), true, example_items)?
+        .section("trinity-jack-catalogue.kinds", Some(labels.manifest_kinds.as_str().into()), false, kind_items)?;
     let builder = if cfg.active_fixture_id.is_empty() {
         builder
     } else {

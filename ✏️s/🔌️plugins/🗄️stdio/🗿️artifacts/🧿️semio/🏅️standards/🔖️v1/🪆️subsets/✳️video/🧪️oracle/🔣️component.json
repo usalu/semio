@@ -18,6 +18,21 @@
     {
       "id": "semio-v1-video",
       "capability": "semio-v1-video-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️video",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "retimes-the-track-and-promotes-a-sample-to-a-keyframe",
+              "directoryName": "🧪️retimes-the-track-and-promotes-a-sample-to-a-keyframe"
+            }
+          ]
+        }
+      ],
       "kinds": ["no-mutation", "set-snapshot", "insert-stream", "remove-stream", "set-stream-meta", "insert-sample", "remove-sample", "set-sample-data", "set-sample-flags"]
     }
   ]

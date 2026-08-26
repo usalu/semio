@@ -34,6 +34,21 @@
     {
       "id": "ifc-2x3-any",
       "capability": "ifc-2x3-any-mutate",
+      "standardDirectoryName": "🔖️2x3",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "renames-the-ifcproject-instance",
+              "directoryName": "🧪️renames-the-ifcproject-instance"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

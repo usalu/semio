@@ -45,35 +45,35 @@ pub mod derived_construction {
         type Mutation = XmlValidMutation;
         type Diff = XmlDiff;
 
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self::default()
         }
 
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
 
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<XmlSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<XmlSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<XmlSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<XmlSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = apply_xml_valid_mutation(&mut self.snapshot, &mutation);
             (self, outcome)
         }
 
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <XmlDiff as protocol::MutationDiff<XmlSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
 
         /// 🛡️ The real construction gate: however `self.snapshot` got here, a hard XML 1.0 §5.1
         /// validity violation fails `build()` -- soft/advisory diagnostics pass through as `Ok`.
-        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let snapshot = self.snapshot;
             let hard: Vec<Diagnostic> = check_valid_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
@@ -91,22 +91,22 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn conforming_snapshot_builds_clean() {
-            let snapshot = XmlValidBuilderConstruction::from_text("<!DOCTYPE root>\n<root/>").await.expect("parses").build().await.expect("conforming construction must build");
+            let snapshot = XmlValidBuilderConstruction::from_text("<!DOCTYPE root>\n<root/>").expect("parses").build().expect("conforming construction must build");
             assert_eq!(snapshot.doc.doctype.as_ref().map(|doctype| doctype.name.as_str()), Some("root"));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn missing_doctype_fails_build() {
-            let err = XmlValidBuilderConstruction::from_text("<root/>").await.expect("parses").build().await.expect_err("a document without a doctype must fail build()");
+            let err = XmlValidBuilderConstruction::from_text("<root/>").expect("parses").build().expect_err("a document without a doctype must fail build()");
             assert!(err.iter().any(|d| d.code.0 == "stdio.xml.valid.doctype-missing"));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn root_name_mismatch_injected_around_the_vocabulary_still_fails_build() {
-            let built = XmlValidBuilderConstruction::from_text("<!DOCTYPE root>\n<root/>").await.expect("parses").build().await.expect("clean build");
+            let built = XmlValidBuilderConstruction::from_text("<!DOCTYPE root>\n<root/>").expect("parses").build().expect("clean build");
             let mut mismatched = built;
             mismatched.doc.doctype = Some("<!DOCTYPE somethingElse>".into());
-            let err = XmlValidBuilderConstruction::from_snapshot(mismatched).await.build().await.expect_err("a doctype/root name mismatch must fail build()");
+            let err = XmlValidBuilderConstruction::from_snapshot(mismatched).build().expect_err("a doctype/root name mismatch must fail build()");
             assert!(err.iter().any(|d| d.code.0 == "stdio.xml.valid.root-name-mismatch"));
         }
     }
@@ -192,12 +192,12 @@ pub mod derived_analysis {
         type Parts = XmlParts;
         const DIALECT: Dialect = DIALECT;
 
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            XmlAnyAnalyzer::sniff(source).await
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            XmlAnyAnalyzer::sniff(source)
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = XmlAnyAnalyzer::analyze(sources).await;
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let inner = XmlAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {

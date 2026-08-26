@@ -10,7 +10,7 @@ use crate::editor::lowpoly::session::LowpolyScratch;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
-async fn reset_from_json(json: &str) -> Emit<LowpolyMutation, LowpolyConfigMutation> {
+fn reset_from_json(json: &str) -> Emit<LowpolyMutation, LowpolyConfigMutation> {
     match serde_json::from_str::<LowpolySnapshot>(json) {
         Ok(parsed) => Emit { effects: vec![crate::editor::lowpoly::reset_document_effect(&parsed)], ..Default::default() },
         Err(_) => Emit::default(),
@@ -27,7 +27,7 @@ pub mod set_snapshot_json {
         pub json: String,
     }
 
-    pub async fn handle(payload: &ImportSnapshotJson, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &ImportSnapshotJson, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(reset_from_json(&payload.json))
     }
 }
@@ -43,7 +43,7 @@ pub mod set_fixture_json {
         pub json: String,
     }
 
-    pub async fn handle(payload: &SetFixtureJson, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &SetFixtureJson, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(reset_from_json(&payload.json))
     }
 }
@@ -85,7 +85,7 @@ mod tests {
     async fn set_fixture_json_with_invalid_json_is_a_no_op() {
         let mut a = app();
         let before = a.snapshot().expect("projection");
-        dispatch(&mut a, LowpolyCommand::SetFixtureJson(super::set_fixture_json::SetFixtureJson { json: "not json".into() }));
+        dispatch(&mut a, LowpolyCommand::SetFixtureJson(super::set_fixture_json::SetFixtureJson { json: "not json".into() })).await;
         assert_eq!(a.snapshot().expect("projection"), before);
     }
 }

@@ -13,7 +13,7 @@
 //! part in the comparison. The seeded header is the committed payload's own, verbatim.
 
 use crate::artifacts::playbook::mutations::{apply_playbook_mutation, inverse_playbook_mutation, PlaybookMutation};
-use crate::artifacts::playbook::{cache_playbook_steps, PlaybookDiff, PlaybookSnapshot, PlaybookStep};
+use crate::artifacts::playbook::{attach_playbook_steps, PlaybookDiff, PlaybookSnapshot, PlaybookStep};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -31,11 +31,11 @@ fn expected_after() -> PlaybookSnapshot {
 /// 🌱 The committed `⬅️before`, with its composed `flow` child resolved to a step whose header is
 /// character-for-character the committed payload's `title`/`description` pair.
 fn before() -> PlaybookSnapshot {
-    let snapshot: PlaybookSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: PlaybookSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let PlaybookMutation::UpdateStep(payload) = mutation() else {
         panic!("no-ops-when-the-header-is-already-current's committed mutation must be an update-step");
     };
-    cache_playbook_steps(&snapshot.flow.child_id, vec![PlaybookStep { id: payload.step_id.clone(), title: payload.title.clone(), description: payload.description.clone(), blocks: Vec::new() }]);
+    attach_playbook_steps(&mut snapshot.flow, vec![PlaybookStep { id: payload.step_id.clone(), title: payload.title.clone(), description: payload.description.clone(), blocks: Vec::new() }]);
     snapshot
 }
 

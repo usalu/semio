@@ -24,12 +24,12 @@ pub mod derived_composition {
         type Snapshot = PdfSnapshot;
         const WRITES: Dialect = DIALECT_A;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_A, DEP_BINARY, DEP_DEFLATE]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = semio_framework_plugin::resolve_ready(PdfAnyComposer::compose(sources))?;
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = PdfAnyComposer::compose(sources)?;
             let mut diagnostics = inner.diagnostics;
             diagnostics.extend(check_pdf_a_conformance(&inner.snapshot));
             Ok(Composition { snapshot: inner.snapshot, confidence: inner.confidence, diagnostics })
@@ -88,7 +88,7 @@ pub mod derived_composition {
         async fn compose_always_carries_the_schema_gap_diagnostic() {
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&PdfSnapshot::default());
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = PdfAComposerComposition::compose(&sources).await.expect("pass-through compose never fails on conformance grounds");
+            let composed = PdfAComposerComposition::compose(&sources).expect("pass-through compose never fails on conformance grounds");
             assert!(composed.diagnostics.iter().any(|d| d.code.0 == CODE_SCHEMA_GAP), "got {:?}", composed.diagnostics);
         }
 

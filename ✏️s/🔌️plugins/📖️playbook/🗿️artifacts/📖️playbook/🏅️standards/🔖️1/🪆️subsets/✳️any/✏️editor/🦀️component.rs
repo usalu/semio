@@ -18,10 +18,13 @@ use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use crate::editor::playbook::engine::{playbook_io, PlaybookChapterPayload};
 use crate::editor::playbook::modes::builder;
 use crate::editor::playbook::modes::builder::windows::builder as builder_window;
+use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionKind, ArtifactEditor, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition,
-    InteractionRef, InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
+    ActionArgDef, ActionArgOption, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, EditorApp, Emit,
+    Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation,
+    SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
 };
 use store::EngineHandles;
 
@@ -72,7 +75,7 @@ pub const PLAYBOOK_INTERACTION_GRANULARITY_STEP: &str = "step";
 /// prune matched on either), so `validate_state` prunes a deleted step's OR block's id automatically
 /// after every document dispatch (`revalidate_interaction_state_after_document_change`), replacing the
 /// deleted hand-rolled prune in `remove_block::handle`.
-async fn playbook_blocks_topology(spec: &PlaybookSnapshot) -> DomainTopology {
+fn playbook_blocks_topology(spec: &PlaybookSnapshot) -> DomainTopology {
     let mut ordered = Vec::new();
     for step in spec.steps() {
         ordered.push(TopologyNode { id: step.id.clone(), granularity: PLAYBOOK_INTERACTION_GRANULARITY_STEP.into(), parent: None });
@@ -89,6 +92,90 @@ async fn playbook_blocks_topology(spec: &PlaybookSnapshot) -> DomainTopology {
 /// `PlaybookConfig` (see `ArtifactEditor::Config`), written through `PlaybookConfigMutation`s.
 #[derive(Default)]
 pub struct PlaybookPlayApp;
+
+//#region 🧵️RetainedViewCommands
+const PLAYBOOK_RETAINED_VIEW_TOOL_IDS: &[&str] = &["setLocale", "setContributions"];
+const PLAYBOOK_RETAINED_VIEW_PAYLOAD_SCHEMA: &str = "playbook.program.view-command.v1";
+const PLAYBOOK_RETAINED_VIEW_RAW_BYTES: usize = 8_192;
+
+fn playbook_retained_view_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(PLAYBOOK_RETAINED_VIEW_RAW_BYTES, 2, 1, 16_384, 2_000)
+}
+
+fn playbook_retained_view_wire_admitted(bytes: usize, has_checkpoint: bool) -> bool {
+    bytes <= PLAYBOOK_RETAINED_VIEW_RAW_BYTES && !has_checkpoint
+}
+
+fn playbook_retained_view_extent(command: &PlaybookCommand, _snapshot: &PlaybookSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    PLAYBOOK_RETAINED_VIEW_TOOL_IDS.contains(&command.command_id()).then_some(1)
+}
+
+fn playbook_retained_view_reduce(
+    command: &PlaybookCommand,
+    snapshot: &PlaybookSnapshot,
+    config: &PlaybookConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, NoDraftMutation>, Fault> {
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+}
+
+struct PlaybookViewCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl PlaybookViewCommandJobFactory {
+    fn new(controller: &str) -> Self {
+        Self { keys: PLAYBOOK_RETAINED_VIEW_TOOL_IDS.iter().map(|tool| ToolFactoryKey::new(controller, *tool)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for PlaybookViewCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<PlaybookPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<PlaybookPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        PLAYBOOK_RETAINED_VIEW_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        playbook_retained_view_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if !playbook_retained_view_wire_admitted(input.declared_bytes(), checkpoint.is_some()) {
+            return Err((ToolJobFactoryError::new("Playbook view command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for PlaybookViewCommandJobFactory {
+    type Owner = EditorApp<PlaybookPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = PLAYBOOK_RETAINED_VIEW_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = "playbook.program";
+}
+//#endregion 🧵️RetainedViewCommands
 
 impl ArtifactEditor for PlaybookPlayApp {
     type Snapshot = PlaybookSnapshot;
@@ -112,30 +199,69 @@ impl ArtifactEditor for PlaybookPlayApp {
         owner_file: "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
         controller: "s.playbook.playbook@1/*#editor",
         document_schema: "playbook.program",
-        factory: "BoundedFirstStepCommandJobFactory",
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 32, 131_072, 2_000),
-        tools: ["addStep", "removeStep", "moveStep", "addBlock", "removeBlock", "moveBlock", "updatePlaybook", "setLocale", "setContributions"]
+        factory: "PlaybookViewCommandJobFactory",
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 2, 1, 16_384, 2_000),
+        tools: ["setLocale", "setContributions"]
     }
 
-    async fn app_schema() -> Option<schema::AppSchemaDescriptor> {
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(PlaybookViewCommandJobFactory::new(&controller))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !PLAYBOOK_RETAINED_VIEW_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id || playbook_retained_view_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
+            return Err(Fault::from("playbook-view-command-tool-mismatch"));
+        }
+        let tool_id = request.command.command_id();
+        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, playbook_retained_view_reduce, playbook_retained_view_extent));
+        let operation = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            request.context,
+            operation,
+            request.completion,
+            PlaybookCommand::command_id,
+            PLAYBOOK_RETAINED_VIEW_RAW_BYTES,
+            1,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
+
+    fn app_schema() -> Option<schema::AppSchemaDescriptor> {
         Some(crate::editor::playbook::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> PlaybookSnapshot {
+    fn initial_snapshot() -> PlaybookSnapshot {
         crate::artifacts::playbook::empty_playbook_snapshot()
     }
 
-    async fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(playbook_io())
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    async fn command_id(command: &PlaybookCommand) -> &'static str {
+    fn command_id(command: &PlaybookCommand) -> &'static str {
         command.command_id()
     }
 
-    async fn handle(
+    fn handle(
         command: &PlaybookCommand,
         doc: &ArtifactView<'_, PlaybookSnapshot>,
         cfg: &ConfigView<'_, PlaybookConfig>,
@@ -148,7 +274,7 @@ impl ArtifactEditor for PlaybookPlayApp {
 
     /// 🕹️ `blocks` domain: `HierarchyProvider::Topology` from the document's own step/block nesting —
     /// see `playbook_blocks_topology`'s doc comment.
-    async fn interaction_topology(doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> InteractionTopology {
         let mut domains = std::collections::BTreeMap::new();
         domains.insert(PLAYBOOK_INTERACTION_BLOCKS.to_string(), playbook_blocks_topology(doc.snapshot));
         InteractionTopology { domains }
@@ -158,7 +284,7 @@ impl ArtifactEditor for PlaybookPlayApp {
     /// `writer_engine::WriterChapterPayload`/`PlaybookChapterPayload`) and inserts it as a `"note"` block
     /// (free-form `text` field, non-interactive) into a dedicated `"imported"` step, created on first
     /// import and reused on every later one (idempotent step creation).
-    async fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, PlaybookSnapshot>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, PlaybookSnapshot>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "chapters:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -179,7 +305,7 @@ impl ArtifactEditor for PlaybookPlayApp {
         Ok(Emit::mutations(operations))
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>) -> UiNode {
         match body_key {
             PLAYBOOK_PLAY_BODY_BUILDER => builder_window::render(doc.snapshot, cfg.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -273,29 +399,29 @@ pub(crate) mod testkit {
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub async fn playbook_app() -> PlaybookApp {
-        new_app::<EditorApp<PlaybookPlayApp>>()
+        new_app::<EditorApp<PlaybookPlayApp>>().await
     }
 
     /// 🧪️ Adapts `create_playbook_play_app`'s `AppDefinition` (contract §2.4) into the `App {
     /// definition, examples }` shape `new_app_with_registry`/`assert_declared_actions_bridge_to_commands`
     /// still expect — framework testkit gap, not modifiable here (`🧰️framework/**` is outside this
     /// packet's lease).
-    pub async fn playbook_manifest_for_testkit() -> App {
+    pub fn playbook_manifest_for_testkit() -> App {
         App { definition: create_playbook_play_app(), examples: Vec::new() }
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline, and the
     /// `kind` default declared on `addBlock` materializes host-side.
     pub async fn playbook_app_with_registry() -> PlaybookApp {
-        new_app_with_registry::<EditorApp<PlaybookPlayApp>>(playbook_manifest_for_testkit)
+        new_app_with_registry::<EditorApp<PlaybookPlayApp>>(playbook_manifest_for_testkit).await
     }
 
     pub async fn dispatch(app: &mut PlaybookApp, command: PlaybookCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
     pub async fn render(app: &mut PlaybookApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
     }
 }
 //#endregion 🧪️Testkit
@@ -369,7 +495,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) async fn every_command() -> Vec<PlaybookCommand> {
+    pub(super) fn every_command() -> Vec<PlaybookCommand> {
         vec![
             PlaybookCommand::AddStep(add_step::AddStep {}),
             PlaybookCommand::RemoveStep(remove_step::RemoveStep { step_id: "s".into() }),
@@ -383,6 +509,26 @@ mod tests {
         ]
     }
     //#endregion 🔖️CommandSurface
+
+    //#region 🧵️RetainedViewCommands
+    #[semio_framework_async_macros::async_test]
+    async fn retained_view_command_fixture_matches_the_exact_factory_contract() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️fixtures/playbook-view-command-limits.json")).expect("language-neutral retained view command fixture");
+        let tools = fixture["tools"].as_array().expect("tools").iter().map(|tool| tool.as_str().expect("tool id")).collect::<Vec<_>>();
+        assert_eq!(tools, PLAYBOOK_RETAINED_VIEW_TOOL_IDS);
+        let limits = &fixture["limits"];
+        assert_eq!(limits["maximumRawBytes"], PLAYBOOK_RETAINED_VIEW_RAW_BYTES);
+        assert_eq!(limits["maximumDecodedItems"], 2);
+        assert_eq!(limits["maximumWorkUnits"], 1);
+        assert_eq!(limits["maximumOutputBytes"], 16_384);
+        assert_eq!(limits["maximumStepMicros"], 2_000);
+        assert_eq!(playbook_retained_view_contract(), ToolExecutionContract::bounded_first_step(8_192, 2, 1, 16_384, 2_000));
+        for case in fixture["cases"].as_array().expect("cases") {
+            let admitted = playbook_retained_view_wire_admitted(case["declaredBytes"].as_u64().expect("declared bytes") as usize, case["checkpoint"].as_bool().expect("checkpoint"));
+            assert_eq!(admitted, case["admitted"].as_bool().expect("admitted"), "{}", case["name"]);
+        }
+    }
+    //#endregion 🧵️RetainedViewCommands
 
     //#region 🔖️ManifestSanity
     #[semio_framework_async_macros::async_test]
@@ -418,10 +564,10 @@ mod tests {
     /// `validate_state` can prune a deleted step's OR block's id out of a stale selection.
     #[semio_framework_async_macros::async_test]
     async fn interaction_topology_covers_every_step_and_block() {
-        let mut app = playbook_app();
-        dispatch(&mut app, PlaybookCommand::AddStep(add_step::AddStep {}));
+        let mut app = playbook_app().await;
+        dispatch(&mut app, PlaybookCommand::AddStep(add_step::AddStep {})).await;
         let step_id = app.snapshot().expect("projection").steps()[0].id.clone();
-        dispatch(&mut app, PlaybookCommand::AddBlock(add_block::AddBlock { kind: "text".into(), step_id: Some(step_id.clone()) }));
+        dispatch(&mut app, PlaybookCommand::AddBlock(add_block::AddBlock { kind: "text".into(), step_id: Some(step_id.clone()) })).await;
         let spec = app.snapshot().expect("projection");
         let block_id = spec.steps().iter().find(|step| step.id == step_id).expect("step present").blocks[0].id.clone();
         let history = semio_framework_plugin::HistoryView::empty();
@@ -437,15 +583,15 @@ mod tests {
     //#region 🔖️CrossCutting
     #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trip_through_the_wrapper() {
-        let mut app = playbook_app();
-        testkit::assert_undo_redo_round_trip(&mut app, PlaybookCommand::AddStep(add_step::AddStep {}), |app| app.snapshot().expect("materialize projection").steps().len(), 1, 2);
+        let mut app = playbook_app().await;
+        testkit::assert_undo_redo_round_trip(&mut app, PlaybookCommand::AddStep(add_step::AddStep {}), |app| app.snapshot().expect("materialize projection").steps().len(), 1, 2).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::playbook::testkit::render;
-        let mut app = playbook_app();
-        assert!(render(&mut app, "playbook.play.nope").contains("Unknown body"));
+        let mut app = playbook_app().await;
+        assert!(render(&mut app, "playbook.play.nope").await.contains("Unknown body"));
     }
 
     /// 🧪️ The definitional proof: two independent instances start from the same document, apply
@@ -463,7 +609,8 @@ mod tests {
                 let steps = projection.steps();
                 (steps.len(), steps[0].blocks.len())
             },
-        );
+        )
+        .await;
     }
     //#endregion 🔖️CrossCutting
 
@@ -477,7 +624,7 @@ mod tests {
         assert_eq!(chapters_in.kind_id.as_deref(), Some("text.document"));
     }
 
-    async fn chapter_media(text: &str, title: &str) -> Media {
+    fn chapter_media(text: &str, title: &str) -> Media {
         let payload = PlaybookChapterPayload { id: "jack".into(), title: title.into(), text: text.into(), language_id: "jack".into() };
         Media { media_type: semio_framework_plugin::MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: "text.document".into(), json: serde_json::to_string(&payload).unwrap() } }
     }

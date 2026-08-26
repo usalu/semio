@@ -17,7 +17,7 @@ pub struct WriterOutline {
 }
 
 impl WriterOutline {
-    pub async fn compute(snapshot: &WriterSnapshot) -> Self {
+    pub fn compute(snapshot: &WriterSnapshot) -> Self {
         let text = writer_text(snapshot);
         let section_outline: Vec<String> = text
             .lines()
@@ -38,7 +38,7 @@ impl WriterOutline {
 mod tests {
     use super::*;
 
-    async fn snapshot_with_text(text: &str) -> WriterSnapshot {
+    fn snapshot_with_text(text: &str) -> WriterSnapshot {
         crate::artifacts::writer::writer_snapshot_with_text("writer.document", "outline-test", "plaintext", "writer://outline-test", text)
     }
 

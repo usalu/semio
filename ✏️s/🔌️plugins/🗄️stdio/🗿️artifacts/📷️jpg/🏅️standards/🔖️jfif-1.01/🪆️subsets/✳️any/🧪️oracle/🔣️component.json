@@ -33,6 +33,21 @@
     {
       "id": "jpg-jfif-1-01-any",
       "capability": "jpg-jfif-1-01-mutate",
+      "standardDirectoryName": "🔖️jfif-1.01",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "records-jfif-print-density-and-a-restart-interval",
+              "directoryName": "🧪️records-jfif-print-density-and-a-restart-interval"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

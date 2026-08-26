@@ -17,11 +17,11 @@ pub mod derived_composition {
         type Snapshot = Mp4Snapshot;
         const WRITES: Dialect = DIALECT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT)
@@ -33,7 +33,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "Mp4ComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = Mp4Analyzer::analyze(&native).await;
+            let analysis = Mp4Analyzer::analyze(&native);
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "Mp4ComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -1042,12 +1042,12 @@ mod codec_tests {
         let from_dsl = <Mp4Snapshot as store::ArtifactDsl>::parse_dsl(&dsl).expect("parse MP4 DSL");
         assert_eq!(encode_mp4(&from_dsl), bytes);
 
-        let analysis = Mp4AnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&pack)]).await;
+        let analysis = Mp4AnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&pack)]);
         let analyzed = analysis.parts.snapshot.expect("MP4 analyzer snapshot");
         assert_eq!(encode_mp4(&analyzed), bytes);
 
         let dialect = <Mp4AnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
-        let composition = Mp4ComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pack) }]).await.expect("compose MP4 pack");
+        let composition = Mp4ComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pack) }]).expect("compose MP4 pack");
         assert_eq!(encode_mp4(&composition.snapshot), bytes);
 
         let self_diff = Mp4Diff::between(&snapshot, &snapshot);

@@ -4764,6 +4764,8 @@ function writeScaleFixtureArtifacts(repoRoot: string, pluginCount: number, exten
   const dir = scaleFixtureGeneratedDir(repoRoot);
   mkdirSync(dir, { recursive: true });
   const { registryJson, catalogJson, registry } = renderScaleFixtureArtifacts(pluginCount, extensionsPerPlugin, seed);
+  const expected = new Set(["🔣️registry.json", "🔣️catalog.json"]);
+  for (const name of readdirSync(dir)) if (!expected.has(name)) rmSync(join(dir, name), { recursive: true, force: true });
   writeFileSync(join(dir, "🔣️registry.json"), registryJson);
   writeFileSync(join(dir, "🔣️catalog.json"), catalogJson);
   console.log(`scale-fixture generate: ${registry.recordCount} records (plugins=${pluginCount} extensions=${extensionsPerPlugin} seed=${seed}) -> ${dir}`);
@@ -4804,6 +4806,26 @@ class ScaleFixtureGenerateScript extends BundleScript {
     const extensionsPerPlugin = scaleFixtureFlag(segments, "extensions", 50);
     const seed = scaleFixtureFlag(segments, "seed", 1);
     writeScaleFixtureArtifacts(this.repoRoot, pluginCount, extensionsPerPlugin, seed);
+  }
+}
+
+/** 🧾️ Emits the canonical scale-fixture output protocol from the seeded in-memory renderer. */
+class ScaleFixturePreviewGeneratedScript extends BundleScript {
+  run(segments: string[]): void {
+    const pluginCount = scaleFixtureFlag(segments, "plugins", 50);
+    const extensionsPerPlugin = scaleFixtureFlag(segments, "extensions", 50);
+    const seed = scaleFixtureFlag(segments, "seed", 1);
+    const dir = scaleFixtureGeneratedDir(this.repoRoot);
+    const rootPath = relative(this.repoRoot, dir).replaceAll("\\", "/").normalize("NFC");
+    const { registryJson, catalogJson } = renderScaleFixtureArtifacts(pluginCount, extensionsPerPlugin, seed);
+    const nodes = [
+      { bytesBase64: "", mode: 0o755, nodeKind: "directory" as const, path: rootPath },
+      { bytesBase64: Buffer.from(catalogJson).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: `${rootPath}/🔣️catalog.json` },
+      { bytesBase64: Buffer.from(registryJson).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: `${rootPath}/🔣️registry.json` },
+    ].sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
+    const expected = new Set(["🔣️registry.json", "🔣️catalog.json"]);
+    const staleRemovals = (existsSync(dir) ? readdirSync(dir) : []).filter((name) => !expected.has(name)).map((name) => `${rootPath}/${name.normalize("NFC")}`).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
+    process.stdout.write(`${JSON.stringify({ contractId: "scale-fixture", nodes, schemaVersion: 1, staleRemovals })}\n`);
   }
 }
 
@@ -5078,6 +5100,7 @@ const router = new ScriptRouter(import.meta.dir)
       }
     },
   )
+  .register("preview-generated", ScaleFixturePreviewGeneratedScript)
   // 🧱️ Also runs as part of `plugin lint` below (the `"plugin"`/`"lint"` router entry) now that its one
   // finding is triaged — see `CapabilityLayeringLintScript`'s own docstring. Kept independently runnable
   // here too: `bun ./📜️script.ts layer-lint`.

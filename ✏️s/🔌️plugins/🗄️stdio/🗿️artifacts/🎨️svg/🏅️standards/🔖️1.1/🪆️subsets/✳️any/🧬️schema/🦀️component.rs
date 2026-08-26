@@ -467,30 +467,30 @@ pub mod derived_construction {
         type Snapshot = SvgSnapshot;
         type Mutation = SvgMutation;
         type Diff = SvgDiff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: SvgSnapshot::default(), diagnostics: Vec::new(), elements: ElementBuilder::new(), view_box: None, width: None, height: None, xmlns: None }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new(), elements: ElementBuilder::new(), view_box: None, width: None, height: None, xmlns: None }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::svg::schema::mutations::apply_svg_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SvgDiff as protocol::MutationDiff<SvgSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
         /// 🏗️ Lowers any pending typed constructor calls into `snapshot.doc`'s root `<svg>` children
         /// before returning -- this is what lets `SvgBuilderConstruction::empty().set_view_box(...).add_rect(...)`
         /// produce a complete, valid SVG 1.1 document purely from typed calls.
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             let mut snapshot = self.snapshot;
             let pending = self.elements.build();
             if !pending.is_empty() || self.view_box.is_some() || self.width.is_some() || self.height.is_some() || self.xmlns.is_some() {
@@ -557,7 +557,7 @@ pub mod derived_analysis {
         /// 🕵️ Real sniff: parses the (possibly DOCTYPE/prolog-prefixed) XML and checks the root
         /// element's LOCAL name is `svg` (namespace-prefixed roots like `ns:svg` count too) -- not a
         /// constant. Binary sources aren't XML text, so they're never claimed here.
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Text(text) => match xml_document_from_text(text) {
                     Ok(doc) => match &doc.root {
@@ -573,7 +573,7 @@ pub mod derived_analysis {
             }
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SvgParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -627,16 +627,16 @@ pub mod derived_analysis {
         #[semio_framework_async_macros::async_test]
         async fn sniff_recognizes_real_svg_and_rejects_non_svg() {
             let svg = r#"<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="1" height="1"/></svg>"#;
-            assert_eq!(SvgAnalyzerAnalysis::sniff(&AnalyzeSource::Text(svg)).await, IoConfidence::High);
+            assert_eq!(SvgAnalyzerAnalysis::sniff(&AnalyzeSource::Text(svg)), IoConfidence::High);
             let not_svg = r#"<note><to>Tove</to></note>"#;
-            assert_ne!(SvgAnalyzerAnalysis::sniff(&AnalyzeSource::Text(not_svg)).await, IoConfidence::High);
+            assert_ne!(SvgAnalyzerAnalysis::sniff(&AnalyzeSource::Text(not_svg)), IoConfidence::High);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn builder_constructs_a_complete_document_from_scratch() {
             let stops = vec![GradientStopSpec::new("0%").with_color("#ffffff"), GradientStopSpec::new("100%").with_color("#000000")];
             let snapshot = SvgBuilder::empty()
-                .await.set_view_box(0.0, 0.0, 200.0, 100.0)
+                .set_view_box(0.0, 0.0, 200.0, 100.0)
                 .set_dimensions("200", "100")
                 .define_linear_gradient("grad1", Some(0.0), Some(0.0), Some(1.0), Some(0.0), stops)
                 .add_group(CommonAttrs::new().with_id("layer1"), |g: ElementBuilder| {
@@ -645,7 +645,7 @@ pub mod derived_analysis {
                         .add_path(PathBuilder::new().move_to(10.0, 80.0).line_to(50.0, 80.0).arc_to(20.0, 20.0, 0.0, false, true, 90.0, 80.0).close(), CommonAttrs::new().with_stroke("blue"))
                 })
                 .build()
-                .await.expect("build succeeds");
+                .expect("build succeeds");
 
             let typed = svg_document_to_typed(&snapshot.doc).expect("typed conversion");
             let (view_box, children) = match &typed {
@@ -694,7 +694,7 @@ pub mod derived_analysis {
       </g>
     </svg>"##;
 
-            let analysis = SvgAnalyzerAnalysis::analyze(&[AnalyzeSource::Text(source_text)]).await;
+            let analysis = SvgAnalyzerAnalysis::analyze(&[AnalyzeSource::Text(source_text)]);
             assert!(analysis.diagnostics.is_empty(), "diagnostics: {:?}", analysis.diagnostics);
             let original_typed = analysis.parts.typed.expect("typed parts present");
 
@@ -766,7 +766,7 @@ pub mod derived_analysis {
                 other => panic!("expected LinearGradient, got {other:?}"),
             };
 
-            let mut builder = SvgBuilder::empty().await.set_view_box(0.0, 0.0, 100.0, 100.0);
+            let mut builder = SvgBuilder::empty().set_view_box(0.0, 0.0, 100.0, 100.0);
             if let Some(xmlns) = xmlns {
                 builder = builder.set_xmlns(xmlns);
             }
@@ -779,7 +779,7 @@ pub mod derived_analysis {
                     g
                 })
                 .build()
-                .await.expect("rebuild succeeds");
+                .expect("rebuild succeeds");
 
             let rebuilt_typed = svg_document_to_typed(&rebuilt_snapshot.doc).expect("typed rebuilt");
             assert_eq!(strip_whitespace(&original_typed), strip_whitespace(&rebuilt_typed));

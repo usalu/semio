@@ -1,0 +1,13 @@
+[package]
+name = "puzzle-retained-runtime-harness"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[dependencies]
+semio-s-plugin-puzzle = { path = "../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", default-features = false }
+semio-framework = { path = "../../../../../../../../../🧰️framework/📦️packages/🦀️rust" }
+semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"] }
+serde_json = "1"

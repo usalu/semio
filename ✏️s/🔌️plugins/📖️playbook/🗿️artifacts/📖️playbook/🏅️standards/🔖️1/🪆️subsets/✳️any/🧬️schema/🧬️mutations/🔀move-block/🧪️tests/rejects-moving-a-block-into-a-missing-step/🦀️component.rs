@@ -15,7 +15,7 @@
 //! the third can be the one that rejects.
 
 use crate::artifacts::playbook::mutations::{apply_playbook_mutation, inverse_playbook_mutation, PlaybookMutation};
-use crate::artifacts::playbook::{cache_playbook_steps, PlaybookBlock, PlaybookDiff, PlaybookSnapshot, PlaybookStep};
+use crate::artifacts::playbook::{attach_playbook_steps, PlaybookBlock, PlaybookDiff, PlaybookSnapshot, PlaybookStep};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -34,12 +34,12 @@ fn expected_after() -> PlaybookSnapshot {
 /// the block the payload names. Only the two ids are load-bearing; the block's own `kind`/`label`
 /// never enter `move-block`'s guards, which look at list membership and position alone.
 fn before() -> PlaybookSnapshot {
-    let snapshot: PlaybookSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: PlaybookSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let PlaybookMutation::MoveBlock(payload) = mutation() else {
         panic!("rejects-moving-a-block-into-a-missing-step's committed mutation must be a move-block");
     };
     let block: PlaybookBlock = serde_json::from_value(serde_json::json!({ "id": payload.block_id.clone(), "label": "Notes", "kind": "text" })).expect("seed block decodes");
-    cache_playbook_steps(&snapshot.flow.child_id, vec![PlaybookStep { id: payload.from_step_id.clone(), title: "Intro".into(), description: None, blocks: vec![block] }]);
+    attach_playbook_steps(&mut snapshot.flow, vec![PlaybookStep { id: payload.from_step_id.clone(), title: "Intro".into(), description: None, blocks: vec![block] }]);
     snapshot
 }
 

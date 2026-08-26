@@ -6,7 +6,8 @@ use crate::artifacts::writer::{writer_text, WriterSnapshot};
 use crate::editor::writer::config::WriterConfig;
 use crate::editor::writer::modes::edit::windows::main::options;
 use crate::editor::writer::terminology::WriterPlayLabels;
-use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, TextEditorScene, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_ui_contract::SurfaceKind as SemanticSurfaceKind;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
@@ -19,7 +20,7 @@ const WRITER_PLAY_SURFACE_MAIN: &str = "writer.play";
 /// 🧱️ Stitched into the app manifest by `crate::editor::writer::create_writer_app`. `options.measures`
 /// stays empty here on purpose: writer's measures are config-derived and rebuilt per frame by
 /// [`window_measures`], not frozen into the manifest.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WRITER_PLAY_WINDOW_KIND.into(),
         label: LocalizedLabel::native("Jack", "Jack"),
@@ -42,13 +43,13 @@ pub async fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
-pub async fn window_measures(config: &WriterConfig, labels: &WriterPlayLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(config: &WriterConfig, labels: &WriterPlayLabels) -> Vec<WindowMeasure> {
     vec![options::font_size::measure(config, labels), options::line_height::measure(config, labels), options::tab_size::measure(config, labels), options::line_numbers::measure(config, labels)]
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(document: &WriterSnapshot, config: &WriterConfig) -> UiNode {
+pub fn render(document: &WriterSnapshot, config: &WriterConfig) -> UiAssemblyResult<BuiltNode> {
     let is_jack = document.language_id == "jack";
     let text = writer_text(document);
     let selection = config.editor_selection.clone().unwrap_or(crate::editor::writer::config::WriterEditorSelection { start: 0, end: 0 });
@@ -98,10 +99,10 @@ pub async fn render(document: &WriterSnapshot, config: &WriterConfig) -> UiNode 
 
     let completions_json = language_completions_json(&text, &document.language_id, cursor);
 
-    build_text_editor_scene(
+    scene_surface(
         WRITER_PLAY_SURFACE_MAIN,
-        crate::editor::writer::WRITER_PLAY_APP_ID,
-        TextEditorScene {
+        SemanticSurfaceKind::TextEditor,
+        &TextEditorScene {
             buffer: text.clone(),
             language: Some(document.language_id.clone()),
             selection_json,

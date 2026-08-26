@@ -32,11 +32,11 @@ pub mod derived_composition {
         type Snapshot = SemioAudioSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT)
@@ -48,7 +48,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "SemioAudioComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = SemioAudioAnalyzer::analyze(&native).await;
+            let analysis = SemioAudioAnalyzer::analyze(&native);
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "SemioAudioComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             let mut diagnostics = analysis.diagnostics;
             diagnostics.extend(check_semio_audio_invariants(&snapshot));
@@ -174,7 +174,7 @@ pub mod derived_composition {
             };
             let bytes = <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = SemioAudioComposerComposition::compose(&sources).await.expect("clean document must compose");
+            let composed = SemioAudioComposerComposition::compose(&sources).expect("clean document must compose");
             assert_eq!(composed.snapshot, snapshot);
             assert!(composed.diagnostics.is_empty(), "got {:?}", composed.diagnostics);
         }

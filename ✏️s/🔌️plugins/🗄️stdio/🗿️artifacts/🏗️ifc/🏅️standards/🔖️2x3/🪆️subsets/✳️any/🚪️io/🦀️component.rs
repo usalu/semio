@@ -113,11 +113,11 @@ pub mod derived_composition {
         type Snapshot = Ifc2x3Snapshot;
         const WRITES: Dialect = DIALECT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_TXT]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT || s.dialect == DEP_TXT)
@@ -129,7 +129,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "Ifc2x3ComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = Ifc2x3Analyzer::analyze(&native).await;
+            let analysis = Ifc2x3Analyzer::analyze(&native);
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "Ifc2x3ComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -222,22 +222,22 @@ mod tests {
         let text_output = text_export::serialize(&text_snapshot).expect("raw text serialize");
         assert_exact("raw text route", text_output.to_body().as_bytes()).await;
 
-        let text_analysis = <Ifc2x3Analyzer as ArtifactAnalyzer>::analyze(&[AnalyzeSource::Text(text)]).await;
+        let text_analysis = <Ifc2x3Analyzer as ArtifactAnalyzer>::analyze(&[AnalyzeSource::Text(text)]);
         assert!(text_analysis.diagnostics.is_empty(), "text analyzer diagnostics: {:?}", text_analysis.diagnostics);
         assert_exact("text analyzer export", &encode_ifc2x3(&text_analysis.parts.snapshot.expect("text analyzer snapshot")).expect("text analyzer export")).await;
 
         let pack = store::ArtifactPack::encode_pack(&imported);
-        let pack_analysis = <Ifc2x3Analyzer as ArtifactAnalyzer>::analyze(&[AnalyzeSource::Binary(&pack)]).await;
+        let pack_analysis = <Ifc2x3Analyzer as ArtifactAnalyzer>::analyze(&[AnalyzeSource::Binary(&pack)]);
         assert!(pack_analysis.diagnostics.is_empty(), "pack analyzer diagnostics: {:?}", pack_analysis.diagnostics);
         assert_exact("pack analyzer export", &encode_ifc2x3(&pack_analysis.parts.snapshot.expect("pack analyzer snapshot")).expect("pack analyzer export")).await;
 
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("*") };
         let text_sources = [ComposeSource { dialect: DIALECT, payload: AnalyzeSource::Text(text) }];
-        let text_composition = Ifc2x3ComposerComposition::compose(&text_sources).await.expect("compose native IFC2X3 text");
+        let text_composition = Ifc2x3ComposerComposition::compose(&text_sources).expect("compose native IFC2X3 text");
         assert_exact("text composer export", &encode_ifc2x3(&text_composition.snapshot).expect("text composer export")).await;
 
         let pack_sources = [ComposeSource { dialect: DIALECT, payload: AnalyzeSource::Binary(&pack) }];
-        let pack_composition = Ifc2x3ComposerComposition::compose(&pack_sources).await.expect("compose IFC2X3 pack");
+        let pack_composition = Ifc2x3ComposerComposition::compose(&pack_sources).expect("compose IFC2X3 pack");
         assert_exact("pack composer export", &encode_ifc2x3(&pack_composition.snapshot).expect("pack composer export")).await;
     }
 

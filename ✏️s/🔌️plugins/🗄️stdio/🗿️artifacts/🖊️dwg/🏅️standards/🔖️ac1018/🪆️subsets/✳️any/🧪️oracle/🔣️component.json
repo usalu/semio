@@ -21,6 +21,21 @@
     {
       "id": "dwg-ac1018-any",
       "capability": "dwg-ac1018-mutate",
+      "standardDirectoryName": "🔖️ac1018",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "bumps-the-auxiliary-save-counter",
+              "directoryName": "🧪️bumps-the-auxiliary-save-counter"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

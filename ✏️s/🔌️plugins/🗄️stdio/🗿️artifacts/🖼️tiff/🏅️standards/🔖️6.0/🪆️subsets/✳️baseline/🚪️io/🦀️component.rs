@@ -23,12 +23,12 @@ pub mod derived_composition {
         type Snapshot = TiffSnapshot;
         const WRITES: Dialect = DIALECT_BASELINE;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_BASELINE, DEP_BINARY]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = semio_framework_plugin::resolve_ready(TiffAnyComposer::compose(sources))?;
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = TiffAnyComposer::compose(sources)?;
             let mut diagnostics = inner.diagnostics;
             diagnostics.extend(check_tiff_baseline_conformance(&inner.snapshot));
             Ok(Composition { snapshot: inner.snapshot, confidence: inner.confidence, diagnostics })
@@ -102,7 +102,7 @@ pub mod derived_composition {
         async fn compose_carries_no_findings_for_a_conformant_document() {
             let bytes = <TiffSnapshot as store::ArtifactPack>::encode_pack(&minimal_non_degenerate_snapshot());
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = TiffBaselineComposerComposition::compose(&sources).await.expect("pass-through compose never fails on conformance grounds");
+            let composed = TiffBaselineComposerComposition::compose(&sources).expect("pass-through compose never fails on conformance grounds");
             assert!(composed.diagnostics.is_empty(), "got {:?}", composed.diagnostics);
         }
 

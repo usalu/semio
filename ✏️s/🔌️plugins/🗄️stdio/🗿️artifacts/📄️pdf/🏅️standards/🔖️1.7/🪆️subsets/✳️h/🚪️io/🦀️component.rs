@@ -24,14 +24,14 @@ pub mod derived_composition {
         type Snapshot = PdfSnapshot;
         const WRITES: Dialect = DIALECT_H;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_H, DEP_BINARY, DEP_DEFLATE]
         }
 
         /// ✅ Always `Ok` -- PDF/H has no hard checks to gate on (see module doc comment). Advisory
         /// diagnostics from `check_h_conformance` are folded onto the successful `Composition`.
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = semio_framework_plugin::resolve_ready(PdfAnyComposer::compose(sources))?;
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = PdfAnyComposer::compose(sources)?;
             let checks = check_h_conformance(&inner.snapshot);
             let mut diagnostics = inner.diagnostics;
             diagnostics.extend(checks);
@@ -90,7 +90,7 @@ pub mod derived_composition {
             let snapshot = PdfSnapshot::default();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = PdfHComposerComposition::compose(&sources).await.expect("PDF/H never hard-gates");
+            let composed = PdfHComposerComposition::compose(&sources).expect("PDF/H never hard-gates");
             assert!(composed.diagnostics.iter().any(|d| d.code.0 == crate::artifacts::pdf::standards::v1_7::subsets::h::schema::CODE_INFO_TITLE_OR_AUTHOR));
         }
 
@@ -104,10 +104,10 @@ pub mod derived_composition {
                 
                 .build()
                 
-                .await.unwrap();
+                .unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = PdfHComposerComposition::compose(&sources).await.expect("PDF/H never hard-gates");
+            let composed = PdfHComposerComposition::compose(&sources).expect("PDF/H never hard-gates");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error && d.severity != Severity::Fatal), "got {:?}", composed.diagnostics);
         }
     }

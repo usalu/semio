@@ -18,6 +18,87 @@
     {
       "id": "semio-v1-text",
       "capability": "semio-v1-text-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️text",
+      "vectors": [
+        {
+          "mutationId": "add-mark",
+          "sourceMutationDirectoryName": "➕add-mark",
+          "mutationDirectoryName": "➕add-mark",
+          "scenarios": [
+            {
+              "id": "adds-a-link-mark-ahead-of-the-bold-mark",
+              "directoryName": "🧪️adds-a-link-mark-ahead-of-the-bold-mark"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-run-language",
+          "sourceMutationDirectoryName": "🌐change-run-language",
+          "mutationDirectoryName": "🌐change-run-language",
+          "scenarios": [
+            {
+              "id": "retags-the-second-run-as-german",
+              "directoryName": "🧪️retags-the-second-run-as-german"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-run",
+          "sourceMutationDirectoryName": "✏️edit-run",
+          "mutationDirectoryName": "✏️edit-run",
+          "scenarios": [
+            {
+              "id": "rewrites-the-marked-runs-content",
+              "directoryName": "🧪️rewrites-the-marked-runs-content"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-run",
+          "sourceMutationDirectoryName": "📥insert-run",
+          "mutationDirectoryName": "📥insert-run",
+          "scenarios": [
+            {
+              "id": "inserts-a-german-run-between-two-english-runs",
+              "directoryName": "🧪️inserts-a-german-run-between-two-english-runs"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-mark",
+          "sourceMutationDirectoryName": "➖remove-mark",
+          "mutationDirectoryName": "➖remove-mark",
+          "scenarios": [
+            {
+              "id": "detaches-the-italic-mark-from-the-run",
+              "directoryName": "🧪️detaches-the-italic-mark-from-the-run"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-run",
+          "sourceMutationDirectoryName": "🗑️remove-run",
+          "mutationDirectoryName": "🗑️remove-run",
+          "scenarios": [
+            {
+              "id": "removes-the-middle-run",
+              "directoryName": "🧪️removes-the-middle-run"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-runs",
+          "sourceMutationDirectoryName": "🔀reorder-runs",
+          "mutationDirectoryName": "🔀reorder-runs",
+          "scenarios": [
+            {
+              "id": "moves-the-first-run-to-the-end",
+              "directoryName": "🧪️moves-the-first-run-to-the-end"
+            }
+          ]
+        }
+      ],
       "kinds": ["insert-run", "remove-run", "edit-run", "change-run-language", "reorder-runs", "add-mark", "remove-mark"]
     }
   ]

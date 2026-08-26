@@ -4,7 +4,7 @@
 //! composed of `f64` and `u32`, with no geometry implementation leaking through the API.
 
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadAdmissionFault, JobPayloadStream, Operation, RetainedJobPayload, RetainedJobPayloadWriter, StepContext, StepOutcome};
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, HashMap};
 
 fn close_vec_owner_step<T>(owner: &mut Vec<T>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
     if owner.pop().is_some() {
@@ -1028,10 +1028,12 @@ fn owned_triangulate(domain: &PlanarDomain, opts: &MeshOpts) -> Result<TriMesh2,
     let prepared_points = input_points.clone();
     let mut triangulation = OwnedTriangulation::bowyer_watson(input_points)?;
     let constraints = remap_constraints(&prepared_points, &triangulation.points, input_constraints);
-    let mut fixed = BTreeSet::new();
+    let mut fixed = Vec::new();
     for constraint in constraints {
         triangulation.recover_constraint(constraint, &fixed)?;
-        fixed.insert(constraint);
+        if let Err(index) = fixed.binary_search(&constraint) {
+            fixed.insert(index, constraint);
+        }
     }
     let mut triangles = Vec::new();
     for triangle in triangulation.triangles {
@@ -1789,8 +1791,8 @@ impl MeshJob {
         Ok(Some(payload))
     }
 
-    fn fail(message: impl Into<Vec<u8>>) -> StepOutcome {
-        StepOutcome::Fault(JobFault { detail: message.into() })
+    fn fail(_message: impl Into<Vec<u8>>) -> StepOutcome {
+        StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) })
     }
 
     fn begin_edge_index_candidate(&mut self, triangle: usize, local: usize) -> bool {

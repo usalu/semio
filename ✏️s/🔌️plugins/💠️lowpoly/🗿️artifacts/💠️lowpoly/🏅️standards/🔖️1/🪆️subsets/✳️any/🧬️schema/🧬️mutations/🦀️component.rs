@@ -29,11 +29,11 @@ mod run_bytes_base64 {
     use base64::Engine;
     use serde::{Deserialize, Deserializer, Serializer};
 
-    pub async fn serialize<S: Serializer>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
+    pub fn serialize<S: Serializer>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(&base64::engine::general_purpose::STANDARD.encode(bytes))
     }
 
-    pub async fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
         let encoded = String::deserialize(deserializer)?;
         base64::engine::general_purpose::STANDARD.decode(encoded.as_bytes()).map_err(serde::de::Error::custom)
     }
@@ -97,7 +97,7 @@ mod tests {
     use crate::artifacts::lowpoly::{schema::default_snapshot, LowpolyObject};
     use protocol::{Mutation, MutationDiff};
 
-    async fn tiny_object(id: &str, name: &str) -> LowpolyObject {
+    fn tiny_object(id: &str, name: &str) -> LowpolyObject {
         let mesh = default_snapshot().objects[0].mesh.clone();
         LowpolyObject { id: id.into(), name: name.into(), transform: Default::default(), smooth_shading: false, mesh, paint_layers: Vec::new() }
     }

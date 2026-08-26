@@ -1,12 +1,12 @@
 #[semio_framework_async_macros::async_test]
-async fn primary_asset_is_nonempty() {
+fn primary_asset_is_nonempty() {
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");
     assert!(text.len() > 8);
 }
 
 //#region 🧪️InferenceLaws
 #[semio_framework_async_macros::async_test]
-async fn inference_determinism_law() {
+fn inference_determinism_law() {
     use protocol::Inference;
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");
     let snapshot = <crate::artifacts::vcs::VcsSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
@@ -15,7 +15,7 @@ async fn inference_determinism_law() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn inference_default_law() {
+fn inference_default_law() {
     use protocol::Inference;
     assert_eq!(
         crate::artifacts::vcs::standards::v1::subsets::any::schema::inferences::VcsInference::infer(&crate::artifacts::vcs::VcsSnapshot::default()),
@@ -24,7 +24,7 @@ async fn inference_default_law() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn summary_counts_the_demo_fixtures_tags_and_notes() {
+fn summary_counts_the_demo_fixtures_tags_and_notes() {
     use protocol::Inference;
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");
     let snapshot = <crate::artifacts::vcs::VcsSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");

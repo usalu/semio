@@ -24,6 +24,164 @@
     {
       "id": "procedural-2d-1-any",
       "capability": "procedural-2d-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-generation-value",
+          "sourceMutationDirectoryName": "🔢change-generation-value",
+          "mutationDirectoryName": "🔢change-generation-value",
+          "scenarios": [
+            {
+              "id": "raises-the-height-answer-in-generation-1",
+              "directoryName": "🧪️raises-the-height-answer-in-generation-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-schema",
+          "sourceMutationDirectoryName": "🔤change-schema",
+          "mutationDirectoryName": "🔤change-schema",
+          "scenarios": [
+            {
+              "id": "restamps-the-fixture-schema",
+              "directoryName": "🧪️restamps-the-fixture-schema"
+            }
+          ]
+        },
+        {
+          "mutationId": "clear-widget-layout",
+          "sourceMutationDirectoryName": "🧹clear-widget-layout",
+          "mutationDirectoryName": "🧹clear-widget-layout",
+          "scenarios": [
+            {
+              "id": "drops-the-note-a-layout-entry",
+              "directoryName": "🧪️drops-the-note-a-layout-entry"
+            }
+          ]
+        },
+        {
+          "mutationId": "connect-synapse",
+          "sourceMutationDirectoryName": "🔗connect-synapse",
+          "mutationDirectoryName": "🔗connect-synapse",
+          "scenarios": [
+            {
+              "id": "joins-note-b-to-note-c-at-index-1",
+              "directoryName": "🧪️joins-note-b-to-note-c-at-index-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-generation",
+          "sourceMutationDirectoryName": "➕create-generation",
+          "mutationDirectoryName": "➕create-generation",
+          "scenarios": [
+            {
+              "id": "appends-generation-2-and-selects-it",
+              "directoryName": "🧪️appends-generation-2-and-selects-it"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-widget",
+          "sourceMutationDirectoryName": "🌱create-widget",
+          "mutationDirectoryName": "🌱create-widget",
+          "scenarios": [
+            {
+              "id": "inserts-note-c-at-index-2",
+              "directoryName": "🧪️inserts-note-c-at-index-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-generation",
+          "sourceMutationDirectoryName": "➖delete-generation",
+          "mutationDirectoryName": "➖delete-generation",
+          "scenarios": [
+            {
+              "id": "removes-generation-2-and-selects-generation-1",
+              "directoryName": "🧪️removes-generation-2-and-selects-generation-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-widget",
+          "sourceMutationDirectoryName": "🗑️delete-widget",
+          "mutationDirectoryName": "🗑️delete-widget",
+          "scenarios": [
+            {
+              "id": "removes-note-a-and-flags-the-dangling-synapse",
+              "directoryName": "🧪️removes-note-a-and-flags-the-dangling-synapse"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-synapse",
+          "sourceMutationDirectoryName": "✂️disconnect-synapse",
+          "mutationDirectoryName": "✂️disconnect-synapse",
+          "scenarios": [
+            {
+              "id": "severs-link-ab-leaving-both-notes",
+              "directoryName": "🧪️severs-link-ab-leaving-both-notes"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-widget",
+          "sourceMutationDirectoryName": "📍move-widget",
+          "mutationDirectoryName": "📍move-widget",
+          "scenarios": [
+            {
+              "id": "repositions-note-a-on-the-canvas",
+              "directoryName": "🧪️repositions-note-a-on-the-canvas"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-generation",
+          "sourceMutationDirectoryName": "🏷️rename-generation",
+          "mutationDirectoryName": "🏷️rename-generation",
+          "scenarios": [
+            {
+              "id": "retitles-generation-1",
+              "directoryName": "🧪️retitles-generation-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-synapse",
+          "sourceMutationDirectoryName": "🔄replace-synapse",
+          "mutationDirectoryName": "🔄replace-synapse",
+          "scenarios": [
+            {
+              "id": "repoints-link-ab-onto-the-alt-port",
+              "directoryName": "🧪️repoints-link-ab-onto-the-alt-port"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-widget",
+          "sourceMutationDirectoryName": "🔁replace-widget",
+          "mutationDirectoryName": "🔁replace-widget",
+          "scenarios": [
+            {
+              "id": "rewrites-the-note-b-body-in-place",
+              "directoryName": "🧪️rewrites-the-note-b-body-in-place"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-camera",
+          "sourceMutationDirectoryName": "🎛set-camera",
+          "mutationDirectoryName": "🎛set-camera",
+          "scenarios": [
+            {
+              "id": "pans-and-zooms-the-graph-camera",
+              "directoryName": "🧪️pans-and-zooms-the-graph-camera"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-widget",
         "replace-widget",

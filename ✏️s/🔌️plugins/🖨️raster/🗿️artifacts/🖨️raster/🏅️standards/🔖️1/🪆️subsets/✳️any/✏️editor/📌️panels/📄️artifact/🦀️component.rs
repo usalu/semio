@@ -13,7 +13,7 @@ pub const RASTER_PLAY_BODY_LAYERS: &str = "raster.play.layers";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -57,7 +57,7 @@ fn layer_tree_item(layer: &RasterLayerNode) -> semio_framework_plugin::UiAssembl
 /// clicks into injected `interactionSelect` and stamp presence from `InteractionState`, replacing the
 /// deleted `.selected()?`/`.highlighted()?`/`.selection_change()` calls (row ids ARE the domain's ids —
 /// this tree is the sole consumer of the `"layers"` domain today).
-pub async fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &RasterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &RasterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut items = UiFixedList::default();
     for (kind, label, icon) in [("pixel", labels.add_pixel, "image"), ("group", labels.add_group, "folder-plus")] {
         let args = ui_value_map([("kind", ui_value_text(kind)?)])?;

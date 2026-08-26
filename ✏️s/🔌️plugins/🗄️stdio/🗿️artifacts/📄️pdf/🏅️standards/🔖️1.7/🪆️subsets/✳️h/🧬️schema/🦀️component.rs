@@ -65,28 +65,28 @@ pub mod derived_construction {
         type Mutation = PdfMutation;
         type Diff = PdfDiff;
 
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self::new()
         }
 
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
 
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_pdf_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
@@ -94,7 +94,7 @@ pub mod derived_construction {
         /// ✅ Always `Ok` -- `check_h_conformance` is ALL-SOFT, so the hard-filter below is never
         /// non-empty. Still runs the real check (not skipped) so a future hard check added here would
         /// correctly start gating without any other code change.
-        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let hard: Vec<Diagnostic> = check_h_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, dsl::Severity::Error | dsl::Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(self.snapshot)
@@ -111,13 +111,13 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn build_always_succeeds() {
-            let snapshot = PdfHBuilderConstruction::new().add_page(PdfPage::new(200.0, 200.0)).build().await.expect("PDF/H build() never fails");
+            let snapshot = PdfHBuilderConstruction::new().add_page(PdfPage::new(200.0, 200.0)).build().expect("PDF/H build() never fails");
             assert_eq!(snapshot.pages.len(), 1);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn set_info_clears_title_author_advisory() {
-            let snapshot = PdfHBuilderConstruction::new().set_info(PdfInfo { title: Some("A Chart".into()), author: Some("Dr. X".into()), ..PdfInfo::default() }).build().await.unwrap();
+            let snapshot = PdfHBuilderConstruction::new().set_info(PdfInfo { title: Some("A Chart".into()), author: Some("Dr. X".into()), ..PdfInfo::default() }).build().unwrap();
             let diagnostics = check_h_conformance(&snapshot);
             assert!(diagnostics.iter().all(|d| d.code.0 != crate::artifacts::pdf::standards::v1_7::subsets::h::schema::CODE_INFO_TITLE_OR_AUTHOR), "got {diagnostics:?}");
         }
@@ -263,12 +263,12 @@ pub mod derived_analysis {
         type Parts = PdfParts;
         const DIALECT: Dialect = DIALECT;
 
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            PdfAnyAnalyzer::sniff(source).await
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            PdfAnyAnalyzer::sniff(source)
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = PdfAnyAnalyzer::analyze(sources).await;
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let inner = PdfAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             // ℹ️ ALL-SOFT profile -- confidence is never downgraded by check_h_conformance's output
             // since it never returns Error/Fatal.

@@ -134,27 +134,27 @@ pub mod derived_construction {
         type Snapshot = SemioAudioSnapshot;
         type Mutation = SemioAudioMutation;
         type Diff = SemioAudioDiff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: SemioAudioSnapshot::default() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SemioAudioSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<SemioAudioSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_audio_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
         }
     }
@@ -172,7 +172,7 @@ pub mod derived_construction {
                 .add_channel(SemioAudioChannel { samples: vec![0.0, -0.5] })
                 .add_tag("title", "test")
                 .build()
-                .await.expect("build");
+                .expect("build");
             assert_eq!(snapshot.sample_rate, 44_100);
             assert_eq!(snapshot.channels.len(), 2);
             assert_eq!(snapshot.tags[0].key, "title");
@@ -181,28 +181,28 @@ pub mod derived_construction {
         #[semio_framework_async_macros::async_test]
         async fn mutate_then_absorb_round_trips_through_the_builder() {
             let builder = SemioAudioBuilderConstruction::new(48_000, SemioAudioFormat::Float32);
-            let (builder, diff) = builder.mutate(SemioAudioMutation::InsertChannel { index: 0, channel: SemioAudioChannel { samples: vec![1.0, 2.0] } }).await;
-            let snapshot_after_mutate = builder.clone().build().await.expect("build");
+            let (builder, diff) = builder.mutate(SemioAudioMutation::InsertChannel { index: 0, channel: SemioAudioChannel { samples: vec![1.0, 2.0] } });
+            let snapshot_after_mutate = builder.clone().build().expect("build");
             let rebuilt = SemioAudioBuilderConstruction::empty()
-                .await.absorb(SemioAudioDiff::default())
-                .await.expect("absorb must succeed for a well-formed fixture")
+                .absorb(SemioAudioDiff::default())
+                .expect("absorb must succeed for a well-formed fixture")
                 .mutate(SemioAudioMutation::SetSampleRate { sample_rate: 48_000 })
-                .await.0
+                .0
                 .mutate(SemioAudioMutation::SetFormat { format: SemioAudioFormat::Float32 })
-                .await.0;
-            let rebuilt = rebuilt.absorb(diff.diff().clone()).await.expect("absorb must succeed for a well-formed fixture");
-            assert_eq!(rebuilt.build().await.expect("build"), snapshot_after_mutate);
+                .0;
+            let rebuilt = rebuilt.absorb(diff.diff().clone()).expect("absorb must succeed for a well-formed fixture");
+            assert_eq!(rebuilt.build().expect("build"), snapshot_after_mutate);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn from_binary_and_from_text_round_trip_through_the_builder() {
-            let snapshot = SemioAudioBuilderConstruction::new(22_050, SemioAudioFormat::Pcm24).add_channel(SemioAudioChannel { samples: vec![0.1] }).build().await.expect("build");
+            let snapshot = SemioAudioBuilderConstruction::new(22_050, SemioAudioFormat::Pcm24).add_channel(SemioAudioChannel { samples: vec![0.1] }).build().expect("build");
             let bytes = <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
-            let via_binary = SemioAudioBuilderConstruction::from_binary(&bytes).await.expect("from_binary").build().await.expect("build");
+            let via_binary = SemioAudioBuilderConstruction::from_binary(&bytes).expect("from_binary").build().expect("build");
             assert_eq!(via_binary, snapshot);
 
             let text = <SemioAudioSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
-            let via_text = SemioAudioBuilderConstruction::from_text(&text).await.expect("from_text").build().await.expect("build");
+            let via_text = SemioAudioBuilderConstruction::from_text(&text).expect("from_text").build().expect("build");
             assert_eq!(via_text, snapshot);
         }
     }
@@ -230,7 +230,7 @@ pub mod derived_analysis {
         type Parts = SemioAudioParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") };
 
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA.as_bytes();
@@ -250,7 +250,7 @@ pub mod derived_analysis {
             }
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SemioAudioParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -286,15 +286,15 @@ pub mod derived_analysis {
         async fn sniff_recognizes_own_marker_and_rejects_foreign_text() {
             let snapshot = SemioAudioSnapshot { sample_rate: 8_000, ..SemioAudioSnapshot::default() };
             let text = <SemioAudioSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
-            assert_eq!(SemioAudioAnalyzerAnalysis::sniff(&AnalyzeSource::Text(&text)).await, IoConfidence::High);
-            assert_eq!(SemioAudioAnalyzerAnalysis::sniff(&AnalyzeSource::Text("not-audio-at-all")).await, IoConfidence::Low);
+            assert_eq!(SemioAudioAnalyzerAnalysis::sniff(&AnalyzeSource::Text(&text)), IoConfidence::High);
+            assert_eq!(SemioAudioAnalyzerAnalysis::sniff(&AnalyzeSource::Text("not-audio-at-all")), IoConfidence::Low);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn analyze_decodes_a_real_binary_source() {
             let snapshot = SemioAudioSnapshot { sample_rate: 16_000, ..SemioAudioSnapshot::default() };
             let bytes = <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
-            let analysis = SemioAudioAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&bytes)]).await;
+            let analysis = SemioAudioAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&bytes)]);
             assert_eq!(analysis.confidence, IoConfidence::High);
             assert_eq!(analysis.parts.snapshot, Some(snapshot));
             assert!(analysis.diagnostics.is_empty());

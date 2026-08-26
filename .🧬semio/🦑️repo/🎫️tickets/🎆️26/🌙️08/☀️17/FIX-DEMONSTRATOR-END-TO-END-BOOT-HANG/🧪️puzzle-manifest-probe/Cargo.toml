@@ -1,0 +1,9 @@
+[package]
+name = "puzzle-manifest-probe"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+semio-s-plugin-puzzle = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", default-features = false }
+
+[workspace]

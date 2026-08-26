@@ -14,11 +14,15 @@ pub struct OpenDocument {
     pub text: String,
 }
 
-pub async fn handle(payload: &OpenDocument, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+pub(super) fn emit(payload: &OpenDocument) -> Emit<WriterMutation, WriterConfigMutation> {
     let id = payload.uri.rsplit('/').next().unwrap_or("document").to_string();
     let ext = payload.uri.rsplit('.').next().filter(|s| *s != &id);
     let language_id = dsl::language_for_semio_content(payload.text.as_bytes()).or_else(|| ext.and_then(|e| dsl::language_for_extension(e))).map(|spec| spec.id.to_string()).unwrap_or_else(|| "plaintext".to_string());
     eprintln!("[DEBUG] writer.open_document uri={} language_id={} text_len={}", payload.uri, language_id, payload.text.len());
     let document = writer_snapshot_with_text(crate::artifacts::writer::WRITER_DOCUMENT_SCHEMA, &id, &language_id, &payload.uri, &payload.text);
-    Ok(Emit { effects: vec![reset_document_effect(&document)], ..Default::default() })
+    Emit { effects: vec![reset_document_effect(&document)], ..Default::default() }
+}
+
+pub fn handle(payload: &OpenDocument, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    Ok(emit(payload))
 }

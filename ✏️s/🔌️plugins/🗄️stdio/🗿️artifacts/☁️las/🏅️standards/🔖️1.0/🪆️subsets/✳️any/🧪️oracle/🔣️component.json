@@ -34,6 +34,21 @@
     {
       "id": "las-1-0-any",
       "capability": "las-1-0-any-mutate",
+      "standardDirectoryName": "🔖️1.0",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "lifts-the-second-point-and-stretches-the-z-bound",
+              "directoryName": "🧪️lifts-the-second-point-and-stretches-the-z-bound"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

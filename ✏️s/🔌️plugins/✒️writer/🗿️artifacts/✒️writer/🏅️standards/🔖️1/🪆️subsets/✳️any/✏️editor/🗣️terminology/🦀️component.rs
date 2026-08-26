@@ -28,7 +28,7 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub async fn writer_play_labels(cfg: &WriterConfig) -> &'static WriterPlayLabels {
+pub fn writer_play_labels(cfg: &WriterConfig) -> &'static WriterPlayLabels {
     semio_framework_plugin::resolve_labels_for_locale::<WriterPlayLabels>(&cfg.locale)
 }
 //#endregion 🔖️Resolvers

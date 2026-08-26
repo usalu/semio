@@ -1,0 +1,13 @@
+./Cargo.toml
+./✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/Cargo.toml
+./✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/Cargo.toml
+./✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml
+./✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/Cargo.toml
+./✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/Cargo.toml
+./✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/Cargo.toml
+./✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml
+./🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/Cargo.toml
+./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml
+./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml
+./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml
+./🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml

@@ -30,18 +30,18 @@ pub mod derived_composition {
         type Snapshot = Fem3dSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_CSV, DEP_JSON, DEP_MD, DEP_TXT]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
                         AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
                         AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
                     };
-                    let analysis = semio_framework_plugin::resolve_ready(Fem3dAnalyzer::analyze(&[native]));
+                    let analysis = Fem3dAnalyzer::analyze(&[native]);
                     if let Some(snapshot) = analysis.parts.snapshot {
                         return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
                     }
@@ -122,10 +122,10 @@ pub mod io_registry {
     fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::fem3d::Fem3dSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == FEM3D_DIALECT) {
             let builder = match &source.payload {
-                IoPayload::Text(t) => semio_framework_plugin::resolve_ready(Fem3dAnyBuilder::from_text(t)).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-                IoPayload::Binary(b) => semio_framework_plugin::resolve_ready(Fem3dAnyBuilder::from_binary(b)).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
+                IoPayload::Text(t) => Fem3dAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
+                IoPayload::Binary(b) => Fem3dAnyBuilder::from_binary(b).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
             };
-            return semio_framework_plugin::resolve_ready(builder.build()).map_err(|diagnostics| ComposeError { message: "Fem3dComposer export: build() failed".into(), diagnostics });
+            return builder.build().map_err(|diagnostics| ComposeError { message: "Fem3dComposer export: build() failed".into(), diagnostics });
         }
         if let Some(source) = sources.iter().find(|s| s.dialect == FEM3D_JSON_BRIDGE_DIALECT) {
             // 🌉 The OS dispatch layer (export_os_app_instance_media_kind) deals in already-

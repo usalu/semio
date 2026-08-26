@@ -24,6 +24,197 @@
     {
       "id": "lowpoly-1-any",
       "capability": "lowpoly-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-object-smooth-shading",
+          "sourceMutationDirectoryName": "🔘️change-object-smooth-shading",
+          "mutationDirectoryName": "🔘️change-object-smooth-shading",
+          "scenarios": [
+            {
+              "id": "turns-on-smooth-shading-for-obj-hull",
+              "directoryName": "🧪️turns-on-smooth-shading-for-obj-hull"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-paint-layer-blend-mode",
+          "sourceMutationDirectoryName": "🎛️change-paint-layer-blend-mode",
+          "mutationDirectoryName": "🎛️change-paint-layer-blend-mode",
+          "scenarios": [
+            {
+              "id": "switches-the-base-layer-to-multiply",
+              "directoryName": "🧪️switches-the-base-layer-to-multiply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-paint-layer-opacity",
+          "sourceMutationDirectoryName": "🌫️change-paint-layer-opacity",
+          "mutationDirectoryName": "🌫️change-paint-layer-opacity",
+          "scenarios": [
+            {
+              "id": "fades-the-base-layer-to-half",
+              "directoryName": "🧪️fades-the-base-layer-to-half"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-paint-layer-visible",
+          "sourceMutationDirectoryName": "👁️change-paint-layer-visible",
+          "mutationDirectoryName": "👁️change-paint-layer-visible",
+          "scenarios": [
+            {
+              "id": "hides-the-base-layer",
+              "directoryName": "🧪️hides-the-base-layer"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-mesh",
+          "sourceMutationDirectoryName": "🕸️create-mesh",
+          "mutationDirectoryName": "🕸️create-mesh",
+          "scenarios": [
+            {
+              "id": "attaches-a-mesh-child-handle-to-obj-fin",
+              "directoryName": "🧪️attaches-a-mesh-child-handle-to-obj-fin"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-object",
+          "sourceMutationDirectoryName": "🌱️create-object",
+          "mutationDirectoryName": "🌱️create-object",
+          "scenarios": [
+            {
+              "id": "inserts-obj-mast-between-hull-and-fin",
+              "directoryName": "🧪️inserts-obj-mast-between-hull-and-fin"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-mesh",
+          "sourceMutationDirectoryName": "🧨delete-mesh",
+          "mutationDirectoryName": "🧨delete-mesh",
+          "scenarios": [
+            {
+              "id": "detaches-the-mesh-child-handle-from-obj-hull",
+              "directoryName": "🧪️detaches-the-mesh-child-handle-from-obj-hull"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-object",
+          "sourceMutationDirectoryName": "💀️delete-object",
+          "mutationDirectoryName": "💀️delete-object",
+          "scenarios": [
+            {
+              "id": "removes-obj-fin-without-touching-the-order",
+              "directoryName": "🧪️removes-obj-fin-without-touching-the-order"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-paint-layer",
+          "sourceMutationDirectoryName": "🎨️edit-paint-layer",
+          "mutationDirectoryName": "🎨️edit-paint-layer",
+          "scenarios": [
+            {
+              "id": "paints-red-over-the-second-half-of-the-base-layer",
+              "directoryName": "🧪️paints-red-over-the-second-half-of-the-base-layer"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-paint-layer",
+          "sourceMutationDirectoryName": "➕️insert-paint-layer",
+          "mutationDirectoryName": "➕️insert-paint-layer",
+          "scenarios": [
+            {
+              "id": "stacks-a-detail-layer-above-the-base-layer",
+              "directoryName": "🧪️stacks-a-detail-layer-above-the-base-layer"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-object",
+          "sourceMutationDirectoryName": "↗️move-object",
+          "mutationDirectoryName": "↗️move-object",
+          "scenarios": [
+            {
+              "id": "translates-obj-hull-along-x-and-z",
+              "directoryName": "🧪️translates-obj-hull-along-x-and-z"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-paint-layer",
+          "sourceMutationDirectoryName": "➖️remove-paint-layer",
+          "mutationDirectoryName": "➖️remove-paint-layer",
+          "scenarios": [
+            {
+              "id": "drops-the-detail-layer-at-index-1",
+              "directoryName": "🧪️drops-the-detail-layer-at-index-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-object",
+          "sourceMutationDirectoryName": "🏷️rename-object",
+          "mutationDirectoryName": "🏷️rename-object",
+          "scenarios": [
+            {
+              "id": "retitles-obj-hull",
+              "directoryName": "🧪️retitles-obj-hull"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-paint-layer",
+          "sourceMutationDirectoryName": "🔖️rename-paint-layer",
+          "mutationDirectoryName": "✏️🎨️rename-paint-layer",
+          "scenarios": [
+            {
+              "id": "retitles-the-base-layer-to-undercoat",
+              "directoryName": "🧪️retitles-the-base-layer-to-undercoat"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-objects",
+          "sourceMutationDirectoryName": "🔀️reorder-objects",
+          "mutationDirectoryName": "🔀️reorder-objects",
+          "scenarios": [
+            {
+              "id": "moves-obj-fin-in-front-of-obj-hull",
+              "directoryName": "🧪️moves-obj-fin-in-front-of-obj-hull"
+            }
+          ]
+        },
+        {
+          "mutationId": "rotate-object",
+          "sourceMutationDirectoryName": "🔄️rotate-object",
+          "mutationDirectoryName": "🔄️rotate-object",
+          "scenarios": [
+            {
+              "id": "yaws-obj-hull-about-the-y-axis",
+              "directoryName": "🧪️yaws-obj-hull-about-the-y-axis"
+            }
+          ]
+        },
+        {
+          "mutationId": "scale-object",
+          "sourceMutationDirectoryName": "📐️scale-object",
+          "mutationDirectoryName": "📐️scale-object",
+          "scenarios": [
+            {
+              "id": "halves-obj-hull-uniformly",
+              "directoryName": "🧪️halves-obj-hull-uniformly"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-object",
         "delete-object",

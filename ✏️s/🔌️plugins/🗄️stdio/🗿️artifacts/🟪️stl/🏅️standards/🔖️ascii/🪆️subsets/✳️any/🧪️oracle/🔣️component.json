@@ -33,6 +33,21 @@
     {
       "id": "stl-ascii-any",
       "capability": "stl-ascii-mutate",
+      "standardDirectoryName": "🔖️ascii",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "renames-the-solid-and-closes-the-wedge-with-a-third-facet",
+              "directoryName": "🧪️renames-the-solid-and-closes-the-wedge-with-a-third-facet"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

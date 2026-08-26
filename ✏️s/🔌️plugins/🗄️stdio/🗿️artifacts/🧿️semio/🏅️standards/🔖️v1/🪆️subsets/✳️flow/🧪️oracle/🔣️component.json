@@ -18,6 +18,21 @@
     {
       "id": "semio-v1-flow",
       "capability": "semio-v1-flow-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️flow",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "relabels-and-repositions-the-transform-node",
+              "directoryName": "🧪️relabels-and-repositions-the-transform-node"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "no-mutation",
         "set-snapshot",

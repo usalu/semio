@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schemaVersion": 1,
+  "contract": {
+    "maximumRawBytes": 256,
+    "maximumDecodedItems": 8,
+    "maximumWorkItemsPerStep": 1,
+    "maximumOutputBytes": 1024,
+    "maximumStepMicros": 7500
+  },
+  "tools": [
+    "evaluate",
+    "setSelectedCheckIndex"
+  ],
+  "apps": [
+    { "variant": "din4108", "documentSchema": "semio.norm.din4108/v1" },
+    { "variant": "din16798", "documentSchema": "semio.norm.din16798/v1" },
+    { "variant": "din18599", "documentSchema": "semio.norm.din18599/v1" },
+    { "variant": "en1990", "documentSchema": "semio.norm.en1990/v1" },
+    { "variant": "en1991", "documentSchema": "semio.norm.en1991/v1" },
+    { "variant": "en1992", "documentSchema": "semio.norm.en1992/v1" },
+    { "variant": "en1993", "documentSchema": "semio.norm.en1993/v1" },
+    { "variant": "en1994", "documentSchema": "semio.norm.en1994/v1" },
+    { "variant": "en1995", "documentSchema": "semio.norm.en1995/v1" },
+    { "variant": "en1996", "documentSchema": "semio.norm.en1996/v1" },
+    { "variant": "en1997", "documentSchema": "semio.norm.en1997/v1" },
+    { "variant": "en1998", "documentSchema": "semio.norm.en1998/v1" },
+    { "variant": "en1999", "documentSchema": "semio.norm.en1999/v1" },
+    { "variant": "iso16757", "documentSchema": "semio.norm.iso16757/v1" },
+    { "variant": "vdi3805", "documentSchema": "semio.norm.vdi3805/v1" }
+  ],
+  "wireCases": [
+    { "name": "empty", "bytes": 0, "accepted": true },
+    { "name": "single", "bytes": 1, "accepted": true },
+    { "name": "maximum", "bytes": 256, "accepted": true },
+    { "name": "maximum-plus-one", "bytes": 257, "accepted": false },
+    { "name": "checkpoint", "bytes": 4, "checkpoint": true, "accepted": false }
+  ]
+}

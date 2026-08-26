@@ -16,23 +16,23 @@ pub struct AddStep {
 }
 
 /// 🏗️ Builder from operation-owned scalar identity and title; it never reads or clones the document.
-pub async fn add_step_operation(step_id: String, title: String) -> PlaybookMutation {
+pub fn add_step_operation(step_id: String, title: String) -> PlaybookMutation {
     PlaybookMutation::AddStep(AddStep { step: PlaybookStep { id: step_id, title, description: None, blocks: Vec::new() }, index: None })
 }
 
 impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for AddStep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "step", kind: "add-step", record: "AddedStep" };
 
-    async fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
+    fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
+    fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Add step \"{}\"", self.step.title)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.step.id.clone()]
     }
 }

@@ -8,8 +8,8 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 use crate::artifacts::procedural2d::dsl::{
-    camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl,
-    WidgetLayoutDsl,
+    CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl, WidgetLayoutDsl, camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl,
+    widget_to_dsl,
 };
 use crate::artifacts::procedural2d::schema::mutations::text::Procedural2dMutation;
 use crate::artifacts::procedural2d::schema::snapshot::Procedural2dSnapshot;
@@ -197,11 +197,11 @@ pub fn decode_op(bytes: &[u8]) -> Result<Procedural2dMutation, protocol::Protoco
 mod tests {
     use super::*;
     use crate::artifacts::procedural2d::mutations::{change_schema, connect_synapse, create_generation, create_widget, delete_widget};
-    use crate::artifacts::procedural2d::{Procedural2dSnapshot, PROCEDURAL_2D_SCHEMA};
+    use crate::artifacts::procedural2d::{PROCEDURAL_2D_SCHEMA, Procedural2dSnapshot};
     use flow::{SynapseSpec, Widget};
     use protocol::OpText;
     use semio_framework_os_kernel::os_store::test_support;
-    use store::{create_document_envelope, ArtifactCommand};
+    use store::{ArtifactCommand, create_document_envelope};
 
     //#region 🔖️OpTextTests
     #[test]
@@ -282,11 +282,48 @@ struct Procedural2dPublicationLease {
     maximum_items: usize,
     maximum_output_pages: usize,
     maximum_controls: usize,
+    closing: bool,
+    terminal: bool,
 }
 
-fn procedural2d_publication_leases() -> &'static std::sync::Mutex<[Option<Procedural2dPublicationLease>; PROCEDURAL2D_PUBLICATION_SLOTS]> {
-    static LEASES: std::sync::OnceLock<std::sync::Mutex<[Option<Procedural2dPublicationLease>; PROCEDURAL2D_PUBLICATION_SLOTS]>> = std::sync::OnceLock::new();
-    LEASES.get_or_init(|| std::sync::Mutex::new([None; PROCEDURAL2D_PUBLICATION_SLOTS]))
+impl semio_framework_job::FixedOperationOwner for Procedural2dPublicationLease {
+    fn retained_bytes(&self) -> usize {
+        std::mem::size_of::<Self>()
+    }
+
+    fn cancel(&mut self) {
+        self.closing = true;
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if !self.closing || maximum_items == 0 || maximum_bytes < std::mem::size_of::<Self>() {
+            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        }
+        if !self.terminal {
+            self.terminal = true;
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<Self>() };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.terminal
+    }
+}
+
+type Procedural2dPublicationRegistry = semio_framework_job::FixedOperationRegistry<Procedural2dPublicationLease, PROCEDURAL2D_PUBLICATION_SLOTS>;
+
+fn procedural2d_publication_leases() -> &'static std::sync::Mutex<Procedural2dPublicationRegistry> {
+    static LEASES: std::sync::OnceLock<std::sync::Mutex<semio_framework_job::FixedOperationRegistry<Procedural2dPublicationLease, PROCEDURAL2D_PUBLICATION_SLOTS>>> = std::sync::OnceLock::new();
+    LEASES.get_or_init(|| std::sync::Mutex::new(Procedural2dPublicationRegistry::new(PROCEDURAL2D_PUBLICATION_SLOTS * std::mem::size_of::<Procedural2dPublicationLease>())))
+}
+
+fn procedural2d_publication_key(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> semio_framework_job::FixedOperationKey {
+    semio_framework_job::FixedOperationKey::new(operation, generation)
 }
 
 #[cfg(test)]
@@ -341,27 +378,30 @@ pub fn procedural2d_admit_publication_authority(
         return Err("procedural2d-publication.initial-freshness");
     }
     let mut leases = procedural2d_publication_leases().try_lock().map_err(|_| "procedural2d-publication.contended")?;
-    if leases.iter().flatten().any(|lease| lease.operation == operation.0) {
+    if leases.get_operation(operation).is_some() {
         return Err("procedural2d-publication.operation-duplicate");
     }
-    let slot = leases.iter_mut().find(|slot| slot.is_none()).ok_or("procedural2d-publication.saturated")?;
     if maximum_items == 0 || maximum_items > PROCEDURAL2D_MAXIMUM_DOMAIN_ITEMS || maximum_output_pages != PROCEDURAL2D_MOUNTED_OUTPUT_CHANNELS || maximum_controls != PROCEDURAL2D_MOUNTED_CONTROL_CREDITS {
         return Err("procedural2d-publication.domain-credits");
     }
-    *slot = Some(Procedural2dPublicationLease { operation: operation.0, generation: generation.0, base_revision, parent_revision, live_revision, maximum_items, maximum_output_pages, maximum_controls });
-    Ok(())
+    leases
+        .admit(
+            procedural2d_publication_key(operation, generation),
+            Procedural2dPublicationLease { operation: operation.0, generation: generation.0, base_revision, parent_revision, live_revision, maximum_items, maximum_output_pages, maximum_controls, closing: false, terminal: false },
+        )
+        .map_err(|_| "procedural2d-publication.saturated")
 }
 
 pub fn procedural2d_refresh_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_revision: u64) -> Result<(), &'static str> {
     let mut leases = procedural2d_publication_leases().try_lock().map_err(|_| "procedural2d-publication.contended")?;
-    let lease = leases.iter_mut().flatten().find(|lease| lease.operation == operation.0 && lease.generation == generation.0).ok_or("procedural2d-publication.stale-authority")?;
+    let lease = leases.get_mut(procedural2d_publication_key(operation, generation)).ok_or("procedural2d-publication.stale-authority")?;
     lease.live_revision = live_revision;
     Ok(())
 }
 
 pub fn procedural2d_validate_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<(u64, u64), &'static str> {
     let leases = procedural2d_publication_leases().try_lock().map_err(|_| "procedural2d-publication.contended")?;
-    let lease = leases.iter().flatten().find(|lease| lease.operation == operation.0 && lease.generation == generation.0).ok_or("procedural2d-publication.stale-authority")?;
+    let lease = leases.get(procedural2d_publication_key(operation, generation)).ok_or("procedural2d-publication.stale-authority")?;
     if lease.generation != generation.0 || lease.live_revision != generation.0 || lease.base_revision != lease.live_revision || lease.parent_revision != lease.base_revision {
         return Err("procedural2d-publication.stale-aba-parent");
     }
@@ -390,7 +430,7 @@ fn procedural2d_validate_atomic_lease(lease: Procedural2dPublicationLease, opera
 /// 🔐️ Fail-closed Procedural2d authority used by the shared atomic replacement branch.
 pub fn procedural2d_validate_atomic_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), &'static str> {
     let leases = procedural2d_publication_leases().try_lock().map_err(|_| "procedural2d-publication.contended")?;
-    let mut lease = leases.iter().flatten().find(|lease| lease.operation == operation.0).or_else(|| leases.iter().flatten().next()).copied().ok_or("procedural2d-publication.authority-missing")?;
+    let mut lease = leases.get_operation(operation).map(|(_, lease)| *lease).ok_or("procedural2d-publication.authority-missing")?;
     #[cfg(test)]
     {
         let mut hostiles = procedural2d_publication_hostiles().try_lock().map_err(|_| "procedural2d-publication.hostile-contended")?;
@@ -416,7 +456,7 @@ pub fn procedural2d_validate_atomic_publication_authority(operation: semio_frame
 
 pub fn procedural2d_publication_item_credit(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<usize, &'static str> {
     let leases = procedural2d_publication_leases().try_lock().map_err(|_| "procedural2d-publication.contended")?;
-    let lease = leases.iter().flatten().find(|lease| lease.operation == operation.0 && lease.generation == generation.0).ok_or("procedural2d-publication.stale-authority")?;
+    let lease = leases.get(procedural2d_publication_key(operation, generation)).ok_or("procedural2d-publication.stale-authority")?;
     if lease.maximum_output_pages != PROCEDURAL2D_MOUNTED_OUTPUT_CHANNELS || lease.maximum_controls != PROCEDURAL2D_MOUNTED_CONTROL_CREDITS {
         return Err("procedural2d-publication.domain-credits-lost");
     }
@@ -425,9 +465,7 @@ pub fn procedural2d_publication_item_credit(operation: semio_framework_job::Oper
 
 pub fn procedural2d_release_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> bool {
     let Ok(mut leases) = procedural2d_publication_leases().try_lock() else { return false };
-    let Some(slot) = leases.iter_mut().find(|slot| slot.is_some_and(|lease| lease.operation == operation.0 && lease.generation == generation.0)) else { return false };
-    *slot = None;
-    true
+    leases.take(procedural2d_publication_key(operation, generation)).is_some()
 }
 
 /// 🧭️ Fixed ownership grammar for every Procedural2d retained domain and lifecycle owner.

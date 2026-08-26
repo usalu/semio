@@ -72,7 +72,7 @@ mod tests {
             description: None,
         }))
         .expect("apply");
-        let projection = semio_framework::io::resolve_ready(store.snapshot()).expect("projection");
+        let projection = store.snapshot().expect("projection");
         assert_eq!(projection.objects.len(), 1);
         assert_eq!(projection.objects[0].id, "o1");
     }

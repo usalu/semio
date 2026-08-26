@@ -48,7 +48,7 @@ impl ArtifactViewer for Process3dViewer {
     const DIALECT: Dialect = PROCESS3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PROCESS_3D_SCHEMA;
 
-    async fn initial_snapshot() -> Process3dSnapshot {
+    fn initial_snapshot() -> Process3dSnapshot {
         crate::artifacts::process3d::schema::default_document()
     }
 
@@ -56,11 +56,11 @@ impl ArtifactViewer for Process3dViewer {
     /// config change, so this always returns the empty `ViewEmit` — no config mutation, no effect,
     /// no dirty scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only
     /// action (camera orbit, "jump to step") is a pure addition here, never a signature change.
-    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    async fn render(
+    fn render(
         body_key: &str,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,

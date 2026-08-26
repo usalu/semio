@@ -17,12 +17,15 @@ use crate::editor::vcs::modes::edit::windows::{editor, history};
 use crate::editor::vcs::panels::{document as document_panel, inspection as inspection_panel};
 use crate::editor::vcs::presence::{VcsDemoPresence, VcsDemoPresenceMutation};
 use crate::editor::vcs::terminology::vcs_play_labels;
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ui_text, ActionDescriptor, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MergeMode, NoDraft,
-    NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
+    ui_text, ActionDescriptor, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider,
+    HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
 };
 use serde_json::Value;
+use std::collections::BTreeSet;
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -38,12 +41,9 @@ pub fn vcs_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -
     semio_framework_plugin::ActionFactory::new(VCS_PLAY_APP_ID).action(action, args)
 }
 
-
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref())
-        .map(semio_framework_plugin::UiValue::Text)
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
@@ -56,27 +56,20 @@ pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue
     semio_framework_plugin::UiValue::Number(value.into())
 }
 
-
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
 pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder
-            .push(value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
 pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder
-            .push(key.to_owned(), value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
@@ -86,9 +79,7 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
     let mut nodes = semio_framework_plugin::UiFixedList::default();
     for value in values {
         let node = value?;
-        nodes
-            .try_push(node)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
     }
     Ok(nodes)
 }
@@ -152,6 +143,458 @@ semio_framework_plugin::app_commands! {
 #[derive(Default)]
 pub struct VcsPlayApp;
 
+//#region 🧵️RetainedCommands
+const VCS_BOUNDED_TOOL_IDS: &[&str] = &["incrementCounter", "patchSnapshot", "setLocale", "noMutation", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasWheel"];
+const VCS_RESUMABLE_TOOL_IDS: &[&str] = &["textEdit", "edit"];
+const VCS_BOUNDED_PAYLOAD_SCHEMA: &str = "vcs.vcs.tool-command.v1";
+const VCS_BOUNDED_RAW_BYTES: usize = 8_192;
+const VCS_BOUNDED_WORK_ITEMS: usize = 1;
+const VCS_EDIT_MAXIMUM_TAGS: usize = 4_096;
+const VCS_EDIT_MAXIMUM_OUTPUT_BYTES: usize = 16_384;
+const VCS_EDIT_MAXIMUM_WORK_ITEMS: usize = 16_400;
+
+fn vcs_bounded_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(VCS_BOUNDED_RAW_BYTES, 32, 32, 16_384, 7_500)
+}
+
+fn vcs_resumable_contract() -> ToolExecutionContract {
+    ToolExecutionContract::resumable(VCS_BOUNDED_RAW_BYTES, VCS_EDIT_MAXIMUM_WORK_ITEMS, 1, VCS_EDIT_MAXIMUM_OUTPUT_BYTES, 7_500, 1, 1)
+}
+
+fn vcs_bounded_extent(command: &VcsCommand, _snapshot: &VcsSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    let bytes = match command {
+        VcsCommand::IncrementCounter(_) | VcsCommand::NoMutation(_) | VcsCommand::CanvasPointerDown(_) | VcsCommand::CanvasPointerMove(_) | VcsCommand::CanvasPointerUp(_) | VcsCommand::CanvasWheel(_) => 0,
+        VcsCommand::PatchSnapshot(payload) => payload.field.len().checked_add(payload.value.len())?,
+        VcsCommand::SetLocale(payload) => payload.value.len(),
+        VcsCommand::TextEdit(_) | VcsCommand::Edit(_) => return None,
+    };
+    (bytes <= VCS_BOUNDED_RAW_BYTES).then_some(VCS_BOUNDED_WORK_ITEMS)
+}
+
+fn vcs_bounded_reduce(
+    command: &VcsCommand,
+    snapshot: &VcsSnapshot,
+    config: &VcsDemoConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation, NoDraftMutation>, Fault> {
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+}
+
+fn vcs_edit_text(command: &VcsCommand) -> Option<&str> {
+    match command {
+        VcsCommand::TextEdit(payload) => Some(&payload.text),
+        VcsCommand::Edit(payload) => Some(&payload.text),
+        _ => None,
+    }
+}
+
+fn vcs_edit_extent(command: &VcsCommand, snapshot: &VcsSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    let text = vcs_edit_text(command)?;
+    (text.len() <= VCS_BOUNDED_RAW_BYTES && snapshot.tags.len() <= VCS_EDIT_MAXIMUM_TAGS).then_some(VCS_EDIT_MAXIMUM_WORK_ITEMS)
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum VcsEditPhase {
+    Decode,
+    Reserve,
+    Scalars,
+    CurrentIndex,
+    NextIndex,
+    Additions,
+    Removals,
+    Complete,
+}
+
+struct VcsEditCommandWork {
+    tool_id: &'static str,
+    phase: VcsEditPhase,
+    cursor: usize,
+    next: Option<VcsSnapshot>,
+    current_tags: BTreeSet<String>,
+    next_tags: BTreeSet<String>,
+    mutations: Vec<VcsDemoMutation>,
+    output_bytes: usize,
+    steps: u64,
+    replay_target: u64,
+    complete: bool,
+    closing: bool,
+}
+
+impl VcsEditCommandWork {
+    fn new(tool_id: &'static str) -> Self {
+        Self { tool_id, phase: VcsEditPhase::Decode, cursor: 0, next: None, current_tags: BTreeSet::new(), next_tags: BTreeSet::new(), mutations: Vec::new(), output_bytes: 0, steps: 0, replay_target: 0, complete: false, closing: false }
+    }
+
+    fn charge_output(&mut self, bytes: usize) -> Result<(), Fault> {
+        self.output_bytes = self.output_bytes.checked_add(bytes).filter(|total| *total <= VCS_EDIT_MAXIMUM_OUTPUT_BYTES).ok_or_else(|| Fault::from("vcs-edit-output-capacity"))?;
+        Ok(())
+    }
+
+    fn advance(&mut self, command: &VcsCommand, snapshot: &VcsSnapshot) -> Result<Option<Emit<VcsDemoMutation, VcsDemoConfigMutation, NoDraftMutation>>, Fault> {
+        use crate::artifacts::vcs::mutations::{add_tag, change_counter, change_notes, change_status, remove_tag, rename_vcs};
+        match self.phase {
+            VcsEditPhase::Decode => {
+                let text = vcs_edit_text(command).ok_or_else(|| Fault::from("vcs-edit-command-mismatch"))?;
+                if text.len() > VCS_BOUNDED_RAW_BYTES || snapshot.tags.len() > VCS_EDIT_MAXIMUM_TAGS {
+                    return Err(Fault::from("vcs-edit-input-capacity"));
+                }
+                match serde_json::from_str::<VcsSnapshot>(text) {
+                    Ok(next) if next.tags.len() <= VCS_EDIT_MAXIMUM_TAGS => {
+                        self.next = Some(next);
+                        self.phase = VcsEditPhase::Reserve;
+                    }
+                    Ok(_) => return Err(Fault::from("vcs-edit-tag-capacity")),
+                    Err(_) => self.phase = VcsEditPhase::Complete,
+                }
+            }
+            VcsEditPhase::Reserve => {
+                let next_tags = self.next.as_ref().map_or(0, |next| next.tags.len());
+                let capacity = snapshot.tags.len().checked_add(next_tags).and_then(|count| count.checked_add(4)).ok_or_else(|| Fault::from("vcs-edit-mutation-capacity"))?;
+                self.mutations.try_reserve_exact(capacity).map_err(|_| Fault::from("vcs-edit-mutation-capacity"))?;
+                self.phase = VcsEditPhase::Scalars;
+            }
+            VcsEditPhase::Scalars => {
+                let next = self.next.as_ref().ok_or_else(|| Fault::from("vcs-edit-next-snapshot-absent"))?;
+                let mut staged = Vec::with_capacity(4);
+                let mut bytes = 0_usize;
+                if next.title != snapshot.title {
+                    bytes = bytes.checked_add(next.title.len()).ok_or_else(|| Fault::from("vcs-edit-output-capacity"))?;
+                    staged.push(rename_vcs(next.title.clone()));
+                }
+                if next.counter != snapshot.counter {
+                    staged.push(change_counter(next.counter));
+                }
+                if next.status != snapshot.status {
+                    bytes = bytes.checked_add(next.status.len()).ok_or_else(|| Fault::from("vcs-edit-output-capacity"))?;
+                    staged.push(change_status(next.status.clone()));
+                }
+                if next.notes != snapshot.notes {
+                    bytes = bytes.checked_add(next.notes.len()).ok_or_else(|| Fault::from("vcs-edit-output-capacity"))?;
+                    staged.push(change_notes(next.notes.clone()));
+                }
+                self.charge_output(bytes)?;
+                self.mutations.extend(staged);
+                self.cursor = 0;
+                self.phase = VcsEditPhase::CurrentIndex;
+            }
+            VcsEditPhase::CurrentIndex => {
+                if let Some(tag) = snapshot.tags.get(self.cursor) {
+                    if tag.len() > VCS_BOUNDED_RAW_BYTES {
+                        return Err(Fault::from("vcs-edit-current-tag-capacity"));
+                    }
+                    self.current_tags.insert(tag.clone());
+                    self.cursor += 1;
+                } else {
+                    self.cursor = 0;
+                    self.phase = VcsEditPhase::NextIndex;
+                }
+            }
+            VcsEditPhase::NextIndex => {
+                let next = self.next.as_ref().ok_or_else(|| Fault::from("vcs-edit-next-snapshot-absent"))?;
+                if let Some(tag) = next.tags.get(self.cursor) {
+                    if tag.len() > VCS_BOUNDED_RAW_BYTES {
+                        return Err(Fault::from("vcs-edit-next-tag-capacity"));
+                    }
+                    self.next_tags.insert(tag.clone());
+                    self.cursor += 1;
+                } else {
+                    self.cursor = 0;
+                    self.phase = VcsEditPhase::Additions;
+                }
+            }
+            VcsEditPhase::Additions => {
+                let next = self.next.as_ref().ok_or_else(|| Fault::from("vcs-edit-next-snapshot-absent"))?;
+                if let Some(tag) = next.tags.get(self.cursor) {
+                    let mutation = (!self.current_tags.contains(tag.as_str())).then(|| add_tag(tag.clone()));
+                    if mutation.is_some() {
+                        self.charge_output(tag.len())?;
+                        self.mutations.push(mutation.expect("mutation was checked above"));
+                    }
+                    self.cursor += 1;
+                } else {
+                    self.cursor = 0;
+                    self.phase = VcsEditPhase::Removals;
+                }
+            }
+            VcsEditPhase::Removals => {
+                if let Some(tag) = snapshot.tags.get(self.cursor) {
+                    let mutation = (!self.next_tags.contains(tag.as_str())).then(|| remove_tag(tag.clone()));
+                    if mutation.is_some() {
+                        self.charge_output(tag.len())?;
+                        self.mutations.push(mutation.expect("mutation was checked above"));
+                    }
+                    self.cursor += 1;
+                } else {
+                    self.phase = VcsEditPhase::Complete;
+                }
+            }
+            VcsEditPhase::Complete => {
+                if self.complete {
+                    return Err(Fault::from("vcs-edit-work-repeated"));
+                }
+                self.complete = true;
+                let mutations = std::mem::take(&mut self.mutations);
+                return Ok(Some(if mutations.is_empty() { Emit::default() } else { Emit::mutations(mutations) }));
+            }
+        }
+        Ok(None)
+    }
+
+    fn mutation_bytes(mutation: &VcsDemoMutation) -> usize {
+        match mutation {
+            VcsDemoMutation::RenameVcs(payload) => payload.new_title.len(),
+            VcsDemoMutation::ChangeCounter(_) => 0,
+            VcsDemoMutation::ChangeNotes(payload) => payload.new_notes.len(),
+            VcsDemoMutation::ChangeStatus(payload) => payload.new_status.len(),
+            VcsDemoMutation::AddTag(payload) => payload.tag.len(),
+            VcsDemoMutation::RemoveTag(payload) => payload.tag.len(),
+        }
+    }
+}
+
+impl ArtifactCommandWork<EditorApp<VcsPlayApp>> for VcsEditCommandWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(&self, command: &VcsCommand, snapshot: &VcsSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<VcsPlayApp>>>) -> Option<usize> {
+        vcs_edit_extent(command, snapshot, interaction)
+    }
+
+    fn step(
+        &mut self,
+        command: &VcsCommand,
+        snapshot: &VcsSnapshot,
+        _config: &VcsDemoConfig,
+        _history: &semio_framework_plugin::HistoryView,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<VcsPlayApp>>>,
+        _operation: &AppOperationContext,
+    ) -> Result<ArtifactCommandWorkStep<EditorApp<VcsPlayApp>>, Fault> {
+        let replaying = self.steps < self.replay_target;
+        match self.advance(command, snapshot)? {
+            Some(emit) if replaying => Err(Fault::from("vcs-edit-checkpoint-beyond-completion")),
+            Some(emit) => Ok(ArtifactCommandWorkStep::Complete(emit)),
+            None => {
+                self.steps = self.steps.checked_add(1).ok_or_else(|| Fault::from("vcs-edit-step-overflow"))?;
+                if self.steps > VCS_EDIT_MAXIMUM_WORK_ITEMS as u64 {
+                    return Err(Fault::from("vcs-edit-work-capacity"));
+                }
+                if replaying {
+                    Ok(ArtifactCommandWorkStep::Replay { stage: "vcs-edit-replay", preview: b"{\"en\":\"Restoring text edit\",\"de\":\"Textbearbeitung wird wiederhergestellt\"}" })
+                } else {
+                    Ok(ArtifactCommandWorkStep::Progress { stage: "vcs-edit-diff", preview: b"{\"en\":\"Comparing text edit\",\"de\":\"Textbearbeitung wird verglichen\"}" })
+                }
+            }
+        }
+    }
+
+    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
+        if target.len() < 16 {
+            return Err(Fault::from("vcs-edit-checkpoint-capacity"));
+        }
+        target[..16].fill(0);
+        target[..4].copy_from_slice(b"VEC1");
+        target[8..16].copy_from_slice(&self.steps.max(self.replay_target).to_le_bytes());
+        Ok(16)
+    }
+
+    fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
+        if checkpoint.len() != 16 || &checkpoint[..4] != b"VEC1" || checkpoint[4..8] != [0; 4] {
+            return Err(Fault::from("vcs-edit-checkpoint-invalid"));
+        }
+        if self.next.is_some() || !self.current_tags.is_empty() || !self.next_tags.is_empty() || !self.mutations.is_empty() {
+            return Err(Fault::from("vcs-edit-checkpoint-workspace-not-empty"));
+        }
+        let target = u64::from_le_bytes(checkpoint[8..16].try_into().map_err(|_| Fault::from("vcs-edit-checkpoint-cursor"))?);
+        if target > VCS_EDIT_MAXIMUM_WORK_ITEMS as u64 {
+            return Err(Fault::from("vcs-edit-checkpoint-cursor"));
+        }
+        self.phase = VcsEditPhase::Decode;
+        self.cursor = 0;
+        self.output_bytes = 0;
+        self.steps = 0;
+        self.replay_target = target;
+        self.complete = false;
+        Ok(())
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        use semio_framework_job::InteractiveJobCloseStep;
+        if !self.closing {
+            return InteractiveJobCloseStep::Blocked;
+        }
+        if maximum_items == 0 {
+            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if let Some(mutation) = self.mutations.last() {
+            let bytes = Self::mutation_bytes(mutation);
+            if bytes > maximum_bytes {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.mutations.pop();
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+        }
+        if let Some(tag) = self.current_tags.first() {
+            let bytes = tag.len();
+            if bytes > maximum_bytes {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.current_tags.pop_first();
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+        }
+        if let Some(tag) = self.next_tags.first() {
+            let bytes = tag.len();
+            if bytes > maximum_bytes {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.next_tags.pop_first();
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+        }
+        if let Some(next) = self.next.as_mut() {
+            if let Some(tag) = next.tags.last() {
+                let bytes = tag.len();
+                if bytes > maximum_bytes {
+                    return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                next.tags.pop();
+                return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+            }
+            let bytes = next.schema.len().saturating_add(next.title.len()).saturating_add(next.notes.len()).saturating_add(next.status.len());
+            if bytes > maximum_bytes {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.next = None;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+        }
+        InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.next.is_none() && self.current_tags.is_empty() && self.next_tags.is_empty() && self.mutations.is_empty()
+    }
+}
+
+struct VcsBoundedCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl VcsBoundedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: VCS_BOUNDED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for VcsBoundedCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<VcsPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<VcsPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        VCS_BOUNDED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        vcs_bounded_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > VCS_BOUNDED_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("VCS bounded command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for VcsBoundedCommandJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<VcsPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = VCS_BOUNDED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
+}
+
+struct VcsResumableCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl VcsResumableCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: VCS_RESUMABLE_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for VcsResumableCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<VcsPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<VcsPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        VCS_BOUNDED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        vcs_resumable_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > VCS_BOUNDED_RAW_BYTES || checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
+            return Err((ToolJobFactoryError::new("VCS resumable command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(match checkpoint {
+            Some(checkpoint) => ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
+            None => ArtifactRetainedCommandJob::from_wire(payload, input),
+        })
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for VcsResumableCommandJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<VcsPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = VCS_RESUMABLE_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
+}
+//#endregion 🧵️RetainedCommands
+
 impl ArtifactEditor for VcsPlayApp {
     type Snapshot = VcsSnapshot;
     type Mutation = VcsDemoMutation;
@@ -169,22 +612,131 @@ impl ArtifactEditor for VcsPlayApp {
     const DIALECT: Dialect = crate::artifacts::vcs::VCS_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<VcsPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.vcs.vcs@1/*#editor",
+        document_schema: "vcs.vcs",
+        factory: "BoundedFirstStepCommandJobFactory",
+        tools: {
+            "incrementCounter" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "patchSnapshot" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setLocale" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "noMutation" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "canvasPointerDown" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "canvasPointerMove" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "canvasPointerUp" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "canvasWheel" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "textEdit" => semio_framework::ToolExecutionContract::resumable(8_192, 16_400, 1, 16_384, 7_500, 1, 1),
+            "edit" => semio_framework::ToolExecutionContract::resumable(8_192, 16_400, 1, 16_384, 7_500, 1, 1),
+        }
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(VcsBoundedCommandJobFactory::new(&controller))?;
+        registry.register(VcsResumableCommandJobFactory::new(&controller))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        let bounded = VCS_BOUNDED_TOOL_IDS.contains(&request.tool_id.as_str());
+        let resumable = VCS_RESUMABLE_TOOL_IDS.contains(&request.tool_id.as_str());
+        if !bounded && !resumable {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id {
+            return Err(Fault::from("vcs-command-tool-mismatch"));
+        }
+        let extent = if bounded { vcs_bounded_extent(&request.command, &request.snapshot, &request.interaction_state) } else { vcs_edit_extent(&request.command, &request.snapshot, &request.interaction_state) };
+        if extent.is_none() {
+            return Err(Fault::from("vcs-command-payload-too-large"));
+        }
+        let tool_id = request.command.command_id();
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = if bounded { Box::new(BoundedArtifactCommandWork::new(tool_id, vcs_bounded_reduce, vcs_bounded_extent)) } else { Box::new(VcsEditCommandWork::new(tool_id)) };
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            request.context,
+            operation_context,
+            request.completion,
+            VcsCommand::command_id,
+            VCS_BOUNDED_RAW_BYTES,
+            if bounded { VCS_BOUNDED_WORK_ITEMS } else { VCS_EDIT_MAXIMUM_WORK_ITEMS },
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
+
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::vcs::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> VcsSnapshot {
+    fn initial_snapshot() -> VcsSnapshot {
         crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot()
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`. `setLocale` isn't declared in the manifest (mirrors
     /// `ShootingCommand::SetLocale` — see `shooting_ui`'s identical doc), so it skips enforcement.
-    async fn command_id(command: &VcsCommand) -> &'static str {
+    fn command_id(command: &VcsCommand) -> &'static str {
         command.command_id()
     }
 
-    async fn handle(
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+        let args = args.cloned().unwrap_or(Value::Null);
+        let text_arg = |key: &str| args.get(key).and_then(Value::as_str).unwrap_or_default().to_string();
+        match action {
+            "incrementCounter" => Ok(VcsCommand::IncrementCounter(increment_counter::IncrementCounter {})),
+            "patchSnapshot" => {
+                let field = text_arg("field");
+                let value = text_arg("value");
+                if field.len().checked_add(value.len()).is_none_or(|bytes| bytes > VCS_BOUNDED_RAW_BYTES) {
+                    return Err(Fault::from("vcs-command-payload-too-large"));
+                }
+                Ok(VcsCommand::PatchSnapshot(patch_snapshot::PatchSnapshot { field, value }))
+            }
+            "textEdit" => {
+                let text = text_arg("text");
+                if text.len() > VCS_BOUNDED_RAW_BYTES {
+                    return Err(Fault::from("vcs-command-payload-too-large"));
+                }
+                Ok(VcsCommand::TextEdit(text_edit::TextEdit { text }))
+            }
+            "edit" => {
+                let text = text_arg("text");
+                if text.len() > VCS_BOUNDED_RAW_BYTES {
+                    return Err(Fault::from("vcs-command-payload-too-large"));
+                }
+                Ok(VcsCommand::Edit(edit_command::Edit { text }))
+            }
+            "setLocale" => {
+                let value = args.get("value").or_else(|| args.get("locale")).and_then(Value::as_str).unwrap_or_default().to_string();
+                if value.len() > VCS_BOUNDED_RAW_BYTES {
+                    return Err(Fault::from("vcs-command-payload-too-large"));
+                }
+                Ok(VcsCommand::SetLocale(set_locale::SetLocale { value }))
+            }
+            "noMutation" => Ok(VcsCommand::NoMutation(no_operation::NoMutation {})),
+            "canvasPointerDown" => Ok(VcsCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {})),
+            "canvasPointerMove" => Ok(VcsCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {})),
+            "canvasPointerUp" => Ok(VcsCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {})),
+            "canvasWheel" => Ok(VcsCommand::CanvasWheel(canvas_wheel::CanvasWheel {})),
+            other => Err(Fault::from(format!("unknown VCS app action '{other}'"))),
+        }
+    }
+
+    fn handle(
         command: &VcsCommand,
         doc: &ArtifactView<'_, VcsSnapshot>,
         cfg: &ConfigView<'_, VcsDemoConfig>,
@@ -195,7 +747,7 @@ impl ArtifactEditor for VcsPlayApp {
         command.dispatch(doc, cfg)
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, VcsSnapshot>, cfg: &ConfigView<'_, VcsDemoConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, VcsSnapshot>, cfg: &ConfigView<'_, VcsDemoConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let labels = vcs_play_labels(cfg.snapshot);
         match body_key {
             VCS_PLAY_BODY_EDITOR => editor::render(doc.snapshot, labels),
@@ -232,6 +784,16 @@ pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
             .view_action("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"))
             .view_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"))
             .view_action("canvasWheel", LocalizedLabel::native("Canvas Wheel", "Leinwand-Mausrad"))
+            .action_interactive_job("incrementCounter", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchSnapshot", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
+            .action_interactive_job("noMutation", InteractiveJobClassification::Migrated)
+            .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
+            .action_interactive_job("canvasPointerMove", InteractiveJobClassification::Migrated)
+            .action_interactive_job("canvasPointerUp", InteractiveJobClassification::Migrated)
+            .action_interactive_job("canvasWheel", InteractiveJobClassification::Migrated)
+            .action_interactive_job("textEdit", InteractiveJobClassification::Migrated)
+            .action_interactive_job("edit", InteractiveJobClassification::Migrated)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .default_layout(edit::layout())
@@ -288,38 +850,38 @@ pub(crate) mod testkit {
     /// ✏️ Adapts `create_vcs_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `testkit::new_app_with_registry` still expects — framework testkit gap, not
     /// modifiable here (`🧰️framework/**` is outside this packet's lease).
-    async fn vcs_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    fn vcs_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_vcs_app(), examples: Vec::new() }
     }
 
     /// 🧪️ A bare, pre-seeded app instance — no `AppActionRegistry`, so undeclared internal commands
     /// dispatch freely. Seeded via `seed_vcs_demo_history` (see its own doc comment for why this
     /// replaced `ArtifactApp::seed`).
-    pub async fn app() -> VcsApp {
+    pub fn app() -> VcsApp {
         let mut instance = new_app::<EditorApp<VcsPlayApp>>();
         seed_vcs_demo_history(&mut instance);
         instance
     }
 
     /// 🧪️ A pre-seeded app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub async fn app_with_registry() -> VcsApp {
+    pub fn app_with_registry() -> VcsApp {
         let mut instance = new_app_with_registry::<EditorApp<VcsPlayApp>>(vcs_app_manifest_for_testkit);
         seed_vcs_demo_history(&mut instance);
         instance
     }
 
-    pub async fn dispatch(instance: &mut VcsApp, command: VcsCommand) -> InvocationResult {
+    pub fn dispatch(instance: &mut VcsApp, command: VcsCommand) -> InvocationResult {
         instance.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub async fn render(instance: &mut VcsApp, body_key: &str) -> String {
+    pub fn render(instance: &mut VcsApp, body_key: &str) -> String {
         serde_json::to_string(&instance.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
     /// 📦️ Parses `document_pack()` (the full envelope) for tests that need to inspect raw
     /// checkpoints/alternatives directly — safe here because none of these tests undo/redo, so every
     /// edit in the log is still applied.
-    pub async fn seeded_envelope(instance: &VcsApp) -> ArtifactEnvelope<VcsSnapshot, VcsDemoMutation> {
+    pub fn seeded_envelope(instance: &VcsApp) -> ArtifactEnvelope<VcsSnapshot, VcsDemoMutation> {
         let files = instance.document_pack().expect("document pack");
         store::parse_document_pack::<VcsSnapshot, VcsDemoMutation>(&files.pack, &files.spr).expect("parse document pack").envelope
     }
@@ -336,7 +898,7 @@ pub(crate) mod testkit {
     /// hardcodes `authors: Vec::new()` with no wire path for real authors (framework-owned, out of this
     /// plugin's boundary) — no test asserts on authorship, so this is a silent, documented fidelity
     /// loss, not a functional gap.
-    pub async fn seed_vcs_demo_history(app: &mut VcsApp) {
+    pub fn seed_vcs_demo_history(app: &mut VcsApp) {
         let local = meta("local");
         let edit = |app: &mut VcsApp, f: fn(&mut VcsSnapshot)| {
             let mut next = app.snapshot().expect("materialize snapshot");
@@ -472,11 +1034,14 @@ mod tests {
     use semio_framework_plugin::PluginApp;
     use store::HistoryColumn;
 
+    const RETAINED_LIMITS: &str = include_str!("🧪️fixtures/🎯️retained-command-limits.json");
+    const RETAINED_EDIT_LIMITS: &str = include_str!("🧪️fixtures/🎯️retained-edit-limits.json");
+
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
     /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
     #[semio_framework_async_macros::async_test]
-    async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
+    fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
         let mut sorted = ids.clone();
@@ -488,7 +1053,7 @@ mod tests {
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
     #[semio_framework_async_macros::async_test]
-    async fn every_command_round_trips_through_text_and_binary() {
+    fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
@@ -499,7 +1064,7 @@ mod tests {
     /// undeclared host-pushed command). This is what a missing `#[dsl(keyword = ..)]` on a payload struct
     /// silently breaks (the record prints with no keyword at all and no longer parses).
     #[semio_framework_async_macros::async_test]
-    async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+    fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         for command in every_command() {
             let id = command.command_id();
             let expected = if id == "setLocale" {
@@ -520,7 +1085,7 @@ mod tests {
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order. Matches the pilot's
     /// wire baseline dump byte-for-byte (ticket `🧪️wire-baseline-before.txt`).
-    pub(super) async fn every_command() -> Vec<VcsCommand> {
+    pub(super) fn every_command() -> Vec<VcsCommand> {
         vec![
             VcsCommand::IncrementCounter(increment_counter::IncrementCounter {}),
             VcsCommand::PatchSnapshot(patch_snapshot::PatchSnapshot { field: "title".into(), value: "Renamed".into() }),
@@ -534,11 +1099,133 @@ mod tests {
             VcsCommand::CanvasWheel(canvas_wheel::CanvasWheel {}),
         ]
     }
+
+    #[test]
+    fn bounded_command_factory_matches_the_language_neutral_maximum_oracle() {
+        let fixture: Value = serde_json::from_str(RETAINED_LIMITS).expect("VCS retained limits decode through serde_json");
+        let maximum = fixture.get("maximumTextBytes").and_then(Value::as_u64).expect("maximumTextBytes") as usize;
+        let additional = fixture.get("rejectedAdditionalBytes").and_then(Value::as_u64).expect("rejectedAdditionalBytes") as usize;
+        let expected_items = fixture.get("expectedWorkItems").and_then(Value::as_u64).expect("expectedWorkItems") as usize;
+        let tool_ids = fixture.get("toolIds").and_then(Value::as_array).expect("toolIds").iter().map(|value| value.as_str().expect("tool id")).collect::<Vec<_>>();
+        assert_eq!(maximum, VCS_BOUNDED_RAW_BYTES);
+        assert_eq!(expected_items, VCS_BOUNDED_WORK_ITEMS);
+        assert_eq!(tool_ids, VCS_BOUNDED_TOOL_IDS);
+        let snapshot = VcsPlayApp::initial_snapshot();
+        let interaction = protocol::InteractionState::default();
+        let accepted = VcsCommand::PatchSnapshot(patch_snapshot::PatchSnapshot { field: String::new(), value: "v".repeat(maximum) });
+        let rejected = VcsCommand::SetLocale(set_locale::SetLocale { value: "l".repeat(maximum + additional) });
+        assert_eq!(vcs_bounded_extent(&accepted, &snapshot, &interaction), Some(expected_items));
+        assert_eq!(vcs_bounded_extent(&rejected, &snapshot, &interaction), None);
+        let factory = VcsBoundedCommandJobFactory::new("s.vcs.vcs@1/*#editor");
+        assert_eq!(factory.execution_contract(), ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500));
+        assert!(VcsPlayApp::command_from_action("patchSnapshot", Some(&serde_json::json!({ "field": "f", "value": "v".repeat(maximum + additional) }))).is_err());
+    }
+
+    #[test]
+    fn action_bridge_covers_all_vcs_owned_commands_and_rejects_unknown_actions() {
+        let rows = [
+            ("incrementCounter", serde_json::json!({})),
+            ("patchSnapshot", serde_json::json!({ "field": "title", "value": "next" })),
+            ("textEdit", serde_json::json!({ "text": "{}" })),
+            ("edit", serde_json::json!({ "text": "{}" })),
+            ("setLocale", serde_json::json!({ "value": "de-DE" })),
+            ("noMutation", serde_json::json!({})),
+            ("canvasPointerDown", serde_json::json!({})),
+            ("canvasPointerMove", serde_json::json!({})),
+            ("canvasPointerUp", serde_json::json!({})),
+            ("canvasWheel", serde_json::json!({})),
+        ];
+        for (id, args) in rows {
+            assert_eq!(VcsPlayApp::command_from_action(id, Some(&args)).expect("declared action bridge").command_id(), id);
+        }
+        assert!(VcsPlayApp::command_from_action("unknown", None).is_err());
+    }
+
+    #[test]
+    fn resumable_text_edit_matches_the_serde_json_batch_oracle() {
+        let fixture: Value = serde_json::from_str(RETAINED_EDIT_LIMITS).expect("VCS retained edit limits decode through serde_json");
+        assert_eq!(fixture.get("toolIds").and_then(Value::as_array).expect("toolIds").iter().map(|value| value.as_str().expect("tool id")).collect::<Vec<_>>(), VCS_RESUMABLE_TOOL_IDS);
+        assert_eq!(fixture.get("maximumTextBytes").and_then(Value::as_u64), Some(VCS_BOUNDED_RAW_BYTES as u64));
+        assert_eq!(fixture.get("maximumTags").and_then(Value::as_u64), Some(VCS_EDIT_MAXIMUM_TAGS as u64));
+        assert_eq!(fixture.get("maximumOutputBytes").and_then(Value::as_u64), Some(VCS_EDIT_MAXIMUM_OUTPUT_BYTES as u64));
+        assert_eq!(fixture.get("maximumWorkItems").and_then(Value::as_u64), Some(VCS_EDIT_MAXIMUM_WORK_ITEMS as u64));
+
+        let mut current = VcsPlayApp::initial_snapshot();
+        current.title = "before".into();
+        current.tags = vec!["keep".into(), "remove".into()];
+        let mut next = current.clone();
+        next.title = "after".into();
+        next.counter = 42;
+        next.tags = vec!["keep".into(), "add".into()];
+        let text = serde_json::to_string(&next).expect("serde_json oracle encodes next snapshot");
+        let command = VcsCommand::TextEdit(text_edit::TextEdit { text: text.clone() });
+        let expected = edit_command::text_edit_operations(&text, &current);
+        let mut work = VcsEditCommandWork::new("textEdit");
+        let mut turns = 0;
+        let actual = loop {
+            turns += 1;
+            if let Some(emit) = work.advance(&command, &current).expect("resumable edit turn") {
+                break emit;
+            }
+            assert!(turns <= VCS_EDIT_MAXIMUM_WORK_ITEMS);
+        };
+        assert!(turns > 1, "text edit must cross real scheduler turns");
+        assert_eq!(actual.artifact_mutations, expected.artifact_mutations);
+    }
+
+    #[test]
+    fn resumable_text_edit_enforces_maximum_plus_one_and_retires_incrementally() {
+        use semio_framework_plugin::retained_command::ArtifactCommandWork;
+        let fixture: Value = serde_json::from_str(RETAINED_EDIT_LIMITS).expect("VCS retained edit limits decode through serde_json");
+        let maximum = fixture.get("maximumTextBytes").and_then(Value::as_u64).expect("maximumTextBytes") as usize;
+        let additional = fixture.get("rejectedAdditionalBytes").and_then(Value::as_u64).expect("rejectedAdditionalBytes") as usize;
+        assert!(VcsPlayApp::command_from_action("textEdit", Some(&serde_json::json!({ "text": "x".repeat(maximum + additional) }))).is_err());
+        let mut oversized_snapshot = VcsPlayApp::initial_snapshot();
+        oversized_snapshot.tags = (0..=VCS_EDIT_MAXIMUM_TAGS).map(|index| format!("tag-{index}")).collect();
+        let command = VcsCommand::Edit(edit_command::Edit { text: "{}".into() });
+        assert_eq!(vcs_edit_extent(&command, &oversized_snapshot, &protocol::InteractionState::default()), None);
+
+        let mut work = VcsEditCommandWork::new("edit");
+        work.next = Some(VcsSnapshot { tags: vec!["retire".into()], ..VcsPlayApp::initial_snapshot() });
+        work.current_tags.insert("current".into());
+        work.next_tags.insert("next".into());
+        work.mutations.push(crate::artifacts::vcs::mutations::add_tag("mutation".into()));
+        work.begin_close();
+        let mut turns = 0;
+        while !work.terminal_is_empty() {
+            turns += 1;
+            let step = work.close_step(1, VCS_EDIT_MAXIMUM_OUTPUT_BYTES);
+            assert!(!matches!(step, semio_framework_job::InteractiveJobCloseStep::Blocked));
+            assert!(turns < 16);
+        }
+        assert!(turns >= 5, "each nested owner must retire through a separate close grant");
+    }
+
+    #[test]
+    fn every_resumable_edit_turn_stays_below_the_interaction_ceiling() {
+        let mut current = VcsPlayApp::initial_snapshot();
+        current.tags = (0..64).map(|index| format!("current-{index:04}-{}", "x".repeat(32))).collect();
+        let mut next = current.clone();
+        next.notes = "n".repeat(256);
+        next.tags.rotate_left(1);
+        next.tags.push("z".repeat(4_096));
+        let command = VcsCommand::TextEdit(text_edit::TextEdit { text: serde_json::to_string(&next).expect("maximum-turn fixture") });
+        assert!(vcs_edit_text(&command).expect("text").len() <= VCS_BOUNDED_RAW_BYTES);
+        let mut work = VcsEditCommandWork::new("textEdit");
+        loop {
+            let started = std::time::Instant::now();
+            let step = work.advance(&command, &current).expect("timed edit turn");
+            assert!(started.elapsed().as_micros() < 8_000, "one VCS edit turn exceeded 8 ms");
+            if step.is_some() {
+                break;
+            }
+        }
+    }
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️ManifestSanity
     #[semio_framework_async_macros::async_test]
-    async fn the_manifest_stitches_every_taxonomy_node() {
+    fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_vcs_app()).expect("app definition json");
         for id in [editor::VCS_PLAY_WINDOW_EDITOR, history::VCS_PLAY_WINDOW_HISTORY] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
@@ -554,7 +1241,7 @@ mod tests {
     /// manifest action — exercises `testkit::app_with_registry`, the counterpart to the bare `app()`
     /// every other node's tests use.
     #[semio_framework_async_macros::async_test]
-    async fn registry_enforced_app_dispatches_a_declared_action() {
+    fn registry_enforced_app_dispatches_a_declared_action() {
         use crate::editor::vcs::testkit::app_with_registry;
         let mut instance = app_with_registry();
         let before = instance.snapshot().expect("materialize snapshot").counter;
@@ -568,7 +1255,7 @@ mod tests {
     /// history window kind — see `VCS_INTERACTION_HISTORY`'s doc comment for why this is entity
     /// selection over checkpoints, not the per-row `checkoutCheckpoint`/`switchAlternative` navigation.
     #[semio_framework_async_macros::async_test]
-    async fn history_interaction_domain_is_declared_flat_and_scoped_to_the_history_window() {
+    fn history_interaction_domain_is_declared_flat_and_scoped_to_the_history_window() {
         let definition = create_vcs_app();
         let history_domain = definition.interactions.iter().find(|interaction| interaction.id == VCS_INTERACTION_HISTORY).expect("history interaction domain declared");
         assert!(matches!(history_domain.hierarchy, HierarchyProvider::Flat));
@@ -584,7 +1271,7 @@ mod tests {
 
     //#region 🔖️CrossCutting
     #[semio_framework_async_macros::async_test]
-    async fn seeded_history_has_checkpoints() {
+    fn seeded_history_has_checkpoints() {
         let instance = app();
         let envelope = seeded_envelope(&instance);
         assert!(envelope.vcs.alternatives.len() >= 5, "expected >=5 alternatives, got {}", envelope.vcs.alternatives.len());
@@ -601,7 +1288,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn checkout_then_commit_forks_across_actions() {
+    fn checkout_then_commit_forks_across_actions() {
         let mut instance = app();
         let envelope_before = seeded_envelope(&instance);
         let root_checkpoint_id = envelope_before.vcs.checkpoints[0].id.clone();
@@ -619,7 +1306,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn undo_redo_round_trips_through_the_wrapper() {
+    fn undo_redo_round_trips_through_the_wrapper() {
         let mut instance = app();
         let before = instance.snapshot().expect("materialize snapshot").counter;
         dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {}));
@@ -633,7 +1320,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn create_and_switch_alternative_round_trip_through_the_wrapper() {
+    fn create_and_switch_alternative_round_trip_through_the_wrapper() {
         let mut instance = app();
         let create = instance.handle_action("createAlternative", Some(&serde_json::json!({ "name": "trying-something" })), &meta("local")).expect("create alternative");
         assert!(create.mutations.is_empty());

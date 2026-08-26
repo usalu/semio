@@ -35,11 +35,11 @@ fn expected_after() -> FlowSnapshot {
 /// widget the committed payload offers as a "replacement" — the seeded widget IS the mutation JSON's
 /// own `widget`, so the equality the no-op guard tests is structural, not asserted twice by hand.
 fn before() -> FlowSnapshot {
-    let snapshot: FlowSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FlowSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let FlowMutation::ReplaceWidget(payload) = mutation() else {
         panic!("replaces-a-note-with-an-identical-note's committed mutation must be a replace-widget");
     };
-    cache_flow_content(&snapshot.content.child_id, vec![payload.widget.clone()], Vec::new(), BTreeMap::new());
+    cache_flow_content(&mut snapshot.content, vec![payload.widget.clone()], Vec::new(), BTreeMap::new());
     snapshot
 }
 

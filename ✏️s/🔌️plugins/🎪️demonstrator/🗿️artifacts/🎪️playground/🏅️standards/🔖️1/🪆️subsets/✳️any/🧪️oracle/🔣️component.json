@@ -20,6 +20,21 @@
     {
       "id": "playground-1-any",
       "capability": "playground-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-schema",
+          "sourceMutationDirectoryName": "✒️change-schema",
+          "mutationDirectoryName": "✒️change-schema",
+          "scenarios": [
+            {
+              "id": "retags-the-playground-document-schema",
+              "directoryName": "🧪️retags-the-playground-document-schema"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "change-schema"
       ]

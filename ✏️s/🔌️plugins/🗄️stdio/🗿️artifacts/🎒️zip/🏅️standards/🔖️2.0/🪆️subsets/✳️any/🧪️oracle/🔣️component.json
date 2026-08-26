@@ -21,6 +21,21 @@
     {
       "id": "zip-2-0-any",
       "capability": "zip-2-0-mutate",
+      "standardDirectoryName": "🔖️2.0",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "extends-the-readme-and-adds-a-version-member",
+              "directoryName": "🧪️extends-the-readme-and-adds-a-version-member"
+            }
+          ]
+        }
+      ],
       "kinds": ["no-mutation", "set-snapshot", "set-archive-comment", "add-entry", "remove-entry", "rename-entry", "set-entry-data"]
     }
   ],

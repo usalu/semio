@@ -1,0 +1,1992 @@
+{
+  "files": [
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🦀️component.rs",
+      "beforeHash": "9dc439d47492acebffcb2afc3bb2397517f41b09394c0daf706cda23f139ba9c",
+      "afterHash": "4f4c78a6ef2f6838d0df50a3f1a111dd9434caf1a79928ef3b72e13d1af2040d",
+      "edits": [
+        {
+          "start": 1585,
+          "end": 1591,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️component.rs",
+      "beforeHash": "df85a3bd7e7d14c5682132a2f3557e20aa96ec53e6da5ca18ca9e16800b741f5",
+      "afterHash": "798d4a66264a6d46cec8c9141096ba6c09aa99caffbefc9105d9f80cfc4ca137",
+      "edits": [
+        {
+          "start": 727,
+          "end": 733,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 1333,
+          "end": 1339,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 1533,
+          "end": 1539,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 2843,
+          "end": 2849,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 3681,
+          "end": 3687,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 10629,
+          "end": 10635,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 14647,
+          "end": 14653,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 17613,
+          "end": 17619,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 21103,
+          "end": 21109,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 22062,
+          "end": 22068,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "beforeHash": "4ac6501af425bf40600c86d6b88507eebf43385858b23369193d83dabdb98904",
+      "afterHash": "994e076e8dd13e61f85976cf154b427c0ac47547bf46465e3cdcfa1229a7d835",
+      "edits": [
+        {
+          "start": 91795,
+          "end": 91801,
+          "before": ".await",
+          "after": "",
+          "kind": "stale-await"
+        },
+        {
+          "start": 95451,
+          "end": 95457,
+          "before": ".await",
+          "after": "",
+          "kind": "stale-await"
+        },
+        {
+          "start": 96620,
+          "end": 96626,
+          "before": ".await",
+          "after": "",
+          "kind": "stale-await"
+        },
+        {
+          "start": 98968,
+          "end": 98974,
+          "before": ".await",
+          "after": "",
+          "kind": "stale-await"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs",
+      "beforeHash": "6076a40cb3da5608b6c870a0b07bf5e72dc3f39c94210f283c5e6eb0291f13db",
+      "afterHash": "37f877b8f84ade56cd4204e19aa3b12e62d33ed2ac9daed17195c4ac84d4b974",
+      "edits": [
+        {
+          "start": 3546,
+          "end": 3552,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs",
+      "beforeHash": "5c3e1eb5e84ddab70bd6233a7e66172b8f35047e899763048ac28e1237fcb4cd",
+      "afterHash": "198764fe3abd51af43326b5a6f75821e0377d48b511b8ffb1436a3dbb52cdfdb",
+      "edits": [
+        {
+          "start": 760,
+          "end": 766,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 1094,
+          "end": 1100,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️model/🦀️component.rs",
+      "beforeHash": "08373dfe7e0ed864b178649febec4133d85fab6aab15cc61856cb84d9f950416",
+      "afterHash": "e1da3994a689971e4e95c143a2b1ab82efaf148133fcad178785e5d01310d350",
+      "edits": [
+        {
+          "start": 2500,
+          "end": 2506,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 2792,
+          "end": 2798,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 3247,
+          "end": 3253,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 4582,
+          "end": 4588,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs",
+      "beforeHash": "48c9d0db190faf8f19197a03f9c51bd5d4a1c1e86562ad6f525b14fbb2a66a73",
+      "afterHash": "bfa67eecfd6dc336e7771955f8b0b8112829db4ee10600b0631ff56dcaa77669",
+      "edits": [
+        {
+          "start": 4408,
+          "end": 4414,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 4696,
+          "end": 4702,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 4957,
+          "end": 4963,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 5270,
+          "end": 5276,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 8291,
+          "end": 8297,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 8952,
+          "end": 8958,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 9480,
+          "end": 9486,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 10458,
+          "end": 10464,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 10882,
+          "end": 10888,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 11403,
+          "end": 11409,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 12055,
+          "end": 12061,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 13221,
+          "end": 13227,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 13813,
+          "end": 13819,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 14099,
+          "end": 14105,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 14726,
+          "end": 14732,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 32146,
+          "end": 32152,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 32832,
+          "end": 32838,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 33609,
+          "end": 33615,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs",
+      "beforeHash": "60cc592fff3be84a444a8c281ecbc6498d80e1a300e766df096bf16bb6a4f868",
+      "afterHash": "6532fd003dd8eedaa6401a1288d63df7669eccbd9cbb015742623e32c4246851",
+      "edits": [
+        {
+          "start": 2448,
+          "end": 2454,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️component.rs",
+      "beforeHash": "bbd1710b0e017b77b3143c84097f4c49dc2db3d5a4eb21b3cf361b776f52fe10",
+      "afterHash": "7f21f67f58a51ae96217b69f5188885748232a30d5fec649a432e5a760381265",
+      "edits": [
+        {
+          "start": 913,
+          "end": 919,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 1421,
+          "end": 1427,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 1808,
+          "end": 1814,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs",
+      "beforeHash": "0c0ec24e756c679c431534b49235ebb1b4926c0204ae353f497577cf24174d4e",
+      "afterHash": "2c9bfc63baaa4f886e89da03474523d1dc0bdd08de974938d691e82a164e3cc7",
+      "edits": [
+        {
+          "start": 5420,
+          "end": 5426,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 5618,
+          "end": 5624,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs",
+      "beforeHash": "d49d31f951a9b33cf5223ae3283e11a7798efe203313be6e1c4beb12b4670d61",
+      "afterHash": "8bb186e769a430f698b7bddc4bea396f603cc5d955546d4dca4e935e3ec12bdd",
+      "edits": [
+        {
+          "start": 864,
+          "end": 870,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 5834,
+          "end": 5840,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 12209,
+          "end": 12215,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 12739,
+          "end": 12745,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 12998,
+          "end": 13004,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 13598,
+          "end": 13604,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 13968,
+          "end": 13974,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 14699,
+          "end": 14705,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 15236,
+          "end": 15242,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 15989,
+          "end": 15995,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 16699,
+          "end": 16705,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+      "beforeHash": "2a7bc84e930b3e31be1752de0ebadb781450adf795cbb45ab5e0b0a50e6cc328",
+      "afterHash": "e4a0806c88e7cf4c8b1fb49eb73ab626d6e42e90588dbd56822c2518f6be58ef",
+      "edits": [
+        {
+          "start": 1672,
+          "end": 1678,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 1870,
+          "end": 1876,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 4779,
+          "end": 4785,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
+      "beforeHash": "2fe7835f6c3ecd068d5ff5a072ee95eba09d65e2eb4cae491d1139123b15fbeb",
+      "afterHash": "8a1838f54a08efbddfde131ab74535b918b7799d4fe4ef2f6cf49ada8e7bff20",
+      "edits": [
+        {
+          "start": 2278,
+          "end": 2284,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 2448,
+          "end": 2454,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 3010,
+          "end": 3016,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-object/↩️inverse/🦀️component.rs",
+      "beforeHash": "7b8218ebb9d271a446d418355bc535dd2327511d49184d3822167bc6af8ced70",
+      "afterHash": "2b3e3c8c2abc8126c889e8deb66f69788b476c6100f508e34f9e7358588e2eb7",
+      "edits": [
+        {
+          "start": 216,
+          "end": 222,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-object/🔺️diff/🦀️component.rs",
+      "beforeHash": "caf13e31b19ccc2666afbe2a54bd70eb6d1224b59b4e063c141b1fa8d4d0624c",
+      "afterHash": "605d4dd34e9c5064fbc1c438cecd982467df4701768b911f8aa7a17221a48b89",
+      "edits": [
+        {
+          "start": 477,
+          "end": 483,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️scale-object/↩️inverse/🦀️component.rs",
+      "beforeHash": "05aae8bb8aabbcbbeacde9d935dcff913ce844b1b9b6b435740710b4f8a4d250",
+      "afterHash": "69a9c528162e096ae711080fd86fe41f5229937e586d5e89aacff9fc357927d3",
+      "edits": [
+        {
+          "start": 215,
+          "end": 221,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️scale-object/🔺️diff/🦀️component.rs",
+      "beforeHash": "f197bfd9778ec9c14f437f3b34c8b25b2afdfacb1970797aaad89d22f63581c4",
+      "afterHash": "4e9a9f603d96bfdfa07c1f4dd696018a78fdffb3cd008a672884c5d4ecf02d94",
+      "edits": [
+        {
+          "start": 476,
+          "end": 482,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️create-mesh/↩️inverse/🦀️component.rs",
+      "beforeHash": "aedad3b20da3cdd4ebcc495811dc576392cb6a200aa02021aeaf8b7d916bfc43",
+      "afterHash": "5659f353541344a4a53bfb911fff793904c251f750979af60509c8f68cffdeea",
+      "edits": [
+        {
+          "start": 1353,
+          "end": 1359,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️create-mesh/🔺️diff/🦀️component.rs",
+      "beforeHash": "28baa0f6413d4ab881c7321439c87021f3204957d578024edc68bc9741ade757",
+      "afterHash": "50eb8476966387bf9b0a057e0517cfa8a3a972f4195746449fc0e9f5ba843bbe",
+      "edits": [
+        {
+          "start": 821,
+          "end": 827,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-paint-layer-blend-mode/↩️inverse/🦀️component.rs",
+      "beforeHash": "d02e4c82fb81c59aa5d29d8562a0c8ae36634d773e9593f074b76f4d7ba34c13",
+      "afterHash": "f7726cf38201698dc8c550aa9750ab40de6cf8140b7f77550a8d5ad305ea181d",
+      "edits": [
+        {
+          "start": 265,
+          "end": 271,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-paint-layer-blend-mode/🔺️diff/🦀️component.rs",
+      "beforeHash": "b3864c63b97e000b219184d9d08e1356c92884b8d4ae6ddcb5dd72f7a4dd1ba2",
+      "afterHash": "791605153d42bc4ebad1e81aee561c18af4d1d56074e9604621592cb09c5609b",
+      "edits": [
+        {
+          "start": 463,
+          "end": 469,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️edit-paint-layer/↩️inverse/🦀️component.rs",
+      "beforeHash": "77944952f03e80119b900741828bb1eb5db85f582fd6336f376aeff971af7322",
+      "afterHash": "6d14009de7ecef4aa4e69413b7b94de2d3cc845938747a7d1d22ccaf25b444e7",
+      "edits": [
+        {
+          "start": 464,
+          "end": 470,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️edit-paint-layer/🔺️diff/🦀️component.rs",
+      "beforeHash": "6073fbb235ccb4c5e8f2087787e35b67182d4ec0a24823033bcdd89d0779520f",
+      "afterHash": "ed0259e90448953a23d16f3e1b8e58b556a373642ab3e0e3f1cc0b0ab09eb969",
+      "edits": [
+        {
+          "start": 501,
+          "end": 507,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+      "beforeHash": "46bbfee6310f6a5734975a811140d724663bd758e7dc5ee764af64809bdc2a64",
+      "afterHash": "407592a23628133f3c956e8d69124d7b271fad538b0820eb5a5a258d60980f7a",
+      "edits": [
+        {
+          "start": 892,
+          "end": 898,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 1085,
+          "end": 1091,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-mesh/↩️inverse/🦀️component.rs",
+      "beforeHash": "c33f183b0b4d0402b10baaec1b6c89b12c1ecd913fb1fe2d7568511e8712945f",
+      "afterHash": "7c4f29905685193d30482286b29e3d1e2ec2e7b2b185d24b97f8f7719f287286",
+      "edits": [
+        {
+          "start": 775,
+          "end": 781,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-mesh/🔺️diff/🦀️component.rs",
+      "beforeHash": "79338a5d9460d172b84dcf61280edbb9eda2d22d5795243535f9b5fe07f387a2",
+      "afterHash": "f19a5efd6093577e548740e72ac52278a1c3dd4c5d51def3fafbdef9d702a74c",
+      "edits": [
+        {
+          "start": 796,
+          "end": 802,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-paint-layer-visible/↩️inverse/🦀️component.rs",
+      "beforeHash": "f60e549662568defecc8e6c516b3b32865cda0ddb245b02180d08866b92cc8a9",
+      "afterHash": "c8bfe591a3e26dcc2e3fbf761a5e6f7af7e043add4716b01bb9b0612c08fdc0c",
+      "edits": [
+        {
+          "start": 250,
+          "end": 256,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-paint-layer-visible/🔺️diff/🦀️component.rs",
+      "beforeHash": "5d97466c5bde4afb891c04d219a4031af8c9ebc9489bc2cbe2164cdbaaaabe74",
+      "afterHash": "2ac3c187f03c508d3fd026d0946c396c0b4b12373e8e602f70f11fb13cdccd67",
+      "edits": [
+        {
+          "start": 458,
+          "end": 464,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-paint-layer-opacity/↩️inverse/🦀️component.rs",
+      "beforeHash": "0dab512893d07991ede54571e587e6cd1f11b1b71f9da68babb2b898952a2803",
+      "afterHash": "fc4f463c5c73aebd15632f334b52317aca9412db24b9dbab2eb6b23255a43287",
+      "edits": [
+        {
+          "start": 253,
+          "end": 259,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-paint-layer-opacity/🔺️diff/🦀️component.rs",
+      "beforeHash": "42b184cbf748ffc3ba049c3b2900d39419acc01ec13a264aabbfd35246ae0488",
+      "afterHash": "866079e2d822fb73456149c17117d7e46db97aba4716b88d6b518a6e906b6099",
+      "edits": [
+        {
+          "start": 458,
+          "end": 464,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-object/↩️inverse/🦀️component.rs",
+      "beforeHash": "1f32f72d617ff37dd379a56fc6652a57e89c02a9fa10e1183156940e4f60b5ce",
+      "afterHash": "865b6d967ff852faed3ef526706c1ce5ea62b87c70ad3e9279cfaeda3df8ae7c",
+      "edits": [
+        {
+          "start": 331,
+          "end": 337,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-object/🔺️diff/🦀️component.rs",
+      "beforeHash": "c734c4c51a7e4af9b12b1ff075d27ed0b633315a3d424d13981c40f3d0bc0e59",
+      "afterHash": "2ba61310ec7bc6c8fc2929bebdaec803780acfc66dee9a406f5b10bf49ad2a85",
+      "edits": [
+        {
+          "start": 365,
+          "end": 371,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️rename-paint-layer/↩️inverse/🦀️component.rs",
+      "beforeHash": "c0e8890b89f4d96f0c27ae352a5b905532c1c1a052fd81c9f365dcb13111434f",
+      "afterHash": "a530e4a2c4a3e6dc6f9e883180b76f86fe10779f5ffc29d509660d5fa71646e3",
+      "edits": [
+        {
+          "start": 235,
+          "end": 241,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️rename-paint-layer/🔺️diff/🦀️component.rs",
+      "beforeHash": "97b7b4bb1711e8841f227c59be491b9413b8ff02749a9dc6a5e80eb2920324f5",
+      "afterHash": "7d83d5a12ffa3da552c9e6397bd54bcfbbe122e0c918c48056f2348b3198717b",
+      "edits": [
+        {
+          "start": 582,
+          "end": 588,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-paint-layer/↩️inverse/🦀️component.rs",
+      "beforeHash": "35ea1766b6081c03a249e60be2e283a5f00d438de5072db36dede062d4ca963c",
+      "afterHash": "e0c7c37a011630e539dc3cd3d895db624d66a4d25ee0daefbddcb4ede60d4fdc",
+      "edits": [
+        {
+          "start": 334,
+          "end": 340,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-paint-layer/🔺️diff/🦀️component.rs",
+      "beforeHash": "686baab63d39c7f035398add4b29dd8be962ca53b110441f15b23b63d699f6d1",
+      "afterHash": "0a2b16017a699e89caeabbfad518dbd68f9ae8ab4276cb4ed30564cb3014ac8a",
+      "edits": [
+        {
+          "start": 400,
+          "end": 406,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-objects/↩️inverse/🦀️component.rs",
+      "beforeHash": "e3d33f46feb9de8d590a9241ff32da8845033fb2756ce16fd3388181cb6c46f2",
+      "afterHash": "c0bf2d9cad4601505a7ec642ff4c5a7a4e9bbf9c9eda825802a8f11383def92a",
+      "edits": [
+        {
+          "start": 229,
+          "end": 235,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-objects/🔺️diff/🦀️component.rs",
+      "beforeHash": "d726a7be48f094014414cb796bdc76705f190bc1962e541f4783d869f9085b58",
+      "afterHash": "bd3f759dabe6b1c054ad5385a4e5c155d25256b4d82065fb7a39578b885aa335",
+      "edits": [
+        {
+          "start": 409,
+          "end": 415,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💀️delete-object/↩️inverse/🦀️component.rs",
+      "beforeHash": "3123514a35597ba2df54ce8aa54bfa80775e724e11c123c84871df1332df6705",
+      "afterHash": "428ad6d587b040ab9c7d60f07d213ca55500e47d9b93cd9587658cb8b3d7b30c",
+      "edits": [
+        {
+          "start": 312,
+          "end": 318,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💀️delete-object/🔺️diff/🦀️component.rs",
+      "beforeHash": "ef6c41e4790f99feb9a718e229e7d0554e0e2b84a10a148dc29bb9d20c74d817",
+      "afterHash": "690ef33a2ead85bedf6e1ba4938d31c8bb87be1e0c03127b967c9db494c4eda6",
+      "edits": [
+        {
+          "start": 361,
+          "end": 367,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘️change-object-smooth-shading/↩️inverse/🦀️component.rs",
+      "beforeHash": "ce34e8f9b6b16fbb2d2ab2c08e8068133a158908c0fd88d01860c0628884ad71",
+      "afterHash": "cd38142d9fccfcc05c484dc279b598c963acf326a1ee06980951302f8a1f89d8",
+      "edits": [
+        {
+          "start": 244,
+          "end": 250,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘️change-object-smooth-shading/🔺️diff/🦀️component.rs",
+      "beforeHash": "607a642e79d2798b0e7f2edda571404a34b9f31d1578bbbc97dee4f214f102b8",
+      "afterHash": "bae6b35ceb75580c9213dd89ba387eaac03bd0a39348ca62812fcdc0f08f3c4f",
+      "edits": [
+        {
+          "start": 387,
+          "end": 393,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-paint-layer/↩️inverse/🦀️component.rs",
+      "beforeHash": "46ee28da40861f7380a15b72d74aebc1b9b43498b53db6a3229c5cc0d9ede65d",
+      "afterHash": "48661adcfb51ca60c9efc99fbde9627f29a46904c4de87e56814e526ea26f2fc",
+      "edits": [
+        {
+          "start": 285,
+          "end": 291,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-paint-layer/🔺️diff/🦀️component.rs",
+      "beforeHash": "59166000e678ac5aa72b295e0fb782b4285b69f0c7c72b4eb3e6a8651db5568e",
+      "afterHash": "79c576ac0bad9138ef601e9f6dd87e3d342a23a58c1dc9c3b443dfb6f733456e",
+      "edits": [
+        {
+          "start": 454,
+          "end": 460,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️move-object/↩️inverse/🦀️component.rs",
+      "beforeHash": "9b8e19bc34e620bf58a4e0e00ab04ab00ad6ef862f6aeaad21a5776d70417624",
+      "afterHash": "07dede49d77e61c11f257af789c901c22686f04b1cbf591b7f45df136185c55b",
+      "edits": [
+        {
+          "start": 216,
+          "end": 222,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️move-object/🔺️diff/🦀️component.rs",
+      "beforeHash": "faa5434a306ad242ab15cb83e338466e33b624ede4b863f630f4583c62b9dbf1",
+      "afterHash": "7c25b8c9007694786ac6e1c5392ac5b91cc18439c8fe55dcf88dd9f17578a577",
+      "edits": [
+        {
+          "start": 563,
+          "end": 569,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-object/↩️inverse/🦀️component.rs",
+      "beforeHash": "73d55985a278b3188d087c08d1c4ec9d7f3f0997b8dde92745b4a427019d610b",
+      "afterHash": "ff2c31f4874422fae21bd4d1df777957f3ed789d10050864be79ef5ba4a46df1",
+      "edits": [
+        {
+          "start": 220,
+          "end": 226,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-object/🔺️diff/🦀️component.rs",
+      "beforeHash": "844431923529c0b0a67a1090386986a72dd5d895fbfc3403eb8170ad3b2f355e",
+      "afterHash": "cb3baed41ef2dfaf147680f8bf2b2472b7f087c6e393e25a04b996e3b6611405",
+      "edits": [
+        {
+          "start": 463,
+          "end": 469,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs",
+      "beforeHash": "3edf217aed7c861b7163f16e104772ca18485a7617cbe60a7f06c776b3111070",
+      "afterHash": "1566c7da1fa70d32b20ec0f239243683bb638706d43fbca93cd8b37d7cfe8aa6",
+      "edits": [
+        {
+          "start": 1452,
+          "end": 1458,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 1555,
+          "end": 1561,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 1823,
+          "end": 1829,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 1903,
+          "end": 1909,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 2162,
+          "end": 2168,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 2260,
+          "end": 2266,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 2505,
+          "end": 2511,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 2646,
+          "end": 2652,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 2997,
+          "end": 3003,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 3172,
+          "end": 3178,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 3352,
+          "end": 3358,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 3601,
+          "end": 3607,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 4118,
+          "end": 4124,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 4372,
+          "end": 4378,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 5120,
+          "end": 5126,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 5287,
+          "end": 5293,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 5869,
+          "end": 5875,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 6121,
+          "end": 6127,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 6778,
+          "end": 6784,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 6931,
+          "end": 6937,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 7177,
+          "end": 7183,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 7335,
+          "end": 7341,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 8114,
+          "end": 8120,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 8272,
+          "end": 8278,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 8518,
+          "end": 8524,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 8622,
+          "end": 8628,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 8794,
+          "end": 8800,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 8914,
+          "end": 8920,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 9092,
+          "end": 9098,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 9246,
+          "end": 9252,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 9492,
+          "end": 9498,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 9729,
+          "end": 9735,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 10010,
+          "end": 10016,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 10223,
+          "end": 10229,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 10658,
+          "end": 10664,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 10921,
+          "end": 10927,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 11438,
+          "end": 11444,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 11644,
+          "end": 11650,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 11887,
+          "end": 11893,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 12184,
+          "end": 12190,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 12656,
+          "end": 12662,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 12848,
+          "end": 12854,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 13077,
+          "end": 13083,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 13327,
+          "end": 13333,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 16796,
+          "end": 16802,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs",
+      "beforeHash": "3592958611baf6f606c24bb34ffd1b414a0dbb896cf5f98c7c43487242961ab3",
+      "afterHash": "b7adc970e48fbe1f6771ef8a3dce8da1e7c2ad5a2f433e2a7f8f3254e17ee054",
+      "edits": [
+        {
+          "start": 879,
+          "end": 885,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 1089,
+          "end": 1095,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs",
+      "beforeHash": "2244f0f67487b481932ced8f0addad4fc729af6e13465258f00cad402a90d816",
+      "afterHash": "cf5e6ba88867002988a192511adf6af8b0c71951de77f9ebea7c80850848fcd5",
+      "edits": [
+        {
+          "start": 158,
+          "end": 164,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 348,
+          "end": 354,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 10832,
+          "end": 10838,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 12648,
+          "end": 12654,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 13372,
+          "end": 13378,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 14096,
+          "end": 14102,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 14826,
+          "end": 14832,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 15561,
+          "end": 15567,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 16291,
+          "end": 16297,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 17020,
+          "end": 17026,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 17747,
+          "end": 17753,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 18376,
+          "end": 18382,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🟪️stl/🔖️ascii/✳️any/🦀️component.rs",
+      "beforeHash": "aec92da70c798051388235c5d0fbfbb73170698f910773da14d1b879788bbe05",
+      "afterHash": "176fdd7ee3210c5ccae067cb5f7ac58bd9fc59a90ed6e9da96aee671e45a1516",
+      "edits": [
+        {
+          "start": 174,
+          "end": 180,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 202,
+          "end": 208,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 556,
+          "end": 562,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🧊️gltf/🔖️2.0/✳️any/🦀️component.rs",
+      "beforeHash": "0d60ddcc3f9c8c993a81948c9cc89490e4d30925eadd11f8d9e92ef639cc9a9c",
+      "afterHash": "5fb523c5216ffc98bc8cda0a28429c22a6aa5beaa3ded508c7fee32c34a0bf49",
+      "edits": [
+        {
+          "start": 178,
+          "end": 184,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 206,
+          "end": 212,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 563,
+          "end": 569,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/☁️las/🔖️1.0/✳️any/🦀️component.rs",
+      "beforeHash": "9ff64e08b5c63d97ad8197e44fa03a2e7546468d2710d41a01b1b5ea3eced6fe",
+      "afterHash": "b4d38c01fe64a1298e13b87e39e093eaff998e9765b06cbc742dd11993594281",
+      "edits": [
+        {
+          "start": 174,
+          "end": 180,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 202,
+          "end": 208,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 556,
+          "end": 562,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️component.rs",
+      "beforeHash": "9d225ee72fe3948863a61f4c0f99ada0c5dc3d46f64c423fadde5acfbacaa013",
+      "afterHash": "3293298c577a2b1b2cf16f6d5a12fa461eef56a496020faf5e1c649ca41b01e8",
+      "edits": [
+        {
+          "start": 174,
+          "end": 180,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 202,
+          "end": 208,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 556,
+          "end": 562,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️component.rs",
+      "beforeHash": "0a73cb2ed2311a5171674da197c07c54dae21f17dfed37efa06f8e3d549e0571",
+      "afterHash": "38c75eda20333869b1db6edd347312ec90bce06549d68c5c9f06840d55ab5050",
+      "edits": [
+        {
+          "start": 174,
+          "end": 180,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 202,
+          "end": 208,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 556,
+          "end": 562,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs",
+      "beforeHash": "44deab73d1a25969815c0cd045dc226c28566eb83711c0cccb67ba976b052929",
+      "afterHash": "ab84dcf665285429038da7f415417da417560b4a117292799a04181e37e9dfa6",
+      "edits": [
+        {
+          "start": 512,
+          "end": 518,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 539,
+          "end": 545,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 709,
+          "end": 715,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🧊️obj/🔖️3.0/✳️any/🦀️component.rs",
+      "beforeHash": "04b97ebba41c2b0565b192da67f438ce8af84c23a951c5cb4769639c96f2926d",
+      "afterHash": "0e0c39e09d61d6cbd84eb3bc1692429246406fc01d3a9f10fbf1b34a86ae12d7",
+      "edits": [
+        {
+          "start": 174,
+          "end": 180,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 202,
+          "end": 208,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 556,
+          "end": 562,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/☁️ply/🔖️1.0/✳️any/🦀️component.rs",
+      "beforeHash": "bd62d75b6e75f86ee3cdb025d18e056c451f091546129535b50e81d1713e552b",
+      "afterHash": "16c3093a5609523a4407450890889558c77a26d2efd0734529c94940ee6b0ee2",
+      "edits": [
+        {
+          "start": 174,
+          "end": 180,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 202,
+          "end": 208,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 556,
+          "end": 562,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs",
+      "beforeHash": "83009f8ac8b370ef29213fd7d110e6ff579eb682c783b78de5111e6d3033be01",
+      "afterHash": "9c93bec8ad5d49b7480b9e4ef31035c5736dd4f712d668abe81480a08fd89f02",
+      "edits": [
+        {
+          "start": 434,
+          "end": 440,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 462,
+          "end": 468,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 764,
+          "end": 770,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🟪️stl/🔖️ascii/✳️any/🦀️component.rs",
+      "beforeHash": "fc5c61df0b6f2288d17648d33f092e32b2334f3deca78272805d4c5f0ad3ee42",
+      "afterHash": "69e4ccaf396100bf1ebf2936625110f0bc49343aca4b595573e73e2f4ce8ebfc",
+      "edits": [
+        {
+          "start": 174,
+          "end": 180,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 202,
+          "end": 208,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 439,
+          "end": 445,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🧊️gltf/🔖️2.0/✳️any/🦀️component.rs",
+      "beforeHash": "e7c800b48f924325c1db05d43650014511faa1f558c49d63ea0b935c4cf5b397",
+      "afterHash": "ef65b27a9c21f944b98da4bc10cb9ba95ac9446593de64b5010618b2812808d5",
+      "edits": [
+        {
+          "start": 178,
+          "end": 184,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 206,
+          "end": 212,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 446,
+          "end": 452,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/☁️las/🔖️1.0/✳️any/🦀️component.rs",
+      "beforeHash": "31a7496b30082aac47dd1d1943bf0973625518d7e688206ea8dbfcb5012efd38",
+      "afterHash": "f200eee7cb878afd0072d179445a2be56a88e247a49399c47f7895a93cdcb859",
+      "edits": [
+        {
+          "start": 174,
+          "end": 180,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 202,
+          "end": 208,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 439,
+          "end": 445,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️component.rs",
+      "beforeHash": "143806dcd5852566b0e7758dd4e1d40a9bca43937d7f5c57e4341387ed3be46b",
+      "afterHash": "70db8e3dd5411678e3028edb0e1cd44a6f76958d279c769c046a6b849f7e3ea1",
+      "edits": [
+        {
+          "start": 174,
+          "end": 180,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 202,
+          "end": 208,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 439,
+          "end": 445,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️component.rs",
+      "beforeHash": "621e6a33abf44bce7d3a0203cd1f00cc0b231cd6a4cc8a28188dbc11d1e45cec",
+      "afterHash": "fc8e6a650622dd69c4c70969e6f51deadc3590e48746ab65709dc2e4bae82fbb",
+      "edits": [
+        {
+          "start": 174,
+          "end": 180,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 202,
+          "end": 208,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 439,
+          "end": 445,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📄txt/🔖️utf-8/✳️any/🦀️component.rs",
+      "beforeHash": "f11694ddc9814d37fb36dea12e5797d964858ae982b75fcd991b172743427527",
+      "afterHash": "98d88fd5648e616d3280649d72e8f96c4498bfa5854e7bc92b4b31bf58e1f731",
+      "edits": [
+        {
+          "start": 515,
+          "end": 521,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 542,
+          "end": 548,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 714,
+          "end": 720,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🧊️obj/🔖️3.0/✳️any/🦀️component.rs",
+      "beforeHash": "215327eb05bda7ed9ae874b3ed3fcdb5f5dc5d51daa38e7eaad8ac6e51312fcb",
+      "afterHash": "d39240d32947ad2647df7a3f82fc87382d1042fc2f7010d6d8c0673f640aa404",
+      "edits": [
+        {
+          "start": 174,
+          "end": 180,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 202,
+          "end": 208,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 439,
+          "end": 445,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/☁️ply/🔖️1.0/✳️any/🦀️component.rs",
+      "beforeHash": "22017b71ce436acd8e82540b44291b60517f0e043a371b6c8874a7cef0aa9ed2",
+      "afterHash": "a45519f26bc714c1b8ada79ad0337aea5329d267835e9172a2549fbbc38a7c77",
+      "edits": [
+        {
+          "start": 174,
+          "end": 180,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 202,
+          "end": 208,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 439,
+          "end": 445,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs",
+      "beforeHash": "fe4660afba03836f0d641019956e9b441cefc31536ed3c8e3bdb530a697de48a",
+      "afterHash": "486f99a4f080531f2bfcedeb1c6c2686bed9ba899a9d0bcea1bb70e85ee2a557",
+      "edits": [
+        {
+          "start": 264,
+          "end": 270,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 292,
+          "end": 298,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 664,
+          "end": 670,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs",
+      "beforeHash": "0d411362323e3abc9588258b8dd53d3cf2641f08477721f57f6d59b7fbfccac5",
+      "afterHash": "f08bb097ca8e4125d4de91502606223b12ccfb03a6ecc8b3bf64ab9a2ac89838",
+      "edits": [
+        {
+          "start": 120,
+          "end": 126,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        },
+        {
+          "start": 316,
+          "end": 322,
+          "before": "async ",
+          "after": "",
+          "kind": "decorative-async"
+        }
+      ]
+    }
+  ]
+}

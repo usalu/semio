@@ -27,14 +27,14 @@ pub enum WriterMutation {
 
 /// 🧮️ Diff-first apply — matches every other migrated facet (`operation.diff(base).apply(base)`,
 /// per wave 0's confirmation that `vcs::apply_mutation` is already diff-first under the hood).
-pub async fn apply_writer_mutation(snapshot: &mut WriterSnapshot, mutation: &WriterMutation) -> protocol::MutationApplyResult<()> {
+pub fn apply_writer_mutation(snapshot: &mut WriterSnapshot, mutation: &WriterMutation) -> protocol::MutationApplyResult<()> {
     let next = mutation.diff(snapshot).diff().apply(snapshot)?;
 
     *snapshot = next;
     Ok(())
 }
 
-pub async fn inverse_writer_mutation(snapshot: &WriterSnapshot, mutation: &WriterMutation) -> Vec<WriterMutation> {
+pub fn inverse_writer_mutation(snapshot: &WriterSnapshot, mutation: &WriterMutation) -> Vec<WriterMutation> {
     mutation.inverse(snapshot)
 }
 
@@ -96,7 +96,7 @@ mod tests {
 
     type WriterStore = store::ArtifactStore<WriterSnapshot, WriterMutation>;
 
-    async fn seeded_store() -> WriterStore {
+    fn seeded_store() -> WriterStore {
         WriterStore::new(store::create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None)).expect("valid artifact store fixture")
     }
 
@@ -138,7 +138,7 @@ mod tests {
     //#region 🔖️MutationLaws
     #[semio_framework_async_macros::async_test]
     async fn rename_writer_and_edit_text_invert_to_the_prior_field_value() {
-        let snapshot = WriterSnapshot { id: "old-id".into(), document: crate::artifacts::writer::document_child_handle_and_cache("old-id", "old text", "plaintext"), ..schema::empty_writer_snapshot() };
+        let snapshot = WriterSnapshot { id: "old-id".into(), document: crate::artifacts::writer::document_child_handle_with_text("old-id", "old text", "plaintext"), ..schema::empty_writer_snapshot() };
         assert_eq!(WriterMutation::RenameWriter(RenameWriter { new_id: "new-id".into() }).inverse(&snapshot), vec![WriterMutation::RenameWriter(RenameWriter { new_id: "old-id".into() })]);
         assert_eq!(WriterMutation::EditText(EditText { text: "new text".into() }).inverse(&snapshot), vec![WriterMutation::EditText(EditText { text: "old text".into() })]);
     }
@@ -159,7 +159,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn edit_text_obeys_the_inverse_and_diff_absorb_laws() {
-        let base = WriterSnapshot { document: crate::artifacts::writer::document_child_handle_and_cache("empty", "first", "plaintext"), ..schema::empty_writer_snapshot() };
+        let base = WriterSnapshot { document: crate::artifacts::writer::document_child_handle_with_text("empty", "first", "plaintext"), ..schema::empty_writer_snapshot() };
         let mutation = WriterMutation::EditText(EditText { text: "second".into() });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base).diff().clone();
@@ -176,7 +176,7 @@ mod tests {
     /// pending) once it lands.
     #[semio_framework_async_macros::async_test]
     async fn edit_text_outcome_is_deterministic() {
-        let base = WriterSnapshot { document: crate::artifacts::writer::document_child_handle_and_cache("empty", "first", "plaintext"), ..schema::empty_writer_snapshot() };
+        let base = WriterSnapshot { document: crate::artifacts::writer::document_child_handle_with_text("empty", "first", "plaintext"), ..schema::empty_writer_snapshot() };
         let mutation = WriterMutation::EditText(EditText { text: "second".into() });
         protocol::testkit::assert_outcome_deterministic(&base, &mutation);
     }

@@ -20,6 +20,285 @@
     {
       "id": "layout-1-any",
       "capability": "layout-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-data-fields",
+          "sourceMutationDirectoryName": "🧾change-data-fields",
+          "mutationDirectoryName": "🧾change-data-fields",
+          "scenarios": [
+            {
+              "id": "attaches-a-data-fields-payload",
+              "directoryName": "🧪️attaches-a-data-fields-payload"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-frame-columns",
+          "sourceMutationDirectoryName": "🔢change-frame-columns",
+          "mutationDirectoryName": "🔢change-frame-columns",
+          "scenarios": [
+            {
+              "id": "splits-the-text-frame-into-two-columns",
+              "directoryName": "🧪️splits-the-text-frame-into-two-columns"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-frame-fill",
+          "sourceMutationDirectoryName": "🎨change-frame-fill",
+          "mutationDirectoryName": "🎨change-frame-fill",
+          "scenarios": [
+            {
+              "id": "repaints-the-rect-frame-fill",
+              "directoryName": "🧪️repaints-the-rect-frame-fill"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-frame-stroke",
+          "sourceMutationDirectoryName": "🖊️change-frame-stroke",
+          "mutationDirectoryName": "🖊️change-frame-stroke",
+          "scenarios": [
+            {
+              "id": "adds-a-stroke-to-the-rect-frame",
+              "directoryName": "🧪️adds-a-stroke-to-the-rect-frame"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-frame-wrap-mode",
+          "sourceMutationDirectoryName": "🔤change-frame-wrap-mode",
+          "mutationDirectoryName": "🔤change-frame-wrap-mode",
+          "scenarios": [
+            {
+              "id": "switches-the-text-frame-to-column-wrap",
+              "directoryName": "🧪️switches-the-text-frame-to-column-wrap"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-link-path",
+          "sourceMutationDirectoryName": "🔗change-link-path",
+          "mutationDirectoryName": "🔗change-link-path",
+          "scenarios": [
+            {
+              "id": "relinks-link-1-to-a-new-file",
+              "directoryName": "🧪️relinks-link-1-to-a-new-file"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-page-height",
+          "sourceMutationDirectoryName": "↕️change-page-height",
+          "mutationDirectoryName": "↕️change-page-height",
+          "scenarios": [
+            {
+              "id": "lengthens-page-1",
+              "directoryName": "🧪️lengthens-page-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-page-width",
+          "sourceMutationDirectoryName": "↔️change-page-width",
+          "mutationDirectoryName": "↔️change-page-width",
+          "scenarios": [
+            {
+              "id": "widens-page-1",
+              "directoryName": "🧪️widens-page-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-print-target",
+          "sourceMutationDirectoryName": "🖨️change-print-target",
+          "mutationDirectoryName": "🖨️change-print-target",
+          "scenarios": [
+            {
+              "id": "sets-a-cmyk-print-target",
+              "directoryName": "🧪️sets-a-cmyk-print-target"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-frame",
+          "sourceMutationDirectoryName": "➕create-frame",
+          "mutationDirectoryName": "➕create-frame",
+          "scenarios": [
+            {
+              "id": "inserts-a-rect-frame-at-index-1",
+              "directoryName": "🧪️inserts-a-rect-frame-at-index-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-link",
+          "sourceMutationDirectoryName": "🖇️create-link",
+          "mutationDirectoryName": "🖇️create-link",
+          "scenarios": [
+            {
+              "id": "appends-link-3",
+              "directoryName": "🧪️appends-link-3"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-page",
+          "sourceMutationDirectoryName": "🌱create-page",
+          "mutationDirectoryName": "🌱create-page",
+          "scenarios": [
+            {
+              "id": "appends-page-3",
+              "directoryName": "🧪️appends-page-3"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-story",
+          "sourceMutationDirectoryName": "📖create-story",
+          "mutationDirectoryName": "📖create-story",
+          "scenarios": [
+            {
+              "id": "appends-story-3",
+              "directoryName": "🧪️appends-story-3"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-frame",
+          "sourceMutationDirectoryName": "➖delete-frame",
+          "mutationDirectoryName": "➖delete-frame",
+          "scenarios": [
+            {
+              "id": "removes-the-text-frame-and-its-layer-membership",
+              "directoryName": "🧪️removes-the-text-frame-and-its-layer-membership"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-link",
+          "sourceMutationDirectoryName": "✂️delete-link",
+          "mutationDirectoryName": "✂️delete-link",
+          "scenarios": [
+            {
+              "id": "removes-link-2",
+              "directoryName": "🧪️removes-link-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-page",
+          "sourceMutationDirectoryName": "🗑️delete-page",
+          "mutationDirectoryName": "🗑️delete-page",
+          "scenarios": [
+            {
+              "id": "removes-page-2",
+              "directoryName": "🧪️removes-page-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-story",
+          "sourceMutationDirectoryName": "📕delete-story",
+          "mutationDirectoryName": "📕delete-story",
+          "scenarios": [
+            {
+              "id": "removes-story-2",
+              "directoryName": "🧪️removes-story-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-story",
+          "sourceMutationDirectoryName": "📝edit-story",
+          "mutationDirectoryName": "📝edit-story",
+          "scenarios": [
+            {
+              "id": "rewrites-story-1-body",
+              "directoryName": "🧪️rewrites-story-1-body"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-frame",
+          "sourceMutationDirectoryName": "🕹️move-frame",
+          "mutationDirectoryName": "🕹️move-frame",
+          "scenarios": [
+            {
+              "id": "moves-the-rect-frame",
+              "directoryName": "🧪️moves-the-rect-frame"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-layout",
+          "sourceMutationDirectoryName": "✏️rename-layout",
+          "mutationDirectoryName": "✏️rename-layout",
+          "scenarios": [
+            {
+              "id": "renames-the-document",
+              "directoryName": "🧪️renames-the-document"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-page",
+          "sourceMutationDirectoryName": "🏷️rename-page",
+          "mutationDirectoryName": "🏷️rename-page",
+          "scenarios": [
+            {
+              "id": "renames-page-1",
+              "directoryName": "🧪️renames-page-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-pages",
+          "sourceMutationDirectoryName": "🔀reorder-pages",
+          "mutationDirectoryName": "🔀reorder-pages",
+          "scenarios": [
+            {
+              "id": "moves-page-1-behind-page-2",
+              "directoryName": "🧪️moves-page-1-behind-page-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-frame",
+          "sourceMutationDirectoryName": "📏resize-frame",
+          "mutationDirectoryName": "📏resize-frame",
+          "scenarios": [
+            {
+              "id": "resizes-the-rect-frame",
+              "directoryName": "🧪️resizes-the-rect-frame"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-page-columns",
+          "sourceMutationDirectoryName": "🏛️update-page-columns",
+          "mutationDirectoryName": "🏛️update-page-columns",
+          "scenarios": [
+            {
+              "id": "splits-page-1-into-three-columns",
+              "directoryName": "🧪️splits-page-1-into-three-columns"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-page-margins",
+          "sourceMutationDirectoryName": "📐update-page-margins",
+          "mutationDirectoryName": "📐update-page-margins",
+          "scenarios": [
+            {
+              "id": "sets-asymmetric-margins-on-page-1",
+              "directoryName": "🧪️sets-asymmetric-margins-on-page-1"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "rename-layout",
         "change-print-target",

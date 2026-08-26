@@ -23,6 +23,241 @@
     {
       "id": "iso16757-1-any",
       "capability": "iso16757-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "add-selection-constraint",
+          "sourceMutationDirectoryName": "🛁add-selection-constraint",
+          "mutationDirectoryName": "🛁add-selection-constraint",
+          "scenarios": [
+            {
+              "id": "appends-a-width-under-800-constraint",
+              "directoryName": "🧪️appends-a-width-under-800-constraint"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-exchange-process",
+          "sourceMutationDirectoryName": "🍃change-exchange-process",
+          "mutationDirectoryName": "🍃change-exchange-process",
+          "scenarios": [
+            {
+              "id": "advances-the-exchange-stage-to-determine-product",
+              "directoryName": "🧪️advances-the-exchange-stage-to-determine-product"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-part-number-input",
+          "sourceMutationDirectoryName": "🌱change-part-number-input",
+          "mutationDirectoryName": "🌱change-part-number-input",
+          "scenarios": [
+            {
+              "id": "raises-the-height-part-number-input-to-750",
+              "directoryName": "🧪️raises-the-height-part-number-input-to-750"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-selection-class",
+          "sourceMutationDirectoryName": "🌴change-selection-class",
+          "mutationDirectoryName": "🌴change-selection-class",
+          "scenarios": [
+            {
+              "id": "retargets-the-selection-at-the-towel-radiator-class",
+              "directoryName": "🧪️retargets-the-selection-at-the-towel-radiator-class"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-selection-series",
+          "sourceMutationDirectoryName": "🌼change-selection-series",
+          "mutationDirectoryName": "🌼change-selection-series",
+          "scenarios": [
+            {
+              "id": "narrows-the-selection-to-the-pr-plus-series",
+              "directoryName": "🧪️narrows-the-selection-to-the-pr-plus-series"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-product",
+          "sourceMutationDirectoryName": "🍁create-product",
+          "mutationDirectoryName": "🍁create-product",
+          "scenarios": [
+            {
+              "id": "appends-a-pr900-product-to-the-existing-series",
+              "directoryName": "🧪️appends-a-pr900-product-to-the-existing-series"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-product-group",
+          "sourceMutationDirectoryName": "🍀create-product-group",
+          "mutationDirectoryName": "🍀create-product-group",
+          "scenarios": [
+            {
+              "id": "appends-a-towel-radiators-group",
+              "directoryName": "🧪️appends-a-towel-radiators-group"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-property-definition",
+          "sourceMutationDirectoryName": "🌾create-property-definition",
+          "mutationDirectoryName": "🌾create-property-definition",
+          "scenarios": [
+            {
+              "id": "appends-a-selection-scoped-length-property",
+              "directoryName": "🧪️appends-a-selection-scoped-length-property"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-subject",
+          "sourceMutationDirectoryName": "🌵create-subject",
+          "mutationDirectoryName": "🌵create-subject",
+          "scenarios": [
+            {
+              "id": "appends-a-towel-radiator-subject-under-the-radiator-parent",
+              "directoryName": "🧪️appends-a-towel-radiator-subject-under-the-radiator-parent"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-product",
+          "sourceMutationDirectoryName": "🌸delete-product",
+          "mutationDirectoryName": "🌸delete-product",
+          "scenarios": [
+            {
+              "id": "removes-the-pr600-product-from-the-catalogue",
+              "directoryName": "🧪️removes-the-pr600-product-from-the-catalogue"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-product-group",
+          "sourceMutationDirectoryName": "🌹delete-product-group",
+          "mutationDirectoryName": "🌹delete-product-group",
+          "scenarios": [
+            {
+              "id": "removes-the-radiators-group-and-strands-its-class",
+              "directoryName": "🧪️removes-the-radiators-group-and-strands-its-class"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-property-definition",
+          "sourceMutationDirectoryName": "🌺delete-property-definition",
+          "mutationDirectoryName": "🌺delete-property-definition",
+          "scenarios": [
+            {
+              "id": "removes-the-height-property-definition",
+              "directoryName": "🧪️removes-the-height-property-definition"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-subject",
+          "sourceMutationDirectoryName": "🌻delete-subject",
+          "mutationDirectoryName": "🌻delete-subject",
+          "scenarios": [
+            {
+              "id": "removes-the-radiator-subject-from-the-dictionary",
+              "directoryName": "🧪️removes-the-radiator-subject-from-the-dictionary"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-part-number-input",
+          "sourceMutationDirectoryName": "🌿remove-part-number-input",
+          "mutationDirectoryName": "🌿remove-part-number-input",
+          "scenarios": [
+            {
+              "id": "drops-the-length-part-number-input",
+              "directoryName": "🧪️drops-the-length-part-number-input"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-selection-constraint",
+          "sourceMutationDirectoryName": "🛋️remove-selection-constraint",
+          "mutationDirectoryName": "🛋️remove-selection-constraint",
+          "scenarios": [
+            {
+              "id": "drops-the-trailing-length-constraint",
+              "directoryName": "🧪️drops-the-trailing-length-constraint"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-catalogue",
+          "sourceMutationDirectoryName": "🌲rename-catalogue",
+          "mutationDirectoryName": "🌲rename-catalogue",
+          "scenarios": [
+            {
+              "id": "restamps-the-catalogue-as-the-2026-edition",
+              "directoryName": "🧪️restamps-the-catalogue-as-the-2026-edition"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-manufacturer",
+          "sourceMutationDirectoryName": "🌳rename-manufacturer",
+          "mutationDirectoryName": "🌳rename-manufacturer",
+          "scenarios": [
+            {
+              "id": "adds-the-ag-suffix-to-the-manufacturer",
+              "directoryName": "🧪️adds-the-ag-suffix-to-the-manufacturer"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-product",
+          "sourceMutationDirectoryName": "🛏️rename-product",
+          "mutationDirectoryName": "🛏️rename-product",
+          "scenarios": [
+            {
+              "id": "renames-pr600-to-the-compact-variant-name",
+              "directoryName": "🧪️renames-pr600-to-the-compact-variant-name"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-product-group",
+          "sourceMutationDirectoryName": "🚿rename-product-group",
+          "mutationDirectoryName": "🚿rename-product-group",
+          "scenarios": [
+            {
+              "id": "renames-the-radiators-group-to-panel-radiators",
+              "directoryName": "🧪️renames-the-radiators-group-to-panel-radiators"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-part-number-rule",
+          "sourceMutationDirectoryName": "🍂replace-part-number-rule",
+          "mutationDirectoryName": "🍂replace-part-number-rule",
+          "scenarios": [
+            {
+              "id": "swaps-the-literal-rule-for-a-height-driven-script",
+              "directoryName": "🧪️swaps-the-literal-rule-for-a-height-driven-script"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-script-limits",
+          "sourceMutationDirectoryName": "🌷update-script-limits",
+          "mutationDirectoryName": "🌷update-script-limits",
+          "scenarios": [
+            {
+              "id": "doubles-the-step-budget-and-quintuples-the-timeout",
+              "directoryName": "🧪️doubles-the-step-budget-and-quintuples-the-timeout"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "change-exchange-process",
         "update-script-limits",

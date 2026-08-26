@@ -17,22 +17,22 @@ pub struct RenameWriter {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn rename_writer(new_id: String) -> WriterMutation {
+pub fn rename_writer(new_id: String) -> WriterMutation {
     WriterMutation::RenameWriter(RenameWriter { new_id })
 }
 
 impl MutationKind<WriterSnapshot, WriterMutation> for RenameWriter {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "writer", kind: "rename-writer", record: "RenamedWriter" };
 
-    async fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
+    fn diff(&self, base: &WriterSnapshot) -> protocol::MutationOutcome<WriterDiff> {
         super::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &WriterSnapshot) -> Vec<WriterMutation> {
+    fn inverse(&self, base: &WriterSnapshot) -> Vec<WriterMutation> {
         super::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Rename document to \"{}\"", self.new_id)
     }
 }

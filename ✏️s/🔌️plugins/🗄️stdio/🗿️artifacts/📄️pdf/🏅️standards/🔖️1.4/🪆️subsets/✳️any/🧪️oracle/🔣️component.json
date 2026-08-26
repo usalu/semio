@@ -21,6 +21,21 @@
     {
       "id": "pdf-1-4-any",
       "capability": "pdf-1-4-mutate",
+      "standardDirectoryName": "🔖️1.4",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "shrinks-the-page-to-a5-and-rewrites-its-text",
+              "directoryName": "🧪️shrinks-the-page-to-a5-and-rewrites-its-text"
+            }
+          ]
+        }
+      ],
       "kinds": ["no-mutation", "set-snapshot"]
     }
   ]

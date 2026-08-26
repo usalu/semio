@@ -20,6 +20,54 @@
     {
       "id": "s-space-1-any",
       "capability": "s-space-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "create-artifact",
+          "sourceMutationDirectoryName": "🌱create-artifact",
+          "mutationDirectoryName": "🌱create-artifact",
+          "scenarios": [
+            {
+              "id": "appends-artifact-3-to-the-index",
+              "directoryName": "🧪️appends-artifact-3-to-the-index"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-artifact",
+          "sourceMutationDirectoryName": "🗑️delete-artifact",
+          "mutationDirectoryName": "🗑️delete-artifact",
+          "scenarios": [
+            {
+              "id": "removes-artifact-2-from-the-index",
+              "directoryName": "🧪️removes-artifact-2-from-the-index"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-artifact",
+          "sourceMutationDirectoryName": "🏷️rename-artifact",
+          "mutationDirectoryName": "🏷️rename-artifact",
+          "scenarios": [
+            {
+              "id": "renames-artifact-1",
+              "directoryName": "🧪️renames-artifact-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "touch-artifact",
+          "sourceMutationDirectoryName": "🕒touch-artifact",
+          "mutationDirectoryName": "🕒touch-artifact",
+          "scenarios": [
+            {
+              "id": "stamps-artifact-1-with-a-new-editor",
+              "directoryName": "🧪️stamps-artifact-1-with-a-new-editor"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-artifact",
         "delete-artifact",

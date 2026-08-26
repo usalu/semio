@@ -108,19 +108,19 @@ pub mod derived_construction {
         type Snapshot = GltfSnapshot;
         type Mutation = GltfMutation;
         type Diff = GltfMutationDiff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: GltfSnapshot::default(), diagnostics: Vec::new() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<GltfSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::from_snapshot(<GltfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<GltfSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<GltfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = protocol::Mutation::diff(&mutation, &self.snapshot);
             if outcome.worst_level().is_some_and(|level| level >= dsl::Severity::Error) {
                 self.diagnostics.push(dsl::Diagnostic::error("stdio.gltf.mutation-rejected", dsl::TextSpan::at(1, 1), format!("{:?}", outcome.messages())));
@@ -135,11 +135,11 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <GltfMutationDiff as protocol::MutationDiff<GltfSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -323,7 +323,7 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn typed_constructors_build_a_decodable_triangle() {
-            let mut b = GltfBuilderConstruction::empty().await;
+            let mut b = GltfBuilderConstruction::empty();
             b.set_asset_version("2.0");
             let mut bytes = Vec::new();
             let verts: [[f32; 3]; 3] = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]];
@@ -341,7 +341,7 @@ pub mod derived_construction {
             let node = b.add_node(Some(mesh));
             let scene = b.add_scene(vec![node], None);
             b.set_default_scene(scene);
-            let snapshot = b.build().await.expect("build");
+            let snapshot = b.build().expect("build");
 
             assert_eq!(snapshot.document.asset.version, "2.0");
             let decoded = crate::artifacts::gltf::engine::decode_accessor(&snapshot.document, &snapshot.buffers, acc).expect("decode");
@@ -397,7 +397,7 @@ pub mod derived_analysis {
         type Parts = GltfParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
 
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if looks_like_glb(bytes) {
@@ -416,7 +416,7 @@ pub mod derived_analysis {
             }
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = GltfParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -465,20 +465,20 @@ pub mod derived_analysis {
             let mut bytes = vec![b'g', b'l', b'T', b'F'];
             bytes.extend_from_slice(&2u32.to_le_bytes());
             bytes.extend_from_slice(&[0u8; 4]);
-            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)).await, IoConfidence::High);
-            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a glb")).await, IoConfidence::Low);
+            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::High);
+            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a glb")), IoConfidence::Low);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn sniff_recognizes_gltf_json() {
-            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Text(r#"{"asset":{"version":"2.0"}}"#)).await, IoConfidence::High);
-            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Text("not json")).await, IoConfidence::Medium);
+            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Text(r#"{"asset":{"version":"2.0"}}"#)), IoConfidence::High);
+            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Text("not json")), IoConfidence::Medium);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn analyze_decodes_real_gltf_json_text_directly() {
             let text = r#"{"asset":{"version":"2.0"},"scenes":[]}"#;
-            let analysis = GltfAnalyzerAnalysis::analyze(&[AnalyzeSource::Text(text)]).await;
+            let analysis = GltfAnalyzerAnalysis::analyze(&[AnalyzeSource::Text(text)]);
             assert_eq!(analysis.confidence, IoConfidence::High);
             let snap = analysis.parts.snapshot.expect("snapshot");
             assert_eq!(snap.document.asset.version, "2.0");

@@ -20,6 +20,175 @@
     {
       "id": "mathematical-1-any",
       "capability": "mathematical-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-coefficient",
+          "sourceMutationDirectoryName": "🔄️change-coefficient",
+          "mutationDirectoryName": "🔄️change-coefficient",
+          "scenarios": [
+            {
+              "id": "raises-the-leading-coefficient-to-three-halves",
+              "directoryName": "🧪️raises-the-leading-coefficient-to-three-halves"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-graph-directed",
+          "sourceMutationDirectoryName": "🔀️change-graph-directed",
+          "mutationDirectoryName": "🔀️change-graph-directed",
+          "scenarios": [
+            {
+              "id": "keeps-an-already-directed-graph-directed",
+              "directoryName": "🧪️keeps-an-already-directed-graph-directed"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-label",
+          "sourceMutationDirectoryName": "🏷️change-node-label",
+          "mutationDirectoryName": "🏷️change-node-label",
+          "scenarios": [
+            {
+              "id": "rejects-relabelling-a-node-that-is-not-in-the-graph",
+              "directoryName": "🧪️rejects-relabelling-a-node-that-is-not-in-the-graph"
+            }
+          ]
+        },
+        {
+          "mutationId": "connect-nodes",
+          "sourceMutationDirectoryName": "🔗️connect-nodes",
+          "mutationDirectoryName": "🔗️connect-nodes",
+          "scenarios": [
+            {
+              "id": "rejects-an-edge-between-two-absent-endpoints",
+              "directoryName": "🧪️rejects-an-edge-between-two-absent-endpoints"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-node",
+          "sourceMutationDirectoryName": "🟢️create-node",
+          "mutationDirectoryName": "🟢️create-node",
+          "scenarios": [
+            {
+              "id": "rejects-a-duplicate-node-id",
+              "directoryName": "🧪️rejects-a-duplicate-node-id"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-node",
+          "sourceMutationDirectoryName": "❌️delete-node",
+          "mutationDirectoryName": "❌️delete-node",
+          "scenarios": [
+            {
+              "id": "rejects-deleting-a-node-that-is-not-in-the-graph",
+              "directoryName": "🧪️rejects-deleting-a-node-that-is-not-in-the-graph"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-nodes",
+          "sourceMutationDirectoryName": "🗑️delete-nodes",
+          "mutationDirectoryName": "🗑️delete-nodes",
+          "scenarios": [
+            {
+              "id": "rejects-a-bulk-delete-where-every-id-is-absent",
+              "directoryName": "🧪️rejects-a-bulk-delete-where-every-id-is-absent"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-nodes",
+          "sourceMutationDirectoryName": "✂️disconnect-nodes",
+          "mutationDirectoryName": "✂️disconnect-nodes",
+          "scenarios": [
+            {
+              "id": "rejects-severing-an-edge-that-is-not-in-the-graph",
+              "directoryName": "🧪️rejects-severing-an-edge-that-is-not-in-the-graph"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-point",
+          "sourceMutationDirectoryName": "➕️insert-point",
+          "mutationDirectoryName": "➕️insert-point",
+          "scenarios": [
+            {
+              "id": "seeds-the-empty-cloud-with-its-first-point",
+              "directoryName": "🧪️seeds-the-empty-cloud-with-its-first-point"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-node",
+          "sourceMutationDirectoryName": "🕹️move-node",
+          "mutationDirectoryName": "🕹️move-node",
+          "scenarios": [
+            {
+              "id": "rejects-moving-a-node-that-is-not-in-the-graph",
+              "directoryName": "🧪️rejects-moving-a-node-that-is-not-in-the-graph"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-point",
+          "sourceMutationDirectoryName": "🎯️move-point",
+          "mutationDirectoryName": "🎯️move-point",
+          "scenarios": [
+            {
+              "id": "rejects-moving-a-point-that-is-not-in-the-cloud",
+              "directoryName": "🧪️rejects-moving-a-point-that-is-not-in-the-cloud"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-point",
+          "sourceMutationDirectoryName": "➖️remove-point",
+          "mutationDirectoryName": "➖️remove-point",
+          "scenarios": [
+            {
+              "id": "rejects-removing-a-point-from-an-empty-cloud",
+              "directoryName": "🧪️rejects-removing-a-point-from-an-empty-cloud"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-graph",
+          "sourceMutationDirectoryName": "🔁️replace-graph",
+          "mutationDirectoryName": "🔁️replace-graph",
+          "scenarios": [
+            {
+              "id": "replays-the-identical-empty-graph",
+              "directoryName": "🧪️replays-the-identical-empty-graph"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-points",
+          "sourceMutationDirectoryName": "🌀️replace-points",
+          "mutationDirectoryName": "🌀️replace-points",
+          "scenarios": [
+            {
+              "id": "replays-the-identical-empty-point-cloud",
+              "directoryName": "🧪️replays-the-identical-empty-point-cloud"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-graph-algorithm",
+          "sourceMutationDirectoryName": "🧮️update-graph-algorithm",
+          "mutationDirectoryName": "🧮️update-graph-algorithm",
+          "scenarios": [
+            {
+              "id": "restates-the-unset-algorithm-and-its-absent-seed",
+              "directoryName": "🧪️restates-the-unset-algorithm-and-its-absent-seed"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "change-graph-directed",
         "update-graph-algorithm",

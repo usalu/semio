@@ -21,7 +21,7 @@ use crate::editor::gis2d::terminology::gis2d_labels;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     tree_item, tree_item_with_action, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition,
-    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode,
+    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode,
     SelectionSpec, UiNode, UiTreeItemNode, WindowMeasure, INTERACTION_SELECT_ACTION_ID,
 };
 use serde_json::{json, Value};
@@ -318,7 +318,7 @@ impl ArtifactEditor for Gis2dPlayApp {
         factory: "BoundedFirstStepCommandJobFactory",
         contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
         tools: [
-            "setActiveExample", "patchPositions", "patchRoutes", "patchRoute", "toggleLayerVisibility", "fitWorld", "setCamera", "setRenderMode", "setVectorStyle", "setLodMode", "focusFeature", "setLayerStrokeScale", "openSource",
+            "setActiveExample", "patchPositions", "patchRoutes", "patchRoute", "toggleLayerVisibility", "fitWorld", "setCamera", "setRenderMode", "setVectorStyle", "setLodMode", "focusFeature", "setLayerStrokeScale", "openSource", "setLocale",
         ]
     }
 
@@ -342,17 +342,17 @@ impl ArtifactEditor for Gis2dPlayApp {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::gis2d::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> GisMapSnapshot {
+    fn initial_snapshot() -> GisMapSnapshot {
         crate::artifacts::gismap::schema::default_document()
     }
 
     /// 🔌️ `features:in`/`map:out` (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) plus the
     /// implicit document ports.
-    async fn io() -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(gis2d_io())
     }
 
@@ -365,11 +365,11 @@ impl ArtifactEditor for Gis2dPlayApp {
     /// 🎞️ `map:out` (see `gis2d_map_media` in `🔖️Io` below) plus the inherited
     /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
-    async fn export_media(port: &str, doc: &ArtifactView<'_, GisMapSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, GisMapSnapshot>) -> Result<Media, MediaError> {
         match port {
             "map:out" => Ok(gis2d_map_media(doc.snapshot)),
             "document:out" => {
-                let media_type = Self::io().await.map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -381,7 +381,7 @@ impl ArtifactEditor for Gis2dPlayApp {
     /// add/patch/remove operations against every collection (a generic vector-features sink — not
     /// pinned to `2d.map`, so a `draw`/another `gis2d`'s producer both work) plus the inherited
     /// `document:in` default (replicated inline for the same reason as `export_media`).
-    async fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, GisMapSnapshot>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, GisMapSnapshot>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "features:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -400,7 +400,7 @@ impl ArtifactEditor for Gis2dPlayApp {
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let snapshot = <GisMapSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                match Self::whole_document_operation(snapshot).await {
+                match Self::whole_document_operation(snapshot) {
                     Some(operation) => Ok(Emit::mutations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
                 }
@@ -409,14 +409,14 @@ impl ArtifactEditor for Gis2dPlayApp {
         }
     }
 
-    async fn command_id(command: &Gis2dCommand) -> &'static str {
+    fn command_id(command: &Gis2dCommand) -> &'static str {
         command.command_id()
     }
 
     /// 🎯️ Maps host action id + JSON args onto `Gis2dCommand` — React/wgpu still speak the
     /// stringly `{action,args}` wire; this is the typed-command bridge until those call sites send
     /// `OpBinary` bytes directly.
-    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let args = args.cloned().unwrap_or(Value::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         let string_list = |key: &str| -> Vec<String> { args.get(key).and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect()).unwrap_or_default() };
@@ -460,7 +460,7 @@ impl ArtifactEditor for Gis2dPlayApp {
         }
     }
 
-    async fn handle(
+    fn handle(
         command: &Gis2dCommand,
         doc: &ArtifactView<'_, GisMapSnapshot>,
         cfg: &ConfigView<'_, Gis2dConfig>,
@@ -473,11 +473,11 @@ impl ArtifactEditor for Gis2dPlayApp {
 
     /// 🧮️ Empty — gis2d's `Config` is session view state (camera/render/layer visibility/…), not a
     /// user-facing settings record; `ConfigSpec::empty()` (the trait default) is correct as-is.
-    async fn config_spec() -> semio_framework_plugin::ConfigSpec {
-        semio_framework_plugin::ConfigSpec::empty().await
+    fn config_spec() -> semio_framework_plugin::ConfigSpec {
+        semio_framework_plugin::ConfigSpec::default()
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let config = cfg.snapshot;
         let labels = gis2d_labels(config);
         match body_key {
@@ -489,18 +489,18 @@ impl ArtifactEditor for Gis2dPlayApp {
         }
     }
 
-    async fn window_measures(_doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         HashMap::from([(map::GIS2D_PLAY_WINDOW_MAIN.into(), map::window_measures(config, gis2d_labels(config)))])
     }
 
-    async fn context_menu(
+    fn context_menu(
         request: &semio_framework_plugin::ContextMenuRequest,
         _doc: &ArtifactView<'_, GisMapSnapshot>,
         _cfg: &ConfigView<'_, Gis2dConfig>,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        gis2d_context_menu_items(registry, request.surface.as_ref(), &[]).await
+        semio_framework_plugin::resolve_ready(async { gis2d_context_menu_items(registry, request.surface.as_ref(), &[]).await })
     }
 }
 //#endregion 🔖️Gis2dPlayApp
@@ -567,6 +567,21 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setLayerStrokeScale", LocalizedLabel::native("Set Layer Stroke Scale", "Ebenenstrichstärke festlegen"))
             // 🌐️ Shell action — opens the picked feature's source URL through the host.
             .action_with(ActionDefinition { category: Some("open".into()), ..ActionDefinition::bounded_catalog("openSource", LocalizedLabel::native("Open Source", "Quelle öffnen"), ActionKind::Shell) })
+            .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchPositions", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchRoutes", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchRoute", InteractiveJobClassification::Migrated)
+            .action_interactive_job("toggleLayerVisibility", InteractiveJobClassification::Migrated)
+            .action_interactive_job("fitWorld", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setRenderMode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setVectorStyle", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLodMode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("focusFeature", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLayerStrokeScale", InteractiveJobClassification::Migrated)
+            .action_interactive_job("openSource", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
             // 📝️ Argument schemas for the discrete-choice actions so the command palette can stage them
             // and the registry validates the vocabulary. The arg id matches the key each handler reads.
             .action_args("setActiveExample", vec![
@@ -593,7 +608,7 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            .config(semio_framework_plugin::resolve_ready(Gis2dPlayApp::config_spec()))
+            .config(Gis2dPlayApp::config_spec())
             .io(gis2d_io())
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder::build_definition` has no `.example(...)`/
             // `.workflow(...)` — the old `"reuse-map"` app-level example registration and the no-op

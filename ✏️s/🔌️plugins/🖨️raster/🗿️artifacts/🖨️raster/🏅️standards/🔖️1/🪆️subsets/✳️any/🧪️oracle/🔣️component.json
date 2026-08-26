@@ -23,6 +23,142 @@
     {
       "id": "raster-1-any",
       "capability": "raster-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "add-layer-asset",
+          "sourceMutationDirectoryName": "🖇️add-layer-asset",
+          "mutationDirectoryName": "🖇️add-layer-asset",
+          "scenarios": [
+            {
+              "id": "declines-to-reattach-an-asset-already-on-the-document",
+              "directoryName": "🧪️declines-to-reattach-an-asset-already-on-the-document"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-layer-adjustment-kind",
+          "sourceMutationDirectoryName": "🎚️change-layer-adjustment-kind",
+          "mutationDirectoryName": "🎚️change-layer-adjustment-kind",
+          "scenarios": [
+            {
+              "id": "switches-the-tone-layer-from-levels-to-curves",
+              "directoryName": "🧪️switches-the-tone-layer-from-levels-to-curves"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-layer-blend-mode",
+          "sourceMutationDirectoryName": "🎨change-layer-blend-mode",
+          "mutationDirectoryName": "🎨change-layer-blend-mode",
+          "scenarios": [
+            {
+              "id": "switches-the-glow-layer-to-screen",
+              "directoryName": "🧪️switches-the-glow-layer-to-screen"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-layer-opacity",
+          "sourceMutationDirectoryName": "🌫️change-layer-opacity",
+          "mutationDirectoryName": "🌫️change-layer-opacity",
+          "scenarios": [
+            {
+              "id": "fades-the-highlight-layer-to-a-quarter",
+              "directoryName": "🧪️fades-the-highlight-layer-to-a-quarter"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-layer-visible",
+          "sourceMutationDirectoryName": "👁️change-layer-visible",
+          "mutationDirectoryName": "👁️change-layer-visible",
+          "scenarios": [
+            {
+              "id": "hides-the-overlay-layer",
+              "directoryName": "🧪️hides-the-overlay-layer"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-layer",
+          "sourceMutationDirectoryName": "🌱create-layer",
+          "mutationDirectoryName": "🌱create-layer",
+          "scenarios": [
+            {
+              "id": "creates-an-ink-layer-inside-the-artwork-group",
+              "directoryName": "🧪️creates-an-ink-layer-inside-the-artwork-group"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-layer",
+          "sourceMutationDirectoryName": "🗑️delete-layer",
+          "mutationDirectoryName": "🗑️delete-layer",
+          "scenarios": [
+            {
+              "id": "deletes-the-frame-group-and-its-nested-children",
+              "directoryName": "🧪️deletes-the-frame-group-and-its-nested-children"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-layer",
+          "sourceMutationDirectoryName": "↔️move-layer",
+          "mutationDirectoryName": "↔️move-layer",
+          "scenarios": [
+            {
+              "id": "slides-the-stamp-layer-off-the-origin",
+              "directoryName": "🧪️slides-the-stamp-layer-off-the-origin"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-layer-asset",
+          "sourceMutationDirectoryName": "🗂️remove-layer-asset",
+          "mutationDirectoryName": "🗂️remove-layer-asset",
+          "scenarios": [
+            {
+              "id": "rejects-removing-an-asset-the-document-never-attached",
+              "directoryName": "🧪️rejects-removing-an-asset-the-document-never-attached"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-layer",
+          "sourceMutationDirectoryName": "✏️rename-layer",
+          "mutationDirectoryName": "✏️rename-layer",
+          "scenarios": [
+            {
+              "id": "renames-the-sketch-layer-to-final-linework",
+              "directoryName": "🧪️renames-the-sketch-layer-to-final-linework"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-layers",
+          "sourceMutationDirectoryName": "🔀reorder-layers",
+          "mutationDirectoryName": "🔀reorder-layers",
+          "scenarios": [
+            {
+              "id": "lifts-the-caption-layer-out-of-the-frame-group",
+              "directoryName": "🧪️lifts-the-caption-layer-out-of-the-frame-group"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-layer",
+          "sourceMutationDirectoryName": "📐resize-layer",
+          "mutationDirectoryName": "📐resize-layer",
+          "scenarios": [
+            {
+              "id": "resizes-the-canvas-layer-to-256-by-128",
+              "directoryName": "🧪️resizes-the-canvas-layer-to-256-by-128"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-layer",
         "delete-layer",

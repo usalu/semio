@@ -23,6 +23,120 @@
     {
       "id": "en1990-1-any",
       "capability": "en1990-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-consequence-class",
+          "sourceMutationDirectoryName": "🐑change-consequence-class",
+          "mutationDirectoryName": "🐑change-consequence-class",
+          "scenarios": [
+            {
+              "id": "escalates-the-building-from-cc2-to-cc3",
+              "directoryName": "🧪️escalates-the-building-from-cc2-to-cc3"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-permanent-action",
+          "sourceMutationDirectoryName": "🐐change-permanent-action",
+          "mutationDirectoryName": "🐐change-permanent-action",
+          "scenarios": [
+            {
+              "id": "raises-the-permanent-action-to-62-5-kn",
+              "directoryName": "🧪️raises-the-permanent-action-to-62-5-kn"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-resistance",
+          "sourceMutationDirectoryName": "🐘change-resistance",
+          "mutationDirectoryName": "🐘change-resistance",
+          "scenarios": [
+            {
+              "id": "raises-the-design-resistance-to-320-kn",
+              "directoryName": "🧪️raises-the-design-resistance-to-320-kn"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-seismic-action",
+          "sourceMutationDirectoryName": "🦄change-seismic-action",
+          "mutationDirectoryName": "🦄change-seismic-action",
+          "scenarios": [
+            {
+              "id": "enables-the-seismic-situation-with-an-85-kn-a-ed",
+              "directoryName": "🧪️enables-the-seismic-situation-with-an-85-kn-a-ed"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-variable-action-category",
+          "sourceMutationDirectoryName": "🐮change-variable-action-category",
+          "mutationDirectoryName": "🐮change-variable-action-category",
+          "scenarios": [
+            {
+              "id": "refuses-to-recategorise-a-missing-action-0",
+              "directoryName": "🧪️refuses-to-recategorise-a-missing-action-0"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-variable-action-value",
+          "sourceMutationDirectoryName": "🦌change-variable-action-value",
+          "mutationDirectoryName": "🦌change-variable-action-value",
+          "scenarios": [
+            {
+              "id": "refuses-to-revalue-a-missing-action-0",
+              "directoryName": "🧪️refuses-to-revalue-a-missing-action-0"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-variable-action",
+          "sourceMutationDirectoryName": "🐴insert-variable-action",
+          "mutationDirectoryName": "🐴insert-variable-action",
+          "scenarios": [
+            {
+              "id": "seeds-the-first-variable-action-q-snow-at-12-5-kn",
+              "directoryName": "🧪️seeds-the-first-variable-action-q-snow-at-12-5-kn"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-variable-action",
+          "sourceMutationDirectoryName": "🐎remove-variable-action",
+          "mutationDirectoryName": "🐎remove-variable-action",
+          "scenarios": [
+            {
+              "id": "refuses-to-remove-action-0-from-an-unseeded-child-slot",
+              "directoryName": "🧪️refuses-to-remove-action-0-from-an-unseeded-child-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-variable-actions",
+          "sourceMutationDirectoryName": "🐗reorder-variable-actions",
+          "mutationDirectoryName": "🐗reorder-variable-actions",
+          "scenarios": [
+            {
+              "id": "refuses-to-move-action-0-to-slot-1-in-an-empty-list",
+              "directoryName": "🧪️refuses-to-move-action-0-to-slot-1-in-an-empty-list"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "🐷set-snapshot",
+          "mutationDirectoryName": "🐷set-snapshot",
+          "scenarios": [
+            {
+              "id": "switches-the-national-annex-from-de-to-en",
+              "directoryName": "🧪️switches-the-national-annex-from-de-to-en"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "change-annex",
         "change-permanent-action",

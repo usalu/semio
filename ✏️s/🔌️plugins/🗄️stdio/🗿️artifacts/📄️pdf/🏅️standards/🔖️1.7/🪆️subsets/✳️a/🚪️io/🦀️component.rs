@@ -24,12 +24,12 @@ pub mod derived_composition {
         type Snapshot = PdfSnapshot;
         const WRITES: Dialect = DIALECT_A;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_A, DEP_BINARY, DEP_DEFLATE]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = semio_framework_plugin::resolve_ready(PdfAnyComposer::compose(sources))?;
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = PdfAnyComposer::compose(sources)?;
             let checks = check_pdf_a_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -140,10 +140,10 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn conforming_builder_snapshot_composes_and_stamps_a() {
-            let snapshot = PdfABuilder::new("sRGB IEC61966-2.1").add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(100.0, 100.0)).build().await.unwrap();
+            let snapshot = PdfABuilder::new("sRGB IEC61966-2.1").add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(100.0, 100.0)).build().unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = PdfAComposerComposition::compose(&sources).await.expect("clean document must compose to a");
+            let composed = PdfAComposerComposition::compose(&sources).expect("clean document must compose to a");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
@@ -152,7 +152,7 @@ pub mod derived_composition {
             let bytes = minimal_pdf_with_extra_object(b"<< /S /JavaScript /JS (app.alert(1)) >>");
             let hex = hex_encode(&bytes);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
-            let err = PdfAComposerComposition::compose(&sources).await.expect_err("a document with a JS action must not stamp a");
+            let err = PdfAComposerComposition::compose(&sources).expect_err("a document with a JS action must not stamp a");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_JAVASCRIPT && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
@@ -161,7 +161,7 @@ pub mod derived_composition {
             let bytes = minimal_pdf_with_extra_object(b"<< /S /Launch /F (calc.exe) >>");
             let hex = hex_encode(&bytes);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
-            let err = PdfAComposerComposition::compose(&sources).await.expect_err("a document with a Launch action must not stamp a");
+            let err = PdfAComposerComposition::compose(&sources).expect_err("a document with a Launch action must not stamp a");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_LAUNCH && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
@@ -183,13 +183,13 @@ pub mod derived_composition {
             body.extend_from_slice(format!("trailer\n<< /Size 3 /Root 1 0 R /Encrypt << /Filter /Standard >> >>\nstartxref\n{xref}\n%%EOF\n").as_bytes());
             let hex = hex_encode(&body);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
-            let err = PdfAComposerComposition::compose(&sources).await.expect_err("an /Encrypt trailer must never compose, at a or any other dialect");
+            let err = PdfAComposerComposition::compose(&sources).expect_err("an /Encrypt trailer must never compose, at a or any other dialect");
             assert!(err.diagnostics.iter().any(|d| d.message.contains("Encrypt")), "must be the real engine-level /Encrypt rejection, not a spurious decode error: {err:?}");
         }
 
         #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_flags_soft_diagnostics_on_the_wire_payload() {
-            let snapshot = PdfABuilder::new("sRGB IEC61966-2.1").add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(50.0, 50.0)).build().await.unwrap();
+            let snapshot = PdfABuilder::new("sRGB IEC61966-2.1").add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(50.0, 50.0)).build().unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             // The registered validator, called directly (same fn the generic io hook calls): today's
             // writer drops `objects` on encode, so the OutputIntent genuinely isn't in these bytes --

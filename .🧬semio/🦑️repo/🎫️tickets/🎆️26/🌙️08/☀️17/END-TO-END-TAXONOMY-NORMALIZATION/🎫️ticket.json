@@ -1,0 +1,13 @@
+{
+  "title": "End-to-End Taxonomy Normalization",
+  "status": "open",
+  "description": "Extend taxonomy mechanism: language-neutral assets at owner root, schemaFacetKinds, package purity gate, hoist WIT and all violating neutral assets.",
+  "summary": "📓️w4-summary.md",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2587"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪de1c72c3542a4da38b2a2dff82b37067"
+  ]
+}

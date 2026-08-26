@@ -107,13 +107,13 @@ impl ArtifactEditor for XmlValidEditor {
     const DIALECT: Dialect = XML_VALID_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_XML_DOCUMENT_SCHEMA;
 
-    async fn initial_snapshot() -> XmlSnapshot {
+    fn initial_snapshot() -> XmlSnapshot {
         XmlSnapshot::default()
     }
 
     /// ✏️ Only a `Text` node found at `node_id` accepts `set-node` — anything else (unparseable
     /// id, missing node, non-`Text` node) is a documented no-op (`Emit::default()`).
-    async fn handle(
+    fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -128,7 +128,7 @@ impl ArtifactEditor for XmlValidEditor {
         Ok(Emit { artifact_mutations: vec![XmlValidMutation::SetText { path: XmlNodePath(path), text: value.clone() }], description: Some(format!("Set node {node_id}")), ..Default::default() })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
             _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),

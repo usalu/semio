@@ -23,6 +23,153 @@
     {
       "id": "din18599-1-any",
       "capability": "din18599-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-annual-limit-kwh",
+          "sourceMutationDirectoryName": "🦡change-annual-limit-kwh",
+          "mutationDirectoryName": "🦡change-annual-limit-kwh",
+          "scenarios": [
+            {
+              "id": "tightens-the-annual-primary-energy-limit-to-6000-kwh",
+              "directoryName": "🧪️tightens-the-annual-primary-energy-limit-to-6000-kwh"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-energy-carrier",
+          "sourceMutationDirectoryName": "📐change-energy-carrier",
+          "mutationDirectoryName": "📐change-energy-carrier",
+          "scenarios": [
+            {
+              "id": "switches-the-energy-carrier-to-an-electric-heat-pump",
+              "directoryName": "🧪️switches-the-energy-carrier-to-an-electric-heat-pump"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-heated-area-m2",
+          "sourceMutationDirectoryName": "🦛change-heated-area-m2",
+          "mutationDirectoryName": "🦛change-heated-area-m2",
+          "scenarios": [
+            {
+              "id": "extends-the-heated-area-to-160-m2",
+              "directoryName": "🧪️extends-the-heated-area-to-160-m2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-ht",
+          "sourceMutationDirectoryName": "🐫change-ht",
+          "mutationDirectoryName": "🐫change-ht",
+          "scenarios": [
+            {
+              "id": "raises-the-transmission-loss-coefficient-to-118-w-per-k",
+              "directoryName": "🧪️raises-the-transmission-loss-coefficient-to-118-w-per-k"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-hv",
+          "sourceMutationDirectoryName": "🦒change-hv",
+          "mutationDirectoryName": "🦒change-hv",
+          "scenarios": [
+            {
+              "id": "raises-the-ventilation-loss-coefficient-to-52-25-w-per-k",
+              "directoryName": "🧪️raises-the-ventilation-loss-coefficient-to-52-25-w-per-k"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-internal-gains-wm2",
+          "sourceMutationDirectoryName": "🦘change-internal-gains-wm2",
+          "mutationDirectoryName": "🦘change-internal-gains-wm2",
+          "scenarios": [
+            {
+              "id": "raises-the-internal-gains-to-5-w-per-m2",
+              "directoryName": "🧪️raises-the-internal-gains-to-5-w-per-m2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-occupants",
+          "sourceMutationDirectoryName": "🐪change-occupants",
+          "mutationDirectoryName": "🐪change-occupants",
+          "scenarios": [
+            {
+              "id": "raises-the-occupancy-to-six-people",
+              "directoryName": "🧪️raises-the-occupancy-to-six-people"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-reference-qp-kwh",
+          "sourceMutationDirectoryName": "🔽change-reference-qp-kwh",
+          "mutationDirectoryName": "🔽change-reference-qp-kwh",
+          "scenarios": [
+            {
+              "id": "lowers-the-reference-building-primary-energy-to-8750-kwh",
+              "directoryName": "🧪️lowers-the-reference-building-primary-energy-to-8750-kwh"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-renewable-kwh",
+          "sourceMutationDirectoryName": "🦨change-renewable-kwh",
+          "mutationDirectoryName": "🦨change-renewable-kwh",
+          "scenarios": [
+            {
+              "id": "raises-the-on-site-renewable-yield-to-2250-kwh",
+              "directoryName": "🧪️raises-the-on-site-renewable-yield-to-2250-kwh"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-solar-gains-kwh",
+          "sourceMutationDirectoryName": "🦥change-solar-gains-kwh",
+          "mutationDirectoryName": "🦥change-solar-gains-kwh",
+          "scenarios": [
+            {
+              "id": "raises-the-annual-solar-gains-to-132-kwh",
+              "directoryName": "🧪️raises-the-annual-solar-gains-to-132-kwh"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-system-losses-kwh",
+          "sourceMutationDirectoryName": "🦦change-system-losses-kwh",
+          "mutationDirectoryName": "🦦change-system-losses-kwh",
+          "scenarios": [
+            {
+              "id": "cuts-the-system-losses-to-450-kwh",
+              "directoryName": "🧪️cuts-the-system-losses-to-450-kwh"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-use-class",
+          "sourceMutationDirectoryName": "🦏change-use-class",
+          "mutationDirectoryName": "🦏change-use-class",
+          "scenarios": [
+            {
+              "id": "reclassifies-the-building-as-an-office",
+              "directoryName": "🧪️reclassifies-the-building-as-an-office"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-climate",
+          "sourceMutationDirectoryName": "🐘update-climate",
+          "mutationDirectoryName": "🐘update-climate",
+          "scenarios": [
+            {
+              "id": "refuses-a-negative-january-irradiance",
+              "directoryName": "🧪️refuses-a-negative-january-irradiance"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "change-use-class",
         "change-heated-area-m2",

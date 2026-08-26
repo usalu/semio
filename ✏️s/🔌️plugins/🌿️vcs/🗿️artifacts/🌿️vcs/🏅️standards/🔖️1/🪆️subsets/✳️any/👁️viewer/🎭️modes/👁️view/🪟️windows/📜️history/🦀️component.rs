@@ -18,7 +18,7 @@ pub const BODY_KEY: &str = TreeWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::vcs::create_vcs_viewer`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     TreeWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
@@ -28,11 +28,11 @@ pub async fn definition() -> WindowKindDefinition {
 /// parent (root checkpoints — `parent_checkpoint_id: None` — become tree roots). Alternative names and
 /// per-row navigation actions (`checkoutCheckpoint`/`switchAlternative`, real app actions on the
 /// editor's document panel) have no read-only counterpart here: a viewer declares no actions.
-pub async fn render(history: &HistoryView) -> UiNode {
+pub fn render(history: &HistoryView) -> UiNode {
     TreeWindowKit::render(&history_tree_view(history))
 }
 
-async fn history_tree_view(history: &HistoryView) -> TreeView {
+fn history_tree_view(history: &HistoryView) -> TreeView {
     let mut children_by_parent: HashMap<Option<String>, Vec<&store::HistoryColumn>> = HashMap::new();
     for column in &history.columns {
         children_by_parent.entry(column.parent_checkpoint_id.clone()).or_default().push(column);
@@ -40,7 +40,7 @@ async fn history_tree_view(history: &HistoryView) -> TreeView {
     TreeView { roots: history_tree_nodes(&None, &children_by_parent) }
 }
 
-async fn history_tree_nodes(parent: &Option<String>, children_by_parent: &HashMap<Option<String>, Vec<&store::HistoryColumn>>) -> Vec<TreeNodeView> {
+fn history_tree_nodes(parent: &Option<String>, children_by_parent: &HashMap<Option<String>, Vec<&store::HistoryColumn>>) -> Vec<TreeNodeView> {
     children_by_parent
         .get(parent)
         .into_iter()
@@ -56,13 +56,13 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn definition_declares_a_tree_window() {
+    fn definition_declares_a_tree_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn render_nests_checkpoints_under_their_parent() {
+    fn render_nests_checkpoints_under_their_parent() {
         let history = HistoryView {
             columns: vec![
                 store::HistoryColumn { checkpoint_id: "c1".into(), timestamp: "t1".into(), labels: Vec::new(), authors: Vec::new(), parent_checkpoint_id: None, description: Some("root".into()), lane: 0, alternative_ids: Vec::new() },

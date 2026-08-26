@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
 /** 📜️ `@semio-tech/framework-graph` — the semio graph crate: graph-manifest codegen, cargo test and clippy gates. */
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, runCargoLint, runCargoTestBudgeted, resolveTestLevel } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { loadTaxonomy, pathIsExcluded } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts";
 
 //#region 🔖️ManifestSource
 type ManifestAxes = { portModel?: string; directedness?: string };
@@ -43,11 +44,13 @@ type ManifestDocument = {
 
 function findManifestFiles(root: string): string[] {
   const out: string[] = [];
+  const taxonomy = loadTaxonomy();
   function walk(dir: string) {
     for (const name of readdirSync(dir)) {
       // 🌳️ Skip dot-directories outright — `.claude/worktrees/<agent-id>` holds a full parallel checkout of the repo (see `git worktree list`), and walking into it re-discovers every manifest.json under a second, identical id, producing duplicate `pub mod`/`MANIFEST_IDS`/match-arm entries in the generated registry.
       if (name === "node_modules" || name === "generated" || name === "🤖️generated" || name === "target" || name.startsWith(".")) continue;
       const path = join(dir, name);
+      if (pathIsExcluded(root, path, taxonomy)) continue;
       let st: ReturnType<typeof statSync>;
       try {
         st = statSync(path);
@@ -69,7 +72,10 @@ function findManifestFiles(root: string): string[] {
       }
     }
   }
-  walk(root);
+  for (const area of taxonomy.pluginAreas) {
+    const scanRoot = join(root, area);
+    if (!pathIsExcluded(root, scanRoot, taxonomy) && existsSync(scanRoot)) walk(scanRoot);
+  }
   return out.sort();
 }
 
@@ -271,11 +277,11 @@ function emitJsonSchema(): string {
   );
 }
 
-class GenerateScript extends BundleScript {
-  run(): void {
-    const root = getWorkspaceRoot();
-    const outDir = join(this.root, "..", "..", "🤖️generated");
-    mkdirSync(outDir, { recursive: true });
+type GraphArtifact = { path: string; content: string };
+
+/** @emoji 🧾️ Renders the full graph catalog from lexically admitted manifest inputs without writes. */
+function renderGraphArtifacts(root: string, outDir: string, log = true): { artifacts: readonly GraphArtifact[]; manifestCount: number } {
+    const artifacts: GraphArtifact[] = [];
     const files = findManifestFiles(root);
     if (files.length === 0) {
       throw new Error("no *.manifest.json files found");
@@ -284,10 +290,10 @@ class GenerateScript extends BundleScript {
     for (const path of files) {
       const doc = JSON.parse(readFileSync(path, "utf8")) as ManifestDocument;
       if (doc.schema !== "manifest") {
-        console.log(`[framework-graph] skip ${relative(root, path)} (${doc.schema})`);
+        if (log) console.log(`[framework-graph] skip ${relative(root, path)} (${doc.schema})`);
         continue;
       }
-      console.log(`[framework-graph] ${relative(root, path)}`);
+      if (log) console.log(`[framework-graph] ${relative(root, path)}`);
       docs.push(doc);
     }
     if (docs.length === 0) {
@@ -295,7 +301,7 @@ class GenerateScript extends BundleScript {
     }
     const rustModules = docs.map((doc) => {
       const modName = rustModName(doc.id);
-      writeFileSync(join(outDir, rustModuleFileName(modName)), emitRustManifest(doc));
+      artifacts.push({ path: join(outDir, rustModuleFileName(modName)), content: emitRustManifest(doc) });
       return modName;
     });
     const registryRs =
@@ -305,22 +311,73 @@ class GenerateScript extends BundleScript {
       `pub fn manifest_by_id(id: &str) -> Option<Manifest> {\n    match id {\n` +
       docs.map((d) => `        ${rustStr(d.id)} => Some(${rustModName(d.id)}::${rustFnName(d.id)}()),`).join("\n") +
       `\n        _ => None,\n    }\n}\n`;
-    writeFileSync(join(outDir, "🦀️registry.rs"), registryRs);
-    writeFileSync(join(outDir, "🔣️manifest.schema.json"), emitJsonSchema());
+    artifacts.push({ path: join(outDir, "🦀️registry.rs"), content: registryRs });
+    artifacts.push({ path: join(outDir, "🔣️manifest.schema.json"), content: emitJsonSchema() });
     const manifestByIdCases = docs.map((d) => `    case ${tsStringLiteral(d.id)}: return ${pascalCase(d.id).toUpperCase()}_MANIFEST_DOCUMENT;`).join("\n");
     const manifestByIdImports = docs.map((d) => `import { ${pascalCase(d.id).toUpperCase()}_MANIFEST_DOCUMENT } from "./${tsManifestFileName(d.id).replace(/\.ts$/, ".js")}";`).join("\n");
     const tsTypes = `/** Generated graph manifest shared types */\n\nexport interface GraphManifestPropertyDef {\n  readonly name: string;\n  readonly kind: "data" | "derived";\n  readonly valueType?: unknown;\n  readonly expr?: string;\n}\n\nexport interface GraphManifestKindRow {\n  readonly id: string;\n  readonly name?: string;\n  readonly properties?: readonly GraphManifestPropertyDef[];\n  readonly ports?: readonly string[];\n  readonly direction?: string;\n  readonly presentation?: Readonly<Record<string, unknown>>;\n}\n\nexport interface GraphManifestDocument {\n  readonly schema: "manifest";\n  readonly id: string;\n  readonly name?: string;\n  readonly axes?: { readonly portModel?: "normal" | "ported"; readonly directedness?: "directed" | "undirected" };\n  readonly nodeKinds?: readonly GraphManifestKindRow[];\n  readonly edgeKinds?: readonly GraphManifestKindRow[];\n  readonly portKinds?: readonly GraphManifestKindRow[];\n  readonly wireKinds?: readonly GraphManifestKindRow[];\n  readonly layerKinds?: readonly GraphManifestKindRow[];\n  readonly blockKinds?: readonly GraphManifestKindRow[];\n  readonly languageKinds?: readonly GraphManifestKindRow[];\n  readonly surfaceKinds?: readonly GraphManifestKindRow[];\n  readonly windowKinds?: readonly GraphManifestKindRow[];\n  readonly fileNodeKinds?: readonly GraphManifestKindRow[];\n  readonly descriptorKinds?: readonly GraphManifestKindRow[];\n  readonly edgeTips?: readonly Record<string, unknown>[];\n  readonly kindCompatibility?: readonly Record<string, unknown>[];\n}\n\nexport interface HandleKind {\n  readonly color: string;\n  readonly defaultWireKind?: string;\n  readonly id: string;\n  readonly name: string;\n}\n\nexport interface WireKind {\n  readonly defaultEdgeKind?: string;\n  readonly id: string;\n  readonly name: string;\n}\n\nexport interface NodeKindHandleTemplate {\n  readonly handleKind: string;\n  readonly angle: number;\n  readonly radius?: number;\n}\n\nexport interface NodeKind {\n  readonly color?: string;\n  readonly defaultHandleKind?: string;\n  readonly icon?: string;\n  readonly id: string;\n  readonly name: string;\n  readonly stroke?: string;\n  readonly handles?: readonly NodeKindHandleTemplate[];\n}\n\nexport interface EdgeTip {\n  readonly filled?: boolean;\n  readonly geometry?: "arrow" | "fine-arrow" | "diamond" | "circle" | "bar";\n  readonly id: string;\n  readonly scale?: number;\n}\n\nexport interface EdgeKind {\n  readonly color?: string;\n  readonly directed?: boolean;\n  readonly id: string;\n  readonly name: string;\n  readonly pattern?: string;\n  readonly shape?: "bezier" | "line";\n  readonly sourceTip?: string;\n  readonly stroke?: string;\n  readonly targetTip?: string;\n}\n\nexport interface KindCatalogBundle {\n  readonly edgeTips?: readonly EdgeTip[];\n  readonly edges?: readonly EdgeKind[];\n  readonly handles?: readonly HandleKind[];\n  readonly nodes?: readonly NodeKind[];\n  readonly wires?: readonly WireKind[];\n}\n\nexport const MANIFEST_IDS = [${docs.map((d) => tsStringLiteral(d.id)).join(", ")}] as const;\nexport type ManifestId = (typeof MANIFEST_IDS)[number];\n\nexport function mergeManifestCatalogBundles(...bundles: readonly KindCatalogBundle[]): KindCatalogBundle {\n  function mergedSlice<T extends { id: string }>(slices: readonly (readonly T[] | undefined)[]): readonly T[] | undefined {\n    const byId = new Map<string, T>();\n    let any = false;\n    for (const slice of slices) {\n      if (!slice) continue;\n      any = true;\n      for (const row of slice) {\n        byId.set(row.id, row);\n      }\n    }\n    if (!any) return undefined;\n    return [...byId.values()].sort((left, right) => left.id.localeCompare(right.id));\n  }\n  return {\n    edgeTips: mergedSlice(bundles.map((bundle) => bundle.edgeTips)),\n    edges: mergedSlice(bundles.map((bundle) => bundle.edges)),\n    handles: mergedSlice(bundles.map((bundle) => bundle.handles)),\n    nodes: mergedSlice(bundles.map((bundle) => bundle.nodes)),\n    wires: mergedSlice(bundles.map((bundle) => bundle.wires)),\n  };\n}\n`;
-    writeFileSync(join(outDir, "🟦️types.ts"), tsTypes);
-    writeFileSync(
-      join(outDir, "📦️index.ts"),
-      `export * from "./🟦️types.js";\n` +
+    artifacts.push({ path: join(outDir, "🟦️types.ts"), content: tsTypes });
+    artifacts.push({
+      path: join(outDir, "📦️index.ts"),
+      content: `export * from "./🟦️types.js";\n` +
         docs.map((d) => `export * from "./${tsManifestFileName(d.id).replace(/\.ts$/, ".js")}";`).join("\n") +
         `\n\n${manifestByIdImports}\nimport type { GraphManifestDocument } from "./🟦️types.js";\n\nexport function manifestById(id: string): GraphManifestDocument | undefined {\n  switch (id) {\n${manifestByIdCases}\n    default: return undefined;\n  }\n}\n`,
-    );
+    });
     for (const doc of docs) {
-      writeFileSync(join(outDir, tsManifestFileName(doc.id)), emitTsManifest(doc));
+      artifacts.push({ path: join(outDir, tsManifestFileName(doc.id)), content: emitTsManifest(doc) });
     }
-    console.log(`[framework-graph] wrote ${docs.length} manifests to ${relative(root, outDir)}`);
+    return { artifacts: artifacts.sort((left, right) => left.path.localeCompare(right.path)), manifestCount: docs.length };
+}
+
+/** @emoji 🧹️ Writes the exact rendered set and removes only stale files inside its owned output root. */
+function writeGraphArtifacts(outDir: string, artifacts: readonly GraphArtifact[]): void {
+  mkdirSync(outDir, { recursive: true });
+  const expected = new Set(artifacts.map((artifact) => basename(artifact.path)));
+  for (const name of readdirSync(outDir)) if (!expected.has(name)) rmSync(join(outDir, name), { recursive: true });
+  for (const artifact of artifacts) writeFileSync(artifact.path, artifact.content, "utf8");
+}
+
+class GenerateScript extends BundleScript {
+  run(): void {
+    const root = getWorkspaceRoot();
+    const outDir = join(this.root, "..", "..", "🤖️generated");
+    const rendered = renderGraphArtifacts(root, outDir);
+    writeGraphArtifacts(outDir, rendered.artifacts);
+    console.log(`[framework-graph] wrote ${rendered.manifestCount} manifests to ${relative(root, outDir)}`);
+  }
+}
+
+/** 🧾️ Emits exact graph bytes and stale top-level removals without writing the output root. */
+class PreviewGeneratedScript extends BundleScript {
+  run(): void {
+    const root = getWorkspaceRoot();
+    const outDir = join(this.root, "..", "..", "🤖️generated");
+    const rendered = renderGraphArtifacts(root, outDir, false);
+    const rootPath = relative(root, outDir).replaceAll("\\", "/").normalize("NFC");
+    const nodes = [
+      { bytesBase64: "", mode: 0o755, nodeKind: "directory" as const, path: rootPath },
+      ...rendered.artifacts.map((artifact) => ({ bytesBase64: Buffer.from(artifact.content).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: relative(root, artifact.path).replaceAll("\\", "/").normalize("NFC") })),
+    ].sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
+    const expected = new Set(rendered.artifacts.map((artifact) => basename(artifact.path)));
+    const staleRemovals = (existsSync(outDir) ? readdirSync(outDir) : [])
+      .filter((name) => !expected.has(name))
+      .map((name) => `${rootPath}/${name.normalize("NFC")}`)
+      .sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
+    process.stdout.write(`${JSON.stringify({ contractId: "graph-catalog", nodes, schemaVersion: 1, staleRemovals })}\n`);
+  }
+}
+
+/** @emoji ✅️ Checks exact graph catalog bytes and output membership without rewriting artifacts. */
+class CheckGeneratedScript extends BundleScript {
+  run(): void {
+    const root = getWorkspaceRoot();
+    const outDir = join(this.root, "..", "..", "🤖️generated");
+    const rendered = renderGraphArtifacts(root, outDir);
+    const expected = rendered.artifacts.map((artifact) => basename(artifact.path)).sort();
+    const actual = existsSync(outDir) ? readdirSync(outDir).sort() : [];
+    const stale = rendered.artifacts.filter((artifact) => !existsSync(artifact.path) || readFileSync(artifact.path, "utf8") !== artifact.content).map((artifact) => basename(artifact.path));
+    if (JSON.stringify(actual) !== JSON.stringify(expected) || stale.length > 0) throw new Error(`framework-graph generated catalog is stale: membership=${JSON.stringify(actual) !== JSON.stringify(expected)}, files=${JSON.stringify(stale)}`);
+    console.log(`[framework-graph] ${rendered.manifestCount} generated manifests are fresh`);
   }
 }
 
@@ -338,6 +395,6 @@ class LintScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("test", TestScript).register("lint", LintScript);
+const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check-generated", CheckGeneratedScript).register("test", TestScript).register("lint", LintScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" });

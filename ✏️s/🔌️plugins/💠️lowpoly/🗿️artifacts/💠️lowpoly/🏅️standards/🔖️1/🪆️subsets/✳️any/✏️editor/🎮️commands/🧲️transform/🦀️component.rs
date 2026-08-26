@@ -18,7 +18,7 @@ pub mod transform_begin {
     #[dsl(keyword = "transform-begin")]
     pub struct TransformBegin {}
 
-    pub async fn handle(_payload: &TransformBegin, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(_payload: &TransformBegin, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         ctx.begin_transform_drag();
         Ok(Emit::default())
     }
@@ -33,7 +33,7 @@ pub mod transform_end {
     #[dsl(keyword = "transform-end")]
     pub struct TransformEnd {}
 
-    pub async fn handle(_payload: &TransformEnd, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(_payload: &TransformEnd, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         Ok(ctx.end_transform_drag())
     }
 }
@@ -53,7 +53,7 @@ pub mod translate_selection {
         pub dz: f32,
     }
 
-    pub async fn handle(payload: &TranslateSelection, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &TranslateSelection, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let mode = payload.mode.clone().unwrap_or_else(|| "mesh".into());
         let ids = payload.ids.clone().unwrap_or_default();
         Ok(ctx.transform_selection(doc.snapshot, cfg.snapshot, &mode, ids, Transform::Translate(Vec3::new(payload.dx, payload.dy, payload.dz)), "Translate selection"))
@@ -76,7 +76,7 @@ pub mod rotate_selection {
         pub angle: f32,
     }
 
-    pub async fn handle(payload: &RotateSelection, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &RotateSelection, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let mode = payload.mode.clone().unwrap_or_else(|| "mesh".into());
         let ids = payload.ids.clone().unwrap_or_default();
         Ok(ctx.transform_selection(doc.snapshot, cfg.snapshot, &mode, ids, Transform::Rotate { axis: Vec3::new(payload.ax, payload.ay, payload.az), angle: payload.angle }, "Rotate selection"))
@@ -98,7 +98,7 @@ pub mod scale_selection {
         pub sz: f32,
     }
 
-    pub async fn handle(payload: &ScaleSelection, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
+    pub fn handle(payload: &ScaleSelection, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let mode = payload.mode.clone().unwrap_or_else(|| "mesh".into());
         let ids = payload.ids.clone().unwrap_or_default();
         Ok(ctx.transform_selection(doc.snapshot, cfg.snapshot, &mode, ids, Transform::Scale(Vec3::new(payload.sx, payload.sy, payload.sz)), "Scale selection"))
@@ -119,16 +119,16 @@ mod tests {
         // exactly ONE commit operation (base → final mesh) on drag end — never a full-mesh patch per tick.
         let mut a = app();
         let before_mesh = a.snapshot().expect("projection").objects[0].mesh.clone();
-        a.dispatch_typed(LowpolyCommand::TransformBegin(super::transform_begin::TransformBegin {}), &testkit::meta("a")).unwrap();
-        let tick_a = a.dispatch_typed(LowpolyCommand::TranslateSelection(super::translate_selection::TranslateSelection { mode: Some("mesh".into()), ids: Some(vec![]), dx: 0.5, dy: 0.0, dz: 0.0 }), &testkit::meta("a")).unwrap();
-        let tick_b = a.dispatch_typed(LowpolyCommand::TranslateSelection(super::translate_selection::TranslateSelection { mode: Some("mesh".into()), ids: Some(vec![]), dx: 0.25, dy: 0.0, dz: 0.0 }), &testkit::meta("a")).unwrap();
+        a.dispatch_typed(LowpolyCommand::TransformBegin(super::transform_begin::TransformBegin {}), &testkit::meta("a")).await.unwrap();
+        let tick_a = a.dispatch_typed(LowpolyCommand::TranslateSelection(super::translate_selection::TranslateSelection { mode: Some("mesh".into()), ids: Some(vec![]), dx: 0.5, dy: 0.0, dz: 0.0 }), &testkit::meta("a")).await.unwrap();
+        let tick_b = a.dispatch_typed(LowpolyCommand::TranslateSelection(super::translate_selection::TranslateSelection { mode: Some("mesh".into()), ids: Some(vec![]), dx: 0.25, dy: 0.0, dz: 0.0 }), &testkit::meta("a")).await.unwrap();
         assert!(tick_a.mutations.is_empty() && tick_b.mutations.is_empty(), "mid-drag transform ticks emit no operations");
         assert_eq!(a.snapshot().expect("projection").objects[0].mesh, before_mesh, "no operation reached the document mid-drag");
-        let end = a.dispatch_typed(LowpolyCommand::TransformEnd(super::transform_end::TransformEnd {}), &testkit::meta("a")).unwrap();
+        let end = a.dispatch_typed(LowpolyCommand::TransformEnd(super::transform_end::TransformEnd {}), &testkit::meta("a")).await.unwrap();
         assert_eq!(end.mutations.len(), 1, "the whole drag commits as exactly one operation");
         let after_mesh = a.snapshot().expect("projection").objects[0].mesh.clone();
         assert_ne!(after_mesh, before_mesh, "the drag moved the mesh");
-        a.handle_action("undo", None, &testkit::meta("a")).unwrap();
+        a.handle_action("undo", None, &testkit::meta("a")).await.unwrap();
         assert_eq!(a.snapshot().expect("projection").objects[0].mesh, before_mesh, "one undo reverts the whole coalesced gumball drag");
     }
 }

@@ -7,7 +7,7 @@ use crate::editor::writer::writer_action;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub async fn measure(config: &WriterConfig, labels: &WriterPlayLabels) -> WindowMeasure {
+pub fn measure(config: &WriterConfig, labels: &WriterPlayLabels) -> WindowMeasure {
     WindowMeasure::Toggle {
         id: "writer-line-numbers-measure".into(),
         icon_id: "list-ordered".into(),

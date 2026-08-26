@@ -33,17 +33,7 @@ use semio_repo_test_host::Adapter;
 /// imported, because the oracle-only build must not link the subject crate. The production module's
 /// own `kinds_match_the_enum_and_the_catalog` keeps that list honest against the enum and the
 /// catalog; the contract gate keeps this case honest against the catalog.
-const KINDS: &[&str] = &[
-    "add-step",
-    "remove-step",
-    "move-step",
-    "add-block",
-    "remove-block",
-    "move-block",
-    "replace-block",
-    "update-step",
-    "change-title",
-];
+const KINDS: &[&str] = &["add-step", "remove-step", "move-step", "add-block", "remove-block", "move-block", "replace-block", "update-step", "change-title"];
 
 #[cfg(feature = "sut")]
 /// 👁️ The eight kinds whose committed vector pins a REJECTION or NO-OP branch rather than
@@ -53,16 +43,7 @@ const KINDS: &[&str] = &[
 /// hand-authored. Naming them here is a claim the reader can check against the vectors, and the
 /// feature description states the same. Only `change-title`, the one kind that touches a persisted
 /// scalar, carries an effect vector.
-const GUARD_VECTORS: &[&str] = &[
-    "add-step",
-    "remove-step",
-    "move-step",
-    "add-block",
-    "remove-block",
-    "move-block",
-    "replace-block",
-    "update-step",
-];
+const GUARD_VECTORS: &[&str] = &["add-step", "remove-step", "move-step", "add-block", "remove-block", "move-block", "replace-block", "update-step"];
 
 #[cfg(feature = "sut")]
 /// 🧫️ Where a `<vector>` cell from the feature's `Examples` tables is rooted, relative to this
@@ -78,10 +59,12 @@ const EXAMPLE_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/�
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_s_plugin_playbook::artifacts::playbook::standards::v1::subsets::any::schema::mutations::{
+        apply_playbook_mutation_outcome, decode_playbook_mutation_json, decode_playbook_snapshot_json, encode_playbook_snapshot_json, inverse_playbook_mutation_steps, seed_playbook_scene_json, PlaybookMutation,
+    };
     use semio_s_plugin_playbook::artifacts::playbook::standards::v1::subsets::any::schema::snapshot::{parse_playbook_dsl, print_playbook_dsl};
-    use semio_s_plugin_playbook::artifacts::playbook::standards::v1::subsets::any::schema::mutations::{apply_playbook_mutation_outcome, decode_playbook_mutation_json, decode_playbook_snapshot_json, encode_playbook_snapshot_json, inverse_playbook_mutation_steps, seed_playbook_scene_json, PlaybookMutation};
     use semio_s_plugin_playbook::artifacts::playbook::PlaybookSnapshot;
+    use semio_s_plugin_stdio_test_oracle::law;
 
     //#region 🔖️VectorReading
     /// 🧫️ The scenario's own doc string, which carries the kind and the committed vector directory
@@ -135,7 +118,7 @@ mod subject {
     /// same `mutation.target-missing` branch — which would make the case look green while testing
     /// one code path nine times. The cell is DATA in the feature's `Examples` table, quoted there
     /// with the leaf test it was read from, rather than a per-kind `match` hidden in this file.
-    fn seed(snapshot: &PlaybookSnapshot, spec: &Json) -> Result<(), String> {
+    fn seed(snapshot: &mut PlaybookSnapshot, spec: &Json) -> Result<(), String> {
         let scene = match spec.get("scene") {
             Some(value) => value.to_string(),
             None => return Err("the scenario doc string must carry a \"scene\" array for this subset".to_string()),
@@ -151,11 +134,11 @@ mod subject {
     /// the mutation actually moved the compared projection.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let (kind, vector, spec) = addressed(ctx)?;
-        let base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️component.json", &kind)?;
+        let mut base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️component.json", &kind)?;
         let expected = snapshot_at(ctx, &vector, "📸️snapshot/➡️after/🔣️component.json", &kind)?;
         let mutation = mutation_at(ctx, &vector, &kind)?;
         let declared = parse_json(&text_at(ctx, &vector, "🎯️outcome/🔣️component.json")?)?;
-        seed(&base, &spec)?;
+        seed(&mut base, &spec)?;
         let mut current = base.clone();
         let outcome = apply_playbook_mutation_outcome(&mut current, &mutation);
         let raised: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
@@ -175,9 +158,9 @@ mod subject {
     /// tolerance and no ignored key.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let (kind, vector, spec) = addressed(ctx)?;
-        let base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️component.json", &kind)?;
+        let mut base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️component.json", &kind)?;
         let mutation = mutation_at(ctx, &vector, &kind)?;
-        seed(&base, &spec)?;
+        seed(&mut base, &spec)?;
         let original = projection(&base)?;
         let mut current = base.clone();
         apply_playbook_mutation_outcome(&mut current, &mutation);

@@ -24,12 +24,12 @@ pub mod derived_composition {
         type Snapshot = PptxSnapshot;
         const WRITES: Dialect = DIALECT_STRICT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_STRICT, DEP_ZIP, DEP_XML]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = semio_framework_plugin::resolve_ready(PptxAnyComposer::compose(sources))?;
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = PptxAnyComposer::compose(sources)?;
             let checks = check_strict_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -129,7 +129,7 @@ pub mod derived_composition {
         async fn conforming_strict_package_composes_and_stamps_strict() {
             let hex = strict_package_hex();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
-            let composed = PptxStrictComposerComposition::compose(&sources).await.expect("clean Strict document must compose to strict");
+            let composed = PptxStrictComposerComposition::compose(&sources).expect("clean Strict document must compose to strict");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
@@ -151,7 +151,7 @@ pub mod derived_composition {
             let bytes = opc::encode_opc(&opc).expect("encode hand-built Transitional OPC package");
             let hex = hex_encode(&bytes);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
-            let err = PptxStrictComposerComposition::compose(&sources).await.expect_err("a Transitional document must not stamp strict");
+            let err = PptxStrictComposerComposition::compose(&sources).expect_err("a Transitional document must not stamp strict");
             assert!(err.diagnostics.iter().any(|d| d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 

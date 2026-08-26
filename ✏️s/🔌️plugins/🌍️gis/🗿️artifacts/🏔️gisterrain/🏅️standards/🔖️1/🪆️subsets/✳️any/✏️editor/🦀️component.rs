@@ -14,10 +14,12 @@ use crate::editor::gis3d::commands::{exaggeration, locale, view};
 use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
 use crate::editor::gis3d::modes::view as view_mode;
 use crate::editor::gis3d::modes::view::windows::terrain;
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ui_text, AppIo, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError,
-    MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
+    ui_text, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
+    InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
 };
 use serde_json::Value;
 use store::ArtifactPack;
@@ -121,6 +123,92 @@ use view::set_camera;
 #[derive(Default)]
 pub struct Gis3dPlayApp;
 
+//#region 🧵️RetainedCommands
+const GIS3D_RETAINED_TOOL_IDS: &[&str] = &["setExaggeration", "setCamera", "setLocale"];
+const GIS3D_RETAINED_PAYLOAD_SCHEMA: &str = "gis.terrain.tool-command.v1";
+const GIS3D_RETAINED_RAW_BYTES: usize = 8_192;
+const GIS3D_RETAINED_WORK_ITEMS: usize = 1;
+
+fn gis3d_retained_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(GIS3D_RETAINED_RAW_BYTES, 32, 32, 16_384, 7_500)
+}
+
+fn gis3d_retained_extent(command: &Gis3dCommand, _snapshot: &GisTerrainSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    let bytes = match command {
+        Gis3dCommand::SetExaggeration(_) => 0,
+        Gis3dCommand::SetCamera(payload) => payload.camera_json.len(),
+        Gis3dCommand::SetLocale(payload) => payload.value.len(),
+    };
+    (bytes <= GIS3D_RETAINED_RAW_BYTES).then_some(GIS3D_RETAINED_WORK_ITEMS)
+}
+
+fn gis3d_retained_reduce(
+    command: &Gis3dCommand,
+    snapshot: &GisTerrainSnapshot,
+    config: &Gis3dConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, NoDraftMutation>, Fault> {
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+}
+
+struct Gis3dCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl Gis3dCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: GIS3D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for Gis3dCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<Gis3dPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<Gis3dPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        GIS3D_RETAINED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        gis3d_retained_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > GIS3D_RETAINED_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("GIS terrain bounded command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Gis3dCommandJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<Gis3dPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = GIS3D_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;
+}
+//#endregion 🧵️RetainedCommands
+
 impl ArtifactEditor for Gis3dPlayApp {
     type Snapshot = GisTerrainSnapshot;
     type Mutation = GisTerrainMutation;
@@ -138,28 +226,83 @@ impl ArtifactEditor for Gis3dPlayApp {
     const DIALECT: Dialect = crate::artifacts::gisterrain::GISTERRAIN_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<Gis3dPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.gis.gisterrain@1/*#editor",
+        document_schema: "gis.terrain",
+        factory: "Gis3dCommandJobFactory",
+        tools: {
+            "setExaggeration" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setCamera" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setLocale" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+        }
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(Gis3dCommandJobFactory::new(&controller))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !GIS3D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id {
+            return Err(Fault::from("gis3d-command-tool-mismatch"));
+        }
+        if gis3d_retained_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
+            return Err(Fault::from("gis3d-command-payload-too-large"));
+        }
+        let tool_id = request.command.command_id();
+        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, gis3d_retained_reduce, gis3d_retained_extent));
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            request.context,
+            operation_context,
+            request.completion,
+            Gis3dCommand::command_id,
+            GIS3D_RETAINED_RAW_BYTES,
+            GIS3D_RETAINED_WORK_ITEMS,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
+
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::gis3d::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> GisTerrainSnapshot {
+    fn initial_snapshot() -> GisTerrainSnapshot {
         default_terrain_document()
     }
 
     /// 🔌️ `map:in`/`scene:out` (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) plus the implicit
     /// document ports.
-    async fn io() -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(gis3d_io())
     }
 
     /// 🎞️ `scene:out` (see `gis3d_scene_media` in `🔖️Io` above) plus the inherited
     /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
-    async fn export_media(port: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>) -> Result<Media, MediaError> {
         match port {
             "scene:out" => Ok(gis3d_scene_media(doc.snapshot)),
             "document:out" => {
-                let media_type = Self::io().await.map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -173,7 +316,7 @@ impl ArtifactEditor for Gis3dPlayApp {
     /// deliberately unimplemented — per the semantic-mutations taxonomy, whole-document replace has
     /// no in-history mutation; it goes through `ArtifactStore::reset` (file-open/import/load-example),
     /// entirely outside this method.
-    async fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, GisTerrainSnapshot>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, GisTerrainSnapshot>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "map:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -186,7 +329,7 @@ impl ArtifactEditor for Gis3dPlayApp {
         }
     }
 
-    async fn command_id(command: &Gis3dCommand) -> &'static str {
+    fn command_id(command: &Gis3dCommand) -> &'static str {
         command.command_id()
     }
 
@@ -194,16 +337,25 @@ impl ArtifactEditor for Gis3dPlayApp {
     /// `{action,args}` wire; this is the typed-command bridge until those call sites send `OpBinary`
     /// bytes directly. Mirrors `crate::editor::gis2d`'s arg-key tolerance (camelCase + snake_case + the
     /// nested `camera` object form).
-    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let args = args.cloned().unwrap_or(Value::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         match action {
             "setExaggeration" => Ok(Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: ["exaggeration", "value"].iter().find_map(|key| args.get(key).and_then(Value::as_f64)).unwrap_or(1.0) })),
             "setCamera" => {
                 let camera_json = str_arg(&["cameraJson", "camera_json"]).or_else(|| args.get("camera").map(|value| if value.is_string() { value.as_str().unwrap_or("{}").to_string() } else { value.to_string() })).unwrap_or_else(|| "{}".into());
+                if camera_json.len() > GIS3D_RETAINED_RAW_BYTES {
+                    return Err(Fault::from("gis3d-command-payload-too-large"));
+                }
                 Ok(Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json }))
             }
-            "setLocale" => Ok(Gis3dCommand::SetLocale(set_locale::SetLocale { value: str_arg(&["value", "locale"]).unwrap_or_default() })),
+            "setLocale" => {
+                let value = str_arg(&["value", "locale"]).unwrap_or_default();
+                if value.len() > GIS3D_RETAINED_RAW_BYTES {
+                    return Err(Fault::from("gis3d-command-payload-too-large"));
+                }
+                Ok(Gis3dCommand::SetLocale(set_locale::SetLocale { value }))
+            }
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
@@ -211,7 +363,7 @@ impl ArtifactEditor for Gis3dPlayApp {
         }
     }
 
-    async fn handle(
+    fn handle(
         command: &Gis3dCommand,
         doc: &ArtifactView<'_, GisTerrainSnapshot>,
         cfg: &ConfigView<'_, Gis3dConfig>,
@@ -224,11 +376,11 @@ impl ArtifactEditor for Gis3dPlayApp {
 
     /// 🧮️ Empty — gis3d's `Config` is session view state (camera), not a user-facing settings
     /// record; `ConfigSpec::empty()` (the trait default) is correct as-is.
-    async fn config_spec() -> semio_framework_plugin::ConfigSpec {
-        semio_framework_plugin::ConfigSpec::empty().await
+    fn config_spec() -> semio_framework_plugin::ConfigSpec {
+        semio_framework_plugin::ConfigSpec::default()
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             terrain::GIS3D_PLAY_BODY_COMPOSITE => terrain::render(doc.snapshot, cfg.snapshot).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
@@ -277,9 +429,12 @@ pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
             .window_kind_interactions(terrain::GIS3D_PLAY_WINDOW_MAIN, vec![InteractionRef::new("features")])
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
             .mutation("setExaggeration", LocalizedLabel::native("Set Exaggeration", "Überhöhung festlegen"))
+            .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setExaggeration", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            .config(semio_framework_plugin::resolve_ready(Gis3dPlayApp::config_spec()))
+            .config(Gis3dPlayApp::config_spec())
             .io(gis3d_io())
             .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder::build_definition` has no `.example(...)`/
@@ -332,6 +487,8 @@ mod tests {
     use crate::editor::gis3d::testkit::{app, app_with_registry, dispatch, gis3d_app_manifest_for_testkit, render};
     use semio_framework_plugin::EditorApp;
     use serde_json::json;
+
+    const RETAINED_LIMITS: &str = include_str!("🧪️fixtures/🎯️retained-command-limits.json");
 
     //#region 🔖️CommandSurface
     /// 🎯️ One value per `app_commands!` row, in row order.
@@ -390,6 +547,27 @@ mod tests {
         let app = Gis3dPlayApp;
         let camera = Gis3dPlayApp::command_from_action("setCamera", Some(&json!({ "camera": { "position": [1.0, 2.0, 3.0] } }))).expect("setCamera");
         assert!(matches!(camera, Gis3dCommand::SetCamera(ref payload) if payload.camera_json.contains("position")));
+    }
+
+    #[test]
+    fn retained_command_factory_matches_the_language_neutral_maximum_oracle() {
+        let fixture: Value = serde_json::from_str(RETAINED_LIMITS).expect("GIS terrain retained limits decode through serde_json");
+        let maximum = fixture.get("maximumTextBytes").and_then(Value::as_u64).expect("maximumTextBytes") as usize;
+        let additional = fixture.get("rejectedAdditionalBytes").and_then(Value::as_u64).expect("rejectedAdditionalBytes") as usize;
+        let expected_items = fixture.get("expectedWorkItems").and_then(Value::as_u64).expect("expectedWorkItems") as usize;
+        let tool_ids = fixture.get("toolIds").and_then(Value::as_array).expect("toolIds").iter().map(|value| value.as_str().expect("tool id")).collect::<Vec<_>>();
+        assert_eq!(maximum, GIS3D_RETAINED_RAW_BYTES);
+        assert_eq!(expected_items, GIS3D_RETAINED_WORK_ITEMS);
+        assert_eq!(tool_ids, GIS3D_RETAINED_TOOL_IDS);
+        let snapshot = default_terrain_document();
+        let interaction = protocol::InteractionState::default();
+        let accepted = Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: "c".repeat(maximum) });
+        let rejected = Gis3dCommand::SetLocale(set_locale::SetLocale { value: "l".repeat(maximum + additional) });
+        assert_eq!(gis3d_retained_extent(&accepted, &snapshot, &interaction), Some(expected_items));
+        assert_eq!(gis3d_retained_extent(&rejected, &snapshot, &interaction), None);
+        let factory = Gis3dCommandJobFactory::new("s.gis.gisterrain@1/*#editor");
+        assert_eq!(factory.execution_contract(), ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500));
+        assert!(Gis3dPlayApp::command_from_action("setCamera", Some(&json!({ "cameraJson": "c".repeat(maximum + additional) }))).is_err());
     }
     //#endregion 🔖️CommandSurface
 

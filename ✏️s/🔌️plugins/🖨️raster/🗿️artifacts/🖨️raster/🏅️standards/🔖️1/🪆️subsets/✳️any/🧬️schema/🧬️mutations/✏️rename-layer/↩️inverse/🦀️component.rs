@@ -7,7 +7,7 @@ use crate::artifacts::raster::schema::{find_layer, layer_name};
 use crate::artifacts::raster::RasterSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &RenameLayer, base: &RasterSnapshot) -> Vec<RasterMutation> {
+pub fn inverse(payload: &RenameLayer, base: &RasterSnapshot) -> Vec<RasterMutation> {
     match find_layer(&base.layers, &payload.layer_id) {
         Some(layer) => vec![RasterMutation::RenameLayer(RenameLayer { layer_id: payload.layer_id.clone(), new_name: layer_name(layer).to_string() })],
         None => Vec::new(),

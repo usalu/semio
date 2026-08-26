@@ -15,11 +15,11 @@ pub mod derived_composition {
         type Snapshot = SvgSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_XML]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -35,7 +35,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "SvgComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = SvgAnalyzer::analyze(&native).await;
+            let analysis = SvgAnalyzer::analyze(&native);
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "SvgComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -103,13 +103,13 @@ mod tests {
     async fn exact_native_analyzer_text_and_pack_roundtrip() {
         let original = exact_fixture_bytes().await;
         let text = std::str::from_utf8(&original).expect("fixture UTF-8");
-        let text_analysis = <crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[AnalyzeSource::Text(text)]).await;
+        let text_analysis = <crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[AnalyzeSource::Text(text)]);
         assert!(text_analysis.diagnostics.is_empty(), "text diagnostics: {:?}", text_analysis.diagnostics);
         let text_snapshot = text_analysis.parts.snapshot.expect("text snapshot");
         assert_eq!(text_snapshot.export_utf8().expect("text analyzer export"), original);
 
         let pack = store::ArtifactPack::encode_pack(&text_snapshot);
-        let pack_analysis = <crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[AnalyzeSource::Binary(&pack)]).await;
+        let pack_analysis = <crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[AnalyzeSource::Binary(&pack)]);
         assert!(pack_analysis.diagnostics.is_empty(), "pack diagnostics: {:?}", pack_analysis.diagnostics);
         assert_eq!(pack_analysis.parts.snapshot.expect("pack snapshot").export_utf8().expect("pack analyzer export"), original);
     }
@@ -119,12 +119,12 @@ mod tests {
         let original = exact_fixture_bytes().await;
         let text = std::str::from_utf8(&original).expect("fixture UTF-8");
         let text_sources = [ComposeSource { dialect: SVG_DIALECT, payload: AnalyzeSource::Text(text) }];
-        let text_composition = SvgComposerComposition::compose(&text_sources).await.expect("compose raw SVG text");
+        let text_composition = SvgComposerComposition::compose(&text_sources).expect("compose raw SVG text");
         assert_eq!(text_composition.snapshot.export_utf8().expect("text composition export"), original);
 
         let pack = store::ArtifactPack::encode_pack(&text_composition.snapshot);
         let pack_sources = [ComposeSource { dialect: SVG_DIALECT, payload: AnalyzeSource::Binary(&pack) }];
-        let pack_composition = SvgComposerComposition::compose(&pack_sources).await.expect("compose SVG pack");
+        let pack_composition = SvgComposerComposition::compose(&pack_sources).expect("compose SVG pack");
         assert_eq!(pack_composition.snapshot.export_utf8().expect("pack composition export"), original);
     }
     //#endregion 🔖️LosslessNativeRouting

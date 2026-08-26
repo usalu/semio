@@ -20,12 +20,12 @@ pub mod derived_composition {
         type Snapshot = Ifc2x3Snapshot;
         const WRITES: Dialect = DIALECT_SAV;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT_ANY, DIALECT_SAV, DEP_TXT]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = semio_framework_plugin::resolve_ready(Ifc2x3AnyComposer::compose(sources))?;
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+            let inner = Ifc2x3AnyComposer::compose(sources)?;
             let checks = check_sav_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -88,20 +88,20 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn conforming_builder_snapshot_composes_and_stamps_sav() {
-            let snapshot = Ifc2x3SavBuilder::new().build().await.expect("clean SAV document must build");
+            let snapshot = Ifc2x3SavBuilder::new().build().expect("clean SAV document must build");
             let bytes = <Ifc2x3Snapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = Ifc2x3SavComposerComposition::compose(&sources).await.expect("clean document must compose to sav");
+            let composed = Ifc2x3SavComposerComposition::compose(&sources).expect("clean document must compose to sav");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn no_analysis_model_fails_compose_with_real_diagnostic() {
-            let mut snapshot = Ifc2x3SavBuilder::new().build().await.expect("build");
+            let mut snapshot = Ifc2x3SavBuilder::new().build().expect("build");
             snapshot.document.instances.retain(|i| !i.is_type("IFCSTRUCTURALANALYSISMODEL"));
             let bytes = <Ifc2x3Snapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let err = Ifc2x3SavComposerComposition::compose(&sources).await.expect_err("a document with no analysis model must not stamp sav");
+            let err = Ifc2x3SavComposerComposition::compose(&sources).expect_err("a document with no analysis model must not stamp sav");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_NO_ANALYSIS_MODEL && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
     }

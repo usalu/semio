@@ -14,32 +14,32 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 /// 🧪️ Real hex/bracket child-handle codec (mirrors `📐️cad`'s own `enc_child`/`dec_child`, the
 /// working reference for a composite subset's handle codec) — a handle is exactly two strings
 /// (`child_id`, the target's `ArtifactRef` flattened via `to_uri()`), never the child's own content.
-async fn hex_encode(bytes: &[u8]) -> String {
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-async fn enc_str(s: &str) -> String {
+fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-async fn dec_str(s: &str) -> Result<String, String> {
+fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-async fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
     enc_str(&r.to_uri())
 }
-async fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
+fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
 }
 
-async fn enc_child(c: &WriterDocumentChild) -> String {
+fn enc_child(c: &WriterDocumentChild) -> String {
     format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
 }
-async fn dec_child(s: &str) -> Result<WriterDocumentChild, String> {
+fn dec_child(s: &str) -> Result<WriterDocumentChild, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
     let parts: Vec<&str> = inner.splitn(2, ',').collect();
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
@@ -48,10 +48,10 @@ async fn dec_child(s: &str) -> Result<WriterDocumentChild, String> {
 //#endregion 🔖️ChildCodecPrimitives
 
 //#region 🔖️TextPrimitives
-async fn print_writer_snapshot_body(s: &WriterSnapshot) -> String {
+fn print_writer_snapshot_body(s: &WriterSnapshot) -> String {
     format!("schema={}\nid={}\nlanguageId={}\nuri={}\ndocument={}", enc_str(&s.schema), enc_str(&s.id), enc_str(&s.language_id), enc_str(&s.uri), enc_child(&s.document))
 }
-async fn parse_writer_snapshot_body(body: &str) -> Result<WriterSnapshot, String> {
+fn parse_writer_snapshot_body(body: &str) -> Result<WriterSnapshot, String> {
     let mut snapshot = WriterSnapshot::default();
     let mut saw_schema = false;
     for line in body.lines() {
@@ -88,17 +88,17 @@ async fn parse_writer_snapshot_body(body: &str) -> Result<WriterSnapshot, String
 /// reachable from this crate).
 impl store::ArtifactDsl for WriterSnapshot {
     const EXTENSION: &'static str = "writer";
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         "writer.writer"
     }
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         parse_writer_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = print_writer_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -125,12 +125,12 @@ const JACK_QUERY_TEXT: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE 
 const DAG_JACK_QUERY_TEXT: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a, b";
 
 /// 📖️ Parses `.writer` DSL text into a `WriterSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<WriterSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<WriterSnapshot, store::TextError> {
     <WriterSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `WriterSnapshot` back to `.writer` DSL text.
-pub async fn print_dsl(projection: &WriterSnapshot) -> String {
+pub fn print_dsl(projection: &WriterSnapshot) -> String {
     store::ArtifactDsl::print_dsl(projection)
 }
 
@@ -154,27 +154,27 @@ pub fn print_writer_dsl(snapshot: &WriterSnapshot) -> String {
 /// 📄️ The `jack` example, parsed once from {@link JACK_EXAMPLE_TEXT} — the source of truth for every
 /// call site below (`setActiveExample`, `.example("jack", ...)`, tests, "file-text"); never re-embed the
 /// raw text.
-pub async fn jack_example_document() -> WriterSnapshot {
-    let document = parse_dsl(JACK_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::writer::schema::empty_writer_snapshot());
-    crate::artifacts::writer::cache_writer_document_text(&document.document.child_id, JACK_QUERY_TEXT);
+pub fn jack_example_document() -> WriterSnapshot {
+    let mut document = parse_dsl(JACK_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::writer::schema::empty_writer_snapshot());
+    crate::artifacts::writer::attach_writer_document_text(&mut document.document, JACK_QUERY_TEXT);
     document
 }
 
 /// 📄️ JSON re-serialization of {@link jack_example_document}, for the framework-generic call sites
 /// (`.example(...)`, `render(...)`) that still take a document as a JSON string.
-pub async fn jack_example_json() -> String {
+pub fn jack_example_json() -> String {
     serde_json::to_string(&jack_example_document()).expect("serialize jack example document")
 }
 
 /// 📄️ The `dag.jack` example, parsed once from {@link DAG_JACK_EXAMPLE_TEXT} — see {@link jack_example_document}.
-pub async fn dag_jack_example_document() -> WriterSnapshot {
-    let document = parse_dsl(DAG_JACK_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::writer::schema::empty_writer_snapshot());
-    crate::artifacts::writer::cache_writer_document_text(&document.document.child_id, DAG_JACK_QUERY_TEXT);
+pub fn dag_jack_example_document() -> WriterSnapshot {
+    let mut document = parse_dsl(DAG_JACK_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::writer::schema::empty_writer_snapshot());
+    crate::artifacts::writer::attach_writer_document_text(&mut document.document, DAG_JACK_QUERY_TEXT);
     document
 }
 
 /// 📄️ JSON re-serialization of {@link dag_jack_example_document} — see {@link jack_example_json}.
-pub async fn dag_jack_example_json() -> String {
+pub fn dag_jack_example_json() -> String {
     serde_json::to_string(&dag_jack_example_document()).expect("serialize dag.jack example document")
 }
 //#endregion 🔖️Examples
@@ -198,7 +198,7 @@ mod tests {
     }
 
     /// ✍️ Hand-built representative document exercising the multiline/quoted-text path.
-    async fn jack_snapshot() -> WriterSnapshot {
+    fn jack_snapshot() -> WriterSnapshot {
         crate::artifacts::writer::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
     }
 
@@ -223,7 +223,7 @@ mod tests {
         assert!(printed.contains("document=["));
     }
 
-    async fn hex_encode_for_test(s: &str) -> String {
+    fn hex_encode_for_test(s: &str) -> String {
         s.as_bytes().iter().map(|b| format!("{b:02x}")).collect()
     }
 }

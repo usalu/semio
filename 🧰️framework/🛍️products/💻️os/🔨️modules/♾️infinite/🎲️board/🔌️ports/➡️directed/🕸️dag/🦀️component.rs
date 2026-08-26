@@ -9463,19 +9463,19 @@ mod wasm_bridge {
         #[wasm_bindgen(js_name = snapshotJson)]
         pub async fn snapshot_json(&self) -> Result<String, JsValue> {
             let store = self.store.try_borrow().map_err(|_| JsValue::from_str("DAG VCS operation already in progress"))?;
-            store.snapshot_json().await.map_err(|e| JsValue::from_str(&e.to_string()))
+            store.snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
         pub async fn envelope_json(&self) -> Result<String, JsValue> {
             let store = self.store.try_borrow().map_err(|_| JsValue::from_str("DAG VCS operation already in progress"))?;
-            store.envelope_json().await.map_err(|e| JsValue::from_str(&e.to_string()))
+            store.envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = generation)]
         pub async fn generation(&self) -> Result<u32, JsValue> {
             let store = self.store.try_borrow().map_err(|_| JsValue::from_str("DAG VCS operation already in progress"))?;
-            Ok(store.generation().await as u32)
+            Ok(store.generation() as u32)
         }
     }
 }

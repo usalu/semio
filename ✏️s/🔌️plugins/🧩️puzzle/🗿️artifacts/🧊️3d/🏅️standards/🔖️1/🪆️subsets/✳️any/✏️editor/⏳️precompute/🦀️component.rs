@@ -2054,7 +2054,7 @@ mod tests {
     use crate::artifacts::puzzle3d::schema::testkit::*;
     use crate::artifacts::puzzle3d::schema::{BrushHostRules, BrushKindWeights, CableKindCatalog, FixtureObject, KindCompatEntry, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexKindCatalog, VortexProps};
     use semio_framework_job::StepOutcome;
-    use std::time::Instant;
+    use std::time::{Duration, Instant};
 
     fn fill_capable_engine() -> Puzzle3dCollision {
         let mut engine = Puzzle3dCollision::new();
@@ -2430,7 +2430,7 @@ mod tests {
 
         engine.set_scene(&single_object_scene_json()).expect("seed");
         if let Some(scene) = &mut engine.scene {
-            scene.kind_catalogs = None;
+            Arc::make_mut(scene).kind_catalogs = None;
         }
         assert!(engine.apply_brush_placement(&payload).is_none(), "no catalogs means no placement");
     }
@@ -2490,7 +2490,7 @@ mod tests {
     fn fill_worker_session(seed: u32) -> Puzzle3dPrecomputeSession {
         let mut engine = fill_capable_engine();
         if seed != 1 {
-            let mut scene = engine.scene.clone().expect("scene");
+            let mut scene = (*engine.scene.clone().expect("scene")).clone();
             scene.seed = seed;
             engine.set_scene(&serde_json::to_string(&scene).expect("scene json")).expect("reseed scene");
         }
@@ -2732,10 +2732,12 @@ mod tests {
         let mut object_weights = std::collections::BTreeMap::new();
         object_weights.insert("Host".to_string(), 3.0);
         session.dispatch(Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights: std::collections::BTreeMap::new() }).expect("superseding weights");
-        let replacement_pointer = Arc::as_ptr(session.engine.fill.as_ref().expect("separate replacement candidate"));
-        assert_ne!(replacement_pointer, admitted_pointer, "supersession builds a distinct unadmitted candidate");
+        let weight_replacement_pointer = Arc::as_ptr(session.engine.fill.as_ref().expect("separate weight replacement candidate"));
+        assert_ne!(weight_replacement_pointer, admitted_pointer, "weight supersession builds a distinct unadmitted candidate");
         let (positions, indices) = unit_cube_mesh_buffers();
         session.register_mesh("/test/superseding.glb", &positions, &indices);
+        let replacement_pointer = Arc::as_ptr(session.engine.fill.as_ref().expect("separate mesh replacement candidate"));
+        assert_ne!(replacement_pointer, weight_replacement_pointer, "mesh supersession replaces the unadmitted weight candidate without touching the admitted owner");
 
         let registry = fill_envelope_registry().lock().expect("registry");
         let authority = registry.slots[usize::from(request.slot)].as_ref().filter(|authority| authority.request == request).expect("old admitted authority");

@@ -113,14 +113,14 @@ impl ArtifactEditor for EpwEditor {
     const DIALECT: Dialect = EPW_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_EPW_DOCUMENT_SCHEMA;
 
-    async fn initial_snapshot() -> EpwSnapshot {
+    fn initial_snapshot() -> EpwSnapshot {
         EpwSnapshot::default()
     }
 
     /// ✏️ Resolves the addressed column to its canonical wire index and emits one
     /// `EpwMutation::SetRecordField`. An out-of-range row or unknown column is a documented no-op
     /// (`Emit::default()`), never a panic.
-    async fn handle(
+    fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -136,7 +136,7 @@ impl ArtifactEditor for EpwEditor {
         Ok(Emit { artifact_mutations: vec![EpwMutation::SetRecordField { record_index: *row as usize, field_index, value: value.clone() }], description: Some(format!("Set {column}")), ..Default::default() })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
             _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),

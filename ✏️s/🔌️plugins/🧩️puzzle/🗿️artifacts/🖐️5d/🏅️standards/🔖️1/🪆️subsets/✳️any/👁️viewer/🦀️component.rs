@@ -56,7 +56,7 @@ impl ArtifactViewer for Puzzle5dViewer {
     const DIALECT: Dialect = PUZZLE5D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE_5D_SCHEMA;
 
-    async fn initial_snapshot() -> Puzzle5dSnapshot {
+    fn initial_snapshot() -> Puzzle5dSnapshot {
         Puzzle5dSnapshot::default()
     }
 
@@ -64,7 +64,7 @@ impl ArtifactViewer for Puzzle5dViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (camera
     /// orbit, "jump to part") is a pure addition here, never a signature change.
-    async fn handle(
+    fn handle(
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -74,7 +74,7 @@ impl ArtifactViewer for Puzzle5dViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let node = match body_key {
             world3d::BODY_KEY => world3d::render(doc.snapshot)?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d viewer unknown-body label admission failed"))?,

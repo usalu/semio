@@ -28,6 +28,21 @@
     {
       "id": "tiff-6-0-any",
       "capability": "tiff-6-0-mutate",
+      "standardDirectoryName": "🔖️6.0",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "stamps-a-software-tag-and-adds-an-image-description",
+              "directoryName": "🧪️stamps-a-software-tag-and-adds-an-image-description"
+            }
+          ]
+        }
+      ],
       "kinds": ["no-mutation", "set-snapshot", "set-byte-order", "insert-ifd", "remove-ifd", "set-tag", "remove-tag", "set-pixels"]
     }
   ]

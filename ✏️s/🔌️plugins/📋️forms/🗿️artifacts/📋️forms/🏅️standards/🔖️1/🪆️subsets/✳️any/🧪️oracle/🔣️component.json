@@ -24,6 +24,120 @@
     {
       "id": "forms-1-any",
       "capability": "forms-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-form-title",
+          "sourceMutationDirectoryName": "🏷️change-form-title",
+          "mutationDirectoryName": "🏷️change-form-title",
+          "scenarios": [
+            {
+              "id": "titles-an-untitled-survey",
+              "directoryName": "🧪️titles-an-untitled-survey"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-step-description",
+          "sourceMutationDirectoryName": "📝change-step-description",
+          "mutationDirectoryName": "📝change-step-description",
+          "scenarios": [
+            {
+              "id": "no-ops-when-clearing-an-already-absent-description",
+              "directoryName": "🧪️no-ops-when-clearing-an-already-absent-description"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-block",
+          "sourceMutationDirectoryName": "➕create-block",
+          "mutationDirectoryName": "➕create-block",
+          "scenarios": [
+            {
+              "id": "rejects-a-block-for-a-step-that-does-not-exist",
+              "directoryName": "🧪️rejects-a-block-for-a-step-that-does-not-exist"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-step",
+          "sourceMutationDirectoryName": "🌱create-step",
+          "mutationDirectoryName": "🌱create-step",
+          "scenarios": [
+            {
+              "id": "rejects-a-duplicate-step-id",
+              "directoryName": "🧪️rejects-a-duplicate-step-id"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-block",
+          "sourceMutationDirectoryName": "➖delete-block",
+          "mutationDirectoryName": "➖delete-block",
+          "scenarios": [
+            {
+              "id": "rejects-deleting-a-block-missing-from-an-existing-step",
+              "directoryName": "🧪️rejects-deleting-a-block-missing-from-an-existing-step"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-step",
+          "sourceMutationDirectoryName": "🗑️delete-step",
+          "mutationDirectoryName": "🗑️delete-step",
+          "scenarios": [
+            {
+              "id": "rejects-deleting-a-step-the-scene-does-not-hold",
+              "directoryName": "🧪️rejects-deleting-a-step-the-scene-does-not-hold"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-block-to-step",
+          "sourceMutationDirectoryName": "📦move-block-to-step",
+          "mutationDirectoryName": "📦move-block-to-step",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-block-stays-at-its-index-in-its-own-step",
+              "directoryName": "🧪️no-ops-when-the-block-stays-at-its-index-in-its-own-step"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-step",
+          "sourceMutationDirectoryName": "✏️rename-step",
+          "mutationDirectoryName": "✏️rename-step",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-step-already-carries-that-title",
+              "directoryName": "🧪️no-ops-when-the-step-already-carries-that-title"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-step",
+          "sourceMutationDirectoryName": "🔀reorder-step",
+          "mutationDirectoryName": "🔀reorder-step",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-step-already-sits-at-that-index",
+              "directoryName": "🧪️no-ops-when-the-step-already-sits-at-that-index"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-block",
+          "sourceMutationDirectoryName": "🔁replace-block",
+          "mutationDirectoryName": "🔁replace-block",
+          "scenarios": [
+            {
+              "id": "no-ops-when-the-replacement-block-is-identical",
+              "directoryName": "🧪️no-ops-when-the-replacement-block-is-identical"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "create-step",
         "delete-step",

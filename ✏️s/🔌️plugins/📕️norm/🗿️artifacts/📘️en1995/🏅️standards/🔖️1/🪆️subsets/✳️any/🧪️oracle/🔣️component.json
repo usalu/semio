@@ -23,6 +23,230 @@
     {
       "id": "en1995-1-any",
       "capability": "en1995-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-a-ef-mm2",
+          "sourceMutationDirectoryName": "🪝change-a-ef-mm2",
+          "mutationDirectoryName": "🪝change-a-ef-mm2",
+          "scenarios": [
+            {
+              "id": "enlarges-the-effective-connection-area-to-16000-mm2",
+              "directoryName": "🧪️enlarges-the-effective-connection-area-to-16000-mm2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-a-mm2",
+          "sourceMutationDirectoryName": "🪣change-a-mm2",
+          "mutationDirectoryName": "🪣change-a-mm2",
+          "scenarios": [
+            {
+              "id": "enlarges-the-gross-area-to-72000-mm2",
+              "directoryName": "🧪️enlarges-the-gross-area-to-72000-mm2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-a-vert-ms2",
+          "sourceMutationDirectoryName": "🧰change-a-vert-ms2",
+          "mutationDirectoryName": "🧰change-a-vert-ms2",
+          "scenarios": [
+            {
+              "id": "doubles-the-vertical-footfall-acceleration-to-0-5-m-s2",
+              "directoryName": "🧪️doubles-the-vertical-footfall-acceleration-to-0-5-m-s2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-annex",
+          "sourceMutationDirectoryName": "📐change-annex",
+          "mutationDirectoryName": "📐change-annex",
+          "scenarios": [
+            {
+              "id": "switches-from-the-german-na-to-the-recommended-en-annex",
+              "directoryName": "🧪️switches-from-the-german-na-to-the-recommended-en-annex"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-b-mm",
+          "sourceMutationDirectoryName": "🧵change-b-mm",
+          "mutationDirectoryName": "🧵change-b-mm",
+          "scenarios": [
+            {
+              "id": "widens-the-beam-to-240-mm",
+              "directoryName": "🧪️widens-the-beam-to-240-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-f-ed-kn",
+          "sourceMutationDirectoryName": "🧶change-f-ed-kn",
+          "mutationDirectoryName": "🧶change-f-ed-kn",
+          "scenarios": [
+            {
+              "id": "raises-the-design-fastener-force-to-24-kn",
+              "directoryName": "🧪️raises-the-design-fastener-force-to-24-kn"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fc0-k",
+          "sourceMutationDirectoryName": "🪡change-fc0-k",
+          "mutationDirectoryName": "🪡change-fc0-k",
+          "scenarios": [
+            {
+              "id": "raises-the-parallel-compressive-strength-to-26-5-mpa",
+              "directoryName": "🧪️raises-the-parallel-compressive-strength-to-26-5-mpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fire-duration-min",
+          "sourceMutationDirectoryName": "🪢change-fire-duration-min",
+          "mutationDirectoryName": "🪢change-fire-duration-min",
+          "scenarios": [
+            {
+              "id": "raises-the-fire-exposure-from-r30-to-r60",
+              "directoryName": "🧪️raises-the-fire-exposure-from-r30-to-r60"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fmk",
+          "sourceMutationDirectoryName": "🧷change-fmk",
+          "mutationDirectoryName": "🧷change-fmk",
+          "scenarios": [
+            {
+              "id": "upgrades-the-bending-strength-class-to-28-mpa",
+              "directoryName": "🧪️upgrades-the-bending-strength-class-to-28-mpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fvk",
+          "sourceMutationDirectoryName": "🧲change-fvk",
+          "mutationDirectoryName": "🧲change-fvk",
+          "scenarios": [
+            {
+              "id": "lowers-the-characteristic-shear-strength-to-3-5-mpa",
+              "directoryName": "🧪️lowers-the-characteristic-shear-strength-to-3-5-mpa"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-h-mm",
+          "sourceMutationDirectoryName": "🪤change-h-mm",
+          "mutationDirectoryName": "🪤change-h-mm",
+          "scenarios": [
+            {
+              "id": "deepens-the-beam-to-360-mm",
+              "directoryName": "🧪️deepens-the-beam-to-360-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-load-duration",
+          "sourceMutationDirectoryName": "🪒change-load-duration",
+          "mutationDirectoryName": "🪒change-load-duration",
+          "scenarios": [
+            {
+              "id": "shortens-the-load-duration-class-from-medium-to-short",
+              "directoryName": "🧪️shortens-the-load-duration-class-from-medium-to-short"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-m-crit-knm",
+          "sourceMutationDirectoryName": "🪥change-m-crit-knm",
+          "mutationDirectoryName": "🪥change-m-crit-knm",
+          "scenarios": [
+            {
+              "id": "raises-the-critical-buckling-moment-to-96-knm",
+              "directoryName": "🧪️raises-the-critical-buckling-moment-to-96-knm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-m-ed-knm",
+          "sourceMutationDirectoryName": "🧴change-m-ed-knm",
+          "mutationDirectoryName": "🧴change-m-ed-knm",
+          "scenarios": [
+            {
+              "id": "raises-the-design-bending-moment-to-32-knm",
+              "directoryName": "🧪️raises-the-design-bending-moment-to-32-knm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-n-cycles-bridge",
+          "sourceMutationDirectoryName": "🧼change-n-cycles-bridge",
+          "mutationDirectoryName": "🧼change-n-cycles-bridge",
+          "scenarios": [
+            {
+              "id": "quadruples-the-bridge-fatigue-cycles-to-2000000",
+              "directoryName": "🧪️quadruples-the-bridge-fatigue-cycles-to-2000000"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-n-ed-kn",
+          "sourceMutationDirectoryName": "🧽change-n-ed-kn",
+          "mutationDirectoryName": "🧽change-n-ed-kn",
+          "scenarios": [
+            {
+              "id": "raises-the-design-axial-force-to-75-kn",
+              "directoryName": "🧪️raises-the-design-axial-force-to-75-kn"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-section-depth-mm",
+          "sourceMutationDirectoryName": "🪠change-section-depth-mm",
+          "mutationDirectoryName": "🪠change-section-depth-mm",
+          "scenarios": [
+            {
+              "id": "raises-the-size-effect-depth-to-360-mm",
+              "directoryName": "🧪️raises-the-size-effect-depth-to-360-mm"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-service-class",
+          "sourceMutationDirectoryName": "🧹change-service-class",
+          "mutationDirectoryName": "🧹change-service-class",
+          "scenarios": [
+            {
+              "id": "moves-the-beam-from-service-class-1-to-service-class-2",
+              "directoryName": "🧪️moves-the-beam-from-service-class-1-to-service-class-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-v-ed-kn",
+          "sourceMutationDirectoryName": "🧺change-v-ed-kn",
+          "mutationDirectoryName": "🧺change-v-ed-kn",
+          "scenarios": [
+            {
+              "id": "raises-the-design-shear-force-to-22-5-kn",
+              "directoryName": "🧪️raises-the-design-shear-force-to-22-5-kn"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-w-mm3",
+          "sourceMutationDirectoryName": "🪑change-w-mm3",
+          "mutationDirectoryName": "🪑change-w-mm3",
+          "scenarios": [
+            {
+              "id": "raises-the-section-modulus-to-4000000-mm3",
+              "directoryName": "🧪️raises-the-section-modulus-to-4000000-mm3"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "change-annex",
         "change-m-ed-knm",

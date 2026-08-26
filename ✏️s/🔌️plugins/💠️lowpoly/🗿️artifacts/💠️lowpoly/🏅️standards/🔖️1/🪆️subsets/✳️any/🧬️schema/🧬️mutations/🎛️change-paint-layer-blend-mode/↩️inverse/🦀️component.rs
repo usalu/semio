@@ -5,7 +5,7 @@ use super::mutation::ChangePaintLayerBlendMode;
 use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &ChangePaintLayerBlendMode, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
+pub fn inverse(payload: &ChangePaintLayerBlendMode, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
     let Some(layer) = base.objects.iter().find(|object| object.id == payload.object_id).and_then(|object| object.paint_layers.get(payload.index)) else {
         return Vec::new();
     };

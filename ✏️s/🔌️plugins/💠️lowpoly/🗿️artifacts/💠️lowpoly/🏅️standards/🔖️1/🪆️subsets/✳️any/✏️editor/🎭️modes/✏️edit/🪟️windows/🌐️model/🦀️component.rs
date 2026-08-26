@@ -53,7 +53,7 @@ pub const LOWPOLY_MAIN_ACTIONS: &[&str] = &[
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::lowpoly::create_lowpoly_app`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     let projection = crate::artifacts::lowpoly::schema::default_snapshot();
     let config = LowpolyConfig::default();
     let labels = semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US");
@@ -82,7 +82,7 @@ pub async fn definition() -> WindowKindDefinition {
 
 /// 🎚️ The live chrome measures for this window, collected from the app-level `🛠️options/*` shared by
 /// both windows (see the master ticket's TEMPLATE.md §12.2 pattern).
-pub async fn window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<WindowMeasure> {
     lowpoly_window_measures(config, labels)
 }
 //#endregion 🔖️Definition
@@ -97,7 +97,7 @@ pub async fn window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> 
 /// renders every peer's (and the local) selection/hover generically off the SAME "mesh" domain this
 /// window declares via `.window_kind_interactions` — see `📋️master.md`'s UI section ("scene payloads
 /// fed from InteractionView") — so this app never needs to re-embed it.
-async fn world_selection_json_for(view: LowpolyView<'_>, active_utility: &str) -> String {
+fn world_selection_json_for(view: LowpolyView<'_>, active_utility: &str) -> String {
     let config = view.config;
     let active = resolve_active_object_id(view.snapshot, config);
     json!({
@@ -109,7 +109,7 @@ async fn world_selection_json_for(view: LowpolyView<'_>, active_utility: &str) -
     .to_string()
 }
 
-async fn world_meshes_json(doc: &LowpolyDocument, texture_cache: &HashMap<String, String>) -> String {
+fn world_meshes_json(doc: &LowpolyDocument, texture_cache: &HashMap<String, String>) -> String {
     let items: Vec<Value> = serde_json::from_str(&doc.tessellate_all_json().unwrap_or_else(|_| "[]".into())).unwrap_or_default();
     let meshes: Vec<Value> = items
         .iter()
@@ -128,7 +128,7 @@ async fn world_meshes_json(doc: &LowpolyDocument, texture_cache: &HashMap<String
 
 /// 🕹️ `selected`/`hovered` per-instance flags are DELETED — see `world_selection_json_for`'s doc: the
 /// shell overlays the mesh domain's live selection/hover generically now.
-async fn world_instances_json(view: LowpolyView<'_>) -> String {
+fn world_instances_json(view: LowpolyView<'_>) -> String {
     let instances: Vec<Value> = view
         .snapshot
         .objects
@@ -157,7 +157,7 @@ async fn world_instances_json(view: LowpolyView<'_>) -> String {
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-pub async fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_utility: &str, texture_cache: &HashMap<String, String>) -> UiNode {
+pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_utility: &str, texture_cache: &HashMap<String, String>) -> UiNode {
     let config = view.config;
     match loaded {
         Some(loaded) => build_world_3d_scene(
@@ -184,7 +184,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn renders_world_scene() {
         let mut a = app();
-        assert!(render(&mut a, super::LOWPOLY_PLAY_BODY_MAIN).contains("world-3d"));
+        assert!(render(&mut a, super::LOWPOLY_PLAY_BODY_MAIN).await.contains("world-3d"));
     }
 
     #[semio_framework_async_macros::async_test]

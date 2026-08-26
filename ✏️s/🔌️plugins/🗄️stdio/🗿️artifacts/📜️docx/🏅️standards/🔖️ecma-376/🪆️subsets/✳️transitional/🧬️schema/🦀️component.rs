@@ -74,30 +74,30 @@ pub mod derived_construction {
         type Mutation = DocxMutation;
         type Diff = DocxDiff;
 
-        async fn empty() -> Self {
-            Self { inner: DocxAnyBuilder::empty().await }
+        fn empty() -> Self {
+            Self { inner: DocxAnyBuilder::empty() }
         }
 
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { inner: DocxAnyBuilder::from_snapshot(snapshot).await }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { inner: DocxAnyBuilder::from_snapshot(snapshot) }
         }
 
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self { inner: DocxAnyBuilder::from_text(text).await? })
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self { inner: DocxAnyBuilder::from_text(text)? })
         }
 
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self { inner: DocxAnyBuilder::from_binary(bytes).await? })
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self { inner: DocxAnyBuilder::from_binary(bytes)? })
         }
 
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let (inner, diff) = self.inner.mutate(mutation).await;
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let (inner, diff) = self.inner.mutate(mutation);
             self.inner = inner;
             (self, diff)
         }
 
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.inner = self.inner.absorb(diff).await?;
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.inner = self.inner.absorb(diff)?;
             Ok(self)
         }
 
@@ -107,8 +107,8 @@ pub mod derived_construction {
         /// `encode_docx` does at real encode time) — `check_transitional_conformance` needs a
         /// materialized `word/document.xml`/relationship to find at all, and the shared `DocxAnyBuilder`
         /// this wraps doesn't materialize either until actual encode.
-        async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
-            let mut snapshot = self.inner.build().await?;
+        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+            let mut snapshot = self.inner.build()?;
             crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::sync_main_part(&mut snapshot);
             let hard: Vec<Diagnostic> = check_transitional_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
@@ -126,21 +126,21 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn empty_builder_is_transitional_conformant() {
-            DocxTransitionalBuilderConstruction::empty().await.build().await.expect("empty transitional builder must be conformant");
+            DocxTransitionalBuilderConstruction::empty().build().expect("empty transitional builder must be conformant");
         }
 
         #[semio_framework_async_macros::async_test]
         async fn add_paragraph_stays_transitional_conformant() {
-            let snapshot = DocxTransitionalBuilderConstruction::empty().await.add_text_paragraph("Hello, transitional world!").build().await.expect("must build");
+            let snapshot = DocxTransitionalBuilderConstruction::empty().add_text_paragraph("Hello, transitional world!").build().expect("must build");
             assert_eq!(snapshot.document.body.len(), 1);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
-            let mut snapshot = DocxTransitionalBuilderConstruction::empty().await.add_text_paragraph("clean").build().await.unwrap();
+            let mut snapshot = DocxTransitionalBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
             snapshot.opc.set_part("word/styles.xml", "application/xml", b"<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>".to_vec());
-            let (mutated, _diff) = DocxTransitionalBuilderConstruction::from_snapshot(DocxSnapshot::default()).await.mutate(DocxMutation::SetSnapshot { snapshot }).await;
-            let err = mutated.build().await.expect_err("mixed-in strict namespace must fail build()");
+            let (mutated, _diff) = DocxTransitionalBuilderConstruction::from_snapshot(DocxSnapshot::default()).mutate(DocxMutation::SetSnapshot { snapshot });
+            let err = mutated.build().expect_err("mixed-in strict namespace must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::docx::standards::v_ecma_376::subsets::transitional::schema::CODE_STRICT_NS_PRESENT));
         }
     }
@@ -247,12 +247,12 @@ pub mod derived_analysis {
         type Parts = DocxParts;
         const DIALECT: Dialect = DIALECT;
 
-        async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            DocxAnyAnalyzer::sniff(source).await
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            DocxAnyAnalyzer::sniff(source)
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = DocxAnyAnalyzer::analyze(sources).await;
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let inner = DocxAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {

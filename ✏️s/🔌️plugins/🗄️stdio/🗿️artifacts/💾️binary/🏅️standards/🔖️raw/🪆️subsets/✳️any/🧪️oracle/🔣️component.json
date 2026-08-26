@@ -15,6 +15,21 @@
     {
       "id": "binary-raw-any",
       "capability": "binary-raw-mutate",
+      "standardDirectoryName": "🔖️raw",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "rewrites-the-two-middle-bytes",
+              "directoryName": "🧪️rewrites-the-two-middle-bytes"
+            }
+          ]
+        }
+      ],
       "kinds": ["no-mutation", "set-snapshot", "splice", "append-bytes", "truncate-at"]
     }
   ]

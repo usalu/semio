@@ -67,6 +67,36 @@ pub struct MathematicalGraphDsl {
     algorithm_seed: Option<String>,
 }
 
+impl MathematicalGraphDsl {
+    /// 🧮 Exposes bounded graph metadata without cloning the payload.
+    pub fn retained_metadata(&self) -> (bool, &str, Option<&str>) {
+        (self.directed, &self.algorithm, self.algorithm_seed.as_deref())
+    }
+
+    /// 🧮 Counts node rows for retained preflight.
+    pub fn retained_node_count(&self) -> usize {
+        self.nodes.len()
+    }
+
+    /// 🧮 Borrows one node row for a retained microstep.
+    pub fn retained_node(&self, index: usize) -> Option<&MathematicalNode> {
+        self.nodes.get(index)
+    }
+
+    /// 🧮 Counts edge rows for retained preflight.
+    pub fn retained_edge_count(&self) -> usize {
+        self.edges.len()
+    }
+
+    /// 🧮 Materializes one edge row for a retained microstep.
+    pub fn retained_edge(&self, index: usize) -> Result<MathematicalEdge, String> {
+        let edge = self.edges.get(index).ok_or_else(|| "graph edge cursor is out of range".to_string())?;
+        let dsl::WireValue { from, edge: link, .. } = &edge.wire.0;
+        let (_, to) = link.as_ref().ok_or_else(|| "graph edge wire literal must have a target".to_string())?;
+        Ok(MathematicalEdge { id: edge.id.clone(), source: from.id.clone(), target: to.id.clone() })
+    }
+}
+
 pub async fn math_graph_to_dsl(graph: &MathematicalGraph) -> MathematicalGraphDsl {
     MathematicalGraphDsl {
         directed: graph.directed,

@@ -18,6 +18,197 @@
     {
       "id": "semio-v1-mesh",
       "capability": "semio-v1-mesh-mutate",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️mesh",
+      "vectors": [
+        {
+          "mutationId": "change-material-base-color",
+          "sourceMutationDirectoryName": "🌈change-material-base-color",
+          "mutationDirectoryName": "🌈change-material-base-color",
+          "scenarios": [
+            {
+              "id": "repaints-the-material-from-red-to-blue",
+              "directoryName": "🧪️repaints-the-material-from-red-to-blue"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-material-metallic",
+          "sourceMutationDirectoryName": "⚙️change-material-metallic",
+          "mutationDirectoryName": "⚙️change-material-metallic",
+          "scenarios": [
+            {
+              "id": "raises-the-metallic-factor-to-fully-metallic",
+              "directoryName": "🧪️raises-the-metallic-factor-to-fully-metallic"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-material-roughness",
+          "sourceMutationDirectoryName": "🧱change-material-roughness",
+          "mutationDirectoryName": "🧱change-material-roughness",
+          "scenarios": [
+            {
+              "id": "lowers-the-roughness-factor-to-a-quarter",
+              "directoryName": "🧪️lowers-the-roughness-factor-to-a-quarter"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-texture-mime",
+          "sourceMutationDirectoryName": "🏷️change-texture-mime",
+          "mutationDirectoryName": "🏷️change-texture-mime",
+          "scenarios": [
+            {
+              "id": "retags-the-texture-as-jpeg-without-touching-its-bytes",
+              "directoryName": "🧪️retags-the-texture-as-jpeg-without-touching-its-bytes"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-material",
+          "sourceMutationDirectoryName": "🎨create-material",
+          "mutationDirectoryName": "🎨create-material",
+          "scenarios": [
+            {
+              "id": "adds-a-second-material-at-the-end",
+              "directoryName": "🧪️adds-a-second-material-at-the-end"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-mesh",
+          "sourceMutationDirectoryName": "🕸️create-mesh",
+          "mutationDirectoryName": "🕸️create-mesh",
+          "scenarios": [
+            {
+              "id": "adds-an-empty-second-mesh-at-the-end",
+              "directoryName": "🧪️adds-an-empty-second-mesh-at-the-end"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-primitive",
+          "sourceMutationDirectoryName": "🔺create-primitive",
+          "mutationDirectoryName": "🔺create-primitive",
+          "scenarios": [
+            {
+              "id": "adds-a-second-primitive-inside-the-existing-mesh",
+              "directoryName": "🧪️adds-a-second-primitive-inside-the-existing-mesh"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-texture",
+          "sourceMutationDirectoryName": "🖼️create-texture",
+          "mutationDirectoryName": "🖼️create-texture",
+          "scenarios": [
+            {
+              "id": "adds-a-second-texture-at-the-end",
+              "directoryName": "🧪️adds-a-second-texture-at-the-end"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-material",
+          "sourceMutationDirectoryName": "🚮delete-material",
+          "mutationDirectoryName": "🚮delete-material",
+          "scenarios": [
+            {
+              "id": "removes-the-leading-material-and-keeps-the-trailing-one",
+              "directoryName": "🧪️removes-the-leading-material-and-keeps-the-trailing-one"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-mesh",
+          "sourceMutationDirectoryName": "🗑️delete-mesh",
+          "mutationDirectoryName": "🗑️delete-mesh",
+          "scenarios": [
+            {
+              "id": "removes-the-leading-mesh-and-keeps-the-trailing-one",
+              "directoryName": "🧪️removes-the-leading-mesh-and-keeps-the-trailing-one"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-primitive",
+          "sourceMutationDirectoryName": "✂️delete-primitive",
+          "mutationDirectoryName": "✂️delete-primitive",
+          "scenarios": [
+            {
+              "id": "removes-the-leading-primitive-and-keeps-the-trailing-one",
+              "directoryName": "🧪️removes-the-leading-primitive-and-keeps-the-trailing-one"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-texture",
+          "sourceMutationDirectoryName": "🕳️delete-texture",
+          "mutationDirectoryName": "🕳️delete-texture",
+          "scenarios": [
+            {
+              "id": "removes-the-leading-texture-and-keeps-the-trailing-one",
+              "directoryName": "🧪️removes-the-leading-texture-and-keeps-the-trailing-one"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-vertex",
+          "sourceMutationDirectoryName": "📍move-vertex",
+          "mutationDirectoryName": "📍move-vertex",
+          "scenarios": [
+            {
+              "id": "lifts-the-third-vertex-of-the-triangle",
+              "directoryName": "🧪️lifts-the-third-vertex-of-the-triangle"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-primitive-geometry",
+          "sourceMutationDirectoryName": "📐replace-primitive-geometry",
+          "mutationDirectoryName": "📐replace-primitive-geometry",
+          "scenarios": [
+            {
+              "id": "swaps-the-triangle-for-a-textured-quad",
+              "directoryName": "🧪️swaps-the-triangle-for-a-textured-quad"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-texture-bytes",
+          "sourceMutationDirectoryName": "📀replace-texture-bytes",
+          "mutationDirectoryName": "📀replace-texture-bytes",
+          "scenarios": [
+            {
+              "id": "swaps-the-texture-payload-without-retagging-its-mime",
+              "directoryName": "🧪️swaps-the-texture-payload-without-retagging-its-mime"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-primitive-material",
+          "sourceMutationDirectoryName": "🔗set-primitive-material",
+          "mutationDirectoryName": "🔗set-primitive-material",
+          "scenarios": [
+            {
+              "id": "binds-the-primitive-to-the-existing-material",
+              "directoryName": "🧪️binds-the-primitive-to-the-existing-material"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-primitive-topology",
+          "sourceMutationDirectoryName": "🔀set-primitive-topology",
+          "mutationDirectoryName": "🔀set-primitive-topology",
+          "scenarios": [
+            {
+              "id": "switches-the-primitive-to-a-triangle-strip",
+              "directoryName": "🧪️switches-the-primitive-to-a-triangle-strip"
+            }
+          ]
+        }
+      ],
       "kinds": ["create-mesh", "delete-mesh", "create-primitive", "delete-primitive", "set-primitive-topology", "replace-primitive-geometry", "set-primitive-material", "create-material", "delete-material", "change-material-base-color", "change-material-metallic", "change-material-roughness", "create-texture", "delete-texture", "change-texture-mime", "replace-texture-bytes", "move-vertex"]
     }
   ]

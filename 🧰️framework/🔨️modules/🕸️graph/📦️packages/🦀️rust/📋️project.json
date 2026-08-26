@@ -13,6 +13,20 @@
         "command": "bun ./📜️script.ts generate"
       }
     },
+    "preview-generated": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts preview-generated"
+      }
+    },
+    "check-generated": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check-generated"
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "dependsOn": ["generate"],

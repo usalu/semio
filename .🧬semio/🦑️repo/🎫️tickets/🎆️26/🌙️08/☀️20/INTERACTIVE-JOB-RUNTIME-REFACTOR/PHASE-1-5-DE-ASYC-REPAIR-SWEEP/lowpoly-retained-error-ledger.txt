@@ -1,0 +1,175 @@
+3193:error[E0364]: `LOWPOLY_PLAY_BODY_CATALOGUE` is only public within the crate, and cannot be re-exported outside
+3205:error[E0432]: unresolved import `semio_framework_plugin::ArtifactOwnedToolJobContext`
+3219:error[E0432]: unresolved import `semio_framework`
+3230:error[E0432]: unresolved import `semio_framework_job`
+3242:error[E0432]: unresolved import `semio_framework_ui_contract`
+3250:error[E0432]: unresolved import `semio_framework`
+3261:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3281:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3301:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3321:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3341:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3361:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3381:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3401:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3421:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3441:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3461:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3481:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3501:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3521:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3541:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3561:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3581:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3601:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3621:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3641:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3661:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3681:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3701:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3721:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3741:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3761:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3781:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3801:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3821:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3841:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3861:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3881:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3901:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3921:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3941:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3961:error[E0433]: cannot find module or crate `semio_framework` in this scope
+3981:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4001:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4021:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4041:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4061:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4081:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4101:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4121:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4141:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4161:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4181:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4201:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4221:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4241:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4261:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4281:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4301:error[E0433]: cannot find `InteractionHoverState` in `semio_framework_plugin`
+4322:error[E0433]: cannot find `InteractionHoverState` in `semio_framework_plugin`
+4343:error[E0433]: cannot find `InteractionHoverState` in `semio_framework_plugin`
+4364:error[E0433]: cannot find `InteractionHoverState` in `semio_framework_plugin`
+4385:error[E0433]: cannot find type `InteractionRef` in this scope
+4401:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4421:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4445:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4469:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4493:error[E0433]: cannot find module or crate `semio_framework` in this scope
+4725:error[E0053]: method `encode_op` has an incompatible type for trait
+4734:error[E0053]: method `decode_op` has an incompatible type for trait
+4743:error[E0053]: method `id` has an incompatible type for trait
+4752:error[E0053]: method `initial_snapshot` has an incompatible type for trait
+4761:error[E0053]: method `handle` has an incompatible type for trait
+4770:error[E0053]: method `render` has an incompatible type for trait
+4779:error[E0053]: method `apply_patch` has an incompatible type for trait
+4788:error[E0053]: method `diff_patch` has an incompatible type for trait
+4797:error[E0053]: method `reads` has an incompatible type for trait
+4806:error[E0053]: method `compose` has an incompatible type for trait
+4815:error[E0053]: method `diff` has an incompatible type for trait
+4824:error[E0277]: the trait bound `LowpolyCommandJobFactory: ToolJobFactory` is not satisfied
+4851:error[E0053]: method `inverse` has an incompatible type for trait
+4860:error[E0053]: method `diff` has an incompatible type for trait
+4869:error[E0053]: method `diff` has an incompatible type for trait
+4878:error[E0053]: method `inverse` has an incompatible type for trait
+4887:error[E0053]: method `label` has an incompatible type for trait
+4896:error[E0053]: method `label` has an incompatible type for trait
+4905:error[E0053]: method `inverse` has an incompatible type for trait
+4914:error[E0053]: method `target` has an incompatible type for trait
+4923:error[E0053]: method `target` has an incompatible type for trait
+4932:error[E0053]: method `label` has an incompatible type for trait
+4941:error[E0053]: method `target` has an incompatible type for trait
+4950:error[E0053]: method `diff` has an incompatible type for trait
+4959:error[E0053]: method `diff` has an incompatible type for trait
+4968:error[E0053]: method `inverse` has an incompatible type for trait
+4977:error[E0053]: method `diff` has an incompatible type for trait
+4986:error[E0053]: method `diff` has an incompatible type for trait
+4995:error[E0053]: method `label` has an incompatible type for trait
+5004:error[E0053]: method `inverse` has an incompatible type for trait
+5013:error[E0053]: method `target` has an incompatible type for trait
+5022:error[E0053]: method `inverse` has an incompatible type for trait
+5031:error[E0053]: method `inverse` has an incompatible type for trait
+5040:error[E0053]: method `label` has an incompatible type for trait
+5049:error[E0053]: method `label` has an incompatible type for trait
+5058:error[E0053]: method `diff` has an incompatible type for trait
+5067:error[E0053]: method `label` has an incompatible type for trait
+5076:error[E0053]: method `target` has an incompatible type for trait
+5085:error[E0053]: method `target` has an incompatible type for trait
+5094:error[E0053]: method `inverse` has an incompatible type for trait
+5103:error[E0053]: method `target` has an incompatible type for trait
+5112:error[E0053]: method `diff` has an incompatible type for trait
+5121:error[E0053]: method `label` has an incompatible type for trait
+5130:error[E0053]: method `target` has an incompatible type for trait
+5139:error[E0053]: method `inverse` has an incompatible type for trait
+5148:error[E0053]: method `diff` has an incompatible type for trait
+5157:error[E0053]: method `label` has an incompatible type for trait
+5166:error[E0053]: method `inverse` has an incompatible type for trait
+5175:error[E0053]: method `target` has an incompatible type for trait
+5184:error[E0053]: method `diff` has an incompatible type for trait
+5193:error[E0053]: method `label` has an incompatible type for trait
+5202:error[E0053]: method `diff` has an incompatible type for trait
+5211:error[E0053]: method `inverse` has an incompatible type for trait
+5220:error[E0053]: method `target` has an incompatible type for trait
+5229:error[E0053]: method `inverse` has an incompatible type for trait
+5238:error[E0053]: method `label` has an incompatible type for trait
+5247:error[E0053]: method `label` has an incompatible type for trait
+5256:error[E0053]: method `target` has an incompatible type for trait
+5265:error[E0053]: method `diff` has an incompatible type for trait
+5274:error[E0053]: method `target` has an incompatible type for trait
+5283:error[E0053]: method `diff` has an incompatible type for trait
+5292:error[E0053]: method `inverse` has an incompatible type for trait
+5301:error[E0053]: method `inverse` has an incompatible type for trait
+5310:error[E0053]: method `label` has an incompatible type for trait
+5319:error[E0053]: method `target` has an incompatible type for trait
+5328:error[E0053]: method `label` has an incompatible type for trait
+5337:error[E0053]: method `target` has an incompatible type for trait
+5346:error[E0053]: method `diff` has an incompatible type for trait
+5355:error[E0053]: method `inverse` has an incompatible type for trait
+5364:error[E0053]: method `label` has an incompatible type for trait
+5373:error[E0053]: method `target` has an incompatible type for trait
+5382:error[E0053]: method `diff` has an incompatible type for trait
+5391:error[E0053]: method `parse_op` has an incompatible type for trait
+5400:error[E0053]: method `print_op` has an incompatible type for trait
+5409:error[E0053]: method `encode_op` has an incompatible type for trait
+5418:error[E0053]: method `decode_op` has an incompatible type for trait
+5427:error[E0053]: method `diff` has an incompatible type for trait
+5436:error[E0053]: method `inverse` has an incompatible type for trait
+5445:error[E0053]: method `label` has an incompatible type for trait
+5454:error[E0053]: method `inverse` has an incompatible type for trait
+5463:error[E0053]: method `label` has an incompatible type for trait
+5472:error[E0053]: method `target` has an incompatible type for trait
+5481:error[E0053]: method `apply` has an incompatible type for trait
+5490:error[E0053]: method `absorb` has an incompatible type for trait
+5499:error[E0053]: method `target` has an incompatible type for trait
+5508:error[E0053]: method `envelope_id` has an incompatible type for trait
+5517:error[E0053]: method `parse_dsl` has an incompatible type for trait
+5526:error[E0053]: method `print_dsl` has an incompatible type for trait
+5535:error[E0053]: method `encode_pack_with` has an incompatible type for trait
+5544:error[E0053]: method `decode_pack_with` has an incompatible type for trait
+5553:error[E0053]: method `infer` has an incompatible type for trait
+5562:error[E0053]: method `empty` has an incompatible type for trait
+5571:error[E0053]: method `from_snapshot` has an incompatible type for trait
+5580:error[E0053]: method `from_text` has an incompatible type for trait
+5589:error[E0053]: method `inference_schema_id` has an incompatible type for trait
+5598:error[E0053]: method `from_binary` has an incompatible type for trait
+5607:error[E0053]: method `schema_version` has an incompatible type for trait
+5616:error[E0053]: method `mutate` has an incompatible type for trait
+5625:error[E0053]: method `fields` has an incompatible type for trait
+5634:error[E0053]: method `absorb` has an incompatible type for trait
+5643:error[E0053]: method `build` has an incompatible type for trait
+5652:error[E0053]: method `sniff` has an incompatible type for trait
+5661:error[E0053]: method `analyze` has an incompatible type for trait
+5670:error[E0433]: cannot find module or crate `semio_framework` in this scope
+5681:error[E0433]: cannot find module or crate `semio_framework_job` in this scope
+5693:error[E0433]: cannot find module or crate `semio_framework_job` in this scope
+5705:error[E0433]: cannot find module or crate `semio_framework` in this scope

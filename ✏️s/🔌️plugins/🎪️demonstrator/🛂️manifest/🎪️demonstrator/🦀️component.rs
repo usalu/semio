@@ -155,6 +155,7 @@ mod tests {
             if let Some(command) = app.commands.iter().find(|command| command.id == "setContributions") {
                 assert!(!command.in_palette, "host catalogue command leaked into {}'s palette", app.id);
                 assert_eq!(command.args.iter().map(|arg| arg.id.as_str()).collect::<Vec<_>>(), vec!["json"]);
+                assert_eq!(command.semantics.execution.interactive_job, semio_framework_plugin::InteractiveJobClassification::Migrated, "host catalogue command in {} must be admitted as migrated interactive work", app.id);
             }
         }
         let procedural = test_bundle().manifest.apps.into_iter().find(|app| app.id == "s.procedural.procedural3d@1/*#editor").expect("procedural surface");

@@ -23,7 +23,7 @@ const RASTER_VIEW_FALLBACK_PNG_BASE64: &str = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABC
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::raster::create_raster_viewer` — the read-only
 /// `ImageWindowKit::window_kind()` variant verbatim (never `editable_window_kind()`, which declares the
 /// mutating `set-pixel-region` command a viewer must never carry).
-pub async fn definition() -> semio_framework_plugin::WindowKindDefinition {
+pub fn definition() -> semio_framework_plugin::WindowKindDefinition {
     ImageWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
@@ -34,20 +34,20 @@ pub async fn definition() -> semio_framework_plugin::WindowKindDefinition {
 /// (`raster_document_json_to_svg` → `rasterize_svg_to_png_base64` → `canonicalize_png_bytes`), then
 /// hands the pixels to `ImageWindowKit::render` — never a bespoke renderer, never a call through the
 /// sibling editor module.
-pub async fn render(document: &RasterSnapshot) -> UiNode {
+pub fn render(document: &RasterSnapshot) -> UiNode {
     ImageWindowKit::render(&composited_image_view(document))
 }
 
 /// 🧭️ `pub(super)` — the sibling `🧭️navigator` window reuses this exact composited view-model (same
 /// real pixels, not different content) rather than re-deriving it.
-pub async fn composited_image_view(document: &RasterSnapshot) -> ImageView {
+pub fn composited_image_view(document: &RasterSnapshot) -> ImageView {
     composite_document_to_png(document).unwrap_or_else(|| ImageView { width: 1, height: 1, mime: "image/png".into(), base64: RASTER_VIEW_FALLBACK_PNG_BASE64.into() })
 }
 
 /// 🌉️ The read-only composite primitive — real pixels, never a placeholder title card, matching the
 /// editor's own `raster_composite_media` fidelity exactly (same three-step bridge), just returning the
 /// framework's `ImageView` view-model instead of a `Media` payload.
-async fn composite_document_to_png(document: &RasterSnapshot) -> Option<ImageView> {
+fn composite_document_to_png(document: &RasterSnapshot) -> Option<ImageView> {
     let value = serde_json::to_value(document).ok()?;
     let (svg, width, height) = crate::artifacts::raster::io::raster_document_json_to_svg(&value).ok()?;
     let rendered_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height).ok()?;

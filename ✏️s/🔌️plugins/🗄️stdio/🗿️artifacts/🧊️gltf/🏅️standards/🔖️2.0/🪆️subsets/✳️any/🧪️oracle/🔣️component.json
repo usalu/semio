@@ -22,6 +22,1330 @@
     {
       "id": "gltf-2-0-any",
       "capability": "gltf-2-0-mutate",
+      "standardDirectoryName": "🔖️2.0",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "bind-default-scene",
+          "sourceMutationDirectoryName": "bind-default-scene",
+          "mutationDirectoryName": "🔗️🎬️bind-default-scene",
+          "scenarios": [
+            {
+              "id": "moves-the-default-scene-pointer-to-the-second-scene",
+              "directoryName": "🧪️moves-the-default-scene-pointer-to-the-second-scene"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-morph-target-attribute",
+          "sourceMutationDirectoryName": "bind-morph-target-attribute",
+          "mutationDirectoryName": "🔗️🧬️bind-morph-target-attribute",
+          "scenarios": [
+            {
+              "id": "binds-position-inside-the-first-morph-target",
+              "directoryName": "🧪️binds-position-inside-the-first-morph-target"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-node-camera",
+          "sourceMutationDirectoryName": "bind-node-camera",
+          "mutationDirectoryName": "🔗️🔘️bind-node-camera",
+          "scenarios": [
+            {
+              "id": "binds-the-perspective-camera-to-the-eye-node",
+              "directoryName": "🧪️binds-the-perspective-camera-to-the-eye-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-node-child",
+          "sourceMutationDirectoryName": "bind-node-child",
+          "mutationDirectoryName": "🔗️🔘️bind-node-child",
+          "scenarios": [
+            {
+              "id": "adopts-the-child-node-under-the-parent-node",
+              "directoryName": "🧪️adopts-the-child-node-under-the-parent-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-node-mesh",
+          "sourceMutationDirectoryName": "bind-node-mesh",
+          "mutationDirectoryName": "🔗️🔘️bind-node-mesh",
+          "scenarios": [
+            {
+              "id": "binds-the-hull-mesh-to-the-body-node",
+              "directoryName": "🧪️binds-the-hull-mesh-to-the-body-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-node-skin",
+          "sourceMutationDirectoryName": "bind-node-skin",
+          "mutationDirectoryName": "🔗️🔘️bind-node-skin",
+          "scenarios": [
+            {
+              "id": "binds-the-jointed-skin-to-the-rig-node",
+              "directoryName": "🧪️binds-the-jointed-skin-to-the-rig-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-primitive-attribute",
+          "sourceMutationDirectoryName": "bind-primitive-attribute",
+          "mutationDirectoryName": "🔗️🔺️bind-primitive-attribute",
+          "scenarios": [
+            {
+              "id": "binds-texcoord-0-to-the-second-accessor",
+              "directoryName": "🧪️binds-texcoord-0-to-the-second-accessor"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-primitive-indices",
+          "sourceMutationDirectoryName": "bind-primitive-indices",
+          "mutationDirectoryName": "🔗️🔺️bind-primitive-indices",
+          "scenarios": [
+            {
+              "id": "binds-the-scalar-index-accessor-to-the-primitive",
+              "directoryName": "🧪️binds-the-scalar-index-accessor-to-the-primitive"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-primitive-material",
+          "sourceMutationDirectoryName": "bind-primitive-material",
+          "mutationDirectoryName": "🔗️🔺️bind-primitive-material",
+          "scenarios": [
+            {
+              "id": "binds-the-steel-material-to-the-primitive",
+              "directoryName": "🧪️binds-the-steel-material-to-the-primitive"
+            }
+          ]
+        },
+        {
+          "mutationId": "bind-scene-root-node",
+          "sourceMutationDirectoryName": "bind-scene-root-node",
+          "mutationDirectoryName": "🔗️🎬️bind-scene-root-node",
+          "scenarios": [
+            {
+              "id": "promotes-the-root-node-into-the-main-scene",
+              "directoryName": "🧪️promotes-the-root-node-into-the-main-scene"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-asset-descriptive-metadata",
+          "sourceMutationDirectoryName": "change-asset-descriptive-metadata",
+          "mutationDirectoryName": "✏️📦️change-asset-descriptive-metadata",
+          "scenarios": [
+            {
+              "id": "restamps-generator-copyright-and-min-version",
+              "directoryName": "🧪️restamps-generator-copyright-and-min-version"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-asset-extension-data",
+          "sourceMutationDirectoryName": "change-asset-extension-data",
+          "mutationDirectoryName": "✏️📦️change-asset-extension-data",
+          "scenarios": [
+            {
+              "id": "attaches-an-xmp-extension-object-to-the-asset-block",
+              "directoryName": "🧪️attaches-an-xmp-extension-object-to-the-asset-block"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-asset-extra-data",
+          "sourceMutationDirectoryName": "change-asset-extra-data",
+          "mutationDirectoryName": "✏️📦️change-asset-extra-data",
+          "scenarios": [
+            {
+              "id": "attaches-a-pipeline-extras-object-to-the-asset-block",
+              "directoryName": "🧪️attaches-a-pipeline-extras-object-to-the-asset-block"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-asset-version",
+          "sourceMutationDirectoryName": "change-asset-version",
+          "mutationDirectoryName": "✏️📦️change-asset-version",
+          "scenarios": [
+            {
+              "id": "raises-the-asset-version-to-2-point-1",
+              "directoryName": "🧪️raises-the-asset-version-to-2-point-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-document-extension-data",
+          "sourceMutationDirectoryName": "change-document-extension-data",
+          "mutationDirectoryName": "✏️📄️change-document-extension-data",
+          "scenarios": [
+            {
+              "id": "attaches-punctual-lights-extension-to-document-root",
+              "directoryName": "🧪️attaches-punctual-lights-extension-to-document-root"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-document-extra-data",
+          "sourceMutationDirectoryName": "change-document-extra-data",
+          "mutationDirectoryName": "✏️📄️change-document-extra-data",
+          "scenarios": [
+            {
+              "id": "attaches-an-exporter-extras-object-to-the-document-root",
+              "directoryName": "🧪️attaches-an-exporter-extras-object-to-the-document-root"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-material-alpha-mode",
+          "sourceMutationDirectoryName": "change-material-alpha-mode",
+          "mutationDirectoryName": "✏️💎️change-material-alpha-mode",
+          "scenarios": [
+            {
+              "id": "switches-the-default-material-from-opaque-to-mask",
+              "directoryName": "🧪️switches-the-default-material-from-opaque-to-mask"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-material-double-sided",
+          "sourceMutationDirectoryName": "change-material-double-sided",
+          "mutationDirectoryName": "✏️💎️change-material-double-sided",
+          "scenarios": [
+            {
+              "id": "makes-the-default-material-double-sided",
+              "directoryName": "🧪️makes-the-default-material-double-sided"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-mesh-extension-data",
+          "sourceMutationDirectoryName": "change-mesh-extension-data",
+          "mutationDirectoryName": "✏️🕸️change-mesh-extension-data",
+          "scenarios": [
+            {
+              "id": "attaches-an-unlit-extension-object-to-the-mesh",
+              "directoryName": "🧪️attaches-an-unlit-extension-object-to-the-mesh"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-mesh-extra-data",
+          "sourceMutationDirectoryName": "change-mesh-extra-data",
+          "mutationDirectoryName": "✏️🕸️change-mesh-extra-data",
+          "scenarios": [
+            {
+              "id": "attaches-an-author-extras-object-to-the-mesh",
+              "directoryName": "🧪️attaches-an-author-extras-object-to-the-mesh"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-mesh-morph-weights",
+          "sourceMutationDirectoryName": "change-mesh-morph-weights",
+          "mutationDirectoryName": "✏️🕸️change-mesh-morph-weights",
+          "scenarios": [
+            {
+              "id": "sets-the-two-mesh-morph-weights-to-a-half-and-a-quarter",
+              "directoryName": "🧪️sets-the-two-mesh-morph-weights-to-a-half-and-a-quarter"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-mesh-name",
+          "sourceMutationDirectoryName": "change-mesh-name",
+          "mutationDirectoryName": "✏️🕸️change-mesh-name",
+          "scenarios": [
+            {
+              "id": "renames-the-hull-mesh-to-deck",
+              "directoryName": "🧪️renames-the-hull-mesh-to-deck"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-extension-data",
+          "sourceMutationDirectoryName": "change-node-extension-data",
+          "mutationDirectoryName": "✏️🔘️change-node-extension-data",
+          "scenarios": [
+            {
+              "id": "attaches-a-punctual-light-extension-to-the-root-node",
+              "directoryName": "🧪️attaches-a-punctual-light-extension-to-the-root-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-extra-data",
+          "sourceMutationDirectoryName": "change-node-extra-data",
+          "mutationDirectoryName": "✏️🔘️change-node-extra-data",
+          "scenarios": [
+            {
+              "id": "attaches-a-unit-extras-object-to-the-root-node",
+              "directoryName": "🧪️attaches-a-unit-extras-object-to-the-root-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-morph-weights",
+          "sourceMutationDirectoryName": "change-node-morph-weights",
+          "mutationDirectoryName": "✏️🔘️change-node-morph-weights",
+          "scenarios": [
+            {
+              "id": "sets-the-node-morph-weights-to-a-half-and-a-quarter",
+              "directoryName": "🧪️sets-the-node-morph-weights-to-a-half-and-a-quarter"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-node-name",
+          "sourceMutationDirectoryName": "change-node-name",
+          "mutationDirectoryName": "✏️🔘️change-node-name",
+          "scenarios": [
+            {
+              "id": "renames-the-root-node-to-pivot",
+              "directoryName": "🧪️renames-the-root-node-to-pivot"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-primitive-extension-data",
+          "sourceMutationDirectoryName": "change-primitive-extension-data",
+          "mutationDirectoryName": "✏️🔺️change-primitive-extension-data",
+          "scenarios": [
+            {
+              "id": "attaches-a-draco-extension-object-to-the-primitive",
+              "directoryName": "🧪️attaches-a-draco-extension-object-to-the-primitive"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-primitive-extra-data",
+          "sourceMutationDirectoryName": "change-primitive-extra-data",
+          "mutationDirectoryName": "✏️🔺️change-primitive-extra-data",
+          "scenarios": [
+            {
+              "id": "attaches-a-lod-extras-object-to-the-primitive",
+              "directoryName": "🧪️attaches-a-lod-extras-object-to-the-primitive"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-primitive-topology-mode",
+          "sourceMutationDirectoryName": "change-primitive-topology-mode",
+          "mutationDirectoryName": "✏️🔺️change-primitive-topology-mode",
+          "scenarios": [
+            {
+              "id": "switches-primitive-from-triangles-to-triangle-strip",
+              "directoryName": "🧪️switches-primitive-from-triangles-to-triangle-strip"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-extension-data",
+          "sourceMutationDirectoryName": "change-scene-extension-data",
+          "mutationDirectoryName": "✏️🎬️change-scene-extension-data",
+          "scenarios": [
+            {
+              "id": "attaches-an-xmp-extension-object-to-the-main-scene",
+              "directoryName": "🧪️attaches-an-xmp-extension-object-to-the-main-scene"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-extra-data",
+          "sourceMutationDirectoryName": "change-scene-extra-data",
+          "mutationDirectoryName": "✏️🎬️change-scene-extra-data",
+          "scenarios": [
+            {
+              "id": "attaches-a-units-extras-object-to-the-main-scene",
+              "directoryName": "🧪️attaches-a-units-extras-object-to-the-main-scene"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-scene-name",
+          "sourceMutationDirectoryName": "change-scene-name",
+          "mutationDirectoryName": "✏️🎬️change-scene-name",
+          "scenarios": [
+            {
+              "id": "renames-the-main-scene-to-alternate",
+              "directoryName": "🧪️renames-the-main-scene-to-alternate"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-accessor",
+          "sourceMutationDirectoryName": "create-accessor",
+          "mutationDirectoryName": "🌱️📐️create-accessor",
+          "scenarios": [
+            {
+              "id": "inserts-a-scalar-index-accessor-ahead-of-the-position-accessor",
+              "directoryName": "🧪️inserts-a-scalar-index-accessor-ahead-of-the-position-accessor"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-animation",
+          "sourceMutationDirectoryName": "create-animation",
+          "mutationDirectoryName": "🌱️🎞️create-animation",
+          "scenarios": [
+            {
+              "id": "inserts-an-empty-clip-ahead-of-the-spin-clip",
+              "directoryName": "🧪️inserts-an-empty-clip-ahead-of-the-spin-clip"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-buffer",
+          "sourceMutationDirectoryName": "create-buffer",
+          "mutationDirectoryName": "🌱️💾️create-buffer",
+          "scenarios": [
+            {
+              "id": "inserts-a-two-byte-buffer-ahead-of-the-four-byte-buffer",
+              "directoryName": "🧪️inserts-a-two-byte-buffer-ahead-of-the-four-byte-buffer"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-buffer-view",
+          "sourceMutationDirectoryName": "create-buffer-view",
+          "mutationDirectoryName": "🌱️👁️create-buffer-view",
+          "scenarios": [
+            {
+              "id": "inserts-a-two-byte-window-ahead-of-the-four-byte-window",
+              "directoryName": "🧪️inserts-a-two-byte-window-ahead-of-the-four-byte-window"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-camera",
+          "sourceMutationDirectoryName": "create-camera",
+          "mutationDirectoryName": "🌱️🎥️create-camera",
+          "scenarios": [
+            {
+              "id": "inserts-a-perspective-camera-ahead-of-the-orthographic-camera",
+              "directoryName": "🧪️inserts-a-perspective-camera-ahead-of-the-orthographic-camera"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-image",
+          "sourceMutationDirectoryName": "create-image",
+          "mutationDirectoryName": "🌱️🖼️create-image",
+          "scenarios": [
+            {
+              "id": "inserts-an-empty-image-ahead-of-the-albedo-image",
+              "directoryName": "🧪️inserts-an-empty-image-ahead-of-the-albedo-image"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-material",
+          "sourceMutationDirectoryName": "create-material",
+          "mutationDirectoryName": "🌱️💎️create-material",
+          "scenarios": [
+            {
+              "id": "inserts-a-default-material-ahead-of-the-glass-material",
+              "directoryName": "🧪️inserts-a-default-material-ahead-of-the-glass-material"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-mesh",
+          "sourceMutationDirectoryName": "create-mesh",
+          "mutationDirectoryName": "🌱️🕸️create-mesh",
+          "scenarios": [
+            {
+              "id": "inserts-an-empty-mesh-ahead-of-the-hull-mesh",
+              "directoryName": "🧪️inserts-an-empty-mesh-ahead-of-the-hull-mesh"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-morph-target",
+          "sourceMutationDirectoryName": "create-morph-target",
+          "mutationDirectoryName": "🌱️🧬️create-morph-target",
+          "scenarios": [
+            {
+              "id": "inserts-an-empty-morph-target-ahead-of-the-existing-one",
+              "directoryName": "🧪️inserts-an-empty-morph-target-ahead-of-the-existing-one"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-node",
+          "sourceMutationDirectoryName": "create-node",
+          "mutationDirectoryName": "🌱️🔘️create-node",
+          "scenarios": [
+            {
+              "id": "inserts-an-empty-node-ahead-of-the-root-node",
+              "directoryName": "🧪️inserts-an-empty-node-ahead-of-the-root-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-primitive",
+          "sourceMutationDirectoryName": "create-primitive",
+          "mutationDirectoryName": "🌱️🔺️create-primitive",
+          "scenarios": [
+            {
+              "id": "inserts-an-empty-primitive-ahead-of-the-position-primitive",
+              "directoryName": "🧪️inserts-an-empty-primitive-ahead-of-the-position-primitive"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-sampler",
+          "sourceMutationDirectoryName": "create-sampler",
+          "mutationDirectoryName": "🌱️🎛️create-sampler",
+          "scenarios": [
+            {
+              "id": "inserts-a-repeat-sampler-ahead-of-the-linear-sampler",
+              "directoryName": "🧪️inserts-a-repeat-sampler-ahead-of-the-linear-sampler"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-scene",
+          "sourceMutationDirectoryName": "create-scene",
+          "mutationDirectoryName": "🌱️🎬️create-scene",
+          "scenarios": [
+            {
+              "id": "inserts-an-empty-scene-ahead-of-the-default-scene",
+              "directoryName": "🧪️inserts-an-empty-scene-ahead-of-the-default-scene"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-skin",
+          "sourceMutationDirectoryName": "create-skin",
+          "mutationDirectoryName": "🌱️🧥️create-skin",
+          "scenarios": [
+            {
+              "id": "inserts-an-empty-skin-ahead-of-the-jointed-skin",
+              "directoryName": "🧪️inserts-an-empty-skin-ahead-of-the-jointed-skin"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-texture",
+          "sourceMutationDirectoryName": "create-texture",
+          "mutationDirectoryName": "🌱️🎨️create-texture",
+          "scenarios": [
+            {
+              "id": "inserts-an-empty-texture-ahead-of-the-albedo-texture",
+              "directoryName": "🧪️inserts-an-empty-texture-ahead-of-the-albedo-texture"
+            }
+          ]
+        },
+        {
+          "mutationId": "declare-used-extension",
+          "sourceMutationDirectoryName": "declare-used-extension",
+          "mutationDirectoryName": "📣️🧩️declare-used-extension",
+          "scenarios": [
+            {
+              "id": "declares-the-unlit-extension-ahead-of-the-transform-extension",
+              "directoryName": "🧪️declares-the-unlit-extension-ahead-of-the-transform-extension"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-accessor",
+          "sourceMutationDirectoryName": "delete-accessor",
+          "mutationDirectoryName": "🗑️📐️delete-accessor",
+          "scenarios": [
+            {
+              "id": "removes-the-index-accessor-and-renumbers-the-position-attribute",
+              "directoryName": "🧪️removes-the-index-accessor-and-renumbers-the-position-attribute"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-animation",
+          "sourceMutationDirectoryName": "delete-animation",
+          "mutationDirectoryName": "🗑️🎞️delete-animation",
+          "scenarios": [
+            {
+              "id": "removes-the-bob-clip-and-leaves-spin-in-place",
+              "directoryName": "🧪️removes-the-bob-clip-and-leaves-spin-in-place"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-buffer",
+          "sourceMutationDirectoryName": "delete-buffer",
+          "mutationDirectoryName": "🗑️💾️delete-buffer",
+          "scenarios": [
+            {
+              "id": "removes-the-two-byte-buffer-and-retargets-the-buffer-view",
+              "directoryName": "🧪️removes-the-two-byte-buffer-and-retargets-the-buffer-view"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-buffer-view",
+          "sourceMutationDirectoryName": "delete-buffer-view",
+          "mutationDirectoryName": "🗑️👁️delete-buffer-view",
+          "scenarios": [
+            {
+              "id": "removes-the-two-byte-window-and-renumbers-the-accessor",
+              "directoryName": "🧪️removes-the-two-byte-window-and-renumbers-the-accessor"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-camera",
+          "sourceMutationDirectoryName": "delete-camera",
+          "mutationDirectoryName": "🗑️🎥️delete-camera",
+          "scenarios": [
+            {
+              "id": "removes-the-perspective-camera-and-renumbers-the-node",
+              "directoryName": "🧪️removes-the-perspective-camera-and-renumbers-the-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-image",
+          "sourceMutationDirectoryName": "delete-image",
+          "mutationDirectoryName": "🗑️🖼️delete-image",
+          "scenarios": [
+            {
+              "id": "removes-the-albedo-image-and-renumbers-the-texture-source",
+              "directoryName": "🧪️removes-the-albedo-image-and-renumbers-the-texture-source"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-material",
+          "sourceMutationDirectoryName": "delete-material",
+          "mutationDirectoryName": "🗑️💎️delete-material",
+          "scenarios": [
+            {
+              "id": "removes-the-glass-material-and-renumbers-the-primitive-binding",
+              "directoryName": "🧪️removes-the-glass-material-and-renumbers-the-primitive-binding"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-mesh",
+          "sourceMutationDirectoryName": "delete-mesh",
+          "mutationDirectoryName": "🗑️🕸️delete-mesh",
+          "scenarios": [
+            {
+              "id": "removes-the-hull-mesh-and-renumbers-the-node-binding",
+              "directoryName": "🧪️removes-the-hull-mesh-and-renumbers-the-node-binding"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-morph-target",
+          "sourceMutationDirectoryName": "delete-morph-target",
+          "mutationDirectoryName": "🗑️🧬️delete-morph-target",
+          "scenarios": [
+            {
+              "id": "removes-the-first-of-two-morph-targets",
+              "directoryName": "🧪️removes-the-first-of-two-morph-targets"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-node",
+          "sourceMutationDirectoryName": "delete-node",
+          "mutationDirectoryName": "🗑️🔘️delete-node",
+          "scenarios": [
+            {
+              "id": "removes-the-root-node-and-drops-it-from-the-scene",
+              "directoryName": "🧪️removes-the-root-node-and-drops-it-from-the-scene"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-primitive",
+          "sourceMutationDirectoryName": "delete-primitive",
+          "mutationDirectoryName": "🗑️🔺️delete-primitive",
+          "scenarios": [
+            {
+              "id": "removes-the-trailing-empty-primitive",
+              "directoryName": "🧪️removes-the-trailing-empty-primitive"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-sampler",
+          "sourceMutationDirectoryName": "delete-sampler",
+          "mutationDirectoryName": "🗑️🎛️delete-sampler",
+          "scenarios": [
+            {
+              "id": "removes-the-linear-sampler-and-renumbers-the-texture",
+              "directoryName": "🧪️removes-the-linear-sampler-and-renumbers-the-texture"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-scene",
+          "sourceMutationDirectoryName": "delete-scene",
+          "mutationDirectoryName": "🗑️🎬️delete-scene",
+          "scenarios": [
+            {
+              "id": "removes-the-first-scene-and-remaps-the-default-scene",
+              "directoryName": "🧪️removes-the-first-scene-and-remaps-the-default-scene"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-skin",
+          "sourceMutationDirectoryName": "delete-skin",
+          "mutationDirectoryName": "🗑️🧥️delete-skin",
+          "scenarios": [
+            {
+              "id": "removes-the-first-skin-and-renumbers-the-bound-node",
+              "directoryName": "🧪️removes-the-first-skin-and-renumbers-the-bound-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-texture",
+          "sourceMutationDirectoryName": "delete-texture",
+          "mutationDirectoryName": "🗑️🎨️delete-texture",
+          "scenarios": [
+            {
+              "id": "removes-the-albedo-texture-and-renumbers-the-base-colour-binding",
+              "directoryName": "🧪️removes-the-albedo-texture-and-renumbers-the-base-colour-binding"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-accessor",
+          "sourceMutationDirectoryName": "move-accessor",
+          "mutationDirectoryName": "🚚️📐️move-accessor",
+          "scenarios": [
+            {
+              "id": "swaps-the-position-and-texcoord-accessors",
+              "directoryName": "🧪️swaps-the-position-and-texcoord-accessors"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-animation",
+          "sourceMutationDirectoryName": "move-animation",
+          "mutationDirectoryName": "🚚️🎞️move-animation",
+          "scenarios": [
+            {
+              "id": "promotes-the-bob-clip-ahead-of-the-spin-clip",
+              "directoryName": "🧪️promotes-the-bob-clip-ahead-of-the-spin-clip"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-buffer",
+          "sourceMutationDirectoryName": "move-buffer",
+          "mutationDirectoryName": "🚚️💾️move-buffer",
+          "scenarios": [
+            {
+              "id": "swaps-the-two-buffers-and-their-byte-lanes",
+              "directoryName": "🧪️swaps-the-two-buffers-and-their-byte-lanes"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-buffer-view",
+          "sourceMutationDirectoryName": "move-buffer-view",
+          "mutationDirectoryName": "🚚️👁️move-buffer-view",
+          "scenarios": [
+            {
+              "id": "swaps-the-two-windows-and-renumbers-both-accessors",
+              "directoryName": "🧪️swaps-the-two-windows-and-renumbers-both-accessors"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-camera",
+          "sourceMutationDirectoryName": "move-camera",
+          "mutationDirectoryName": "🚚️🎥️move-camera",
+          "scenarios": [
+            {
+              "id": "swaps-the-perspective-and-orthographic-cameras",
+              "directoryName": "🧪️swaps-the-perspective-and-orthographic-cameras"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-image",
+          "sourceMutationDirectoryName": "move-image",
+          "mutationDirectoryName": "🚚️🖼️move-image",
+          "scenarios": [
+            {
+              "id": "swaps-the-albedo-and-normal-images",
+              "directoryName": "🧪️swaps-the-albedo-and-normal-images"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-material",
+          "sourceMutationDirectoryName": "move-material",
+          "mutationDirectoryName": "🚚️💎️move-material",
+          "scenarios": [
+            {
+              "id": "swaps-the-glass-and-steel-materials",
+              "directoryName": "🧪️swaps-the-glass-and-steel-materials"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-mesh",
+          "sourceMutationDirectoryName": "move-mesh",
+          "mutationDirectoryName": "🚚️🕸️move-mesh",
+          "scenarios": [
+            {
+              "id": "swaps-the-hull-and-deck-meshes",
+              "directoryName": "🧪️swaps-the-hull-and-deck-meshes"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-morph-target",
+          "sourceMutationDirectoryName": "move-morph-target",
+          "mutationDirectoryName": "🚚️🧬️move-morph-target",
+          "scenarios": [
+            {
+              "id": "swaps-the-two-morph-targets",
+              "directoryName": "🧪️swaps-the-two-morph-targets"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-morph-target-attribute",
+          "sourceMutationDirectoryName": "move-morph-target-attribute",
+          "mutationDirectoryName": "🚚️🧬️move-morph-target-attribute",
+          "scenarios": [
+            {
+              "id": "moves-position-behind-normal-inside-the-morph-target",
+              "directoryName": "🧪️moves-position-behind-normal-inside-the-morph-target"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-node",
+          "sourceMutationDirectoryName": "move-node",
+          "mutationDirectoryName": "🚚️🔘️move-node",
+          "scenarios": [
+            {
+              "id": "swaps-the-two-scene-root-nodes",
+              "directoryName": "🧪️swaps-the-two-scene-root-nodes"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-node-child",
+          "sourceMutationDirectoryName": "move-node-child",
+          "mutationDirectoryName": "🚚️🔘️move-node-child",
+          "scenarios": [
+            {
+              "id": "refuses-a-move-whose-destination-is-the-childs-current-slot",
+              "directoryName": "🧪️refuses-a-move-whose-destination-is-the-childs-current-slot"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-primitive",
+          "sourceMutationDirectoryName": "move-primitive",
+          "mutationDirectoryName": "🚚️🔺️move-primitive",
+          "scenarios": [
+            {
+              "id": "moves-the-position-primitive-behind-the-strip-primitive",
+              "directoryName": "🧪️moves-the-position-primitive-behind-the-strip-primitive"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-primitive-attribute",
+          "sourceMutationDirectoryName": "move-primitive-attribute",
+          "mutationDirectoryName": "🚚️🔺️move-primitive-attribute",
+          "scenarios": [
+            {
+              "id": "moves-position-behind-normal-in-the-attribute-map",
+              "directoryName": "🧪️moves-position-behind-normal-in-the-attribute-map"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-required-extension",
+          "sourceMutationDirectoryName": "move-required-extension",
+          "mutationDirectoryName": "🚚️🧩️move-required-extension",
+          "scenarios": [
+            {
+              "id": "moves-unlit-requirement-behind-transform-requirement",
+              "directoryName": "🧪️moves-unlit-requirement-behind-transform-requirement"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-sampler",
+          "sourceMutationDirectoryName": "move-sampler",
+          "mutationDirectoryName": "🚚️🎛️move-sampler",
+          "scenarios": [
+            {
+              "id": "swaps-the-linear-and-clamped-samplers",
+              "directoryName": "🧪️swaps-the-linear-and-clamped-samplers"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-scene",
+          "sourceMutationDirectoryName": "move-scene",
+          "mutationDirectoryName": "🚚️🎬️move-scene",
+          "scenarios": [
+            {
+              "id": "demotes-the-first-scene-and-slides-the-default-pointer",
+              "directoryName": "🧪️demotes-the-first-scene-and-slides-the-default-pointer"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-scene-root-node",
+          "sourceMutationDirectoryName": "move-scene-root-node",
+          "mutationDirectoryName": "🚚️🎬️move-scene-root-node",
+          "scenarios": [
+            {
+              "id": "refuses-to-move-a-node-that-is-not-a-root-of-the-scene",
+              "directoryName": "🧪️refuses-to-move-a-node-that-is-not-a-root-of-the-scene"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-skin",
+          "sourceMutationDirectoryName": "move-skin",
+          "mutationDirectoryName": "🚚️🧥️move-skin",
+          "scenarios": [
+            {
+              "id": "swaps-the-two-skins-and-rewrites-both-node-bindings",
+              "directoryName": "🧪️swaps-the-two-skins-and-rewrites-both-node-bindings"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-texture",
+          "sourceMutationDirectoryName": "move-texture",
+          "mutationDirectoryName": "🚚️🎨️move-texture",
+          "scenarios": [
+            {
+              "id": "swaps-the-albedo-and-normal-textures",
+              "directoryName": "🧪️swaps-the-albedo-and-normal-textures"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-used-extension",
+          "sourceMutationDirectoryName": "move-used-extension",
+          "mutationDirectoryName": "🚚️🧩️move-used-extension",
+          "scenarios": [
+            {
+              "id": "demotes-the-unlit-declaration-behind-the-transform-declaration",
+              "directoryName": "🧪️demotes-the-unlit-declaration-behind-the-transform-declaration"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-accessors",
+          "sourceMutationDirectoryName": "reorder-accessors",
+          "mutationDirectoryName": "🔀️📐️reorder-accessors",
+          "scenarios": [
+            {
+              "id": "flips-the-two-accessors-and-remaps-both-attributes",
+              "directoryName": "🧪️flips-the-two-accessors-and-remaps-both-attributes"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-animations",
+          "sourceMutationDirectoryName": "reorder-animations",
+          "mutationDirectoryName": "🔀️🎞️reorder-animations",
+          "scenarios": [
+            {
+              "id": "flips-the-spin-and-bob-clips",
+              "directoryName": "🧪️flips-the-spin-and-bob-clips"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-buffer-views",
+          "sourceMutationDirectoryName": "reorder-buffer-views",
+          "mutationDirectoryName": "🔀️👁️reorder-buffer-views",
+          "scenarios": [
+            {
+              "id": "flips-the-two-windows-and-remaps-both-accessors",
+              "directoryName": "🧪️flips-the-two-windows-and-remaps-both-accessors"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-buffers",
+          "sourceMutationDirectoryName": "reorder-buffers",
+          "mutationDirectoryName": "🔀️💾️reorder-buffers",
+          "scenarios": [
+            {
+              "id": "flips-the-two-buffers-and-their-byte-lanes",
+              "directoryName": "🧪️flips-the-two-buffers-and-their-byte-lanes"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-cameras",
+          "sourceMutationDirectoryName": "reorder-cameras",
+          "mutationDirectoryName": "🔀️🎥️reorder-cameras",
+          "scenarios": [
+            {
+              "id": "flips-the-perspective-and-orthographic-cameras",
+              "directoryName": "🧪️flips-the-perspective-and-orthographic-cameras"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-images",
+          "sourceMutationDirectoryName": "reorder-images",
+          "mutationDirectoryName": "🔀️🖼️reorder-images",
+          "scenarios": [
+            {
+              "id": "flips-the-albedo-and-normal-images",
+              "directoryName": "🧪️flips-the-albedo-and-normal-images"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-materials",
+          "sourceMutationDirectoryName": "reorder-materials",
+          "mutationDirectoryName": "🔀️💎️reorder-materials",
+          "scenarios": [
+            {
+              "id": "flips-the-glass-and-steel-materials",
+              "directoryName": "🧪️flips-the-glass-and-steel-materials"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-meshs",
+          "sourceMutationDirectoryName": "reorder-meshs",
+          "mutationDirectoryName": "🔀️🕸️reorder-meshs",
+          "scenarios": [
+            {
+              "id": "flips-the-hull-and-deck-meshes",
+              "directoryName": "🧪️flips-the-hull-and-deck-meshes"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-morph-target-attributes",
+          "sourceMutationDirectoryName": "reorder-morph-target-attributes",
+          "mutationDirectoryName": "🔀️🧬️reorder-morph-target-attributes",
+          "scenarios": [
+            {
+              "id": "orders-normal-before-position-in-morph-target",
+              "directoryName": "🧪️orders-normal-before-position-in-morph-target"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-morph-targets",
+          "sourceMutationDirectoryName": "reorder-morph-targets",
+          "mutationDirectoryName": "🔀️🧬️reorder-morph-targets",
+          "scenarios": [
+            {
+              "id": "flips-the-two-morph-targets",
+              "directoryName": "🧪️flips-the-two-morph-targets"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-node-children",
+          "sourceMutationDirectoryName": "reorder-node-children",
+          "mutationDirectoryName": "🔀️🔘️reorder-node-children",
+          "scenarios": [
+            {
+              "id": "refuses-an-order-that-repeats-the-same-child-twice",
+              "directoryName": "🧪️refuses-an-order-that-repeats-the-same-child-twice"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-nodes",
+          "sourceMutationDirectoryName": "reorder-nodes",
+          "mutationDirectoryName": "🔀️🔘️reorder-nodes",
+          "scenarios": [
+            {
+              "id": "flips-the-two-nodes-and-renumbers-the-scene-roots",
+              "directoryName": "🧪️flips-the-two-nodes-and-renumbers-the-scene-roots"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-primitive-attributes",
+          "sourceMutationDirectoryName": "reorder-primitive-attributes",
+          "mutationDirectoryName": "🔀️🔺️reorder-primitive-attributes",
+          "scenarios": [
+            {
+              "id": "flips-normal-ahead-of-position-in-the-attribute-map",
+              "directoryName": "🧪️flips-normal-ahead-of-position-in-the-attribute-map"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-primitives",
+          "sourceMutationDirectoryName": "reorder-primitives",
+          "mutationDirectoryName": "🔀️🔺️reorder-primitives",
+          "scenarios": [
+            {
+              "id": "flips-the-strip-primitive-ahead-of-the-position-primitive",
+              "directoryName": "🧪️flips-the-strip-primitive-ahead-of-the-position-primitive"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-required-extensions",
+          "sourceMutationDirectoryName": "reorder-required-extensions",
+          "mutationDirectoryName": "🔀️🧩️reorder-required-extensions",
+          "scenarios": [
+            {
+              "id": "flips-the-two-required-extension-declarations",
+              "directoryName": "🧪️flips-the-two-required-extension-declarations"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-samplers",
+          "sourceMutationDirectoryName": "reorder-samplers",
+          "mutationDirectoryName": "🔀️🎛️reorder-samplers",
+          "scenarios": [
+            {
+              "id": "flips-the-linear-and-clamped-samplers",
+              "directoryName": "🧪️flips-the-linear-and-clamped-samplers"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-scene-root-nodes",
+          "sourceMutationDirectoryName": "reorder-scene-root-nodes",
+          "mutationDirectoryName": "🔀️🎬️reorder-scene-root-nodes",
+          "scenarios": [
+            {
+              "id": "refuses-a-scene-index-past-the-end-of-the-scene-list",
+              "directoryName": "🧪️refuses-a-scene-index-past-the-end-of-the-scene-list"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-scenes",
+          "sourceMutationDirectoryName": "reorder-scenes",
+          "mutationDirectoryName": "🔀️🎬️reorder-scenes",
+          "scenarios": [
+            {
+              "id": "flips-the-two-scenes-and-remaps-the-default-pointer",
+              "directoryName": "🧪️flips-the-two-scenes-and-remaps-the-default-pointer"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-skins",
+          "sourceMutationDirectoryName": "reorder-skins",
+          "mutationDirectoryName": "🔀️🧥️reorder-skins",
+          "scenarios": [
+            {
+              "id": "flips-the-two-skins-and-remaps-both-node-bindings",
+              "directoryName": "🧪️flips-the-two-skins-and-remaps-both-node-bindings"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-textures",
+          "sourceMutationDirectoryName": "reorder-textures",
+          "mutationDirectoryName": "🔀️🎨️reorder-textures",
+          "scenarios": [
+            {
+              "id": "flips-the-albedo-and-normal-textures",
+              "directoryName": "🧪️flips-the-albedo-and-normal-textures"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-used-extensions",
+          "sourceMutationDirectoryName": "reorder-used-extensions",
+          "mutationDirectoryName": "🔀️🧩️reorder-used-extensions",
+          "scenarios": [
+            {
+              "id": "flips-the-two-used-extension-declarations",
+              "directoryName": "🧪️flips-the-two-used-extension-declarations"
+            }
+          ]
+        },
+        {
+          "mutationId": "reparent-node",
+          "sourceMutationDirectoryName": "reparent-node",
+          "mutationDirectoryName": "👪️🔘️reparent-node",
+          "scenarios": [
+            {
+              "id": "adopts-the-second-scene-root-under-the-first-node",
+              "directoryName": "🧪️adopts-the-second-scene-root-under-the-first-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "require-extension",
+          "sourceMutationDirectoryName": "require-extension",
+          "mutationDirectoryName": "✅️🧩️require-extension",
+          "scenarios": [
+            {
+              "id": "promotes-the-unlit-declaration-to-a-hard-requirement",
+              "directoryName": "🧪️promotes-the-unlit-declaration-to-a-hard-requirement"
+            }
+          ]
+        },
+        {
+          "mutationId": "transform-node",
+          "sourceMutationDirectoryName": "transform-node",
+          "mutationDirectoryName": "🔄️🔘️transform-node",
+          "scenarios": [
+            {
+              "id": "replaces-a-translation-with-a-scaled-trs-transform",
+              "directoryName": "🧪️replaces-a-translation-with-a-scaled-trs-transform"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-default-scene",
+          "sourceMutationDirectoryName": "unbind-default-scene",
+          "mutationDirectoryName": "✂️🎬️unbind-default-scene",
+          "scenarios": [
+            {
+              "id": "clears-the-default-scene-pointer",
+              "directoryName": "🧪️clears-the-default-scene-pointer"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-morph-target-attribute",
+          "sourceMutationDirectoryName": "unbind-morph-target-attribute",
+          "mutationDirectoryName": "✂️🧬️unbind-morph-target-attribute",
+          "scenarios": [
+            {
+              "id": "unbinds-normal-from-the-first-morph-target",
+              "directoryName": "🧪️unbinds-normal-from-the-first-morph-target"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-node-camera",
+          "sourceMutationDirectoryName": "unbind-node-camera",
+          "mutationDirectoryName": "✂️🔘️unbind-node-camera",
+          "scenarios": [
+            {
+              "id": "clears-the-camera-binding-on-the-eye-node",
+              "directoryName": "🧪️clears-the-camera-binding-on-the-eye-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-node-child",
+          "sourceMutationDirectoryName": "unbind-node-child",
+          "mutationDirectoryName": "✂️🔘️unbind-node-child",
+          "scenarios": [
+            {
+              "id": "releases-the-child-node-from-the-parent-node",
+              "directoryName": "🧪️releases-the-child-node-from-the-parent-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-node-mesh",
+          "sourceMutationDirectoryName": "unbind-node-mesh",
+          "mutationDirectoryName": "✂️🔘️unbind-node-mesh",
+          "scenarios": [
+            {
+              "id": "clears-the-mesh-binding-on-the-body-node",
+              "directoryName": "🧪️clears-the-mesh-binding-on-the-body-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-node-skin",
+          "sourceMutationDirectoryName": "unbind-node-skin",
+          "mutationDirectoryName": "✂️🔘️unbind-node-skin",
+          "scenarios": [
+            {
+              "id": "clears-the-skin-binding-on-the-rig-node",
+              "directoryName": "🧪️clears-the-skin-binding-on-the-rig-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-primitive-attribute",
+          "sourceMutationDirectoryName": "unbind-primitive-attribute",
+          "mutationDirectoryName": "✂️🔺️unbind-primitive-attribute",
+          "scenarios": [
+            {
+              "id": "unbinds-normal-from-the-primitive",
+              "directoryName": "🧪️unbinds-normal-from-the-primitive"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-primitive-indices",
+          "sourceMutationDirectoryName": "unbind-primitive-indices",
+          "mutationDirectoryName": "✂️🔺️unbind-primitive-indices",
+          "scenarios": [
+            {
+              "id": "returns-the-primitive-to-non-indexed-drawing",
+              "directoryName": "🧪️returns-the-primitive-to-non-indexed-drawing"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-primitive-material",
+          "sourceMutationDirectoryName": "unbind-primitive-material",
+          "mutationDirectoryName": "✂️🔺️unbind-primitive-material",
+          "scenarios": [
+            {
+              "id": "returns-the-primitive-to-the-default-material",
+              "directoryName": "🧪️returns-the-primitive-to-the-default-material"
+            }
+          ]
+        },
+        {
+          "mutationId": "unbind-scene-root-node",
+          "sourceMutationDirectoryName": "unbind-scene-root-node",
+          "mutationDirectoryName": "✂️🎬️unbind-scene-root-node",
+          "scenarios": [
+            {
+              "id": "demotes-the-root-node-out-of-the-main-scene",
+              "directoryName": "🧪️demotes-the-root-node-out-of-the-main-scene"
+            }
+          ]
+        },
+        {
+          "mutationId": "unrequire-extension",
+          "sourceMutationDirectoryName": "unrequire-extension",
+          "mutationDirectoryName": "🚫️🧩️unrequire-extension",
+          "scenarios": [
+            {
+              "id": "relaxes-the-unlit-requirement-while-keeping-the-declaration",
+              "directoryName": "🧪️relaxes-the-unlit-requirement-while-keeping-the-declaration"
+            }
+          ]
+        },
+        {
+          "mutationId": "withdraw-used-extension",
+          "sourceMutationDirectoryName": "withdraw-used-extension",
+          "mutationDirectoryName": "🔙️🧩️withdraw-used-extension",
+          "scenarios": [
+            {
+              "id": "withdraws-the-unlit-declaration-that-nothing-requires",
+              "directoryName": "🧪️withdraws-the-unlit-declaration-that-nothing-requires"
+            }
+          ]
+        }
+      ],
       "kinds": [
         "bind-node-child",
         "bind-scene-root-node",

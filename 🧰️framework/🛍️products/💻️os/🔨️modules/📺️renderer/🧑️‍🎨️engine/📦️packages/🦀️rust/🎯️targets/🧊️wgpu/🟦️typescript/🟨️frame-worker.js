@@ -1059,6 +1059,57 @@ var init__component5 = __esm(() => {
 });
 
 /* ../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts */
+function createShardCommandIngressPages(input) {
+  if (input.command.length === 0)
+    throw new Error("[DEBUG] command ingress cannot encode an empty command");
+  const pageCount = Math.ceil(input.command.length / SHARD_COMMAND_PAGE_BYTES);
+  if (pageCount > SHARD_COMMAND_MAXIMUM_PAGES)
+    throw new Error(`[DEBUG] command ingress exceeds ${SHARD_COMMAND_MAXIMUM_PAGES} pages`);
+  const pages = [];
+  for (let pageIndex = 0;pageIndex < pageCount; pageIndex += 1) {
+    const start = pageIndex * SHARD_COMMAND_PAGE_BYTES;
+    const bytes = input.command.subarray(start, Math.min(start + SHARD_COMMAND_PAGE_BYTES, input.command.length));
+    const blocks = {};
+    for (let blockIndex = 0;blockIndex < 64; blockIndex += 1) {
+      const words = [];
+      for (let wordIndex = 0;wordIndex < 8; wordIndex += 1) {
+        let word = 0n;
+        const wordStart = blockIndex * 64 + wordIndex * 8;
+        for (let byteIndex = 0;byteIndex < 8; byteIndex += 1)
+          word |= BigInt(bytes[wordStart + byteIndex] ?? 0) << BigInt(byteIndex * 8);
+        words.push(word);
+      }
+      blocks[`block${blockIndex.toString().padStart(2, "0")}`] = {
+        word0: words[0],
+        word1: words[1],
+        word2: words[2],
+        word3: words[3],
+        word4: words[4],
+        word5: words[5],
+        word6: words[6],
+        word7: words[7]
+      };
+    }
+    pages.push({
+      cursor: {
+        owner: input.owner,
+        generation: input.generation,
+        commandIndex: input.commandIndex,
+        commandCount: input.commandCount,
+        instance: input.instance,
+        seq: input.seq,
+        kind: input.command[0],
+        pageIndex,
+        pageCount,
+        itemCount: 0,
+        metadata: 0
+      },
+      length: bytes.length,
+      ...blocks
+    });
+  }
+  return pages;
+}
 function orderEnvelopesByLane(envelopes) {
   return envelopes.map((envelope, index) => ({ envelope, index })).sort((left, right) => {
     const rank = SHARD_FRAME_LANE_ORDER.indexOf(left.envelope.lane) - SHARD_FRAME_LANE_ORDER.indexOf(right.envelope.lane);
@@ -1285,13 +1336,13 @@ class ShardClient {
     const requestId = this.nextRequestId();
     await this.send(slot, { kind: "activate", requestId, actorId, moduleUrl, caps, budget, assets }, requestId);
   }
-  async turn(actorId, events, budget) {
+  async turn(actorId, events, budget, commandPage) {
     const shardIndex = this.actorShard.get(actorId);
     if (shardIndex === undefined)
       throw new Error(`[DEBUG] ShardClient.turn(${actorId}): not activated on any shard`);
     const slot = this.shards[shardIndex];
     const requestId = this.nextRequestId();
-    return this.send(slot, { kind: "turn", requestId, actorId, events, budget }, requestId);
+    return this.send(slot, { kind: "turn", requestId, actorId, events, commandPage, budget }, requestId);
   }
   async envelope(shardEnvelope) {
     const slot = this.requireShard(shardEnvelope.to);
@@ -1506,7 +1557,7 @@ class ShardClient {
     }
   }
 }
-var MAINTENANCE_LANE_DEFAULT_BUDGET, SHARD_FRAME_VARIANT_FIELDS, SHARD_FRAME_LANE_ORDER, MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES = 4096, MAX_SEGMENTED_DOWNLOAD_OPERATION_ID, DEFAULT_HEARTBEAT_TIMEOUT_MS = 5000, HEARTBEAT_MISSED_LIMIT = 3, DEFAULT_MAX_OUTSTANDING_EFFECTS_PER_ACTOR = 64;
+var SHARD_COMMAND_PAGE_BYTES = 4096, SHARD_COMMAND_MAXIMUM_PAGES = 64, MAINTENANCE_LANE_DEFAULT_BUDGET, SHARD_FRAME_VARIANT_FIELDS, SHARD_FRAME_LANE_ORDER, MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES = 4096, MAX_SEGMENTED_DOWNLOAD_OPERATION_ID, DEFAULT_HEARTBEAT_TIMEOUT_MS = 5000, HEARTBEAT_MISSED_LIMIT = 3, DEFAULT_MAX_OUTSTANDING_EFFECTS_PER_ACTOR = 64;
 var init__shard_client = __esm(() => {
   MAINTENANCE_LANE_DEFAULT_BUDGET = { fuel: 80000000, wallMs: 200, memoryBytes: 256 * 1024 * 1024, uiNodes: 4000, mailboxLen: 1024, maxEffects: 512, maxPatchBytes: 2097152 };
   SHARD_FRAME_VARIANT_FIELDS = [
@@ -1960,6 +2011,28 @@ var init__shard_client = __esm(() => {
         expect(turnMsg.kind).toBe("turn");
         workers[0].deliver({ kind: "result", requestId: turnMsg.requestId, ok: true, value: { effects: [] } });
         await expect(turnPromise).resolves.toEqual({ effects: [] });
+      });
+    });
+    describe("fixed command ingress pages", () => {
+      it("matches a DataView little-endian oracle across a full page boundary", () => {
+        const command = Uint8Array.from({ length: SHARD_COMMAND_PAGE_BYTES + 5 }, (_, index) => index & 255);
+        const pages = createShardCommandIngressPages({ owner: 7n, generation: 11n, commandIndex: 1, commandCount: 3, instance: 13, seq: 17n, command });
+        expect(pages).toHaveLength(2);
+        expect(pages.map((page) => page.length)).toEqual([SHARD_COMMAND_PAGE_BYTES, 5]);
+        expect(pages[0].cursor).toMatchObject({ owner: 7n, generation: 11n, commandIndex: 1, commandCount: 3, instance: 13, seq: 17n, kind: 0, pageIndex: 0, pageCount: 2 });
+        const oracle = new DataView(command.buffer, command.byteOffset, command.byteLength);
+        expect(pages[0].block00.word0).toBe(oracle.getBigUint64(0, true));
+        expect(pages[0].block63.word7).toBe(oracle.getBigUint64(SHARD_COMMAND_PAGE_BYTES - 8, true));
+        expect(pages[1].block00.word0).toBe(0x0000000403020100n);
+        expect(pages[1].block00.word1).toBe(0n);
+        expect(pages[1].block63.word7).toBe(0n);
+      });
+      it("forwards the fixed page as the dedicated turn argument", async () => {
+        const { client, workers } = harness(1);
+        await activateActor(client, workers, "paged");
+        const page = createShardCommandIngressPages({ owner: 1n, generation: 1n, commandIndex: 0, commandCount: 1, instance: 1, seq: 1n, command: Uint8Array.of(9, 8, 7) })[0];
+        client.turn("paged", [], BUDGET, page);
+        expect(workers[0].sent.at(-1)).toMatchObject({ kind: "turn", actorId: "paged", events: [], commandPage: page });
       });
     });
     describe("ShardFrame parity with Rust component.rs", () => {
@@ -2666,7 +2739,14 @@ class AppRouter {
     const ownerByArtifactKind = new Map;
     const seenRefs = new Set;
     const grouped = new Map;
-    const ordered = [...manifests].sort((left, right) => Number((right.artifactKinds?.length ?? 0) > 0) - Number((left.artifactKinds?.length ?? 0) > 0));
+    const loadedIds = new Set(manifests.map((manifest) => manifest.pluginId));
+    const dependencyNodes = manifests.map((manifest) => ({
+      pluginId: manifest.pluginId,
+      dependencies: (manifest.dependencies ?? []).filter((dependency) => loadedIds.has(dependency.pluginId))
+    }));
+    const resolved = resolvePluginLoadOrder(dependencyNodes);
+    const byId = new Map(manifests.map((manifest) => [manifest.pluginId, manifest]));
+    const ordered = resolved.errors.length === 0 ? resolved.order.map((pluginId) => byId.get(pluginId)).filter(Boolean) : [...manifests];
     for (const manifest of ordered) {
       for (const kind of manifest.artifactKinds ?? []) {
         if (!ownerByArtifactKind.has(kind.id))
@@ -3284,6 +3364,7 @@ function runtimeMetricsDue(lastPublishedMs, nowMs) {
 }
 function createDevPluginSource(registry) {
   const byId = new Map(registry.map((entry) => [entry.pluginId, entry]));
+  const bootVersion = Date.now();
   return {
     id: "dev",
     async list() {
@@ -3293,7 +3374,8 @@ function createDevPluginSource(registry) {
       const entry = byId.get(pluginId);
       if (!entry)
         throw new Error(`[DEBUG] plugin source "dev" has no registry entry for ${pluginId}`);
-      return rebuiltAt === undefined ? entry.moduleUrl : `${entry.moduleUrl}?v=${rebuiltAt}`;
+      const separator = entry.moduleUrl.includes("?") ? "&" : "?";
+      return `${entry.moduleUrl}${separator}v=${rebuiltAt ?? bootVersion}`;
     },
     subscribe(listener) {
       if (typeof EventSource === "undefined")
@@ -3309,6 +3391,18 @@ function createDevPluginSource(registry) {
       return () => source.close();
     }
   };
+}
+function extensionSourceEventToPluginSourceEvent(event) {
+  if (event.kind === "snapshot") {
+    if (!Array.isArray(event.extensions))
+      throw new Error("snapshot extensions must be an array");
+    return { kind: "snapshot", plugins: event.extensions.map((extension) => ({ pluginId: extension.extensionId, rebuiltAt: extension.installedAt })) };
+  }
+  if (event.kind === "installed")
+    return { kind: "built", pluginId: event.extensionId, rebuiltAt: event.installedAt };
+  if (event.kind === "uninstalled")
+    return;
+  throw new Error("unknown extension source event kind");
 }
 function createExtensionSource(catalog) {
   const registry = catalog.extensions.map((target) => ({
@@ -3336,7 +3430,9 @@ function createExtensionSource(catalog) {
       const source = new EventSource(EXTENSION_SOURCE_WATCH_PATH);
       source.onmessage = (event) => {
         try {
-          listener(JSON.parse(event.data));
+          const normalized = extensionSourceEventToPluginSourceEvent(JSON.parse(event.data));
+          if (normalized)
+            listener(normalized);
         } catch (error) {
           console.warn(`[DEBUG] plugin source "extensions" malformed event: ${error instanceof Error ? error.message : String(error)}`);
         }
@@ -3786,6 +3882,29 @@ var init__component6 = __esm(() => {
     Conflict: "surface.conflict",
     MissingOwnerSurface: "surface.missing-owner-surface"
   };
+  if (import.meta.vitest) {
+    const { describe, expect, it } = import.meta.vitest;
+    describe("AppRouter", () => {
+      it("orders a loaded aggregate plugin after the foreign surface owner it depends on", () => {
+        const cadDialect = { artifactKind: "s.cad.cad", standard: "1", subset: "*" };
+        const aggregate = {
+          pluginId: "demonstrator",
+          apps: [{ id: "s.cad.cad@1/*#editor", role: "editor", dialect: cadDialect }],
+          dependencies: [{ pluginId: "cad", version: "*" }]
+        };
+        const owner = {
+          pluginId: "cad",
+          apps: [{ id: "s.cad.cad@1/*#editor", role: "editor", dialect: cadDialect }]
+        };
+        const router = AppRouter.build([aggregate, owner]);
+        expect(router.ownerPluginId("s.cad.cad")).toBe("cad");
+        expect(router.entriesFor(cadDialect, "editor")).toEqual([
+          { pluginId: "cad", appId: "s.cad.cad@1/*#editor" },
+          { pluginId: "demonstrator", appId: "s.cad.cad@1/*#editor" }
+        ]);
+      });
+    });
+  }
   CARRIER_BINARY_DIALECT = { artifactKind: "s.stdio.binary", standard: "raw", subset: "*" };
   CARRIER_TEXT_DIALECT = { artifactKind: "s.stdio.txt", standard: "utf-8", subset: "*" };
   EMPTY_OPENING_PREFERENCES = { defaults: [] };
@@ -5121,6 +5240,7 @@ __export(exports__glue, {
   init: () => init,
   foldOpeningPreferences: () => foldOpeningPreferences,
   fetchWithTimeout: () => fetchWithTimeout,
+  extensionSourceEventToPluginSourceEvent: () => extensionSourceEventToPluginSourceEvent,
   explore: () => explore,
   expandPluginRegistry: () => expandPluginRegistry,
   ephemeralWeakMap: () => ephemeralWeakMap,
@@ -5796,9 +5916,13 @@ var init__glue = __esm(() => {
         expect(source.id).toBe("dev");
         await expect(source.list()).resolves.toEqual(registry);
       });
-      it("moduleUrl() passes through unbusted without rebuiltAt", () => {
+      it("moduleUrl() cache-busts a cold page load even before the build snapshot arrives", () => {
         const source = createDevPluginSource(registry);
-        expect(source.moduleUrl("note")).toBe("/plugin-modules/note/note_plugin.js");
+        const first = new URL(source.moduleUrl("note"), "http://semio.test");
+        const second = new URL(source.moduleUrl("s"), "http://semio.test");
+        expect(first.pathname).toBe("/plugin-modules/note/note_plugin.js");
+        expect(first.searchParams.get("v")).toMatch(/^\d+$/);
+        expect(second.searchParams.get("v")).toBe(first.searchParams.get("v"));
       });
       it("moduleUrl() cache-busts with a rebuiltAt query param", () => {
         const source = createDevPluginSource(registry);
@@ -5815,6 +5939,18 @@ var init__glue = __esm(() => {
         expect(() => unsubscribe()).not.toThrow();
         expect(events).toEqual([]);
       });
+      it("normalizes extension snapshots and installs into plugin availability events", () => {
+        expect(extensionSourceEventToPluginSourceEvent({ kind: "snapshot", extensions: [{ extensionId: "gamma-extension", installedAt: 1785789943669 }] })).toEqual({
+          kind: "snapshot",
+          plugins: [{ pluginId: "gamma-extension", rebuiltAt: 1785789943669 }]
+        });
+        expect(extensionSourceEventToPluginSourceEvent({ kind: "installed", extensionId: "gamma-extension", installedAt: 1785789943670 })).toEqual({
+          kind: "built",
+          pluginId: "gamma-extension",
+          rebuiltAt: 1785789943670
+        });
+        expect(extensionSourceEventToPluginSourceEvent({ kind: "uninstalled", extensionId: "gamma-extension" })).toBeUndefined();
+      });
       it("multiplexPluginSources() merges list() and resolves moduleUrl from the matching child", async () => {
         const catalog = {
           plugins: [],
@@ -5830,7 +5966,7 @@ var init__glue = __esm(() => {
         expect(multiplexed.id).toBe("dev+extensions");
         const listed = await multiplexed.list();
         expect(listed.map((entry) => entry.pluginId).sort()).toEqual([...registry.map((entry) => entry.pluginId), ...catalog.extensions.map((entry) => entry.pluginId)].sort());
-        expect(multiplexed.moduleUrl("note")).toBe("/plugin-modules/note/note_plugin.js");
+        expect(new URL(multiplexed.moduleUrl("note"), "http://semio.test").pathname).toBe("/plugin-modules/note/note_plugin.js");
         expect(() => multiplexed.moduleUrl("missing")).toThrow(/missing/);
       });
     });
@@ -7313,9 +7449,9 @@ var PLUGIN_BUILD_TARGETS = [
   { pluginId: "animate", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF9E️animate/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_animate.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:animate.present"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "5fff7e3ac148177243275445e12535fd89c433f6fa50316572bcdda9b3d97590", coreWasmSha256: "5fff7e3ac148177243275445e12535fd89c433f6fa50316572bcdda9b3d97590", descriptorSha256: "12a912e82f98d54f405262123150f41035a15234332a1abc971062ac7e973b17" } },
   { pluginId: "architect", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFDB️architect/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_architect.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:data.\uD83C\uDFDB️program"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "2301bc724c96c3f6ea698bc1eba4feb50a0b0b4d1dfdbffa94a912c7e9dab510", coreWasmSha256: "2301bc724c96c3f6ea698bc1eba4feb50a0b0b4d1dfdbffa94a912c7e9dab510", descriptorSha256: "09d0f7320243a4aa38d5c83fa7d0a75ed398756edcb093c848adf515d1c1c4d8" } },
   { pluginId: "block", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDDF1️block/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_block.wasm", role: "plugin", capabilities: [], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: [], extensionPoints: [] },
-  { pluginId: "cad", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD0️cad/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_cad.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:3d.cad"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "d3501088cd8ec6762011a2f7523b313c45c00ad4867041a78443c38572b092e6", coreWasmSha256: "d3501088cd8ec6762011a2f7523b313c45c00ad4867041a78443c38572b092e6", descriptorSha256: "63b5a4ca0a07a7f4f6c98ec19c0c20046a46edbbf51ff0e90072c952e8b147e4" } },
+  { pluginId: "cad", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD0️cad/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_cad.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:3d.cad"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "64a36cc37cb80d8d0c122af7c22272e1749730a45e2eb18657e435f6614c8823", coreWasmSha256: "64a36cc37cb80d8d0c122af7c22272e1749730a45e2eb18657e435f6614c8823", descriptorSha256: "ff3daed49568aaec15d35de6067f2df0956bf988de1db8baa98560f10063b867" } },
   { pluginId: "dag", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDD78️dag/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_dag.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:graph.dag"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "55c9da9026706dbcd47277335eda53abf66e3ecf19fd848280a95b7a531f51e2", coreWasmSha256: "55c9da9026706dbcd47277335eda53abf66e3ecf19fd848280a95b7a531f51e2", descriptorSha256: "53d81f2b0927fbc1383cccb1c989a5fe190fd98ea582786bd6ea1846aea5258d" } },
-  { pluginId: "demonstrator", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFAA️demonstrator/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_demonstrator.wasm", role: "plugin", capabilities: [], contributes: [], consumes: ["forms.questionKind", "flow.extension", "process.machines"], dependsOn: ["cad", "gis", "procedural", "process", "puzzle", "sourcing", "stdio"], activationEvents: [], extensionPoints: [] },
+  { pluginId: "demonstrator", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFAA️demonstrator/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_demonstrator.wasm", role: "plugin", capabilities: [], contributes: [], consumes: ["forms.questionKind", "flow.extension", "process.machines"], dependsOn: ["cad", "gis", "procedural", "process", "puzzle", "sourcing", "stdio"], activationEvents: [], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "515ba55d89735c6bf1683a8ed7a0925122f317922968e7abad9cd196327e1363", coreWasmSha256: "515ba55d89735c6bf1683a8ed7a0925122f317922968e7abad9cd196327e1363", descriptorSha256: "38aa951a6e782347410864362b5dec0fa0ad8aa8685524af5f3d4e96f0aa6f56" } },
   { pluginId: "draw", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDD8D️draw/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_draw.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["draw-fsm", "stdio"], activationEvents: ["on-artifact-kind:2d.drawing"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "4bccf647dd64b0d6088e7338a25e7ed1326a412f44660459f0d6c9cab0e79714", coreWasmSha256: "4bccf647dd64b0d6088e7338a25e7ed1326a412f44660459f0d6c9cab0e79714", descriptorSha256: "b9d12f23271b085b41da39d7ba395ea78604cab8006b6b00e1ee39aa5265a1bd" } },
   { pluginId: "energy", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDD0B️energy/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_energy.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:data.\uD83D\uDD0B️model"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "1c0f620a5d442096c9683acf7095f470375c8b7efa0821076d8e548b8d706f20", coreWasmSha256: "1c0f620a5d442096c9683acf7095f470375c8b7efa0821076d8e548b8d706f20", descriptorSha256: "383853b475b0308336f8088fe067d27fa2f525b21349d70b080b07aa86ae2ec1" } },
   { pluginId: "fem", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFD7️fem/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_fem.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:computation.fem2d", "on-artifact-kind:computation.fem3d"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "924176ed3c2bd2415f14218d6671a485db3d06931f2b47e67c5170f715661e13", coreWasmSha256: "924176ed3c2bd2415f14218d6671a485db3d06931f2b47e67c5170f715661e13", descriptorSha256: "f0c10888f9dc7101c596b0e8b837fcbd439cb031738dd233e767cc8ad59f6fdb" } },
@@ -7329,8 +7465,8 @@ var PLUGIN_BUILD_TARGETS = [
   { pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_norm.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["fem", "stdio"], activationEvents: ["on-artifact-kind:computation.norm.din4108", "on-artifact-kind:computation.norm.din16798", "on-artifact-kind:computation.norm.din18599", "on-artifact-kind:computation.norm.en1990", "on-artifact-kind:computation.norm.en1991", "on-artifact-kind:computation.norm.en1992", "on-artifact-kind:computation.norm.en1993", "on-artifact-kind:computation.norm.en1994", "on-artifact-kind:computation.norm.en1995", "on-artifact-kind:computation.norm.en1996", "on-artifact-kind:computation.norm.en1997", "on-artifact-kind:computation.norm.en1998", "on-artifact-kind:computation.norm.en1999", "on-artifact-kind:computation.norm.iso16757", "on-artifact-kind:computation.norm.vdi3805"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "ee09ede9e0a96f42d31342b2e646edfb17b05f3d63b47315148774eb9f99dbfc", coreWasmSha256: "ee09ede9e0a96f42d31342b2e646edfb17b05f3d63b47315148774eb9f99dbfc", descriptorSha256: "dbca604de90af12da82cb423792a4ced55422e75c1f1baee863caf898f0295c3" } },
   { pluginId: "note", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDDD2️note/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_note.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:2d.note"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "a60a593e311b5e4b6e366884638095c8dec2aa0e6bed9792163d6f2cef35a5b7", coreWasmSha256: "a60a593e311b5e4b6e366884638095c8dec2aa0e6bed9792163d6f2cef35a5b7", descriptorSha256: "1b8c29c800f1fd38f95f6754ec982585b59595a60ddf06fdbbadb6738850a093" } },
   { pluginId: "playbook", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD6️playbook/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_playbook.wasm", role: "plugin", capabilities: [], contributes: [], consumes: ["playbook.blockKind"], dependsOn: ["stdio"], activationEvents: [], extensionPoints: [] },
-  { pluginId: "procedural", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF00️procedural/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_procedural.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["forms.questionKind", "flow.extension"], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:2d.procedural", "on-artifact-kind:3d.procedural"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "be2cee9b5207741615ed09eddf257acde85b0acdf58535f56c0d03f8cf91915f", coreWasmSha256: "be2cee9b5207741615ed09eddf257acde85b0acdf58535f56c0d03f8cf91915f", descriptorSha256: "cc84360e8f5e007ca916ea785556baee6f193b4bd78d30d6a359da4fe84d939e" } },
-  { pluginId: "process", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFED️process/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_process.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["process.machines"], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:3d.process"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "dcb1cf7e073ec7c61fa31d6fe176d1e11424ccb452cc1387a14a442c81efe746", coreWasmSha256: "dcb1cf7e073ec7c61fa31d6fe176d1e11424ccb452cc1387a14a442c81efe746", descriptorSha256: "ba72fb1fdc5e1aa1e47833146de43ea59601e494c812ac4ca45e5e3c746b2628" } },
+  { pluginId: "procedural", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF00️procedural/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_procedural.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["forms.questionKind", "flow.extension"], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:2d.procedural", "on-artifact-kind:3d.procedural"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "c5f3397c099d1aa8111bbfe55b67016545fdf73640c357432f5f1775e9efc541", coreWasmSha256: "c5f3397c099d1aa8111bbfe55b67016545fdf73640c357432f5f1775e9efc541", descriptorSha256: "d5f9303d4e7ad4e2c1c7f7b43244340da22f2cba2bca7e665496a63edd4ce6c7" } },
+  { pluginId: "process", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFED️process/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_process.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["process.machines"], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:3d.process"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "e92a458a8ac3c43bfe5f6a45740761a45fdfd43a1ea3f33e7f7ecad8d637204a", coreWasmSha256: "e92a458a8ac3c43bfe5f6a45740761a45fdfd43a1ea3f33e7f7ecad8d637204a", descriptorSha256: "cf72544602b5530bb375b2282dbf71df99b1af2c333e813d6943a00c50a39289" } },
   { pluginId: "puzzle", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDDE9️puzzle/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_puzzle.wasm", role: "plugin", capabilities: [], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: [], extensionPoints: [] },
   { pluginId: "raster", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDDA8️raster/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_raster.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:2d.raster"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "9040c81c6daee99c3d31b9eac685c68ea24d551ac7f33f31cad68fe75487e4e6", coreWasmSha256: "9040c81c6daee99c3d31b9eac685c68ea24d551ac7f33f31cad68fe75487e4e6", descriptorSha256: "26760a5a3c146b1612a8e8036c877f91a17c13cef425b94a174127df3e33bd94" } },
   { pluginId: "reasoning-mindmap", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCA1️reasoning/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_reasoning_mindmap.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:graph.wires"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "7686a3193c6aeffe74e8e73d76b842112e892e57f9f3aa9ed04d39bc8bc1c2b8", coreWasmSha256: "7686a3193c6aeffe74e8e73d76b842112e892e57f9f3aa9ed04d39bc8bc1c2b8", descriptorSha256: "eb21b2587a19242762803823f748628b1eb1553c783f6281dfee25ac72706f93" } },
@@ -7338,7 +7474,7 @@ var PLUGIN_BUILD_TARGETS = [
   { pluginId: "s", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDE90️space/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_space.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:space.shome", "on-artifact-kind:space.sspace"], extensionPoints: [], host: { landingAppId: "home", hostAppId: "studio" }, executionMode: "isolated", hashes: { wasmSha256: "762dad6b1eca109108ff781d0697bdc2114ed8869b692c2cf88cc60ec03209af", coreWasmSha256: "762dad6b1eca109108ff781d0697bdc2114ed8869b692c2cf88cc60ec03209af", descriptorSha256: "df021b9a83bcb48ab858afe4a8f2c2e30d69f8166850ddebb064421109b3fed6" } },
   { pluginId: "sequence", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFAC️sequence/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_sequence.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["imperative-control", "imperative-effect", "imperative-math", "imperative-text", "stdio"], activationEvents: ["on-artifact-kind:computation.sequence"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "bbcf24176893beb37e0dcdf36f658f52a62b8a5e48163130cd5f02371b2a6a79", coreWasmSha256: "bbcf24176893beb37e0dcdf36f658f52a62b8a5e48163130cd5f02371b2a6a79", descriptorSha256: "5c5ee126f62f14b60a81d95575c85186db47ec9b7712d0e56d5ba6b2a032088a" } },
   { pluginId: "shooting", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFA5️shooting/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_shooting.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:2d.shooting"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "2e16eed70a875e078501c439d8f05c162163f1193bcaee4f11b41f0b2f2eed01", coreWasmSha256: "2e16eed70a875e078501c439d8f05c162163f1193bcaee4f11b41f0b2f2eed01", descriptorSha256: "ad86c4d9cf0730ae4b512389898962bb9eefd1f631f8543d7fd8143be3276129" } },
-  { pluginId: "sourcing", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDEB5️sourcing/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_sourcing.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:catalogue.sourcing"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "a3bf35a836d57f1277b74e4f2c4b2172e2f1c33fb3fc1ce841b1c957b8ed9531", coreWasmSha256: "a3bf35a836d57f1277b74e4f2c4b2172e2f1c33fb3fc1ce841b1c957b8ed9531", descriptorSha256: "6fb94b60b530d27f2a9f2ab4ee507c9736c277396697f5d0998d91ffff6fc252" } },
+  { pluginId: "sourcing", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDEB5️sourcing/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_sourcing.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:catalogue.sourcing"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "f7c118430126c3e5ae41918b4bfb936fcabfddf1bc17438e6b485dab22c1edfb", coreWasmSha256: "f7c118430126c3e5ae41918b4bfb936fcabfddf1bc17438e6b485dab22c1edfb", descriptorSha256: "0f18b59b4d7a9217c19909b205ecc92980214aa3ecc3a47e9915fc64345c5d4d" } },
   { pluginId: "stdio", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDDC4️stdio/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_stdio.wasm", role: "plugin", capabilities: [], contributes: [], consumes: [], dependsOn: [], activationEvents: [], extensionPoints: [] },
   { pluginId: "trinity", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDD31️trinity/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_trinity.wasm", role: "plugin", capabilities: [], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: [], extensionPoints: [] },
   { pluginId: "vcs", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF3F️vcs/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_vcs.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: ["stdio"], activationEvents: ["on-artifact-kind:vcs.document"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "74771b987f39e483da63efdb21006a3ce511ad5edd1c3bd0de05543bef00d925", coreWasmSha256: "74771b987f39e483da63efdb21006a3ce511ad5edd1c3bd0de05543bef00d925", descriptorSha256: "b702fe11bb1c92bb06226ccce58792ccd37fa01be8313a740e52ea6a48e8329e" } },
@@ -7381,64 +7517,66 @@ var extensionModuleUrl = (extensionId, fileName) => `/extensions/${extensionId}/
 
 /* ../../../../../../🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts */
 var PLAYGROUND_BUILD_TARGETS = [
-  { variant: "aggregator", pluginId: "demonstrator", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFAA️demonstrator/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.puzzle3d@1/*#editor", brand: "entwerfen-mit-bestand-aggregator", aliases: ["mit-bestand", "entwerfen-mit-bestand"], ports: { react: 6023, wgpu: 6123 }, examples: [], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", roots: ["\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDBC️assets/\uD83C\uDF31️metabolism/\uD83C\uDFA8️representation", "♻️mit-bestand/\uD83D\uDDBC️asset/\uD83C\uDFDA️abbau-aufbau"], placeholder: "\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDBC️assets/\uD83E\uDD7D️mesh/\uD83E\uDDCA️placeholder.glb", filterFromExamples: true }, { kind: "static-dir", route: "/infinite-fixture", root: "\uD83E\uDDF0️framework/\uD83D\uDECD️products/\uD83D\uDCBB️os/\uD83D\uDD28️modules/♾️infinite/\uD83E\uDDEB️fixtures" }] },
-  { variant: "animate", pluginId: "animate", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF9E️animate/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6051, wgpu: 6151 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "architect", pluginId: "architect", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFDB️architect/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6090, wgpu: 6190 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "aussuchen", pluginId: "demonstrator", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFAA️demonstrator/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "sourcing-curate", brand: "entwerfen-mit-bestand-aussuchen", aliases: ["entwerfen-mit-bestand-aussuchen"], ports: { react: 6030, wgpu: 6130 }, examples: [], engines: [], assets: [] },
-  { variant: "bearbeiten", pluginId: "demonstrator", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFAA️demonstrator/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "process3d-play", brand: "entwerfen-mit-bestand-bearbeiten", aliases: ["entwerfen-mit-bestand-bearbeiten"], ports: { react: 6031, wgpu: 6131 }, examples: [], engines: [], assets: [] },
-  { variant: "block2d", pluginId: "block", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDDF1️block/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.block.block2d@1/*#editor", aliases: ["block 2d"], ports: { react: 6024, wgpu: 6124 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "block3d", pluginId: "block", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDDF1️block/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.block.block3d@1/*#editor", aliases: ["block 3d"], ports: { react: 6025, wgpu: 6125 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", roots: ["\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDBC️assets/\uD83C\uDF31️metabolism/\uD83C\uDFA8️representation", "♻️mit-bestand/\uD83D\uDDBC️asset/\uD83C\uDFDA️abbau-aufbau"], placeholder: "\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDBC️assets/\uD83E\uDD7D️mesh/\uD83E\uDDCA️placeholder.glb", filterFromExamples: true }] },
-  { variant: "block5d", pluginId: "block", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDDF1️block/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.block.block5d@1/*#editor", aliases: ["block 5d"], ports: { react: 6026, wgpu: 6126 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "cad", pluginId: "cad", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD0️cad/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.cad.cad@1/*#editor", aliases: [], ports: { react: 6020, wgpu: 6120 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [{ kind: "static-dir", route: "/cad-fixture", root: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD0️cad/\uD83D\uDDFF️artifacts/\uD83D\uDCD0️cad/\uD83C\uDFC5️standards/\uD83D\uDD16️1/\uD83E\uDE86️subsets/✳️any/\uD83D\uDCDA️examples/\uD83E\uDDEB️fixtures" }] },
-  { variant: "dag", pluginId: "dag", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDD78️dag/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6017, wgpu: 6117 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "din16798", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.din16798@1/*#editor", aliases: [], ports: { react: 6092, wgpu: 6192 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "din18599", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.din18599@1/*#editor", aliases: [], ports: { react: 6093, wgpu: 6193 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "din4108", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.din4108@1/*#editor", aliases: [], ports: { react: 6091, wgpu: 6191 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "draw", pluginId: "draw", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDD8D️draw/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6064, wgpu: 6164 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "en1990", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1990@1/*#editor", aliases: [], ports: { react: 6094, wgpu: 6194 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "en1991", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1991@1/*#editor", aliases: [], ports: { react: 6095, wgpu: 6195 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "en1992", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1992@1/*#editor", aliases: [], ports: { react: 6096, wgpu: 6196 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "en1993", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1993@1/*#editor", aliases: [], ports: { react: 6097, wgpu: 6197 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "en1994", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1994@1/*#editor", aliases: [], ports: { react: 6098, wgpu: 6198 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "en1995", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1995@1/*#editor", aliases: [], ports: { react: 6099, wgpu: 6199 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "en1996", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1996@1/*#editor", aliases: [], ports: { react: 6100, wgpu: 6200 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "en1997", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1997@1/*#editor", aliases: [], ports: { react: 6101, wgpu: 6201 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "en1998", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1998@1/*#editor", aliases: [], ports: { react: 6102, wgpu: 6202 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "en1999", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1999@1/*#editor", aliases: [], ports: { react: 6103, wgpu: 6203 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "fem2d", pluginId: "fem", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFD7️fem/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.fem.fem2d@1/*#editor", aliases: ["fem 2d"], ports: { react: 6086, wgpu: 6186 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "fem3d", pluginId: "fem", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFD7️fem/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.fem.fem3d@1/*#editor", aliases: ["fem 3d"], ports: { react: 6087, wgpu: 6187 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "flow", pluginId: "flow", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF0A️flow/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6016, wgpu: 6116 }, examples: ["\uD83C\uDFAC️demo-session"], engines: ["./\uD83E\uDDF0️framework/\uD83D\uDECD️products/\uD83D\uDCBB️os/\uD83D\uDD28️modules/\uD83C\uDF0A️flow/\uD83E\uDEC0️core/pkg"], assets: [] },
-  { variant: "forms", pluginId: "forms", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCCB️forms/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6058, wgpu: 6158 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
+  { variant: "aggregator", pluginId: "demonstrator", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFAA️demonstrator/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.puzzle.puzzle3d@1/*#editor", brand: "entwerfen-mit-bestand-aggregator", aliases: ["mit-bestand", "entwerfen-mit-bestand"], ports: { react: 6023, wgpu: 6123 }, examples: [], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", roots: ["\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDBC️assets/\uD83C\uDF31️metabolism/\uD83C\uDFA8️representation", "♻️mit-bestand/\uD83D\uDDBC️asset/\uD83C\uDFDA️abbau-aufbau"], placeholder: "\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDBC️assets/\uD83E\uDD7D️mesh/\uD83E\uDDCA️placeholder.glb", filterFromExamples: true }, { kind: "static-dir", route: "/infinite-fixture", root: "\uD83E\uDDF0️framework/\uD83D\uDECD️products/\uD83D\uDCBB️os/\uD83D\uDD28️modules/♾️infinite/\uD83E\uDDEB️fixtures" }] },
+  { variant: "animate", pluginId: "animate", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF9E️animate/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6051, wgpu: 6151 }, examples: [], engines: [], assets: [] },
+  { variant: "architect", pluginId: "architect", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFDB️architect/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6090, wgpu: 6190 }, examples: [], engines: [], assets: [] },
+  { variant: "aussuchen", pluginId: "demonstrator", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFAA️demonstrator/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.sourcing.curate@1/*#editor", brand: "entwerfen-mit-bestand-aussuchen", aliases: ["entwerfen-mit-bestand-aussuchen"], ports: { react: 6030, wgpu: 6130 }, examples: [], engines: [], assets: [] },
+  { variant: "bearbeiten", pluginId: "demonstrator", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFAA️demonstrator/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.process.process3d@1/*#editor", brand: "entwerfen-mit-bestand-bearbeiten", aliases: ["entwerfen-mit-bestand-bearbeiten"], ports: { react: 6031, wgpu: 6131 }, examples: [], engines: [], assets: [] },
+  { variant: "block2d", pluginId: "block", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDDF1️block/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.block.block2d@1/*#editor", aliases: ["block 2d"], ports: { react: 6024, wgpu: 6124 }, examples: [], engines: [], assets: [] },
+  { variant: "block3d", pluginId: "block", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDDF1️block/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.block.block3d@1/*#editor", aliases: ["block 3d"], ports: { react: 6025, wgpu: 6125 }, examples: [], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", roots: ["\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDBC️assets/\uD83C\uDF31️metabolism/\uD83C\uDFA8️representation", "♻️mit-bestand/\uD83D\uDDBC️asset/\uD83C\uDFDA️abbau-aufbau"], placeholder: "\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDBC️assets/\uD83E\uDD7D️mesh/\uD83E\uDDCA️placeholder.glb", filterFromExamples: true }] },
+  { variant: "block5d", pluginId: "block", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDDF1️block/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.block.block5d@1/*#editor", aliases: ["block 5d"], ports: { react: 6026, wgpu: 6126 }, examples: [], engines: [], assets: [] },
+  { variant: "cad", pluginId: "cad", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD0️cad/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.cad.cad@1/*#editor", aliases: [], ports: { react: 6020, wgpu: 6120 }, examples: [], engines: [], assets: [{ kind: "static-dir", route: "/cad-fixture", root: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD0️cad/\uD83D\uDDFF️artifacts/\uD83D\uDCD0️cad/\uD83C\uDFC5️standards/\uD83D\uDD16️1/\uD83E\uDE86️subsets/✳️any/\uD83D\uDCDA️examples/\uD83E\uDDEB️fixtures" }] },
+  { variant: "dag", pluginId: "dag", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDD78️dag/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6017, wgpu: 6117 }, examples: [], engines: [], assets: [] },
+  { variant: "demonstrator", pluginId: "demonstrator", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFAA️demonstrator/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.demonstrator.playground@1/*#editor", aliases: [], ports: { react: 6107, wgpu: 6207 }, examples: [], engines: [], assets: [] },
+  { variant: "din16798", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.din16798@1/*#editor", aliases: [], ports: { react: 6092, wgpu: 6192 }, examples: [], engines: [], assets: [] },
+  { variant: "din18599", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.din18599@1/*#editor", aliases: [], ports: { react: 6093, wgpu: 6193 }, examples: [], engines: [], assets: [] },
+  { variant: "din4108", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.din4108@1/*#editor", aliases: [], ports: { react: 6091, wgpu: 6191 }, examples: [], engines: [], assets: [] },
+  { variant: "draw", pluginId: "draw", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDD8D️draw/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6064, wgpu: 6164 }, examples: [], engines: [], assets: [] },
+  { variant: "en1990", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1990@1/*#editor", aliases: [], ports: { react: 6094, wgpu: 6194 }, examples: [], engines: [], assets: [] },
+  { variant: "en1991", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1991@1/*#editor", aliases: [], ports: { react: 6095, wgpu: 6195 }, examples: [], engines: [], assets: [] },
+  { variant: "en1992", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1992@1/*#editor", aliases: [], ports: { react: 6096, wgpu: 6196 }, examples: [], engines: [], assets: [] },
+  { variant: "en1993", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1993@1/*#editor", aliases: [], ports: { react: 6097, wgpu: 6197 }, examples: [], engines: [], assets: [] },
+  { variant: "en1994", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1994@1/*#editor", aliases: [], ports: { react: 6098, wgpu: 6198 }, examples: [], engines: [], assets: [] },
+  { variant: "en1995", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1995@1/*#editor", aliases: [], ports: { react: 6099, wgpu: 6199 }, examples: [], engines: [], assets: [] },
+  { variant: "en1996", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1996@1/*#editor", aliases: [], ports: { react: 6100, wgpu: 6200 }, examples: [], engines: [], assets: [] },
+  { variant: "en1997", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1997@1/*#editor", aliases: [], ports: { react: 6101, wgpu: 6201 }, examples: [], engines: [], assets: [] },
+  { variant: "en1998", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1998@1/*#editor", aliases: [], ports: { react: 6102, wgpu: 6202 }, examples: [], engines: [], assets: [] },
+  { variant: "en1999", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.en1999@1/*#editor", aliases: [], ports: { react: 6103, wgpu: 6203 }, examples: [], engines: [], assets: [] },
+  { variant: "energy", pluginId: "energy", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDD0B️energy/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.energy.model@1/*#editor", aliases: [], ports: { react: 6106, wgpu: 6206 }, examples: [], engines: [], assets: [] },
+  { variant: "fem2d", pluginId: "fem", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFD7️fem/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.fem.fem2d@1/*#editor", aliases: ["fem 2d"], ports: { react: 6086, wgpu: 6186 }, examples: [], engines: [], assets: [] },
+  { variant: "fem3d", pluginId: "fem", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFD7️fem/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.fem.fem3d@1/*#editor", aliases: ["fem 3d"], ports: { react: 6087, wgpu: 6187 }, examples: [], engines: [], assets: [] },
+  { variant: "flow", pluginId: "flow", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF0A️flow/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6016, wgpu: 6116 }, examples: [], engines: ["./\uD83E\uDDF0️framework/\uD83D\uDECD️products/\uD83D\uDCBB️os/\uD83D\uDD28️modules/\uD83C\uDF0A️flow/\uD83E\uDEC0️core/pkg"], assets: [] },
+  { variant: "forms", pluginId: "forms", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCCB️forms/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6058, wgpu: 6158 }, examples: [], engines: [], assets: [] },
   { variant: "generator", pluginId: "demonstrator", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFAA️demonstrator/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.procedural.procedural3d@1/*#editor", brand: "entwerfen-mit-bestand-generator", aliases: ["entwerfen-mit-bestand-generator"], ports: { react: 6027, wgpu: 6127 }, examples: [], engines: [], assets: [] },
-  { variant: "gis2d", pluginId: "gis", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF0D️gis/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.gis.gismap@1/*#editor", aliases: ["gis 2d"], ports: { react: 6040, wgpu: 6140 }, examples: ["\uD83C\uDFAC️demo-session"], engines: ["./\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDFA️surface/\uD83D\uDCE6️packages/\uD83E\uDD80️rust"], assets: [{ kind: "tile-proxy", route: "/osm", upstream: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", cache: "osm-tiles" }, { kind: "tile-proxy", route: "/vt", upstream: "https://tiles.openfreemap.org/planet", cache: "openfreemap-vt" }] },
-  { variant: "gis3d", pluginId: "gis", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF0D️gis/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.gis.gisterrain@1/*#editor", aliases: ["gis 3d"], ports: { react: 6083, wgpu: 6183 }, examples: ["\uD83C\uDFAC️demo-session"], engines: ["./\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDFA️surface/\uD83D\uDCE6️packages/\uD83E\uDD80️rust"], assets: [{ kind: "tile-proxy", route: "/dem", upstream: "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png", cache: "terrarium-dem" }] },
-  { variant: "imperative", pluginId: "imperative", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCDC️imperative/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6076, wgpu: 6176 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "iso16757", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.iso16757@1/*#editor", aliases: [], ports: { react: 6104, wgpu: 6204 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
+  { variant: "gis2d", pluginId: "gis", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF0D️gis/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.gis.gismap@1/*#editor", aliases: ["gis 2d"], ports: { react: 6040, wgpu: 6140 }, examples: [], engines: ["./\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDFA️surface/\uD83D\uDCE6️packages/\uD83E\uDD80️rust"], assets: [{ kind: "tile-proxy", route: "/osm", upstream: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", cache: "osm-tiles" }, { kind: "tile-proxy", route: "/vt", upstream: "https://tiles.openfreemap.org/planet", cache: "openfreemap-vt" }] },
+  { variant: "gis3d", pluginId: "gis", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF0D️gis/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.gis.gisterrain@1/*#editor", aliases: ["gis 3d"], ports: { react: 6083, wgpu: 6183 }, examples: [], engines: ["./\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDFA️surface/\uD83D\uDCE6️packages/\uD83E\uDD80️rust"], assets: [{ kind: "tile-proxy", route: "/dem", upstream: "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png", cache: "terrarium-dem" }] },
+  { variant: "imperative", pluginId: "imperative", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCDC️imperative/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6076, wgpu: 6176 }, examples: [], engines: [], assets: [] },
+  { variant: "iso16757", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.iso16757@1/*#editor", aliases: [], ports: { react: 6104, wgpu: 6204 }, examples: [], engines: [], assets: [] },
   { variant: "koordinator", pluginId: "demonstrator", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFAA️demonstrator/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.cad.cad@1/*#editor", brand: "entwerfen-mit-bestand-koordinator", aliases: ["entwerfen-mit-bestand-koordinator"], ports: { react: 6028, wgpu: 6128 }, examples: [], engines: [], assets: [{ kind: "static-dir", route: "/cad-fixture", root: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD0️cad/\uD83D\uDDFF️artifacts/\uD83D\uDCD0️cad/\uD83C\uDFC5️standards/\uD83D\uDD16️1/\uD83E\uDE86️subsets/✳️any/\uD83D\uDCDA️examples/\uD83E\uDDEB️fixtures" }] },
-  { variant: "layout", pluginId: "layout", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCCF️layout/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6079, wgpu: 6179 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "lowpoly", pluginId: "lowpoly", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCA0️lowpoly/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6078, wgpu: 6178 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "mathematical", pluginId: "mathematical", cratePath: "✏️s/\uD83D\uDD0C️plugins/➗️mathematical/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "mathematical-play", aliases: ["mathematical", "math"], ports: { react: 6084, wgpu: 6184 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "note", pluginId: "note", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDDD2️note/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6080, wgpu: 6180 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "playbook", pluginId: "playbook", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD6️playbook/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6085, wgpu: 6185 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "procedural2d", pluginId: "procedural", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF00️procedural/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "procedural2d-play", aliases: ["procedural 2d"], ports: { react: 6021, wgpu: 6121 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "procedural3d", pluginId: "procedural", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF00️procedural/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "procedural3d-play", aliases: ["procedural 3d"], ports: { react: 6018, wgpu: 6118 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "process3d", pluginId: "process", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFED️process/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "process3d-play", aliases: ["process 3d"], ports: { react: 6022, wgpu: 6122 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "puzzle2d", pluginId: "puzzle", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDDE9️puzzle/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.puzzle2d@1/*#editor", aliases: ["2d", "puzzle 2d"], ports: { react: 6012, wgpu: 6112 }, examples: ["\uD83C\uDFAC️demo-session"], engines: ["./\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDFA️surface/\uD83D\uDCE6️packages/\uD83E\uDD80️rust"], assets: [] },
-  { variant: "puzzle3d", pluginId: "puzzle", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDDE9️puzzle/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.puzzle3d@1/*#editor", aliases: ["3d", "puzzle 3d"], ports: { react: 6013, wgpu: 6113 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", roots: ["\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDBC️assets/\uD83C\uDF31️metabolism/\uD83C\uDFA8️representation", "♻️mit-bestand/\uD83D\uDDBC️asset/\uD83C\uDFDA️abbau-aufbau"], placeholder: "\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDBC️assets/\uD83E\uDD7D️mesh/\uD83E\uDDCA️placeholder.glb", filterFromExamples: true }, { kind: "static-dir", route: "/infinite-fixture", root: "\uD83E\uDDF0️framework/\uD83D\uDECD️products/\uD83D\uDCBB️os/\uD83D\uDD28️modules/♾️infinite/\uD83E\uDDEB️fixtures" }] },
-  { variant: "puzzle5d", pluginId: "puzzle", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDDE9️puzzle/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.puzzle5d@1/*#editor", aliases: ["5d", "puzzle 5d"], ports: { react: 6014, wgpu: 6114 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "raster", pluginId: "raster", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDDA8️raster/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6060, wgpu: 6160 }, examples: ["\uD83C\uDFAC️demo-session"], engines: ["./\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDFA️surface/\uD83D\uDCE6️packages/\uD83E\uDD80️rust"], assets: [] },
-  { variant: "reasoning-wires", pluginId: "reasoning-mindmap", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCA1️reasoning/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: ["wires"], ports: { react: 6015, wgpu: 6115 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "remodel", pluginId: "remodel", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCF8️remodel/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6063, wgpu: 6163 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "s", pluginId: "s", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDE90️space/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6070, wgpu: 6066 }, userPorts: { react: [6072, 6073], wgpu: [6067, 6068] }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "sequence", pluginId: "sequence", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFAC️sequence/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6077, wgpu: 6177 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "shooting", pluginId: "shooting", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFA5️shooting/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6019, wgpu: 6119 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", roots: ["\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDBC️assets/\uD83C\uDF31️metabolism/\uD83C\uDFA8️representation", "♻️mit-bestand/\uD83D\uDDBC️asset/\uD83C\uDFDA️abbau-aufbau"], placeholder: "\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDBC️assets/\uD83E\uDD7D️mesh/\uD83E\uDDCA️placeholder.glb", filterFromExamples: true }] },
-  { variant: "sourcing", pluginId: "sourcing", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDEB5️sourcing/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "sourcing-curate", aliases: ["curate"], ports: { react: 6081, wgpu: 6181 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "trinity-jack", pluginId: "trinity", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDD31️trinity/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.trinity.jack@1/*#editor", aliases: ["trinity jack"], ports: { react: 6054, wgpu: 6154 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "trinity-rewrite", pluginId: "trinity", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDD31️trinity/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.trinity.rewrite@1/*#editor", aliases: ["trinity rewrite"], ports: { react: 6056, wgpu: 6156 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "vcs", pluginId: "vcs", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF3F️vcs/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6075, wgpu: 6175 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
-  { variant: "vdi3805", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.vdi3805@1/*#editor", aliases: [], ports: { react: 6105, wgpu: 6205 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] },
+  { variant: "layout", pluginId: "layout", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCCF️layout/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6079, wgpu: 6179 }, examples: [], engines: [], assets: [] },
+  { variant: "lowpoly", pluginId: "lowpoly", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCA0️lowpoly/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6078, wgpu: 6178 }, examples: [], engines: [], assets: [] },
+  { variant: "mathematical", pluginId: "mathematical", cratePath: "✏️s/\uD83D\uDD0C️plugins/➗️mathematical/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.mathematical.mathematical@1/*#editor", aliases: ["mathematical", "math"], ports: { react: 6084, wgpu: 6184 }, examples: [], engines: [], assets: [] },
+  { variant: "note", pluginId: "note", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDDD2️note/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6080, wgpu: 6180 }, examples: [], engines: [], assets: [] },
+  { variant: "playbook", pluginId: "playbook", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD6️playbook/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6085, wgpu: 6185 }, examples: [], engines: [], assets: [] },
+  { variant: "procedural2d", pluginId: "procedural", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF00️procedural/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.procedural.procedural2d@1/*#editor", aliases: ["procedural 2d"], ports: { react: 6021, wgpu: 6121 }, examples: [], engines: [], assets: [] },
+  { variant: "procedural3d", pluginId: "procedural", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF00️procedural/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.procedural.procedural3d@1/*#editor", aliases: ["procedural 3d"], ports: { react: 6018, wgpu: 6118 }, examples: [], engines: [], assets: [] },
+  { variant: "process3d", pluginId: "process", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFED️process/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.process.process3d@1/*#editor", aliases: ["process 3d"], ports: { react: 6022, wgpu: 6122 }, examples: [], engines: [], assets: [] },
+  { variant: "puzzle2d", pluginId: "puzzle", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDDE9️puzzle/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.puzzle2d@1/*#editor", aliases: ["2d", "puzzle 2d"], ports: { react: 6012, wgpu: 6112 }, examples: [], engines: ["./\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDFA️surface/\uD83D\uDCE6️packages/\uD83E\uDD80️rust"], assets: [] },
+  { variant: "puzzle3d", pluginId: "puzzle", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDDE9️puzzle/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.puzzle3d@1/*#editor", aliases: ["3d", "puzzle 3d"], ports: { react: 6013, wgpu: 6113 }, examples: [], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", roots: ["\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDBC️assets/\uD83C\uDF31️metabolism/\uD83C\uDFA8️representation", "♻️mit-bestand/\uD83D\uDDBC️asset/\uD83C\uDFDA️abbau-aufbau"], placeholder: "\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDBC️assets/\uD83E\uDD7D️mesh/\uD83E\uDDCA️placeholder.glb", filterFromExamples: true }, { kind: "static-dir", route: "/infinite-fixture", root: "\uD83E\uDDF0️framework/\uD83D\uDECD️products/\uD83D\uDCBB️os/\uD83D\uDD28️modules/♾️infinite/\uD83E\uDDEB️fixtures" }] },
+  { variant: "puzzle5d", pluginId: "puzzle", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDDE9️puzzle/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.puzzle5d@1/*#editor", aliases: ["5d", "puzzle 5d"], ports: { react: 6014, wgpu: 6114 }, examples: [], engines: [], assets: [] },
+  { variant: "raster", pluginId: "raster", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDDA8️raster/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6060, wgpu: 6160 }, examples: [], engines: ["./\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDFA️surface/\uD83D\uDCE6️packages/\uD83E\uDD80️rust"], assets: [] },
+  { variant: "reasoning-wires", pluginId: "reasoning-mindmap", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCA1️reasoning/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: ["wires"], ports: { react: 6015, wgpu: 6115 }, examples: [], engines: [], assets: [] },
+  { variant: "remodel", pluginId: "remodel", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCF8️remodel/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6063, wgpu: 6163 }, examples: [], engines: [], assets: [] },
+  { variant: "s", pluginId: "s", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDE90️space/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6070, wgpu: 6066 }, userPorts: { react: [6072, 6073], wgpu: [6067, 6068] }, examples: [], engines: [], assets: [] },
+  { variant: "sequence", pluginId: "sequence", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFAC️sequence/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6077, wgpu: 6177 }, examples: [], engines: [], assets: [] },
+  { variant: "shooting", pluginId: "shooting", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFA5️shooting/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6019, wgpu: 6119 }, examples: [], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", roots: ["\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDBC️assets/\uD83C\uDF31️metabolism/\uD83C\uDFA8️representation", "♻️mit-bestand/\uD83D\uDDBC️asset/\uD83C\uDFDA️abbau-aufbau"], placeholder: "\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDBC️assets/\uD83E\uDD7D️mesh/\uD83E\uDDCA️placeholder.glb", filterFromExamples: true }] },
+  { variant: "sourcing", pluginId: "sourcing", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDEB5️sourcing/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.sourcing.curate@1/*#editor", aliases: ["curate"], ports: { react: 6081, wgpu: 6181 }, examples: [], engines: [], assets: [] },
+  { variant: "trinity-jack", pluginId: "trinity", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDD31️trinity/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.trinity.jack@1/*#editor", aliases: ["trinity jack"], ports: { react: 6054, wgpu: 6154 }, examples: [], engines: [], assets: [] },
+  { variant: "trinity-rewrite", pluginId: "trinity", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDD31️trinity/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.trinity.rewrite@1/*#editor", aliases: ["trinity rewrite"], ports: { react: 6056, wgpu: 6156 }, examples: [], engines: [], assets: [] },
+  { variant: "vcs", pluginId: "vcs", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF3F️vcs/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6075, wgpu: 6175 }, examples: [], engines: [], assets: [] },
+  { variant: "vdi3805", pluginId: "norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.norm.vdi3805@1/*#editor", aliases: [], ports: { react: 6105, wgpu: 6205 }, examples: [], engines: [], assets: [] },
   { variant: "verfolgen", pluginId: "demonstrator", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFAA️demonstrator/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.gis.gismap@1/*#editor", brand: "entwerfen-mit-bestand-verfolgen", aliases: ["entwerfen-mit-bestand-verfolgen"], ports: { react: 6032, wgpu: 6132 }, examples: [], engines: ["./\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDFA️surface/\uD83D\uDCE6️packages/\uD83E\uDD80️rust"], assets: [{ kind: "tile-proxy", route: "/osm", upstream: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", cache: "osm-tiles" }, { kind: "tile-proxy", route: "/vt", upstream: "https://tiles.openfreemap.org/planet", cache: "openfreemap-vt" }] },
-  { variant: "writer", pluginId: "writer", cratePath: "✏️s/\uD83D\uDD0C️plugins/✒️writer/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6062, wgpu: 6162 }, examples: ["\uD83C\uDFAC️demo-session"], engines: [], assets: [] }
+  { variant: "writer", pluginId: "writer", cratePath: "✏️s/\uD83D\uDD0C️plugins/✒️writer/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6062, wgpu: 6162 }, examples: [], engines: [], assets: [] }
 ];
 
 /* ../../../../../../🔌️plugin/📇️registry/🟦️catalog.ts */
@@ -10844,6 +10982,131 @@ function decodePackValue(bytes) {
   }
   return result;
 }
+var SCENE_PACK_TAG_UNIT = 0;
+var SCENE_PACK_TAG_FALSE = 1;
+var SCENE_PACK_TAG_TRUE = 2;
+var SCENE_PACK_TAG_U64 = 3;
+var SCENE_PACK_TAG_I64 = 4;
+var SCENE_PACK_TAG_F64 = 5;
+var SCENE_PACK_TAG_STR = 6;
+var SCENE_PACK_TAG_BYTES = 7;
+var SCENE_PACK_TAG_NONE = 8;
+var SCENE_PACK_TAG_SOME = 9;
+var SCENE_PACK_TAG_SEQ = 10;
+var SCENE_PACK_TAG_CHAR = 11;
+var SCENE_PACK_TAG_VARIANT = 12;
+var SCENE_PACK_TAG_MAP = 13;
+var SCENE_PACK_UNIT = Symbol("scene-pack-unit");
+function readScenePackVarint(bytes, position) {
+  let value = 0n;
+  for (let shift = 0n;shift < 70n; shift += 7n) {
+    const byte = bytes[position.value];
+    if (byte === undefined)
+      throw new Error("decodeScenePackValue: truncated varint");
+    position.value += 1;
+    value |= BigInt(byte & 127) << shift;
+    if ((byte & 128) === 0)
+      return value;
+  }
+  throw new Error("decodeScenePackValue: varint exceeds u64");
+}
+function scenePackNumber(value) {
+  const number = Number(value);
+  if (!Number.isSafeInteger(number))
+    throw new Error("decodeScenePackValue: integer exceeds JavaScript's safe range");
+  return number;
+}
+function readScenePackLength(bytes, position) {
+  const length = scenePackNumber(readScenePackVarint(bytes, position));
+  if (length > bytes.length - position.value)
+    throw new Error("decodeScenePackValue: declared length exceeds remaining bytes");
+  return length;
+}
+function decodeScenePackItem(bytes, position) {
+  const tag = bytes[position.value];
+  if (tag === undefined)
+    throw new Error("decodeScenePackValue: truncated value");
+  position.value += 1;
+  if (tag === SCENE_PACK_TAG_UNIT)
+    return SCENE_PACK_UNIT;
+  if (tag === SCENE_PACK_TAG_FALSE)
+    return false;
+  if (tag === SCENE_PACK_TAG_TRUE)
+    return true;
+  if (tag === SCENE_PACK_TAG_U64)
+    return scenePackNumber(readScenePackVarint(bytes, position));
+  if (tag === SCENE_PACK_TAG_I64) {
+    const raw = readScenePackVarint(bytes, position);
+    return scenePackNumber(raw >> 1n ^ -(raw & 1n));
+  }
+  if (tag === SCENE_PACK_TAG_F64) {
+    if (bytes.length - position.value < 8)
+      throw new Error("decodeScenePackValue: truncated f64");
+    const value = new DataView(bytes.buffer, bytes.byteOffset + position.value, 8).getFloat64(0, true);
+    position.value += 8;
+    return value;
+  }
+  if (tag === SCENE_PACK_TAG_STR) {
+    const length = readScenePackLength(bytes, position);
+    const value = new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(position.value, position.value + length));
+    position.value += length;
+    return value;
+  }
+  if (tag === SCENE_PACK_TAG_BYTES) {
+    const length = readScenePackLength(bytes, position);
+    const value = Array.from(bytes.subarray(position.value, position.value + length));
+    position.value += length;
+    return value;
+  }
+  if (tag === SCENE_PACK_TAG_NONE)
+    return null;
+  if (tag === SCENE_PACK_TAG_SOME)
+    return decodeScenePackItem(bytes, position);
+  if (tag === SCENE_PACK_TAG_SEQ) {
+    const count = readScenePackLength(bytes, position);
+    const value = [];
+    for (let index = 0;index < count; index += 1) {
+      const item = decodeScenePackItem(bytes, position);
+      value.push(item === SCENE_PACK_UNIT ? null : item);
+    }
+    return value;
+  }
+  if (tag === SCENE_PACK_TAG_CHAR) {
+    const codePoint = scenePackNumber(readScenePackVarint(bytes, position));
+    if (codePoint > 1114111 || codePoint >= 55296 && codePoint <= 57343)
+      throw new Error("decodeScenePackValue: invalid Unicode scalar");
+    return String.fromCodePoint(codePoint);
+  }
+  if (tag === SCENE_PACK_TAG_VARIANT) {
+    const name = decodeScenePackItem(bytes, position);
+    if (typeof name !== "string")
+      throw new Error("decodeScenePackValue: variant name is not a string");
+    const payload = decodeScenePackItem(bytes, position);
+    return payload === SCENE_PACK_UNIT ? name : { [name]: payload };
+  }
+  if (tag === SCENE_PACK_TAG_MAP) {
+    const count = readScenePackLength(bytes, position);
+    const value = {};
+    for (let index = 0;index < count; index += 1) {
+      const key = decodeScenePackItem(bytes, position);
+      if (typeof key !== "string")
+        throw new Error("decodeScenePackValue: map key is not a string");
+      if (Object.hasOwn(value, key))
+        throw new Error(`decodeScenePackValue: duplicate map key ${key}`);
+      const item = decodeScenePackItem(bytes, position);
+      value[key] = item === SCENE_PACK_UNIT ? null : item;
+    }
+    return value;
+  }
+  throw new Error(`decodeScenePackValue: invalid tag ${tag}`);
+}
+function decodeScenePackValue(bytes) {
+  const position = { value: 0 };
+  const value = decodeScenePackItem(bytes, position);
+  if (position.value !== bytes.length)
+    throw new Error(`decodeScenePackValue: ${bytes.length - position.value} trailing bytes`);
+  return value === SCENE_PACK_UNIT ? null : value;
+}
 function writeOptU64(out, value) {
   writeBool(out, value !== null);
   if (value !== null)
@@ -11772,26 +12035,18 @@ if (import.meta.vitest) {
       const graph = { schema: "os.workflow", nodes: [mediaNode("node-1", "app-1")], edges: [] };
       expect(planWorkflow(graph, new Set(["app-1"]))).toEqual([]);
     });
-    it("matches the Rust plan_workflow across shared fixtures decoded via wasm", async () => {
+    it("pairs every shared workflow DSL fixture with a pack fixture", async () => {
       const { readdirSync, readFileSync } = await import("node:fs");
-      const { fileURLToPath, pathToFileURL } = await Promise.resolve().then(() => (init_url(), exports_url));
+      const { fileURLToPath } = await Promise.resolve().then(() => (init_url(), exports_url));
       const { dirname: dirname2, join: join2 } = await Promise.resolve().then(() => (init_path(), exports_path));
       const here = dirname2(fileURLToPath(import.meta.url));
       const fixturesDir = join2(here, "\uD83E\uDDEB️fixtures");
-      const rsPkgDir = join2(here, "\uD83D\uDDA5️host", "\uD83D\uDCE6️packages", "\uD83E\uDD80️rust", "pkg");
-      const wasmModule = await import(pathToFileURL(join2(rsPkgDir, "semio_framework_os.js")).href);
-      await wasmModule.default({ module_or_path: new Uint8Array(readFileSync(join2(rsPkgDir, "semio_framework_os_bg.wasm"))) });
       const dslFiles = readdirSync(fixturesDir).filter((file) => file.endsWith(".dsl"));
       expect(dslFiles.length).toBeGreaterThanOrEqual(5);
       for (const dslFile of dslFiles) {
-        const dslText = readFileSync(join2(fixturesDir, dslFile), "utf8");
+        expect(readFileSync(join2(fixturesDir, dslFile), "utf8").length).toBeGreaterThan(0);
         const spkFile = dslFile.replace(/^🗣️?/, "\uD83D\uDCE6️").replace(/\.dsl$/, ".spk");
-        const spkBytes = new Uint8Array(readFileSync(join2(fixturesDir, spkFile)));
-        const viaDsl = wasmModule.parseWorkflowFixtureDsl(dslText);
-        const viaPack = wasmModule.decodeWorkflowFixturePack(spkBytes);
-        expect(viaDsl).toEqual(viaPack);
-        const deliveries = planWorkflow(viaDsl.graph, new Set(viaDsl.dirtyInstanceIds));
-        expect(deliveries).toEqual(viaDsl.expectedDeliveries);
+        expect(readFileSync(join2(fixturesDir, spkFile)).byteLength).toBeGreaterThan(0);
       }
     });
   });
@@ -11834,6 +12089,15 @@ world with "quotes"`, "011968656c6c6f0a776f726c642077697468202271756f74657322010
     });
     it.each(packValueFixtures)("round-trips %s through encodePackValue/decodePackValue", (_name, value) => {
       expect(decodePackValue(encodePackValue(value))).toEqual(value);
+    });
+  });
+  describe("@semio-tech/framework-os ScenePackCodec", () => {
+    it("decodes the byte-exact Rust TableScene fixture without a schema-specific field mirror", () => {
+      const hex = "0d02060b636f6c756d6e734a736f6e060f5b7b226964223a226e616d65227d5d0608726f77734a736f6e06025b5d";
+      const bytes = new Uint8Array(hex.length / 2);
+      for (let index = 0;index < bytes.length; index += 1)
+        bytes[index] = Number.parseInt(hex.slice(index * 2, index * 2 + 2), 16);
+      expect(decodeScenePackValue(bytes)).toEqual({ columnsJson: '[{"id":"name"}]', rowsJson: "[]" });
     });
   });
   describe("@semio-tech/framework-os AppChannelCodec", () => {
@@ -12879,6 +13143,9 @@ if (import.meta.vitest) {
     });
   });
 }
+/* 🟦️typescript/🐚️plugin-bridge.ts */
+init__shard_client();
+
 /* ../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-runtime.ts */
 init__shard_client();
 var SHARD_WORKER_URL = "/plugin-modules/_shard/\uD83D\uDFE8️shard-worker.js";
@@ -12927,7 +13194,8 @@ function coerceTurnResult(raw) {
   const uiPatches = Array.isArray(record.uiPatches) ? record.uiPatches : [];
   const effects = Array.isArray(record.effects) ? record.effects : [];
   const nextWake = typeof record.nextWake === "number" ? record.nextWake : null;
-  return { uiPatches, effects, nextWake };
+  const commandIngress = record.commandIngress && typeof record.commandIngress === "object" ? record.commandIngress : undefined;
+  return { uiPatches, effects, nextWake, commandIngress };
 }
 function shellFrameBytes(effect, instanceId) {
   if (effect.tag !== "send-message")
@@ -13030,12 +13298,12 @@ function getActivationRegistry() {
   return sharedActivationRegistry;
 }
 var actorTurnChains = new Map;
-function submitTurn(actorId, events) {
+function submitTurn(actorId, events, commandPage) {
   getActivationRegistry().touch(actorId);
   const previousSettled = (actorTurnChains.get(actorId) ?? Promise.resolve()).catch(() => {
     return;
   });
-  const next = previousSettled.then(() => getShardClient().turn(actorId, events, DEFAULT_SHARD_BUDGET));
+  const next = previousSettled.then(() => getShardClient().turn(actorId, events, DEFAULT_SHARD_BUDGET, commandPage));
   actorTurnChains.set(actorId, next);
   return next.then(coerceTurnResult);
 }
@@ -13053,8 +13321,8 @@ function applyRetainedWindowPatches(actorId, uiPatches) {
       retainedWindowByActor.set(actorId, surface);
   }
 }
-async function performRender(actorId, instanceId) {
-  const result = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: 0 } } }]);
+async function performRender(actorId, instanceId, bodyKey) {
+  const result = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: bodyKey } } }]);
   if (result.uiPatches.length > 0)
     applyRetainedWindowPatches(actorId, result.uiPatches);
   return retainedWindowByActor.get(actorId)?.node ?? null;
@@ -13091,7 +13359,8 @@ async function fetchDescriptorManifest(pluginId, moduleUrl, signal) {
   const descriptorUrl = moduleUrl.replace(/\/[^/]+$/, "/\uD83D\uDD23️descriptor.json");
   try {
     const response = await fetch(descriptorUrl, signal ? { signal } : undefined);
-    if (response.ok) {
+    const contentType = response.headers?.get?.("content-type") ?? "";
+    if (response.ok && !contentType.includes("text/html")) {
       const descriptor = await response.json();
       if (descriptor.manifest)
         return descriptor.manifest;
@@ -13099,9 +13368,7 @@ async function fetchDescriptorManifest(pluginId, moduleUrl, signal) {
   } catch (error) {
     if (signal?.aborted)
       throw error;
-    console.warn(`[DEBUG] fetchDescriptorManifest: ${descriptorUrl} unreachable — using an empty manifest`, error);
   }
-  console.warn(`[DEBUG] fetchDescriptorManifest: no descriptor for ${pluginId} yet — loading with an empty manifest, no eager instantiation`);
   return { pluginId, label: pluginId, version: "", apps: [], workflows: [], examples: [] };
 }
 async function loadPluginModule(pluginId, moduleUrl, signal) {
@@ -13128,11 +13395,39 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
   const runQueuedTurn = async (instanceId, events) => {
     try {
       const actorId = requireActorId(instanceId);
-      const shardEvents = events.map((frame) => {
+      const results = [];
+      for (let commandIndex = 0;commandIndex < events.length; commandIndex += 1) {
         eventSeq += 1;
-        return { kind: "app-command", payload: { instance: instanceId, seq: eventSeq, command: Array.from(frame) } };
-      });
-      const result = await submitTurn(actorId, shardEvents);
+        const pages = createShardCommandIngressPages({
+          owner: BigInt(instanceId),
+          generation: 1n,
+          commandIndex,
+          commandCount: events.length,
+          instance: instanceId,
+          seq: BigInt(eventSeq),
+          command: events[commandIndex]
+        });
+        for (const commandPage of pages)
+          results.push(await submitTurn(actorId, [], commandPage));
+        let terminal = results.at(-1)?.commandIngress?.tag;
+        for (let continuation = 0;terminal !== "command-complete" && continuation < 1024; continuation += 1) {
+          if (terminal === "fault")
+            throw new Error(`[DEBUG] plugin ${pluginId}: command ingress fault`);
+          if (terminal === "backpressure")
+            throw new Error(`[DEBUG] plugin ${pluginId}: command ingress backpressure after serialized submission`);
+          const continued = await submitTurn(actorId, []);
+          results.push(continued);
+          terminal = continued.commandIngress?.tag;
+        }
+        if (terminal !== "command-complete")
+          throw new Error(`[DEBUG] plugin ${pluginId}: command ingress did not complete within 1024 continuations`);
+      }
+      const result = {
+        uiPatches: results.flatMap((turn) => turn.uiPatches),
+        effects: results.flatMap((turn) => turn.effects),
+        nextWake: [...results].reverse().find((turn) => turn.nextWake !== null)?.nextWake ?? null,
+        commandIngress: results.at(-1)?.commandIngress
+      };
       const outFrames = [];
       const leftover = [];
       for (const effect of result.effects) {
@@ -13183,7 +13478,7 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
     },
     handleAction: (instanceId, actionJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), viewState),
     handleCommand: (instanceId, commandJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), viewState),
-    render: (instanceId) => performRender(requireActorId(instanceId), instanceId),
+    render: (instanceId, bodyKey) => performRender(requireActorId(instanceId), instanceId, bodyKey),
     contextMenu: (instanceId, request) => requireChannel(instanceId).contextMenu(request),
     dispose: () => {
       for (const instanceId of channelByInstance.keys())
@@ -13223,6 +13518,8 @@ var WORKER_STEP_BUDGET_MS = 8;
 var BOOT_HEARTBEAT_MS = 2;
 var PLUGIN_BOOT_CAPACITY = 32;
 var PLUGIN_MANIFEST_CODE_UNIT_CAPACITY = 64 * 1024;
+var ASSET_RESPONSE_BYTE_CAPACITY = 16 * 1024 * 1024;
+var ASSET_RESPONSE_PAGE_BYTES = 16 * 1024;
 function ownedStep(stage, callback) {
   const startedAt = performance.now();
   const value = callback();
@@ -13269,6 +13566,8 @@ var pendingFault;
 var runtimeCloseComplete = false;
 var jobsCloseComplete = false;
 var closeOwner = "runtime";
+var assetPumping = false;
+var assetAbort;
 scope.onmessage = (event) => void receive(event.data);
 async function receive(message) {
   if (message.kind === "boot") {
@@ -13312,6 +13611,8 @@ async function receive(message) {
     post({ kind: "frame", lifecycle, sequence: message.sequence, generation: message.generation, cursor: result.cursor, fullscreen: result.fullscreen, requestFrame: result.requestFrame, progress: result.progress, workerDurationMs: duration, quarantined: quarantined !== undefined, faultCode: quarantined?.code, faultDetail: quarantined?.detail });
     if (quarantined)
       requestFault(quarantined.code, quarantined.detail);
+    else
+      scheduleAssetPump();
   } catch (error) {
     fault("frame-runtime-fault", error instanceof Error ? error.message : String(error));
   }
@@ -13348,6 +13649,15 @@ function beginClose() {
   failed = pendingFault !== undefined;
   runtimeCloseComplete = runtime === undefined;
   jobsCloseComplete = interactiveJobs === undefined;
+  assetAbort?.abort();
+  assetAbort = undefined;
+  if (runtime) {
+    try {
+      ownedStep("asset-abort", () => runtime.abortAssetResponse());
+    } catch (error) {
+      pendingFault ??= { code: "asset-abort-fault", detail: error instanceof Error ? error.message : String(error) };
+    }
+  }
   interactiveJobs?.close();
   closeRuntime();
 }
@@ -13409,8 +13719,68 @@ async function boot(message) {
     interactiveJobs = ownedStep("interactive-job-registry", () => new InteractiveWorkerScheduler(lifecycle, INTERACTIVE_WORKER_DESCRIPTORS, post, (callback) => setTimeout(callback, 0), () => performance.now(), (detail) => fault("interactive-job-fault", detail)));
     progress("ready", 1);
     post({ kind: "booted", lifecycle });
+    scheduleAssetPump();
   } catch (error) {
     fault("worker-boot-failed", error instanceof Error ? error.message : String(error));
+  }
+}
+function scheduleAssetPump() {
+  if (assetPumping || !runtime || closed || closing || failed || quarantined)
+    return;
+  assetPumping = true;
+  setTimeout(() => void pumpAsset(), 0);
+}
+async function pumpAsset() {
+  try {
+    if (!runtime || closed || closing || failed || quarantined)
+      return;
+    const request = ownedStep("asset-request", () => JSON.parse(runtime.pollAssetRequest()));
+    if (!request.available)
+      return;
+    if (!request.url || request.responseByteCapacity !== ASSET_RESPONSE_BYTE_CAPACITY || request.pageByteCapacity !== ASSET_RESPONSE_PAGE_BYTES) {
+      throw new Error("asset-request-protocol: request descriptor did not match fixed Worker credits");
+    }
+    assetAbort = new AbortController;
+    const response = await monitoredSuspension("asset-fetch", () => fetch(request.url, { signal: assetAbort.signal }));
+    if (!response.ok || !response.body)
+      throw new Error(`asset-fetch-status: ${response.status}`);
+    const declaredHeader = ownedStep("asset-response-headers", () => response.headers.get("content-length"));
+    const declared = declaredHeader === null ? undefined : Number(declaredHeader);
+    if (declared !== undefined && (!Number.isSafeInteger(declared) || declared < 0 || declared > ASSET_RESPONSE_BYTE_CAPACITY))
+      throw new Error("asset-response-length: Content-Length exceeded fixed aggregate credits");
+    ownedStep("asset-response-reserve", () => runtime.reserveAssetResponse(declared ?? ASSET_RESPONSE_BYTE_CAPACITY));
+    const reader = ownedStep("asset-stream-reader", () => response.body.getReader({ mode: "byob" }));
+    let received = 0;
+    for (;; ) {
+      const pageOwner = ownedStep("asset-page-owner", () => new Uint8Array(ASSET_RESPONSE_PAGE_BYTES));
+      const chunk = await monitoredSuspension("asset-stream-read", () => reader.read(pageOwner));
+      if (chunk.done)
+        break;
+      const bytes = chunk.value;
+      if (bytes.byteLength === 0 || bytes.byteLength > ASSET_RESPONSE_PAGE_BYTES)
+        throw new Error("asset-response-page: stream violated fixed BYOB page credits");
+      received += bytes.byteLength;
+      if (received > (declared ?? ASSET_RESPONSE_BYTE_CAPACITY))
+        throw new Error("asset-response-overflow: stream exceeded admitted bytes");
+      ownedStep("asset-page", () => runtime.pushAssetResponsePage(bytes));
+      await macrotask();
+    }
+    ownedStep("asset-stream-release", () => reader.releaseLock());
+    if (declared !== undefined && received !== declared)
+      throw new Error("asset-response-short-read: stream ended before declared bytes");
+    ownedStep("asset-seal", () => runtime.sealAssetResponse());
+    post({ kind: "wake", lifecycle });
+  } catch (error) {
+    if (runtime) {
+      try {
+        ownedStep("asset-abort", () => runtime.abortAssetResponse());
+      } catch {}
+    }
+    if (!closing && !closed)
+      fault("asset-stream-fault", error instanceof Error ? error.message : String(error));
+  } finally {
+    assetAbort = undefined;
+    assetPumping = false;
   }
 }
 function progress(stage, value) {

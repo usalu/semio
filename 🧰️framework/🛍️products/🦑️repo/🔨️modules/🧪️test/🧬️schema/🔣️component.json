@@ -771,6 +771,58 @@
         }
       }
     },
+    "MutationVectorScenario": {
+      "type": "object",
+      "description": "🧪️ One canonical projected scenario identity. The directory name is the taxonomy-rendered semantic directory, not an alias for the current source basename.",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "directoryName"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "directoryName": {
+          "type": "string",
+          "pattern": "^🧪️[a-z0-9]+(?:-[a-z0-9]+)*$"
+        }
+      }
+    },
+    "MutationVector": {
+      "type": "object",
+      "description": "🧬️ One physical mutation directory and its complete projected scenario bundle registry. This is independent of the runtime capability vocabulary in kinds.",
+      "additionalProperties": false,
+      "required": [
+        "mutationId",
+        "sourceMutationDirectoryName",
+        "mutationDirectoryName",
+        "scenarios"
+      ],
+      "properties": {
+        "mutationId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "sourceMutationDirectoryName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mutationDirectoryName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scenarios": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MutationVectorScenario"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
     "MutationCatalog": {
       "type": "object",
       "description": "🦠️ The complete mutation vocabulary an owner declares for one artifact. The completeness gate holds a feature tagged @mutations-<id> against this list: every kind needs a mutate-<kind> and an inverse-<kind> scenario, so exhaustive coverage is arithmetic rather than a claim.",
@@ -778,7 +830,10 @@
       "required": [
         "id",
         "capability",
-        "kinds"
+        "standardDirectoryName",
+        "subsetDirectoryName",
+        "kinds",
+        "vectors"
       ],
       "properties": {
         "id": {
@@ -789,6 +844,14 @@
           "type": "string",
           "minLength": 1
         },
+        "standardDirectoryName": {
+          "type": "string",
+          "pattern": "^🔖️.+$"
+        },
+        "subsetDirectoryName": {
+          "type": "string",
+          "pattern": "^✳️.+$"
+        },
         "kinds": {
           "type": "array",
           "items": {
@@ -796,6 +859,13 @@
             "minLength": 1
           },
           "minItems": 1,
+          "uniqueItems": true
+        },
+        "vectors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MutationVector"
+          },
           "uniqueItems": true
         },
         "deferredKinds": {

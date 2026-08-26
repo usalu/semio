@@ -51,7 +51,7 @@ impl ArtifactViewer for Procedural3dViewer {
     const DIALECT: Dialect = PROCEDURAL3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PROCEDURAL_3D_SCHEMA;
 
-    async fn initial_snapshot() -> Procedural3dSnapshot {
+    fn initial_snapshot() -> Procedural3dSnapshot {
         crate::artifacts::procedural3d::schema::default_snapshot()
     }
 
@@ -59,7 +59,7 @@ impl ArtifactViewer for Procedural3dViewer {
     /// config change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no
     /// dirty scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action
     /// (camera orbit, "jump to widget") is a pure addition here, never a signature change.
-    async fn handle(
+    fn handle(
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -69,7 +69,7 @@ impl ArtifactViewer for Procedural3dViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let node = match body_key {
             preview::BODY_KEY => preview::render(doc.snapshot),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),

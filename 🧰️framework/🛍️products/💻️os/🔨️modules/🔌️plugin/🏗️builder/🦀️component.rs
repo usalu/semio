@@ -330,7 +330,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         // the registry from `def` inside the fn body instead of capturing it, same trick
         // `crate::app::declarations::editor_surface`'s inner `factory` uses.
         fn factory<A: ArtifactApp, PA: PluginApp + From<crate::app::VcsArtifactApp<A>>>(def: &crate::app::AppDefinition) -> PA {
-            PA::from(resolve_ready(crate::app::VcsArtifactApp::with_registry(A::default(), resolve_ready(crate::app::AppActionRegistry::from_definition(def)))))
+            PA::from(resolve_ready(crate::app::VcsArtifactApp::with_registry(A::default(), crate::app::AppActionRegistry::from_definition(def))))
         }
         let definition = app.definition.clone();
         self.app_defs.push((app, (definition, factory::<A, PA>)));
@@ -381,11 +381,11 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
         // 🚫️async: E4 fn-pointer slot
         fn app_schema<V: crate::app::ArtifactViewer>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
-            resolve_ready(V::app_schema())
+            V::app_schema()
         }
         // 🚫️async: E4 fn-pointer slot — see `document_app`'s `factory` doc.
         fn factory<V: crate::app::ArtifactViewer, PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::ViewerApp<V>>>>(def: &crate::app::AppDefinition) -> PA {
-            PA::from(resolve_ready(crate::app::VcsArtifactApp::with_registry(crate::app::ViewerApp::<V>::default(), resolve_ready(crate::app::AppActionRegistry::from_definition(def)))))
+            PA::from(resolve_ready(crate::app::VcsArtifactApp::with_registry(crate::app::ViewerApp::<V>::default(), crate::app::AppActionRegistry::from_definition(def))))
         }
         // 🎯️ C8.2 — schema-first: `io.document_schema` names the schema this surface opens without
         // relying on the `artifact_kinds[0].schema` convention. Stamped only when the app left it
@@ -431,11 +431,11 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
         // 🚫️async: E4 fn-pointer slot
         fn app_schema<E: crate::app::ArtifactEditor>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
-            resolve_ready(E::app_schema())
+            E::app_schema()
         }
         // 🚫️async: E4 fn-pointer slot — see `document_app`'s `factory` doc.
         fn factory<E: crate::app::ArtifactEditor, PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>>>>(def: &crate::app::AppDefinition) -> PA {
-            PA::from(resolve_ready(crate::app::VcsArtifactApp::with_registry(crate::app::EditorApp::<E>::default(), resolve_ready(crate::app::AppActionRegistry::from_definition(def)))))
+            PA::from(resolve_ready(crate::app::VcsArtifactApp::with_registry(crate::app::EditorApp::<E>::default(), crate::app::AppActionRegistry::from_definition(def))))
         }
         // 🎯️ C8.2 — schema-first: `io.document_schema` names the schema this surface opens without
         // relying on the `artifact_kinds[0].schema` convention. Stamped only when the app left it
@@ -461,7 +461,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
         fn app_schema<E: crate::app::ArtifactEditor>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
-            resolve_ready(E::app_schema())
+            E::app_schema()
         }
         fn factory<E, M, PA>(def: &crate::app::AppDefinition) -> PA
         where
@@ -469,7 +469,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             M: store::SpaceMember + store::MemberFactory + Send + 'static,
             PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>, M>>,
         {
-            PA::from(resolve_ready(crate::app::VcsArtifactApp::<crate::app::EditorApp<E>, M>::with_registry(crate::app::EditorApp::<E>::default(), resolve_ready(crate::app::AppActionRegistry::from_definition(def)))))
+            PA::from(resolve_ready(crate::app::VcsArtifactApp::<crate::app::EditorApp<E>, M>::with_registry(crate::app::EditorApp::<E>::default(), crate::app::AppActionRegistry::from_definition(def))))
         }
         if def.io.document_schema.is_empty() {
             def.io.document_schema = E::DOCUMENT_SCHEMA.to_string();
@@ -943,11 +943,11 @@ mod schema_stamping_tests {
         type TransientMutation = NoTransientMutation;
         type Command = NoConfigMutation;
 
-        async fn initial_snapshot() -> NoConfig {
+        fn initial_snapshot() -> NoConfig {
             NoConfig::default()
         }
 
-        async fn handle(
+        fn handle(
             _command: &NoConfigMutation,
             _doc: &ArtifactView<'_, NoConfig>,
             _cfg: &ConfigView<'_, NoConfig>,
@@ -958,11 +958,8 @@ mod schema_stamping_tests {
             Ok(Emit::default())
         }
 
-        async fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
-            semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
-                "text",
-                semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from("schema-stamp-editor".to_string()), emphasize: None, data_attributes: None }),
-            ))
+        fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> crate::app::UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
+            crate::app::built_text_to_component_tree(ui_wgpu::wgpu::Label::data("schema-stamp-editor"))
         }
     }
 
@@ -982,19 +979,16 @@ mod schema_stamping_tests {
         type TransientMutation = NoTransientMutation;
         type Command = NoConfigMutation;
 
-        async fn initial_snapshot() -> NoConfig {
+        fn initial_snapshot() -> NoConfig {
             NoConfig::default()
         }
 
-        async fn handle(_command: &NoConfigMutation, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
+        fn handle(_command: &NoConfigMutation, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
             Ok(ViewEmit::default())
         }
 
-        async fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
-            semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
-                "text",
-                semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from("schema-stamp-viewer".to_string()), emphasize: None, data_attributes: None }),
-            ))
+        fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> crate::app::UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
+            crate::app::built_text_to_component_tree(ui_wgpu::wgpu::Label::data("schema-stamp-viewer"))
         }
     }
 

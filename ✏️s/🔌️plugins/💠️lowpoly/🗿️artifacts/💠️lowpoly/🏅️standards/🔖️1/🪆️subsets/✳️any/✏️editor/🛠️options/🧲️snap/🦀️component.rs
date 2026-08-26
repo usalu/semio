@@ -7,7 +7,7 @@ use crate::editor::lowpoly::view::utility_params_value;
 use semio_framework_plugin::WindowMeasure;
 
 /// 🎛️ The live chrome measure for this option.
-pub async fn measure(config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMeasure {
+pub fn measure(config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMeasure {
     let params = utility_params_value(config);
     WindowMeasure::Group {
         id: "lowpoly-measure-snap".into(),

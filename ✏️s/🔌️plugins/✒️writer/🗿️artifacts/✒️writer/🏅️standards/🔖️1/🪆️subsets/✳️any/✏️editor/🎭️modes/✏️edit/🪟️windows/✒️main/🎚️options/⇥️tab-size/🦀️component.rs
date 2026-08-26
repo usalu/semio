@@ -8,7 +8,7 @@ use semio_framework_plugin::WindowMeasure;
 use serde_json::json;
 
 //#region 🔖️Measure
-pub async fn measure(config: &WriterConfig, labels: &WriterPlayLabels) -> WindowMeasure {
+pub fn measure(config: &WriterConfig, labels: &WriterPlayLabels) -> WindowMeasure {
     let settings = &config.editor_settings;
     WindowMeasure::Slider {
         id: "writer-tab-size-measure".into(),

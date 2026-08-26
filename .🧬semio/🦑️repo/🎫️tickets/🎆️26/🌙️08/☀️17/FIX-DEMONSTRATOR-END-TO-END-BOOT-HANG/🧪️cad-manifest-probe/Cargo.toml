@@ -1,0 +1,9 @@
+[package]
+name = "cad-manifest-probe"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+semio-s-plugin-cad = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust" }
+
+[workspace]

@@ -41,6 +41,13 @@
         "command": "bun ./📜️script.ts typegen"
       },
       "outputs": ["{projectRoot}/../../🤖️generated"]
+    },
+    "preview-generated": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts preview-generated"
+      }
     }
   }
 }

@@ -37,10 +37,10 @@ fn expected_after() -> FlowSnapshot {
 /// (`note-alpha`, with a layout entry) — deliberately not the `ghost-widget` the committed payload
 /// addresses, so the lookup miss is a genuine miss inside a populated collection.
 fn before() -> FlowSnapshot {
-    let snapshot: FlowSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FlowSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let mut layout = BTreeMap::new();
     layout.insert("note-alpha".to_string(), WidgetLayout { x: 12.0, y: 34.0 });
-    cache_flow_content(&snapshot.content.child_id, vec![Widget::InputNote { id: "note-alpha".into(), text: "Alpha".into() }], Vec::new(), layout);
+    cache_flow_content(&mut snapshot.content, vec![Widget::InputNote { id: "note-alpha".into(), text: "Alpha".into() }], Vec::new(), layout);
     snapshot
 }
 
