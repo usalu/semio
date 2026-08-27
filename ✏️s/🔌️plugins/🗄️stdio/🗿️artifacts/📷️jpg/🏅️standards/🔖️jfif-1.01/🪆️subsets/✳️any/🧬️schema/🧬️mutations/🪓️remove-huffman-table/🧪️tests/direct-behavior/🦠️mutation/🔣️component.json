@@ -1,0 +1,9 @@
+{
+  "mutation": "remove-huffman-table",
+  "payload": {
+    "key": {
+      "class": "dc",
+      "id": 1
+    }
+  }
+}

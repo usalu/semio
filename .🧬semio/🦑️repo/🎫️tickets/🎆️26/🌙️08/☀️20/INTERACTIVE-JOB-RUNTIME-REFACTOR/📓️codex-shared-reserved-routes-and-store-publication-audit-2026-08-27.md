@@ -5,6 +5,14 @@ Scope: read-only source audit of the shared `copy`, `cut`, `paste`, and `import-
 
 ## Verdict
 
+### Coordinator Continuation Recheck
+
+The coordinator reread the current definitions after peer commit `a8d1caf41f`. The semantic escape described below still exists. Current `dispatch_framework_reserved_action` constructs the generic raw-envelope cursor for history and interaction routes, and preserves the copy/cut/paste fallback. `run_framework_reserved_job` genuinely yields through mounted worker steps and drains outcomes, but that work only earns a permit; semantic work follows afterward in `commit_framework_history_route`, `commit_framework_clipboard_completion`, and `commit_framework_shared_host_route`.
+
+Specifically, the current interaction tail clones the full state, resolves topology, clones selections/hover, computes selection, and revalidates/persists it after the envelope cursor completes. The history tail still calls `Store::dispatch`; clipboard completion still applies whole Presence/Transient batches and calls `dispatch_emit`. The schema/retained-root local-interaction packet is being implemented, but is not yet mounted. This is still an open all-app implementation requirement, not a new timing measurement.
+
+The latest complete source JSON reports twenty `acceptedReservedRoutes` and zero `scanThenMonolithRows`. Those fields are not evidence that this reserved semantic path has become bounded; the explicit source review contradicts that interpretation. The full gate remains RED for other reasons, and these route families must not receive end-to-end credit from that counter alone. No source was changed during this recheck.
+
 The smallest honest architecture is a two-owner route, not a generic framework implementation:
 
 1. the framework owns exact wire admission, bounded mounted-job scheduling, cancellation, fresh commit gating, fixed host result/ACK pages, and fail-closed dispatch; and

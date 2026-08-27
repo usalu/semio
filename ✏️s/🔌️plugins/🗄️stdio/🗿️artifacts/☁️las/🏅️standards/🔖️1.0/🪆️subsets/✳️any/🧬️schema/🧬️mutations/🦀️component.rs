@@ -93,7 +93,7 @@ pub enum LasMutation {
 
 //#region 🔖️Kinds
 /// 🧾️ Kebab-case spelling of every `LasMutation` variant, in declaration order — the vocabulary
-/// `../../🧪️oracle/🔣️component.json`'s `las-1-0-any` catalog is measured against. Kept honest by
+/// `../../🧪️oracle/🔣️.json`'s `las-1-0-any` catalog is measured against. Kept honest by
 /// `kinds_match_enum_and_catalog` below (the framework never parses Rust to learn this list).
 pub const KINDS: &[&str] = &[
     "no-mutation",
@@ -1095,7 +1095,7 @@ mod tests {
         let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
         assert_eq!(from_enum, KINDS, "KINDS must list every LasMutation variant, in declaration order");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         let needle = "\"kinds\": [";
         let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
         let end = start + manifest[start..].find(']').expect("kinds array is closed");

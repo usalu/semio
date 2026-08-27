@@ -2433,6 +2433,28 @@ pub struct SurfaceReconcilePublishedPatch {
 }
 
 impl SurfaceReconcilePublishedPatch {
+    /// ♻️ Releases one exact published owner without handing its terminal into a global queue.
+    pub fn close_step(&mut self) -> bool {
+        if !self.surface.0.is_empty() {
+            self.surface = ui_contract::SurfaceId::default();
+            return false;
+        }
+        if let Some(credit) = self.credit.take() {
+            release_surface_reconcile(credit);
+            return false;
+        }
+        if let Some(handback) = self.handback.take() {
+            release_surface_reconcile_handback(handback);
+            return false;
+        }
+        true
+    }
+
+    /// 🧾️ Verifies this published handle owns neither payload nor admission/handback authority.
+    pub fn terminal_is_empty(&self) -> bool {
+        self.surface.0.is_empty() && self.credit.is_none() && self.handback.is_none()
+    }
+
     pub fn generation(&self) -> u64 {
         self.generation
     }
@@ -3361,6 +3383,29 @@ mod tests {
 
     //#region ⏭️ResumableCursor
     #[test]
+    fn instance_lifetime_published_patch_close_retains_exact_handback_until_terminal() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🎭️actor/🚪️lifetime/🧪️fixture.json")).unwrap();
+        let mut reservation = SurfaceReconcileReservation::try_new(8_971).expect("real published owner reservation");
+        let mut owner = SurfaceReconcilePublishedPatch { generation: 8_971, surface: ui_contract::SurfaceId::try_from("7:retained").unwrap(), revision: ui_contract::UiRevision(1), credit: reservation.credit.take(), handback: reservation.handback.take() };
+        let key = owner.handback.as_ref().unwrap().key;
+        let mut remaining = Vec::new();
+        let mut complete = Vec::new();
+        for _ in 0..4 {
+            complete.push(owner.close_step());
+            let fields: Vec<_> = [("surface", !owner.surface.0.is_empty()), ("credit", owner.credit.is_some()), ("handback", owner.handback.is_some())].into_iter().filter_map(|(name, retained)| retained.then_some(name)).collect();
+            remaining.push(fields);
+        }
+        assert_eq!(serde_json::to_value(remaining).unwrap(), fixture["publishedClose"]["remaining"]);
+        assert_eq!(serde_json::to_value(complete).unwrap(), fixture["publishedClose"]["complete"]);
+        assert!(owner.terminal_is_empty());
+        let registry = SURFACE_RECONCILE_HANDBACKS.lock().unwrap();
+        let slot = &registry.slots[key.slot];
+        assert!(slot.epoch != key.epoch || (!slot.reserved && slot.state.is_none()), "the exact handback was released, not queued and forgotten");
+        drop(registry);
+        drop(owner);
+    }
+
+    #[test]
     fn fixed_runtime_owners_keep_bounded_state_off_the_stack() {
         assert!(size_of::<SurfaceReconciler>() <= 1_024);
         assert!(size_of::<SurfaceReconcileCursor>() <= 48 * 1_024);
@@ -3492,8 +3537,8 @@ mod tests {
 
     #[test]
     fn semantic_census_zero_fuel_and_expired_deadline_leave_every_cursor_and_owner_unchanged() {
-        fn expired_now() -> u64 {
-            10
+        fn expired_now() -> Option<u64> {
+            Some(10)
         }
         let generation = 7_001;
         let mut zero = SurfaceReconcileJob::try_new(SurfaceReconciler::new("s"), tree(leaf("zero")), generation).expect("admitted");
@@ -3503,7 +3548,7 @@ mod tests {
             semio_framework_job::Generation(generation),
             semio_framework_job::StepBudget::new(0, u64::MAX),
             semio_framework_job::root_cancel_token(),
-            semio_framework_job::default_now_ms,
+            semio_framework_job::default_now_us,
             &mut sequence,
         );
         assert_eq!(zero.drive_one(&mut context), SurfaceReconcileJobStep::MoreWork);
@@ -3598,7 +3643,7 @@ mod tests {
                 semio_framework_job::Generation(generation),
                 semio_framework_job::StepBudget::new(1, u64::MAX),
                 semio_framework_job::root_cancel_token(),
-                semio_framework_job::default_now_ms,
+                semio_framework_job::default_now_us,
                 &mut sequence,
             );
             if job.drive_one(&mut context) == SurfaceReconcileJobStep::Ready {
@@ -3656,7 +3701,7 @@ mod tests {
             semio_framework_job::Generation(generation + 1),
             semio_framework_job::StepBudget::new(1, u64::MAX),
             semio_framework_job::root_cancel_token(),
-            semio_framework_job::default_now_ms,
+            semio_framework_job::default_now_us,
             &mut sequence,
         );
         assert_eq!(job.drive_one(&mut context), SurfaceReconcileJobStep::Fault);
@@ -3681,7 +3726,7 @@ mod tests {
             semio_framework_job::Generation(generation),
             semio_framework_job::StepBudget::new(1, u64::MAX),
             cancel,
-            semio_framework_job::default_now_ms,
+            semio_framework_job::default_now_us,
             &mut sequence,
         );
         assert_eq!(job.drive_one(&mut context), SurfaceReconcileJobStep::Fault);

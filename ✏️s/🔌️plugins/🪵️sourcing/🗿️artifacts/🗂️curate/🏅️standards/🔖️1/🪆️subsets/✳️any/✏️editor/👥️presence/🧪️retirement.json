@@ -1,0 +1,8 @@
+{
+  "maximumItems": 1,
+  "maximumBytes": 56,
+  "snapshots": [
+    { "worldCameraPosition": [2.5, 2.0, 2.5], "worldCameraTarget": [0.0, 0.0, 0.0], "worldCameraFov": 50.0 },
+    { "worldCameraPosition": [-10.0, 8.0, 4.0], "worldCameraTarget": [1.0, 2.0, 3.0], "worldCameraFov": 35.0 }
+  ]
+}

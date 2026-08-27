@@ -53,7 +53,7 @@ Aggregate/shared/consumer files:
 - `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🦀️component.rs`
 - `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🧪️tests/🔣️component.json`
 - `✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/📦️glue.rs` (direct mounts plus schema operations)
-- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`
+- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`
 - `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/📝️text/🦀️component.rs` (one direct create_step path only)
 
 No root script, shared API, taxonomy, STDIO, other plugin, AGENTS, or Git state mutation was made. Real compose paths were never accessed.

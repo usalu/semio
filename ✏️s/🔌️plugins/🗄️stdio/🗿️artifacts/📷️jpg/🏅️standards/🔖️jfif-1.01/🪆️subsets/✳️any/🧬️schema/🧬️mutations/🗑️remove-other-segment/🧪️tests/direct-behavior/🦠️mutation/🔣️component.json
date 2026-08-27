@@ -1,0 +1,6 @@
+{
+  "mutation": "remove-other-segment",
+  "payload": {
+    "index": 0
+  }
+}

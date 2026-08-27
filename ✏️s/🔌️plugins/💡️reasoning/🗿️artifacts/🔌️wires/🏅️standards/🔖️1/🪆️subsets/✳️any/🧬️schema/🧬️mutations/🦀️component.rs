@@ -75,7 +75,7 @@ pub use super::set_node_root::mutation::{set_node_root, SetNodeRoot};
 //#endregion 🔖️Builders
 
 /// 🏷️ Kebab-case spelling of every [`WiresMutation`] variant, in declaration order — the vocabulary
-/// the `wires-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// the `wires-1-any` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and
 /// `mutate-wires-1`'s exhaustive case measures itself against. There is deliberately no
 /// `no-mutation` and no `set-snapshot`: the six generic leaves this facet used to carry
 /// (`➕add-node`, `➖remove-node`, `✂️remove-edge`, `➕add-relationship`, `🖼️set-snapshot`,
@@ -134,7 +134,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

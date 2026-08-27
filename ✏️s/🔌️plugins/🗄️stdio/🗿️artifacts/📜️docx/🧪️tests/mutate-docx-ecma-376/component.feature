@@ -32,7 +32,7 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
   `SetSnapshot` replaces `document.body` + `document.styles` only (the typed semantic view this
   subset's own `DocxDocument` models) -- real OPC parts outside that typed view are exercised
   separately by `SetPart`/`RemovePart` and are deliberately left untouched by `SetSnapshot` here, per
-  `../🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`'s own comparison-profile note.
+  `../🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🔣️.json`'s own comparison-profile note.
 
   `set-part` overwrites the real, pre-existing `docProps/app.xml` (exercising the "replace" branch of
   "inserting or replacing"); `remove-part` deletes the real, pre-existing `docProps/core.xml` --

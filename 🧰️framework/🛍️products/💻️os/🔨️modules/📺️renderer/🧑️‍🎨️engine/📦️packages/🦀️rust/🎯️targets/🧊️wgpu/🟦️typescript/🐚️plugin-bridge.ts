@@ -67,7 +67,7 @@ import {
   SemioFaultError,
   type TurnOutcome,
 } from "@semio-tech/framework";
-import { AppChannelClient, decodeFaultFromWire, decodePackValue, encodePackValue, faultDisplayMessage } from "@semio-tech/framework-os";
+import { AppChannelClient, AppChannelRequestSequence, decodeFaultFromWire, decodePackValue, encodePackValue, faultDisplayMessage } from "@semio-tech/framework-os";
 import { createShardCommandIngressPages, ShardClient, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-runtime.ts";
 import {
@@ -234,6 +234,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   const shardClient = getShardClient();
   const actorIdByInstance = new Map<number, string>();
   const channelByInstance = new Map<number, AppChannelClient>();
+  const channelRequests = new AppChannelRequestSequence();
   let eventSeq = 0;
 
   const requireActorId = (instanceId: number): string => {
@@ -326,7 +327,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       await registry.activate(pluginId, actorId, "manual" satisfies ActivationReason);
       eventSeq += 1;
       await submitTurn(actorId, [{ kind: "instance-open", payload: { instance: instanceId, appId, actor: "local", config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) } }]);
-      channelByInstance.set(instanceId, new AppChannelClient(channelHandle, instanceId, appId, "local"));
+      channelByInstance.set(instanceId, new AppChannelClient(channelHandle, channelRequests, instanceId, appId, "local"));
       return instanceId;
     },
     destroyApp: async (instanceId) => {

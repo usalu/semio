@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "appCommandTag": 29,
+  "appFrameTag": 23,
+  "unsigned": [
+    {"decimal": "0", "hex": "00"},
+    {"decimal": "13", "hex": "0d"},
+    {"decimal": "128", "hex": "8001"},
+    {"decimal": "9007199254740993", "hex": "8180808080808010"},
+    {"decimal": "18446744073709551615", "hex": "ffffffffffffffffff01"}
+  ],
+  "malformedUnsigned": ["80", "8000", "ffffffffffffffffff02"],
+  "commandKinds": ["read", "acknowledge", "cancel"],
+  "replyKinds": ["started", "page", "closed", "rejected"],
+  "maximumPageBytes": 4096,
+  "requestReuseNeedsNewGeneration": true,
+  "lateAcknowledgementAfterCloseAccepted": false
+}

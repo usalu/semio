@@ -72,6 +72,32 @@ pub fn apply_merge_policy_config_mutation(snapshot: &mut MergePolicySetting, mut
 pub fn inverse_merge_policy_config_mutation(snapshot: &MergePolicySetting, mutation: &MergePolicyConfigMutation) -> Vec<MergePolicyConfigMutation> {
     mutation.inverse(snapshot)
 }
+
+/// 📥️ Decodes the internally tagged merge-policy mutation JSON projection.
+pub fn decode_merge_policy_config_mutation_json(text: &str) -> Result<MergePolicyConfigMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📤️ Encodes the merge-policy setting to its canonical camel-case JSON projection.
+pub fn encode_merge_policy_setting_json(snapshot: &MergePolicySetting) -> String {
+    serde_json::to_string(snapshot).expect("MergePolicySetting serialization is infallible")
+}
+
+/// 📥️ Decodes the canonical merge-policy setting JSON projection.
+pub fn decode_merge_policy_setting_json(text: &str) -> Result<MergePolicySetting, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// ▶️ Applies a mutation and returns its diagnostic `(code, severity)` pairs.
+pub fn apply_merge_policy_config_mutation_reporting(snapshot: &mut MergePolicySetting, mutation: &MergePolicyConfigMutation) -> Vec<(String, String)> {
+    let outcome = mutation.diff(snapshot).apply_to(snapshot);
+    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
+}
+
+/// ↩️ Returns the mutation's own inverse steps for an external fixture adapter.
+pub fn inverse_merge_policy_config_mutation_steps(mutation: &MergePolicyConfigMutation, base: &MergePolicySetting) -> Vec<MergePolicyConfigMutation> {
+    mutation.inverse(base)
+}
 //#endregion 🔖️Mutation
 
 //#region 🧪️Tests

@@ -73,7 +73,7 @@ pub enum SemioMutation {
 }
 
 /// 🏷️ Kebab-case spelling of every `SemioMutation` variant, in declaration order — the vocabulary
-/// the `semio-v1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// the `semio-v1-any` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and
 /// `mutate-semio-any`'s exhaustive test case measures itself against. The eighteen wrapper variants
 /// are spelled by their SUBSET name (`brep`, `mesh`, …), which is what the envelope actually routes
 /// on; `kinds_match_the_enum_and_the_catalog` below pins the list with a WILDCARD-FREE match, so a
@@ -888,7 +888,7 @@ mod tests {
         for (kind, arm) in KINDS[2..].iter().zip(arms) {
             assert_eq!(*kind, semio_subset_tag(&enveloped(arm)), "KINDS must follow SemioSubsetSnapshot's own declaration order and the envelope's own runtime subset tag");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

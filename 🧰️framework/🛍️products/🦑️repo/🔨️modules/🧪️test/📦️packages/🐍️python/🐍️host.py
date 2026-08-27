@@ -32,17 +32,51 @@ def digest(payload: Optional[bytes]) -> str:
     return hashlib.sha256(payload if payload is not None else b"").hexdigest()[:32]
 
 
+def content_digest(path: str) -> str:
+    """#⃣ The FULL ``sha256:<64 hex>`` content address of a produced file.
+
+    Protocol v2 addresses fixture blobs and result artifacts by content, and a truncated digest is
+    not a content address — the store's whole safety argument is that a blob's name IS its content.
+    """
+    with open(path, "rb") as handle:
+        return "sha256:" + hashlib.sha256(handle.read()).hexdigest()
+
+
 # endregion 🔖️Digest
 
 
 # region 🔖️Adapter
 class Outcome:
-    """🎯️ What one scenario handler returns: the raw artifact and the compared projection."""
+    """🎯️ What one scenario handler returns: an artifact BUNDLE plus the compared projection.
 
-    def __init__(self, projection: Any, raw: Optional[bytes] = None, diagnostics: Optional[List[Dict[str, str]]] = None) -> None:
+    ``production_dispatch`` is set only by a SUBJECT handler that actually invoked production
+    dispatch. Its ABSENCE is how a vector-replay adapter is detected — a replayed expectation and a
+    computed one are otherwise indistinguishable on the wire.
+    """
+
+    def __init__(
+        self,
+        projection: Any,
+        raw: Optional[bytes] = None,
+        diagnostics: Optional[List[Dict[str, str]]] = None,
+        artifacts: Optional[List[Dict[str, str]]] = None,
+        production_dispatch: Optional[Dict[str, Any]] = None,
+    ) -> None:
         self.projection = projection
         self.raw = raw
         self.diagnostics = diagnostics or []
+        self.artifacts = artifacts or []
+        self.production_dispatch = production_dispatch
+
+    def artifact(self, role: str, path: str, media_type: str) -> "Outcome":
+        """📦️ Adds one produced file to the bundle under its role."""
+        self.artifacts.append({"role": role, "path": path, "mediaType": media_type})
+        return self
+
+    def dispatched(self, operation: str, bridge_version: int) -> "Outcome":
+        """🏭️ Records that this outcome came out of PRODUCTION dispatch, not a committed vector."""
+        self.production_dispatch = {"invoked": True, "operation": operation, "bridgeVersion": bridge_version}
+        return self
 
 
 class Context:
@@ -54,6 +88,20 @@ class Context:
         self.role = role
         self.repo_root = repo_root
         self.work_dir = plan["workDir"]
+        self.artifact_dir = plan.get("artifactDir") or os.path.join(plan["workDir"], "📦️artifacts")
+
+    def artifact(self, role: str, filename: str) -> str:
+        """📦️ Absolute path to write one named result artifact to, creating parent directories."""
+        directory = os.path.join(self.artifact_dir, role)
+        os.makedirs(directory, exist_ok=True)
+        return os.path.join(directory, filename)
+
+    def target(self) -> Dict[str, str]:
+        """🪆️ The smallest owning subset this case is scoped to; a handler must not invent one."""
+        target = self.plan.get("target")
+        if not target:
+            raise KeyError("case %s declares no subset target — Protocol v2 scopes every mutation case to its smallest owning subset" % self.plan["case"])
+        return target
 
     def fixture(self, uri: str) -> str:
         """🧫️ Absolute path of a declared fixture; an undeclared URI is an error, never a default."""
@@ -155,15 +203,19 @@ def run_main(argv: List[str]) -> int:
     for scenario in plan.get("scenarios", []):
         started = time.time()
         result: Dict[str, Any] = {
+            "schemaVersion": 2,
             "testId": "%s::%s::%s::%s::%s" % (plan["owner"], plan["case"], scenario["id"], plan["implementation"], plan["role"]),
+            "baselineSha": plan.get("baselineSha", ""),
             "owner": plan["owner"],
             "case": plan["case"],
             "scenario": scenario["id"],
             "implementation": plan["implementation"],
             "role": plan["role"],
             "level": scenario["level"],
+            "platform": plan.get("platform", ""),
             "seed": scenario.get("seed", ""),
             "featureHash": plan.get("featureHash", ""),
+            "artifacts": [],
             "diagnostics": [],
         }
         handler = adapter.handler(scenario["id"], plan["role"])
@@ -187,6 +239,20 @@ def run_main(argv: List[str]) -> int:
                 with open(projection_path, "wb") as handle:
                     handle.write(payload)
                 result["output"]["projectionPath"] = projection_path
+                # 📦️Every produced file is re-hashed HERE rather than trusted from the handler: the
+                # digest a comparison stage keys on must describe the bytes that reached disk.
+                result["artifacts"] = [
+                    {
+                        "role": artifact["role"],
+                        "path": artifact["path"],
+                        "mediaType": artifact["mediaType"],
+                        "sha256": content_digest(artifact["path"]),
+                        "bytes": os.path.getsize(artifact["path"]),
+                    }
+                    for artifact in outcome.artifacts
+                ]
+                if outcome.production_dispatch is not None:
+                    result["productionDispatch"] = outcome.production_dispatch
                 result["diagnostics"] = outcome.diagnostics
             except AssertionError as error:
                 failed = True

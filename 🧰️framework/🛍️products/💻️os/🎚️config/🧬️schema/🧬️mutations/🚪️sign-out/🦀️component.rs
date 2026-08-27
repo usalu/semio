@@ -38,6 +38,10 @@ impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignOut {
 
 //#region 🧪️Tests
 #[cfg(test)]
+#[path = "🧪️tests/clears-the-active-session/🦀️component.rs"]
+mod tests_clears_the_active_session;
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use protocol::Mutation;

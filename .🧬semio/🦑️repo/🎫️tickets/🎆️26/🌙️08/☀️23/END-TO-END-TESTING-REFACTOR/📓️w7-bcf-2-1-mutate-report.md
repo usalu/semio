@@ -57,7 +57,7 @@ description, not only here.
   filled in the stub dispatcher: independent `zip`+`quick-xml` composition (own `BNode` XML tree,
   own `ODoc`/`OTopic`/`OComment`/`OViewpoint`/`OCamera`/`OComponents` model, own archive read/write),
   covering all 14 declared `BcfMutation` kinds forward + inverse, plus `project_bcf_2_1`.
-- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`
   (new) — oracle registration (`zip-quick-xml-bcf-2-1-mutate`, ecosystem `rust`) and the
   `bcf-2-1-any` mutation catalog (14 kinds), `semantic-bcf-v1` comparison profile.
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`

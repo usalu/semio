@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "callbackLimitUs": 8000,
+  "callbacks": [
+    { "candidate": "complete", "elapsedUs": 7999, "published": "complete" },
+    { "candidate": "complete", "elapsedUs": 8000, "published": "fault" },
+    { "candidate": "complete", "elapsedUs": 8001, "published": "fault" },
+    { "candidate": "ready", "elapsedUs": 8001, "published": "fault" },
+    { "candidate": "external-wait", "elapsedUs": 8000, "published": "fault" },
+    { "candidate": "fault", "elapsedUs": 1, "published": "fault" }
+  ],
+  "terminalPump": [
+    { "complete": true, "faulted": false, "blocked": false, "status": "complete" },
+    { "complete": true, "faulted": true, "blocked": false, "status": "fault" },
+    { "complete": false, "faulted": true, "blocked": true, "status": "fault" },
+    { "complete": false, "faulted": false, "blocked": true, "status": "external-wait" }
+  ],
+  "clocks": [
+    { "samples": [null], "workEntered": false, "published": "fault" },
+    { "samples": [10, null], "workEntered": false, "published": "fault" },
+    { "samples": [10, 9], "workEntered": false, "published": "fault" },
+    { "samples": [10, 10, null], "workEntered": true, "published": "fault" },
+    { "samples": [10, 10, 9], "workEntered": true, "published": "fault" },
+    { "samples": [10, 10, 8010], "workEntered": true, "published": "fault" },
+    { "samples": [10, 10, 8009], "workEntered": true, "published": "complete" }
+  ],
+  "owners": {
+    "terminalVisibleBeforeWatchdog": false,
+    "sharedRestoreKeepsExactAllocation": true,
+    "nonterminalPreflightKeepsExactAllocation": true,
+    "contendedPumpPreservesSession": true,
+    "contendedOutcomePreservesSource": true,
+    "secondOwnerLockRequired": false,
+    "forgottenPayloads": 0
+  }
+}

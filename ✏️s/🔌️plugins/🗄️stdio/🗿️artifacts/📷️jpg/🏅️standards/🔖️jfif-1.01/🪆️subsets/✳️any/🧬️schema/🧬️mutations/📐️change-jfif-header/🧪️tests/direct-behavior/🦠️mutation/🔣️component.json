@@ -1,0 +1,13 @@
+{
+  "mutation": "change-jfif-header",
+  "payload": {
+    "densityUnits": "pixelsPerInch",
+    "thumbnail": null,
+    "version": [
+      1,
+      2
+    ],
+    "xDensity": 300,
+    "yDensity": 300
+  }
+}

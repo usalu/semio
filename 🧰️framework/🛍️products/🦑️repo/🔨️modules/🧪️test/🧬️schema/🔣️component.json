@@ -1,894 +1,889 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio-tech.com/schema/repo/test/v1",
-  "title": "Semio Repository Test Protocol v1",
-  "description": "🧬️ Schema-first contract shared by the test coordinator and every native host. Ticket 26/08/23/END-TO-END-TESTING-REFACTOR.",
+  "$id": "https://semio-tech.com/schema/repo/test/v2",
+  "title": "Semio Repository Test Protocol v2",
+  "description": "🧬️ Schema-first contract shared by the test coordinator, every native host and every external probe. v2 makes the unit of coverage `artifact × standard × smallest owning subset × runtime mutation × expected outcome class × fixture × subject implementation × platform`, replaces the single-projection result with a multi-artifact bundle, and requires a QUALIFYING third-party oracle for every mutation. Ticket 26/08/27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING, baseline a8d1caf41f68204e73ff5e47ce40c5f543ed442d.",
   "x-semio": {
     "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-    "schemaVersion": 1
+    "schemaVersion": 2,
+    "baselineSha": "a8d1caf41f68204e73ff5e47ce40c5f543ed442d"
   },
   "$defs": {
+    "Slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "DottedId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+    },
+    "Sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
     "TestLevel": {
-      "enum": [
-        "fundamental",
-        "quick",
-        "long",
-        "exhaustive"
-      ]
+      "enum": ["fundamental", "quick", "long", "exhaustive"]
     },
     "TestMode": {
-      "enum": [
-        "differential",
-        "conformance",
-        "round-trip",
-        "property",
-        "error"
-      ]
+      "enum": ["differential", "conformance", "round-trip", "property", "error"]
     },
     "TestRole": {
-      "enum": [
-        "oracle",
-        "subject"
-      ]
+      "enum": ["oracle", "subject"]
     },
     "Implementation": {
-      "enum": [
-        "rust",
-        "typescript",
-        "go",
-        "python",
-        "dotnet"
-      ]
+      "enum": ["rust", "typescript", "go", "python", "dotnet"]
     },
-    "ComparisonProfile": {
-      "enum": [
-        "exact-bytes-v1",
-        "utf8-text-v1",
-        "ordered-json-v1",
-        "unordered-json-v1",
-        "floating-point-v1",
-        "semantic-pdf-v1",
-        "filesystem-tree-v1",
-        "diagnostic-v1",
-        "event-stream-v1",
-        "semantic-raster-v1",
-        "semantic-archive-v1",
-        "semantic-tabular-v1",
-        "semantic-mesh-v1",
-        "semantic-audio-v1"
-      ]
+    "Platform": {
+      "type": "string",
+      "pattern": "^(linux|darwin|win32)-(x64|arm64)$"
     },
-    "FixtureRef": {
+    "MediaType": {
+      "type": "string",
+      "pattern": "^[a-z]+/[A-Za-z0-9.+-]+$"
+    },
+    "ArtifactRole": {
+      "$ref": "#/$defs/Slug",
+      "description": "🎭️ What one produced or expected file IS inside a bundle — `expected-step`, `actual-step`, `subject-mesh`. Roles are the join key between a fixture manifest, an adapter result and a comparison stage's inputs, so nothing in the pipeline addresses a file by path."
+    },
+    "MutationOutcomeClass": {
+      "description": "🎯️ The semantic class a fixture DECLARES for its mutation. A fixture that accepts any non-crash result measures nothing, so every fixture names exactly one of these.",
+      "enum": ["applied", "no-op", "empty", "disjoint", "rejected"]
+    },
+    "EngineFamily": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "uri",
-        "scope",
-        "name",
-        "path",
-        "digest"
-      ],
+      "description": "⚙️ The exact-geometry or format kernel a reference actually sits on. Independence is accounted at the FAMILY level: two wrappers around one kernel are one oracle, not two.",
+      "required": ["family", "implementation", "version"],
       "properties": {
-        "uri": {
-          "type": "string",
-          "pattern": "^(shared|local|asset)://.+$"
-        },
-        "scope": {
-          "enum": [
-            "shared",
-            "local",
-            "asset"
-          ]
-        },
-        "name": {
-          "type": "string",
-          "minLength": 1
-        },
-        "path": {
-          "type": "string",
-          "minLength": 1
-        },
-        "digest": {
-          "type": "string",
-          "minLength": 1
-        }
-      }
-    },
-    "Step": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "keyword",
-        "text"
-      ],
-      "properties": {
-        "keyword": {
-          "enum": [
-            "Given",
-            "When",
-            "Then"
-          ]
-        },
-        "rawKeyword": {
-          "type": "string"
-        },
-        "text": {
-          "type": "string"
-        },
-        "docString": {
-          "type": "string"
-        },
-        "dataTable": {
-          "type": "array",
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      }
-    },
-    "Scenario": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "name",
-        "level",
-        "mode",
-        "steps",
-        "tags"
-      ],
-      "properties": {
-        "id": {
-          "type": "string",
-          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
-        },
-        "name": {
-          "type": "string"
-        },
-        "level": {
-          "$ref": "#/$defs/TestLevel"
-        },
-        "mode": {
-          "$ref": "#/$defs/TestMode"
-        },
-        "tags": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "steps": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Step"
-          }
-        },
-        "seed": {
-          "type": "string"
-        },
-        "platforms": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "requires": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "implementations": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Implementation"
-          }
-        },
-        "examples": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            }
-          }
-        },
-        "outlineOf": {
-          "type": "string"
-        },
-        "line": {
-          "type": "integer"
-        }
-      }
-    },
-    "TestCasePlan": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schemaVersion",
-        "owner",
-        "case",
-        "featurePath",
-        "featureHash",
-        "capability",
-        "comparison",
-        "scenarios",
-        "adapters",
-        "fixtures"
-      ],
-      "properties": {
-        "schemaVersion": {
-          "const": 1
-        },
-        "owner": {
-          "type": "string",
-          "description": "Repo-relative owner root path."
-        },
-        "case": {
-          "type": "string",
-          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
-        },
-        "featurePath": {
-          "type": "string"
-        },
-        "featureHash": {
-          "type": "string"
-        },
-        "featureName": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "capability": {
-          "type": "string"
-        },
-        "oracle": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "noOracleDecision": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "comparison": {
-          "$ref": "#/$defs/ComparisonProfile"
-        },
-        "background": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Step"
-          }
-        },
-        "scenarios": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Scenario"
-          }
-        },
-        "adapters": {
-          "type": "object",
-          "additionalProperties": false,
-          "propertyNames": {
-            "$ref": "#/$defs/Implementation"
-          },
-          "patternProperties": {
-            "^(rust|typescript|go|python|dotnet)$": {
-              "type": "string"
-            }
-          }
-        },
-        "fixtures": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/FixtureRef"
-          }
-        },
-        "workDir": {
-          "type": "string"
-        },
-        "resultsPath": {
-          "type": "string"
-        },
-        "outputDir": {
-          "type": "string"
-        },
-        "level": {
-          "$ref": "#/$defs/TestLevel"
-        },
-        "role": {
-          "$ref": "#/$defs/TestRole"
+        "family": {
+          "$ref": "#/$defs/Slug",
+          "description": "⚙️ `opencascade`, `cgal`, `stepcode`, `parasolid`, `none`."
         },
         "implementation": {
-          "$ref": "#/$defs/Implementation"
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },
-    "Diagnostic": {
+    "QualifyingOracleKind": {
+      "description": "✅️ The only kinds that can DISCHARGE a mutation's external-oracle requirement.",
+      "enum": ["third-party-library", "third-party-cli", "standards-reference-tool"]
+    },
+    "SupplementalOracleKind": {
+      "description": "➕️ Required supplements that can never substitute for a qualifying oracle. `cross-semio-implementation` names a second implementation written inside this repository — useful, and explicitly NOT independent evidence.",
+      "enum": ["metamorphic", "inverse", "round-trip", "property", "cross-semio-implementation"]
+    },
+    "OracleKind": {
+      "anyOf": [
+        { "$ref": "#/$defs/QualifyingOracleKind" },
+        { "$ref": "#/$defs/SupplementalOracleKind" }
+      ]
+    },
+    "OracleLinkedPackage": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "severity",
-        "message"
-      ],
+      "description": "🧩️ One FURTHER third-party package a composed reference links beyond its primary one, pinned and licensed in its own right.",
+      "required": ["package", "version", "license", "role"],
       "properties": {
-        "severity": {
-          "enum": [
-            "info",
-            "warning",
-            "error"
-          ]
-        },
-        "message": {
-          "type": "string"
-        },
-        "detail": {
-          "type": "string"
-        }
+        "package": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "license": { "type": "string", "minLength": 1 },
+        "lockDigest": { "$ref": "#/$defs/Sha256" },
+        "homepage": { "type": "string" },
+        "role": { "type": "string", "minLength": 1 }
       }
     },
-    "TestResult": {
+    "ProductionDebt": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "testId",
-        "owner",
-        "case",
-        "scenario",
-        "implementation",
-        "role",
-        "level",
-        "status",
-        "durationMs",
-        "output",
-        "diagnostics"
-      ],
+      "description": "🔒️ Pre-existing production reachability of a test-only package, recorded rather than hidden. Shrink-only: a path may leave this list, never join it.",
+      "required": ["reachableFrom", "owner", "plan"],
       "properties": {
-        "testId": {
-          "type": "string"
-        },
-        "owner": {
-          "type": "string"
-        },
-        "case": {
-          "type": "string"
-        },
-        "scenario": {
-          "type": "string"
-        },
-        "implementation": {
-          "$ref": "#/$defs/Implementation"
-        },
-        "role": {
-          "$ref": "#/$defs/TestRole"
-        },
-        "level": {
-          "$ref": "#/$defs/TestLevel"
-        },
-        "status": {
-          "enum": [
-            "passed",
-            "failed",
-            "errored"
-          ]
-        },
-        "durationMs": {
-          "type": "number",
-          "minimum": 0
-        },
-        "seed": {
-          "type": "string"
-        },
-        "featureHash": {
-          "type": "string"
-        },
-        "fixtureHash": {
-          "type": "string"
-        },
-        "sourceHash": {
-          "type": "string"
-        },
-        "dependencyFingerprint": {
-          "type": "string"
-        },
-        "output": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "rawHash",
-            "projectionHash"
-          ],
-          "properties": {
-            "rawHash": {
-              "type": "string"
-            },
-            "projectionHash": {
-              "type": "string"
-            },
-            "rawPath": {
-              "type": "string"
-            },
-            "projectionPath": {
-              "type": "string"
-            },
-            "projection": {}
-          }
-        },
-        "diagnostics": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Diagnostic"
-          }
-        }
+        "reachableFrom": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "owner": { "type": "string" },
+        "plan": { "type": "string" }
       }
     },
     "OracleRegistryEntry": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "ecosystem",
-        "package",
-        "capabilities",
-        "comparisonProfiles",
-        "license",
-        "testOnly"
-      ],
+      "description": "📇️ One registered reference. `kind` decides whether it can discharge an external-oracle requirement at all; `engine` decides whether it is INDEPENDENT of the subject and of other oracles.",
+      "required": ["id", "kind", "ecosystem", "package", "capabilities", "comparisonProfiles", "license", "testOnly", "engine", "productionReachable", "networkDuringExecution"],
       "properties": {
-        "id": {
-          "type": "string",
-          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        "id": { "$ref": "#/$defs/Slug" },
+        "kind": { "$ref": "#/$defs/OracleKind" },
+        "ecosystem": { "enum": ["rust", "javascript", "go", "python", "dotnet", "native"] },
+        "package": { "type": "string" },
+        "packages": { "type": "array", "items": { "$ref": "#/$defs/OracleLinkedPackage" } },
+        "version": { "type": "string" },
+        "lockDigest": { "$ref": "#/$defs/Sha256" },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "repository": { "type": "string" },
+            "commit": { "type": "string" },
+            "license": { "type": "string" }
+          }
         },
-        "ecosystem": {
-          "enum": [
-            "rust",
-            "javascript",
-            "go",
-            "python",
-            "dotnet"
-          ]
-        },
-        "package": {
-          "type": "string"
-        },
-        "version": {
-          "type": "string"
-        },
-        "packages": {
+        "engine": { "$ref": "#/$defs/EngineFamily" },
+        "capabilities": { "type": "array", "items": { "$ref": "#/$defs/DottedId" }, "minItems": 1 },
+        "comparisonProfiles": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "license": { "type": "string", "minLength": 1 },
+        "testOnly": { "const": true },
+        "productionReachable": { "type": "boolean" },
+        "networkDuringExecution": { "type": "boolean" },
+        "platforms": { "type": "array", "items": { "$ref": "#/$defs/Platform" } },
+        "homepage": { "type": "string" },
+        "rationale": { "type": "string" },
+        "hostPath": { "type": "string" },
+        "productionDebt": { "$ref": "#/$defs/ProductionDebt" }
+      }
+    },
+    "ProbeRegistryEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🔬️ One EXTERNAL measurement tool the comparison pipeline invokes. A probe computes; the framework only evaluates the typed JSON it emits. No geometry, no format parsing and no metric arithmetic may live in the orchestrator.",
+      "required": ["id", "kind", "ecosystem", "package", "capabilities", "outputSchema", "deterministic", "license", "testOnly", "engine", "productionReachable"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "kind": { "enum": ["external-process", "external-library"] },
+        "ecosystem": { "enum": ["rust", "javascript", "go", "python", "dotnet", "native"] },
+        "package": { "type": "string", "minLength": 1 },
+        "version": { "type": "string" },
+        "lockDigest": { "$ref": "#/$defs/Sha256" },
+        "engine": { "$ref": "#/$defs/EngineFamily" },
+        "capabilities": { "type": "array", "items": { "$ref": "#/$defs/DottedId" }, "minItems": 1 },
+        "outputSchema": { "type": "string", "minLength": 1 },
+        "deterministic": { "type": "boolean" },
+        "seedRequired": { "type": "boolean" },
+        "platforms": { "type": "array", "items": { "$ref": "#/$defs/Platform" } },
+        "license": { "type": "string", "minLength": 1 },
+        "testOnly": { "const": true },
+        "productionReachable": { "type": "boolean" },
+        "networkDuringExecution": { "type": "boolean" },
+        "command": { "type": "array", "items": { "type": "string" } },
+        "rationale": { "type": "string" },
+        "qualification": { "$ref": "#/$defs/ProbeQualification" }
+      }
+    },
+    "ProbeQualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🎓️ The recorded outcome of a qualification spike. A probe whose `status` is not `qualified` may be RUN, but no gate may claim its strongest guarantee — the canonical-STEP gate is the motivating case.",
+      "required": ["status", "evidence"],
+      "properties": {
+        "status": { "enum": ["qualified", "provisional", "rejected"] },
+        "evidence": { "type": "string", "minLength": 1 },
+        "checkedAt": { "type": "string" },
+        "criteria": {
           "type": "array",
-          "description": "🧩️ The FURTHER third-party packages this one reference implementation links, beyond `package`. A composed reference names several because some formats have no single credible library — an OOXML container needs an archive reader AND an XML reader, and a spreadsheet needs a reader AND a writer. Every linked package is named here so the dependency ratchet and the oracle-purity probe classify all of them; a package linked into the host but absent from every manifest is invisible to both.",
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": [
-              "package",
-              "version",
-              "license",
-              "role"
-            ],
+            "required": ["id", "met"],
             "properties": {
-              "package": {
-                "type": "string",
-                "minLength": 1
-              },
-              "version": {
-                "type": "string",
-                "minLength": 1
-              },
-              "license": {
-                "type": "string",
-                "minLength": 1
-              },
-              "homepage": {
-                "type": "string"
-              },
-              "role": {
-                "type": "string",
-                "minLength": 1,
-                "description": "🧭️ What this package contributes to the composition (`archive reader/writer`, `independent writer`, `DOM`), so a reader can tell why the reference needs more than one library."
-              }
-            }
-          }
-        },
-        "capabilities": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "minItems": 1
-        },
-        "comparisonProfiles": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/ComparisonProfile"
-          },
-          "minItems": 1
-        },
-        "license": {
-          "type": "string"
-        },
-        "testOnly": {
-          "const": true
-        },
-        "homepage": {
-          "type": "string"
-        },
-        "rationale": {
-          "type": "string"
-        },
-        "hostPath": {
-          "type": "string"
-        },
-        "productionDebt": {
-          "type": "object",
-          "additionalProperties": false,
-          "description": "🔒️ Pre-existing production reachability of this package, recorded rather than hidden. Shrink-only: a path may leave this list, never join it. Its presence means the `testOnly` claim is a TARGET, not yet a fact.",
-          "required": [
-            "reachableFrom",
-            "owner",
-            "plan"
-          ],
-          "properties": {
-            "reachableFrom": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "minItems": 1
-            },
-            "owner": {
-              "type": "string"
-            },
-            "plan": {
-              "type": "string"
+              "id": { "$ref": "#/$defs/Slug" },
+              "met": { "type": "boolean" },
+              "detail": { "type": "string" }
             }
           }
         }
       }
     },
+    "SubsetTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🪆️ The SMALLEST semantic subset a mutation owns, plus the selector addressing the entity inside it. Wildcard and artifact-wide targets are unrepresentable here on purpose.",
+      "required": ["artifact", "standard", "subset"],
+      "properties": {
+        "artifact": { "$ref": "#/$defs/DottedId" },
+        "standard": { "type": "string", "minLength": 1 },
+        "subset": { "$ref": "#/$defs/Slug" },
+        "compound": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Slug" },
+          "minItems": 2,
+          "description": "🧩️ For a cross-subset operation: the explicit typed compound. Declaring the compound is the ONLY way to span subsets — falling back to the whole artifact is a contract failure."
+        },
+        "selector": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "value"],
+          "properties": {
+            "type": { "enum": ["entity-id", "entity-path", "entity-set", "whole-subset"] },
+            "value": { "type": ["string", "array"], "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "OracleRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🎯️ What a mutation needs from an external reference before it may be registered or released.",
+      "required": ["capability", "qualifyingKind"],
+      "properties": {
+        "capability": { "$ref": "#/$defs/DottedId" },
+        "qualifyingKind": { "$ref": "#/$defs/QualifyingOracleKind" },
+        "distinctEngineFamilies": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "⚙️ How many INDEPENDENT engine families must supply this capability. Default 1; raise it where a single kernel ancestry would make the comparison circular."
+        }
+      }
+    },
+    "ManifestMutation": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🦠️ One mutation as the DOMAIN owner declares it. This record is the single source that feeds both production registration metadata and the repository test catalog; there must never be two handwritten lists to reconcile.",
+      "required": ["id", "capability", "outcomes", "productionDispatch", "oracleRequirements"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "capability": { "$ref": "#/$defs/DottedId" },
+        "subset": {
+          "$ref": "#/$defs/Slug",
+          "description": "🪆️ Overrides the manifest's own subset when this mutation is owned by a NARROWER one. Absent means the manifest subset owns it."
+        },
+        "compound": { "type": "array", "items": { "$ref": "#/$defs/Slug" }, "minItems": 2 },
+        "selectorSchema": { "type": "string" },
+        "payloadSchema": { "type": "string" },
+        "resultSchema": { "type": "string" },
+        "outcomes": { "type": "array", "items": { "$ref": "#/$defs/MutationOutcomeClass" }, "minItems": 1, "uniqueItems": true },
+        "productionDispatch": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation", "bridgeVersion"],
+          "properties": {
+            "operation": { "type": "string", "minLength": 1 },
+            "bridgeVersion": { "type": "integer", "minimum": 1 },
+            "variant": { "type": "string", "description": "🦀️ The dispatch enum variant this row corresponds to, so runtime↔manifest equality is name-checked rather than order-checked." }
+          }
+        },
+        "oracleRequirements": { "type": "array", "items": { "$ref": "#/$defs/OracleRequirement" }, "minItems": 1 },
+        "invariants": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "local": { "type": "array", "items": { "$ref": "#/$defs/Slug" } },
+            "enclosing": { "type": "array", "items": { "$ref": "#/$defs/Slug" } }
+          }
+        },
+        "normativeTopologyCounts": {
+          "type": "boolean",
+          "description": "🔢️ True only where exact face/edge/vertex counts are part of the mutation's SEMANTICS. Two valid kernels may split a periodic surface differently, so counts are never asserted globally."
+        }
+      }
+    },
+    "MutationManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🧬️ One owner's authoritative mutation inventory for one artifact/standard/subset. The contract phase requires `runtime inventory = manifest inventory = claimed test inventory`, exactly.",
+      "required": ["schema", "artifact", "standard", "subset", "mutations"],
+      "properties": {
+        "schema": { "const": "semio.repository-test.mutation-manifest/v2" },
+        "artifact": { "$ref": "#/$defs/DottedId" },
+        "standard": { "type": "string", "minLength": 1 },
+        "subset": { "$ref": "#/$defs/Slug" },
+        "standardDirectoryName": { "type": "string", "pattern": "^🔖️.+$" },
+        "subsetDirectoryName": { "type": "string", "pattern": "^✳️.+$" },
+        "mutations": { "type": "array", "items": { "$ref": "#/$defs/ManifestMutation" }, "minItems": 1 }
+      }
+    },
+    "RuntimeMutationInventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🏭️ What PRODUCTION dispatch actually offers, emitted by the language-neutral bridge `listMutations(artifact, standard, subset)`. This file is generated by running production code, never by parsing source.",
+      "required": ["schema", "artifact", "standard", "subset", "bridgeVersion", "mutations"],
+      "properties": {
+        "schema": { "const": "semio.repository-test.runtime-inventory/v2" },
+        "artifact": { "$ref": "#/$defs/DottedId" },
+        "standard": { "type": "string" },
+        "subset": { "$ref": "#/$defs/Slug" },
+        "bridgeVersion": { "type": "integer", "minimum": 1 },
+        "producedBy": { "type": "string" },
+        "mutations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "variant", "outcomes"],
+            "properties": {
+              "id": { "$ref": "#/$defs/Slug" },
+              "variant": { "type": "string" },
+              "verb": { "type": "string" },
+              "entity": { "type": "string" },
+              "record": { "type": "string" },
+              "outcomes": { "type": "array", "items": { "$ref": "#/$defs/MutationOutcomeClass" }, "minItems": 1 }
+            }
+          }
+        }
+      }
+    },
+    "FixtureClass": {
+      "enum": ["real-world", "handcrafted", "third-party-generated"]
+    },
+    "FixtureFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "path", "mediaType", "sha256"],
+      "properties": {
+        "role": { "$ref": "#/$defs/ArtifactRole" },
+        "path": { "type": "string", "minLength": 1 },
+        "mediaType": { "$ref": "#/$defs/MediaType" },
+        "sha256": { "$ref": "#/$defs/Sha256" },
+        "bytes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "FixtureGenerator": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🏭️ Exactly how a third-party-generated fixture was produced, in enough detail to re-run it. A generated fixture with no reproducible generator record is a fixture nobody can audit.",
+      "required": ["oracle", "packageVersion", "engineFamily", "engineVersion", "command", "platform"],
+      "properties": {
+        "oracle": { "$ref": "#/$defs/Slug" },
+        "packageVersion": { "type": "string", "minLength": 1 },
+        "engineFamily": { "$ref": "#/$defs/Slug" },
+        "engineVersion": { "type": "string", "minLength": 1 },
+        "command": { "type": "string", "minLength": 1 },
+        "seed": { "type": ["string", "integer"] },
+        "platform": { "$ref": "#/$defs/Platform" },
+        "sourceDigest": { "$ref": "#/$defs/Sha256" }
+      }
+    },
+    "FixtureProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "license"],
+      "properties": {
+        "source": { "enum": ["generated", "authored", "downloaded", "vendored"] },
+        "license": { "type": "string", "minLength": 1 },
+        "acquiredAt": { "type": "string" },
+        "attribution": { "type": "string" },
+        "url": { "type": "string" },
+        "security": { "enum": ["scanned-clean", "unscanned", "quarantined"] },
+        "privacy": { "enum": ["no-personal-data", "reviewed", "unreviewed"] }
+      }
+    },
+    "FixtureUnits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["length", "angle"],
+      "properties": {
+        "length": { "enum": ["metre", "millimetre", "centimetre", "inch", "foot", "unitless"] },
+        "angle": { "enum": ["radian", "degree"] },
+        "handedness": { "enum": ["right", "left"] },
+        "up": { "enum": ["y", "z"] }
+      }
+    },
+    "FixtureManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🧫️ One immutable fixture bundle. Updating a fixture creates a NEW identity and digest; the manifest is never edited in place.",
+      "required": ["schema", "id", "class", "target", "units", "files", "provenance", "comparisonProfile", "reproducible"],
+      "properties": {
+        "schema": { "const": "semio.repository-test.fixture/v2" },
+        "id": { "$ref": "#/$defs/Slug" },
+        "class": { "$ref": "#/$defs/FixtureClass" },
+        "target": {
+          "allOf": [{ "$ref": "#/$defs/SubsetTarget" }],
+          "description": "🎯️ The subset-scoped coordinates plus the mutation and the DECLARED outcome class."
+        },
+        "mutation": { "$ref": "#/$defs/Slug" },
+        "outcome": { "$ref": "#/$defs/MutationOutcomeClass" },
+        "units": { "$ref": "#/$defs/FixtureUnits" },
+        "files": { "type": "array", "items": { "$ref": "#/$defs/FixtureFile" }, "minItems": 1 },
+        "generator": { "$ref": "#/$defs/FixtureGenerator" },
+        "provenance": { "$ref": "#/$defs/FixtureProvenance" },
+        "comparisonProfile": { "type": "string", "minLength": 1 },
+        "toleranceProfile": { "$ref": "#/$defs/Slug" },
+        "toleranceOverride": { "$ref": "#/$defs/ToleranceOverride" },
+        "reproducible": { "type": "boolean" },
+        "family": {
+          "$ref": "#/$defs/Slug",
+          "description": "👪️ The fixture family this case belongs to (`spatial-relationship`, `shape-complexity`, `robustness`, `mechanical`, `failure`) — the sharding and reporting key that keeps a matrix from collapsing to artifact level."
+        },
+        "notes": { "type": "string" }
+      }
+    },
+    "ToleranceProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "📏️ Scale-relative tolerance policy. Effective tolerance is `max(absolute, relative × reference)`, so one profile serves micro-scale and large-coordinate fixtures without a per-fixture override.",
+      "required": ["id"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "description": { "type": "string" },
+        "absoluteLength": { "type": "number", "minimum": 0 },
+        "relativeLength": { "type": "number", "minimum": 0 },
+        "absoluteArea": { "type": "number", "minimum": 0 },
+        "relativeArea": { "type": "number", "minimum": 0 },
+        "absoluteVolume": { "type": "number", "minimum": 0 },
+        "relativeVolume": { "type": "number", "minimum": 0 },
+        "normalizedHausdorffMax": { "type": "number", "minimum": 0 },
+        "normalizedCentroidDistanceMax": { "type": "number", "minimum": 0 },
+        "maxOverrideFactor": { "type": "number", "minimum": 1 }
+      }
+    },
+    "ToleranceOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "⚠️ A fixture-level loosening of its profile. Every field is mandatory because an unexplained override turns a failure into a pass and nothing in the report would say so.",
+      "required": ["reason", "measuredBaseline", "factor", "approvedBy"],
+      "properties": {
+        "reason": { "type": "string", "minLength": 20 },
+        "measuredBaseline": { "type": "number", "minimum": 0 },
+        "factor": { "type": "number", "minimum": 1 },
+        "approvedBy": { "type": "string", "minLength": 1 }
+      }
+    },
+    "ComparisonAssertion": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "⚖️ Declarative assertions evaluated against ONE probe's typed JSON output. Keys are probe-defined; the orchestrator only compares, never computes."
+    },
+    "ComparisonStage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["probe", "inputs"],
+      "properties": {
+        "probe": { "$ref": "#/$defs/Slug" },
+        "description": { "type": "string" },
+        "inputs": { "type": "array", "items": { "$ref": "#/$defs/ArtifactRole" }, "minItems": 1 },
+        "outputs": { "type": "array", "items": { "$ref": "#/$defs/ArtifactRole" } },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "seed": { "type": ["string", "integer"] },
+        "optional": {
+          "type": "boolean",
+          "description": "🚧️ A stage whose probe is not yet qualified. An optional stage RUNS and REPORTS, and its guarantee may not be claimed by any release gate."
+        },
+        "assertions": { "$ref": "#/$defs/ComparisonAssertion" }
+      }
+    },
+    "ComparisonPipeline": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "⚖️ An ordered, multi-artifact, externally-probed comparison. Replaces v1's single-projection profile for every case that produces more than one file or needs a measured metric.",
+      "required": ["id", "stages"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "toleranceProfile": { "$ref": "#/$defs/Slug" },
+        "referenceScale": {
+          "enum": ["bounding-box-diagonal", "unit", "declared"],
+          "description": "📐️ What `D` is when normalizing a length. `bounding-box-diagonal` is measured by a probe, never by the orchestrator."
+        },
+        "stages": { "type": "array", "items": { "$ref": "#/$defs/ComparisonStage" }, "minItems": 1 }
+      }
+    },
+    "ComparisonProfileSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "⚖️ The declarative structural profile a projection is compared under. Still the right tool for a single JSON/text/byte projection; a bundle uses a ComparisonPipeline instead.",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "arrays": { "enum": ["ordered", "set"] },
+        "ignoreKeys": { "type": "array", "items": { "type": "string" } },
+        "tolerance": { "type": "number" },
+        "text": { "enum": ["none", "utf8"] },
+        "bytes": { "type": "boolean" },
+        "pipeline": { "$ref": "#/$defs/Slug" }
+      }
+    },
+    "FixtureRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🧫️ How a scenario ADDRESSES a fixture. v2 requires the manifest id alongside the digest so a run is keyed by reviewed provenance and not merely by bytes.",
+      "required": ["uri", "scope", "name", "path", "digest"],
+      "properties": {
+        "uri": { "type": "string", "pattern": "^(shared|local|asset|cas)://.+$" },
+        "scope": { "enum": ["shared", "local", "asset", "cas"] },
+        "name": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "digest": { "type": "string", "minLength": 1 },
+        "manifestId": { "$ref": "#/$defs/Slug" },
+        "role": { "$ref": "#/$defs/ArtifactRole" },
+        "mediaType": { "$ref": "#/$defs/MediaType" }
+      }
+    },
+    "Step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["keyword", "text"],
+      "properties": {
+        "keyword": { "enum": ["Given", "When", "Then"] },
+        "rawKeyword": { "type": "string" },
+        "text": { "type": "string" },
+        "docString": { "type": "string" },
+        "dataTable": { "type": "array", "items": { "type": "array", "items": { "type": "string" } } }
+      }
+    },
+    "Scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "level", "mode", "steps", "tags"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "name": { "type": "string" },
+        "level": { "$ref": "#/$defs/TestLevel" },
+        "mode": { "$ref": "#/$defs/TestMode" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "steps": { "type": "array", "items": { "$ref": "#/$defs/Step" } },
+        "seed": { "type": "string" },
+        "platforms": { "type": "array", "items": { "type": "string" } },
+        "requires": { "type": "array", "items": { "type": "string" } },
+        "implementations": { "type": "array", "items": { "$ref": "#/$defs/Implementation" } },
+        "examples": { "type": "array", "items": { "type": "object", "additionalProperties": { "type": "string" } } },
+        "outlineOf": { "type": "string" },
+        "line": { "type": "integer" },
+        "mutation": { "$ref": "#/$defs/Slug" },
+        "outcome": { "$ref": "#/$defs/MutationOutcomeClass" },
+        "fixtureFamily": { "$ref": "#/$defs/Slug" }
+      }
+    },
+    "TestCasePlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "📋️ The complete, serializable instruction one host receives. v2 adds the subset target, the mutation manifest digest and the comparison pipeline so a host can never widen its own scope.",
+      "required": ["schemaVersion", "owner", "case", "featurePath", "featureHash", "capability", "comparison", "scenarios", "adapters", "fixtures"],
+      "properties": {
+        "schemaVersion": { "const": 2 },
+        "baselineSha": { "type": "string" },
+        "owner": { "type": "string" },
+        "case": { "$ref": "#/$defs/Slug" },
+        "featurePath": { "type": "string" },
+        "featureHash": { "type": "string" },
+        "featureName": { "type": "string" },
+        "description": { "type": "string" },
+        "capability": { "type": "string" },
+        "target": { "$ref": "#/$defs/SubsetTarget" },
+        "mutationManifestDigest": { "type": "string" },
+        "oracle": { "type": ["string", "null"] },
+        "noOracleDecision": { "type": ["string", "null"] },
+        "comparison": { "type": "string" },
+        "comparisonPipeline": { "type": ["string", "null"] },
+        "toleranceProfile": { "type": ["string", "null"] },
+        "background": { "type": "array", "items": { "$ref": "#/$defs/Step" } },
+        "scenarios": { "type": "array", "items": { "$ref": "#/$defs/Scenario" } },
+        "adapters": {
+          "type": "object",
+          "additionalProperties": false,
+          "propertyNames": { "$ref": "#/$defs/Implementation" },
+          "patternProperties": { "^(rust|typescript|go|python|dotnet)$": { "type": "string" } }
+        },
+        "fixtures": { "type": "array", "items": { "$ref": "#/$defs/FixtureRef" } },
+        "fixtureManifests": { "type": "array", "items": { "$ref": "#/$defs/FixtureManifest" } },
+        "workDir": { "type": "string" },
+        "resultsPath": { "type": "string" },
+        "outputDir": { "type": "string" },
+        "artifactDir": { "type": "string" },
+        "level": { "$ref": "#/$defs/TestLevel" },
+        "role": { "$ref": "#/$defs/TestRole" },
+        "implementation": { "$ref": "#/$defs/Implementation" },
+        "platform": { "$ref": "#/$defs/Platform" }
+      }
+    },
+    "Diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["severity", "message"],
+      "properties": {
+        "severity": { "enum": ["info", "warning", "error"] },
+        "message": { "type": "string" },
+        "detail": { "type": "string" }
+      }
+    },
+    "ResultArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "📦️ One file a host produced. `role` joins it to the fixture bundle and to every comparison stage.",
+      "required": ["role", "path", "mediaType", "sha256"],
+      "properties": {
+        "role": { "$ref": "#/$defs/ArtifactRole" },
+        "path": { "type": "string", "minLength": 1 },
+        "mediaType": { "$ref": "#/$defs/MediaType" },
+        "sha256": { "$ref": "#/$defs/Sha256" },
+        "bytes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "TestResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "📤️ One scenario × implementation × role execution. v2 returns an ARTIFACT BUNDLE plus a projection, so a BRep case can hand back STEP and a mesh without inventing a second protocol.",
+      "required": ["schemaVersion", "testId", "owner", "case", "scenario", "implementation", "role", "level", "status", "durationMs", "output", "diagnostics", "artifacts"],
+      "properties": {
+        "schemaVersion": { "const": 2 },
+        "testId": { "type": "string" },
+        "baselineSha": { "type": "string" },
+        "owner": { "type": "string" },
+        "case": { "type": "string" },
+        "scenario": { "type": "string" },
+        "implementation": { "$ref": "#/$defs/Implementation" },
+        "role": { "$ref": "#/$defs/TestRole" },
+        "level": { "$ref": "#/$defs/TestLevel" },
+        "platform": { "$ref": "#/$defs/Platform" },
+        "status": { "enum": ["passed", "failed", "errored"] },
+        "durationMs": { "type": "number", "minimum": 0 },
+        "seed": { "type": "string" },
+        "featureHash": { "type": "string" },
+        "fixtureHash": { "type": "string" },
+        "sourceHash": { "type": "string" },
+        "dependencyFingerprint": { "type": "string" },
+        "runKey": { "type": "string" },
+        "mutation": { "$ref": "#/$defs/Slug" },
+        "outcome": { "$ref": "#/$defs/MutationOutcomeClass" },
+        "productionDispatch": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "🏭️ Proof the subject reached PRODUCTION dispatch rather than replaying a committed vector. A subject result without it cannot count toward production-bridge coverage.",
+          "required": ["invoked", "operation", "bridgeVersion"],
+          "properties": {
+            "invoked": { "const": true },
+            "operation": { "type": "string" },
+            "bridgeVersion": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "artifacts": { "type": "array", "items": { "$ref": "#/$defs/ResultArtifact" } },
+        "output": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rawHash", "projectionHash"],
+          "properties": {
+            "rawHash": { "type": "string" },
+            "projectionHash": { "type": "string" },
+            "rawPath": { "type": "string" },
+            "projectionPath": { "type": "string" },
+            "projection": {}
+          }
+        },
+        "diagnostics": { "type": "array", "items": { "$ref": "#/$defs/Diagnostic" } }
+      }
+    },
+    "ProbeReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🔬️ The typed JSON one probe emits for one stage. `measurements` is probe-defined; the orchestrator evaluates the stage's assertions against it and computes nothing itself.",
+      "required": ["schema", "probe", "status", "measurements"],
+      "properties": {
+        "schema": { "const": "semio.repository-test.probe-report/v2" },
+        "probe": { "$ref": "#/$defs/Slug" },
+        "probeVersion": { "type": "string" },
+        "engine": { "$ref": "#/$defs/EngineFamily" },
+        "status": { "enum": ["ok", "failed", "unsupported"] },
+        "seed": { "type": ["string", "integer"] },
+        "durationMs": { "type": "number", "minimum": 0 },
+        "measurements": { "type": "object" },
+        "outputs": { "type": "array", "items": { "$ref": "#/$defs/ResultArtifact" } },
+        "diagnostics": { "type": "array", "items": { "$ref": "#/$defs/Diagnostic" } }
+      }
+    },
     "NoOracleDecision": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "capabilities",
-        "rationale",
-        "substitutes"
-      ],
+      "description": "📇️ A recorded decision that a capability has no credible reference. v2 keeps it for NON-mutation capabilities only: a runtime mutation can never be discharged this way.",
+      "required": ["id", "capabilities", "rationale", "substitutes"],
       "properties": {
-        "id": {
-          "type": "string",
-          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
-        },
-        "capabilities": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "minItems": 1
-        },
-        "rationale": {
-          "type": "string",
-          "minLength": 20
-        },
+        "id": { "$ref": "#/$defs/Slug" },
+        "capabilities": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "rationale": { "type": "string", "minLength": 20 },
         "substitutes": {
           "type": "array",
-          "items": {
-            "enum": [
-              "specification-vectors",
-              "metamorphic-laws",
-              "independent-implementations",
-              "second-parser"
-            ]
-          },
+          "items": { "enum": ["specification-vectors", "metamorphic-laws", "independent-implementations", "second-parser"] },
           "minItems": 1
+        },
+        "coversMutations": {
+          "const": false,
+          "description": "🚫️ Structurally false. A mutation's external-oracle requirement is discharged only by a qualifying oracle."
         }
       }
     },
     "OracleHostPackage": {
       "type": "object",
       "additionalProperties": false,
-      "description": "🧩️ A package an owner contributes so its adapters can reach their reference libraries. With `path` the entry names LOCAL in-repo source linked by path; without it the entry names an EXTERNAL distribution the generated host must provision from that ecosystem's registry, and which the dependency ratchet classifies as a test-oracle dependency.",
-      "required": [
-        "implementation",
-        "package"
-      ],
+      "required": ["implementation", "package"],
       "properties": {
-        "implementation": {
-          "$ref": "#/$defs/Implementation"
-        },
-        "package": {
-          "type": "string",
-          "minLength": 1
-        },
-        "path": {
-          "type": "string",
-          "minLength": 1,
-          "description": "📁️ Repo-relative directory of the local package. Required for a Rust host, which links contributed crates by path."
-        },
-        "version": {
-          "type": "string",
-          "description": "📌️ Distribution version an external package is pinned to."
-        },
-        "module": {
-          "type": "string",
-          "description": "🧭️ Import name when it differs from the distribution name (Pillow → PIL)."
-        },
-        "features": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "🎚️ Cargo features of a local crate."
-        }
+        "implementation": { "$ref": "#/$defs/Implementation" },
+        "package": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "version": { "type": "string" },
+        "module": { "type": "string" },
+        "features": { "type": "array", "items": { "type": "string" } }
       }
     },
     "OracleRegistry": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "schemaVersion",
-        "oracles",
-        "noOracleDecisions"
-      ],
+      "required": ["schemaVersion", "oracles", "noOracleDecisions"],
       "properties": {
-        "schemaVersion": {
-          "const": 1
-        },
-        "oracles": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/OracleRegistryEntry"
-          }
-        },
-        "noOracleDecisions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/NoOracleDecision"
-          }
-        },
-        "mutationCatalogs": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/MutationCatalog"
-          }
-        },
-        "comparisonProfiles": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
-        "oracleHostPackages": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/OracleHostPackage"
-          }
-        },
-        "migrationStatus": {
+        "schemaVersion": { "const": 2 },
+        "$schema": { "type": "string" },
+        "_comment": { "type": "string" },
+        "oracles": { "type": "array", "items": { "$ref": "#/$defs/OracleRegistryEntry" } },
+        "probes": { "type": "array", "items": { "$ref": "#/$defs/ProbeRegistryEntry" } },
+        "noOracleDecisions": { "type": "array", "items": { "$ref": "#/$defs/NoOracleDecision" } },
+        "mutationManifests": { "type": "array", "items": { "$ref": "#/$defs/MutationManifest" } },
+        "fixtureManifests": { "type": "array", "items": { "$ref": "#/$defs/FixtureManifest" } },
+        "comparisonProfiles": { "type": "array", "items": { "$ref": "#/$defs/ComparisonProfileSpec" } },
+        "comparisonPipelines": { "type": "array", "items": { "$ref": "#/$defs/ComparisonPipeline" } },
+        "toleranceProfiles": { "type": "array", "items": { "$ref": "#/$defs/ToleranceProfile" } },
+        "oracleHostPackages": { "type": "array", "items": { "$ref": "#/$defs/OracleHostPackage" } },
+        "migrationStatus": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "RetentionClass": {
+      "description": "🗄️ What a cached path IS, which decides when it may be removed. Failure evidence and pinned proof are never removed by routine stale cleanup.",
+      "enum": ["ephemeral-success", "last-success-proof", "failure-evidence", "fixture-generation", "toolchain", "downloaded-source", "pinned"]
+    },
+    "LeaseState": {
+      "enum": ["creating", "active", "complete", "failed", "abandoned"]
+    },
+    "RunLease": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🔐️ One agent's claim on one run directory. Clean and GC read this; an `active` lease is never reclaimed, and a stale one only after a documented timeout AND a process check.",
+      "required": ["schema", "runId", "agentId", "state", "createdAt", "heartbeatAt", "retention"],
+      "properties": {
+        "schema": { "const": "semio.repository-test.lease/v2" },
+        "runId": { "type": "string", "minLength": 1 },
+        "agentId": { "type": "string", "minLength": 1 },
+        "pid": { "type": "integer" },
+        "state": { "$ref": "#/$defs/LeaseState" },
+        "createdAt": { "type": "string" },
+        "heartbeatAt": { "type": "string" },
+        "retention": { "$ref": "#/$defs/RetentionClass" },
+        "runKey": { "type": "string" },
+        "testId": { "type": "string" }
+      }
+    },
+    "RunManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🗝️ Everything a reusable run result is keyed by. A changed tolerance profile must not reuse an earlier parity result, so the profile digest is part of the key rather than metadata beside it.",
+      "required": ["schema", "runId", "runKey", "baselineSha", "components"],
+      "properties": {
+        "schema": { "const": "semio.repository-test.run-manifest/v2" },
+        "runId": { "type": "string" },
+        "runKey": { "type": "string" },
+        "baselineSha": { "type": "string" },
+        "startedAt": { "type": "string" },
+        "finishedAt": { "type": "string" },
+        "retention": { "$ref": "#/$defs/RetentionClass" },
+        "components": {
           "type": "object",
-          "additionalProperties": {
-            "type": "string"
+          "additionalProperties": false,
+          "required": ["mutationManifestDigest", "fixtureManifestDigest", "fixtureFileDigests", "oracleLockDigest", "oracleEngineDigest", "probeDigest", "comparisonProfileDigest", "subjectDigest", "platform", "level"],
+          "properties": {
+            "mutationManifestDigest": { "type": "string" },
+            "fixtureManifestDigest": { "type": "string" },
+            "fixtureFileDigests": { "type": "string" },
+            "oracleLockDigest": { "type": "string" },
+            "oracleEngineDigest": { "type": "string" },
+            "probeDigest": { "type": "string" },
+            "comparisonProfileDigest": { "type": "string" },
+            "subjectDigest": { "type": "string" },
+            "platform": { "$ref": "#/$defs/Platform" },
+            "seed": { "type": ["string", "integer"] },
+            "level": { "$ref": "#/$defs/TestLevel" }
           }
         },
-        "_comment": {
-          "type": "string"
-        },
-        "$schema": {
-          "type": "string"
-        }
+        "artifacts": { "type": "array", "items": { "$ref": "#/$defs/ResultArtifact" } }
       }
     },
     "OutputMarker": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "kind",
-        "testId",
-        "cacheKey"
-      ],
+      "required": ["kind", "testId", "cacheKey"],
       "properties": {
-        "kind": {
-          "const": "semio-test-output"
-        },
-        "testId": {
-          "type": "string"
-        },
-        "cacheKey": {
-          "type": "string"
-        }
+        "kind": { "const": "semio-test-output" },
+        "testId": { "type": "string" },
+        "cacheKey": { "type": "string" },
+        "runId": { "type": "string" },
+        "agentId": { "type": "string" },
+        "retention": { "$ref": "#/$defs/RetentionClass" }
       }
     },
     "DependencyBaselineEntry": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "ecosystem",
-        "name",
-        "version",
-        "kinds",
-        "users"
-      ],
+      "required": ["ecosystem", "name", "version", "kinds", "users"],
       "properties": {
-        "ecosystem": {
-          "enum": [
-            "rust",
-            "js",
-            "go",
-            "python",
-            "dotnet"
-          ]
-        },
-        "name": {
-          "type": "string"
-        },
-        "version": {
-          "type": "string"
-        },
+        "ecosystem": { "enum": ["rust", "js", "go", "python", "dotnet", "native"] },
+        "name": { "type": "string" },
+        "version": { "type": "string" },
         "kinds": {
           "type": "array",
-          "items": {
-            "enum": [
-              "production-runtime",
-              "production-build",
-              "repository-tooling",
-              "test-runner",
-              "test-oracle",
-              "runtime",
-              "build",
-              "test",
-              "tooling"
-            ]
-          }
+          "items": { "enum": ["production-runtime", "production-build", "repository-tooling", "test-runner", "test-oracle", "test-probe"] }
         },
-        "users": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "productionReachable": {
-          "type": "boolean"
-        },
-        "oracleIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "capabilities": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
+        "users": { "type": "array", "items": { "type": "string" } },
+        "productionReachable": { "type": "boolean" },
+        "oracleIds": { "type": "array", "items": { "type": "string" } },
+        "probeIds": { "type": "array", "items": { "type": "string" } },
+        "capabilities": { "type": "array", "items": { "type": "string" } }
       }
     },
-    "MutationVectorScenario": {
-      "type": "object",
-      "description": "🧪️ One canonical projected scenario identity. The directory name is the taxonomy-rendered semantic directory, not an alias for the current source basename.",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "directoryName"
-      ],
-      "properties": {
-        "id": {
-          "type": "string",
-          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
-        },
-        "directoryName": {
-          "type": "string",
-          "pattern": "^🧪️[a-z0-9]+(?:-[a-z0-9]+)*$"
-        }
-      }
+    "CoverageDimension": {
+      "description": "📈️ Every dimension the release gate reads. A dimension that is not listed here cannot be gated, and a gate that reads nothing else cannot be satisfied by an aggregate.",
+      "enum": [
+        "runtimeMutationCoverage",
+        "subsetOwnershipCoverage",
+        "externalOracleCoverage",
+        "oracleCapabilityCoverage",
+        "productionBridgeCoverage",
+        "fixtureClassCoverage",
+        "fixtureProvenanceCoverage",
+        "expectedOutcomeCoverage",
+        "inverseCoverage",
+        "metamorphicCoverage",
+        "comparisonMetricCoverage",
+        "determinismCoverage",
+        "implementationCoverage",
+        "platformCoverage",
+        "fixtureReproducibilityCoverage",
+        "dependencyIsolationCoverage"
+      ]
     },
-    "MutationVector": {
+    "CoverageRow": {
       "type": "object",
-      "description": "🧬️ One physical mutation directory and its complete projected scenario bundle registry. This is independent of the runtime capability vocabulary in kinds.",
       "additionalProperties": false,
-      "required": [
-        "mutationId",
-        "sourceMutationDirectoryName",
-        "mutationDirectoryName",
-        "scenarios"
-      ],
+      "description": "📊️ One report row. The key is the FULL coordinate; sharding or reporting at artifact level is what this shape exists to prevent.",
+      "required": ["baselineSha", "artifact", "standard", "subset", "mutation", "outcome", "fixture", "oracle", "probes", "implementation", "platform", "comparisonProfile", "status"],
       "properties": {
-        "mutationId": {
-          "type": "string",
-          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
-        },
-        "sourceMutationDirectoryName": {
-          "type": "string",
-          "minLength": 1
-        },
-        "mutationDirectoryName": {
-          "type": "string",
-          "minLength": 1
-        },
-        "scenarios": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/MutationVectorScenario"
-          },
-          "minItems": 1,
-          "uniqueItems": true
-        }
-      }
-    },
-    "MutationCatalog": {
-      "type": "object",
-      "description": "🦠️ The complete mutation vocabulary an owner declares for one artifact. The completeness gate holds a feature tagged @mutations-<id> against this list: every kind needs a mutate-<kind> and an inverse-<kind> scenario, so exhaustive coverage is arithmetic rather than a claim.",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "capability",
-        "standardDirectoryName",
-        "subsetDirectoryName",
-        "kinds",
-        "vectors"
-      ],
-      "properties": {
-        "id": {
-          "type": "string",
-          "minLength": 1
-        },
-        "capability": {
-          "type": "string",
-          "minLength": 1
-        },
-        "standardDirectoryName": {
-          "type": "string",
-          "pattern": "^🔖️.+$"
-        },
-        "subsetDirectoryName": {
-          "type": "string",
-          "pattern": "^✳️.+$"
-        },
-        "kinds": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "minItems": 1,
-          "uniqueItems": true
-        },
-        "vectors": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/MutationVector"
-          },
-          "uniqueItems": true
-        },
-        "deferredKinds": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "uniqueItems": true,
-          "description": "🚧️ Kinds knowingly left uncovered. Recorded so the gap stays visible instead of reading as green."
-        }
+        "baselineSha": { "type": "string" },
+        "artifact": { "type": "string" },
+        "standard": { "type": "string" },
+        "subset": { "type": "string" },
+        "mutation": { "type": "string" },
+        "outcome": { "$ref": "#/$defs/MutationOutcomeClass" },
+        "fixture": { "type": "string" },
+        "fixtureClass": { "$ref": "#/$defs/FixtureClass" },
+        "oracle": { "type": "string" },
+        "oracleKind": { "$ref": "#/$defs/OracleKind" },
+        "oracleEngineFamily": { "type": "string" },
+        "subjectEngineFamily": { "type": "string" },
+        "probes": { "type": "array", "items": { "type": "string" } },
+        "implementation": { "$ref": "#/$defs/Implementation" },
+        "platform": { "$ref": "#/$defs/Platform" },
+        "comparisonProfile": { "type": "string" },
+        "toleranceOverridden": { "type": "boolean" },
+        "status": { "enum": ["passed", "failed", "errored", "missing"] },
+        "notes": { "type": "string" }
       }
     }
   },
   "oneOf": [
-    {
-      "$ref": "#/$defs/TestCasePlan"
-    },
-    {
-      "$ref": "#/$defs/TestResult"
-    },
-    {
-      "$ref": "#/$defs/OracleRegistry"
-    }
+    { "$ref": "#/$defs/TestCasePlan" },
+    { "$ref": "#/$defs/TestResult" },
+    { "$ref": "#/$defs/OracleRegistry" },
+    { "$ref": "#/$defs/MutationManifest" },
+    { "$ref": "#/$defs/RuntimeMutationInventory" },
+    { "$ref": "#/$defs/FixtureManifest" },
+    { "$ref": "#/$defs/ProbeReport" },
+    { "$ref": "#/$defs/RunManifest" },
+    { "$ref": "#/$defs/RunLease" }
   ]
 }

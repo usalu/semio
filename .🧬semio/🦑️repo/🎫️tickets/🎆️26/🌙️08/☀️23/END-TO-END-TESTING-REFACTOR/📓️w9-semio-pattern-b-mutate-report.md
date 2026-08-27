@@ -102,7 +102,7 @@ The design landed here for Pattern-B, verified against `text` and to be mirrored
   point this ticket added — then projects the resulting snapshot to `protocol::Json` via a small
   hand-written per-subset encoder (forward direction only) for comparison under `ordered-json-v1`.
 - `@no-oracle-semio-<subset>-mutation-semantics` decision, `substitutes: ["specification-vectors",
-  "metamorphic-laws"]`, in a new `✳️<subset>/🧪️oracle/🔣️component.json` (`oracles: []`,
+  "metamorphic-laws"]`, in a new `✳️<subset>/🧪️oracle/🔣️.json` (`oracles: []`,
   `mutationCatalogs` carrying the subset's `KINDS`).
 - `@mode-conformance` for `mutate-<kind>` and `@mode-property` for `inverse-<kind>` — never
   `@mode-differential`. No identity-round-trip scenario: `store::ArtifactPack`/`ArtifactDsl` are
@@ -133,7 +133,7 @@ The design landed here for Pattern-B, verified against `text` and to be mirrored
   errors.
 
 Files added:
-- `✳️text/🧪️oracle/🔣️component.json`
+- `✳️text/🧪️oracle/🔣️.json`
 - `🧿️semio/🧪️tests/mutate-semio-text/component.feature`
 - `🧿️semio/🧪️tests/mutate-semio-text/🦀️component.rs`
 
@@ -162,7 +162,7 @@ Files touched/added:
   entries, enum order) right after the enum's closing brace, plus a `kinds_match_the_enum_and_the_
   catalog` test inside the existing `mod tests` block (asserts `KINDS.len() == SemioBrepMutation::
   kinds().len()`, per-index kind spelling, and every entry present in the new oracle manifest text).
-- `✳️brep/🧪️oracle/🔣️component.json` (new): `oracles: []`, one `noOracleDecisions` entry
+- `✳️brep/🧪️oracle/🔣️.json` (new): `oracles: []`, one `noOracleDecisions` entry
   `semio-brep-mutation-semantics` (`capabilities: ["semio-v1-brep-mutate"]`, `substitutes:
   ["specification-vectors", "metamorphic-laws"]`), one `mutationCatalogs` entry `semio-v1-brep`
   listing all 13 kinds in enum order. Same `$schema` relative-path depth as text's (verified: both
@@ -257,7 +257,7 @@ Files added/edited:
   — added `pub const KINDS: &[&str]` (11 entries, enum order) after the enum, and a
   `kinds_match_the_enum_and_the_catalog` test inside the existing `mod tests` block, matching
   text's shape verbatim (renamed).
-- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧪️oracle/🔣️component.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧪️oracle/🔣️.json`
   (new) — `oracles: []`, one `noOracleDecisions` entry `id: "semio-graph-mutation-semantics"`,
   `capabilities: ["semio-v1-graph-mutate"]`, `substitutes: ["specification-vectors",
   "metamorphic-laws"]`; one `mutationCatalogs` entry `id: "semio-v1-graph"`, `capability:
@@ -319,7 +319,7 @@ Files added/edited:
   inside `//#region 🔖️Mutations` (before its `//#endregion`), and a `kinds_match_the_enum_and_the_
   catalog` test inside the existing `mod tests` block (new `//#region 🧪️KindsCatalog` before the
   module's closing brace), matching text's shape verbatim (renamed).
-- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧪️oracle/🔣️component.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧪️oracle/🔣️.json`
   (new; `🧪️oracle/` directory did not exist yet for this subset, created it) — `oracles: []`, one
   `noOracleDecisions` entry `id: "semio-mesh-mutation-semantics"`, `capabilities:
   ["semio-v1-mesh-mutate"]`, `substitutes: ["specification-vectors", "metamorphic-laws"]`; one
@@ -406,7 +406,7 @@ Files touched:
   — added `pub const KINDS: &[&str]` (8 entries, enum order) after the `SemioTableMutation` enum,
   and a `kinds_match_the_enum_and_the_catalog` test inside `mod tests` (mirrors text's verbatim,
   renamed). `apply_semio_table_mutation` and the enum itself already existed from TASK 1.
-- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧪️oracle/🔣️component.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧪️oracle/🔣️.json`
   (new) — `oracles: []`, `noOracleDecisions: [semio-table-mutation-semantics]`, `mutationCatalogs:
   [semio-v1-table]` with the 8 kinds in enum order.
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-table/component.feature` (new) —
@@ -527,7 +527,7 @@ Files added/edited:
   `decode_kit_mutation_json`.
 - `✳️kit/🧬️schema/📸️snapshot/🦀️component.rs` — added `decode_kit_snapshot_json`,
   `encode_kit_snapshot_json`.
-- `✳️kit/🧪️oracle/🔣️component.json` (new).
+- `✳️kit/🧪️oracle/🔣️.json` (new).
 - `🧿️semio/🧪️tests/mutate-semio-kit/component.feature` (new).
 - `🧿️semio/🧪️tests/mutate-semio-kit/🦀️component.rs` (new).
 
@@ -640,7 +640,7 @@ Files touched:
   brace, and a `kinds_match_the_enum_and_the_catalog` test inside the existing `mod tests` block,
   matching text's shape verbatim (renamed). `apply_semio_object_mutation` already existed from an
   earlier pass in this ticket.
-- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🧪️oracle/🔣️component.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🧪️oracle/🔣️.json`
   (new) — `oracles: []`, one `noOracleDecisions` entry `id: "semio-object-mutation-semantics"`,
   `capabilities: ["semio-v1-object-mutate"]`, `substitutes: ["specification-vectors",
   "metamorphic-laws"]`; one `mutationCatalogs` entry `id: "semio-v1-object"`, `capability:

@@ -1137,9 +1137,9 @@ impl MountedState {
         if budget.fuel == 0 || budget.deadline_ms == 0 || self.outcome.is_some() {
             return JobStep::Running(None);
         }
-        let now = semio_framework_job::default_now_ms();
-        let deadline = now.saturating_add(u64::from(budget.deadline_ms).min(7));
-        let mut context = StepContext::new(self.identity.operation, self.identity.generation, StepBudget::new(budget.fuel.min(1), deadline), self.cancel.clone(), semio_framework_job::default_now_ms, &mut self.preview_sequence);
+        let Some(now) = semio_framework_job::default_now_us() else { return JobStep::Running(None) };
+        let Some(deadline) = now.checked_add(u64::from(budget.deadline_ms).min(7) * 1_000) else { return JobStep::Running(None) };
+        let mut context = StepContext::new(self.identity.operation, self.identity.generation, StepBudget::new(budget.fuel.min(1), deadline), self.cancel.clone(), semio_framework_job::default_now_us, &mut self.preview_sequence);
         if context.should_yield() {
             return JobStep::Running(None);
         }

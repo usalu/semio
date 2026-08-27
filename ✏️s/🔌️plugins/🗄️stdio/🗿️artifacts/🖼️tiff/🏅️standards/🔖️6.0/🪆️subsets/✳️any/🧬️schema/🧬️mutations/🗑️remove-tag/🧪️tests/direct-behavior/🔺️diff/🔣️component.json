@@ -1,0 +1,16 @@
+{
+  "ifds": {
+    "modified": [
+      {
+        "diff": {
+          "entries": {
+            "removed": [
+              305
+            ]
+          }
+        },
+        "index": 0
+      }
+    ]
+  }
+}

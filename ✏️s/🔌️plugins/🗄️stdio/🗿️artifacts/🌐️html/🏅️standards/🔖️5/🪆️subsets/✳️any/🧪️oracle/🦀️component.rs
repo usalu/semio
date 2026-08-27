@@ -26,7 +26,7 @@
 //!    this case touches) cannot round-trip through this oracle. Recorded, not worked around — the
 //!    real fixture only ever carries the bare `<!doctype html>` this loses nothing on.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself.
 
 use semio_repo_test_host::Json;

@@ -584,7 +584,7 @@ thread_local! {
 
 #[cfg(all(not(target_arch = "wasm32"), not(test)))]
 fn submit_clipboard_io(job: ui_wgpu::wgpu::ClipboardIoJob, complete: impl FnOnce(Result<Option<String>, String>) + 'static) {
-    use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
+    use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US};
     let mut complete = Some(Box::new(complete) as Box<dyn FnOnce(Result<Option<String>, String>)>);
     let mut job = Some(job);
     MOUNTED_CLIPBOARD_IO.with(|registry| {
@@ -602,8 +602,8 @@ fn submit_clipboard_io(job: ui_wgpu::wgpu::ClipboardIoJob, complete: impl FnOnce
             operation: allocate_operation_id(),
             generation: Generation(generation),
             cancel: root_cancel_token(),
-            config: BatchDriveConfig { site: "renderer_clipboard_io", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_ms: INTERACTIVE_LANE_WALL_MS },
-            now_ms: semio_framework_job::default_now_ms,
+            config: BatchDriveConfig { site: "renderer_clipboard_io", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_us: INTERACTIVE_LANE_WALL_US },
+            now_us: semio_framework_job::default_now_us,
         };
         match semio_framework_job::WorkerJobSession::try_new(job.take().expect("clipboard job owner"), params) {
             Ok(session) => slot.mounted = Some(MountedClipboardIo { session: Some(session), rejected: None, ticket: None, complete: complete.take() }),
@@ -1146,20 +1146,20 @@ impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
 
 fn drive_mounted_layout_text_one(engine: &mut ui_wgpu::wgpu::Ui, window_id: &str, atlas: &mut ui_wgpu::wgpu::FontAtlas) -> ui_wgpu::wgpu::UiLayoutStep {
     let generation = engine.tree_revision(window_id).unwrap_or(1);
-    let now = semio_framework_job::default_now_ms();
+    let now = semio_framework_job::default_now_us();
     let mut preview_sequence = 0;
     let mut context = semio_framework_job::StepContext::new(
         semio_framework_job::OperationId(generation),
         semio_framework_job::Generation(generation),
-        semio_framework_job::StepBudget::new(1, now.saturating_add(1)),
+        now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, 1000)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
         semio_framework_job::CancelToken::root_now(),
-        semio_framework_job::default_now_ms,
+        semio_framework_job::default_now_us,
         &mut preview_sequence,
     );
     let pool = crate::renderer_worker_pool();
     let progress = engine.step_layouts(&pool, atlas, &mut context);
     #[cfg(target_arch = "wasm32")]
-    let _ = pool.pump(now);
+    if let Some(now) = now { let _ = pool.pump(now / 1_000); }
     progress
 }
 
@@ -1281,13 +1281,13 @@ pub fn render_ui_document_step(
     };
     let generation = header.generation;
     let mut preview_sequence = 0;
-    let now = semio_framework_job::default_now_ms();
+    let now = semio_framework_job::default_now_us();
     let mut step = semio_framework_job::StepContext::new(
         semio_framework_job::OperationId(generation),
         semio_framework_job::Generation(generation),
-        semio_framework_job::StepBudget::new(1, now.saturating_add(2)),
+        now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, 2000)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
         semio_framework_job::CancelToken::root_now(),
-        semio_framework_job::default_now_ms,
+        semio_framework_job::default_now_us,
         &mut preview_sequence,
     );
     let viewport_w = bounds.w.max(1.0);
@@ -1373,13 +1373,13 @@ pub fn render_ui_document(
     let Ok(header) = document.header() else { return };
     let generation = header.generation;
     let mut preview_sequence = 0;
-    let now = semio_framework_job::default_now_ms();
+    let now = semio_framework_job::default_now_us();
     let mut step = semio_framework_job::StepContext::new(
         semio_framework_job::OperationId(generation),
         semio_framework_job::Generation(generation),
-        semio_framework_job::StepBudget::new(1, now.saturating_add(2)),
+        now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, 2000)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
         semio_framework_job::CancelToken::root_now(),
-        semio_framework_job::default_now_ms,
+        semio_framework_job::default_now_us,
         &mut preview_sequence,
     );
     let theme = *ctx.theme;

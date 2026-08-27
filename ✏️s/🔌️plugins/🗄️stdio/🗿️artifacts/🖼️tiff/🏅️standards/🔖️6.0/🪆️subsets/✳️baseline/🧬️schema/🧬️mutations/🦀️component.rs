@@ -53,7 +53,7 @@
 //! byte-observable, because `TileWidth`/`TileLength` are outside `CORE_STRIP_TAGS` and are carried
 //! verbatim.
 //!
-//! The catalog `tiff-6-0-baseline` (`../../🧪️oracle/🔣️component.json`) is therefore declared and
+//! The catalog `tiff-6-0-baseline` (`../../🧪️oracle/🔣️.json`) is therefore declared and
 //! claimed by `mutate-tiff-6-0-baseline`, and that case measures this vocabulary where its axes
 //! actually live: on the DECODED SNAPSHOT, against [`check_tiff_baseline_conformance`]'s verdict.
 //! Each kind must move its own axis and raise its own diagnostic; each inverse must restore the
@@ -118,7 +118,7 @@ pub enum TiffBaselineMutation {
 }
 
 /// 🏷️ Kebab-case spelling of every `TiffBaselineMutation` variant, in declaration order — the
-/// vocabulary the `tiff-6-0-baseline` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares
+/// vocabulary the `tiff-6-0-baseline` mutation catalog (`../../🧪️oracle/🔣️.json`) declares
 /// and `mutate-tiff-6-0-baseline` measures itself against.
 /// `kinds_match_enum_variants_in_declaration_order` below keeps the two honest against the enum,
 /// and `kinds_match_the_committed_catalog` against the manifest.
@@ -392,7 +392,7 @@ mod tests {
     /// until the completeness gate learned to see an unregistered one.
     #[test]
     fn kinds_match_the_committed_catalog() {
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

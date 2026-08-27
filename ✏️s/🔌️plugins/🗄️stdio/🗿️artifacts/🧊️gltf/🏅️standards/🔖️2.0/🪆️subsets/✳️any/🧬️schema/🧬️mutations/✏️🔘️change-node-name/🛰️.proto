@@ -1,0 +1,25 @@
+syntax = "proto3";
+package stdio.gltf.mutation;
+
+message GltfChangeNodeNameAbsentV1 {}
+message GltfChangeNodeNameOptionalStringV1 {
+  oneof state {
+    string present = 1;
+    GltfChangeNodeNameAbsentV1 absent = 2;
+  }
+}
+message GltfChangeNodeNameApplyV1 {
+  optional uint32 node = 1;
+  GltfChangeNodeNameOptionalStringV1 value = 2;
+}
+message GltfChangeNodeNameRestoreV1 {
+  optional uint32 node = 1;
+  GltfChangeNodeNameOptionalStringV1 before = 2;
+  GltfChangeNodeNameOptionalStringV1 after = 3;
+}
+message GltfChangeNodeNameMutationV1 {
+  oneof phase {
+    GltfChangeNodeNameApplyV1 apply = 1;
+    GltfChangeNodeNameRestoreV1 restore = 2;
+  }
+}

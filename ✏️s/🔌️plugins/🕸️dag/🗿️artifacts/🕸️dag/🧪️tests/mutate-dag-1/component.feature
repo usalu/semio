@@ -7,7 +7,7 @@ Feature: Apply every typed DAG mutation to the real committed pipeline and to it
   `.dag.dsl.semio`, and no graph format holds an opinion about an edge whose endpoints are named
   PORTS owned by two nodes, so no reference library is registered — recorded as the
   `dag-1-port-directed-graph-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`.
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`.
 
   ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party
   LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever

@@ -1331,6 +1331,14 @@
       }
     },
     {
+      "name": "⚖️gate🏪️store📖️canonical-reader-and-sealer",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-os-kernel:test --args=canonical_edit::",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 403.1 }
+    },
+    {
       "name": "⚖️gate🏪️store🧩️member-publication",
       "type": "node-terminal",
       "request": "launch",
@@ -1356,6 +1364,14 @@
       "command": "bun x nx run @semio-tech/framework-os-kernel:test --args=retained_latest_wins_cold_rebase_",
       "cwd": "${workspaceFolder}",
       "presentation": { "group": "4_gate", "order": 404.2 }
+    },
+    {
+      "name": "⚖️gate🏪️store👥️presence-owned-close",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-os-kernel:test --args=retained_presence_",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 404.3 }
     },
     {
       "name": "⚖️gate🔌️plugin🦀️check",
@@ -1407,6 +1423,97 @@
       "presentation": { "group": "4_gate", "order": 407.2 }
     },
     {
+      "name": "⚖️gate🧵️job⏱️microseconds",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-job-rs:test --args='-- microsecond_'",
+      "cwd": "${workspaceFolder}",
+      "env": { "SEMIO_TEST_ARTIFACT_DIR": "${env:SEMIO_TEST_ARTIFACT_DIR}" },
+      "presentation": { "group": "4_gate", "order": 407.3 }
+    },
+    {
+      "name": "⚖️gate⏱️trace🪪️clock-authority",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-trace-rs:test --args='-- microsecond_'",
+      "cwd": "${workspaceFolder}",
+      "env": { "SEMIO_TEST_ARTIFACT_DIR": "${env:SEMIO_TEST_ARTIFACT_DIR}" },
+      "presentation": { "group": "4_gate", "order": 407.31 }
+    },
+    {
+      "name": "⚖️gate⏳️async🦀️check",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-async-rs:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 407.32 }
+    },
+    {
+      "name": "⚖️gate⏳️async🌐️clock-check",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-async-rs:check --args='--lib --target wasm32-unknown-unknown'",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 407.33 }
+    },
+    {
+      "name": "⚖️gate⏳️async🔁️cooperative-maintenance",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-async-rs:test --args='--lib cooperative_maintenance_ -- --nocapture'",
+      "cwd": "${workspaceFolder}",
+      "env": { "SEMIO_TEST_ARTIFACT_DIR": "${env:SEMIO_TEST_ARTIFACT_DIR}" },
+      "presentation": { "group": "4_gate", "order": 407.34 }
+    },
+    {
+      "name": "⚖️gate🔌️plugin⏱️registered-500us",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-plugin:test --args=microsecond_registered_",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 407.4 }
+    },
+    {
+      "name": "⚖️gate🖥️host🦀️check",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-plugin-host:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 407.5 }
+    },
+    {
+      "name": "⚖️gate🖥️host🧪️test",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-plugin-host:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 407.6 }
+    },
+    {
+      "name": "⚖️gate🖥️host⏱️wasi-clock",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-plugin-host:test --args=microsecond_owned_wasi_clock_",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 407.7 }
+    },
+    {
+      "name": "⚖️gate🌊️flow🌐️startup",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run semio-framework-os-flow-core:test-browser",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 407.8 }
+    },
+    {
+      "name": "⚖️gate🌊️flow⏱️consumed-clock",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run semio-framework-os-flow-core:test-browser-clock",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 407.81 }
+    },
+    {
       "name": "⚖️gate📐️cad🪪️activation",
       "type": "node-terminal",
       "request": "launch",
@@ -1452,6 +1559,14 @@
       "command": "bun x nx run @semio-tech/framework-replication-rs:test-source",
       "cwd": "${workspaceFolder}",
       "presentation": { "group": "4_gate", "order": 408.3 }
+    },
+    {
+      "name": "⚖️gate🗂️ordered🔢️numeric",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/value-numeric-index:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 408.31 }
     },
     {
       "name": "⚖️gate🗂️ordered🧪️native",
@@ -1524,6 +1639,54 @@
       "command": "bun x nx run semio-framework-os-flow-core:declarations",
       "cwd": "${workspaceFolder}",
       "presentation": { "group": "4_gate", "order": 408.93 }
+    },
+    {
+      "name": "⚖️gate🧹️clean🛡️active-ticket",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/repo-lib:test --args='-t \"active ticket clean protection\"'",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 408.94 }
+    },
+    {
+      "name": "⚖️gate🕹️local-interaction🧬️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-replication-rs:test-local-interaction-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 408.95 }
+    },
+    {
+      "name": "⚖️gate🕹️local-interaction🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-replication-rs:test-local-interaction-native",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 408.96 }
+    },
+    {
+      "name": "⚖️gate🗣️dsl📤️exports-source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/dsl-derive-rs:test-exports-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 408.97 }
+    },
+    {
+      "name": "⚖️gate🗣️dsl📤️exports-native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/dsl-derive-rs:test-exports",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 408.98 }
+    },
+    {
+      "name": "⚖️gate🕹️local-interaction🔌️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-plugin:test --args=local_interaction_",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 408.99 }
     },
     {
       "name": "⚖️gate🦀️nextest🎯️filters",
@@ -1611,6 +1774,116 @@
       "presentation": {
         "group": "4_gate",
         "order": 410.05
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️artifact-support",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-artifact-support --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.06
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️historical-package-owner-identity",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-historical-package-owner-identity --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.07
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️rust-physical-reference-context",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-rust-physical-reference-context --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.08
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️cli-cancellation",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-taxonomy-cli-cancellation --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.09
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️inventory-artifact-shards",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-inventory-artifact-shards --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.1
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️root-script-compiler",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-root-script-compiler --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.11
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️json-reference-owner-lookup",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-json-reference-owner-lookup --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.12
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️cargo-discovery-exclusions",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-cargo-discovery-exclusions --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.13
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️nested-cargo-collision-authority",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-nested-cargo-collision-authority --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.14
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️registry-import-language",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-registry-import-language --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.15
       }
     },
     {
@@ -2061,6 +2334,14 @@
       }
     },
     {
+      "name": "📦️build🧩️puzzle🌉️board",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/puzzle-plugin:wasm",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_build", "order": 122 }
+    },
+    {
       "name": "📦️build🌐️gis📍️2d",
       "type": "node-terminal",
       "request": "launch",
@@ -2427,12 +2708,28 @@
       "name": "📦️preview🤖️wgpu-frame-worker",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-renderer-wgpu:preview-generated",
+      "command": "bun nx run @semio-tech/framework-os:preview-generated",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
         "order": 206.14
       }
+    },
+    {
+      "name": "📦️generate🧊️wgpu📦️artifacts",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os:generate-wgpu",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_build", "order": 206.15 }
+    },
+    {
+      "name": "📦️verify🧊️wgpu📦️artifacts",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os:check-wgpu",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_build", "order": 206.16 }
     },
     {
       "name": "📦️generate🧩️jco📚️adapter",

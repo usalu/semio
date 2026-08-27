@@ -8,7 +8,7 @@ Subset: `🎥️mp4` standard `🔖️isobmff` subset `✳️any`. Reference: `m
   — added `pub const KINDS: &[&str]` (10 kebab-case entries) and
   `kinds_const_matches_enum_variants_in_declaration_order` test. Everything else in this file is
   unchanged.
-- `.../🧪️oracle/🔣️component.json` (new) — oracle registration (`mp4-isobmff-mutate`, package `mp4`
+- `.../🧪️oracle/🔣️.json` (new) — oracle registration (`mp4-isobmff-mutate`, package `mp4`
   0.14), mutation catalog (`mp4-isobmff-any`, 10 kinds), and a new `semantic-mp4-mutate-v1`
   comparison profile (this subset's own, not the shared stdio manifest — no shared entry references
   `mp4` at all).
@@ -59,7 +59,7 @@ genuinely non-zero — confirmed with `ffprobe`). Committed at
 
 ## Comparison profile
 
-`semantic-mp4-mutate-v1` (this subset's own, in its own `🧪️oracle/🔣️component.json`, not the shared
+`semantic-mp4-mutate-v1` (this subset's own, in its own `🧪️oracle/🔣️.json`, not the shared
 stdio manifest): `ftyp`, per-track geometry/timescale, an SPS/PPS digest, and every sample's
 duration/composition-time-offset/sync-flag/payload digest — arrays order-significant, no tolerance
 (the container level is lossless, so this is exact structural identity, not the lossy raster

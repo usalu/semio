@@ -18,7 +18,7 @@
 //! `blocklists_agree_with_the_subset_conformance_checker` below holds the two against each other so
 //! they cannot drift apart silently.
 //!
-//! @see ../../🧪️oracle/🔣️component.json — the catalog `KINDS` below must match exactly.
+//! @see ../../🧪️oracle/🔣️.json — the catalog `KINDS` below must match exactly.
 //! @see ../../../../../../🧪️tests/mutate-svg-1-1-basic/component.feature — the case that exercises it.
 
 use crate::artifacts::svg::schema::diff::{diff_at_path, diff_set_snapshot, SvgAttrAdded, SvgAttrModified, SvgAttributesDiff, SvgChildAdded, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
@@ -97,7 +97,7 @@ pub enum SvgBasicMutation {
 }
 
 /// 📇️ Kebab-case spelling of every `SvgBasicMutation` variant, in declaration order — the exact
-/// `kinds` list `../../🧪️oracle/🔣️component.json`'s `mutationCatalogs` entry declares.
+/// `kinds` list `../../🧪️oracle/🔣️.json`'s `mutationCatalogs` entry declares.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "stamp-base-profile", "insert-basic-element", "remove-element", "set-basic-attribute", "set-clip-path-reference", "insert-clip-path-shape", "set-text", "set-view-box", "set-transform"];
 
 crate::impl_serde_op_codec!(SvgBasicMutation, "svg-basic-mutation");
@@ -395,7 +395,7 @@ mod tests {
         let spelled: Vec<&'static str> = every.iter().map(kind_of).collect();
         assert_eq!(spelled, KINDS.to_vec(), "KINDS must spell every variant, in declaration order");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "the oracle manifest's catalog does not declare {kind:?}");
         }

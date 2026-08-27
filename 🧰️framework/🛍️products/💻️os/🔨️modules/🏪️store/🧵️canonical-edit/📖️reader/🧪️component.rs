@@ -120,7 +120,7 @@ fn canonical_reader_rebound_root_rejected_before_borrowed_reference_use() {
     let (mut reader, _, lifetime) = make_reader();
     for _ in 0..100 { reader.encode_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 7 }, &mut [0; 7]).unwrap(); }
     let original = reader.owned.root.replace(Arc::new(fixture().0)).unwrap();
-    assert_eq!(reader.encode_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 7 }, &mut [0; 7]).unwrap_err(), "canonical-edit.borrowed-root-rebound");
+    assert_eq!(reader.encode_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 7 }, &mut [0; 7]).unwrap_err(), ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason: "canonical-edit.borrowed-root-rebound".into() });
     reader.owned.root = Some(original);
     close(&mut reader);
     assert_eq!(lifetime.root_drops.load(Ordering::SeqCst), 1);
@@ -153,3 +153,161 @@ fn canonical_reader_unclosed_drop_preserves_owned_root_and_does_not_double_panic
     assert_eq!(lifetime.root_drops.load(Ordering::SeqCst), 0);
 }
 //#endregion 🧪️ReaderLifecycle
+
+//#region ⚠️ErrorProgress
+struct ErrorLeaf;
+struct ErrorRoot { text: String, borrowed: bool, error: ErrorLeaf }
+struct ErrorRootRetirement(Arc<std::sync::atomic::AtomicUsize>);
+
+impl ArtifactCanonicalJson for ErrorLeaf {
+    fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String> { Err("canonical-reader.fixture-child".into()) }
+}
+
+impl ArtifactCanonicalJson for ErrorRoot {
+    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String> {
+        match path { [] => Ok(ArtifactCanonicalJsonNode::Array(2)), [0] => Ok(ArtifactCanonicalJsonNode::String(&self.text)), _ => Err("canonical-reader.fixture-child".into()) }
+    }
+    fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String> {
+        Ok(self.borrowed.then(|| ArtifactCanonicalJsonValue::Array(ArtifactCanonicalJsonArray::new([
+            ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::String(&self.text)), ArtifactCanonicalJsonValue::Source(&self.error),
+        ].into_iter()))))
+    }
+}
+
+impl SnapshotRetirementFactory<ErrorRoot> for ErrorRootRetirement {
+    fn retire(&self, root: Arc<ErrorRoot>) -> Box<dyn ErasedSnapshotRetirement> {
+        match Arc::into_inner(root) {
+            Some(root) => { self.0.fetch_add(1, Ordering::SeqCst); Box::new(ArtifactStoreStringRetirement::new(root.text)) }
+            None => Box::new(EmptyRetirement),
+        }
+    }
+}
+
+impl ArtifactOwnedValueRetirementFactory<ErrorRoot> for ErrorRootRetirement {
+    fn retire_owned(&self, root: ErrorRoot) -> Box<dyn ErasedSnapshotRetirement> {
+        self.0.fetch_add(1, Ordering::SeqCst);
+        Box::new(ArtifactStoreStringRetirement::new(root.text))
+    }
+}
+
+#[test]
+fn canonical_reader_error_after_partial_unicode_output_accounts_every_initialized_byte() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️canonical-error-progress.json")).unwrap();
+    let oracle = serde_json::to_string(&serde_json::json!([fixture["text"], null])).unwrap();
+    let prefix = oracle.strip_suffix("null]").unwrap().as_bytes();
+    assert_eq!(prefix, fixture["expectedPrefix"].as_str().unwrap().as_bytes());
+    assert_eq!(prefix.len() as u64, fixture["expectedBytes"].as_u64().unwrap());
+    for mode in fixture["modes"].as_array().unwrap() {
+        for bytes in fixture["grants"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize).filter(|bytes| *bytes != 0) {
+            let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            let root = ErrorRoot { text: fixture["text"].as_str().unwrap().into(), borrowed: mode == "borrowed", error: ErrorLeaf };
+            let mut reader = ArtifactCanonicalJsonReader::new(Arc::new(root), Arc::new(ErrorRootRetirement(count.clone())));
+            let sentinel = fixture["sentinel"].as_u64().unwrap() as u8;
+            let mut actual = Vec::new();
+            let mut failure = None;
+            let mut empty = [sentinel; 512];
+            assert_eq!(reader.encode_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 0 }, &mut empty).unwrap(), 0);
+            assert!(empty.iter().all(|byte| *byte == sentinel));
+            for _ in 0..128 {
+                let mut output = [sentinel; 512];
+                let result = reader.encode_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes }, &mut output);
+                let initialized = output.iter().position(|byte| *byte == sentinel).unwrap();
+                assert!(initialized <= bytes.min(256));
+                assert!(output[initialized..].iter().all(|byte| *byte == sentinel));
+                actual.extend_from_slice(&output[..initialized]);
+                match result { Ok(written) => assert_eq!(written, initialized), Err(error) => { assert_eq!(error.written_bytes, initialized); failure = Some(error.reason); break; } }
+            }
+            let reported = reader.completed_bytes();
+            let complete = reader.is_complete();
+            assert!(reader.take_root().is_none());
+            assert_eq!(reader.encode_chunk(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4096 }, &mut empty).unwrap(), 0);
+            assert!(empty.iter().all(|byte| *byte == sentinel));
+            reader.begin_close();
+            let mut retired = 0;
+            for _ in 0..256 {
+                match reader.close_step(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }).unwrap() {
+                    SnapshotRetirementStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1 && released_bytes <= 1); retired += released_bytes; }
+                    SnapshotRetirementStep::Complete => break,
+                    SnapshotRetirementStep::Blocked => panic!("failed reader must retain bounded close progress"),
+                }
+            }
+            assert!(reader.terminal_is_empty());
+            assert_eq!(failure.as_deref(), fixture["expectedError"].as_str());
+            assert_eq!(actual, prefix);
+            assert_eq!(reported, actual.len() as u64, "{mode}: grant{bytes} must include initialized bytes from its failed write");
+            assert_eq!(complete, fixture["expectedComplete"].as_bool().unwrap());
+            assert_eq!(count.load(Ordering::SeqCst) as u64, fixture["expectedRootRetirements"].as_u64().unwrap());
+            assert_eq!(retired as u64, fixture["expectedSnapshotBytes"].as_u64().unwrap());
+            eprintln!("[DEBUG] canonical reader failed mode={mode} grant={bytes} with all{reported} initialized prefix bytes owned and exact snapshot retirement={retired}");
+        }
+    }
+}
+
+#[test]
+fn canonical_reader_indexed_cursor_error_preserves_actual_chunk_prefix() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️canonical-error-progress.json")).unwrap();
+    for maximum in [1, 7, 256, 4096] {
+        let root = ErrorRoot { text: fixture["text"].as_str().unwrap().into(), borrowed: false, error: ErrorLeaf };
+        let mut cursor = ArtifactCanonicalJsonCursor::default();
+        let mut actual = Vec::new();
+        let mut failure = None;
+        for _ in 0..128 {
+            let mut output = [165; 512];
+            let result = cursor.encode_chunk(&root, &mut output[..maximum.min(512)]);
+            let written = match result { Ok(written) => written, Err(error) => { failure = Some(error.reason); error.written_bytes } };
+            assert!(written <= maximum.min(256));
+            assert!(output[written..].iter().all(|byte| *byte == 165));
+            actual.extend_from_slice(&output[..written]);
+            if failure.is_some() { break; }
+        }
+        assert_eq!(failure.as_deref(), fixture["expectedError"].as_str());
+        assert_eq!(actual, fixture["expectedPrefix"].as_str().unwrap().as_bytes());
+        assert!(!cursor.is_complete());
+        eprintln!("[DEBUG] indexed canonical cursor retained exact partial-error prefix bytes={} grant={maximum}", actual.len());
+    }
+}
+
+#[test]
+fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️canonical-error-progress.json")).unwrap();
+    for borrowed in [false, true] {
+        for maximum_bytes in [1, 7, 4096] {
+            let mut value: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️canonical-edit-sealer.json")).unwrap();
+            value["edit"]["forwards"] = serde_json::json!([]);
+            value["edit"]["inverse"] = serde_json::json!([]);
+            let mut oracle: Edit<serde_json::Value> = serde_json::from_value(value["edit"].take()).unwrap();
+            oracle.forwards.push(serde_json::json!([fixture["text"], null]));
+            let expected = serde_json::to_string(&oracle).unwrap();
+            let prefix = &expected.as_bytes()[..expected.find("null]").unwrap()];
+            let edit = Edit {
+                id: oracle.id, actor: oracle.actor, forwards: vec![ErrorRoot { text: fixture["text"].as_str().unwrap().into(), borrowed, error: ErrorLeaf }], inverse: Vec::new(),
+                mutation_meta: oracle.mutation_meta, description: oracle.description, coalesce_key: oracle.coalesce_key,
+                sequence_number: oracle.sequence_number, started_at: oracle.started_at, finished_at: oracle.finished_at,
+            };
+            let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            let authority = super::super::tests::authority();
+            let mut owner = authority.begin_one_item_seal(edit, Arc::new(17u64), Arc::new(ErrorRootRetirement(count.clone())), Arc::new(super::super::tests::FixtureSnapshotRetirement));
+            let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes };
+            let mut actual = Vec::new();
+            let mut failure = None;
+            for _ in 0..1024 {
+                let result = owner.advance(grant);
+                actual.extend_from_slice(owner.canonical_chunk());
+                if let Err(error) = result { failure = Some(error); break; }
+            }
+            assert_eq!(failure.as_deref(), fixture["expectedError"].as_str());
+            assert_eq!(actual, prefix);
+            assert_eq!(owner.checkpoint().completed_bytes, actual.len() as u64);
+            assert_eq!(owner.checkpoint().canonical_bytes, actual.len() as u64);
+            assert_eq!(owner.checkpoint().prefix_digest, { let mut hash = semio_framework_hash::Sha256::new(); hash.update(&actual); hash.finalize() });
+            assert!(owner.prepared().is_none() && owner.take_prepared().is_none());
+            assert_eq!(owner.advance(grant).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked);
+            owner.begin_close();
+            for _ in 0..100_000 { if owner.close_step(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }).unwrap() == SnapshotRetirementStep::Complete { break; } }
+            assert!(owner.terminal_is_empty());
+            assert_eq!(count.load(Ordering::SeqCst), 1);
+            eprintln!("[DEBUG] failed canonical sealer retained {} prefix bytes, no prepared authority, exact close borrowed={borrowed} grant={maximum_bytes}", actual.len());
+        }
+    }
+}
+//#endregion ⚠️ErrorProgress

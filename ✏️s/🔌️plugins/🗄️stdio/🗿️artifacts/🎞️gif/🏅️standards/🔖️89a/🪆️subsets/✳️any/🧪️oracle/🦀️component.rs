@@ -35,7 +35,7 @@
 //! The vocabulary is per SUBSET, not per artifact: 87a has no GCE/animation concept at all, so
 //! nothing here is shared with the peer 87a subset's own oracle.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`GifMutation::KINDS`).
 
 #[cfg(not(feature = "oracles"))]

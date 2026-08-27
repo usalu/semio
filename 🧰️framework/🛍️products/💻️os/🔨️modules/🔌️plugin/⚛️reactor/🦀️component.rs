@@ -55,6 +55,33 @@ use std::collections::{HashMap, VecDeque};
 
 const RECONCILE_STEP_OPPORTUNITY_LIMIT: u64 = 1_024;
 
+//#region 📬️ShellFaultFrame
+fn shell_fault_effect(instance: u32, fault: &semio_framework::Fault) -> semio_framework::kernel::Effect {
+    let fault = store::pack_rt::encode_wire_value(&dsl::to_dsl_value(fault).expect("shell diagnostic must serialize"));
+    let frame = protocol::AppFrame::Error { in_reply_to: None, fault, report: Vec::new() };
+    semio_framework::kernel::Effect::SendMessage {
+        target: semio_framework::kernel::MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) },
+        payload: semio_framework::io::resolve_ready(protocol::encode_app_frame(&frame)),
+    }
+}
+
+#[cfg(test)]
+mod shell_fault_frame_tests {
+    #[semio_framework_async_macros::async_test]
+    async fn shell_fault_frame_round_trips_the_language_neutral_diagnostic() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/📬️operation-continuation.json")).unwrap();
+        let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-render"), fixture["wire"]["fault"].as_str().unwrap());
+        let semio_framework::kernel::Effect::SendMessage { target, payload } = super::shell_fault_effect(7, &fault) else { panic!("shell diagnostic effect") };
+        assert!(matches!(target, semio_framework::kernel::MessageEndpoint::Shell { instance } if instance.0 == "7"));
+        let protocol::AppFrame::Error { in_reply_to, fault: bytes, report } = protocol::decode_app_frame(&payload).await.expect("shell diagnostic must use the app frame protocol") else { panic!("shell diagnostic error frame") };
+        assert_eq!(in_reply_to, None);
+        assert!(report.is_empty());
+        let decoded: semio_framework::Fault = dsl::from_dsl_value(store::pack_rt::decode_wire_value(&bytes).unwrap()).unwrap();
+        assert_eq!(serde_json::to_value(decoded).unwrap(), serde_json::to_value(fault).unwrap());
+    }
+}
+//#endregion 📬️ShellFaultFrame
+
 fn reconcile_step_opportunities(fuel: u64) -> usize {
     usize::try_from(fuel.min(RECONCILE_STEP_OPPORTUNITY_LIMIT)).unwrap_or(RECONCILE_STEP_OPPORTUNITY_LIMIT as usize).max(1)
 }
@@ -1165,7 +1192,7 @@ mod wit_bridge {
         PENDING_PATCHES.with(|pending| {
             pending.borrow_mut().close_step();
         });
-        let _ = crate::plugin_runtime::plugin_step_close_cleanup(runtime)?;
+        let close_cleanup_work = crate::plugin_runtime::plugin_step_close_cleanup(runtime)?;
         let _ = crate::plugin_runtime::plugin_step_live_cleanup(runtime)?;
         if let Some(surface) = PATCHES.with(patches::PatchTracker::take_deferred_ready) {
             if let Some(instance) = parse_surface_instance(surface.as_ref()) {
@@ -1602,7 +1629,7 @@ mod wit_bridge {
                         }
                     }
                 }
-                Err(fault) => effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: dsl::encode_fault_bytes(&fault) }),
+                Err(fault) => effects.push(shell_fault_effect(instance, &fault)),
             }
             // 🌳️ Deduped per instance — several intents on the same surface this turn must not queue a
             // redundant re-render (the second `diff()` would return `None` anyway, but there is no reason
@@ -1613,10 +1640,7 @@ mod wit_bridge {
                     continue;
                 }
                 if surfaces.try_push(intent.surface.0.clone()).is_err() {
-                    effects.push(Effect::SendMessage {
-                        target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) },
-                        payload: dsl::encode_fault_bytes(&semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "dirty render surface capacity exceeded")),
-                    });
+                    effects.push(shell_fault_effect(instance, &semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "dirty render surface capacity exceeded")));
                     break;
                 }
             }
@@ -1625,6 +1649,11 @@ mod wit_bridge {
                     .try_surface(instance, ui_contract::SurfaceId(surface))
                     .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
             }
+        }
+
+        let (continuation, typed_operation_work) = crate::plugin_runtime::plugin_continue_typed_operations(runtime).await?;
+        if let Some((instance, output)) = continuation {
+            route_exchange_output(instance, output, &mut effects);
         }
 
         // 👥️ M2 (ticket 26/08/17 `design-unified.md`): `now_ms` is read ONCE for both `record_peer`'s
@@ -1641,7 +1670,7 @@ mod wit_bridge {
                     }
                     Err(fault) => {
                         grant.cancel();
-                        effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: dsl::encode_fault_bytes(&fault) });
+                        effects.push(shell_fault_effect(instance, &fault));
                     }
                 },
                 Err(surface) => PATCHES.with(|patches| {
@@ -1665,7 +1694,7 @@ mod wit_bridge {
                         });
                     }
                 }
-                Err(fault) => effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: dsl::encode_fault_bytes(&fault) }),
+                Err(fault) => effects.push(shell_fault_effect(instance, &fault)),
             }
         }
         let reconcile_work = PATCHES.with(|patches| {
@@ -1692,10 +1721,7 @@ mod wit_bridge {
             more || patches.has_work() || PENDING_PATCHES.with(|pending| pending.borrow().has_unpublished())
         });
         if let Some((instance, message)) = PATCHES.with(patches::PatchTracker::take_render_fault) {
-            effects.push(Effect::SendMessage {
-                target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) },
-                payload: dsl::encode_fault_bytes(&semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-render"), message)),
-            });
+            effects.push(shell_fault_effect(instance, &semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-render"), message)));
         }
 
         // 🚫️async: E5 executor bridge (× 2) — `LocalExecutor::{run_until_idle,has_ready}` stay
@@ -1713,7 +1739,7 @@ mod wit_bridge {
         // executor may have fresh ready work by the time this returns — folded into `more_work` below
         // rather than requiring a second `run_until_idle` pass this turn (the next `poll` picks it up).
         let resumes_remain = drain_task_resumes(runtime, &mut effects, 64);
-        let more_work = more_work || reconcile_work || resumes_remain || REACTOR_EXECUTOR.with(|executor| executor.has_pending()) || COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some));
+        let more_work = more_work || close_cleanup_work || typed_operation_work || reconcile_work || resumes_remain || REACTOR_EXECUTOR.with(|executor| executor.has_pending()) || COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some));
 
         let mut ui_patches = semio_framework::kernel::UiTurnPatches::default();
         if let Some(patch) = PENDING_PATCHES.with(|pending| pending.borrow_mut().take_one()) {
@@ -1776,6 +1802,7 @@ mod wit_bridge {
 
     struct PendingPatchSlot {
         sequence: u64,
+        instance: Option<u32>,
         owner: PendingPatchOwner,
     }
 
@@ -1809,14 +1836,16 @@ mod wit_bridge {
         fn push_reconcile(&mut self, owner: SurfaceReconcileReadyPatch) -> Result<(), SurfaceReconcileReadyPatch> {
             let Some(index) = self.slots.iter().position(Option::is_none) else { return Err(owner) };
             let Some(sequence) = self.reserve_sequence() else { return Err(owner) };
-            self.slots[index] = Some(PendingPatchSlot { sequence, owner: PendingPatchOwner::Reconcile(owner) });
+            let instance = owner.surface().and_then(|surface| parse_surface_instance(&surface.0));
+            self.slots[index] = Some(PendingPatchSlot { sequence, instance, owner: PendingPatchOwner::Reconcile(owner) });
             Ok(())
         }
 
         fn push_external(&mut self, patch: UiPatch) -> Result<(), UiPatch> {
             let Some(index) = self.slots.iter().position(Option::is_none) else { return Err(patch) };
             let Some(sequence) = self.reserve_sequence() else { return Err(patch) };
-            self.slots[index] = Some(PendingPatchSlot { sequence, owner: PendingPatchOwner::External(Some(patch)) });
+            let instance = parse_surface_instance(&patch.surface.0);
+            self.slots[index] = Some(PendingPatchSlot { sequence, instance, owner: PendingPatchOwner::External(Some(patch)) });
             Ok(())
         }
 
@@ -1830,12 +1859,12 @@ mod wit_bridge {
             match slot.owner {
                 PendingPatchOwner::Reconcile(owner) => {
                     let (patch, published) = owner.publish()?;
-                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, owner: PendingPatchOwner::Published(published) });
+                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, instance: slot.instance, owner: PendingPatchOwner::Published(published) });
                     Some(patch)
                 }
                 PendingPatchOwner::External(mut patch) => patch.take(),
                 PendingPatchOwner::Published(published) => {
-                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, owner: PendingPatchOwner::Published(published) });
+                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, instance: slot.instance, owner: PendingPatchOwner::Published(published) });
                     None
                 }
             }
@@ -1853,21 +1882,21 @@ mod wit_bridge {
             let published = match slot.owner {
                 PendingPatchOwner::Published(owner) => owner,
                 owner => {
-                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, owner });
+                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, instance: slot.instance, owner });
                     return false;
                 }
             };
             let ack = match published.acknowledge(surface, revision) {
                 Ok(ack) => ack,
                 Err(published) => {
-                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, owner: PendingPatchOwner::Published(published) });
+                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, instance: slot.instance, owner: PendingPatchOwner::Published(published) });
                     return false;
                 }
             };
             match advance(ack) {
                 Ok(()) => true,
                 Err(ack) => {
-                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, owner: PendingPatchOwner::Published(ack.into_published()) });
+                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, instance: slot.instance, owner: PendingPatchOwner::Published(ack.into_published()) });
                     false
                 }
             }
@@ -1881,13 +1910,7 @@ mod wit_bridge {
                 self.turn_handback.take();
                 return false;
             }
-            let Some(index) = self.slots.iter().position(|slot| {
-                slot.as_ref().is_some_and(|slot| match &slot.owner {
-                    PendingPatchOwner::Reconcile(owner) => owner.surface().and_then(|surface| parse_surface_instance(&surface.0)) == Some(instance),
-                    PendingPatchOwner::External(patch) => patch.as_ref().and_then(|patch| parse_surface_instance(&patch.surface.0)) == Some(instance),
-                    PendingPatchOwner::Published(owner) => parse_surface_instance(&owner.surface().0) == Some(instance),
-                })
-            }) else {
+            let Some(index) = self.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.instance == Some(instance))) else {
                 return true;
             };
             let complete = match self.slots[index].as_mut().map(|slot| &mut slot.owner) {
@@ -1900,7 +1923,7 @@ mod wit_bridge {
                         true
                     }
                 }
-                Some(PendingPatchOwner::Published(_)) => true,
+                Some(PendingPatchOwner::Published(owner)) => owner.close_step() && owner.terminal_is_empty(),
                 None => true,
             };
             if complete {
@@ -1929,6 +1952,24 @@ mod wit_bridge {
 
         fn has_unpublished(&self) -> bool {
             self.turn_handback.is_some() || self.slots.iter().flatten().any(|slot| !matches!(&slot.owner, PendingPatchOwner::Published(_))) || self.closing_instances.iter().any(Option::is_some)
+        }
+    }
+
+    #[cfg(test)]
+    mod instance_lifetime_patch_close_tests {
+        use super::*;
+
+        #[test]
+        fn instance_lifetime_pending_patch_keeps_scope_after_payload_surface_retires() {
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture.json")).unwrap();
+            let mut pending = PendingPatchAuthority::new();
+            pending.push_external(UiPatch { surface: ui_contract::SurfaceId::try_from("7:retained").unwrap(), base_revision: ui_contract::UiRevision(0), revision: ui_contract::UiRevision(1), ops: Default::default() }).unwrap();
+            pending.begin_close_instance(7);
+            if let Some(PendingPatchSlot { owner: PendingPatchOwner::External(Some(patch)), .. }) = pending.slots[0].as_mut() { patch.surface = Default::default(); }
+            assert!(!pending.close_step());
+            assert_eq!(pending.slots[0].is_none(), fixture["nativeCases"]["scopeAfterSurfaceClear"].as_bool().unwrap());
+            assert!(!pending.close_step());
+            assert!(pending.close_step());
         }
     }
 
@@ -2008,7 +2049,7 @@ mod wit_bridge {
             };
             let input = match resume.outcome {
                 TaskResumeOutcome::Fault(fault) => {
-                    effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(resume.instance.to_string()) }, payload: dsl::encode_fault_bytes(&fault) });
+                    effects.push(shell_fault_effect(resume.instance, &fault));
                     continue;
                 }
                 TaskResumeOutcome::Command(bytes) => crate::plugin_runtime::TaskResumeInput::Command(bytes),
@@ -2046,14 +2087,14 @@ mod wit_bridge {
         if let Effect::SetTimer { id, .. } = &effect {
             if ARMED_TIMERS.with(|timers| timers.borrow_mut().insert(instance, *id)).is_err() {
                 let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.timer-capacity"), "fixed timer authority is saturated or collided");
-                effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: dsl::encode_fault_bytes(&fault) });
+                effects.push(shell_fault_effect(instance, &fault));
                 return;
             }
         }
         if let Effect::SpawnJob { job, .. } = &effect {
             if JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow_mut().bind(instance, *job)).is_err() {
                 let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.job-render-binding-capacity"), "fixed job-to-surface render authority is saturated or collided");
-                effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: dsl::encode_fault_bytes(&fault) });
+                effects.push(shell_fault_effect(instance, &fault));
                 return;
             }
         }

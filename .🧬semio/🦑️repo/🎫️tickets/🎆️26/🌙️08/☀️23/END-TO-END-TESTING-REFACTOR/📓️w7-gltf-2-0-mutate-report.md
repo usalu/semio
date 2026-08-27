@@ -82,7 +82,7 @@ instead of routing through another catalog kind.
 New files:
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`
   — the oracle: independent GLB codec, independent JSON-tree mutation semantics, `project_gltf`.
-- `.../🧪️oracle/🔣️component.json` — oracle registration (`json-rust-gltf-2-0-mutate`) + `gltf-2-0-any`
+- `.../🧪️oracle/🔣️.json` — oracle registration (`json-rust-gltf-2-0-mutate`) + `gltf-2-0-any`
   catalog (7 kinds) + `semantic-gltf-v1` comparison profile.
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🧪️tests/mutate-gltf-2-0/component.feature` +
   `🦀️component.rs` — the case: 7×mutate, 7×inverse, 1×identity-round-trip.

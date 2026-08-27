@@ -6,7 +6,7 @@ Feature: Apply every typed FLOW mutation to the real committed widget graph
   `s.flow.flow` is a semio-NATIVE artifact — the `flow.flow` envelope is defined by this repository
   alone and no package in any ecosystem reads it — so this case carries a recorded no-oracle decision
   (`flow-widget-graph-mutation-semantics`, in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`). That decision's third-party
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`). That decision's third-party
   survey is argued rather than assumed: this document's body is plain JSON and `json-rust` is already
   linked into the stdio oracle crate, and it is declined because a generic DOM reader knows nothing of
   a widget discriminant, a synapse port pair or the cascade `delete-widget` performs.

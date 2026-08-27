@@ -2,7 +2,7 @@
 //! `26/08/23/END-TO-END-TESTING-REFACTOR`.
 //!
 //! Recorded no-oracle decision `block-3d-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`): this is a semio-NATIVE
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): this is a semio-NATIVE
 //! document and `Block3dMutation` IS its specification, so there is nothing third-party to register. What
 //! stands in for an oracle is named there and exercised here: the committed
 //! `(before, mutation, diff, outcome, after)` quintets under

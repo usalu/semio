@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "kind": "exact-wgpu-tool-producer-retirement",
+  "validToolchain": { "packageManager": "bun@1.3.5", "actualVersion": "1.3.5", "expectedVersion": "1.3.5" },
+  "invalidToolchains": [
+    { "packageManager": "bun@1.3.5", "actualVersion": "1.3.4" },
+    { "packageManager": "bun@^1.3.5", "actualVersion": "1.3.5" },
+    { "packageManager": "npm@1.3.5", "actualVersion": "1.3.5" },
+    { "packageManager": null, "actualVersion": "1.3.5" }
+  ],
+  "retiredFunctions": ["assertPinnedBunVersion", "renderBrowserEntry", "buildBootScript", "renderFrameWorker", "generateFrameWorker", "checkFrameWorker"],
+  "retiredClasses": ["GenerateFrameWorkerScript", "PreviewGeneratedScript", "CheckFrameWorkerScript"],
+  "retiredTargets": ["generate-frame-worker", "preview-generated", "check-frame-worker"],
+  "fragments": [
+  {
+    "id": "single-package-artifact-producer",
+    "kind": "tool-producer",
+    "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts",
+    "oldValue": "/** @emoji 🥖️ Rejects browser code generation unless it uses the repository's exact Bun toolchain. */\nexport function assertPinnedBunVersion(actualVersion: string = Bun.version): string {\n  const packageManager = (JSON.parse(readFileSync(join(repoRoot, \"package.json\"), \"utf8\")) as { readonly packageManager?: string }).packageManager ?? \"\";\n  const expectedVersion = /^bun@(\\d+\\.\\d+\\.\\d+)$/u.exec(packageManager)?.[1];\n  if (!expectedVersion) throw new Error(`wgpu-frame-worker requires an exact root packageManager bun@x.y.z pin; received ${JSON.stringify(packageManager)}`);\n  if (actualVersion !== expectedVersion) throw new Error(`wgpu-frame-worker requires Bun ${expectedVersion} from root packageManager, received ${actualVersion}`);\n  return expectedVersion;\n}\n\n/** @emoji 🧾️ Bundles one browser entry entirely in memory for identical generate/check bytes. */\nasync function renderBrowserEntry(entryPath: string): Promise<string> {\n  assertPinnedBunVersion();\n  const runtime = globalThis as typeof globalThis & { Bun: { build(options: { entrypoints: string[]; target: \"browser\"; format: \"esm\" }): Promise<{ success: boolean; logs: unknown[]; outputs: { text(): Promise<string> }[] }> } };\n  const result = await runtime.Bun.build({ entrypoints: [entryPath], target: \"browser\", format: \"esm\" });\n  if (!result.success || result.outputs.length !== 1) throw new Error(`browser bundle render failed for ${entryPath}: ${result.logs.map(String).join(\"\\n\")}`);\n  return await result.outputs[0]!.text();\n}\n\nasync function buildBootScript(bundleRoot: string): Promise<void> {\n  const bootTs = join(bundleRoot, \"🟦️typescript/🟦️boot.ts\");\n  const bootJs = join(bundleRoot, \"🟦️typescript/🟨️boot.js\");\n  writeFileSync(bootJs, await renderBrowserEntry(bootTs), \"utf8\");\n}\n\n/** @emoji 🧵️ Renders the frame worker without invoking Trunk, Cargo, or the WASM build. */\nexport async function renderFrameWorker(bundleRoot: string): Promise<{ path: string; content: string }> {\n  const workerTs = join(bundleRoot, \"🟦️typescript/🧵️frame-worker.ts\");\n  const workerJs = join(bundleRoot, \"🟦️typescript/🟨️frame-worker.js\");\n  return { path: workerJs, content: await renderBrowserEntry(workerTs) };\n}\n\nasync function generateFrameWorker(bundleRoot: string): Promise<void> {\n  const artifact = await renderFrameWorker(bundleRoot);\n  writeFileSync(artifact.path, artifact.content, \"utf8\");\n}\n\nasync function checkFrameWorker(bundleRoot: string): Promise<void> {\n  const artifact = await renderFrameWorker(bundleRoot);\n  if (!existsSync(artifact.path) || readFileSync(artifact.path, \"utf8\") !== artifact.content) throw new Error(\"🟨️frame-worker.js is stale; run the generate-frame-worker target\");\n}\n\n",
+    "newValue": "/** 🧵️ Runs the sole package artifact producer before browser build or freshness checks. */\nasync function runBrowserArtifacts(mode: \"generate\" | \"check\"): Promise<void> {\n  await (await import(\"../../../../../../../../../../📜️script.ts\")).runWgpuPackageGenerator(repoRoot, mode);\n}\n\n"
+  },
+  {
+    "id": "trunk-build-package-artifacts",
+    "kind": "tool-producer",
+    "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts",
+    "oldValue": "class TrunkBuildScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\n    ensureTrunk();\n    ensureWasmTarget();\n    await buildBootScript(this.root);\n    await checkFrameWorker(this.root);\n    mkdirSync(outDir, { recursive: true });\n    const release = segments.includes(\"--release\") || segments.includes(\"--dist\");\n    const args = [\"build\", \"--config\", \"Trunk.toml\"];\n    if (release) args.push(\"--release\");\n    if (runCmdStatus(\"trunk\", args, { cwd: this.root, env: trunkEnv(), budgetMs: buildBudgetMs() }) !== 0) throw new Error(\"trunk build failed for wgpu renderer\");\n    syncStableRendererArtifacts();\n    console.log(`trunk built wgpu renderer -> ${outDir}`);\n  }\n}\n\n",
+    "newValue": "class TrunkBuildScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\n    ensureTrunk();\n    ensureWasmTarget();\n    await runBrowserArtifacts(\"generate\");\n    mkdirSync(outDir, { recursive: true });\n    const release = segments.includes(\"--release\") || segments.includes(\"--dist\");\n    const args = [\"build\", \"--config\", \"Trunk.toml\"];\n    if (release) args.push(\"--release\");\n    if (runCmdStatus(\"trunk\", args, { cwd: this.root, env: trunkEnv(), budgetMs: buildBudgetMs() }) !== 0) throw new Error(\"trunk build failed for wgpu renderer\");\n    syncStableRendererArtifacts();\n    console.log(`trunk built wgpu renderer -> ${outDir}`);\n  }\n}\n\n"
+  },
+  {
+    "id": "trunk-serve-package-artifacts",
+    "kind": "tool-producer",
+    "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts",
+    "oldValue": "class TrunkServeScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\n    ensureTrunk();\n    ensureWasmTarget();\n    await buildBootScript(this.root);\n    await checkFrameWorker(this.root);\n    const program = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? \"s\";\n    ensureAssetServer(program);\n    const catalog = loadFrameworkOsPlaygroundCatalog();\n    const defaultPort = String(frameworkOsPlaygroundDefaultPort(catalog, program, \"wgpu\"));\n    const port = process.env.S_OS_PORT ?? defaultPort;\n    const extra = segments.filter((segment, index, all) => segment !== \"--port\" && all[index - 1] !== \"--port\");\n    const args = [\"serve\", \"--config\", \"Trunk.toml\", \"--port\", port, ...extra];\n    if (process.env.SEMIO_PARITY_QUIET_CARGO === \"1\") args.push(\"--ignore\", pluginOutRoot);\n    if ((await runInteractiveCommand(\"trunk\", args, this.root, trunkEnv())) !== 0) throw new Error(\"trunk serve failed for wgpu renderer\");\n  }\n}\n",
+    "newValue": "class TrunkServeScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\n    ensureTrunk();\n    ensureWasmTarget();\n    await runBrowserArtifacts(\"generate\");\n    const program = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? \"s\";\n    ensureAssetServer(program);\n    const catalog = loadFrameworkOsPlaygroundCatalog();\n    const defaultPort = String(frameworkOsPlaygroundDefaultPort(catalog, program, \"wgpu\"));\n    const port = process.env.S_OS_PORT ?? defaultPort;\n    const extra = segments.filter((segment, index, all) => segment !== \"--port\" && all[index - 1] !== \"--port\");\n    const args = [\"serve\", \"--config\", \"Trunk.toml\", \"--port\", port, ...extra];\n    if (process.env.SEMIO_PARITY_QUIET_CARGO === \"1\") args.push(\"--ignore\", pluginOutRoot);\n    if ((await runInteractiveCommand(\"trunk\", args, this.root, trunkEnv())) !== 0) throw new Error(\"trunk serve failed for wgpu renderer\");\n  }\n}\n"
+  },
+  {
+    "id": "browser-check-single-producer",
+    "kind": "tool-producer",
+    "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts",
+    "oldValue": "/** @emoji 🧵️ Bundles both browser isolates without invoking Cargo or Trunk. */\nclass BrowserWorkerCheckScript extends BundleScript {\n  async run(_segments: string[]): Promise<void> {\n    await buildBootScript(this.root);\n    await checkFrameWorker(this.root);\n  }\n}\n\n/** @emoji 🧵️ Generates only the deterministic browser frame-worker artifact. */\nclass GenerateFrameWorkerScript extends BundleScript {\n  async run(): Promise<void> {\n    await generateFrameWorker(this.root);\n    console.log(\"framework-renderer-wgpu: generated 🟨️frame-worker.js\");\n  }\n}\n\n/** 🧾️ Emits the canonical read-only generator protocol from the same in-memory browser bundle. */\nclass PreviewGeneratedScript extends BundleScript {\n  async run(): Promise<void> {\n    const artifact = await renderFrameWorker(this.root);\n    const nodes = [{ bytesBase64: Buffer.from(artifact.content).toString(\"base64\"), mode: 0o644, nodeKind: \"file\" as const, path: relative(repoRoot, artifact.path).replaceAll(\"\\\\\", \"/\").normalize(\"NFC\") }];\n    process.stdout.write(`${JSON.stringify({ contractId: \"wgpu-frame-worker\", nodes, schemaVersion: 1, staleRemovals: [] })}\\n`);\n  }\n}\n\n/** @emoji ✅️ Checks the frame-worker bytes without invoking any renderer build. */\nclass CheckFrameWorkerScript extends BundleScript {\n  async run(): Promise<void> {\n    await checkFrameWorker(this.root);\n    console.log(\"framework-renderer-wgpu: 🟨️frame-worker.js is fresh\");\n  }\n}\n\n",
+    "newValue": "/** 🧵️ Checks all package browser artifacts without invoking Cargo or Trunk. */\nclass BrowserWorkerCheckScript extends BundleScript {\n  async run(_segments: string[]): Promise<void> {\n    await runBrowserArtifacts(\"check\");\n  }\n}\n\n"
+  },
+  {
+    "id": "retire-renderer-generation-routes",
+    "kind": "tool-producer",
+    "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts",
+    "oldValue": "  .register(\"check-browser-worker\", BrowserWorkerCheckScript)\n  .register(\"generate-frame-worker\", GenerateFrameWorkerScript)\n  .register(\"preview-generated\", PreviewGeneratedScript)\n  .register(\"check-frame-worker\", CheckFrameWorkerScript)\n  .register(\"lint\", LintScript);",
+    "newValue": "  .register(\"check-browser-worker\", BrowserWorkerCheckScript)\n  .register(\"lint\", LintScript);"
+  },
+  {
+    "id": "producer-read-only-fs-import",
+    "kind": "tool-producer",
+    "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts",
+    "oldValue": "import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from \"node:fs\";",
+    "newValue": "import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from \"node:fs\";"
+  },
+  {
+    "id": "producer-path-import",
+    "kind": "tool-producer",
+    "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts",
+    "oldValue": "import { join, relative } from \"node:path\";",
+    "newValue": "import { join } from \"node:path\";"
+  },
+  {
+    "id": "retire-renderer-nx-producers",
+    "kind": "tool-producer",
+    "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📋️project.json",
+    "oldValue": "    \"generate-frame-worker\": {\n      \"executor\": \"nx:run-commands\",\n      \"options\": {\n        \"command\": \"bun ./📜️script.ts generate-frame-worker\",\n        \"cwd\": \"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu\"\n      }\n    },\n    \"preview-generated\": {\n      \"executor\": \"nx:run-commands\",\n      \"options\": {\n        \"command\": \"bun ./📜️script.ts preview-generated\",\n        \"cwd\": \"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu\"\n      }\n    },\n    \"check-frame-worker\": {\n      \"executor\": \"nx:run-commands\",\n      \"options\": {\n        \"command\": \"bun ./📜️script.ts check-frame-worker\",\n        \"cwd\": \"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu\"\n      }\n    },\n    \"test-long\": {",
+    "newValue": "    \"test-long\": {"
+  },
+  {
+    "id": "retire-wasm-duplicate-producer",
+    "kind": "tool-producer",
+    "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📋️project.json",
+    "oldValue": "    \"wasm\": {\n      \"executor\": \"nx:run-commands\",\n      \"dependsOn\": [\"generate-frame-worker\"],",
+    "newValue": "    \"wasm\": {\n      \"executor\": \"nx:run-commands\","
+  },
+  {
+    "id": "retire-serve-duplicate-producer",
+    "kind": "tool-producer",
+    "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📋️project.json",
+    "oldValue": "    \"serve\": {\n      \"executor\": \"nx:run-commands\",\n      \"dependsOn\": [\"generate-frame-worker\"],",
+    "newValue": "    \"serve\": {\n      \"executor\": \"nx:run-commands\","
+  },
+  {
+    "id": "retire-dev-duplicate-producer",
+    "kind": "tool-producer",
+    "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📋️project.json",
+    "oldValue": "    \"dev\": {\n      \"executor\": \"nx:run-commands\",\n      \"dependsOn\": [\"generate-frame-worker\"],",
+    "newValue": "    \"dev\": {\n      \"executor\": \"nx:run-commands\","
+  },
+  {
+    "id": "package-tests-producer-import",
+    "kind": "tool-producer",
+    "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️index.test.ts",
+    "oldValue": "import { assertPinnedBunVersion, renderFrameWorker } from \"./📜️script.ts\";",
+    "newValue": "import { assertWgpuPackageToolchain, renderWgpuPackageArtifacts } from \"../../../../../../../../../../📜️script.ts\";"
+  },
+  {
+    "id": "package-tests-single-producer",
+    "kind": "tool-producer",
+    "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️index.test.ts",
+    "oldValue": "describe(\"framework renderer wgpu generated worker\", () => {\n  it(\"fails closed unless the renderer uses the repository-pinned Bun runtime\", () => {\n    expect(assertPinnedBunVersion()).toBe(Bun.version);\n    expect(() => assertPinnedBunVersion(\"0.0.0\")).toThrow(/requires Bun/);\n  });\n\n  it(\"renders identical bytes twice with matching independent SHA-256 implementations\", async () => {\n    const bundleRoot = dirname(fileURLToPath(import.meta.url));\n    const first = await renderFrameWorker(bundleRoot);\n    const second = await renderFrameWorker(bundleRoot);\n    const subtle = Buffer.from(await crypto.subtle.digest(\"SHA-256\", Buffer.from(first.content))).toString(\"hex\");\n    expect(second).toEqual(first);\n    expect(createHash(\"sha256\").update(first.content).digest(\"hex\")).toBe(subtle);\n  });\n\n  it(\"derives devcontainer and native Bun provisioning from the single packageManager pin\", () => {\n    let repoRoot = dirname(fileURLToPath(import.meta.url));\n    while (!existsSync(join(repoRoot, \"nx.json\"))) repoRoot = dirname(repoRoot);\n    const dockerfile = readFileSync(join(repoRoot, \".devcontainer/Dockerfile\"), \"utf8\");\n    const postCreatePath = join(repoRoot, \".devcontainer/post-create.sh\");\n    const nativeBootstrapPath = join(repoRoot, \"🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/⌨️script.sh\");\n    const postCreate = readFileSync(postCreatePath, \"utf8\");\n    const nativeBootstrap = readFileSync(nativeBootstrapPath, \"utf8\");\n    expect(dockerfile).not.toContain(\"bun.sh/install\");\n    expect(postCreate).toContain(\".packageManager\");\n    expect(postCreate).toContain('bash -s \"bun-v$required_bun_version\"');\n    expect(nativeBootstrap).toContain('bash -s \"bun-v$required_version\"');\n    expect(`${dockerfile}\\n${postCreate}\\n${nativeBootstrap}`).not.toContain(Bun.version);\n    if (process.platform !== \"win32\") {\n      execFileSync(\"bash\", [\"-n\", postCreatePath]);\n      execFileSync(\"bash\", [\"-n\", nativeBootstrapPath]);\n    }\n  });\n});\n",
+    "newValue": "describe(\"framework renderer wgpu generated artifacts\", () => {\n  function workspaceRoot(): string {\n    let root = dirname(fileURLToPath(import.meta.url));\n    while (!existsSync(join(root, \"nx.json\"))) {\n      const parent = dirname(root);\n      if (parent === root) throw new Error(\"WGPU package tests require a workspace root\");\n      root = parent;\n    }\n    return root;\n  }\n\n  it(\"fails closed unless artifacts use the repository-pinned Bun runtime\", () => {\n    const pin = JSON.parse(readFileSync(join(workspaceRoot(), \"package.json\"), \"utf8\")).packageManager;\n    expect(assertWgpuPackageToolchain(pin)).toBe(Bun.version);\n    expect(() => assertWgpuPackageToolchain(pin, \"0.0.0\")).toThrow(/Bun/);\n  });\n\n  it(\"renders six identical artifacts with independent SHA-256 agreement\", async () => {\n    const first = await renderWgpuPackageArtifacts(workspaceRoot());\n    const second = await renderWgpuPackageArtifacts(workspaceRoot());\n    expect(first.nodes).toHaveLength(6);\n    expect(second).toEqual(first);\n    for (const node of first.nodes) {\n      const subtle = Buffer.from(await crypto.subtle.digest(\"SHA-256\", Buffer.from(node.content))).toString(\"hex\");\n      expect(createHash(\"sha256\").update(node.content).digest(\"hex\")).toBe(subtle);\n    }\n  });\n\n  it(\"derives devcontainer and native Bun provisioning from the single packageManager pin\", () => {\n    let repoRoot = dirname(fileURLToPath(import.meta.url));\n    while (!existsSync(join(repoRoot, \"nx.json\"))) repoRoot = dirname(repoRoot);\n    const dockerfile = readFileSync(join(repoRoot, \".devcontainer/Dockerfile\"), \"utf8\");\n    const postCreatePath = join(repoRoot, \".devcontainer/post-create.sh\");\n    const nativeBootstrapPath = join(repoRoot, \"🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/⌨️script.sh\");\n    const postCreate = readFileSync(postCreatePath, \"utf8\");\n    const nativeBootstrap = readFileSync(nativeBootstrapPath, \"utf8\");\n    expect(dockerfile).not.toContain(\"bun.sh/install\");\n    expect(postCreate).toContain(\".packageManager\");\n    expect(postCreate).toContain('bash -s \"bun-v$required_bun_version\"');\n    expect(nativeBootstrap).toContain('bash -s \"bun-v$required_version\"');\n    expect(`${dockerfile}\\n${postCreate}\\n${nativeBootstrap}`).not.toContain(Bun.version);\n    if (process.platform !== \"win32\") {\n      execFileSync(\"bash\", [\"-n\", postCreatePath]);\n      execFileSync(\"bash\", [\"-n\", nativeBootstrapPath]);\n    }\n  });\n});\n"
+  },
+  {
+    "id": "semantic-test-owner-selection",
+    "kind": "tool-producer",
+    "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🧪️vitest.config.ts",
+    "oldValue": "import { defineConfig } from \"vitest/config\";\n\nexport default defineConfig({\n  test: {\n    name: \"@semio-tech/framework-renderer-wgpu\",\n    environment: \"node\",\n    coverage: { include: [\"index.ts\"] },\n  },\n});\n",
+    "newValue": "import { defineConfig } from \"vitest/config\";\n\nexport default defineConfig({\n  root: \"../..\",\n  test: {\n    name: \"@semio-tech/framework-renderer-wgpu\",\n    environment: \"node\",\n    include: [\"🧪️tests/🧪️browser-frame-transport/🟦️.ts\",\"🧪️tests/🧪️browser-interactive-job-port/🟦️.ts\",\"🧪️tests/🧪️package-integration/🟦️.ts\"],\n    coverage: { include: [\"🧊️renderer-boot/🟦️.ts\"] },\n  },\n});\n"
+  }
+]
+}

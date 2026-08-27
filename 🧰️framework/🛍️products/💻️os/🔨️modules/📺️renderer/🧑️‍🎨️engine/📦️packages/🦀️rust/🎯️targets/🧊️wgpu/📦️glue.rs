@@ -3048,7 +3048,7 @@ fn pump_renderer_io_sessions(maximum_sessions: usize) -> usize {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn submit_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> Result<RendererIoHandle, String> {
-    use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
+    use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US};
     let Some((slot_index, generation)) = RENDERER_IO_SLOTS.iter().enumerate().find_map(|(index, slot)| {
         if slot.state.compare_exchange(RENDERER_IO_VACANT, RENDERER_IO_CHECKED_OUT, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
             return None;
@@ -3069,8 +3069,8 @@ fn submit_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> 
         operation: allocate_operation_id(),
         generation: Generation(generation),
         cancel: cancel.clone(),
-        config: BatchDriveConfig { site: "os_renderer_native_io", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_ms: INTERACTIVE_LANE_WALL_MS },
-        now_ms: semio_framework_job::default_now_ms,
+        config: BatchDriveConfig { site: "os_renderer_native_io", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_us: INTERACTIVE_LANE_WALL_US },
+        now_us: semio_framework_job::default_now_us,
     };
     let (session, rejected, result) = match semio_framework_job::WorkerJobSession::try_new(job, params) {
         Ok(session) => (Some(session), None, None),
@@ -6038,14 +6038,14 @@ pub(crate) mod kernel_runtime {
         }
         if let Some(log) = owner.log.as_mut() {
             log.begin_close();
-            let now = semio_framework_job::default_now_ms();
+            let now = semio_framework_job::default_now_us();
             let mut preview_sequence = owner.job;
             let mut context = semio_framework_job::StepContext::new(
                 semio_framework_job::OperationId(owner.actor.0),
                 semio_framework_job::Generation(owner.generation),
-                semio_framework_job::StepBudget::new(1, now.saturating_add(semio_framework_job::MAINTENANCE_LANE_WALL_MS)),
+                now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::MAINTENANCE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
                 semio_framework_job::root_cancel_token(),
-                semio_framework_job::default_now_ms,
+                semio_framework_job::default_now_us,
                 &mut preview_sequence,
             );
             let _ = log.close_step(&mut context);
@@ -6626,14 +6626,14 @@ pub(crate) mod kernel_runtime {
                 return;
             }
             let terminal = matches!(&publication.outcome, semio_framework_actor::JobStepOutcome::Complete { .. } | semio_framework_actor::JobStepOutcome::Cancelled | semio_framework_actor::JobStepOutcome::Fault { .. });
-            let now = semio_framework_job::default_now_ms();
+            let now = semio_framework_job::default_now_us();
             let mut preview_sequence = publication.turn.operation.preview_sequence;
             let mut context = semio_framework_job::StepContext::new(
                 semio_framework_job::OperationId(publication.turn.operation.operation),
                 semio_framework_job::Generation(publication.turn.operation.generation),
-                semio_framework_job::StepBudget::new(1, now.saturating_add(semio_framework_job::INTERACTIVE_LANE_WALL_MS)),
+                now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::INTERACTIVE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
                 semio_framework_job::root_cancel_token(),
-                semio_framework_job::default_now_ms,
+                semio_framework_job::default_now_us,
                 &mut preview_sequence,
             );
             match entry.log.begin_capture(&mut context, actor, worker_count, worker_slot, TURN_BUDGET.fuel, TURN_BUDGET.deadline_ms, publication) {
@@ -6658,14 +6658,14 @@ pub(crate) mod kernel_runtime {
             if let Some(policy) = self.job_replays[index].as_mut().expect("mounted replay").policy.take() {
                 let entry = self.job_replays[index].as_mut().expect("mounted replay");
                 let operation = entry.authority.operation;
-                let now = semio_framework_job::default_now_ms();
+                let now = semio_framework_job::default_now_us();
                 let mut preview_sequence = operation.preview_sequence;
                 let mut context = semio_framework_job::StepContext::new(
                     semio_framework_job::OperationId(operation.operation),
                     semio_framework_job::Generation(operation.generation),
-                    semio_framework_job::StepBudget::new(1, now.saturating_add(semio_framework_job::MAINTENANCE_LANE_WALL_MS)),
+                    now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::MAINTENANCE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
                     semio_framework_job::root_cancel_token(),
-                    semio_framework_job::default_now_ms,
+                    semio_framework_job::default_now_us,
                     &mut preview_sequence,
                 );
                 if entry.log.acknowledge_publication(&mut context, policy).is_err() {
@@ -6686,14 +6686,14 @@ pub(crate) mod kernel_runtime {
                 return true;
             }
             let operation = self.job_replays[index].as_ref().expect("mounted replay").authority.operation;
-            let now = semio_framework_job::default_now_ms();
+            let now = semio_framework_job::default_now_us();
             let mut preview_sequence = operation.preview_sequence;
             let mut context = semio_framework_job::StepContext::new(
                 semio_framework_job::OperationId(operation.operation),
                 semio_framework_job::Generation(operation.generation),
-                semio_framework_job::StepBudget::new(1, now.saturating_add(semio_framework_job::INTERACTIVE_LANE_WALL_MS)),
+                now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::INTERACTIVE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
                 semio_framework_job::root_cancel_token(),
-                semio_framework_job::default_now_ms,
+                semio_framework_job::default_now_us,
                 &mut preview_sequence,
             );
             if self.job_replays[index].as_ref().expect("mounted replay").log.close_started() {
@@ -6751,14 +6751,14 @@ pub(crate) mod kernel_runtime {
                 return false;
             }
             if self.job_progress.has_close_work() {
-                let now = semio_framework_job::default_now_ms();
+                let now = semio_framework_job::default_now_us();
                 let mut preview_sequence = 0;
                 let mut context = semio_framework_job::StepContext::new(
                     semio_framework_job::OperationId(0),
                     semio_framework_job::Generation(0),
-                    semio_framework_job::StepBudget::new(1, now.saturating_add(semio_framework_job::MAINTENANCE_LANE_WALL_MS)),
+                    now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::MAINTENANCE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
                     semio_framework_job::root_cancel_token(),
-                    semio_framework_job::default_now_ms,
+                    semio_framework_job::default_now_us,
                     &mut preview_sequence,
                 );
                 let _ = self.job_progress.close_step(&mut context);
@@ -6894,14 +6894,14 @@ pub(crate) mod kernel_runtime {
                     return JobReplayPublicationPolicy::Rejected;
                 }
             }
-            let now = semio_framework_job::default_now_ms();
+            let now = semio_framework_job::default_now_us();
             let mut preview_sequence = publication.turn.operation.preview_sequence;
             let mut context = semio_framework_job::StepContext::new(
                 semio_framework_job::OperationId(publication.turn.operation.operation),
                 semio_framework_job::Generation(publication.turn.operation.generation),
-                semio_framework_job::StepBudget::new(2, now.saturating_add(semio_framework_job::INTERACTIVE_LANE_WALL_MS)),
+                now.and_then(|now| semio_framework_job::StepBudget::from_duration(2, now, semio_framework_job::INTERACTIVE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
                 semio_framework_job::root_cancel_token(),
-                semio_framework_job::default_now_ms,
+                semio_framework_job::default_now_us,
                 &mut preview_sequence,
             );
             let admission = match self.job_progress.preflight(&mut context, actor, &publication, live) {
@@ -12050,13 +12050,13 @@ impl RuntimeMailbox {
         let Ok(mut sequence) = self.0.world3d_close_sequence.try_lock() else {
             return false;
         };
-        let now = semio_framework_job::default_now_ms();
+        let now = semio_framework_job::default_now_us();
         let mut context = semio_framework_job::StepContext::new(
             semio_framework_job::OperationId(1),
             semio_framework_job::Generation(1),
-            semio_framework_job::StepBudget::new(1, now.saturating_add(semio_framework_job::MAINTENANCE_LANE_WALL_MS)),
+            now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::MAINTENANCE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
             semio_framework_job::root_cancel_token(),
-            semio_framework_job::default_now_ms,
+            semio_framework_job::default_now_us,
             &mut sequence,
         );
         if step_world3d_dynamic_retirement(state, &mut context) && world3d_dynamic_retirement_terminal_is_empty(state) {
@@ -12076,8 +12076,8 @@ impl RuntimeMailbox {
         let Some(interaction) = runtime.interaction.as_mut() else {
             return false;
         };
-        let now = semio_framework_job::default_now_ms();
-        let deadline = match now.checked_add(1) {
+        let now = semio_framework_job::default_now_us();
+        let deadline = match now.and_then(|now| now.checked_add(1_000)) {
             Some(deadline) => deadline,
             None => return false,
         };
@@ -12086,7 +12086,7 @@ impl RuntimeMailbox {
             semio_framework_trace::Generation(token.generation),
             semio_framework_job::StepBudget::new(1, deadline),
             semio_framework_job::root_cancel_token(),
-            semio_framework_job::default_now_ms,
+            semio_framework_job::default_now_us,
             sequence,
         );
         engine_canvas::close_engine_surface_step(token, &mut context, &mut interaction.input)
@@ -13951,14 +13951,18 @@ pub(crate) struct AppFramePreparation {
 }
 
 impl AppFramePreparation {
+    pub(crate) fn callback_verdict(&self) -> Option<&semio_framework_trace::CallbackVerdict> {
+        self.session.as_ref().and_then(semio_framework_job::BatchJobSession::callback_verdict)
+    }
+
     pub(crate) fn drive_step(&mut self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, cancel: semio_framework_job::CancelToken, _preview_sequence: &mut u64) -> semio_framework_job::StepOutcome {
         if let Some(job) = self.job.take() {
             let params = semio_framework_job::BatchJobParams {
                 operation,
                 generation,
                 cancel,
-                config: semio_framework_job::BatchDriveConfig { site: "os_renderer.prepare.worker", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: 1, step_budget_ms: 1 },
-                now_ms: semio_framework_job::default_now_ms,
+                config: semio_framework_job::BatchDriveConfig { site: "os_renderer.prepare.worker", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: 1, step_budget_us: 1000 },
+                now_us: semio_framework_job::default_now_us,
             };
             match semio_framework_job::BatchJobSession::try_new(job, params) {
                 Ok(session) => self.session = Some(session),
@@ -14925,7 +14929,7 @@ async fn stream_native_renderer_http_asset(mailbox: &RuntimeMailbox, fetch: &mut
         generation: 0,
         trace: semio_framework_async::TraceId(0),
         lane: semio_framework_async::Lane::Io as u8,
-        deadline_ms: Some(semio_framework_job::default_now_ms().saturating_add(15_000)),
+        deadline_ms: Some(semio_framework_job::default_now_ms().and_then(|now| now.checked_add(15_000)).ok_or_else(|| "native asset deadline requires a real clock and checked range".to_string())?),
         cancel: mailbox.0.native_asset_http_cancel.child_now(),
         capability: None,
     };

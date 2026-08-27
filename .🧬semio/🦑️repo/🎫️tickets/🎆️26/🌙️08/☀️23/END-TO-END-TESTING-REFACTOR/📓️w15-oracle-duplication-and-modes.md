@@ -62,7 +62,7 @@ The engine now lives once, at
 ```
 
 reached by all fifteen generated Python hosts through a declared `oracleHostPackage` in
-`✏️s/🔌️plugins/📕️norm/🧪️oracle/🔣️component.json` — the same mechanism the plugin already used to
+`✏️s/🔌️plugins/📕️norm/🧪️oracle/🔣️.json` — the same mechanism the plugin already used to
 share the Rust `law` module, on the Python side for the first time in this repository:
 
 ```json

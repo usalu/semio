@@ -1210,7 +1210,7 @@ mod codec_tests {
         let cancel = root_cancel_token();
         let mut sequence = 0;
         loop {
-            let mut context = StepContext::new(OperationId(1), Generation(1), StepBudget::new(fuel, u64::MAX), cancel.clone(), || 0, &mut sequence);
+            let mut context = StepContext::new(OperationId(1), Generation(1), StepBudget::new(fuel, u64::MAX), cancel.clone(), || Some(0), &mut sequence);
             match job.step(&mut context) {
                 StepOutcome::Complete(commit) => return retained_bytes(commit.output),
                 StepOutcome::Yield | StepOutcome::CheckpointReady(_) => {}
@@ -1241,7 +1241,7 @@ mod codec_tests {
         let mut job = DeflateEncodeJob::new(payload, 31);
         let mut sequence = 0;
         let checkpoint = loop {
-            let mut context = StepContext::new(OperationId(2), Generation(1), StepBudget::new(5, u64::MAX), root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(OperationId(2), Generation(1), StepBudget::new(5, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
             if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
                 break checkpoint;
             }
@@ -1260,7 +1260,7 @@ mod codec_tests {
         let cancel = root_cancel_token();
         cancel.cancel_now();
         let mut sequence = 0;
-        let mut context = StepContext::new(OperationId(3), Generation(1), StepBudget::new(1, u64::MAX), cancel, || 0, &mut sequence);
+        let mut context = StepContext::new(OperationId(3), Generation(1), StepBudget::new(1, u64::MAX), cancel, || Some(0), &mut sequence);
         assert_eq!(job.step(&mut context), StepOutcome::Cancelled);
         assert_eq!(job.checkpoint_bytes(), before);
     }
@@ -1274,7 +1274,7 @@ mod codec_tests {
         }
         let mut job = DeflateEncodeJob::new(input, usize::MAX);
         let mut sequence = 0;
-        let mut context = StepContext::new(OperationId(4), Generation(1), StepBudget::new(1, u64::MAX), root_cancel_token(), || 0, &mut sequence);
+        let mut context = StepContext::new(OperationId(4), Generation(1), StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
         let started = std::time::Instant::now();
         let _ = job.step(&mut context);
         assert!(started.elapsed() < std::time::Duration::from_millis(8));

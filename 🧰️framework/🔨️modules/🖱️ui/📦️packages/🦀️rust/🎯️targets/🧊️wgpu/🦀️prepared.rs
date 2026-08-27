@@ -3241,8 +3241,8 @@ mod tests {
         }
     }
 
-    fn now_ms() -> u64 {
-        1
+    fn now_ms() -> Option<u64> {
+        Some(1)
     }
 
     fn packet(revision: u64, generation: u64) -> PreparedRenderPacket {
@@ -3510,7 +3510,7 @@ mod tests {
         let mut preview = 0;
         let now_ms = || 0.0;
         for expected in [PREPARED_RASTER_PAGE_BYTES * 2, PREPARED_RASTER_PAGE_BYTES * 2, PREPARED_RASTER_PAGE_BYTES, 0] {
-            let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(11), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 10), root_cancel_token(), now_ms, &mut preview);
+            let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(11), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
             assert!(matches!(outcome, StepOutcome::Yield));
             assert_eq!(job.input.as_ref().unwrap().raster_producers.get(0).unwrap().retained_source.len(), expected);
         }
@@ -3570,13 +3570,13 @@ mod tests {
         let mut job = PreparedRenderJob::new(input, 1);
         let mut preview = 0;
 
-        let zero = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(0, 10), root_cancel_token(), now_ms, &mut preview);
+        let zero = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(0, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
         assert!(matches!(zero, StepOutcome::Yield));
         let retained = job.input.as_ref().unwrap().raster_producers.get(0).unwrap();
         assert_eq!(retained.source.as_ptr(), source_pointer);
         assert!(retained.pages.as_ref().unwrap().slots.is_empty());
 
-        let expired = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 1), root_cancel_token(), now_ms, &mut preview);
+        let expired = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 1), root_cancel_token(), now_ms, &mut preview, &mut None);
         assert!(matches!(expired, StepOutcome::Yield));
         let retained = job.input.as_ref().unwrap().raster_producers.get(0).unwrap();
         assert_eq!(retained.source.as_ptr(), source_pointer);
@@ -3623,7 +3623,7 @@ mod tests {
             let mut job = job;
             let mut preview = 0;
             loop {
-                let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview);
+                let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
                 if outcome.is_terminal() {
                     assert!(matches!(outcome, StepOutcome::Complete(_)));
                     break;
@@ -3644,7 +3644,7 @@ mod tests {
         let input = PreparedRenderInput::new(7, 3, draw, None, 0.0);
         let mut job = PreparedRenderJob::new(input, 1);
         let mut preview = 0;
-        let first = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview);
+        let first = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
         assert!(matches!(first, StepOutcome::Yield));
     }
 
@@ -3656,7 +3656,7 @@ mod tests {
         let mut preview = 0;
         let mut outcome = StepOutcome::Yield;
         for _ in 0..8 {
-            outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview);
+            outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
             if !matches!(outcome, StepOutcome::Yield) {
                 break;
             }
@@ -3670,7 +3670,7 @@ mod tests {
     fn preparation_rejects_a_stale_generation_before_publication() {
         let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 2, DrawList::default(), None, 0.0), 8);
         let mut preview = 0;
-        let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview);
+        let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
         assert!(matches!(outcome, StepOutcome::Fault(_)));
         assert!(job.take_packet().is_none());
     }
@@ -3681,7 +3681,7 @@ mod tests {
         cancel.cancel().await;
         let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0), 8);
         let mut preview = 0;
-        let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), cancel, now_ms, &mut preview);
+        let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), cancel, now_ms, &mut preview, &mut None);
         assert!(matches!(outcome, StepOutcome::Cancelled));
         assert!(job.take_packet().is_none());
     }
@@ -3783,7 +3783,7 @@ mod tests {
         assert!(input.try_push_upload(PreparedRenderUpload::GlyphAtlas { pixels: vec![0; 4], width: 2, height: 2 }).is_ok());
         let mut job = PreparedRenderJob::new(input, 64);
         let mut preview = 0;
-        let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview);
+        let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
         assert!(matches!(outcome, StepOutcome::Fault(_)));
         assert!(job.take_packet().is_none());
     }
@@ -3795,7 +3795,7 @@ mod tests {
         assert!(input.try_push_eviction(PreparedRenderEviction::Mesh { key: "mesh".into() }).is_ok());
         let mut job = PreparedRenderJob::new(input, 64);
         let mut preview = 0;
-        let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview);
+        let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
         assert!(matches!(outcome, StepOutcome::Fault(_)));
         assert!(job.take_packet().is_none());
     }
@@ -3808,7 +3808,7 @@ mod tests {
         input.limits.max_draw_items = 0;
         let mut job = PreparedRenderJob::new(input, 64);
         let mut preview = 0;
-        let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview);
+        let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
         assert!(matches!(outcome, StepOutcome::Fault(_)));
         assert!(job.take_packet().is_none());
     }
@@ -3897,7 +3897,7 @@ mod tests {
         let mut preview = 0;
         let mut steps = 0;
         loop {
-            let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(41), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 10), root_cancel_token(), now_ms, &mut preview);
+            let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(41), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 10), root_cancel_token(), now_ms, &mut preview, &mut None);
             steps += 1;
             if outcome.is_terminal() {
                 assert!(matches!(outcome, StepOutcome::Complete(_)));

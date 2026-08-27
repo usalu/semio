@@ -2,7 +2,7 @@
 //! wave 12 (the gate hole that exempted every vocabulary with no catalog).
 //!
 //! Recorded no-oracle decision `flow-widget-graph-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`): `s.flow.flow` is a
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): `s.flow.flow` is a
 //! semio-NATIVE artifact with no third-party reader or writer in any ecosystem, so this adapter
 //! registers NO oracle handler at all. That is deliberate and it is the honest shape: a recorded
 //! no-oracle case is never dispatched in the oracle role, and an oracle handler that could only

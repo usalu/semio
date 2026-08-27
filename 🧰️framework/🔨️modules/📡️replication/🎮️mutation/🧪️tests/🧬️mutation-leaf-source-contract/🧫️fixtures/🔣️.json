@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "canonical": {
+    "workspaceToken": [42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42],
+    "mutationRoot": "✏️s/🔌️plugins/🧪️probe/🧬️mutations",
+    "taxonomyPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "sourceFilename": "🦀️.rs",
+    "descriptorFilename": "🔣️.json",
+    "owner": "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page"
+  },
+  "workspaceTokenMismatchBytes": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31],
+  "cases": [
+    { "name": "canonical-direct-leaf", "expected": { "valid": true } },
+    { "name": "descriptor-contract-invalid", "descriptor": { "schemaVersion": 2 }, "expected": { "valid": false, "field": "schemaVersion" } },
+    { "name": "owner-equals-root", "descriptor": { "owner": "✏️s/🔌️plugins/🧪️probe/🧬️mutations" }, "expected": { "valid": false, "field": "owner" } },
+    { "name": "foreign-root-owner", "descriptor": { "owner": "✏️s/🔌️plugins/🧪️foreign/🧬️mutations/➕️insert-page" }, "expected": { "valid": false, "field": "owner" } },
+    { "name": "nested-owner", "descriptor": { "owner": "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page/🧪️tests" }, "expected": { "valid": false, "field": "owner" } },
+    { "name": "provenance-root-mismatch", "provenance": { "mutationRoot": "✏️s/🔌️plugins/🧪️foreign/🧬️mutations" }, "expected": { "valid": false, "field": "mutationRoot" } },
+    { "name": "provenance-owner-mismatch", "provenance": { "owner": "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➖️remove-page" }, "expected": { "valid": false, "field": "owner" } },
+    { "name": "provenance-taxonomy-mismatch", "provenance": { "taxonomyPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️other.json" }, "expected": { "valid": false, "field": "taxonomyPath" } },
+    { "name": "source-path-mismatch", "provenance": { "sourceFilename": "🦀️old.rs" }, "expected": { "valid": false, "field": "sourcePath" } },
+    { "name": "descriptor-path-mismatch", "provenance": { "descriptorFilename": "🔣️old.json" }, "expected": { "valid": false, "field": "descriptorPath" } },
+    { "name": "historical-source-path-against-current-scope", "provenance": { "sourceFilename": "component.rs" }, "expected": { "valid": false, "field": "sourcePath" } },
+    { "name": "historical-descriptor-path-against-current-scope", "provenance": { "descriptorFilename": "mutation.json" }, "expected": { "valid": false, "field": "descriptorPath" } },
+    { "name": "alternate-safe-authority-filenames", "scope": { "sourceFilename": "operation.rs", "descriptorFilename": "metadata.json" }, "provenance": { "sourceFilename": "operation.rs", "descriptorFilename": "metadata.json" }, "expected": { "valid": true } },
+    { "name": "unsafe-taxonomy-path", "scope": { "taxonomyPath": "🧰️framework/../🔣️taxonomy.json" }, "expected": { "valid": false, "field": "taxonomyPath" } },
+    { "name": "compose-root", "scope": { "mutationRoot": "compose/🧬️mutations" }, "expected": { "valid": false, "field": "mutationRoot" } },
+    { "name": "backslash-source-filename", "scope": { "sourceFilename": "dir\\🦀️.rs" }, "expected": { "valid": false, "field": "sourceFilename" } },
+    { "name": "parent-descriptor-filename", "scope": { "descriptorFilename": "../🔣️.json" }, "expected": { "valid": false, "field": "descriptorFilename" } },
+    { "name": "nested-source-filename", "scope": { "sourceFilename": "nested/🦀️.rs" }, "expected": { "valid": false, "field": "sourceFilename" } },
+    { "name": "empty-taxonomy-component", "scope": { "taxonomyPath": "🧰️framework//🔣️taxonomy.json" }, "expected": { "valid": false, "field": "taxonomyPath" } },
+    { "name": "nul-taxonomy-path", "scope": { "taxonomyPath": "🧰️framework/\u0000/🔣️taxonomy.json" }, "expected": { "valid": false, "field": "taxonomyPath" } },
+    { "name": "newline-taxonomy-path", "scope": { "taxonomyPath": "🧰️framework/\n/🔣️taxonomy.json" }, "expected": { "valid": false, "field": "taxonomyPath" } },
+    { "name": "drive-taxonomy-path", "scope": { "taxonomyPath": "C:🧰️framework/🔣️taxonomy.json" }, "expected": { "valid": false, "field": "taxonomyPath" } },
+    { "name": "compose-taxonomy-path", "scope": { "taxonomyPath": "compose/🔣️taxonomy.json" }, "expected": { "valid": false, "field": "taxonomyPath" } },
+    { "name": "case-folded-compose-root", "scope": { "mutationRoot": "Compose/🧬️mutations" }, "expected": { "valid": false, "field": "mutationRoot" } },
+    { "name": "case-folded-compose-taxonomy", "scope": { "taxonomyPath": "Compose/🔣️taxonomy.json" }, "expected": { "valid": false, "field": "taxonomyPath" } },
+    { "name": "case-folded-compose-filename", "scope": { "sourceFilename": "Compose" }, "provenance": { "sourceFilename": "Compose" }, "expected": { "valid": false, "field": "sourceFilename" } }
+  ]
+}

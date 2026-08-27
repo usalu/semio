@@ -1,0 +1,22 @@
+{
+  "chrm": {
+    "blueX": 7,
+    "blueY": 8,
+    "greenX": 5,
+    "greenY": 6,
+    "redX": 3,
+    "redY": 4,
+    "whiteX": 1,
+    "whiteY": 2
+  },
+  "chunkOrder": {
+    "added": [
+      {
+        "index": 3,
+        "marker": {
+          "chunk": "chrm"
+        }
+      }
+    ]
+  }
+}

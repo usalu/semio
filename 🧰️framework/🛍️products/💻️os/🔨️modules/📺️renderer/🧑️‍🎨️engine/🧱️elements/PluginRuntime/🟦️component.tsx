@@ -45,7 +45,9 @@ import {
 } from "@semio-tech/framework";
 import {
   AppChannelClient,
+  AppChannelRequestSequence,
   type AppFrameValue,
+  decodeAppFrame,
   decodeConflictsFromWire,
   decodeFaultFromWire,
   decodeMergeReportFromWire,
@@ -74,6 +76,7 @@ import {
 } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
 import { TurnScheduler, type Lane } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler.ts";
 import { type PluginManifest, type ViewModel } from "../Shell/🟦️component.tsx";
+import { SEGMENTED_DOWNLOAD_MARKER_PREFIX } from "../SegmentedDownload/🟦️component.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️plugin-runtime
@@ -334,6 +337,49 @@ function shellFrameBytes(effect: WireVariant, instanceId: number): Uint8Array | 
   return coerceWireBytes(val.payload);
 }
 
+//#region 📬️TypedOperationResult
+const TYPED_OPERATION_PAGE_MAGIC = new TextEncoder().encode("semio.typed-operation-page.v1\0");
+const TYPED_OPERATION_ACK_MAGIC = new TextEncoder().encode("semio.typed-operation-ack.v1\0");
+
+function typedOperationResult(effect: WireVariant): { readonly acknowledgement: ShardEventEnvelope; readonly lane: number; readonly payload: Uint8Array; readonly operation: bigint } | null {
+  if (effect.tag !== "send-message") return null;
+  const value = effect.val as { readonly target?: WireVariant; readonly payload?: unknown } | undefined;
+  if (value?.target?.tag !== "shell" || value.payload === undefined) return null;
+  const bytes = coerceWireBytes(value.payload);
+  if (!TYPED_OPERATION_PAGE_MAGIC.every((byte, index) => bytes[index] === byte)) return null;
+  const body = bytes.subarray(TYPED_OPERATION_PAGE_MAGIC.length);
+  if (body.length < 30) throw new Error("typed-operation result header is truncated");
+  const view = new DataView(body.buffer, body.byteOffset, body.byteLength);
+  const receiver = view.getUint32(0, true);
+  const lane = body[25]!;
+  const length = view.getUint32(26, true);
+  if (Number(value.target.val) !== receiver || lane > 11 || length > 4_096 || body.length !== 30 + length) throw new Error("typed-operation result violates its receiver, lane, or page authority");
+  const ack = new Uint8Array(TYPED_OPERATION_ACK_MAGIC.length + 25);
+  ack.set(TYPED_OPERATION_ACK_MAGIC);
+  ack.set(body.subarray(0, 25), TYPED_OPERATION_ACK_MAGIC.length);
+  return { acknowledgement: { kind: "message", payload: { source: { tag: "shell", val: String(receiver) }, payload: Array.from(ack) } }, lane, payload: body.subarray(30), operation: view.getBigUint64(4, true) };
+}
+
+function typedOperationAcknowledgements(result: WireTurnResult): ShardEventEnvelope[] {
+  return result.effects.flatMap((effect) => {
+    const page = typedOperationResult(effect);
+    return page ? [page.acknowledgement] : [];
+  });
+}
+
+function consumeTypedOperationEffects(effects: readonly WireVariant[]): WireVariant[] {
+  return effects.flatMap((effect) => {
+    const page = typedOperationResult(effect);
+    if (!page) return [effect];
+    if (page.lane === 11) throw new Error(`typed-operation failed: ${new TextDecoder().decode(page.payload)}`);
+    if (page.lane !== 9) return [];
+    const metadata: unknown = JSON.parse(new TextDecoder().decode(page.payload));
+    if (!Array.isArray(metadata) || typeof metadata[0] !== "string" || typeof metadata[1] !== "string" || (metadata[2] !== null && metadata[2] !== "base64" && metadata[2] !== "identity")) throw new Error("typed-operation download metadata is invalid");
+    return [{ tag: "download-media-export", val: { filename: metadata[0], mimeType: metadata[1], data: String(page.operation), encoding: `${SEGMENTED_DOWNLOAD_MARKER_PREFIX}${metadata[2] ?? "identity"}` } }];
+  });
+}
+//#endregion 📬️TypedOperationResult
+
 //#region 🔖️RetainedUiPatch
 /** 🩹️ `kernel::PatchOp`, TS twin restricted to what `⚛️reactor/🩹️patches/🦀️component.rs`'s
  * `PatchTracker` actually emits this wave (its own doc: "full-body only — every dirty surface emits
@@ -493,6 +539,10 @@ function wireEffectToFriendly(effect: WireVariant): Effect | null {
   switch (effect.tag) {
     case "request-sync":
       return "requestSync";
+    case "load-document":
+      return { loadDocument: { pack: Array.from(coerceWireBytes(val.pack)), spr: Array.from(coerceWireBytes(val.spr)) } };
+    case "download-media-export":
+      return { downloadMediaExport: { filename: str("filename"), mimeType: str("mimeType"), data: str("data"), encoding: val.encoding as string | undefined } };
     case "notify":
       return { notify: { message: str("message") } };
     case "navigate":
@@ -763,18 +813,20 @@ async function yieldPluginUiContinuation(): Promise<void> {
  * publish them across multiple MoreWork frames. A supplied empty `requiredSurfaceIds` means every
  * requested surface is already retained, so an unchanged refresh needs no continuation at all.
  * Accepted patches are acknowledged between turns to release bounded publication capacity. */
-async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: Lane, requiredSurfaceIds?: ReadonlySet<string>, acceptPatches?: (result: WireTurnResult) => readonly ShardEventEnvelope[]): Promise<WireTurnResult> {
+async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: Lane, requiredSurfaceIds?: ReadonlySet<string>, acceptPatches?: (result: WireTurnResult) => readonly ShardEventEnvelope[], drainOperations = false): Promise<WireTurnResult> {
   const results: WireTurnResult[] = [initial];
-  let acknowledgements = acceptPatches?.(initial) ?? [];
-  for (let continuation = 0; (acknowledgements.length > 0 || (!hasRequiredUiPatches(results, requiredSurfaceIds) && wireTurnStatusTag(results.at(-1)?.status) === "more-work")) && continuation < PLUGIN_UI_CONTINUATION_LIMIT; continuation += 1) {
+  const acknowledge = (result: WireTurnResult) => [...(acceptPatches?.(result) ?? []), ...typedOperationAcknowledgements(result)];
+  const hasWork = () => (drainOperations || !hasRequiredUiPatches(results, requiredSurfaceIds)) && wireTurnStatusTag(results.at(-1)?.status) === "more-work";
+  let acknowledgements = acknowledge(initial);
+  for (let continuation = 0; (acknowledgements.length > 0 || hasWork()) && continuation < PLUGIN_UI_CONTINUATION_LIMIT; continuation += 1) {
     const continued = await submitPluginTurn(actorId, acknowledgements, lane);
     results.push(continued);
-    acknowledgements = acceptPatches?.(continued) ?? [];
-    if ((continuation + 1) % PLUGIN_UI_CONTINUATION_BATCH_SIZE === 0 && !hasRequiredUiPatches(results, requiredSurfaceIds) && wireTurnStatusTag(results.at(-1)?.status) === "more-work") {
+    acknowledgements = acknowledge(continued);
+    if ((continuation + 1) % PLUGIN_UI_CONTINUATION_BATCH_SIZE === 0 && hasWork()) {
       await yieldPluginUiContinuation();
     }
   }
-  if (acknowledgements.length > 0 || (!hasRequiredUiPatches(results, requiredSurfaceIds) && wireTurnStatusTag(results.at(-1)?.status) === "more-work")) {
+  if (acknowledgements.length > 0 || hasWork()) {
     const published = results.flatMap((result) => result.uiPatches.map(wirePatchSurfaceId).filter((surface): surface is string => surface !== null));
     throw new Error(
       `[DEBUG] PluginRuntime: actor ${actorId} did not publish its requested UI surfaces within ${PLUGIN_UI_CONTINUATION_LIMIT} continuations ` +
@@ -789,10 +841,26 @@ async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: 
   }
   return {
     uiPatches: results.flatMap((result) => result.uiPatches),
-    effects: results.flatMap((result) => result.effects),
+    effects: consumeTypedOperationEffects(results.flatMap((result) => result.effects)),
     nextWake: [...results].reverse().find((result) => result.nextWake !== null)?.nextWake ?? null,
     status: results.at(-1)?.status,
     commandIngress: results.at(-1)?.commandIngress,
+  };
+}
+async function settleAcknowledgedPluginTurns(actorId: string, results: readonly WireTurnResult[], acknowledgements: readonly ShardEventEnvelope[]): Promise<WireTurnResult> {
+  const initial: WireTurnResult = {
+    uiPatches: [],
+    effects: [],
+    nextWake: null,
+    commandIngress: results.at(-1)?.commandIngress,
+    status: results.at(-1)?.status,
+  };
+  const continued = await settlePluginTurn(actorId, initial, "Interactive", new Set(), (turn) => turn === initial ? acknowledgements : patchAckEvents(retainTurnUiPatches(actorId, turn)), true);
+  return {
+    ...continued,
+    uiPatches: [...results.flatMap((turn) => turn.uiPatches), ...continued.uiPatches],
+    effects: consumeTypedOperationEffects([...results.flatMap((turn) => turn.effects), ...continued.effects]),
+    nextWake: continued.nextWake ?? [...results].reverse().find((turn) => turn.nextWake !== null)?.nextWake ?? null,
   };
 }
 //#endregion 🔖️PluginTurnScheduler
@@ -815,13 +883,28 @@ function uiRefreshBodyKeys(request: PluginUiRefreshRequest): string[] {
 }
 
 /** 📬️ Projects retained bodies back to their requested window and panel keys. */
-function retainedUiRefreshResponse(instanceId: number, request: PluginUiRefreshRequest, retained: ReadonlyMap<string, RetainedSurface>): PluginUiRefreshResponse {
+function retainedUiRefreshResponse(instanceId: number, request: PluginUiRefreshRequest, retained: ReadonlyMap<string, RetainedSurface>, effects: readonly WireVariant[] = []): PluginUiRefreshResponse {
   const project = (targets: PluginUiRefreshRequest["windows"]) => (targets ?? []).flatMap((target) => {
     const surface = retained.get(retainedSurfaceId(instanceId, target.bodyKey ?? target.key));
     const value = surface && retainedSurfaceToBuiltNode(surface);
     return surface && value ? [{ key: target.key, hash: retainedSurfaceHash(retainedSurfaceToSnapshot(surface)), value }] : [];
   });
-  return { windows: project(request.windows), panels: project(request.panels) };
+  const requestedEffects: Effect[] = [];
+  for (const effect of effects) {
+    const bytes = shellFrameBytes(effect, instanceId);
+    if (bytes) {
+      const frame = decodeAppFrame(bytes);
+      if ("Error" in frame) {
+        const fault = decodeFaultFromWire(frame.Error.fault, decodePackValue);
+        if (fault) throw new SemioFaultError(fault);
+        throw new Error(`refresh failed: ${faultDisplayMessage(frame.Error.fault, decodePackValue)}`);
+      }
+    } else {
+      const requested = wireEffectToFriendly(effect);
+      if (requested) requestedEffects.push(requested);
+    }
+  }
+  return { windows: project(request.windows), panels: project(request.panels), requestedEffects };
 }
 
 function retainedSurfacesForActor(actorId: string): Map<string, RetainedSurface> {
@@ -884,6 +967,11 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const actorId = requireActorId(instanceId);
       const result = await serializeCommandIngressForActor(actorId, async (): Promise<WireTurnResult> => {
         const results: WireTurnResult[] = [];
+        let acknowledgements: readonly ShardEventEnvelope[] = [];
+        const acceptTurn = (turn: WireTurnResult) => {
+          results.push(turn);
+          acknowledgements = [...patchAckEvents(retainTurnUiPatches(actorId, turn)), ...typedOperationAcknowledgements(turn)];
+        };
         for (let commandIndex = 0; commandIndex < events.length; commandIndex += 1) {
           eventSeq += 1;
           const pages = createShardCommandIngressPages({
@@ -895,26 +983,20 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
             seq: BigInt(eventSeq),
             command: events[commandIndex]!,
           });
-          for (const commandPage of pages) results.push(await submitTurn(actorId, [], { commandPage }));
+          for (const commandPage of pages) acceptTurn(await submitTurn(actorId, acknowledgements, { commandPage }));
           let terminal = results.at(-1)?.commandIngress?.tag;
           const observedStatuses = new Set([terminal ?? "missing"]);
           for (let continuation = 0; terminal !== "command-complete" && continuation < 1_024; continuation += 1) {
             if (terminal === "fault") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress fault: ${commandIngressFaultDisplay(results.at(-1)?.commandIngress)}`);
             if (terminal === "backpressure") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress backpressure after serialized submission`);
-            const continued = await submitTurn(actorId, []);
-            results.push(continued);
+            const continued = await submitTurn(actorId, acknowledgements);
+            acceptTurn(continued);
             terminal = continued.commandIngress?.tag;
             observedStatuses.add(terminal ?? "missing");
           }
           if (terminal !== "command-complete") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress did not complete within 1024 continuations (observed statuses: ${[...observedStatuses].join(", ")})`);
         }
-        const result = {
-          uiPatches: results.flatMap((turn) => turn.uiPatches),
-          effects: results.flatMap((turn) => turn.effects),
-          nextWake: [...results].reverse().find((turn) => turn.nextWake !== null)?.nextWake ?? null,
-          commandIngress: results.at(-1)?.commandIngress,
-        };
-        return settlePluginTurn(actorId, result, "Interactive", new Set(), (turn) => patchAckEvents(retainTurnUiPatches(actorId, turn)));
+        return settleAcknowledgedPluginTurns(actorId, results, acknowledgements);
       });
       const outFrames: Uint8Array[] = [];
       const leftover: WireVariant[] = [];
@@ -997,7 +1079,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     // repeatedly for the SAME actor; "UserVisible" (below "Interactive", above "Background") lets a
     // real command preempt it, and the `"surface-visible"` coalesce key collapses the burst to the
     // single latest probe rather than queuing every intermediate one (see `submitPluginTurn`'s doc).
-    await serializeCommandIngressForActor(actorId, async () => {
+    const result = await serializeCommandIngressForActor(actorId, async () => {
       const settled = await settlePluginTurn(
         actorId,
         await submitTurn(
@@ -1008,11 +1090,12 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         "UserVisible",
         missingSurfaceIds,
         (turn) => patchAckEvents(retainTurnUiPatches(actorId, turn)),
+        true,
       );
       return settled;
     });
     const retained = retainedWindowByActor.get(actorId);
-    return retained ? retainedUiRefreshResponse(instanceId, request, retained) : {};
+    return retainedUiRefreshResponse(instanceId, request, retained ?? new Map(), result.effects);
   };
 
   /** 🔁️ H1-react item 2 ("finish the invokeExtension branch") — the real `req`-correlated completion
@@ -1132,12 +1215,16 @@ async function performInvocation(client: AppChannelClient, instanceId: number, i
   let historyPatch: InvocationResponse["historyPatch"];
   for (const frame of frames) {
     if ("Invocation" in frame) {
-      output = decodePackValue(new Uint8Array(frame.Invocation.output));
-      const decodedDiagnostics = decodePackValue(new Uint8Array(frame.Invocation.diagnostics));
-      diagnostics = Array.isArray(decodedDiagnostics) ? (decodedDiagnostics as InvocationResponse["diagnostics"]) : [];
-      uiScope = decodePackValue(new Uint8Array(frame.Invocation.ui_scope)) as InvocationResponse["uiScope"];
-      const decodedHistoryPatch = decodePackValue(new Uint8Array(frame.Invocation.history_patch));
-      historyPatch = decodedHistoryPatch && typeof decodedHistoryPatch === "object" ? (decodedHistoryPatch as InvocationResponse["historyPatch"]) : undefined;
+      if (frame.Invocation.output.length) output = decodePackValue(new Uint8Array(frame.Invocation.output));
+      if (frame.Invocation.diagnostics.length) {
+        const decodedDiagnostics = decodePackValue(new Uint8Array(frame.Invocation.diagnostics));
+        diagnostics = Array.isArray(decodedDiagnostics) ? (decodedDiagnostics as InvocationResponse["diagnostics"]) : [];
+      }
+      if (frame.Invocation.ui_scope.length) uiScope = decodePackValue(new Uint8Array(frame.Invocation.ui_scope)) as InvocationResponse["uiScope"];
+      if (frame.Invocation.history_patch.length) {
+        const decodedHistoryPatch = decodePackValue(new Uint8Array(frame.Invocation.history_patch));
+        historyPatch = decodedHistoryPatch && typeof decodedHistoryPatch === "object" ? (decodedHistoryPatch as InvocationResponse["historyPatch"]) : undefined;
+      }
     } else if ("Error" in frame) {
       const fault = decodeFaultFromWire(frame.Error.fault, decodePackValue);
       if (fault) throw new SemioFaultError(fault);
@@ -1196,6 +1283,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
   const handle = lease.handle;
   const manifest = decodePackValue(await handle.manifest()) as unknown as PluginManifest;
   const channels = new Map<number, AppChannelClient>();
+  const channelRequests = new AppChannelRequestSequence();
   const requireChannel = (instanceId: number): AppChannelClient => {
     const client = channels.get(instanceId);
     if (!client) throw new Error(`[DEBUG] program ${pluginId}: no channel for instance ${instanceId} (createApp not called, or already destroyed)`);
@@ -1206,7 +1294,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     manifest,
     createApp: async (appId) => {
       const instanceId = await handle.createApp(appId);
-      channels.set(instanceId, new AppChannelClient(handle, instanceId, appId, currentPluginRuntimeActor));
+      channels.set(instanceId, new AppChannelClient(handle, channelRequests, instanceId, appId, currentPluginRuntimeActor));
       return instanceId;
     },
     destroyApp: async (instanceId) => {
@@ -1814,6 +1902,19 @@ if (import.meta.vitest) {
   });
 
   describe("instance-open retained UI lifecycle", () => {
+    it("preserves document effects returned by a refresh even before any surface is retained", async () => {
+      const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/📬️operation-continuation.json");
+      const response = retainedUiRefreshResponse(7, { viewState: {} }, new Map(), [{ tag: "load-document", val: fixture.effects.loadDocument }]);
+      expect(response.requestedEffects).toEqual([{ loadDocument: fixture.effects.loadDocument }]);
+    });
+
+    it("reports a refresh fault frame instead of returning an unchanged surface", async () => {
+      const { encodeAppFrame } = await import("@semio-tech/framework-os");
+      const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/📬️operation-continuation.json");
+      const payload = encodeAppFrame({ Error: { in_reply_to: null, fault: Array.from(encodeFaultBytes(fixture.wire.fault)), report: [] } });
+      expect(() => retainedUiRefreshResponse(7, { viewState: {} }, new Map(), [{ tag: "send-message", val: { target: { tag: "shell", val: "7" }, payload } }])).toThrow(fixture.wire.fault);
+    });
+
     it("refreshes window and panel surfaces from the language-agnostic ownership cases", async () => {
       const { default: fixture } = await import("./🧪️fixtures/🔣️surface-refresh.json");
       for (const testCase of fixture.cases) {
@@ -2280,17 +2381,20 @@ if (import.meta.vitest) {
           enqueue: (instanceId: number, events: readonly Uint8Array[]) => {
             const commands = events.map((frame) => decodeAppCommand(frame));
             seenCommands.push(...commands);
-            const frames = commands.map((command) => {
+            const frames = commands.flatMap((command) => {
               if ("transactionPrepare" in command) {
-                return encodeAppFrame({ transactionPrepared: { txn_id: command.transactionPrepare.txn_id, foreign: [], rejection: [] } });
+                return [encodeAppFrame({ transactionPrepared: { txn_id: command.transactionPrepare.txn_id, foreign: [], rejection: [] } }), encodeAppFrame({ Done: { in_reply_to: command.transactionPrepare.seq } })];
               }
               if ("transactionCommit" in command) {
-                return encodeAppFrame({ transactionCommitted: { txn_id: command.transactionCommit.txn_id, edit_id: "edit-1" } });
+                return [encodeAppFrame({ transactionCommitted: { txn_id: command.transactionCommit.txn_id, edit_id: "edit-1" } }), encodeAppFrame({ Done: { in_reply_to: command.transactionCommit.seq } })];
               }
+              if ("transactionRollback" in command) return [encodeAppFrame({ transactionRolledBack: { txn_id: command.transactionRollback.txn_id } }), encodeAppFrame({ Done: { in_reply_to: command.transactionRollback.seq } })];
+              if ("transactionUndo" in command) return [encodeAppFrame({ Done: { in_reply_to: command.transactionUndo.seq } })];
+              if ("transactionRedo" in command) return [encodeAppFrame({ Done: { in_reply_to: command.transactionRedo.seq } })];
               if ("ReadDocument" in command) {
-                return encodeAppFrame({ Document: { in_reply_to: command.ReadDocument.seq, pack: [5, 5], spr: [6], ops: "" } });
+                return [encodeAppFrame({ Document: { in_reply_to: command.ReadDocument.seq, pack: [5, 5], spr: [6], ops: "" } })];
               }
-              return encodeAppFrame({ Done: { in_reply_to: 0 } });
+              throw new Error(`unexpected command ${JSON.stringify(command)}`);
             });
             turnBroadcast.push({ instanceId, frames });
           },
@@ -2336,7 +2440,10 @@ if (import.meta.vitest) {
           takeSegmentedDownloadChunk: async () => undefined,
           enqueue: (instanceId: number, events: readonly Uint8Array[]) => {
             const commands = events.map((frame) => decodeAppCommand(frame));
-            const frames = commands.map((command) => ("LoadDocument" in command ? encodeAppFrame({ Done: { in_reply_to: command.LoadDocument.seq } }) : encodeAppFrame({ Done: { in_reply_to: 0 } })));
+            const frames = commands.map((command) => {
+              if (!("LoadDocument" in command)) throw new Error(`unexpected command ${JSON.stringify(command)}`);
+              return encodeAppFrame({ Done: { in_reply_to: command.LoadDocument.seq } });
+            });
             turnBroadcast.push({ instanceId, frames });
           },
           outcomes: turnBroadcast.stream,
@@ -2367,6 +2474,103 @@ if (import.meta.vitest) {
         sharedShardClient = previous;
       });
     }
+
+    it("continues admitted operations after surfaces are retained and ACKs each exact result", async () => {
+      const { Buffer } = await import("node:buffer");
+      const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/📬️operation-continuation.json");
+      const token = Buffer.alloc(25);
+      token.writeUInt32LE(fixture.wire.receiver, 0);
+      token.writeBigUInt64LE(BigInt(fixture.wire.operation), 4);
+      token.writeBigUInt64LE(BigInt(fixture.wire.generation), 12);
+      token.writeUInt32LE(fixture.wire.sequence, 20);
+      token[24] = fixture.wire.attempt;
+      const expectedAck = Buffer.concat([Buffer.from("semio.typed-operation-ack.v1\0"), token]);
+      const payload = Buffer.from(fixture.wire.payload);
+      const length = Buffer.alloc(4);
+      length.writeUInt32LE(payload.length);
+      let turns = 0;
+      await withFakeShardClient(async (_actor, events) => {
+        if (turns > 0) expect(events).toEqual([{ kind: "message", payload: { source: { tag: "shell", val: String(fixture.wire.receiver) }, payload: Array.from(expectedAck) } }]);
+        const lane = fixture.wire.lanes[turns++];
+        const effects = lane === undefined ? [] : [{ tag: "send-message", val: { target: { tag: "shell", val: String(fixture.wire.receiver) }, payload: Array.from(Buffer.concat([Buffer.from("semio.typed-operation-page.v1\0"), token, Buffer.from([lane]), length, payload])) } }];
+        return { uiPatches: [], effects, nextWake: null, status: { tag: lane === undefined ? "idle" : "more-work" } };
+      }, async () => {
+        const result = await settlePluginTurn("retained-operation#7", { uiPatches: [], effects: [], nextWake: null, status: { tag: "more-work" } }, "Interactive", new Set(), undefined, true);
+        expect(turns).toBe(fixture.wire.lanes.length + 1);
+        expect(result.effects).toEqual([]);
+        expect(result.status).toEqual({ tag: "idle" });
+      });
+    });
+
+    it("does not replay already acknowledged ingress publications during settlement", async () => {
+      const { Buffer } = await import("node:buffer");
+      const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/📬️operation-continuation.json");
+      const results: WireTurnResult[] = fixture.wire.lanes.map((lane, sequence) => {
+        const header = Buffer.alloc(30);
+        header.writeUInt32LE(fixture.wire.receiver, 0);
+        header.writeBigUInt64LE(BigInt(fixture.wire.operation), 4);
+        header.writeBigUInt64LE(BigInt(fixture.wire.generation), 12);
+        header.writeUInt32LE(sequence, 20);
+        header[24] = fixture.wire.attempt;
+        header[25] = lane;
+        return { uiPatches: [], effects: [{ tag: "send-message", val: { target: { tag: "shell", val: String(fixture.wire.receiver) }, payload: Array.from(Buffer.concat([Buffer.from("semio.typed-operation-page.v1\0"), header])) } }], nextWake: null, status: { tag: "more-work" } };
+      });
+      const pending = typedOperationAcknowledgements(results.at(-1)!);
+      await withFakeShardClient(async (_actor, events) => {
+        expect(events).toEqual(pending);
+        return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+      }, async () => {
+        const result = await settleAcknowledgedPluginTurns("retained-ingress#7", results, pending);
+        expect(result.effects).toEqual([]);
+        expect(result.status).toEqual({ tag: "idle" });
+      });
+    });
+
+    it("validates fixed result page authority and preserves document and download effects", async () => {
+      const { Buffer } = await import("node:buffer");
+      const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/📬️operation-continuation.json");
+      const wire = (lane: number, text: string, receiver = fixture.wire.receiver): WireVariant => {
+        const body = Buffer.alloc(30);
+        body.writeUInt32LE(fixture.wire.receiver, 0);
+        body.writeBigUInt64LE(BigInt(fixture.wire.operation), 4);
+        body.writeBigUInt64LE(BigInt(fixture.wire.generation), 12);
+        body.writeUInt32LE(fixture.wire.sequence, 20);
+        body[24] = fixture.wire.attempt;
+        body[25] = lane;
+        const payload = Buffer.from(text);
+        body.writeUInt32LE(payload.length, 26);
+        return { tag: "send-message", val: { target: { tag: "shell", val: String(receiver) }, payload: Array.from(Buffer.concat([Buffer.from("semio.typed-operation-page.v1\0"), body, payload])) } };
+      };
+      expect(typedOperationResult(wire(10, "x".repeat(4_096)))?.payload.length).toBe(4_096);
+      for (const invalid of [wire(12, ""), wire(10, "x".repeat(4_097)), wire(10, "", 8)]) expect(() => typedOperationResult(invalid)).toThrow("authority");
+      const truncated = wire(10, "x");
+      (truncated.val as { payload: number[] }).payload.pop();
+      expect(() => typedOperationResult(truncated)).toThrow("authority");
+      expect(wireEffectToFriendly({ tag: "load-document", val: fixture.effects.loadDocument })).toEqual({ loadDocument: fixture.effects.loadDocument });
+      const download = consumeTypedOperationEffects([wire(9, JSON.stringify(fixture.effects.download))]);
+      expect(download.map(wireEffectToFriendly)).toEqual([{ downloadMediaExport: { filename: fixture.effects.download[0], mimeType: fixture.effects.download[1], data: fixture.wire.operation, encoding: "semio-segmented-handle-v1:identity" } }]);
+      let acknowledged = false;
+      await withFakeShardClient(async (_actor, events) => {
+        acknowledged = events.length === 1 && events[0]?.kind === "message";
+        return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+      }, async () => {
+        await expect(settlePluginTurn("faulted-operation#7", { uiPatches: [], effects: [wire(11, fixture.wire.fault)], nextWake: null, status: { tag: "idle" } }, "Interactive", new Set(), undefined, true)).rejects.toThrow(fixture.wire.fault);
+        expect(acknowledged).toBe(true);
+      });
+    });
+
+    it("keeps the command reply when publication supplies only an unsolicited UI scope", async () => {
+      const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/📬️operation-continuation.json");
+      const bytes = (value: unknown) => Array.from(encodePackValue(value));
+      const frames = [
+        { Invocation: { in_reply_to: 1, output: bytes({ operationId: fixture.wire.operation }), diagnostics: bytes([]), ui_scope: bytes({ kind: "none" }), history_patch: [], messages: [] } },
+        { Invocation: { in_reply_to: 0, output: [], diagnostics: [], ui_scope: bytes({ kind: "full" }), history_patch: [], messages: [] } },
+      ];
+      const client = { command: async () => frames } as unknown as AppChannelClient;
+      const result = await performInvocation(client, 7, {}, "action", {});
+      expect(result.output).toEqual({ operationId: fixture.wire.operation });
+      expect(result.uiScope).toEqual({ kind: "full" });
+    });
 
     it("drains an actor's more-work turns until the reconciled UI patch is publishable", async () => {
       let continuationCount = 0;

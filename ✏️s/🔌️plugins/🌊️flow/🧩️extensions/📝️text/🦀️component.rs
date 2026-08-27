@@ -152,7 +152,7 @@ mod extension_guest {
         let manifest_json = extension_manifest_json();
         let flow_topic_payload = flow_extension_contribution(FLOW_APP_ID, manifest_json.clone());
         let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);
-        let bundle = ExtensionBundle::new(EXTENSION_ID, EXTENSION_LABEL, "0.1.0").extends("flow");
+        let bundle = ExtensionBundle::new("flow-extension-text", EXTENSION_LABEL, "0.1.0").extends("flow");
         let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Linked));
         let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", flow_topic_payload));
         let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
@@ -160,6 +160,19 @@ mod extension_guest {
             let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string()))?;
             Ok(evaluate_json(&neural_engine::ColdOwner::new(module_registry()), &request.operator_id, &request.input_json).into_bytes())
         }))
+    }
+
+    #[test]
+    fn bundle_identity_matches_catalogue_fixture() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️package-identities.json")).unwrap();
+        let bundle = bundle();
+        let manifest = serde_json::to_value(&bundle.manifest).unwrap();
+        assert_eq!(manifest["extensionId"], fixture["text"]["pluginId"]);
+        assert_eq!(bundle.manifest.topic_contributions.len(), 2);
+        for contribution in &bundle.manifest.topic_contributions {
+            let payload: serde_json::Value = contribution.decode().unwrap();
+            assert_eq!(payload["extensionId"], fixture["text"]["flowId"]);
+        }
     }
 
     semio_framework_plugin::extension_exports!(bundle);

@@ -12,7 +12,7 @@ writes — genuinely differential, unlike a read-only reference).
   — filled in the stub dispatcher: an independent `quick-xml`-backed tree type (`XNode`/`XDoc`, not
   reusing production `XmlNode`/`XmlSnapshot` — this crate never depends on `semio-s-plugin-stdio`),
   parse/serialize, path-addressed apply/inverse for all 8 kinds, and `project_xml_1_0`.
-- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️oracle/🔣️.json`
   — new: registers `quick-xml-1-0-mutate` oracle (capability `xml-1-0-mutate`), the `semantic-xml-v1`
   comparison profile, and the `xml-1-0-any` mutation catalog (8 kinds).
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🧫️fixtures/📰️ooxml-word-document.xml` — new, real input (see

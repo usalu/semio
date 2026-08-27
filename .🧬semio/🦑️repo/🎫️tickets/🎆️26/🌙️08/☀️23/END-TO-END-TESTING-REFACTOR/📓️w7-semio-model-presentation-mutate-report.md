@@ -41,7 +41,7 @@ pub const KINDS: &[&str] = &OP_KEYWORDS;
 own test module. It asserts two things: every enum variant reaches `KINDS` at its own
 `variant_ordinal` under exactly the keyword `print_op` emits — `demo_mutation_cases()` supplies one
 instance per variant — and `KINDS` equals the catalog's `kinds` array read straight out of
-`../../🧪️oracle/🔣️component.json` with `include_str!`.
+`../../🧪️oracle/🔣️.json` with `include_str!`.
 
 **Not run.** The production crate does not compile (see §6), so like every other subset's `KINDS`
 test this one is written and waiting. The catalogs were instead audited by hand against the enums:
@@ -68,7 +68,7 @@ over IFC, neither is authoritative over `SemioModelSnapshot`, and the only path 
 our own IFC bridge.
 
 Recorded as `semio-model-mutation-semantics` and `semio-presentation-mutation-semantics` in the two
-new `🧪️oracle/🔣️component.json` manifests, `substitutes: ["specification-vectors",
+new `🧪️oracle/🔣️.json` manifests, `substitutes: ["specification-vectors",
 "metamorphic-laws"]`, with the rejection reasoning written into the rationale rather than left in a
 report.
 
@@ -225,10 +225,10 @@ honest limit of this deliverable.
 Production (subset-owned):
 * `…/🪆️subsets/✳️model/🧬️schema/🧬️mutations/🦀️component.rs` — `pub const KINDS`, `semio_model_mutation_inverse`, `kinds_match_the_enum_and_the_catalog`
 * `…/🪆️subsets/✳️model/🧬️schema/📸️snapshot/🦀️component.rs` — `🔖️ReachableCodecs` region (4 wrappers)
-* `…/🪆️subsets/✳️model/🧪️oracle/🔣️component.json` — new
+* `…/🪆️subsets/✳️model/🧪️oracle/🔣️.json` — new
 * `…/🪆️subsets/✳️presentation/🧬️schema/🧬️mutations/🦀️component.rs` — same three additions
 * `…/🪆️subsets/✳️presentation/🧬️schema/📸️snapshot/🦀️component.rs` — `🔖️ReachableCodecs` region
-* `…/🪆️subsets/✳️presentation/🧪️oracle/🔣️component.json` — new
+* `…/🪆️subsets/✳️presentation/🧪️oracle/🔣️.json` — new
 
 Cases (new), under `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/`:
 * `mutate-semio-model/{component.feature,🦀️component.rs,🧫️fixtures/…}` — 33 fixture files

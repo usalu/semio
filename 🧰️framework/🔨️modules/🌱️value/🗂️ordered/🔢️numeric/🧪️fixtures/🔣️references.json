@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "maximum": 9007199254740991,
+  "cases": ["capture-ids", "capture-order", "capture-shadowed-checker", "allocation-entry", "allocation-left", "allocation-right", "allocation-duplicate-owner"],
+  "expected": { "rejected": true, "preserved": true },
+  "maximumStepBytes": 256
+}

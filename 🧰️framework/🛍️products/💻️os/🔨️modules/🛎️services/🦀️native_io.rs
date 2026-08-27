@@ -707,9 +707,9 @@ mod tests {
                 site: "native_io_test",
                 stage: semio_framework_job::InteractiveStage::InteractiveStep,
                 fuel_per_step: semio_framework_job::INTERACTIVE_LANE_FUEL,
-                step_budget_ms: semio_framework_job::INTERACTIVE_LANE_WALL_MS,
+                step_budget_us: semio_framework_job::INTERACTIVE_LANE_WALL_US,
             },
-            now_ms: semio_framework_job::default_now_ms,
+            now_us: semio_framework_job::default_now_us,
         };
         let mut session = semio_framework_job::BatchJobSession::try_new(NativeIoJob::new(request), params).unwrap_or_else(|_| panic!("native I/O test session admission"));
         let result;

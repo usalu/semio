@@ -9,6 +9,7 @@ export { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS, PROGRAM_TARGETS, pluginModuleU
 export { PLAYGROUND_SESSION } from "./🤖️generated/🟦️session.ts";
 
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
+import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-js/board-session";
 import { PLUGIN_CATALOG } from "../🔌️plugin/📇️registry/🟦️catalog.ts";
 import { PLAYGROUND_SESSION } from "./🤖️generated/🟦️session.ts";
 import { resolveShellBrandById } from "./🏷️brand/📦️index.ts";
@@ -44,7 +45,7 @@ if (typeof document !== "undefined" && document.getElementById("root") != null &
   const plugins = boot.plugins;
   if (renderer !== "wgpu") {
     const { bootFrameworkOs } = await import("@semio-tech/framework-renderer-react");
-    void bootFrameworkOs({ plugin: pluginFilter, plugins, appId, appRole, locks, defaults, brand }).catch((error) => {
+    void bootFrameworkOs({ plugin: pluginFilter, plugins, surfaceSessionFactories: PUZZLE_BOARD_SESSION_FACTORIES, appId, appRole, locks, defaults, brand }).catch((error) => {
       console.error("[DEBUG] os-dev react boot failed", error);
     });
   }

@@ -1,5 +1,11 @@
 # Draw Reference Evidence Semantics
 
+## Subsequent retention and input-state update
+
+The following causal audit remains historical evidence. The newer AGENTS policy and fresh input checks are recorded in [Historical Package Identity and Retention Recheck](📓️s-historical-package-identity-input.md). The machine-readable audit input linked below is currently absent, so its old link is not evidence of current availability. All 35 output owners are open; the coordinator retains their exact observation registrations without relabeling them as permanent inputs. Purity now has a separate canonical genuine-input regression, and the four originally detected full-path spans are supplemented by one newly detected prefixed-owner suffix. No old result is silently presented as a fresh run.
+
+The subsequent [completed-output and historical-link closure](📓️s-completed-output-retirement-and-historical-links.md) records removal of the six exact completed compiler outputs after current-caller and recovery checks, and replacement only of the ten approved inline-code spans with historical links to the same frozen source coordinates. It records all before/after hashes and spans; surrounding report facts remain unchanged. No executable-output freeze or blanket Markdown exemption was introduced. The original blocked-plan classification below remains a record of that earlier state, not a fresh apply-ready plan.
+
 ## Decision
 
 The retained full Draw plan's 77 proposed edits in 35 other-ticket JSON documents are historical report output coordinates, not replayable pending edits. Their exact current bytes and 77 source-value pointers are proposed for explicit frozen-coordinate registration. They have **not** been registered by this audit; coordinator approval is required.

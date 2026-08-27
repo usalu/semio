@@ -1,0 +1,16 @@
+{
+  "grants": [256, 4096],
+  "publication": { "scope": "actor-instance-surface", "ack": "after-atomic-root-publication", "stale": "reject-without-root-change", "capture": "old-root-survives-concurrent-close" },
+  "cases": [
+    { "name": "one-leaf-large-table", "kind": "replace", "size": 1024 },
+    { "name": "whole-subtree-retained-delete", "kind": "remove", "size": 1024 },
+    { "name": "backedge-cycle", "kind": "cycle", "size": 4 },
+    { "name": "missing-child", "kind": "orphan", "size": 4 },
+    { "name": "long-unicode-sibling-key", "kind": "duplicate", "size": 4 },
+    { "name": "unchecked-dangling-snapshot", "kind": "dangling", "size": 4 },
+    { "name": "deep-chain", "kind": "depth", "size": 132 },
+    { "name": "stale-before-work", "kind": "stale", "size": 4 }
+  ],
+  "text": { "unit": "α🧩️\n\"", "repeat": 4096, "utf8Bytes": 45056 },
+  "cancellation": { "everyPhase": true, "publishedRootUnchanged": true, "retireBeforeComplete": true }
+}

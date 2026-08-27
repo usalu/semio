@@ -134,7 +134,7 @@ pub mod manifest;
 /// actually call the impls: `ArtifactDsl::print_dsl`/`parse_dsl` and `ArtifactPack::encode_pack`/
 /// `decode_pack`. The impls were public while the traits were reachable only through the private
 /// `store` extern-crate alias above, which made them uncallable from outside — see
-/// `🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, which recorded
+/// `🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, which recorded
 /// exactly that gap.
 pub use semio_framework_os_kernel::{ArtifactDsl, ArtifactPack};
 //#endregion Store
@@ -421,22 +421,12 @@ pub mod artifacts {
                             }
                             #[path = "."]
                             pub mod mutations {
-                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️set-trailing-newline/🦀️component.rs"]
-                                pub mod set_trailing_newline;
-                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️set-line-ending/🦀️component.rs"]
-                                pub mod set_line_ending;
-                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥️insert-line/🦀️component.rs"]
-                                pub mod insert_line;
-                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-line/🦀️component.rs"]
-                                pub mod remove_line;
-                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️set-line/🦀️component.rs"]
-                                pub mod set_line;
-                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
+                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                                 pub mod binary;
-                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
                                 pub mod text;
                             }
                         }
@@ -2469,7 +2459,7 @@ pub mod artifacts {
                                 pub mod change_node_extra_data;
                                 #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔘️change-node-morph-weights/🦀️component.rs"]
                                 pub mod change_node_morph_weights;
-                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔘️change-node-name/🦀️component.rs"]
+                                #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔘️change-node-name/🦀️.rs"]
                                 pub mod change_node_name;
                                 #[path = "../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔺️change-primitive-extension-data/🦀️component.rs"]
                                 pub mod change_primitive_extension_data;

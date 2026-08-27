@@ -1,7 +1,7 @@
 //! 🦀️ UTF-8 text-line exhaustive mutation round-trip case — Rust adapter.
 //!
 //! No differential oracle is registered for this subset (see `../../🏅️standards/🔖️utf-8/
-//! 🪆️subsets/✳️any/🧪️oracle/🔣️component.json`'s `noOracleDecisions`), so the "oracle" role handlers
+//! 🪆️subsets/✳️any/🧪️oracle/🔣️.json`'s `noOracleDecisions`), so the "oracle" role handlers
 //! below are never dispatched by the repository test platform for a `@no-oracle-` feature (it has
 //! no `@oracle-<id>` tag to resolve an implementation for). They are still registered, matching
 //! every other stdio case's shape, and they still compute a REAL, independently-derived answer
@@ -129,9 +129,9 @@ mod subject {
     use semio_s_plugin_stdio_test_oracle::artifacts::txt::standards::v_utf_8::subsets::any::project_txt;
     use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
 
-    fn json_usize(params: &Json, key: &str) -> Result<usize, String> {
+    fn json_u32(params: &Json, key: &str) -> Result<u32, String> {
         match params.get(key) {
-            Some(Json::Number(value)) => Ok(*value as usize),
+            Some(Json::Number(value)) if value.is_finite() && value.fract() == 0.0 && *value >= 0.0 && *value <= u32::MAX as f64 => Ok(*value as u32),
             _ => Err(format!("mutation spec is missing numeric `{key}`")),
         }
     }
@@ -162,9 +162,9 @@ mod subject {
         Ok(match spec.str("kind").as_str() {
             "set-trailing-newline" => TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: json_bool(&params, "value") }),
             "set-line-ending" => TxtMutation::SetLineEnding(SetLineEndingMutation { value: line_ending_of(&params, "value") }),
-            "insert-line" => TxtMutation::InsertLine(InsertLineMutation { index: json_usize(&params, "index")?, text: params.str("text") }),
-            "remove-line" => TxtMutation::RemoveLine(RemoveLineMutation { index: json_usize(&params, "index")? }),
-            "set-line" => TxtMutation::SetLine(SetLineMutation { index: json_usize(&params, "index")?, text: params.str("text") }),
+            "insert-line" => TxtMutation::InsertLine(InsertLineMutation { index: json_u32(&params, "index")?, text: params.str("text") }),
+            "remove-line" => TxtMutation::RemoveLine(RemoveLineMutation { index: json_u32(&params, "index")? }),
+            "set-line" => TxtMutation::SetLine(SetLineMutation { index: json_u32(&params, "index")?, text: params.str("text") }),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

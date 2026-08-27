@@ -1,7 +1,7 @@
 //! 🦀️ Forms document exhaustive mutation case — Rust adapter. Ticket `26/08/23/END-TO-END-TESTING-REFACTOR`.
 //!
 //! Recorded no-oracle decision `forms-document-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`): `s.forms.form` is a
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): `s.forms.form` is a
 //! semio-NATIVE artifact with no third-party reader or writer, so this case registers SUBJECT
 //! handlers only. That is not an omission — the runner resolves an oracle implementation from the
 //! feature's `@oracle-` tag, this feature carries `@no-oracle-` instead, and the oracle role is

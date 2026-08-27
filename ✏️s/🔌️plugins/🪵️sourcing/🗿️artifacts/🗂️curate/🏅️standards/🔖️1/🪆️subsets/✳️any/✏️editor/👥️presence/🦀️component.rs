@@ -141,3 +141,112 @@ impl protocol::OpBinary for SourcingCuratePresenceMutation {
     }
 }
 //#endregion 🔖️PresenceMutation
+
+//#region 🧹️Retirement
+const SOURCING_PRESENCE_BYTES: usize = 7 * std::mem::size_of::<f64>();
+const _: () = assert!(std::mem::size_of::<SourcingCuratePresence>() == SOURCING_PRESENCE_BYTES && !std::mem::needs_drop::<SourcingCuratePresence>());
+
+pub struct SourcingPresenceRetirementFactory;
+
+impl store::SnapshotRetirementFactory<SourcingCuratePresence> for SourcingPresenceRetirementFactory {
+    fn retire(&self, root: std::sync::Arc<SourcingCuratePresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
+        Box::new(SourcingPresenceRetirement { root: std::mem::ManuallyDrop::new(Some(root)) })
+    }
+}
+
+struct SourcingPresenceRetirement {
+    root: std::mem::ManuallyDrop<Option<std::sync::Arc<SourcingCuratePresence>>>,
+}
+
+impl store::ErasedSnapshotRetirement for SourcingPresenceRetirement {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+        if maximum_items == 0 || maximum_bytes < SOURCING_PRESENCE_BYTES {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        let Some(root) = self.root.take() else { return Ok(store::SnapshotRetirementStep::Complete) };
+        let released_bytes = if std::sync::Arc::into_inner(root).is_some() { SOURCING_PRESENCE_BYTES } else { 0 };
+        Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes })
+    }
+
+    fn terminal_is_empty(&self) -> bool { self.root.is_none() }
+}
+
+impl Drop for SourcingPresenceRetirement {
+    fn drop(&mut self) {
+        if !std::thread::panicking() { assert!(self.root.is_none(), "Sourcing presence retirement requires exact terminal emptiness"); }
+    }
+}
+
+pub struct SourcingPresenceStoreDisposer {
+    terminal: Option<std::sync::Arc<SourcingCuratePresence>>,
+    active: Option<store::PresenceStoreRetirement<SourcingCuratePresence>>,
+}
+
+impl SourcingPresenceStoreDisposer {
+    pub fn new() -> Self { Self { terminal: Some(std::sync::Arc::new(SourcingCuratePresence::default())), active: None } }
+}
+
+impl semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<SourcingCuratePresence, SourcingCuratePresenceMutation>> for SourcingPresenceStoreDisposer {
+    fn close_step(
+        &mut self,
+        owner: &mut store::PresenceStore<SourcingCuratePresence, SourcingCuratePresenceMutation>,
+        maximum_items: usize,
+        maximum_bytes: usize,
+    ) -> Result<semio_framework_plugin::PluginCloseStep, semio_framework_plugin::Fault> {
+        use semio_framework_plugin::PluginCloseStep;
+        if maximum_items == 0 { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if let Some(active) = self.active.as_mut() {
+            return active.close_step(1, maximum_bytes).map_err(semio_framework_plugin::Fault::from).map(|step| match step {
+                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "Sourcing presence retains local or peer readers" },
+                store::SnapshotRetirementStep::Complete => PluginCloseStep::Complete,
+            });
+        }
+        let terminal = self.terminal.take().expect("Sourcing presence terminal root");
+        match owner.begin_retirement(terminal, |_| !std::mem::needs_drop::<SourcingCuratePresence>()) {
+            Ok(active) => self.active = Some(active),
+            Err((reason, terminal)) => { self.terminal = Some(terminal); return Err(semio_framework_plugin::Fault::from(reason)); }
+        }
+        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+    }
+
+    fn terminal_is_empty(&self, owner: &store::PresenceStore<SourcingCuratePresence, SourcingCuratePresenceMutation>) -> bool {
+        self.terminal.is_none() && self.active.as_ref().is_some_and(store::PresenceStoreRetirement::terminal_is_empty) && owner.retirement_started() && owner.peers_root().is_empty()
+    }
+}
+//#endregion 🧹️Retirement
+
+//#region 🧪️RetirementTests
+#[cfg(test)]
+mod retirement_tests {
+    use super::*;
+    use std::sync::Arc;
+    use store::{SnapshotRetirementFactory, SnapshotRetirementStep};
+
+    #[test]
+    fn sourcing_presence_retirement_preserves_shared_readers_and_exact_grants() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️retirement.json")).unwrap();
+        let maximum_bytes = fixture["maximumBytes"].as_u64().unwrap() as usize;
+        for value in fixture["snapshots"].as_array().unwrap() {
+            let snapshot: SourcingCuratePresence = serde_json::from_value(value.clone()).unwrap();
+            let packed = SourcingCuratePresence::decode_pack(&snapshot.encode_pack()).unwrap();
+            assert_eq!(serde_json::to_value(packed).unwrap(), *value);
+            let root = Arc::new(snapshot);
+            let weak = Arc::downgrade(&root);
+            let reader = root.clone();
+            let mut first = SourcingPresenceRetirementFactory.retire(root);
+            assert_eq!(first.close_step(0, maximum_bytes).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            assert_eq!(first.close_step(1, maximum_bytes - 1).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            assert_eq!(first.close_step(1, maximum_bytes).unwrap(), SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            assert_eq!(first.close_step(1, maximum_bytes).unwrap(), SnapshotRetirementStep::Complete);
+            assert!(first.terminal_is_empty());
+            assert_eq!(serde_json::to_value(reader.as_ref()).unwrap(), *value);
+            let mut final_owner = SourcingPresenceRetirementFactory.retire(reader);
+            assert_eq!(final_owner.close_step(1, maximum_bytes).unwrap(), SnapshotRetirementStep::Pending { released_items: 1, released_bytes: maximum_bytes });
+            assert_eq!(final_owner.close_step(1, maximum_bytes).unwrap(), SnapshotRetirementStep::Complete);
+            assert!(final_owner.terminal_is_empty());
+            assert!(weak.upgrade().is_none());
+        }
+    }
+}
+//#endregion 🧪️RetirementTests

@@ -27,7 +27,7 @@ mod structural_correspondence_tests {
         let owner = mutation_root.join("🔢️change-catalog-generation");
         let source = std::fs::read_to_string(owner.join("🦀️component.rs")).expect("direct Rust owner");
         let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️component.json")).expect("direct descriptor")).expect("valid descriptor");
-        let catalog: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(mutation_root.join("../../🧪️oracle/🔣️component.json")).expect("language-neutral catalog")).expect("valid catalog");
+        let catalog: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(mutation_root.join("../../🧪️oracle/🔣️.json")).expect("language-neutral catalog")).expect("valid catalog");
         let mutation_catalog = &catalog["mutationCatalogs"][0];
         assert_eq!(<SHomeMutation as protocol::SemanticMutation<SHomeSnapshot>>::kinds()[0].kind, "change-catalog-generation");
         assert_eq!(mutation_catalog["kinds"], serde_json::json!(["change-catalog-generation"]));

@@ -24,7 +24,7 @@
 //! different mutations, and a subset that shares an implementation with another reaches it through
 //! the shared family modules rather than by copying it.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`PptxMutation`'s
 //! 9 variants).
 

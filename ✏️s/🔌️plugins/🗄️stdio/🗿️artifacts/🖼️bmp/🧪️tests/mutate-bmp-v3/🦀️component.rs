@@ -20,7 +20,7 @@ use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
 /// 📇️ Mirrors `../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s own
-/// `KINDS` and `../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`'s
+/// `KINDS` and `../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️oracle/🔣️.json`'s
 /// `mutationCatalogs[0].kinds` — kept in the SAME declaration order in all three; a mismatch is
 /// caught loudly (either by the contract phase, or by the runner's own "no registration for
 /// scenario" error) rather than silently.

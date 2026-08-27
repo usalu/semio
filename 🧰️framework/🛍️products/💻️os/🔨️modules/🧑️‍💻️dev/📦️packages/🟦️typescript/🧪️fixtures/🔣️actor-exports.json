@@ -1,0 +1,6 @@
+{
+  "reactor": ["poll"],
+  "jobs": ["startJob", "stepJob", "cancelJob", "takeSegmentedDownloadChunk"],
+  "checkpoint": ["checkpoint", "restore"],
+  "describe": ["describe"]
+}

@@ -222,7 +222,7 @@ mod tests {
         assert_eq!(config.locale, "en-US");
     }
 
-    async fn sample_config() -> SourcingCurateConfig {
+    fn sample_config() -> SourcingCurateConfig {
         SourcingCurateConfig {
             filters: Filters {
                 query: "glulam".into(),
@@ -237,7 +237,7 @@ mod tests {
     }
 
     /// 🎞️ Every variant's `backwards()` must exactly restore the pre-operation config.
-    async fn round_trip(config: &SourcingCurateConfig, operation: &SourcingCurateConfigMutation) -> SourcingCurateConfig {
+    fn round_trip(config: &SourcingCurateConfig, operation: &SourcingCurateConfigMutation) -> SourcingCurateConfig {
         let forward = operation.diff(config).into_parts().0;
         let backwards = operation.inverse(config);
         let mut restored = forward.clone();

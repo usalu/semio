@@ -42,7 +42,7 @@ mod structural_correspondence_tests {
             ("remove-tag", "RemoveTag", "🗑️remove-tag"),
         ];
         let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
-        let catalog_source = std::fs::read_to_string(mutation_root.join("../../🧪️oracle/🔣️component.json")).expect("language-neutral oracle catalog");
+        let catalog_source = std::fs::read_to_string(mutation_root.join("../../🧪️oracle/🔣️.json")).expect("language-neutral oracle catalog");
         let catalog: serde_json::Value = serde_json::from_str(&catalog_source).expect("valid catalog");
         let catalog_kinds: Vec<_> = catalog["mutationCatalogs"][0]["kinds"].as_array().expect("catalog kinds").iter().map(|kind| kind.as_str().expect("kind")).collect();
         let descriptor_kinds: Vec<_> = VcsDemoMutation::kinds().iter().map(|descriptor| descriptor.kind).collect();

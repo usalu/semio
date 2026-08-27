@@ -90,7 +90,7 @@ pub enum Vdi3805Mutation {
 }
 
 /// 🏷️ Every declared kind of [`Vdi3805Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
-/// order and spelling — the list `../../🧪️oracle/🔣️component.json` publishes as the `vdi3805-1-any`
+/// order and spelling — the list `../../🧪️oracle/🔣️.json` publishes as the `vdi3805-1-any`
 /// mutation catalog and `../../../../../🧪️tests/mutate-vdi3805-1` registers its scenarios from. The
 /// test platform never parses Rust, so [`kinds_catalog::kinds_match_the_enum_and_the_catalog`] below
 /// is what keeps the enum, this const and the committed manifest from drifting apart.
@@ -460,7 +460,7 @@ mod kinds_catalog {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

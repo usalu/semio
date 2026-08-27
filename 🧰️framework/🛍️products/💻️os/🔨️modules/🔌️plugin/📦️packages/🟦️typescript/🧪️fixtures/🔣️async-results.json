@@ -4,6 +4,7 @@
     { "id": "descriptor", "type": "(list u8)", "params": ["i32", "i32"], "direct": true },
     { "id": "job-start", "type": "(result (error (list u8)))", "params": ["i32", "i32", "i32"], "direct": true },
     { "id": "job-step", "type": "(tuple u32 u32 u32 u32 u32)", "params": ["i32", "i32", "i32", "i32", "i32"], "direct": true },
+    { "id": "direct-limit", "type": "(tuple u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32)", "params": ["i32", "i32", "i32", "i32", "i32", "i32", "i32", "i32", "i32", "i32", "i32", "i32", "i32", "i32", "i32", "i32"], "direct": true },
     { "id": "turn", "type": "(tuple u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32)", "params": ["i32"], "direct": false }
   ]
 }

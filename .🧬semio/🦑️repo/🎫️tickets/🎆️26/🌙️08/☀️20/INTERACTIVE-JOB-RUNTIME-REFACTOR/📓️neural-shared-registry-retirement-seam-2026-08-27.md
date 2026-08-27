@@ -1,0 +1,11 @@
+# Shared Neural Registry Retirement Boundary
+
+Read-only coordination for the peer-owned Flow registry rebuild. No neural or Flow source was changed by this audit.
+
+The current engine exports `ValueRetirement` for `Value`, `Dictionary`, `OperatorInfo`, channels and evaluation snapshots, with `close_step(maximum_items, maximum_bytes)` and `terminal_is_empty()`. `NeuralCacheRetirement` separately owns its exact shared cache root. There is **no existing retained `RegistryRetirement` or shared registry root-release API** in this lane.
+
+`Registry` currently owns four private hash collections: `schemas`, `operators`, `operator_produces` and `schema_providers`, plus the finalized flag. A registry's operators own `OperatorInfo` defaults and `Vec<OperatorImpl>`; each implementation owns schema strings and a `Box<dyn Operator>`. Schema fields also own default Values. The existing `ColdRetire for Registry` and `ColdOwner<Registry>` are explicitly synchronous cold boundaries, not last-reader cleanup authority for interactive shared roots. Wrapping one in `Arc` does not change that fact.
+
+The required retained seam is an exact shared-root owner whose release uses `Arc::into_inner` (not a racy strong-count check): nonfinal release relinquishes only its own alias; the final owner moves the registry into a domain cursor. That cursor must transfer metadata strings, schema/channel default Values, implementation schema strings and each operator's own dynamic payload through exact retained retirement. Existing `ValueRetirement::push_operator` can handle an `OperatorInfo`, but does not own an `OperatorRecord`, `Schema` or `Box<dyn Operator>` and is not a complete registry disposer.
+
+The present `HashMap`/`HashSet` collections cannot be declared bounded merely by calling an owned iterator once: a sparse table can scan capacity before producing an entry. A coherent registry repair therefore needs its own bounded collection/ordered cursor and a genuine retained operator-disposal contract, or a statically demonstrated terminal operator type. Neither an opaque synchronous callback nor `Arc<ColdOwner<Registry>>` supplies this authority. The Flow registry peer retains ownership of that implementation; this lane will not make competing edits.

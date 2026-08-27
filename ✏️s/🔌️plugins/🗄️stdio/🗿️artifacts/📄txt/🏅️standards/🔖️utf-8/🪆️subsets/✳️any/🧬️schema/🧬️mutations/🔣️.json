@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TxtMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "set-trailing-newline"
+        },
+        "payload": {
+          "$ref": "↩️set-trailing-newline/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "set-line-ending"
+        },
+        "payload": {
+          "$ref": "🔚️set-line-ending/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "insert-line"
+        },
+        "payload": {
+          "$ref": "📥️insert-line/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "remove-line"
+        },
+        "payload": {
+          "$ref": "🗑️remove-line/🧬️schema/🔣️.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "set-line"
+        },
+        "payload": {
+          "$ref": "✏️set-line/🧬️schema/🔣️.json"
+        }
+      }
+    }
+  ]
+}

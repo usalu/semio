@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️set-line",
+  "semanticKind": "set-line",
+  "displayName": "Set Line",
+  "emoji": "✏️",
+  "aggregateVariant": "SetLine",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-line",
+  "binaryTag": 5,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": ["applied", "error"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]
+}

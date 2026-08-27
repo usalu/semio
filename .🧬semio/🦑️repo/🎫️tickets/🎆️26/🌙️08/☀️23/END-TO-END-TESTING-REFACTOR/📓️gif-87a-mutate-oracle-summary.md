@@ -49,7 +49,7 @@ referenced from the feature as `shared://🖼️dancing-87a.gif`.
   — filled in: an independent GIF87a document model + JSON bridge + `gif`-crate codec, all 12
   mutation kinds, and inverse computation, none of it calling into this repo's own `decode_gif`/
   `encode_gif`/`GifMutation`.
-- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧪️oracle/🔣️.json`
   — new: oracle registration (`gif-87a-mutate`, capability `gif-87a-mutate`, `semantic-raster-v1`)
   and `mutationCatalogs` (`gif-87a-any`, 12 kinds).
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🧫️fixtures/🖼️dancing-87a.gif` — new, the derived fixture.

@@ -2655,8 +2655,8 @@ mod tests {
     }
 
     fn drive_mesh_job(mut job: MeshJob) -> (Vec<u8>, usize, Duration) {
-        fn now() -> u64 {
-            0
+        fn now() -> Option<u64> {
+            Some(0)
         }
         let cancel = root_cancel_token();
         let mut sequence = 0;
@@ -3033,8 +3033,8 @@ mod tests {
 
     #[test]
     fn mesh_job_observes_cancellation_before_mutating() {
-        fn now() -> u64 {
-            0
+        fn now() -> Option<u64> {
+            Some(0)
         }
         let operation = mesh_operation();
         let mut job = MeshJob::new(PlanarDomain { outer: square(2.0), holes: vec![] }, MeshOpts { max_edge: 0.0, min_angle_deg: 0.0 }, operation);
@@ -3068,7 +3068,7 @@ mod tests {
         let mut sequence = 0;
         let mut faulted = false;
         for _ in 0..256 {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
             if matches!(job.step(&mut context), StepOutcome::Fault(_)) {
                 faulted = true;
                 break;
@@ -3134,23 +3134,23 @@ mod tests {
             seen.insert(stage);
             let before = job.triangulation.as_ref().expect("triangulation retained").triangles.clone();
             let before_cursor = (job.constraint_cursor, job.constraint_stage, job.constraint_search_cursor, job.constraint_apply_cursor, job.constraint_retire_cursor, job.constraint_retire_adjacency_cursor);
-            let mut deadline = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), root_cancel_token(), || 0, &mut sequence);
+            let mut deadline = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), root_cancel_token(), || Some(0), &mut sequence);
             assert_eq!(job.step(&mut deadline), StepOutcome::Yield);
             assert_eq!((job.constraint_cursor, job.constraint_stage, job.constraint_search_cursor, job.constraint_apply_cursor, job.constraint_retire_cursor, job.constraint_retire_adjacency_cursor), before_cursor);
             assert_eq!(job.triangulation.as_ref().expect("triangulation retained").triangles, before);
 
-            let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX), root_cancel_token(), || 0, &mut sequence);
+            let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
             assert!(matches!(job.step(&mut stale), StepOutcome::Fault(_)));
             assert_eq!((job.constraint_cursor, job.constraint_stage, job.constraint_search_cursor, job.constraint_apply_cursor, job.constraint_retire_cursor, job.constraint_retire_adjacency_cursor), before_cursor);
 
             let token = root_cancel_token();
             semio_framework_async::block_on(token.cancel());
-            let mut cancelled = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || 0, &mut sequence);
+            let mut cancelled = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || Some(0), &mut sequence);
             assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
             assert_eq!((job.constraint_cursor, job.constraint_stage, job.constraint_search_cursor, job.constraint_apply_cursor, job.constraint_retire_cursor, job.constraint_retire_adjacency_cursor), before_cursor);
 
             let started = std::time::Instant::now();
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
             assert_eq!(job.step(&mut context), StepOutcome::Yield);
             maximum_micros = maximum_micros.max(started.elapsed().as_micros());
             if job.constraint_cursor == job.constraints.len() {
@@ -3255,19 +3255,19 @@ mod tests {
                 }
                 if matches!(job.stage, MeshJobStage::PrepareInput | MeshJobStage::Initialize | MeshJobStage::InsertBoundary | MeshJobStage::PublishPreview | MeshJobStage::PublishCheckpoint | MeshJobStage::Complete) {
                     let before = snapshot(&job);
-                    let mut deadline = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), root_cancel_token(), || 0, &mut sequence);
+                    let mut deadline = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), root_cancel_token(), || Some(0), &mut sequence);
                     assert_eq!(job.step(&mut deadline), StepOutcome::Yield);
                     assert_eq!(snapshot(&job), before);
-                    let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX), root_cancel_token(), || 0, &mut sequence);
+                    let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
                     assert!(matches!(job.step(&mut stale), StepOutcome::Fault(_)));
                     assert_eq!(snapshot(&job), before);
                     let token = root_cancel_token();
                     semio_framework_async::block_on(token.cancel());
-                    let mut cancelled = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || 0, &mut sequence);
+                    let mut cancelled = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || Some(0), &mut sequence);
                     assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
                     assert_eq!(snapshot(&job), before);
                 }
-                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || 0, &mut sequence);
+                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
                 let started = Instant::now();
                 let outcome = job.step(&mut context);
                 maximum_micros = maximum_micros.max(started.elapsed().as_micros());
@@ -3330,7 +3330,7 @@ mod tests {
         let mut interrupted = MeshJob::new_bounded(domain(), MeshOpts { max_edge: 2.0, min_angle_deg: 0.0 }, operation, 128, 20);
         let mut sequence = 0;
         for _ in 0..1_000_000 {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
             match interrupted.step(&mut context) {
                 StepOutcome::PreviewReady(preview) => {
                     take_payload_bytes(preview);

@@ -1,0 +1,5 @@
+syntax = "proto3";
+package stdio.txt.mutation;
+// canonical set-line-ending/SetLineEnding
+enum TxtLineEndingV1 { LF = 0; CR_LF = 1; }
+message SetLineEndingPayload { optional TxtLineEndingV1 value = 1; }

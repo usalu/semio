@@ -51,8 +51,8 @@ Per subset:
    apply helper at all), `inverse_<x>_mutation_steps`, `decode_<x>_mutation_json`,
    `decode_<x>_snapshot_json`, `encode_<x>_snapshot_json`, plus `parse_<x>_dsl`/`print_<x>_dsl` in
    the DSL facet (`store::TextError` is unnameable outside the crate).
-4. `<subset>/🧪️oracle/🔣️component.json` — the `noOracleDecision` and the `mutationCatalog`.
-5. `<artifact>/🧪️oracle/🔣️component.json` — ONLY `oracleHostPackages`, naming
+4. `<subset>/🧪️oracle/🔣️.json` — the `noOracleDecision` and the `mutationCatalog`.
+5. `<artifact>/🧪️oracle/🔣️.json` — ONLY `oracleHostPackages`, naming
    `semio-s-plugin-stdio-test-oracle` by path so the generated host can reach the shared
    `⚖️law` module. The `oracles` feature is deliberately not enabled, so no third-party crate enters
    a host. `bun ./📜️script.ts dependency` still reports `test-oracle=30`, unchanged.

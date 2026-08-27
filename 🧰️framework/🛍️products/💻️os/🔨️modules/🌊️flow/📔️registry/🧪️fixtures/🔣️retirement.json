@@ -1,0 +1,50 @@
+{
+  "pluginId": "flow-extension-owned",
+  "retiredCapacity": 16,
+  "maximumGeneration": "18446744073709551615",
+  "manifest": {
+    "schema": "flow.extension",
+    "id": "owned",
+    "name": "Owned",
+    "version": "1",
+    "activationEvents": ["onStartup"],
+    "contributes": {
+      "schemas": [
+        {
+          "id": "owned",
+          "module": "owned",
+          "name": "Owned",
+          "icon": "emoji:🧪️",
+          "summary": "Shared schema",
+          "fields": [
+            { "key": "nested", "value": { "kind": "any" }, "default": { "label": "schema default" } }
+          ]
+        }
+      ],
+      "operators": [
+        {
+          "id": "owned.echo",
+          "extension": "owned",
+          "name": "Echo",
+          "abbreviation": "E",
+          "icon": "emoji:🧪️",
+          "summary": "Contributed operator",
+          "inputs": [
+            {
+              "code": "I",
+              "abbreviation": "In",
+              "name": "input",
+              "fullName": "Input",
+              "default": { "label": "operator default" },
+              "cardinality": "?"
+            }
+          ],
+          "outputs": []
+        }
+      ],
+      "widgets": [],
+      "commands": [],
+      "settings": []
+    }
+  }
+}

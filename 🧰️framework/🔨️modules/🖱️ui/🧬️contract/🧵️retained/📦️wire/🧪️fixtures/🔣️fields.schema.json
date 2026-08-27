@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "fieldNames", "node", "replacement", "repeat", "expected", "laws"],
+  "properties": {
+    "version": { "const": 1 },
+    "fieldNames": { "const": ["component", "layout", "style", "accessibility", "bindings", "menu", "children"] },
+    "node": { "type": "object" }, "replacement": { "type": "object" },
+    "repeat": { "const": 1024 },
+    "expected": { "type": "object", "additionalProperties": false, "required": ["directFieldOwners", "ancestorOwners", "oldBytesAfterReplacement", "id", "component"], "properties": { "directFieldOwners": { "const": 7 }, "ancestorOwners": { "const": 0 }, "oldBytesAfterReplacement": { "const": [3, 7, 11] }, "id": { "const": 9007199254740991 }, "component": { "const": { "type": "text", "value": "Neu 😀", "emphasize": null, "dataAttributes": null } } } },
+    "laws": { "type": "array", "minItems": 9, "maxItems": 9, "uniqueItems": true, "items": { "enum": ["old-reader-holds-replaced-bytes", "unchanged-field-allocation-identity", "fixed-seven-direct-fields", "cancelled-candidate-does-not-close-current", "last-reader-releases-old-bytes", "wrong-field-owner-rejected-before-move", "zero-grant-close-preserves-fields", "capabilities-cannot-be-shadowed", "capture-saturation-is-atomic"] } }
+  }
+}

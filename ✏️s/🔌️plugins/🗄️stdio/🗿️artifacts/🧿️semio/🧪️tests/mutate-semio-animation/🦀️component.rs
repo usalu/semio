@@ -5,7 +5,7 @@
 //! beside it — an independent Python implementation of the same carrier and the same
 //! thirteen verbs, written from the committed grammars, registered as the oracle
 //! `semio-animation-python-independent` in
-//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧪️oracle/🔣️component.json`. Registering oracle
+//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧪️oracle/🔣️.json`. Registering oracle
 //! handlers here as well would put this repository's own answer on both sides of the comparison,
 //! which is the one failure the platform exists to prevent, so the registrations this file used to
 //! carry are gone rather than merely unused.

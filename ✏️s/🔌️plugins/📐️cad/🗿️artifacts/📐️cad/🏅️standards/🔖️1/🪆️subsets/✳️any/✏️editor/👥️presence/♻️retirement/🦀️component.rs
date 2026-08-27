@@ -36,16 +36,8 @@ impl ErasedSnapshotRetirement for CadPresenceRetirement {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes });
         }
         if let Some(root) = self.root.take() {
-            return match Arc::try_unwrap(root) {
-                Ok(owned) => {
-                    *self.owned = Some(owned);
-                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                Err(root) => {
-                    *self.root = Some(root);
-                    Ok(SnapshotRetirementStep::Blocked)
-                }
-            };
+            *self.owned = Arc::into_inner(root);
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(owned) = self.owned.as_mut() {
             let value = match self.field {
@@ -116,7 +108,7 @@ impl semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<CadPrese
             });
         }
         let terminal = self.terminal.take().expect("CAD presence close owns its exact empty terminal root");
-        match owner.begin_retirement(terminal, terminal_is_empty, Arc::new(CadPresenceRetirementFactory)) {
+        match owner.begin_retirement(terminal, terminal_is_empty) {
             Ok(active) => self.active = Some(active),
             Err((reason, terminal)) => {
                 self.terminal = Some(terminal);
@@ -127,7 +119,7 @@ impl semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<CadPrese
     }
 
     fn terminal_is_empty(&self, owner: &store::PresenceStore<CadPresence, super::CadPresenceMutation>) -> bool {
-        self.terminal.is_none() && self.active.as_ref().is_some_and(store::PresenceStoreRetirement::terminal_is_empty) && owner.retirement_started() && terminal_is_empty(owner.local_root().as_ref()) && owner.peers_root().is_empty()
+        self.terminal.is_none() && self.active.as_ref().is_some_and(store::PresenceStoreRetirement::terminal_is_empty) && owner.retirement_started() && terminal_is_empty(owner.local()) && owner.peers_root().is_empty()
     }
 }
 //#endregion 🏪️StoreRetirement
@@ -157,9 +149,11 @@ mod tests {
             let reader = root.clone();
             let mut retirement = CadPresenceRetirementFactory.retire(root);
             assert_eq!(retirement.close_step(0, 4096).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            assert_eq!(retirement.close_step(1, 4096).unwrap(), SnapshotRetirementStep::Blocked);
+            assert_eq!(retirement.close_step(1, 4096).unwrap(), SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            assert_eq!(retirement.close_step(1, 4096).unwrap(), SnapshotRetirementStep::Complete);
+            assert!(retirement.terminal_is_empty());
             assert_eq!(serde_json::to_value(reader.as_ref()).unwrap(), oracle);
-            drop(reader);
+            let mut retirement = CadPresenceRetirementFactory.retire(reader);
             let mut released = 0;
             for turn in 0..128 {
                 match retirement.close_step(1, 4096).unwrap() {
@@ -205,6 +199,7 @@ mod tests {
         let value = |name: &str| presence(fixture["cases"].as_array().unwrap().iter().find(|case| case["name"] == name).unwrap());
         for case in fixture["storeCases"].as_array().unwrap() {
             let mut owner = store::PresenceStore::<CadPresence, super::super::CadPresenceMutation>::new(value(case["local"].as_str().unwrap()));
+            owner.install_local_retirement_factory(Arc::new(CadPresenceRetirementFactory)).unwrap();
             owner.install_peer_retirement_factory(Arc::new(CadPresenceRetirementFactory)).unwrap();
             let mut publication = owner.begin_peer_publication().unwrap();
             assert!(!publication.prune_one(|_| true).unwrap());
@@ -237,7 +232,7 @@ mod tests {
                 assert!(turn < 511);
             }
             assert!(disposer.terminal_is_empty(&owner));
-            assert!(terminal_is_empty(owner.local_root().as_ref()));
+            assert!(terminal_is_empty(owner.local()));
             assert_eq!(observed_blocked, shared);
             assert_eq!(retired_bytes, case["expectedBytes"].as_u64().unwrap() as usize);
             assert!(owner.begin_peer_publication().is_err());

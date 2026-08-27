@@ -5,6 +5,8 @@
 //! fields in declaration order — no length prefix, no per-field tags.
 
 //#region 🔖️SyncProtocol
+export * from "./📡️wire/🏠️local-interaction/🟦️component.ts";
+export * from "./📡️wire/🏠️local-interaction/📡️transport/🟦️component.ts";
 /**
  * 🔁️ TS mirror of `store_sync`'s Rust actor protocol (`ArtifactActorConfig`/`ArtifactActorMsg`/
  * `ArtifactEvent`/`ArtifactSyncStatus`/`RemoteState`/`PersistenceBinding`) — the wire/postMessage

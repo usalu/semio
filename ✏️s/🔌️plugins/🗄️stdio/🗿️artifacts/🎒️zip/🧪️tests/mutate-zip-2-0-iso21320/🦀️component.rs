@@ -18,7 +18,7 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, 
 //#region 🔖️Input
 /// 🦠️ Every declared `ZipIso21320Mutation` variant, kebab-case — mirrors
 /// `../../🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🧬️mutations/🦀️component.rs`'s `KINDS` and
-/// that subset's `🧪️oracle/🔣️component.json` catalog. Declared locally rather than imported so the
+/// that subset's `🧪️oracle/🔣️.json` catalog. Declared locally rather than imported so the
 /// oracle-only role's registration loop never has to link `semio-s-plugin-stdio`.
 const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-archive-comment", "add-stored-entry", "add-deflated-entry", "remove-entry", "rename-entry", "set-entry-data"];
 

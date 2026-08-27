@@ -9,7 +9,7 @@ Executor subset: 🎨️svg standard 🔖️1.1 subset ✳️any. Reference: `qu
 | Mutation vocabulary (pre-existing, confirmed) | `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` |
 | `pub const KINDS` + `kinds_const_matches_enum_variants_in_declaration_order` test (added) | same file |
 | Mutation oracle (written) | `.../🔖️1.1/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs` |
-| Catalog + oracle registration + comparison profile (written) | `.../🔖️1.1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json` |
+| Catalog + oracle registration + comparison profile (written) | `.../🔖️1.1/🪆️subsets/✳️any/🧪️oracle/🔣️.json` |
 | Real fixture (copied) | `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧫️fixtures/qr-code.svg` |
 | Test case | `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1/{component.feature,🦀️component.rs}` |
 
@@ -54,7 +54,7 @@ transform="matrix(0.35,0,0,0.35,280,0)">` three levels inside the QR module tree
 
 Both are decomposed into typed numeric fields in the projection (not compared as raw attribute
 strings) — real writer freedom between two independently-written number formatters, narrowed and
-documented in `../🧪️oracle/🔣️component.json`'s `comparisonProfiles` entry, not chased byte-for-byte.
+documented in `../🧪️oracle/🔣️.json`'s `comparisonProfiles` entry, not chased byte-for-byte.
 
 ## Oracle module
 

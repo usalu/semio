@@ -107,7 +107,7 @@ impl protocol::OpBinary for SourcingMutation {
 mod tests {
     use super::*;
 
-    async fn every_mutation() -> Vec<SourcingMutation> {
+    fn every_mutation() -> Vec<SourcingMutation> {
         vec![
             SourcingMutation::CreateCuratedItem(create_curated_item::CreateCuratedItem { item: CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 3 } }),
             SourcingMutation::DeleteCuratedItem(delete_curated_item::DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() }),

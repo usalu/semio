@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SetLinePayload",
+  "description": "Canonical payload schema for set-line.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "text"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "text": {
+      "type": "string",
+      "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+    }
+  }
+}

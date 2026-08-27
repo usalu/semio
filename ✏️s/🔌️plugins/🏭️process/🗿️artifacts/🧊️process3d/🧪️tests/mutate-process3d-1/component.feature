@@ -6,7 +6,7 @@ Feature: Apply every typed process.process3d mutation to its committed specifica
 
   `process.process3d` is a semio-NATIVE artifact and nothing outside this repository reads
   `.dsl.semio`. That is recorded as the `process3d-mutation-semantics` no-oracle decision in
-  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, which also records why G-code parsers
+  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, which also records why G-code parsers
   and STEP/BREP kernels were surveyed and DECLINED.
 
   ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party

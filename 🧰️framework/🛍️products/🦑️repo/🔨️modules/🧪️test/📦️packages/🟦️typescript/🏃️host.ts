@@ -14,9 +14,9 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join } from "node:path";
-import { type AdapterOutcome, type TestAdapter, type TestCasePlan, type TestResult, digest, makeAdapterContext, projectionHash, repoRootFromHere, setDigest, testId, validateRegistration } from "./📦️index.ts";
+import { type AdapterOutcome, type ResultArtifact, type TestAdapter, type TestCasePlan, type TestResult, contentDigestOf, currentPlatform, digest, makeAdapterContext, projectionHash, repoRootFromHere, setDigest, testId, validateRegistration } from "./📦️index.ts";
 //#endregion 🔌️Adapters
 
 //#region 🎛️Arguments
@@ -50,19 +50,32 @@ export function resultFor(plan: TestCasePlan, scenarioId: string, level: TestRes
     mkdirSync(dirname(projectionPath), { recursive: true });
     writeFileSync(projectionPath, `${JSON.stringify(outcome.projection, null, 2)}\n`);
   }
+  // 📦️Every produced file is re-hashed HERE rather than trusted from the handler: the digest a
+  // comparison stage keys on must describe the bytes that actually reached disk.
+  const artifacts: ResultArtifact[] = (outcome?.artifacts ?? []).map((artifact) => {
+    const abs = isAbsolute(artifact.path) ? artifact.path : join(plan.artifactDir, artifact.path);
+    return { role: artifact.role, path: abs, mediaType: artifact.mediaType, sha256: contentDigestOf(abs), bytes: statSync(abs).size };
+  });
   return {
+    schemaVersion: 2,
     testId: testId(plan.owner, plan.case, scenarioId, plan.implementation, role),
+    baselineSha: plan.baselineSha,
     owner: plan.owner,
     case: plan.case,
     scenario: scenarioId,
     implementation: plan.implementation,
     role,
     level,
+    platform: plan.platform ?? currentPlatform(),
     status,
     durationMs,
     seed,
     featureHash: plan.featureHash,
     fixtureHash: setDigest(plan.fixtures.map((fixture) => [fixture.name, fixture.digest] as const)),
+    artifacts,
+    // 🏭️Only a handler that actually reached production dispatch carries this. Emitting it
+    // unconditionally would make every replaying adapter look like a real subject.
+    productionDispatch: outcome?.productionDispatch,
     output: {
       rawHash: raw === undefined ? digest("") : digest(raw),
       projectionHash: outcome === null ? digest("") : projectionHash(plan.comparison, outcome.projection),

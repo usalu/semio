@@ -1,0 +1,65 @@
+{
+  "arithmetic": false,
+  "frame": null,
+  "height": 1,
+  "huffmanTables": [
+    {
+      "bits": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "class": "dc",
+      "id": 1,
+      "values": [
+        7
+      ]
+    }
+  ],
+  "jfifDensityUnits": "aspect",
+  "jfifThumbnail": null,
+  "jfifVersion": [
+    1,
+    1
+  ],
+  "jfifXDensity": 1,
+  "jfifYDensity": 1,
+  "otherSegments": [
+    {
+      "data": [
+        83,
+        119,
+        97,
+        116,
+        99,
+        104
+      ],
+      "marker": 254
+    }
+  ],
+  "pixels": [
+    18,
+    52,
+    86,
+    255
+  ],
+  "quantTables": [],
+  "reEncodeQuality": 90,
+  "restartInterval": null,
+  "schema": "stdio.jpg",
+  "sofMarker": 0,
+  "width": 1
+}

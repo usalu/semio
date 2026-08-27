@@ -6,7 +6,7 @@ Feature: Apply every typed VCS checkpoint mutation to its committed specificatio
   `s.vcs.vcs` is a semio-NATIVE review-checkpoint document: its two wire forms are
   `.vcs.dsl.semio` and `.vcs.pack.semio`, grammars this repository defines and nobody else reads, so
   no reference LIBRARY is registered — recorded as the `vcs-1-checkpoint-mutation-semantics`
-  no-oracle decision in `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`. Each of
+  no-oracle decision in `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`. Each of
   the six kinds carries an independently handcrafted `(before, mutation, after, diff, outcome)`
   specification fixture under its own triad leaf's `🧪️tests/` directory, and this feature re-exercises
   those SAME committed bytes end to end through `apply_vcs_mutation_reporting`.

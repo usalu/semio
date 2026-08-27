@@ -10,7 +10,7 @@ A raw byte buffer has no format. There is no grammar for a third-party crate to 
 every other subset this wave, which at minimum has an independent READER even without a writer — no
 independent reader either, because there is nothing to read structurally. No crate was surveyed or
 registered. This is recorded as `noOracleDecision` `raw-buffer-no-format` in
-`🏅️standards/🔖️raw/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, substitutes
+`🏅️standards/🔖️raw/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, substitutes
 `specification-vectors` + `metamorphic-laws`, and the feature carries `@no-oracle-raw-buffer-no-format`
 instead of an `@oracle-` tag. `BinaryMutation` has 5 variants (confirmed by reading
 `🧬️schema/🧬️mutations/🦀️component.rs`): `NoMutation`, `SetSnapshot`, `Splice`, `AppendBytes`,
@@ -109,7 +109,7 @@ again.
   — added `pub const KINDS` + `kinds_cover_every_variant` test.
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`
   — filled in `oracle_apply_mutation` + 10 unit tests (was a stub rejecting every kind).
-- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧪️oracle/🔣️.json`
   — new: catalog + `noOracleDecision`.
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🧫️fixtures/🖼️abbau-aufbau-masterarbeit-grundriss.jpg`
   — new: real 483,496-byte fixture, copied from the jpg artifact's own committed fixture.

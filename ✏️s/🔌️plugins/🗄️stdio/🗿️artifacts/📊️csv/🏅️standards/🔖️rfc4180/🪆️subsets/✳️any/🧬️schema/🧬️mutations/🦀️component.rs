@@ -55,7 +55,7 @@ pub enum CsvMutation {
 }
 
 /// 🧾️ Kebab-case spelling of every `CsvMutation` variant, in declaration order — the exhaustive
-/// mutation catalog `csv-rfc4180-any` (`../../🧪️oracle/🔣️component.json`) is measured against
+/// mutation catalog `csv-rfc4180-any` (`../../🧪️oracle/🔣️.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-has-header", "insert-record", "remove-record", "set-field"];
 //#endregion 🔖️Mutations
@@ -613,7 +613,7 @@ mod tests {
         let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
         assert_eq!(from_enum, KINDS, "KINDS must list every CsvMutation variant, in declaration order");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         let needle = "\"kinds\": [";
         let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
         let end = start + manifest[start..].find(']').expect("kinds array is closed");

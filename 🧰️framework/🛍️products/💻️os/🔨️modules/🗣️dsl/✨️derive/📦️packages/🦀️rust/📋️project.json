@@ -2,6 +2,22 @@
   "name": "@semio-tech/dsl-derive-rs",
   "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "test-exports-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-exports-source",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exports": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-exports",
+        "forwardAllArgs": true
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

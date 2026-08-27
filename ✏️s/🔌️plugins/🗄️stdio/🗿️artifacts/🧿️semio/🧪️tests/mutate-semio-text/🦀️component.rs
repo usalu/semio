@@ -3,7 +3,7 @@
 //!
 //! **This file no longer serves the oracle role.** The reference for `semio-v1-text-mutate` is the
 //! registered oracle `semio-text-python-independent` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️text/
-//! 🧪️oracle/🔣️component.json`) — an independent Python implementation of the semio text carrier and
+//! 🧪️oracle/🔣️.json`) — an independent Python implementation of the semio text carrier and
 //! its seven verbs, written from the committed grammar and protocol documents, living beside this
 //! file as `🐍️component.py`. The runner dispatches the oracle role to that adapter and the subject
 //! role here, and compares the two projections under `@comparison-ordered-json-v1`. Registering

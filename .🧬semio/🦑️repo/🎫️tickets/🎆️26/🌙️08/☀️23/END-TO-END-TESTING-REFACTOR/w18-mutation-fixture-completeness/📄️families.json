@@ -1,0 +1,6 @@
+[
+  { "name": "bmp",  "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations",         "snapshot": "BmpSnapshot",  "mutation": "BmpMutation",  "scenario": "direct-behavior" },
+  { "name": "tiff", "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations",       "snapshot": "TiffSnapshot", "mutation": "TiffMutation", "scenario": "direct-behavior" },
+  { "name": "jpg",  "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations", "snapshot": "JpgSnapshot",  "mutation": "JpgMutation",  "scenario": "direct-behavior" },
+  { "name": "png",  "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations",       "snapshot": "PngSnapshot",  "mutation": "PngMutation",  "scenario": "direct-behavior" }
+]

@@ -4104,7 +4104,7 @@ mod tests {
         let cancel = semio_framework_job::root_cancel_token();
         let mut preview_sequence = 0;
         for _ in 0..100_000 {
-            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(4_096, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(4_096, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
             let outcome = semio_framework_plugin::ArtifactStoreInitializationAuthority::step(authority, &mut context);
             if outcome.is_terminal() {
                 return outcome;
@@ -4185,7 +4185,7 @@ mod tests {
         let mut authority = empty_raster_initializer(operation, generation);
         let cancel = semio_framework_job::root_cancel_token();
         let mut preview_sequence = 0;
-        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(0, u64::MAX), cancel, semio_framework_job::default_now_ms, &mut preview_sequence);
+        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(0, u64::MAX), cancel, semio_framework_job::default_now_us, &mut preview_sequence);
         assert!(matches!(semio_framework_plugin::ArtifactStoreInitializationAuthority::step(&mut authority, &mut context), semio_framework_job::StepOutcome::Yield));
         assert_eq!(authority.phase, RasterStoreInitializationPhase::ValidateEnvelope);
         assert!(authority.envelope.is_some());
@@ -4217,7 +4217,7 @@ mod tests {
         let mut digest = store::ArtifactStoreInitializationDigest::new(b"raster.low-fuel");
         let mut turns = 0;
         while !clone.terminal {
-            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
             assert!(!clone.step(&source, &mut digest, &mut context).expect("bounded Raster clone") || clone.terminal);
             turns += 1;
             assert!(turns < 20_000);
@@ -4248,7 +4248,7 @@ mod tests {
         let empty = empty_raster_document();
         let mut bounds = RasterSnapshotBoundsAuthority::new();
         for _ in 0..256 {
-            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
             if bounds.step(&empty, &mut context).expect("empty Raster bounds remain admissible") {
                 break;
             }
@@ -4287,7 +4287,7 @@ mod tests {
         let mut authority = RasterStoreInitializationAuthority::new(envelope, operation, generation);
         let mut terminal = None;
         for _ in 0..100_000 {
-            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
             let outcome = semio_framework_plugin::ArtifactStoreInitializationAuthority::step(&mut authority, &mut context);
             if outcome.is_terminal() {
                 terminal = Some(outcome);
@@ -4304,8 +4304,8 @@ mod tests {
 
     #[test]
     fn raster_expired_deadline_advances_no_bounds_clone_or_mutation_owner() {
-        fn expired_now() -> u64 {
-            10
+        fn expired_now() -> Option<u64> {
+            Some(10)
         }
         let source = deeply_nested_raster_snapshot(8);
         let operation = semio_framework_job::OperationId(705);
@@ -4336,7 +4336,7 @@ mod tests {
         let mut authority = RasterMutationCandidateAuthority::new();
         let mut turns = 0;
         loop {
-            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
             if authority.step(&source, &mutation, &mut context).expect("cursorized Raster mutation") {
                 break;
             }
@@ -4351,7 +4351,7 @@ mod tests {
         drop(authority);
         let mut locator = RasterLayerLocator::new();
         loop {
-            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
             if locator.step(&candidate, "leaf", &mut context).expect("candidate leaf locator") {
                 break;
             }

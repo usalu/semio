@@ -91,9 +91,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_via_the_app() {
-        let mut app = new_app();
+        let mut app = new_app().await;
         // `render` carries no `InteractionView` yet, so the app-level render always shows the placeholder.
-        assert!(render_body(&mut app, SOURCING_CURATE_BODY_PREVIEW).contains("No selection"));
+        assert!(render_body(&mut app, SOURCING_CURATE_BODY_PREVIEW).await.contains("No selection"));
     }
 }
 //#endregion 🧪️Tests

@@ -1,0 +1,69 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution to the repository test platform, discovered by the same `testContributionDirName` convention as the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json — a mutation vocabulary belongs to one subset of one standard of one artifact, so its oracle registration lives here rather than in the shared, format-spanning manifest.",
+  "oracles": [
+    {
+      "id": "gif-89a-any-mutate",
+      "ecosystem": "rust",
+      "package": "gif",
+      "version": "0.13",
+      "capabilities": [
+        "gif-89a-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-raster-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/image-rs/image-gif",
+      "rationale": "Distinct from the shared `gif` oracle entry's `gif-raster` capability (single-frame creation): this entry's `gif-89a-mutate` capability is this subset's full 21-kind mutation vocabulary — screen/GCT/loop scalars, frame insert/remove/move/geometry/pixels/interlace/delay/disposal/transparency/user-input, and comment/app-extension insert/remove — applied and re-serialized with the same reference encoder/decoder, plus minimal fixed-offset header patching for the two scalar fields (background color index, pixel aspect ratio) `gif::Encoder`'s public API has no setter for.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "gif-89a-any",
+      "capability": "gif-89a-mutate",
+      "standardDirectoryName": "🔖️89a",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "slows-the-second-frame-and-marks-it-do-not-dispose",
+              "directoryName": "🧪️slows-the-second-frame-and-marks-it-do-not-dispose"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-screen-size",
+        "set-global-color-table",
+        "set-background-color-index",
+        "set-pixel-aspect-ratio",
+        "set-loop-count",
+        "insert-frame",
+        "remove-frame",
+        "move-frame",
+        "set-frame-geometry",
+        "set-frame-pixels",
+        "set-frame-interlace",
+        "set-frame-delay",
+        "set-frame-disposal",
+        "set-frame-transparency",
+        "set-frame-user-input",
+        "insert-comment",
+        "remove-comment",
+        "add-app-extension",
+        "remove-app-extension"
+      ]
+    }
+  ]
+}

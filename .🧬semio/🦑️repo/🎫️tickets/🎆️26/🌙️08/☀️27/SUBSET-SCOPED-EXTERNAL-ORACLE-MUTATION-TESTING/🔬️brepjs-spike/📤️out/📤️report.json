@@ -1,0 +1,67 @@
+{
+  "probe": "brepjs-occt",
+  "checkedAt": "2026-08-27T14:28:46.716Z",
+  "package": "brepjs",
+  "checks": [
+    {
+      "id": "kernel-init",
+      "met": true,
+      "detail": "kernel tier \"unknown\""
+    },
+    {
+      "id": "kernel-capabilities",
+      "met": true,
+      "detail": "{\"exact\":true,\"brepExport\":true,\"exactMeasurement\":true,\"tessellationModel\":\"extract-time\"}"
+    },
+    {
+      "id": "boolean-cut",
+      "met": true,
+      "detail": "cut produced a compound holding 1 solid(s) (isSolid on the compound itself is false)"
+    },
+    {
+      "id": "measure-volume",
+      "met": true,
+      "detail": "6429.203673205102 vs analytic 6429.203673205104 (relative error 2.829e-16)"
+    },
+    {
+      "id": "measure-area",
+      "met": true,
+      "detail": "2871.238898038469"
+    },
+    {
+      "id": "valid-solid",
+      "met": true,
+      "detail": "isValidSolid=true"
+    },
+    {
+      "id": "export-step",
+      "met": true,
+      "detail": "19068 bytes, header \"ISO-10303-21;\""
+    },
+    {
+      "id": "step-self-determinism",
+      "met": false,
+      "detail": "first differing lines: [[18,\"#7 = PRODUCT('Open CASCADE STEP translator 8.0 1',\",\"#7 = PRODUCT('Open CASCADE STEP translator 8.0 2',\"],[19,\"  'Open CASCADE STEP translator 8.0 1','',(#8));\",\"  'Open CASCADE STEP translator 8.0 2','',(#8));\"]]"
+    },
+    {
+      "id": "tessellate",
+      "met": true,
+      "detail": "918 vertices, 908 triangles at tolerance 1e-3"
+    },
+    {
+      "id": "step-round-trip",
+      "met": true,
+      "detail": "reimported volume 6429.203673205047 vs 6429.203673205102 (relative 8.488e-15)"
+    },
+    {
+      "id": "bounding-box",
+      "met": true,
+      "detail": "{\"xMin\":-1e-7,\"xMax\":20.0000001,\"yMin\":-1e-7,\"yMax\":20.0000001,\"zMin\":-1e-7,\"zMax\":20.0000001}"
+    },
+    {
+      "id": "topology-counts",
+      "met": true,
+      "detail": "1 solid(s), 7 face(s), 15 edge(s)"
+    }
+  ]
+}

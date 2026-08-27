@@ -5,7 +5,7 @@
 //! results, fixtures and adapters, and about no file format, plugin or product whatsoever.
 //!
 //! Reference implementations live with the owner of the format they reference and are contributed
-//! through that owner's `🧪️oracle/🔣️component.json` manifest, which the platform discovers by
+//! through that owner's `🧪️oracle/🔣️.json` manifest, which the platform discovers by
 //! convention. Adding an artifact family therefore never edits this crate.
 //!
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json
@@ -19,6 +19,6 @@ pub mod runner;
 //#endregion 🔖️Modules
 
 //#region 🔖️Surface
-pub use protocol::{digest, parse_json, Fixture, Json, Outcome, Plan, Scenario};
+pub use protocol::{digest, parse_json, sha256_hex, Fixture, Json, Outcome, Plan, ProductionDispatch, ResultArtifact, Scenario, SubsetTarget};
 pub use runner::{run_main, Adapter, Context};
 //#endregion 🔖️Surface

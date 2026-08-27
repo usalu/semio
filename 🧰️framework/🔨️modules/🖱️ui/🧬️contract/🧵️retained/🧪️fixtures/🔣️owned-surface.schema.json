@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#", "type": "object", "additionalProperties": false,
+  "required": ["version", "identity", "root", "label", "laws"],
+  "properties": {
+    "version": {"const": 1},
+    "identity": {"type": "object", "additionalProperties": false, "required": ["actor", "instance", "surface"], "properties": {"actor": {"type": "string"}, "instance": {"type": "integer", "minimum": 0, "maximum": 4294967295}, "surface": {"type": "string"}}},
+    "root": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+    "label": {"type": "string"},
+    "laws": {"type": "array", "items": {"type": "string"}, "uniqueItems": true, "minItems": 12}
+  }
+}

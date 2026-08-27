@@ -1,0 +1,15 @@
+{
+  "mutation": "replace-pixels",
+  "payload": {
+    "pixels": [
+      9,
+      9,
+      9,
+      255,
+      9,
+      9,
+      9,
+      255
+    ]
+  }
+}

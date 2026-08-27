@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    { "id": "extern-derive-and-facade-contract", "derive": "derive::MutationLeaf", "contract": "::facade::MutationLeaf", "facadeSource": "pub use lower::MutationLeaf;\n", "manualImpl": "", "accepted": true },
+    { "id": "inherited-cargo-provider-bindings", "derive": "derive::MutationLeaf", "contract": "::facade::MutationLeaf", "facadeSource": "pub use lower::MutationLeaf;\n", "manualImpl": "", "binding": "inherited", "accepted": true },
+    { "id": "renamed-local-contract-import", "derive": "derive::MutationLeaf", "contract": "::Contract", "facadeSource": "pub use lower::MutationLeaf;\n", "manualImpl": "use facade::MutationLeaf as Contract;\n", "accepted": true },
+    { "id": "grouped-local-contract-import", "derive": "derive::MutationLeaf", "contract": "::Contract", "facadeSource": "pub use lower::MutationLeaf;\n", "manualImpl": "use facade::{MutationLeaf as Contract};\n", "accepted": true },
+    { "id": "crate-scoped-public-reexport", "derive": "derive::MutationLeaf", "contract": "::Contract", "facadeSource": "pub use lower::MutationLeaf;\n", "manualImpl": "mod contract { pub use facade::MutationLeaf; }\nuse crate::contract::MutationLeaf as Contract;\n", "accepted": true },
+    { "id": "self-scoped-local-contract-import", "derive": "derive::MutationLeaf", "contract": "::Contract", "facadeSource": "pub use lower::MutationLeaf;\n", "manualImpl": "use self::facade::MutationLeaf as Contract;\n", "accepted": true },
+    { "id": "super-scoped-inline-contract-import", "derive": "derive::MutationLeaf", "contract": "::Contract", "facadeSource": "pub use lower::MutationLeaf;\n", "manualImpl": "", "consumerPrefix": "mod nested {\nuse super::facade::MutationLeaf as Contract;\n", "consumerSuffix": "}\n", "originModulePath": ["nested"], "accepted": true },
+    { "id": "ambiguous-direct-and-facade-contract-import-is-rejected", "derive": "derive::MutationLeaf", "contract": "::Contract", "facadeSource": "pub use lower::MutationLeaf;\n", "manualImpl": "use facade::MutationLeaf as Contract;\nuse lower::MutationLeaf as Contract;\n", "accepted": false },
+    { "id": "shadowed-local-contract-import-is-rejected", "derive": "derive::MutationLeaf", "contract": "::Contract", "facadeSource": "pub use lower::MutationLeaf;\n", "manualImpl": "use facade::MutationLeaf as Contract;\nuse derive::MutationLeaf as Contract;\n", "accepted": false },
+    { "id": "conditional-inline-super-contract-is-rejected", "derive": "derive::MutationLeaf", "contract": "::Contract", "facadeSource": "pub use lower::MutationLeaf;\n", "manualImpl": "", "consumerPrefix": "#[cfg(any())]\nmod nested {\nuse super::facade::MutationLeaf as Contract;\n", "consumerSuffix": "}\n", "originModulePath": ["nested"], "accepted": false },
+    { "id": "public-facade-glob-reexport", "derive": "derive::MutationLeaf", "contract": "::facade::MutationLeaf", "facadeSource": "pub use lower::*;\n", "manualImpl": "", "accepted": true },
+    { "id": "fake-derive-package-is-rejected", "derive": "counterfeit::MutationLeaf", "contract": "::facade::MutationLeaf", "facadeSource": "pub use lower::MutationLeaf;\n", "manualImpl": "", "accepted": false },
+    { "id": "aliased-genuine-manual-implementation-is-rejected", "derive": "derive::MutationLeaf", "contract": "::facade::MutationLeaf", "facadeSource": "pub use lower::MutationLeaf;\n", "manualImpl": "use facade::MutationLeaf as GenuineTrait;\nimpl GenuineTrait for Payload {}\n", "accepted": false }
+  ]
+}

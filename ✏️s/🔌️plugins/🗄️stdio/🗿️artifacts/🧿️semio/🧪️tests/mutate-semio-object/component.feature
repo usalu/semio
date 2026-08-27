@@ -13,7 +13,7 @@ Feature: Apply every typed semio OBJECT mutation to the real committed crate obj
   `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs` and the one dialect-coordinate codec
   `ArtifactRef::to_uri` in `🧰️framework/🔨️modules/🚪️io/🧬️schema/🦀️component.rs`), importing nothing
   from and transliterating nothing of the Rust it judges. It is registered as the oracle
-  `semio-object-python-independent` in `…/✳️object/🧪️oracle/🔣️component.json`; the recorded no-oracle
+  `semio-object-python-independent` in `…/✳️object/🧪️oracle/🔣️.json`; the recorded no-oracle
   decision it replaces is gone, because there is now a reference to compare against.
 
   The document under test is the REAL committed crate object, read where the domain keeps it through

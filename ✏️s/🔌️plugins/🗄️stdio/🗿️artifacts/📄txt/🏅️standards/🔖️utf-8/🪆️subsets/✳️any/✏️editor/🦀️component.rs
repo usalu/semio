@@ -5,6 +5,7 @@
 //! reachable through this window (documented, not silently dropped: a future line-addressable editor
 //! could target those directly).
 
+use crate::artifacts::txt::schema::mutation_support::txt_usize_to_u32;
 use crate::artifacts::txt::schema::mutations::{InsertLineMutation, RemoveLineMutation, SetTrailingNewlineMutation};
 use crate::artifacts::txt::{STDIO_TXT_DOCUMENT_SCHEMA, TxtMutation, TxtSnapshot};
 use crate::editor::txt::modes::edit;
@@ -121,8 +122,14 @@ impl ArtifactEditor for TxtEditor {
         if doc.snapshot.trailing_newline {
             mutations.push(TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: false }));
         }
-        mutations.extend((0..doc.snapshot.lines.len()).rev().map(|index| TxtMutation::RemoveLine(RemoveLineMutation { index })));
-        mutations.extend(lines.into_iter().enumerate().map(|(index, text)| TxtMutation::InsertLine(InsertLineMutation { index, text })));
+        for index in (0..doc.snapshot.lines.len()).rev() {
+            let index = txt_usize_to_u32(index).map_err(|detail| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("txt.mutation.index-out-of-range"), detail))?;
+            mutations.push(TxtMutation::RemoveLine(RemoveLineMutation { index }));
+        }
+        for (index, text) in lines.into_iter().enumerate() {
+            let index = txt_usize_to_u32(index).map_err(|detail| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("txt.mutation.index-out-of-range"), detail))?;
+            mutations.push(TxtMutation::InsertLine(InsertLineMutation { index, text }));
+        }
         if trailing_newline {
             mutations.push(TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: true }));
         }

@@ -1,7 +1,7 @@
 //! 🦀️ Imperative-program exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-
 //! TESTING-REFACTOR. Recorded no-oracle decision
 //! `imperative-1-nested-step-list-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`): `imperative.document` is a
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): `imperative.document` is a
 //! semio-NATIVE program document with no third-party reader or writer, so `oracle` here reads the
 //! committed, independently handcrafted per-kind specification fixtures
 //! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`)

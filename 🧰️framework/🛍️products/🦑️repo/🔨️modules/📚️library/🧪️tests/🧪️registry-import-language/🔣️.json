@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "selection": "physical-leaf-extension",
+  "fallback": "none",
+  "cases": [
+    {
+      "id": "generic-static-private-member",
+      "paths": [
+        "🧩️module/🟦️.ts",
+        "🧩️module/module.mts",
+        "🧩️module/module.cts"
+      ],
+      "language": "ts",
+      "source": "import { task } from './🧵️task/🟦️.ts';\nlet enqueue: <T>(owner: Owner<T>, value: T) => void;\nexport class Owner<V> { #head: V | null = null; static { enqueue = <T>(owner: Owner<T>, value: T) => owner.#push(value); } #push(value: V): void { if (value) this.#head = value; } }\nexport const result = task;\n",
+      "imports": [
+        "./🧵️task/🟦️.ts"
+      ]
+    },
+    {
+      "id": "typescript-angle-assertion",
+      "paths": [
+        "🧩️assertion/🟦️.ts"
+      ],
+      "language": "ts",
+      "source": "import { value } from './value.ts'; export const output = <number>value;",
+      "imports": [
+        "./value.ts"
+      ]
+    },
+    {
+      "id": "tsx-jsx-and-generic",
+      "paths": [
+        "🧩️view/🟦️.tsx"
+      ],
+      "language": "tsx",
+      "source": "import { value } from './value.ts'; const identity = <T,>(input: T) => input; export const view = <section>{identity(value)}</section>;",
+      "imports": [
+        "./value.ts"
+      ]
+    },
+    {
+      "id": "javascript-reexports-and-dynamic",
+      "paths": [
+        "🧩️module/🟨️.js",
+        "🧩️module/module.mjs",
+        "🧩️module/module.cjs"
+      ],
+      "language": "js",
+      "source": "export { value } from './value.js'; export * from './other.js'; export const lazy = () => import('./lazy.js');",
+      "imports": [
+        "./other.js",
+        "./value.js"
+      ]
+    },
+    {
+      "id": "jsx-unicode",
+      "paths": [
+        "🧩️view/🟨️.jsx"
+      ],
+      "language": "jsx",
+      "source": "import { value } from './🌱️value/🟨️.js'; export const view = <main>{value}</main>;",
+      "imports": [
+        "./🌱️value/🟨️.js"
+      ]
+    },
+    {
+      "id": "shebang-and-side-effect",
+      "paths": [
+        "📜️script.ts"
+      ],
+      "language": "ts",
+      "source": "#!/usr/bin/env bun\nimport './first.ts'; import './first.ts'; import './second.ts';",
+      "imports": [
+        "./first.ts",
+        "./second.ts"
+      ]
+    }
+  ],
+  "invalid": [
+    {
+      "id": "generic-arrow-is-not-tsx",
+      "path": "🧩️bad/🟦️.tsx",
+      "source": "export const identity = <T>(value: T) => value;"
+    },
+    {
+      "id": "typescript-is-not-javascript",
+      "path": "🧩️bad/🟨️.js",
+      "source": "export interface Value { id: string }"
+    },
+    {
+      "id": "unknown-physical-language",
+      "path": "🧩️bad/🦀️.rs",
+      "source": "import './value.ts';"
+    }
+  ],
+  "liveRegression": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️component.ts",
+  "execution": {
+    "target": "test-registry-import-language",
+    "command": "bun ./📜️script.ts test registry-import-language",
+    "launchName": "🧹clean🧩️taxonomy🧪️registry-import-language",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-registry-import-language --skip-nx-cache",
+    "launchGroup": "4_gate",
+    "launchOrder": 410.15
+  }
+}

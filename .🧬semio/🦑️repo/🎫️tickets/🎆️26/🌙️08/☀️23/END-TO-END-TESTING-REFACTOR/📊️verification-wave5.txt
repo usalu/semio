@@ -13,7 +13,7 @@ Every line below is a command that was actually executed and its actual output.
 2. THE FRAMEWORK NO LONGER DEPENDS ON `s`
    🧰️.../🧪️test/📇️registry/🔒️migration.json — DELETED. It listed six ✏️s owners.
      · per-owner migration status now lives with the owner, in that owner's own
-       🧪️oracle/🔣️component.json (`migrationStatus`), collected by discovery
+       🧪️oracle/🔣️.json (`migrationStatus`), collected by discovery
      · the repo-wide shrink-only ratchet moved to /🔒️migration.json beside 🔒️dependencies.json
        and is keyed by AREA, so a deleted area simply surveys as zero and passes
      · the os-kernel blocker prose moved to this ticket, where it belongs

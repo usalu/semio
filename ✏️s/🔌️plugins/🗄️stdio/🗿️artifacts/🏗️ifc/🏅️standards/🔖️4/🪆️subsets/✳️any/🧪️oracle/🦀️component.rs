@@ -39,7 +39,7 @@
 //! shared family module rather than by copying it — this subset has no such sibling yet, so nothing
 //! here is promoted to `✏️s/🔌️plugins/🗄️stdio/🧪️oracle`.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`IfcMutation::KINDS`).
 
 use semio_repo_test_host::Json;

@@ -154,7 +154,7 @@ another concurrent session". My retry loop was stopped rather than left competin
 NOT CONVERTED — mutate-semio-any, and why
 ================================================================================
 `✳️any` keeps its recorded `semio-envelope-routing` no-oracle decision. Its rationale in
-`…/✳️any/🧪️oracle/🔣️component.json` now records the wave-14 re-survey and the two blockers:
+`…/✳️any/🧪️oracle/🔣️.json` now records the wave-14 re-survey and the two blockers:
   1. the envelope's own committed documents declare the wrapped arm OPAQUE — the snapshot grammar is
      `document = artifact-mark subset-line REST`, the binary protocol models the wrapped pack as one
      opaque `payload` chain, and the mutations grammar is `op = "noMutation" | tag ":" REST` — so an

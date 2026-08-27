@@ -1,5 +1,5 @@
 //! 🦀️ Draw-document exhaustive mutation case — Rust adapter. Recorded no-oracle decision
-//! `draw-mutation-semantics` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`):
+//! `draw-mutation-semantics` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`):
 //! `s.draw.draw` is a semio-NATIVE format with no third-party reader or writer, so `oracle` here
 //! reads the committed, independently handcrafted per-kind specification vectors literally — no
 //! recomputation, no second implementation of draw semantics — and `subject` drives this

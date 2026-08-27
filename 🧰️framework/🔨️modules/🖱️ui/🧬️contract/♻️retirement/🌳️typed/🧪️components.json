@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "cases": [
+    {"component": {"type": "container", "role": "group", "label": "A", "description": "B", "error": "C", "dropOverlay": {"title": "D", "hint": "E", "accept": "F"}}, "bytes": 6},
+    {"component": {"type": "text", "value": "A", "dataAttributes": {"x": "🌊"}}, "bytes": 6},
+    {"component": {"type": "button", "icon": "I", "label": "L"}, "bytes": 2},
+    {"component": {"type": "separator"}, "bytes": 0},
+    {"component": {"type": "input", "kind": "number", "value": "1", "placeholder": "P", "commit": "C", "accept": "A"}, "bytes": 4},
+    {"component": {"type": "select", "value": "v", "items": [{"value": "a", "label": "L"}], "placeholder": "P"}, "bytes": 4},
+    {"component": {"type": "toggle", "on": true, "icon": "I", "text": "T"}, "bytes": 2},
+    {"component": {"type": "keyValueList", "entries": [{"label": "L", "value": "V"}]}, "bytes": 2},
+    {"component": {"type": "slider", "value": 2, "min": 0, "max": 4, "step": 1, "unit": "mm"}, "bytes": 2},
+    {"component": {"type": "numberStepper", "value": 1, "step": 1, "uniform": false}, "bytes": 0},
+    {"component": {"type": "ring", "orbId": "x", "t": 0}, "bytes": 1},
+    {"component": {"type": "iconSelect", "value": "v", "uniform": false, "classifierKind": "k"}, "bytes": 2},
+    {"component": {"type": "tree", "interactionDomain": "d"}, "bytes": 1},
+    {"component": {"type": "treeSection", "label": "L"}, "bytes": 1},
+    {"component": {"type": "treeItem", "label": "L", "description": "D", "icon": "I", "dragData": {"x": "🌊"}, "rowActions": [{"icon": "R", "label": "B", "action": {"trigger": "activate", "action": {"scope": "s", "name": "n", "version": 1}, "args": {"x": ["🌊"]}, "capability": "c"}}]}, "bytes": 18},
+    {"component": {"type": "image", "src": "S", "alt": "A"}, "bytes": 2},
+    {"component": {"type": "extension", "extension": "E", "props": {"x": ["🌊"]}}, "bytes": 6},
+    {"component": {"type": "surface", "kind": "canvas-2d", "docSchema": "wire", "doc": {"bytes": [0, 1, 2]}, "bindings": []}, "bytes": 7}
+  ]
+}

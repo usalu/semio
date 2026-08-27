@@ -1,2 +1,0 @@
-# 🧬 remove-line/RemoveLine
-input RemoveLinePayload { index: Int! }

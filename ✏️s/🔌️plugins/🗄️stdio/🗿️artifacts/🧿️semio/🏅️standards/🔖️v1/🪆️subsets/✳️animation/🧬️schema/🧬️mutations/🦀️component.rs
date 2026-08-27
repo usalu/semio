@@ -85,7 +85,7 @@ pub enum SemioAnimationMutation {
 
 /// 🏷️ The declared kebab-case mutation vocabulary of `s.stdio.semio.animation`, in enum
 /// declaration order — what the `mutate-semio-animation` case's completeness gate counts against
-/// and what `../../🧪️oracle/🔣️component.json`'s catalog repeats. Unlike its audio/video siblings
+/// and what `../../🧪️oracle/🔣️.json`'s catalog repeats. Unlike its audio/video siblings
 /// this subset's wire keywords are the two-letter `OP_KEYWORDS` tags (`IT`, `KV`, …), so the two
 /// tables are related only by position; `kinds_match_the_enum_and_the_catalog` below asserts that
 /// positional agreement rather than string equality.
@@ -477,7 +477,7 @@ mod tests {
             seen[ordinal] = true;
         }
         assert!(seen.iter().all(|hit| *hit), "every declared variant must be represented in demo_mutation_cases");
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

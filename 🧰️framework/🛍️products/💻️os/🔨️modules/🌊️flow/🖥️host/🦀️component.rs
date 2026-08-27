@@ -2703,10 +2703,11 @@ mod tests {
                 ("flow-extension-list", semio_s_plugin_flow_extension_list::extension_manifest_json()),
                 ("flow-extension-brep", complete_fixture_registration(semio_s_plugin_flow_extension_brep::extension_manifest_json())),
             ] {
-                install_flow_extension_manifest(plugin_id, &manifest);
+                install_flow_extension_manifest(plugin_id, &manifest).expect("fixture extension admission");
             }
-            let mut state = FLOW_EXTENSION_STATE.lock().expect("flow extension registry");
-            let mut registry = neural::Registry::new();
+            let mut state = flow_extension_state().lock().expect("flow extension registry");
+            let admission = begin_flow_registry_replacement(&mut state).expect("fixture registry admission");
+            let mut registry = neural::ColdOwner::new(neural::Registry::new());
             semio_s_plugin_flow_extension_primitive::register(&mut registry);
             semio_s_plugin_flow_extension_math::register(&mut registry);
             semio_s_plugin_flow_extension_text::register(&mut registry);
@@ -2715,14 +2716,15 @@ mod tests {
             semio_s_plugin_flow_extension_list::register(&mut registry);
             complete_fixture_registration(semio_s_plugin_flow_extension_brep::register(&mut registry));
             registry.finalize();
-            state.registry = std::sync::Arc::new(registry);
-            state.generation += 1;
+            admission.publish(registry.into_inner());
+            drop(state);
+            while retire_flow_extension_registries_step(1, 4096).expect("fixture registry retirement") != neural::ValueRetirementStep::Complete {}
         });
     }
 
     fn fixture_kind_infos_json() -> String {
         install_first_party_light_flow_extensions_for_tests();
-        serde_json::to_string(&flow_extension_registry().operator_catalogue()).unwrap_or_else(|_| "[]".into())
+        crate::catalogue::flow_neuron_kind_infos_json()
     }
 
     fn test_kind_infos_json() -> String {
@@ -3407,11 +3409,11 @@ mod tests {
     #[test]
     fn contributed_extension_manifest_installs_catalogue_operator() {
         let manifest = r#"{"schema":"flow.extension","id":"stubext","name":"Stub","version":"0.0.1","activationEvents":[],"contributes":{"schemas":[],"operators":[{"id":"stubext.echo","extension":"stubext","name":"Echo","abbreviation":"Echo","icon":"emoji:📣️","summary":"Echo","inputs":[],"outputs":[]}],"widgets":[],"commands":[],"settings":[]}}"#;
-        install_flow_extension_manifest("stub-plugin", manifest);
+        install_flow_extension_manifest("stub-plugin", manifest).expect("stub extension admission");
         assert!(flow_extension_registry().operator_info("stubext.echo").is_some());
         let sections = flow_catalogue_sections();
         assert!(sections.iter().any(|section| section.id == "stubext"));
-        uninstall_flow_extension("stubext");
+        uninstall_flow_extension("stubext").expect("stub extension uninstall admission");
     }
 
     #[test]

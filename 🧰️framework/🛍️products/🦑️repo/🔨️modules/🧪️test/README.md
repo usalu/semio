@@ -68,7 +68,7 @@ case also has generated Nx targets (`test`, `test-quick`, `test-long`, `test-exh
 
 An oracle runs in whichever implementation its registry `ecosystem` names, and the library it needs
 is declared by the OWNER, never by the framework. One field carries this, in the owner's
-`🧪️oracle/🔣️component.json`:
+`🧪️oracle/🔣️.json`:
 
 ```json
 "oracleHostPackages": [

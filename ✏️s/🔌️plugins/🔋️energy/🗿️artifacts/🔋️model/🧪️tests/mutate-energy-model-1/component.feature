@@ -6,7 +6,7 @@ Feature: Apply the one typed s.energy.model mutation to its committed specificat
 
   `s.energy.model` is a semio-NATIVE artifact and no third party reads `.dsl.semio`, so no reference
   library is registered — recorded as the `energy-model-mutation-semantics` no-oracle decision in
-  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, which also records why EnergyPlus and
+  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, which also records why EnergyPlus and
   OpenStudio were surveyed and DECLINED, and why the `energyplus` weather reader already registered
   under `✏️s/🔌️plugins/🗄️stdio`'s `🌦️epw` subset is deliberately NOT reused here.
 

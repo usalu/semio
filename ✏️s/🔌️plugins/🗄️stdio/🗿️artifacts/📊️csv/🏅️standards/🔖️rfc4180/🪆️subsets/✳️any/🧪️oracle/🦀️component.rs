@@ -8,7 +8,7 @@
 //! optional-header convention means `has_header` never has to be reconciled against `has_headers`
 //! assumptions the shared `tabular` module bakes in — so its independent reading lives here.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself.
 
 use semio_repo_test_host::Json;

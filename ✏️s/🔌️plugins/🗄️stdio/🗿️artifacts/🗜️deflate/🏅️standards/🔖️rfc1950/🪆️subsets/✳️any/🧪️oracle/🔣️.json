@@ -1,0 +1,53 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json manifest. `flate2` is already the plugin's registered zlib-compression oracle (capability zlib-compression), but that entry cannot cover mutation coverage without re-surveying it for this capability, so this is a distinct id.",
+  "oracles": [
+    {
+      "id": "flate2-deflate-rfc1950-mutate",
+      "ecosystem": "rust",
+      "package": "flate2",
+      "version": "1",
+      "capabilities": [
+        "deflate-rfc1950-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/rust-lang/flate2-rs",
+      "rationale": "The reference zlib/deflate implementation of the Rust ecosystem, used here as the independent encoder/decoder for every typed RFC1950 mutation kind. CMF/FLG/DICTID framing is fixed bit arithmetic RFC1950 mandates (not a competing 'implementation'), computed independently in this subset's own oracle module; flate2 supplies the actual DEFLATE entropy coding and the real Adler-32 trailer that arithmetic alone cannot fabricate. Deterministic given the same call sequence, no network, no system dependencies, cross-platform.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "deflate-rfc1950-any",
+      "capability": "deflate-rfc1950-mutate",
+      "standardDirectoryName": "🔖️rfc1950",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "set-snapshot",
+          "sourceMutationDirectoryName": "📄set-snapshot",
+          "mutationDirectoryName": "📄set-snapshot",
+          "scenarios": [
+            {
+              "id": "raises-the-flevel-hint-and-extends-the-payload",
+              "directoryName": "🧪️raises-the-flevel-hint-and-extends-the-payload"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-compression-params",
+        "set-preset-dictionary",
+        "set-payload"
+      ]
+    }
+  ]
+}

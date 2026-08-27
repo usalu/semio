@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "cases", "hostile", "large", "laws"],
+  "properties": {
+    "version": {"const": 1},
+    "cases": {"type": "array", "minItems": 10, "items": {"type": "object", "additionalProperties": false, "required": ["name", "hex", "value"], "properties": {"name": {"type": "string"}, "hex": {"type": "string", "pattern": "^(?:[0-9a-f]{2})+$"}, "value": {}}}},
+    "hostile": {"type": "array", "minItems": 10, "items": {"type": "object", "additionalProperties": false, "required": ["name", "hex"], "properties": {"name": {"type": "string"}, "hex": {"type": "string", "pattern": "^(?:[0-9a-f]{2})*$"}}}},
+    "large": {"type": "object", "additionalProperties": false, "required": ["unit", "repeat", "depth", "maximumBytes"], "properties": {"unit": {"const": "Größe🧭"}, "repeat": {"const": 1000}, "depth": {"const": 4096}, "maximumBytes": {"const": 32768}}},
+    "laws": {"type": "array", "minItems": 12, "uniqueItems": true, "items": {"type": "string"}}
+  }
+}

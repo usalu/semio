@@ -1,0 +1,27 @@
+  testing/contract  ✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations  A mutation vocabulary is declared here but no catalog registers it
+  testing/contract  ✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations  A mutation vocabulary is declared here but no catalog registers it
+  testing/contract  ✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations  A mutation vocabulary is declared here but no catalog registers it
+  testing/contract  ✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations  A mutation vocabulary is declared here but no catalog registers it
+  testing/contract  ✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations  A mutation vocabulary is declared here but no catalog registers it
+  testing/contract  ✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations  A mutation vocabulary is declared here but no catalog registers it
+  testing/contract  ✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations  A mutation vocabulary is declared here but no catalog registers it
+  testing/contract  ✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations  A mutation vocabulary is declared here but no catalog registers it
+  testing/contract  ✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations  A mutation vocabulary is declared here but no catalog registers it
+  testing/contract  ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations  A mutation vocabulary is declared here but no catalog registers it
+  testing/contract  ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations  A mutation vocabulary is declared here but no catalog registers it
+  testing/contract  ✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations  A mutation vocabulary is declared here but no catalog registers it
+  testing/contract  ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations  A mutation vocabulary is declared here but no catalog registers it
+  testing/contract  ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations  A mutation vocabulary is declared here but no catalog registers it
+  testing/contract  ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations  A mutation vocabulary is declared here but no catalog registers it
+  testing/contract  🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations  A mutation vocabulary is declared here but no catalog registers it
+  testing/contract  energy-model-1-any  Mutation catalog energy-model-1-any (1 kinds) is claimed by no feature
+  testing/contract  energy-model-1-any  Mutation catalog energy-model-1-any (1 kinds) is claimed by no feature
+  testing/contract  energy-model-1-any  Mutation catalog energy-model-1-any (1 kinds) is claimed by no feature
+  testing/contract  energy-model-1-any  Mutation catalog energy-model-1-any (1 kinds) is claimed by no feature
+  testing/discovery  🧰️framework  58 executable test file(s) outside the canonical owner-root test tree, baseline allows 35
+  testing/discovery  ✏️s  7 executable test file(s) outside the canonical owner-root test tree, baseline allows 1
+  testing/discovery  .🧬semio  6 executable test file(s) outside the canonical owner-root test tree, baseline allows 0
+
+full breach set (including non-blocking priorities): /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/breaches/testing.json
+
+[exited with code 0]

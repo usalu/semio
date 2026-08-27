@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "contract": {
+    "fold": ["NFC", "toLocaleLowerCase:und", "remove:U+FE0F"],
+    "collision": "folded-equality-or-occupied-ancestor-with-slash",
+    "allowedDirectories": "exact-unfolded-identity",
+    "diagnostics": "occupied-input-order-with-duplicates",
+    "reuse": "invocation-local",
+    "maxFoldsPerOccupiedPath": 1,
+    "maxCandidateReadsDuringOccupiedSelection": 0
+  },
+  "fixture": {
+    "mappings": ["owner/📚️Café/🟦️.ts", "owner/Kelvin/K.rs", "owner/İ/🦀️.rs", "owner/[literal]/.leaf", "owner/straße/🟦️.ts", "owner/📚️Café/🟦️.ts"],
+    "adapters": ["owner/📚️Café/📜️script.ts", "owner/📚️Café/🟦️.ts"],
+    "derived": ["owner/🧬️schema/🔣️.json"],
+    "allowedDirectories": ["owner", "owner/📚️Café"]
+  },
+  "caseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "occupiedPaths", "collisions"],
+    "properties": {
+      "id": { "type": "string", "minLength": 1 },
+      "occupiedPaths": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+      "collisions": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+    }
+  },
+  "cases": [
+    { "id": "empty", "occupiedPaths": [], "collisions": [] },
+    { "id": "exact-leaf", "occupiedPaths": ["owner/📚️Café/🟦️.ts"], "collisions": ["owner/📚️Café/🟦️.ts"] },
+    { "id": "nfc-decomposed", "occupiedPaths": ["owner/📚️Café/🟦️.ts"], "collisions": ["owner/📚️Café/🟦️.ts"] },
+    { "id": "case-fold", "occupiedPaths": ["OWNER/📚️CAFÉ/🟦️.TS"], "collisions": ["OWNER/📚️CAFÉ/🟦️.TS"] },
+    { "id": "variation-selectors", "occupiedPaths": ["owner/📚Café/🟦.ts"], "collisions": ["owner/📚Café/🟦.ts"] },
+    { "id": "kelvin-nfc", "occupiedPaths": ["owner/kelvin/K.rs"], "collisions": ["owner/kelvin/K.rs"] },
+    { "id": "locale-und-dotted-i", "occupiedPaths": ["owner/i̇/🦀️.rs", "owner/i/🦀️.rs"], "collisions": ["owner/i̇/🦀️.rs"] },
+    { "id": "not-full-unicode-case-fold", "occupiedPaths": ["owner/STRASSE/🟦️.ts"], "collisions": [] },
+    { "id": "exact-allowed-directories", "occupiedPaths": ["owner", "owner/📚️Café"], "collisions": [] },
+    { "id": "allowed-directory-aliases-reject", "occupiedPaths": ["OWNER", "owner/📚Café", "owner/📚️Café"], "collisions": ["OWNER", "owner/📚Café", "owner/📚️Café"] },
+    { "id": "ancestor", "occupiedPaths": ["owner/🧬️schema"], "collisions": ["owner/🧬️schema"] },
+    { "id": "output-descendant-is-not-ancestor", "occupiedPaths": ["owner/📚️Café/🟦️.ts/child"], "collisions": [] },
+    { "id": "sibling-prefix-needs-slash", "occupiedPaths": ["owner/📚️Caf", "owner/🧬️schema-more", "owner/📚️Café/🟦️.t"], "collisions": [] },
+    { "id": "literal-glob-characters", "occupiedPaths": ["owner/[literal]", "owner/l", "owner/*", "owner/{a,b}", "owner/?"], "collisions": ["owner/[literal]"] },
+    { "id": "adapter-and-derived", "occupiedPaths": ["owner/📚️Café/📜️script.ts", "owner/🧬️schema/🔣️.json"], "collisions": ["owner/📚️Café/📜️script.ts", "owner/🧬️schema/🔣️.json"] },
+    { "id": "ordered-duplicate-diagnostics", "occupiedPaths": ["owner/🧬️schema/🔣️.json", "noise/leaf", "owner/📚️Café/🟦️.ts", "owner/🧬️schema/🔣️.json"], "collisions": ["owner/🧬️schema/🔣️.json", "owner/📚️Café/🟦️.ts", "owner/🧬️schema/🔣️.json"] }
+  ],
+  "membershipCases": [
+    { "id": "empty", "candidates": [], "entries": [], "occupiedPaths": [] },
+    { "id": "exact-not-folded", "candidates": ["owner/🟦️.ts", "owner/🟦️.ts"], "entries": ["owner/🟦️.ts", "OWNER/🟦️.ts", "owner/🟦.ts", "owner/🟦️.ts/child", "outside/leaf"], "occupiedPaths": ["OWNER/🟦️.ts", "owner/🟦.ts", "owner/🟦️.ts/child", "outside/leaf"] },
+    { "id": "insertion-order", "candidates": ["owner/a", "owner/b"], "entries": ["outside/z", "owner/b", "outside/a", "owner/a"], "occupiedPaths": ["outside/z", "outside/a"] }
+  ],
+  "performance": { "noisePaths": 128, "timingRounds": 4, "timingNoisePaths": 512 },
+  "execution": {
+    "target": "test-nested-cargo-collision-authority",
+    "command": "bun ./📜️script.ts test nested-cargo-collision-authority",
+    "launchName": "🧹clean🧩️taxonomy🧪️nested-cargo-collision-authority",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-nested-cargo-collision-authority --skip-nx-cache",
+    "group": "4_gate",
+    "order": 410.14
+  }
+}

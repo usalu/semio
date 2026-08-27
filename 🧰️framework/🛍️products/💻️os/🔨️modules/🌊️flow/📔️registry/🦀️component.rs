@@ -2,11 +2,11 @@
 
 use neural_engine as neural;
 
-use std::collections::BTreeMap;
-use std::sync::{Arc, LazyLock, Mutex};
+use std::collections::{BTreeMap, VecDeque};
+use std::sync::{LazyLock, Mutex, OnceLock, TryLockError};
 
 use flow_extension_sdk::FlowExtensionManifest;
-use neural::{Dictionary, EvalError, NeuralCache, OperatorImpl, OperatorInfo};
+use neural::{ColdRetire, Dictionary, EvalError, NeuralCache, OperatorImpl};
 use serde::{Deserialize, Serialize};
 
 use crate::catalogue::*;
@@ -39,14 +39,30 @@ struct ContributedFlowExtension {
     manifest_json: String,
 }
 
+#[derive(Deserialize)]
+struct FlowExtensionMetadata {
+    id: String,
+    name: String,
+    version: String,
+}
+
 pub(crate) struct FlowExtensionRegistryState {
     contributed: BTreeMap<String, ContributedFlowExtension>,
-    pub(crate) registry: Arc<neural::Registry>,
+    pub(crate) registry: neural::SharedRegistry,
+    registry_retirement: neural::RegistryRetirement,
+    retired: VecDeque<neural::RegistryRetirement>,
     pub(crate) generation: u64,
 }
 
-pub(crate) static FLOW_EXTENSION_STATE: LazyLock<Mutex<FlowExtensionRegistryState>> =
-    LazyLock::new(|| Mutex::new(FlowExtensionRegistryState { contributed: BTreeMap::new(), registry: Arc::new(build_flow_extension_registry(&BTreeMap::new())), generation: 0 }));
+const RETIRED_REGISTRY_CAPACITY: usize = 16;
+static FLOW_EXTENSION_STATE: OnceLock<Mutex<FlowExtensionRegistryState>> = OnceLock::new();
+
+pub(crate) fn flow_extension_state() -> &'static Mutex<FlowExtensionRegistryState> {
+    FLOW_EXTENSION_STATE.get_or_init(|| {
+        let (registry, registry_retirement) = neural::SharedRegistry::new(build_flow_extension_registry(&BTreeMap::new()));
+        Mutex::new(FlowExtensionRegistryState { contributed: BTreeMap::new(), registry, registry_retirement, retired: VecDeque::with_capacity(RETIRED_REGISTRY_CAPACITY), generation: 0 })
+    })
+}
 
 /// 🔗 Host-linked extension installers — real `OperatorImpl`s compiled into the consuming plugin
 /// (procedural/flow). Preferred over `ContributedExtensionStub` until extension-world WIT invoke is wired.
@@ -74,17 +90,26 @@ impl neural::Operator for ContributedExtensionStub {
         let node_hash = neural::node_hash(&self.operator_id, input);
         Err(EvalError::PendingExtension { extension_id: self.extension_id.clone(), operator_id: self.operator_id.clone(), node_hash })
     }
+
+    fn retirement_is_empty(&self) -> bool { self.extension_id.is_empty() && self.operator_id.is_empty() }
+
+    fn retire_step(&mut self, maximum_items: usize, maximum_bytes: usize, values: &mut neural::ValueRetirement) -> Result<neural::ValueRetirementStep, &'static str> {
+        if maximum_items == 0 || maximum_bytes == 0 { return Ok(neural::ValueRetirementStep::Blocked); }
+        if self.retirement_is_empty() { return Ok(neural::ValueRetirementStep::Complete); }
+        values.text(std::mem::take(&mut self.extension_id));
+        values.text(std::mem::take(&mut self.operator_id));
+        Ok(neural::ValueRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+    }
 }
 
 fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &str, manifest_json: &str) {
     let Ok(manifest) = serde_json::from_str::<FlowExtensionManifest>(manifest_json) else { return };
     for schema in manifest.contributes.schemas {
-        if !registry.schema_catalogue().iter().any(|existing| existing.id == schema.id) {
-            registry.register_schema(schema);
-        }
+        if registry.schema(&schema.id).is_none() { registry.register_schema(schema); } else { schema.retire_cold(); }
     }
     for info in manifest.contributes.operators {
         if registry.operator_info(&info.id).is_some() {
+            info.retire_cold();
             continue;
         }
         let extension_id = manifest.id.clone();
@@ -96,7 +121,7 @@ fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &st
 }
 
 fn build_flow_extension_registry(contributed: &BTreeMap<String, ContributedFlowExtension>) -> neural::Registry {
-    let mut registry = neural::Registry::new();
+    let mut registry = neural::ColdOwner::new(neural::Registry::new());
     install_builtin_flow_extensions(&mut registry);
     let linked = LINKED_FLOW_EXTENSION_INSTALLERS.lock().expect("linked flow extension installers").clone();
     for install in linked.values() {
@@ -105,29 +130,71 @@ fn build_flow_extension_registry(contributed: &BTreeMap<String, ContributedFlowE
     for entry in contributed.values() {
         register_contributed_manifest(&mut registry, &entry.plugin_id, &entry.manifest_json);
     }
-    registry
+    registry.finalize();
+    registry.into_inner()
 }
 
-fn rebuild_flow_extension_registry(state: &mut FlowExtensionRegistryState) {
-    state.generation += 1;
-    state.registry = Arc::new(build_flow_extension_registry(&state.contributed));
+pub(crate) struct FlowRegistryReplacement<'a> { state: &'a mut FlowExtensionRegistryState, generation: u64 }
+
+/// 🎟️ Admits a replacement before constructing any new registry or changing contribution metadata.
+pub(crate) fn begin_flow_registry_replacement(state: &mut FlowExtensionRegistryState) -> Result<FlowRegistryReplacement<'_>, &'static str> {
+    let generation = state.generation.checked_add(1).ok_or("flow.registry-generation-exhausted")?;
+    if state.retired.len() >= RETIRED_REGISTRY_CAPACITY { return Err("flow.registry-retirement-full"); }
+    Ok(FlowRegistryReplacement { state, generation })
+}
+
+impl FlowRegistryReplacement<'_> {
+    pub(crate) fn publish(self, replacement: neural::Registry) {
+        let (registry, retirement) = neural::SharedRegistry::new(replacement);
+        self.state.retired.push_back(std::mem::replace(&mut self.state.registry_retirement, retirement));
+        self.state.registry = registry;
+        self.state.generation = self.generation;
+    }
+}
+
+/// 🧹️ Advances one retired version without waiting on registry readers or a busy registry lock.
+pub fn retire_flow_extension_registries_step(maximum_items: usize, maximum_bytes: usize) -> Result<neural::ValueRetirementStep, &'static str> {
+    if maximum_items == 0 || maximum_bytes == 0 { return Ok(neural::ValueRetirementStep::Blocked); }
+    let Some(state) = FLOW_EXTENSION_STATE.get() else { return Ok(neural::ValueRetirementStep::Complete); };
+    let mut state = match state.try_lock() {
+        Ok(state) => state,
+        Err(TryLockError::WouldBlock) => return Ok(neural::ValueRetirementStep::Blocked),
+        Err(TryLockError::Poisoned(_)) => return Err("flow.registry-retirement-poisoned"),
+    };
+    let Some(retirement) = state.retired.front_mut() else { return Ok(neural::ValueRetirementStep::Complete); };
+    let step = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| retirement.close_step(1, maximum_bytes)))
+        .map_err(|_| "flow.registry-retirement-panicked")??;
+    match step {
+        neural::ValueRetirementStep::Complete => {
+            if !retirement.terminal_is_empty() { return Err("flow.registry-retirement-not-empty"); }
+            drop(state.retired.pop_front());
+            Ok(if state.retired.is_empty() { neural::ValueRetirementStep::Complete } else { neural::ValueRetirementStep::Pending { released_items: 1, released_bytes: 0 } })
+        }
+        neural::ValueRetirementStep::Blocked if state.retired.len() > 1 => {
+            let waiting = state.retired.pop_front().unwrap();
+            state.retired.push_back(waiting);
+            Ok(neural::ValueRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+        }
+        _ => Ok(step),
+    }
 }
 
 /// 🔌️ Installs a built-in extension spec (idempotent on `id`).
-pub fn install_flow_extension(spec: FlowExtensionSpec) {
-    let mut state = FLOW_EXTENSION_STATE.lock().expect("flow extension registry");
+pub fn install_flow_extension(spec: FlowExtensionSpec) -> Result<(), &'static str> {
+    let mut state = flow_extension_state().lock().expect("flow extension registry");
     if state.contributed.contains_key(&spec.id) {
-        return;
+        return Ok(());
     }
+    let admission = begin_flow_registry_replacement(&mut state)?;
     let id = spec.id.clone();
-    let mut composed = neural::Registry::new();
+    let mut composed = neural::ColdOwner::new(neural::Registry::new());
     install_builtin_flow_extensions(&mut composed);
-    for entry in state.contributed.values() {
+    for entry in admission.state.contributed.values() {
         register_contributed_manifest(&mut composed, &entry.plugin_id, &entry.manifest_json);
     }
     (spec.install)(&mut composed);
     composed.finalize();
-    state.contributed.insert(
+    admission.state.contributed.insert(
         id.clone(),
         ContributedFlowExtension {
             plugin_id: format!("spec:{}", id),
@@ -142,10 +209,9 @@ pub fn install_flow_extension(spec: FlowExtensionSpec) {
             .to_string(),
         },
     );
-    // Preserve the live registry that includes spec.install side effects.
-    state.generation += 1;
-    state.registry = Arc::new(composed);
+    admission.publish(composed.into_inner());
     let _ = (spec.name, spec.version);
+    Ok(())
 }
 
 /// 🗂️ `flow.extension` topic payload shape carried by the open `TopicContribution`.
@@ -160,67 +226,75 @@ const FLOW_EXTENSION_TOPIC: &str = "flow.extension";
 /// 📥️ Merges a contributed `flow.extension` manifest from a hot-swapped plugin.
 /// 🔌️ Installs or refreshes contributed flow.extension manifests from host-pushed contributionsJson.
 /// 🗂️ Reads the open `TopicContribution` (`"flow.extension"` topic) shape per entry.
-pub fn sync_host_flow_extension_contributions(contributions_json: &str) {
+pub fn sync_host_flow_extension_contributions(contributions_json: &str) -> Result<(), &'static str> {
     use std::sync::Mutex;
     static LAST: Mutex<String> = Mutex::new(String::new());
     let mut last = LAST.lock().expect("flow contributions lock");
     if *last == contributions_json {
-        return;
+        return Ok(());
     }
-    for info in installed_flow_extensions() {
-        uninstall_flow_extension(&info.id);
+    let entries = serde_json::from_str::<Vec<semio_framework::ProgramContributionEntry>>(contributions_json).map_err(|_| "flow.extension-contributions-invalid")?;
+    let mut contributed = BTreeMap::new();
+    for entry in entries {
+        let Some(topic) = entry.topic_contribution.filter(|topic| topic.topic == FLOW_EXTENSION_TOPIC) else { continue; };
+        let payload = topic.decode::<FlowExtensionTopicPayload>().map_err(|_| "flow.extension-contribution-invalid")?;
+        let manifest = serde_json::from_str::<FlowExtensionMetadata>(&payload.manifest_json).map_err(|_| "flow.extension-manifest-invalid")?;
+        contributed.insert(manifest.id, ContributedFlowExtension { plugin_id: entry.plugin_id, manifest_json: payload.manifest_json });
     }
-    if let Ok(entries) = serde_json::from_str::<Vec<semio_framework::ProgramContributionEntry>>(contributions_json) {
-        for entry in entries {
-            let topic_manifest_json = entry
-                .topic_contribution
-                .as_ref()
-                .filter(|topic_contribution| topic_contribution.topic == FLOW_EXTENSION_TOPIC)
-                .and_then(|topic_contribution| topic_contribution.decode::<FlowExtensionTopicPayload>().ok())
-                .map(|payload| payload.manifest_json);
-            if let Some(manifest_json) = topic_manifest_json {
-                install_flow_extension_manifest(&entry.plugin_id, &manifest_json);
-            }
-        }
-    }
+    let mut state = flow_extension_state().lock().expect("flow extension registry");
+    let admission = begin_flow_registry_replacement(&mut state)?;
+    let registry = build_flow_extension_registry(&contributed);
+    admission.state.contributed = contributed;
+    admission.publish(registry);
     *last = contributions_json.to_string();
+    Ok(())
 }
 
-pub fn install_flow_extension_manifest(plugin_id: &str, manifest_json: &str) {
-    let Ok(manifest) = serde_json::from_str::<FlowExtensionManifest>(manifest_json) else { return };
-    let id = manifest.id.clone();
-    let mut state = FLOW_EXTENSION_STATE.lock().expect("flow extension registry");
-    state.contributed.insert(id, ContributedFlowExtension { plugin_id: plugin_id.to_string(), manifest_json: manifest_json.to_string() });
-    rebuild_flow_extension_registry(&mut state);
+pub fn install_flow_extension_manifest(plugin_id: &str, manifest_json: &str) -> Result<(), &'static str> {
+    let manifest = serde_json::from_str::<FlowExtensionMetadata>(manifest_json).map_err(|_| "flow.extension-manifest-invalid")?;
+    let id = manifest.id;
+    let mut state = flow_extension_state().lock().expect("flow extension registry");
+    let admission = begin_flow_registry_replacement(&mut state)?;
+    let mut contributed = admission.state.contributed.clone();
+    contributed.insert(id, ContributedFlowExtension { plugin_id: plugin_id.to_string(), manifest_json: manifest_json.to_string() });
+    let registry = build_flow_extension_registry(&contributed);
+    admission.state.contributed = contributed;
+    admission.publish(registry);
+    Ok(())
 }
 
 /// 🗑️ Removes a contributed extension and rebuilds the composed registry.
-pub fn uninstall_flow_extension(id: &str) {
-    let mut state = FLOW_EXTENSION_STATE.lock().expect("flow extension registry");
-    if state.contributed.remove(id).is_some() {
-        rebuild_flow_extension_registry(&mut state);
-    }
+pub fn uninstall_flow_extension(id: &str) -> Result<(), &'static str> {
+    let mut state = flow_extension_state().lock().expect("flow extension registry");
+    if !state.contributed.contains_key(id) { return Ok(()); }
+    let admission = begin_flow_registry_replacement(&mut state)?;
+    let mut contributed = admission.state.contributed.clone();
+    contributed.remove(id);
+    let registry = build_flow_extension_registry(&contributed);
+    admission.state.contributed = contributed;
+    admission.publish(registry);
+    Ok(())
 }
 
 /// 📜️ Lists installed contributed extensions (built-ins are implicit).
 pub fn installed_flow_extensions() -> Vec<FlowExtensionInfo> {
-    let state = FLOW_EXTENSION_STATE.lock().expect("flow extension registry");
+    let state = flow_extension_state().lock().expect("flow extension registry");
     state
         .contributed
         .values()
         .filter_map(|entry| {
-            let manifest = serde_json::from_str::<FlowExtensionManifest>(&entry.manifest_json).ok()?;
+            let manifest = serde_json::from_str::<FlowExtensionMetadata>(&entry.manifest_json).ok()?;
             Some(FlowExtensionInfo { id: manifest.id, name: manifest.name, version: manifest.version, plugin_id: Some(entry.plugin_id.clone()) })
         })
         .collect()
 }
 
 /// 🧠️ Shared composed operator registry for evaluation and catalogue derivation.
-pub fn flow_extension_registry() -> Arc<neural::Registry> {
-    FLOW_EXTENSION_STATE.lock().expect("flow extension registry").registry.clone()
+pub fn flow_extension_registry() -> neural::SharedRegistry {
+    flow_extension_state().lock().expect("flow extension registry").registry.clone()
 }
 
-pub(crate) fn flow_registry() -> Arc<neural::Registry> {
+pub(crate) fn flow_registry() -> neural::SharedRegistry {
     flow_extension_registry()
 }
 
@@ -238,10 +312,13 @@ pub fn seed_flow_eval_node_cache(cache: &NeuralCache, node_hash: u64, output_jso
 
 /// 📚️ Extension-grouped catalogue sections (static widget sections merged at host).
 pub fn flow_catalogue_sections() -> Vec<CatalogueSection> {
-    let operators = flow_extension_registry().operator_catalogue();
-    let mut by_extension: BTreeMap<String, Vec<OperatorInfo>> = BTreeMap::new();
-    for info in operators {
-        by_extension.entry(info.extension.clone()).or_default().push(info);
+    let registry = flow_extension_registry();
+    let mut by_extension: BTreeMap<String, Vec<CatalogueItem>> = BTreeMap::new();
+    for info in registry.operator_infos() {
+        by_extension.entry(info.extension.clone()).or_default().push(CatalogueItem {
+            kind: "neuron".into(), neuron_kind: Some(info.id.clone()), action: None, format: None,
+            name: info.name.clone(), abbreviation: info.abbreviation.clone(), icon: info.icon.clone(), summary: info.summary.clone(),
+        });
     }
     by_extension
         .into_iter()
@@ -249,7 +326,7 @@ pub fn flow_catalogue_sections() -> Vec<CatalogueSection> {
             id: extension.clone(),
             title: titleize_extension(&extension),
             groups: vec![],
-            items: items.into_iter().map(|info| CatalogueItem { kind: "neuron".into(), neuron_kind: Some(info.id), action: None, format: None, name: info.name, abbreviation: info.abbreviation, icon: info.icon, summary: info.summary }).collect(),
+            items,
         })
         .collect()
 }
@@ -258,3 +335,7 @@ fn titleize_extension(extension: &str) -> String {
     titleize_module(extension)
 }
 // #endregion 🔖️ExtensionRegistry
+
+#[cfg(test)]
+#[path = "🧪️component.rs"]
+mod tests;

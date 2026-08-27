@@ -2019,10 +2019,9 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::cad::CAD_DIALECT).document(["semio", "cad"])
             .command({
                 let mut definition = CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) };
-                definition.semantics.execution.interactive_job = semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite;
+                definition.semantics.execution.interactive_job = semio_framework_plugin::InteractiveJobClassification::Migrated;
                 definition
             })
-            .action_interactive_job("setContributions", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .artifact_kind(artifact_kind())
             .icon_id("box")
             .terminology("reuse")
@@ -2214,8 +2213,8 @@ pub(crate) mod testkit {
     /// ✏️ `CadPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime `ArtifactApp`
     /// — `EditorApp<CadPlayApp>` (SDK adapter, contract §2.1) is the real `ArtifactApp` implementor
     /// `VcsArtifactApp` wraps, exactly the way `PluginBuilder::editor::<CadPlayApp>` builds it.
-    pub fn new_app() -> VcsArtifactApp<EditorApp<CadPlayApp>> {
-        semio_framework_plugin::testkit::new_app::<EditorApp<CadPlayApp>>()
+    pub async fn new_app() -> VcsArtifactApp<EditorApp<CadPlayApp>> {
+        semio_framework_plugin::testkit::new_app::<EditorApp<CadPlayApp>>().await
     }
 
     /// ✏️ Adapts `create_cad_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
@@ -2270,7 +2269,7 @@ pub(crate) mod testkit {
 
     pub fn render_direct(_app: &CadPlayApp, body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
         let cfg = ConfigView { snapshot: config };
-        CadPlayApp::render(body_key, doc, &cfg)
+        CadPlayApp::render(body_key, doc, &cfg).map(|tree| tree.root)
     }
 
     pub fn window_measures_direct(_app: &CadPlayApp, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig) -> HashMap<String, Vec<WindowMeasure>> {
@@ -2321,7 +2320,7 @@ mod tests {
     use super::*;
     use crate::artifacts::cad::standards::v1::subsets::any::io::{cad_document_from_dwg, cad_working_scene_from_dwg, scene_from_spatial_payload};
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{
-        align_mesh_to_fixture_centroid, default_document, object_mesh_data, primary_primitive_kind, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z,
+        align_mesh_to_fixture_centroid, default_document, object_mesh_data, primary_primitive_kind, run_derive_from_geometry, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z,
         CAD_FOREST_REFERENCE_WIDTH_WORLD, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO,
     };
     use crate::artifacts::cad::{empty_cad_snapshot, CadNode, CAD_PLAY_DOCUMENT_SCHEMA};
@@ -2457,7 +2456,12 @@ mod tests {
         let activation = &fixture["activation"];
         let controller = activation["controller"].as_str().expect("controller");
         let bus = semio_framework::ActionBus::new();
-        let registry = AppActionRegistry::from_definition(&create_cad_app());
+        let definition = create_cad_app();
+        let host_route = fixture["routes"].as_array().unwrap().iter().find(|route| route["id"] == "setContributions").unwrap();
+        assert_eq!(host_route["disposition"], "migrated");
+        let host_command = definition.commands.iter().find(|command| command.id == host_route["id"].as_str().unwrap()).expect("host command declaration");
+        assert_eq!(host_command.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
+        let registry = AppActionRegistry::from_definition(&definition);
         let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<CadPlayApp>>::with_registry_on_bus(EditorApp::<CadPlayApp>::default(), registry, bus.clone()).await;
         assert_eq!(app.app_id().await, controller);
         assert_eq!(<CadPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), activation["proofRows"].as_u64().expect("proof rows") as usize);
@@ -2547,12 +2551,25 @@ mod tests {
         }));
         let manifest = create_cad_app();
         for tool_id in CAD_RETAINED_TOOL_IDS {
-            let actions = manifest.actions.iter().filter(|action| action.id == *tool_id).collect::<Vec<_>>();
-            assert_eq!(actions.len(), 1, "{tool_id} requires exactly one manifest declaration");
-            assert_eq!(actions[0].semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{tool_id}");
+            let mut declarations = 0;
+            for commands in std::iter::once(&manifest.commands).chain(manifest.modes.iter().map(|mode| &mode.commands)) {
+                let matches = commands.iter().filter(|command| command.id == *tool_id).collect::<Vec<_>>();
+                if matches.is_empty() { continue; }
+                assert_eq!(matches.len(), 1, "{tool_id} requires exactly one declaration per command scope");
+                assert_eq!(matches[0].semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{tool_id}");
+                declarations += 1;
+            }
+            for window in &manifest.window_kinds {
+                let actions = window.actions.iter().filter(|action| action.id == *tool_id).collect::<Vec<_>>();
+                if actions.is_empty() { continue; }
+                assert_eq!(actions.len(), 1, "{tool_id} requires exactly one declaration per window scope");
+                assert_eq!(actions[0].semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{tool_id}");
+                declarations += 1;
+            }
+            assert!(declarations > 0, "{tool_id} requires a manifest command or window declaration");
         }
-        assert_eq!(manifest.actions.iter().find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).map(|action| action.semantics.execution.interactive_job), Some(InteractiveJobClassification::Migrated));
-        assert!(manifest.actions.iter().filter(|action| route_ids.contains(action.id.as_str())).all(|action| {
+        assert_eq!(manifest.window_kinds.iter().flat_map(|window| &window.actions).find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).map(|action| action.semantics.execution.interactive_job), Some(InteractiveJobClassification::Migrated));
+        assert!(manifest.window_kinds.iter().flat_map(|window| &window.actions).filter(|action| route_ids.contains(action.id.as_str())).all(|action| {
             let expected = if CAD_RETAINED_TOOL_IDS.contains(&action.id.as_str()) { InteractiveJobClassification::Migrated } else { InteractiveJobClassification::BatchOnlyPendingRewrite };
             action.semantics.execution.interactive_job == expected
         }));
@@ -2564,7 +2581,7 @@ mod tests {
     /// `setActiveExample`: chrome that declares an action no command row backs.
     #[semio_framework_async_macros::async_test]
     async fn every_rendered_action_bridges_through_the_framework_harness() {
-        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<CadPlayApp>>(cad_app_manifest_for_testkit);
+        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<CadPlayApp>>(cad_app_manifest_for_testkit).await;
     }
 
     /// ⚖️ Text and binary are two projections of the same command, and every printed line starts with
@@ -2758,7 +2775,7 @@ mod tests {
         let history = empty_history();
         let doc = ArtifactView::new(&scene, &history);
         for body_key in [shape::BODY_KEY, building::BODY_KEY, energy::BODY_KEY, structure_classic::BODY_KEY] {
-            let node = render_direct(&app, body_key, &doc, &CadConfig::default());
+            let node = render_direct(&app, body_key, &doc, &CadConfig::default()).expect("CAD UI assembly");
             let json = serde_json::to_string(&node).unwrap();
             assert!(json.contains("world-3d"), "body {body_key} should render a world-3d scene");
         }
@@ -2847,8 +2864,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn engagement_input_and_possible_engagements_present() {
-        let mut app = new_app();
-        let engagements = app.window_engagements();
+        let mut app = new_app().await;
+        let engagements = app.window_engagements().await;
         let shape = engagements.get(shape::WINDOW_KIND_ID).expect("shape engagement");
         assert!(shape.input.is_some());
         assert!(shape.possible_engagements.as_ref().is_some_and(|rows| !rows.is_empty()));
@@ -2856,8 +2873,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn window_engagements_registered_for_all_four_panes() {
-        let mut app = new_app();
-        let engagements = app.window_engagements();
+        let mut app = new_app().await;
+        let engagements = app.window_engagements().await;
         for window_kind in [shape::WINDOW_KIND_ID, building::WINDOW_KIND_ID, energy::WINDOW_KIND_ID, structure_classic::WINDOW_KIND_ID] {
             assert!(engagements.contains_key(window_kind), "missing engagement for {window_kind}");
         }
@@ -2925,7 +2942,7 @@ mod tests {
         let history = empty_history();
         let doc = ArtifactView::new(&scene, &history);
         let config = CadConfig { active_utility_id: CAD_DISLOCATE_UTILITY_ID.into(), ..CadConfig::default() };
-        let node = render_direct(&app, shape::BODY_KEY, &doc, &config);
+        let node = render_direct(&app, shape::BODY_KEY, &doc, &config).expect("CAD UI assembly");
         let json = serde_json::to_string(&node).unwrap();
         // The world selection blob is embedded as an escaped JSON string inside the scene node.
         assert!(json.contains(r#"transformMode\":\"transform"#), "render sources Dislocate from CadConfig::active_utility_id");
@@ -2947,8 +2964,8 @@ mod tests {
         let config = CadConfig { active_utility_id: CAD_DISLOCATE_UTILITY_ID.into(), ..CadConfig::default() };
         let history = empty_history();
         let doc = ArtifactView::new(&scene, &history);
-        let shape = render_direct(&app, shape::BODY_KEY, &doc, &config);
-        let building = render_direct(&app, building::BODY_KEY, &doc, &config);
+        let shape = render_direct(&app, shape::BODY_KEY, &doc, &config).expect("CAD UI assembly");
+        let building = render_direct(&app, building::BODY_KEY, &doc, &config).expect("CAD UI assembly");
         let shape_json = serde_json::to_string(&shape).unwrap();
         let building_json = serde_json::to_string(&building).unwrap();
         assert!(shape_json.contains(r#"gumballActive\":false"#));
@@ -3023,8 +3040,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn engagement_hud_no_longer_carries_utility_switcher_options() {
-        let mut app = new_app();
-        let engagements = app.window_engagements();
+        let mut app = new_app().await;
+        let engagements = app.window_engagements().await;
         for engagement in engagements.values() {
             assert!(engagement.options.is_none(), "utility switching now lives in the framework utility bar, not the engagement HUD");
         }
@@ -3039,15 +3056,15 @@ mod tests {
         // 🧱️ Uses `AddNode` as the "prior real edit" — `AddObject` is a documented no-op pending the
         // child-dispatch seam (see `commands/🧱️object/component.rs`'s module doc), so it cannot
         // stand in for a real history entry here anymore.
-        let mut app = new_app();
+        let mut app = new_app().await;
         let before = app.snapshot().expect("snapshot").nodes.len();
-        app.dispatch_typed(CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), &meta("local")).expect("add node");
+        app.dispatch_typed(CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), &meta("local")).await.expect("add node");
         let projection_after_add = serde_json::to_string(&app.snapshot().expect("snapshot")).unwrap();
-        let result = app.dispatch_typed(CadCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: CAD_DISLOCATE_UTILITY_ID.into() }), &meta("local")).expect("set active utility");
+        let result = app.dispatch_typed(CadCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: CAD_DISLOCATE_UTILITY_ID.into() }), &meta("local")).await.expect("set active utility");
         assert!(result.mutations.is_empty(), "utility switch must emit zero operations");
         let projection_after_switch = serde_json::to_string(&app.snapshot().expect("snapshot")).unwrap();
         assert_eq!(projection_after_add, projection_after_switch, "utility switch must not mutate the projection");
-        app.handle_action("undo", None, &meta("local")).expect("undo");
+        app.handle_action("undo", None, &meta("local")).await.expect("undo");
         assert_eq!(app.snapshot().expect("snapshot").nodes.len(), before, "a single undo reverts the addNode — proving the utility switch created no history entry");
     }
 
@@ -3091,17 +3108,17 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn add_object_through_wrapper_is_a_documented_no_op() {
-        let mut app = new_app();
+        let mut app = new_app().await;
         let before = serde_json::to_string(&app.snapshot().expect("snapshot")).unwrap();
-        app.dispatch_typed(CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &meta("local")).expect("add object dispatch");
+        app.dispatch_typed(CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &meta("local")).await.expect("add object dispatch");
         let after = serde_json::to_string(&app.snapshot().expect("snapshot")).unwrap();
         assert_eq!(before, after, "addObject is a documented no-op until the child-dispatch seam lands");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn focus_model_definition_emits_document_operation() {
-        let mut app = new_app();
-        app.dispatch_typed(CadCommand::FocusModelDefinition(focus_model_definition::FocusModelDefinition { model_definition_id: "aec.building".into() }), &meta("local")).expect("focus model definition");
+        let mut app = new_app().await;
+        app.dispatch_typed(CadCommand::FocusModelDefinition(focus_model_definition::FocusModelDefinition { model_definition_id: "aec.building".into() }), &meta("local")).await.expect("focus model definition");
         assert_eq!(app.snapshot().expect("snapshot").active_model_definition_id, "aec.building");
     }
 
@@ -3165,7 +3182,7 @@ mod tests {
         match &emit.effects[0] {
             Effect::DownloadMediaExport { filename, data, .. } => {
                 assert_eq!(filename, "cad.selected.spatial.dsl");
-                assert!(data.contains("activeModelDefinitionId"))?;
+                assert!(data.contains("activeModelDefinitionId"));
             }
             other => panic!("expected DownloadMediaExport, got {other:?}"),
         }
@@ -3591,21 +3608,21 @@ mod tests {
         // `commands/🧱️object/component.rs`'s module doc) — this exercises the generic
         // `assert_undo_redo_round_trip` testkit helper (distinct from `undo_redo_round_trips_added_node_through_wrapper`
         // below, which drives the manual add/undo/redo dance) against the real `AddNode` command.
-        let mut app = new_app();
+        let mut app = new_app().await;
         let before = app.snapshot().expect("snapshot").nodes.len();
-        semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1);
+        semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trips_added_node_through_wrapper() {
-        let mut app = new_app();
+        let mut app = new_app().await;
         let before = app.snapshot().expect("snapshot").nodes.len();
-        app.dispatch_typed(CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), &meta("local")).expect("add node");
+        app.dispatch_typed(CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), &meta("local")).await.expect("add node");
         assert_eq!(app.snapshot().expect("snapshot").nodes.len(), before + 1);
-        let undo = app.handle_action("undo", None, &meta("local")).expect("undo");
+        let undo = app.handle_action("undo", None, &meta("local")).await.expect("undo");
         assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
         assert_eq!(app.snapshot().expect("snapshot").nodes.len(), before);
-        app.handle_action("redo", None, &meta("local")).expect("redo");
+        app.handle_action("redo", None, &meta("local")).await.expect("redo");
         assert_eq!(app.snapshot().expect("snapshot").nodes.len(), before + 1);
     }
 
@@ -3617,10 +3634,10 @@ mod tests {
         // `s.stdio.semio.model` CHILD documents (see `commands/🔄️transform/component.rs`'s own doc
         // comment). This locks in the honest current behavior — a coalesced multi-tick drag emits
         // nothing to undo — rather than letting it silently drift.
-        let mut app = new_app();
+        let mut app = new_app().await;
         let before = serde_json::to_string(&app.snapshot().expect("snapshot")).unwrap();
         for _ in 0..3 {
-            app.dispatch_typed(CadCommand::TranslateSelection(translate_selection::TranslateSelection { object_ids: vec!["object-box-1".into()], dx: 1.0, dy: 0.0, dz: 0.0 }), &meta("local")).expect("translate tick");
+            app.dispatch_typed(CadCommand::TranslateSelection(translate_selection::TranslateSelection { object_ids: vec!["object-box-1".into()], dx: 1.0, dy: 0.0, dz: 0.0 }), &meta("local")).await.expect("translate tick");
         }
         let after = serde_json::to_string(&app.snapshot().expect("snapshot")).unwrap();
         assert_eq!(before, after, "translateSelection is a documented no-op until the child-dispatch seam lands");
@@ -3644,25 +3661,25 @@ mod tests {
         let node_a = base.nodes[0].id.clone();
         let node_b = base.nodes[1].id.clone();
         let base_envelope = store::create_document_envelope::<CadSnapshot, CadMutation>(CAD_DOCUMENT_SCHEMA, "cad-play", base, None);
-        let base_files = store::print_document_pack(&base_envelope).expect("print document pack");
+        let base_files = store::print_document_pack(&base_envelope).await.expect("print document pack");
 
-        let mut instance_a = new_app();
-        let mut instance_b = new_app();
-        instance_a.load_document_pack(&base_files).expect("load a");
-        instance_b.load_document_pack(&base_files).expect("load b");
-        let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://cad-convergence", "mem://cad-convergence");
-        instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
-        instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+        let mut instance_a = new_app().await;
+        let mut instance_b = new_app().await;
+        instance_a.load_document_pack(&base_files).await.expect("load a");
+        instance_b.load_document_pack(&base_files).await.expect("load b");
+        let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://cad-convergence", "mem://cad-convergence").await;
+        instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
+        instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
 
         // A renames node A.
-        instance_a.dispatch_typed(CadCommand::RenameNode(rename_node::RenameNode { node_id: node_a.clone(), value: "Renamed By A".into() }), &meta("actor-a")).expect("a renames node a");
+        instance_a.dispatch_typed(CadCommand::RenameNode(rename_node::RenameNode { node_id: node_a.clone(), value: "Renamed By A".into() }), &meta("actor-a")).await.expect("a renames node a");
 
         // B renames node B — a disjoint edit that must survive alongside A's.
-        instance_b.dispatch_typed(CadCommand::RenameNode(rename_node::RenameNode { node_id: node_b.clone(), value: "Renamed By B".into() }), &meta("actor-b")).expect("b renames node b");
+        instance_b.dispatch_typed(CadCommand::RenameNode(rename_node::RenameNode { node_id: node_b.clone(), value: "Renamed By B".into() }), &meta("actor-b")).await.expect("b renames node b");
 
         // A neutral history command always pumps inbound operations before doing its own work.
-        instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).expect("pump a");
-        instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).expect("pump b");
+        instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("pump a");
+        instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).await.expect("pump b");
 
         let scene_a = instance_a.snapshot().expect("projection a");
         let scene_b = instance_b.snapshot().expect("projection b");
@@ -3680,13 +3697,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent_for_cad() {
-        let mut sender = new_app();
-        let (near, mut far) = MemoryBackbone::pair("mem://cad-doc", "mem://cad-doc");
-        sender.attach_backbone(Box::new(near)).expect("attach");
-        sender.dispatch_typed(CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), &meta("local")).expect("add node");
+        let mut sender = new_app().await;
+        let (near, mut far) = MemoryBackbone::pair("mem://cad-doc", "mem://cad-doc").await;
+        sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach");
+        sender.dispatch_typed(CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), &meta("local")).await.expect("add node");
 
         let mut envelopes = Vec::new();
-        for message in far.receive().expect("receive") {
+        for message in far.receive().await.expect("receive") {
             if let BackboneMessage::Mutations { envelopes: operations } = message {
                 envelopes.extend(operations);
             }
@@ -3694,10 +3711,10 @@ mod tests {
         assert!(!envelopes.is_empty(), "expected the applied operation to flow onto the channel");
         let operations = envelopes;
 
-        let mut receiver = new_app();
+        let mut receiver = new_app().await;
         let nodes_before = receiver.snapshot().expect("snapshot").nodes.len();
-        receiver.ingest_operations(&operations).expect("ingest once");
-        receiver.ingest_operations(&operations).expect("ingest twice");
+        receiver.ingest_operations(&operations).await.expect("ingest once");
+        receiver.ingest_operations(&operations).await.expect("ingest twice");
         assert_eq!(receiver.snapshot().expect("snapshot").nodes.len(), nodes_before + 1, "feeding the same operation twice must not double-apply");
     }
     //#endregion 🔖️Convergence

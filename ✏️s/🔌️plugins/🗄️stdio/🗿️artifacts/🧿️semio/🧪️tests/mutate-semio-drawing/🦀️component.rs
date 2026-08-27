@@ -3,7 +3,7 @@
 //!
 //! **This file no longer serves the oracle role.** The reference for `semio-v1-drawing-mutate` is
 //! the registered oracle `semio-drawing-python-independent` (`../../🏅️standards/🔖️v1/🪆️subsets/
-//! ✳️drawing/🧪️oracle/🔣️component.json`) — an independent Python implementation of the semio drawing
+//! ✳️drawing/🧪️oracle/🔣️.json`) — an independent Python implementation of the semio drawing
 //! carrier, its recursive `DrawNode` tree and all seventeen verbs, written from the committed
 //! grammar and protocol documents and living beside this file as `🐍️component.py`. The runner
 //! dispatches the oracle role there and the subject role here, and compares the two projections

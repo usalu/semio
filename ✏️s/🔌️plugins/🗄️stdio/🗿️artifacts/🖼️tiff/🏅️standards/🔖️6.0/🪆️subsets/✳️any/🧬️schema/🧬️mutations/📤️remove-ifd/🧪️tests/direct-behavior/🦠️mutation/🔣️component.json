@@ -1,0 +1,6 @@
+{
+  "mutation": "remove-ifd",
+  "payload": {
+    "index": 0
+  }
+}

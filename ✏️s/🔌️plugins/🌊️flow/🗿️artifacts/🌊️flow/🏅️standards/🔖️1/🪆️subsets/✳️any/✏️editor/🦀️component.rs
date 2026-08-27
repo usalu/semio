@@ -2025,7 +2025,7 @@ pub(crate) mod testkit {
                 },
             };
             let manifest_json = serde_json::to_string(&manifest).expect("serialize test fixture manifest");
-            flow::install_flow_extension_manifest("flow-core-test-fixture", &manifest_json);
+            flow::install_flow_extension_manifest("flow-core-test-fixture", &manifest_json).expect("fixture extension admission");
         });
     }
 

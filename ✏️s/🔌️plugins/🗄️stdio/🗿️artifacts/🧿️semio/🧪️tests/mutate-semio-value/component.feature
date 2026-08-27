@@ -14,7 +14,7 @@ Feature: Apply every typed semio VALUE mutation to a real 424 KB building model,
   `(before, mutation, after)` vectors, and the semio envelope region of
   `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`), importing nothing from and
   transliterating nothing of the Rust it judges. It is registered as the oracle
-  `semio-value-python-independent` in `…/✳️value/🧪️oracle/🔣️component.json`; the recorded no-oracle
+  `semio-value-python-independent` in `…/✳️value/🧪️oracle/🔣️.json`; the recorded no-oracle
   decision it replaces is gone, because there is now a reference to compare against. That decision
   had named `json` 0.12 as the nearest candidate and declined it — a generic JSON DOM has no
   analogue for `Bytes`, `Ref`, lexeme-preserving numbers or the id-keyed node graph, so it could

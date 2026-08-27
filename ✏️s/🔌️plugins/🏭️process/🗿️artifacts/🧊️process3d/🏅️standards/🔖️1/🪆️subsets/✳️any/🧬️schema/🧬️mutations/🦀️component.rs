@@ -369,7 +369,7 @@ mod tests {
 
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every `Process3dMutation` variant, in declaration order — the vocabulary the `process3d-1-any` mutation catalog
-/// (`../../🧪️oracle/🔣️component.json`) declares and the `mutate-process3d-1` exhaustive test case measures
+/// (`../../🧪️oracle/🔣️.json`) declares and the `mutate-process3d-1` exhaustive test case measures
 /// itself against. The framework never parses Rust, so `kinds_match_the_enum_and_the_catalog` below is
 /// what keeps this list honest in both directions.
 pub const KINDS: &[&str] = &[
@@ -408,7 +408,7 @@ pub const KINDS: &[&str] = &[
 /// so the inverse law is checked against the mutation's OWN computed inverse rather than against a
 /// hand-written undo.
 ///
-/// @see ../../🧪️oracle/🔣️component.json — the catalog and the recorded no-oracle decision.
+/// @see ../../🧪️oracle/🔣️.json — the catalog and the recorded no-oracle decision.
 pub fn process3d_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
     let decode_snapshot = |text: &str| -> Result<Process3dSnapshot, String> {
         let decoded: Process3dSnapshot = serde_json::from_str(text).map_err(|error| error.to_string())?;
@@ -456,7 +456,7 @@ mod kinds_conformance {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

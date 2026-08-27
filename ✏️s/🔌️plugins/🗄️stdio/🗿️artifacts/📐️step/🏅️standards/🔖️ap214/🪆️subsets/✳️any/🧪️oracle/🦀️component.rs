@@ -23,7 +23,7 @@
 //! subject's — through `project_step_ap214_any` below, which is the one place a genuinely
 //! independent, third-party parse of the result happens.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`StepMutation::KINDS`).
 
 use semio_repo_test_host::Json;

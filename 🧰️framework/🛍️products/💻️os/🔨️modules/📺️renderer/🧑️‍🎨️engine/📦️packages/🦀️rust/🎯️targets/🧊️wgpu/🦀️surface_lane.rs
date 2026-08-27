@@ -9,7 +9,7 @@ use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU64, Ordering};
 
 pub(crate) const SURFACE_RESIZE_LANE_CAPACITY: usize = 64;
 const SURFACE_RESIZE_STEP_FUEL: u64 = 1;
-const SURFACE_RESIZE_STEP_BUDGET_MS: u64 = 1;
+const SURFACE_RESIZE_STEP_BUDGET_US: u64 = 1_000;
 
 static SURFACE_LANE_OCCUPIED: [AtomicBool; SURFACE_RESIZE_LANE_CAPACITY] = [const { AtomicBool::new(false) }; SURFACE_RESIZE_LANE_CAPACITY];
 static SURFACE_LANE_GENERATIONS: [AtomicU64; SURFACE_RESIZE_LANE_CAPACITY] = [const { AtomicU64::new(0) }; SURFACE_RESIZE_LANE_CAPACITY];
@@ -267,8 +267,8 @@ impl MountedSurfaceResizeLane {
             operation,
             generation: Generation(request.metrics_generation),
             cancel,
-            config: BatchDriveConfig { site: "os_renderer_surface_resize", stage: InteractiveStage::InteractiveStep, fuel_per_step: SURFACE_RESIZE_STEP_FUEL, step_budget_ms: SURFACE_RESIZE_STEP_BUDGET_MS },
-            now_ms: semio_framework_job::default_now_ms,
+            config: BatchDriveConfig { site: "os_renderer_surface_resize", stage: InteractiveStage::InteractiveStep, fuel_per_step: SURFACE_RESIZE_STEP_FUEL, step_budget_us: SURFACE_RESIZE_STEP_BUDGET_US },
+            now_us: semio_framework_job::default_now_us,
         };
         self.session = Some(match MountedWorkerJobSession::try_new(SurfaceResizeJob::new(request), params) {
             Ok(session) => SurfaceResizeSession::Admitted(session),
@@ -488,7 +488,7 @@ mod tests {
         let operation = semio_framework_job::allocate_operation_id();
         let cancel = semio_framework_job::CancelToken::root_now();
         let mut preview_sequence = 0;
-        let mut cx = StepContext::new(operation, Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), cancel, semio_framework_job::default_now_ms, &mut preview_sequence);
+        let mut cx = StepContext::new(operation, Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), cancel, semio_framework_job::default_now_us, &mut preview_sequence);
         assert_eq!(job.step(&mut cx), StepOutcome::Yield);
         assert_eq!(job.phase, ResizePhase::LogicalHeight);
         assert_eq!(job.logical_width, 640.0);

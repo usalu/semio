@@ -317,7 +317,7 @@ pub fn round_trip_draw_dsl(text: &str) -> Result<String, String> {
 
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every `DrawMutation` variant, in declaration order — the vocabulary
-/// the `draw-1-any` catalog (`../../🧪️oracle/🔣️component.json`) declares and the `mutate-draw-1`
+/// the `draw-1-any` catalog (`../../🧪️oracle/🔣️.json`) declares and the `mutate-draw-1`
 /// exhaustive case measures itself against. Ten of the fourteen address ONE layer of the recursive
 /// tree by id, `create-layer`/`duplicate-layer`/`reorder-layer` address a parent plus an index, and
 /// `update-layer-trace-params` exists only for the trace node kind. `kinds_match_the_enum_and_the_
@@ -358,7 +358,7 @@ mod kinds_catalog_tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed draw-1-any catalog");
         }

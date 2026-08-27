@@ -1,5 +1,11 @@
 # Retained Renderer Patch Packet
 
+## Verified Numeric Prerequisite and Additional Consumer
+
+The coordinator independently ran the new dual persistent numeric-index target: ten semantic/grant cases, 37 lifecycle laws, two ordinal laws, 3,072 Immer/Map differential operations, five invalid IDs and zero strict TypeScript diagnostics pass. Full output is in `📓️coordinator-numeric-index-test-2026-08-27.md`. The complete component was read: separate ID/insertion-order roots preserve safe-53-bit IDs and captured old roots, while cancellation releases borrowed frames before root retirement. A source-level negative-zero/Map normalization edge is assigned for a regression law. Logical 256-byte metadata accounting is not a JavaScript GC or eight-millisecond timing measurement.
+
+The coordinator also read the actual wgpu-web `🐚️plugin-bridge.ts` retained-window path. It still calls the shared actor `🖼️wire-turn.ts` whole decode/apply pipeline and caches the result by actor only, even though render receives an instance and body key. This parallel consumer must adopt the same retained patch machinery with exact actor/instance/surface identity; otherwise a React-only change leaves a monolithic and potentially cross-surface path. The renderer executor has this concrete follow-on boundary. No deployed-browser failure is inferred from source inspection alone.
+
 ## Source and Runtime Evidence
 
 The coordinator re-read `UiDocumentStore` validation, patch application, hydration, tree flattening, and notification, plus the matching PluginRuntime wire/application call sites. The existing diagnostic already executes the actual patch function on valid 4,096-node and 20,000-node trees; functional assertions pass, but many calls exceed eight milliseconds. Its concurrent-compilation/Bun caveat remains: this is not an isolated browser input-latency measurement.

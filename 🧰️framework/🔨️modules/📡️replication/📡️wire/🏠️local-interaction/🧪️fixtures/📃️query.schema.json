@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "pageBytes", "grants", "sourceCases", "cancelAfterBytes", "wrongAcknowledgements", "zeroItemMutates", "unacknowledgedPageAdvances", "duplicateAcknowledgementAccepted", "cancelledPageReadable", "terminalRequiresReadReturn", "partialError"],
+  "properties": {
+    "version": {"const": 1},
+    "pageBytes": {"const": 256},
+    "grants": {"const": [1, 64, 4096]},
+    "sourceCases": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "cancelAfterBytes": {"const": [0, 17, 4097]},
+    "wrongAcknowledgements": {"const": ["request", "queryGeneration", "ordinal", "instance", "generation", "interaction", "document", "topology"]},
+    "zeroItemMutates": {"const": false},
+    "unacknowledgedPageAdvances": {"const": false},
+    "duplicateAcknowledgementAccepted": {"const": false},
+    "cancelledPageReadable": {"const": false},
+    "terminalRequiresReadReturn": {"const": true},
+    "partialError": {"type": "object", "additionalProperties": false, "required": ["first", "expectedPrefix", "error"], "properties": {"first": {"const": "retained✓"}, "expectedPrefix": {"const": "{\"first\":\"retained✓\",\"second\":"}, "error": {"const": "query.hostile-source"}}}
+  }
+}

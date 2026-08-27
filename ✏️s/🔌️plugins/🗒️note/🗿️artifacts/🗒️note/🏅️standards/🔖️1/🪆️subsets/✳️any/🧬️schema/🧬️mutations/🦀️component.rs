@@ -111,7 +111,7 @@ pub async fn inverse_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutat
 
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every [`NoteMutation`] variant, in declaration order — the vocabulary the
-/// `note-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and the
+/// `note-1-any` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and the
 /// exhaustive `mutate-*` case measures itself against (9 document-root scalars, 3 asset-pool kinds and 21 block-tree kinds). The framework never
 /// parses Rust, so `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest
 /// against both the enum and the committed catalog.
@@ -207,7 +207,7 @@ mod kinds_catalog {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

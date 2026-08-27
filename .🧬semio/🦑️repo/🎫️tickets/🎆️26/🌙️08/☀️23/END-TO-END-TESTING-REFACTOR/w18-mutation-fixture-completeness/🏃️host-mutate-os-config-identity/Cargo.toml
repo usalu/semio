@@ -1,0 +1,19 @@
+# 🤖️ Ticket-local reproduction of the generated test host. Deleted with the ticket.
+[workspace]
+
+[package]
+name = "semio-test-host-mutate-os-config-identity"
+version = "0.0.0"
+edition = "2021"
+
+[[bin]]
+name = "host"
+path = "src/main.rs"
+
+[features]
+default = ["sut"]
+sut = ["dep:semio-framework-plugin-host"]
+
+[dependencies]
+semio-repo-test-host = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }
+semio-framework-plugin-host = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust", optional = true }

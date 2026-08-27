@@ -680,6 +680,19 @@ describe("🧬️ physical mutation vector registry", () => {
     expect(mutationCatalogProblems({ ...catalog, standardDirectoryName: "🔖️2" }, "artifact/🏅️standards/🔖️1/🪆️subsets/✳️any")).toContain("catalog profile does not match its contribution owner");
   });
 
+  // 🪆️A framework facet owns a mutation vocabulary too, and its path carries no
+  // `🏅️standards/🪆️subsets` coordinates to restate. Requiring them unconditionally made such a
+  // catalog unrepresentable, which silently dropped the whole contribution — and an owner whose
+  // contribution never loads is an owner the completeness gate never measures.
+  test("an owner with no standards/subsets coordinates declares a catalog without them", () => {
+    const facetOwner = "🧰️framework/🛍️products/💻️os/🎚️config";
+    const { standardDirectoryName: _standard, subsetDirectoryName: _subset, ...profileless } = catalog;
+    expect(mutationCatalogProblems(profileless, facetOwner)).toEqual([]);
+    expect(mutationCatalogProblems(catalog, facetOwner)).toContain("standardDirectoryName is only declarable by an owner that carries standards/subsets coordinates");
+    expect(mutationCatalogProblems(catalog, facetOwner)).toContain("subsetDirectoryName is only declarable by an owner that carries standards/subsets coordinates");
+    expect(mutationCatalogProblems(profileless, "artifact/🏅️standards/🔖️1/🪆️subsets/✳️any")).toContain("standardDirectoryName must be a non-empty string");
+  });
+
   test("a source or projected 13-node bundle is represented exactly once", () => {
     const root = mkdtempSync(join(tmpdir(), "mutation-vector-contract-"));
     const owner = "artifact/🏅️standards/🔖️1/🪆️subsets/✳️any";
@@ -687,7 +700,7 @@ describe("🧬️ physical mutation vector registry", () => {
     try {
       for (const dir of ["🦠️mutation", "📸️snapshot/⬅️before", "📸️snapshot/➡️after", "🔺️diff", "🎯️outcome"]) mkdirSync(join(source, dir), { recursive: true });
       for (const file of ["🦀️component.rs", "🦠️mutation/🔣️component.json", "📸️snapshot/⬅️before/🔣️component.json", "📸️snapshot/➡️after/🔣️component.json", "🔺️diff/🔣️component.json", "🎯️outcome/🔣️component.json"]) writeFileSync(join(source, file), "{}\n");
-      const contribution = { owner, manifestPath: `${owner}/🧪️oracle/🔣️component.json`, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [catalog], migrationStatus: {} };
+      const contribution = { owner, manifestPath: `${owner}/🧪️oracle/🔣️.json`, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [catalog], migrationStatus: {} };
       const registry = { schemaVersion: 1, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [catalog], contributions: [contribution] } as unknown as import("./📦️index.ts").OracleRegistry;
       expect(mutationVectorRegistryBreaches(root, registry)).toEqual([]);
       rmSync(join(source, "🎯️outcome", "🔣️component.json"));

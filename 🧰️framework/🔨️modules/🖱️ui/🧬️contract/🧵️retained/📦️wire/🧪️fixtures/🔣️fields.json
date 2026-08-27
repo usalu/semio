@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "fieldNames": ["component", "layout", "style", "accessibility", "bindings", "menu", "children"],
+  "node": { "id": 9007199254740991, "key": "root", "component": { "type": "surface", "kind": "node-graph", "docSchema": "node-graph@1", "doc": { "bytes": [3, 7, 11] } }, "layout": { "kind": "leaf", "width": "hug", "height": "fill" }, "style": {}, "activity": "idle", "accessibility": {} },
+  "replacement": { "type": "text", "value": "Neu 😀" },
+  "repeat": 1024,
+  "expected": { "directFieldOwners": 7, "ancestorOwners": 0, "oldBytesAfterReplacement": [3, 7, 11], "id": 9007199254740991, "component": { "type": "text", "value": "Neu 😀", "emphasize": null, "dataAttributes": null } },
+  "laws": ["old-reader-holds-replaced-bytes", "unchanged-field-allocation-identity", "fixed-seven-direct-fields", "cancelled-candidate-does-not-close-current", "last-reader-releases-old-bytes", "wrong-field-owner-rejected-before-move", "zero-grant-close-preserves-fields", "capabilities-cannot-be-shadowed", "capture-saturation-is-atomic"]
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false, "required": ["grants", "cases", "text", "cancellation", "publication"],
+  "properties": {
+    "publication": { "type": "object", "additionalProperties": false, "required": ["scope", "ack", "stale", "capture"], "properties": { "scope": { "const": "actor-instance-surface" }, "ack": { "const": "after-atomic-root-publication" }, "stale": { "const": "reject-without-root-change" }, "capture": { "const": "old-root-survives-concurrent-close" } } },
+    "grants": { "type": "array", "items": { "enum": [256, 4096] }, "minItems": 2 },
+    "cases": { "type": "array", "minItems": 8, "items": { "type": "object", "additionalProperties": false, "required": ["name", "kind", "size"], "properties": { "name": { "type": "string" }, "kind": { "enum": ["replace", "remove", "cycle", "orphan", "duplicate", "dangling", "depth", "stale"] }, "size": { "type": "integer", "minimum": 2, "maximum": 4096 } } } },
+    "text": { "type": "object", "additionalProperties": false, "required": ["unit", "repeat", "utf8Bytes"], "properties": { "unit": { "const": "α🧩️\n\"" }, "repeat": { "const": 4096 }, "utf8Bytes": { "const": 45056 } } },
+    "cancellation": { "type": "object", "additionalProperties": false, "required": ["everyPhase", "publishedRootUnchanged", "retireBeforeComplete"], "properties": { "everyPhase": { "const": true }, "publishedRootUnchanged": { "const": true }, "retireBeforeComplete": { "const": true } } }
+  }
+}

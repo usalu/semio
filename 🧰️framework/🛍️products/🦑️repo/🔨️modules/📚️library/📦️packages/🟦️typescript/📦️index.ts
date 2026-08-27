@@ -6,12 +6,12 @@
 //#region 🔌️Adapters
 import { ephemeralBox } from "@semio-tech/framework";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { type Dirent, chmodSync, existsSync, fstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { type Dirent, chmodSync, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { availableParallelism, devNull, homedir, tmpdir } from "node:os";
 import { basename, dirname, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
-import { fixedContractFilename, loadTaxonomy } from "../../🔍️discovery/🟦️component.ts";
+import { fixedContractFilename, loadTaxonomy, taxonomyRelativePathIsExcluded } from "../../🔍️discovery/🟦️component.ts";
 //#endregion 🔌️Adapters
 
 import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
@@ -1392,8 +1392,10 @@ function generateCargoVariants(name: string): string[] {
   return Array.from(variants);
 }
 
+/** 🦀️ Indexes admitted Cargo manifests without probing opaque nodes or following links. */
 function getCargoWorkspaceIndex(repoRoot = getWorkspaceRoot()) {
   if (cachedCrateIndex.current) return cachedCrateIndex.current;
+  const taxonomy = loadTaxonomy();
   const exactPkgNames = new Set<string>();
   const libNameToCrates = new Map<string, CrateIndexRecord[]>();
   const aliasToCrates = new Map<string, CrateIndexRecord[]>();
@@ -1407,12 +1409,16 @@ function getCargoWorkspaceIndex(repoRoot = getWorkspaceRoot()) {
   };
 
   const walk = (dir: string): void => {
+    const relativePath = relative(repoRoot, dir);
+    if (relativePath && taxonomyRelativePathIsExcluded(relativePath, taxonomy)) return;
     if (dir.includes("node_modules") || dir.includes("target") || dir.includes(".git") || dir.includes(".🧬semio")) return;
-    for (const ent of readdirSync(dir, { withFileTypes: true })) {
-      const full = join(dir, ent.name);
+    for (const name of readdirSync(dir)) {
+      const full = join(dir, name);
+      if (taxonomyRelativePathIsExcluded(relative(repoRoot, full), taxonomy)) continue;
+      const ent = lstatSync(full);
       if (ent.isDirectory()) {
         walk(full);
-      } else if (ent.name === "Cargo.toml" && full !== join(repoRoot, "Cargo.toml")) {
+      } else if (ent.isFile() && name === "Cargo.toml" && full !== join(repoRoot, "Cargo.toml")) {
         try {
           const content = readFileSync(full, "utf8");
           const pkgMatch = content.match(/\[package\][\s\S]*?\bname\s*=\s*"([^"]+)"/);
@@ -6076,6 +6082,7 @@ export async function exportAnimatedSvgToMp4(inputSvgPath: string, outputMp4Path
 /** 🔣️ Shared taxonomy vocabulary + repo-wide package discovery contract — see
  * `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`. */
 export * from "../../🔍️discovery/🟦️component.ts";
+export { cargoProviderTomlParser, inspectMutationMetadataSource, projectCargoProviderManifest, resolveCargoProviderBinding, type CargoProviderBinding, type CargoProviderBindingInput, type CargoProviderDependencyProjection, type CargoProviderLibraryProjection, type CargoProviderManifestProjection, type CargoProviderManifestProjectionInput, type CargoProviderTomlParser, type MutationMetadataProviderIdentity, type MutationMetadataSourceInput, type MutationMetadataSourceOrigin, type MutationMetadataSourceProof } from "../../🔍️discovery/🟦️component.ts";
 //#endregion 🔣️TaxonomyDiscovery
 
 //#region 🗂️Workspaces

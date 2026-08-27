@@ -28,7 +28,7 @@ const KINDS: [&str; 5] = ["no-mutation", "set-snapshot", "set-id3v2", "set-frame
 
 //#region 🔖️Profile
 /// 📏️ `semantic-mp3-mpeg1-layer3-v1`'s own declared writer freedom
-/// (`../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`), mirrored here so
+/// (`../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️oracle/🔣️.json`), mirrored here so
 /// an in-handler law check is exactly as strict as the profile the case is measured by, never
 /// stricter. Every projected value is an exact integer, a boolean or a string, so the tolerance is
 /// genuinely zero rather than a nominal one.

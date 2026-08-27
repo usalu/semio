@@ -79,7 +79,7 @@ pub enum CadMutation {
 }
 
 /// 🏷️ The kebab-case spelling of every [`CadMutation`] variant, in declaration order — the exact
-/// vocabulary the `cad-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and the
+/// vocabulary the `cad-1-any` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and the
 /// `mutate-cad-1` exhaustive case measures itself against. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
 pub const KINDS: &[&str] = &[
@@ -202,7 +202,7 @@ pub mod tests {
 
     //#region 🧪️MutationLaws
     /// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs`
-    /// (reachable here as `protocol::testkit`, the same `semio_framework_os_kernel` alias every
+    /// (reachable here as `store::os_spr::testkit`, the same `semio_framework_os_kernel` alias every
     /// other law/round-trip assertion in this crate already goes through), exercised against the
     /// three most structurally distinct new variants: a fixed-slot create/delete pair
     /// (`create-shape-model`), a Vec-collection create/delete pair (`create-drawing`), and a
@@ -212,10 +212,10 @@ pub mod tests {
         let base = sample_scene();
         let sample = sample_model_child("law-model-1");
         let mutation = CadMutation::CreateShapeModel(CreateShapeModel { child_id: sample.child_id.clone(), target: sample.target.to_uri() });
-        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        store::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).diff().clone();
         let d2 = CadMutation::DeleteShapeModel(DeleteShapeModel {}).diff(&base).diff().clone();
-        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        store::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -223,20 +223,20 @@ pub mod tests {
         let base = sample_scene();
         let sample = sample_model_child("law-drawing-1");
         let mutation = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-law-1".into(), target: sample.target.to_uri() });
-        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        store::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).diff().clone();
         let d2 = CadMutation::DeleteDrawing(DeleteDrawing { child_id: "drawing-law-1".into() }).diff(&base).diff().clone();
-        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        store::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn change_reference_hidden_satisfies_the_inverse_and_absorb_laws() {
         let base = sample_scene();
         let mutation = CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_hidden: true });
-        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        store::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).diff().clone();
         let d2 = CadMutation::ChangeReferenceLocked(ChangeReferenceLocked { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_locked: false }).diff(&base).diff().clone();
-        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        store::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
     //#endregion 🧪️MutationLaws
 
@@ -246,32 +246,32 @@ pub mod tests {
     #[semio_framework_async_macros::async_test]
     async fn delete_missing_node_is_a_target_missing_error() {
         let base = sample_scene();
-        protocol::testkit::assert_missing_target_is_error(&base, &CadMutation::DeleteNode(DeleteNode { node_id: "does-not-exist".into() }));
+        store::os_spr::testkit::assert_missing_target_is_error(&base, &CadMutation::DeleteNode(DeleteNode { node_id: "does-not-exist".into() })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rename_missing_node_is_a_target_missing_error() {
         let base = sample_scene();
-        protocol::testkit::assert_missing_target_is_error(&base, &CadMutation::RenameNode(RenameNode { node_id: "does-not-exist".into(), new_label: "New".into() }));
+        store::os_spr::testkit::assert_missing_target_is_error(&base, &CadMutation::RenameNode(RenameNode { node_id: "does-not-exist".into(), new_label: "New".into() })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn change_hidden_on_missing_reference_is_a_target_missing_error() {
         let base = sample_scene();
-        protocol::testkit::assert_missing_target_is_error(&base, &CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: "spatial.shape".into(), reference_id: "does-not-exist".into(), new_hidden: true }));
+        store::os_spr::testkit::assert_missing_target_is_error(&base, &CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: "spatial.shape".into(), reference_id: "does-not-exist".into(), new_hidden: true })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn create_node_duplicate_id_never_applies() {
         let base = sample_scene();
         let duplicate = CadMutation::CreateNode(CreateNode { node: crate::artifacts::cad::CadNode { id: "node-1".into(), label: "Dup".into(), kind: "group".into() } });
-        protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
+        store::os_spr::testkit::assert_fatal_never_applies(&duplicate.diff(&base)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn delete_missing_drawing_is_a_target_missing_error() {
         let base = sample_scene();
-        protocol::testkit::assert_missing_target_is_error(&base, &CadMutation::DeleteDrawing(DeleteDrawing { child_id: "does-not-exist".into() }));
+        store::os_spr::testkit::assert_missing_target_is_error(&base, &CadMutation::DeleteDrawing(DeleteDrawing { child_id: "does-not-exist".into() })).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -280,7 +280,7 @@ pub mod tests {
         let mut base = sample_scene();
         base = protocol::MutationDiff::apply(CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.to_uri() }).diff(&base).diff(), &base).expect("valid mutation diff");
         let duplicate = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.to_uri() });
-        protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
+        store::os_spr::testkit::assert_fatal_never_applies(&duplicate.diff(&base)).await;
     }
     //#endregion 🧪️OutcomeLaws
     //#region 🧪️KindsCatalog
@@ -295,7 +295,7 @@ pub mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

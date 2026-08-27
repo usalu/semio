@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["nativeBounds", "vectors", "hostile", "large"],
+  "properties": {
+    "nativeBounds": {"type":"object","additionalProperties":false,"required":["textBytes","collectionItems","grantBytes"],"properties":{"textBytes":{"const":512},"collectionItems":{"const":256},"grantBytes":{"const":4096}}},
+    "vectors": {"type":"array","minItems":5,"items":{"type":"object","additionalProperties":false,"required":["name","hex","expected"],"properties":{"name":{"type":"string"},"hex":{"type":"string","pattern":"^(?:[0-9a-f]{2})+$"},"expected":{}}}},
+    "hostile": {"type":"array","minItems":8,"items":{"type":"object","additionalProperties":false,"required":["name","hex"],"properties":{"name":{"type":"string"},"hex":{"type":"string","pattern":"^(?:[0-9a-f]{2})*$"}}}},
+    "large": {"type":"object","additionalProperties":false,"required":["rows","text","repeat"],"properties":{"rows":{"const":128},"text":{"const":"😀ä\"\\"},"repeat":{"const":48}}}
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "grants", "componentVariants", "patchVariants", "document", "ownership"],
+  "properties": {
+    "version": {"const": 1},
+    "grants": {"const": [1, 64, 4096]},
+    "componentVariants": {"const": ["container", "text", "button", "separator", "input", "select", "toggle", "keyValueList", "slider", "numberStepper", "ring", "iconSelect", "tree", "treeSection", "treeItem", "image", "extension", "surface"]},
+    "patchVariants": {"const": ["upsert", "setComponent", "setLayout", "setActivity", "setChildren", "setStyle", "setAccessibility", "setBindings", "setMenu", "remove", "setRoot"]},
+    "document": {
+      "type": "object", "additionalProperties": false,
+      "required": ["generation", "surface", "nodeId", "value", "valueTextBytes", "terminalDescendantsRetired"],
+      "properties": {
+        "generation": {"const": 41}, "surface": {"const": "native.owned"}, "nodeId": {"const": 1},
+        "value": {"const": {"label": "Column Height", "nested": ["Grüße", {"unit": "🌊"}]}},
+        "valueTextBytes": {"const": 39}, "terminalDescendantsRetired": {"const": true}
+      }
+    },
+    "ownership": {
+      "type": "object", "additionalProperties": false,
+      "required": ["zeroGrantMutates", "arenaContentionAdvances", "dropWaitsForArena", "terminalRequiresNoAllocation", "sharedDescendantPreserved", "globalDrainConsumesClaimedDocument"],
+      "properties": {
+        "zeroGrantMutates": {"const": false}, "arenaContentionAdvances": {"const": false}, "dropWaitsForArena": {"const": false},
+        "terminalRequiresNoAllocation": {"const": true}, "sharedDescendantPreserved": {"const": true},
+        "globalDrainConsumesClaimedDocument": {"const": false}
+      }
+    }
+  }
+}

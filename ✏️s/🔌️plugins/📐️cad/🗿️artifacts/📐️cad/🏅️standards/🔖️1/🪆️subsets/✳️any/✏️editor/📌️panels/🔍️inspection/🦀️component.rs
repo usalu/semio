@@ -273,7 +273,7 @@ mod tests {
     use crate::editor::cad::{make_object_for_typology, CadPlayRuntime};
     fn selected_box_panel(config: &CadConfig) -> String {
         let runtime = CadPlayRuntime::default();
-        let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(config), None);
+        let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(config), None).expect("CAD properties panel assembly");
         serde_json::to_string(&panel).unwrap()
     }
 

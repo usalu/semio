@@ -25,7 +25,7 @@ pub enum WavMutation {
 }
 
 /// 🦠️ Kebab-case spelling of every `WavMutation` variant — the exhaustive vocabulary the mutation
-/// oracle catalog (`../../🧪️oracle/🔣️component.json`) is measured against. Order matches the enum.
+/// oracle catalog (`../../🧪️oracle/🔣️.json`) is measured against. Order matches the enum.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-fmt", "set-data", "set-other-chunks"];
 
 impl Mutation<WavSnapshot> for WavMutation {
@@ -178,7 +178,7 @@ mod tests {
         from_const.sort_unstable();
         assert_eq!(from_const, from_enum, "KINDS must name exactly the enum's variants");
 
-        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️component.json")).expect("valid oracle manifest JSON");
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️.json")).expect("valid oracle manifest JSON");
         let mut from_manifest: Vec<String> = manifest["mutationCatalogs"][0]["kinds"].as_array().expect("mutationCatalogs[0].kinds").iter().map(|value| value.as_str().expect("kind is a string").to_string()).collect();
         from_manifest.sort_unstable();
         assert_eq!(from_const, from_manifest.iter().map(String::as_str).collect::<Vec<_>>(), "KINDS must name exactly the manifest's declared kinds");

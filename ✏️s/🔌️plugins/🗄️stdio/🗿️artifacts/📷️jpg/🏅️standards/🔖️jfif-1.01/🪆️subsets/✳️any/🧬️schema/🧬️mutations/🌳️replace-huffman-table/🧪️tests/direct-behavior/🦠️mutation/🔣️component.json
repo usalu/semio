@@ -1,0 +1,30 @@
+{
+  "mutation": "replace-huffman-table",
+  "payload": {
+    "table": {
+      "bits": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "class": "dc",
+      "id": 1,
+      "values": [
+        7
+      ]
+    }
+  }
+}

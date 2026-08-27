@@ -14,7 +14,7 @@
 //! The implementation lives in the shared `document::ooxml` family module because all six
 //! `✳️strict`/`✳️transitional` OOXML subsets genuinely share it — see that module's own doc comment.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself.
 
 use semio_repo_test_host::Json;

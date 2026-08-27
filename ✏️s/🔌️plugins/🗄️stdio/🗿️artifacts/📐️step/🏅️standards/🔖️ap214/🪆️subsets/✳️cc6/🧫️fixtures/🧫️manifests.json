@@ -1,0 +1,1763 @@
+[
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "cut-bored-box-through",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "applied",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "cut-bored-box-through/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:4388f07b714d7180b1905631224ca8fc8ae3b03148c1118d7aa3de50ae348cd1",
+        "bytes": 15451
+      },
+      {
+        "role": "operand-b-step",
+        "path": "cut-bored-box-through/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:f928f5bd9dfca6fd9c03cf495c61b19d5092ab9ccb10b1fc440253ea697a6049",
+        "bytes": 5666
+      },
+      {
+        "role": "expected-step",
+        "path": "cut-bored-box-through/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:3178bfdbab2c0acce21c4c435bc01e37f865378ab93ac651bd13801fd9ababf1",
+        "bytes": 19068
+      },
+      {
+        "role": "expected-mesh",
+        "path": "cut-bored-box-through/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:1a112f044f52cb781cc3143879eb4965a03a12e330ad4b186acecfc6e57d8ab8",
+        "bytes": 45433
+      },
+      {
+        "role": "expected-measurements",
+        "path": "cut-bored-box-through/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:aba1b4b8d2237de6cde28c9cc0a7d7f529be8f2db0c2c974c2009c86ee8ba9f3",
+        "bytes": 447
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only cut-bored-box-through",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "analytic-strict",
+    "reproducible": false,
+    "family": "spatial-relationship",
+    "notes": "Partial volumetric overlap: a cylinder bored clean through a box. The analytic answer 20³ − π·5²·20 is known in closed form, so this fixture also pins the kernel's own exactness."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "cut-disjoint-operands",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "no-op",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "cut-disjoint-operands/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:60ea7ddede34231fa3f923e9d47988d55cd64607705e219d776bc290da09f93d",
+        "bytes": 15451
+      },
+      {
+        "role": "operand-b-step",
+        "path": "cut-disjoint-operands/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:f6c94c8ab91fd6770416e8fc78ae9f73b9c9157f4363d11d832d583f4dcd66f4",
+        "bytes": 15494
+      },
+      {
+        "role": "expected-step",
+        "path": "cut-disjoint-operands/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:65d736ec2e661be52868c4b42ad15f95eb47c42366830943c0dffc67b163daea",
+        "bytes": 15451
+      },
+      {
+        "role": "expected-mesh",
+        "path": "cut-disjoint-operands/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:41eadf52084d1d8ec9c094e55c4496823c81ace94852400fbce258816338a068",
+        "bytes": 343
+      },
+      {
+        "role": "expected-measurements",
+        "path": "cut-disjoint-operands/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:b632221904efa945f184bcc7641031dd5268192ac970faf7980dd1ee6a3ca37f",
+        "bytes": 429
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only cut-disjoint-operands",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "analytic-strict",
+    "reproducible": false,
+    "family": "spatial-relationship",
+    "notes": "Completely disjoint operands. The declared outcome is a NO-OP: subtracting something that touches nothing must return the base unchanged, not merely 'something that does not crash'."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "cut-contained-operand",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "applied",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "cut-contained-operand/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:cb511c4e304d0a0d5dc6dfe53d72e23f6eb7443af3fa3ee6fb988b51042338a0",
+        "bytes": 15451
+      },
+      {
+        "role": "operand-b-step",
+        "path": "cut-contained-operand/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:92a0ff11fd835492bebcb1320e33a45b98ff728479d3f17a6d4338001e626eb6",
+        "bytes": 15439
+      },
+      {
+        "role": "expected-step",
+        "path": "cut-contained-operand/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:c032eea6e02a70c1dd7cfb8b9ebae9b5b706c830611737b769f4826a27c002d9",
+        "bytes": 29367
+      },
+      {
+        "role": "expected-mesh",
+        "path": "cut-contained-operand/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:30d2cac14994181d9f86dabc35c3a166f6df3ad7c0b6fad7f5d910ea64078e59",
+        "bytes": 631
+      },
+      {
+        "role": "expected-measurements",
+        "path": "cut-contained-operand/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:f61a711f3015a7f2e9af25ce243d48535be8a239a2a6502796ea600c78f3c03c",
+        "bytes": 433
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only cut-contained-operand",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "analytic-strict",
+    "reproducible": false,
+    "family": "spatial-relationship",
+    "notes": "One operand fully contained in the other, producing an internal cavity. A cavity is exactly what mesh similarity alone cannot see, which is why volume and validity are asserted beside it."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "cut-full-subtraction",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "empty",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "cut-full-subtraction/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:529adbd15a9c3f7b899cd1c38dc460a1b489dad344472f3ad5e5e2858edc8c6f",
+        "bytes": 15441
+      },
+      {
+        "role": "operand-b-step",
+        "path": "cut-full-subtraction/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:f698c39dbe347aa66f574fdf621cbb35593501253a1a729cc61f22cbaee89d91",
+        "bytes": 15453
+      },
+      {
+        "role": "expected-measurements",
+        "path": "cut-full-subtraction/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:5be5703680ebe8f9b370ce763d2ebc5b965e93287ca6523317d9bb4edbd744fc",
+        "bytes": 65
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only cut-full-subtraction",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "analytic-strict",
+    "reproducible": false,
+    "family": "spatial-relationship",
+    "notes": "The tool completely swallows the base. The declared outcome is EMPTY, so a kernel that returned the base unchanged would fail rather than pass quietly."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "fuse-face-touching-boxes",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "applied",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "fuse-face-touching-boxes/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:39e1fdb50012facb931d0b8f65d96bf958ffb332b826e3b5c694871dc305813b",
+        "bytes": 15453
+      },
+      {
+        "role": "operand-b-step",
+        "path": "fuse-face-touching-boxes/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:fe226ef7ff67ebdf6d8a77dd502e7d064f23a6e7ebbd6d2125a4a3f76f4ce5d9",
+        "bytes": 15470
+      },
+      {
+        "role": "expected-step",
+        "path": "fuse-face-touching-boxes/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:3c9c142bf95ab6c7f05c59303345d1958540a114e1ed4dabb4d1faa08acd24e4",
+        "bytes": 24606
+      },
+      {
+        "role": "expected-mesh",
+        "path": "fuse-face-touching-boxes/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:b333543716ca733842a4b4f7f393524896cd5322a0ea7c3af79dfb83a7e65ff6",
+        "bytes": 543
+      },
+      {
+        "role": "expected-measurements",
+        "path": "fuse-face-touching-boxes/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:46238604f14578b06cf99513d79de7a8a4d0ff5946716a32783d39dc95166ca8",
+        "bytes": 435
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only fuse-face-touching-boxes",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "contact-sensitive",
+    "reproducible": false,
+    "family": "spatial-relationship",
+    "notes": "Exact face contact. Two boxes sharing a whole face must fuse into ONE solid; a kernel that left two components would be caught by the component-count assertion, not by the volume, which is identical either way."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "fuse-edge-touching-boxes",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "disjoint",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "fuse-edge-touching-boxes/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:2a5a09836b2dfc1b3fb502e2f502ea9d2bf92d6a91ebb894fc4b6c38dfbf56a1",
+        "bytes": 15453
+      },
+      {
+        "role": "operand-b-step",
+        "path": "fuse-edge-touching-boxes/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:16c9952b4ce59f7e6b1537f1fcdbf4896f16ddf74708d6903aa7d0702fbd39f9",
+        "bytes": 15487
+      },
+      {
+        "role": "expected-step",
+        "path": "fuse-edge-touching-boxes/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:64c109e5b82a58792f5e4b30b83de62072c6052a09da846054e6ccc31f2504b8",
+        "bytes": 32630
+      },
+      {
+        "role": "expected-mesh",
+        "path": "fuse-edge-touching-boxes/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:cdb5f9da4f1227c5c48aab41b0ceb40157f5e566d14f1b34e45873dffbc0ad96",
+        "bytes": 655
+      },
+      {
+        "role": "expected-measurements",
+        "path": "fuse-edge-touching-boxes/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:8280d2653362c80e573bfdce115ac25e476ce99c57b0f3389065f2625e84ebf6",
+        "bytes": 435
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only fuse-edge-touching-boxes",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "contact-sensitive",
+    "reproducible": false,
+    "family": "robustness",
+    "notes": "Edge contact only — the degenerate case between 'joined' and 'two bodies'. MEASURED: this kernel leaves TWO solids (12 faces, 23 edges, total volume 2000), so the declared class is DISJOINT, not applied. The volume is identical either way; only the component count separates the two answers, which is why component count is asserted and face count is not."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "intersect-overlapping-boxes",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "applied",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "intersect-overlapping-boxes/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:be3dbe36827935815b5c1e3dcc48d5fe32d59874bf4531f4e4ebae873b255ba8",
+        "bytes": 15453
+      },
+      {
+        "role": "operand-b-step",
+        "path": "intersect-overlapping-boxes/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:15ef200255187e90836c9824ea15f86ea6b62d8a35044bb9b3d5390803ccba99",
+        "bytes": 15453
+      },
+      {
+        "role": "expected-step",
+        "path": "intersect-overlapping-boxes/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:b4a8f18c405482e5278444c2e38139cb9e774a1ee119d1b50ed34d9cbcbf50b7",
+        "bytes": 16320
+      },
+      {
+        "role": "expected-mesh",
+        "path": "intersect-overlapping-boxes/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:7b5059107251508375e6f031ba10bfe6f0b4fb80453a35dd154bb7d07e885f3d",
+        "bytes": 343
+      },
+      {
+        "role": "expected-measurements",
+        "path": "intersect-overlapping-boxes/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:b4a68aa355bf9e447bf5b2898722f9311ba60907946029e3e95a351446b75768",
+        "bytes": 449
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only intersect-overlapping-boxes",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "analytic-strict",
+    "reproducible": false,
+    "family": "spatial-relationship",
+    "notes": "Partial overlap intersection with the closed-form answer 5³. Supplies the A∩B term of the Boolean volume identity V(A∪B) + V(A∩B) = V(A) + V(B)."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "intersect-disjoint-operands",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "empty",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "intersect-disjoint-operands/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:92cefa8d2a86bf93c5d3e1a7d78c7ba3ef0ef53b5cf54a67fdab73a93121d639",
+        "bytes": 15453
+      },
+      {
+        "role": "operand-b-step",
+        "path": "intersect-disjoint-operands/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:40163b49774909d6fa0b669c03ab7cf9ddb0396a1c8ddffae05bccaf5776af3f",
+        "bytes": 15470
+      },
+      {
+        "role": "expected-measurements",
+        "path": "intersect-disjoint-operands/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:5be5703680ebe8f9b370ce763d2ebc5b965e93287ca6523317d9bb4edbd744fc",
+        "bytes": 65
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only intersect-disjoint-operands",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "analytic-strict",
+    "reproducible": false,
+    "family": "failure",
+    "notes": "Empty intersection. The declared outcome is EMPTY, distinguishing 'correctly nothing' from 'the operation failed and produced nothing'."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "cut-tangent-cylinder-epsilon-below",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "no-op",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "cut-tangent-cylinder-epsilon-below/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:7442922c2a2a3efc4f92d5c0065947d8a86858a14c91f452ebad414cc1f491b5",
+        "bytes": 15453
+      },
+      {
+        "role": "operand-b-step",
+        "path": "cut-tangent-cylinder-epsilon-below/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:83ef1b4df34e6e40aa123b834ed0b12f71a8c9b4dc37f7218823bd5bf6ee434e",
+        "bytes": 5743
+      },
+      {
+        "role": "expected-step",
+        "path": "cut-tangent-cylinder-epsilon-below/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:c214d954d133fbeea50bb2f63d9ae1200e6c29314c997f4999fc2e907eaf2fd4",
+        "bytes": 15453
+      },
+      {
+        "role": "expected-mesh",
+        "path": "cut-tangent-cylinder-epsilon-below/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:e6617400c6cb3f446abb01b21840da42d654f2e7bcb65a20f415b232885c6c25",
+        "bytes": 343
+      },
+      {
+        "role": "expected-measurements",
+        "path": "cut-tangent-cylinder-epsilon-below/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:c3ad48912f02ce535cc8951184e64566b9b37eecc45242b9581675863932ef07",
+        "bytes": 429
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only cut-tangent-cylinder-epsilon-below",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "epsilon-degenerate",
+    "reproducible": false,
+    "family": "robustness",
+    "notes": "Epsilon BELOW contact: the cutter misses by 1e-6. Declared no-op. The lower rung of the three-rung contact bracket."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "cut-tangent-cylinder-exact",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "applied",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "cut-tangent-cylinder-exact/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:7239bb636d3ab71bdebc9f65541ece90bc0263b09e98bd350c73706b328b4f1b",
+        "bytes": 15453
+      },
+      {
+        "role": "operand-b-step",
+        "path": "cut-tangent-cylinder-exact/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:635530594f8832525e86616b1b353d0e939145558c560f7388ea09ca6c8715a9",
+        "bytes": 5665
+      },
+      {
+        "role": "expected-step",
+        "path": "cut-tangent-cylinder-exact/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:5c55c4b0ff4252e93e737ab6ffad2fa35d74a4ffccb797d8c54eb22f7ebdf9e6",
+        "bytes": 18783
+      },
+      {
+        "role": "expected-mesh",
+        "path": "cut-tangent-cylinder-exact/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:d46c08fcae2d6c25d3eb2a18f8ed9067125600076a6d50816392da6e2f41f87c",
+        "bytes": 424
+      },
+      {
+        "role": "expected-measurements",
+        "path": "cut-tangent-cylinder-exact/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:2868d24fa261bb6886e0e7439748b87aa2f7e755b3eb2535829846edca4e992a",
+        "bytes": 432
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only cut-tangent-cylinder-exact",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "epsilon-degenerate",
+    "reproducible": false,
+    "family": "robustness",
+    "notes": "EXACT tangency, the middle rung of the contact bracket. MEASURED: the kernel removes ZERO volume (8000 to within 1.8e-12) but IMPRINTS the tangent line, taking the shape from 6 faces / 12 edges to 7 / 15. So the class is APPLIED, not no-op: a volume-only comparison cannot tell this apart from the epsilon-below rung, and the epsilon-below rung genuinely leaves 6 faces untouched."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "cut-tangent-cylinder-epsilon-above",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "applied",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "cut-tangent-cylinder-epsilon-above/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:d7cba3280e43e472470d3323ea6bc900f72e935f5f0b159041f5ef863236b8f0",
+        "bytes": 15453
+      },
+      {
+        "role": "operand-b-step",
+        "path": "cut-tangent-cylinder-epsilon-above/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:23a42b9b18e1d3d0c8f63fa228d350e4f112df5f091daf00d58d3b3ca34dfa38",
+        "bytes": 5740
+      },
+      {
+        "role": "expected-step",
+        "path": "cut-tangent-cylinder-epsilon-above/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:ceae08598a37316e74867aab56ab770f7e273765ef47ba94ef6a4047ae21e055",
+        "bytes": 26314
+      },
+      {
+        "role": "expected-mesh",
+        "path": "cut-tangent-cylinder-epsilon-above/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:19433263288afe214849177b9453593995169acb4374c2c07cebdba03d0dbebf",
+        "bytes": 1695
+      },
+      {
+        "role": "expected-measurements",
+        "path": "cut-tangent-cylinder-epsilon-above/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:86e76b80129b2dbd68c404c14dd7e51be603f3d48bb3f37755801944bc9d1e62",
+        "bytes": 463
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only cut-tangent-cylinder-epsilon-above",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "epsilon-degenerate",
+    "reproducible": false,
+    "family": "robustness",
+    "notes": "Epsilon ABOVE contact: the cutter bites 1e-6 into the face. MEASURED: a sliver of 8.44e-8 is removed and the shape reaches 9 faces / 21 edges — the upper rung of the contact bracket, and the one a tolerance sized in millimetres would swallow whole."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "cut-coplanar-face-cutter",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "applied",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "cut-coplanar-face-cutter/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:fdd8a499020dae1cdce8578c21daa283a02cf98ab2618855a38a218bae601b78",
+        "bytes": 15453
+      },
+      {
+        "role": "operand-b-step",
+        "path": "cut-coplanar-face-cutter/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:84fdcc0a90e3f751deab944f5c4f35d91c2b5a20f1bf740a59dd420acb1f7b94",
+        "bytes": 15487
+      },
+      {
+        "role": "expected-step",
+        "path": "cut-coplanar-face-cutter/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:b8b7988e2d5f1ebe1e95e2bd76271ce73318c5011f5ee90de9aa895446c11187",
+        "bytes": 16066
+      },
+      {
+        "role": "expected-mesh",
+        "path": "cut-coplanar-face-cutter/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:b705d3ecf924a00293e6e4768c0b525e287b06e0ff8afce7d997b2890de78b3a",
+        "bytes": 355
+      },
+      {
+        "role": "expected-measurements",
+        "path": "cut-coplanar-face-cutter/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:28bb6ad2ba9d8373d037c5c95605ac3396ebd5fe5e57f049133ae12b0b27bad3",
+        "bytes": 444
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only cut-coplanar-face-cutter",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "contact-sensitive",
+    "reproducible": false,
+    "family": "robustness",
+    "notes": "Coplanar faces: the cutter's top face lies exactly on the box's mid-plane. Coplanarity is the classic source of kernel-dependent face splitting, which is why face counts are NOT asserted here."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "cut-identical-operands",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "empty",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "cut-identical-operands/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:c387fecc316559a6b3f2bc1784ac2ed2dbdd6624dcf0331b48f068e67f03c099",
+        "bytes": 15453
+      },
+      {
+        "role": "operand-b-step",
+        "path": "cut-identical-operands/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:5f7437e53fb01d841c31613f91d028c9280f6e91faa39cd40d4968c80f144253",
+        "bytes": 15453
+      },
+      {
+        "role": "expected-measurements",
+        "path": "cut-identical-operands/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:5be5703680ebe8f9b370ce763d2ebc5b965e93287ca6523317d9bb4edbd744fc",
+        "bytes": 65
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only cut-identical-operands",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "analytic-strict",
+    "reproducible": false,
+    "family": "failure",
+    "notes": "Identical operands. A − A is empty; a kernel that returned a zero-volume shell instead of nothing would fail the declared outcome."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "cut-skewed-bore",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "applied",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "cut-skewed-bore/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:883701895418c28ea9d22b312ecb8c35e94ab7ed2f3103f8dc3304bb977cac93",
+        "bytes": 15453
+      },
+      {
+        "role": "operand-b-step",
+        "path": "cut-skewed-bore/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:5fdc1837f410a812ccdadc5788d993859e873603877b56cb9cc4a982225d7460",
+        "bytes": 5882
+      },
+      {
+        "role": "expected-step",
+        "path": "cut-skewed-bore/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:30608154ce6220531dd7d766e14a99d22553c66df04c5509a791227b70bf63a4",
+        "bytes": 20302
+      },
+      {
+        "role": "expected-mesh",
+        "path": "cut-skewed-bore/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:baafa2935e5a5712ade8da0005b6c87a9365524270be655fd0ac1ea863d635c2",
+        "bytes": 9986
+      },
+      {
+        "role": "expected-measurements",
+        "path": "cut-skewed-bore/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:137d25c8bacb8a798b02e680bc1c55ceef2787f0f2e190caf41bb0e9d8c75d76",
+        "bytes": 474
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only cut-skewed-bore",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "mechanical-standard",
+    "reproducible": false,
+    "family": "shape-complexity",
+    "notes": "A non-axis-aligned cutter through a box. Rotating the tool takes the operation off every analytic shortcut and onto the kernel's real surface–surface intersection."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "cut-sphere-from-box",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "applied",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "cut-sphere-from-box/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:841f9289e48c9bbe67c98befc6640fea36d1b2e4a2420ac95c08835313320341",
+        "bytes": 15453
+      },
+      {
+        "role": "operand-b-step",
+        "path": "cut-sphere-from-box/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:3f6d9b19b8f1521ed8e450b0a937eefaea23fe2e710e21a0567f55a1b64af433",
+        "bytes": 2129
+      },
+      {
+        "role": "expected-step",
+        "path": "cut-sphere-from-box/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:96ec3b83a7d69d15345343bd361baa374bba2769111d360e2ebaf14071472776",
+        "bytes": 18077
+      },
+      {
+        "role": "expected-mesh",
+        "path": "cut-sphere-from-box/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:480437d6a5edc59b0b63b12a075677b1401ab4d75793382dcc3517c17ae5a311",
+        "bytes": 1576327
+      },
+      {
+        "role": "expected-measurements",
+        "path": "cut-sphere-from-box/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:4f8921b18424c667fc2816f84d1c76ed7e638a6b827ea10a6f7fa23031f8ea69",
+        "bytes": 456
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only cut-sphere-from-box",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "mechanical-standard",
+    "reproducible": false,
+    "family": "shape-complexity",
+    "notes": "Sphere/box: a doubly-curved cutter against planar faces, and a periodic surface whose seam placement is a kernel decision rather than a semantic one."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "fuse-cylinder-cross",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "applied",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "fuse-cylinder-cross/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:f64aafee118e330c592f867d392142db46c3c2206e0ab62937ba3b111a4d9e07",
+        "bytes": 5693
+      },
+      {
+        "role": "operand-b-step",
+        "path": "fuse-cylinder-cross/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:96deffe61d72bdb52ffca8966924610b99c597153f7e1a01c38bd65a43660911",
+        "bytes": 5755
+      },
+      {
+        "role": "expected-step",
+        "path": "fuse-cylinder-cross/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:b79e35c5d9669d293a3400a56efd007f477ccc1b1369a3bf72c0532e9a5b2ef5",
+        "bytes": 27886
+      },
+      {
+        "role": "expected-mesh",
+        "path": "fuse-cylinder-cross/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:bbb279891bc9d3fe966fb62565f95922536d1c62715a0a9253dce9e2abd4ae8a",
+        "bytes": 169025
+      },
+      {
+        "role": "expected-measurements",
+        "path": "fuse-cylinder-cross/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:9ea13be33aa4e0ab5466575f967ae6dafd8b24e3096e04714d4bf7232dfb39c3",
+        "bytes": 458
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only fuse-cylinder-cross",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "mechanical-standard",
+    "reproducible": false,
+    "family": "shape-complexity",
+    "notes": "Cylinder/cylinder at right angles: two periodic surfaces meeting in a genuine 3-D intersection curve, the case where seam-crossing splits differ between kernels."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "cut-thin-wall-shell",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "applied",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "cut-thin-wall-shell/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:fb4b0530bed4007e7290791a6daf4b0e6ee9b2cb7b00c7c829ad3a963d36116d",
+        "bytes": 15453
+      },
+      {
+        "role": "operand-b-step",
+        "path": "cut-thin-wall-shell/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:e6c770c00e3e19a7f224c808330e2d969b00a9f2922e4bd1ceaea317992a4062",
+        "bytes": 15543
+      },
+      {
+        "role": "expected-step",
+        "path": "cut-thin-wall-shell/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:72dfd431eead10aaedacb38cce516f12f413bb36118d557bb19852628a097446",
+        "bytes": 29471
+      },
+      {
+        "role": "expected-mesh",
+        "path": "cut-thin-wall-shell/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:42770439930d3033dcec9155c3fc8e8f4d44fe7aa632262056d53d6f1e8a2f85",
+        "bytes": 1855
+      },
+      {
+        "role": "expected-measurements",
+        "path": "cut-thin-wall-shell/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:b4f54adf8da92dce07e68b2623e6b7cecf8f7628d28ede4fc66b517dc863cd4d",
+        "bytes": 447
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only cut-thin-wall-shell",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "epsilon-degenerate",
+    "reproducible": false,
+    "family": "robustness",
+    "notes": "A 0.2 mm wall left behind by a nested cut. Thin walls are where tessellation-only comparison passes while the exact shape is wrong."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "cut-micro-scale-bore",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "applied",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "cut-micro-scale-bore/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:e7699cc7de2747e5ac88210dc20d4ddb730f3df7dc7a2c710228bc5ada686f80",
+        "bytes": 15570
+      },
+      {
+        "role": "operand-b-step",
+        "path": "cut-micro-scale-bore/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:05f9e9e8e3252eda661b3bcca58e65b2778002265dc159b526ed09d7fc2f098a",
+        "bytes": 5766
+      },
+      {
+        "role": "expected-step",
+        "path": "cut-micro-scale-bore/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:5402f7e7bacf17c85ca55503f30ccce408d9885b25524bf0339d486a49730806",
+        "bytes": 19276
+      },
+      {
+        "role": "expected-mesh",
+        "path": "cut-micro-scale-bore/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:ded2ec42b972f0b40eda816b7496bc4737eab7eb49026e26cacc1e02dd8b0ec8",
+        "bytes": 33670
+      },
+      {
+        "role": "expected-measurements",
+        "path": "cut-micro-scale-bore/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:9809e7cdda31c76c99f314e8223094f8d3f9e0426c3a35a6a9a7f62d6f0874c0",
+        "bytes": 455
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only cut-micro-scale-bore",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "micro-scale",
+    "reproducible": false,
+    "family": "robustness",
+    "notes": "Sub-millimetre geometry. An absolute tolerance sized for millimetres would swallow the whole model, which is precisely what the scale-relative resolution rule exists to prevent."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "cut-large-coordinate-bore",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "applied",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "cut-large-coordinate-bore/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:61ae384d630e8cd262bd7fbb7d4b06656d7a403552b6d31776ae7c2268ecceb3",
+        "bytes": 15593
+      },
+      {
+        "role": "operand-b-step",
+        "path": "cut-large-coordinate-bore/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:b7804271f246ed8c3a66bfdf0abf5f4477e5ee48fbceb7f3d24aae43d8cdac53",
+        "bytes": 5735
+      },
+      {
+        "role": "expected-step",
+        "path": "cut-large-coordinate-bore/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:9a151eea2e1c56a8e9bbe43da876e64bb2e2875128149b40125e5082b0bbce61",
+        "bytes": 19261
+      },
+      {
+        "role": "expected-mesh",
+        "path": "cut-large-coordinate-bore/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:7719bf63d9d153a1c14e9290ebd45ec1bec7a0b2b332abc7038b776773ebd25f",
+        "bytes": 39747
+      },
+      {
+        "role": "expected-measurements",
+        "path": "cut-large-coordinate-bore/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:675631a138252d71f253fc4e964854d1e7a689092d1f9c0ee69f943098dea9f6",
+        "bytes": 461
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only cut-large-coordinate-bore",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "large-coordinate",
+    "reproducible": false,
+    "family": "robustness",
+    "notes": "The same bored box translated a kilometre from the origin. Absolute error grows with the coordinate, so only the relative term is meaningful here."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "cut-disconnected-result",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "applied",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "cut-disconnected-result/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:bf8b9800a0e7e613b3f23180d7d4c714a79545fd53c8e91d31eebba62bbd49b7",
+        "bytes": 15453
+      },
+      {
+        "role": "operand-b-step",
+        "path": "cut-disconnected-result/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:da4e93afd7df7477e6bc5ef525c12c62825f3f8c7600536e08ced1d9fef59503",
+        "bytes": 15534
+      },
+      {
+        "role": "expected-step",
+        "path": "cut-disconnected-result/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:b74f64191774aaaaba58af2a6001fcb61e9ba59075e49309685c0d039e6e5ac6",
+        "bytes": 33807
+      },
+      {
+        "role": "expected-mesh",
+        "path": "cut-disconnected-result/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:85c69480902403977faca78bdf09be712b93bf0d8215eacabd78324ffcac70a1",
+        "bytes": 643
+      },
+      {
+        "role": "expected-measurements",
+        "path": "cut-disconnected-result/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:7e7c3b20adf31a7954fd72367863f76e29fa3f51e48d888b50033aff13c314dc",
+        "bytes": 442
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only cut-disconnected-result",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "mechanical-standard",
+    "reproducible": false,
+    "family": "spatial-relationship",
+    "notes": "A cut that splits the base into TWO bodies. The component count is the assertion; volume alone cannot tell one body from two."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "mechanical-fixture-plate",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "applied",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "mechanical-fixture-plate/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:fe31b0c8c478e3e025f5c5ca71158022984de944bf36795cbb451805499eb0c1",
+        "bytes": 15440
+      },
+      {
+        "role": "expected-step",
+        "path": "mechanical-fixture-plate/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:c0ce361836faa08aaf6678465407fab2ebfe6beb9cc95f649723c31e4ef0135b",
+        "bytes": 43576
+      },
+      {
+        "role": "expected-mesh",
+        "path": "mechanical-fixture-plate/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:65cf5efe57e09e35895af09a018f66844aee1c50bb53791e1100e45dfe618f32",
+        "bytes": 131502
+      },
+      {
+        "role": "expected-measurements",
+        "path": "mechanical-fixture-plate/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:1be6429c7fd41c0b595c0311959cca183339421047ff41cef5f30084c5ee2481",
+        "bytes": 450
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only mechanical-fixture-plate",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "mechanical-standard",
+    "reproducible": false,
+    "family": "mechanical",
+    "notes": "A fixture plate: four patterned through-holes and a central pocket, produced by a subtractive sequence rather than a single operation. Repeated Boolean chains are where intermediate-state defects accumulate."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "mechanical-pipe-manifold",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "applied",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "mechanical-pipe-manifold/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:96517465529da0ffe4c7a1aef6c667c6728c5dba733042cd612f7700c42614d9",
+        "bytes": 15453
+      },
+      {
+        "role": "expected-step",
+        "path": "mechanical-pipe-manifold/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:2d02e51b285aebc3ea563263e594036925228cddada8e39359c4b59db1c5385d",
+        "bytes": 74913
+      },
+      {
+        "role": "expected-mesh",
+        "path": "mechanical-pipe-manifold/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:ea5310d6a16db951d4b8340c355bb8cbcc1b7428b346568a86bbcb897d060ea2",
+        "bytes": 187353
+      },
+      {
+        "role": "expected-measurements",
+        "path": "mechanical-pipe-manifold/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:ff3ee7a8606bf3003d37f44b7af93bbdfeb5330520df345f773108b70dc8e5c7",
+        "bytes": 467
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only mechanical-pipe-manifold",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "mechanical-standard",
+    "reproducible": false,
+    "family": "mechanical",
+    "notes": "A manifold: a main bore with a branch bore meeting it at right angles inside the body. Intersecting internal passages are the case where a lost cavity leaves the outer surface — and therefore the Hausdorff distance — untouched."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "mechanical-ribbed-enclosure",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "applied",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "mechanical-ribbed-enclosure/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:727ef54c87225cc4f7c4b08823391ede923c582bb4024ac075aa7584a65e32d0",
+        "bytes": 15453
+      },
+      {
+        "role": "expected-step",
+        "path": "mechanical-ribbed-enclosure/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:be510b50474992de9e4a27dc086b4a3ad158ded6139295851fd1634a8cc7e2ff",
+        "bytes": 159070
+      },
+      {
+        "role": "expected-mesh",
+        "path": "mechanical-ribbed-enclosure/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:ca9e07c7f4446fc7aed9fb5f2f37985760648b4afff0843317d2ca4772c6b573",
+        "bytes": 4051
+      },
+      {
+        "role": "expected-measurements",
+        "path": "mechanical-ribbed-enclosure/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:d62adc7cd05b0478b7f48d2b13837da3cc5097c40f7c69adfa8f6b418e61577b",
+        "bytes": 447
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only mechanical-ribbed-enclosure",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "mechanical-standard",
+    "reproducible": false,
+    "family": "mechanical",
+    "notes": "A shelled enclosure with internal ribs and vent slots — a nested cavity crossed by thin partitions, and the closest this corpus comes to a real housing."
+  },
+  {
+    "schema": "semio.repository-test.fixture/v2",
+    "id": "mechanical-filleted-bracket",
+    "class": "third-party-generated",
+    "target": {
+      "artifact": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6"
+    },
+    "mutation": "set-shape-representation",
+    "outcome": "applied",
+    "units": {
+      "length": "millimetre",
+      "angle": "radian",
+      "handedness": "right",
+      "up": "z"
+    },
+    "files": [
+      {
+        "role": "operand-a-step",
+        "path": "mechanical-filleted-bracket/operand-a.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:f6f751c3790e170dc7e70699b455635c55d8b8e1e2d7711bccc9fc2b84d3a886",
+        "bytes": 15440
+      },
+      {
+        "role": "operand-b-step",
+        "path": "mechanical-filleted-bracket/operand-b.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:d5a0898d057c84151ef2c1ee4fcb93139e4ec200cf7459228fadb371aebd069c",
+        "bytes": 15440
+      },
+      {
+        "role": "expected-step",
+        "path": "mechanical-filleted-bracket/expected.step",
+        "mediaType": "model/step",
+        "sha256": "sha256:b1186a64e553fc404956371115d91be7b410ca8d44317c2c545561a0cf10b492",
+        "bytes": 45543
+      },
+      {
+        "role": "expected-mesh",
+        "path": "mechanical-filleted-bracket/expected.mesh.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:3c70224403cd26bc4647462db0721a38ad6bd648a7d5640b2984ae3bd64549ec",
+        "bytes": 81974
+      },
+      {
+        "role": "expected-measurements",
+        "path": "mechanical-filleted-bracket/expected.metrics.json",
+        "mediaType": "application/json",
+        "sha256": "sha256:0589ef33e33d574b909c805c420c72dc20a4a34e6156a145afa53a1b63286e1b",
+        "bytes": 472
+      }
+    ],
+    "generator": {
+      "oracle": "brepjs-occt",
+      "packageVersion": "18.119.8",
+      "engineFamily": "opencascade",
+      "engineVersion": "0.15.6",
+      "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️generator/📜️script.ts generate --only mechanical-filleted-bracket",
+      "seed": 4815162342,
+      "platform": "darwin-arm64"
+    },
+    "provenance": {
+      "source": "generated",
+      "license": "Apache-2.0",
+      "attribution": "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)",
+      "security": "scanned-clean",
+      "privacy": "no-personal-data"
+    },
+    "comparisonProfile": "semantic-brep-solid-v1",
+    "toleranceProfile": "mechanical-standard",
+    "reproducible": false,
+    "family": "mechanical",
+    "notes": "An angled bracket with a gusset and two angled cutters. Filleting is deliberately left out where the kernel refuses it, because a fixture that quietly skipped its own defining feature would be worse than none."
+  }
+]

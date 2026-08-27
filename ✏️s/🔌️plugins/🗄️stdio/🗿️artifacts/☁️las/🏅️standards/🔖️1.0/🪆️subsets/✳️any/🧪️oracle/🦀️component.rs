@@ -36,7 +36,7 @@
 //! signature carries no field value, and `offsetToPointData` (the only field it would shift) is
 //! itself STRUCTURAL and excluded from the projection below.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself.
 
 use semio_repo_test_host::Json;

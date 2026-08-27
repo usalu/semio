@@ -73,7 +73,7 @@ pub enum SemioVideoMutation {
 
 /// 🏷️ The declared kebab-case mutation vocabulary of `s.stdio.semio.video`, in enum declaration
 /// order — what the `mutate-semio-video` case's completeness gate counts against and what
-/// `../../🧪️oracle/🔣️component.json`'s catalog repeats. The framework never parses Rust, so
+/// `../../🧪️oracle/🔣️.json`'s catalog repeats. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this declaration honest.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-stream", "remove-stream", "set-stream-meta", "insert-sample", "remove-sample", "set-sample-data", "set-sample-flags"];
 //#endregion 🔖️Mutations
@@ -396,7 +396,7 @@ mod tests {
             assert_eq!(KINDS[ordinal], print_semio_video_mutation(&mutation).split(' ').next().unwrap_or_default(), "KINDS[{ordinal}] must be the keyword {mutation:?} prints");
         }
         assert!(seen.iter().all(|hit| *hit), "every declared variant must be represented in sample_mutations");
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

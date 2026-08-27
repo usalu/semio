@@ -43,7 +43,7 @@ two different verbs is not a differential, so it is not claimed as one; `remove-
 `ruststep`-backed scenarios in `../mutate-ifc-2x3`, unchanged.
 
 @see ../mutate-ifc-2x3/component.feature — the exhaustive five-kind case this one does not replace.
-@see ../../🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧪️oracle/🔣️component.json — this oracle's registration.
+@see ../../🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧪️oracle/🔣️.json — this oracle's registration.
 """
 
 from __future__ import annotations

@@ -46,7 +46,7 @@ primitive IS used here, but only as the inverse of `insert-entity`, and only beh
 `get_total_inverses(...) == 0` guard, so the cascading path is never silently taken.
 
 @see ../mutate-ifc-4/component.feature — the exhaustive eleven-kind case this one does not replace.
-@see ../../🏅️standards/🔖️4/🪆️subsets/✳️any/🧪️oracle/🔣️component.json — this oracle's registration.
+@see ../../🏅️standards/🔖️4/🪆️subsets/✳️any/🧪️oracle/🔣️.json — this oracle's registration.
 """
 
 from __future__ import annotations

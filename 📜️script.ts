@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { microsecondsFromMilliseconds } from "./🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️component.js";
 /**
  * 🧭️ Monorepo command router: `bun ./📜️script.ts <verb> [segments…]` (e.g. `📜️script.ts dev`, `📜️script.ts dev mcp`, `📜️script.ts generate neo4j elements`).
  */
@@ -72,8 +73,9 @@ import {
   buildSemanticCensus,
   createRustMutationCodecOwnershipInspector,
   inspectRustMutationAggregateSpan,
+  inspectRustMutationMetadataFacts,
   inspectRustModuleGraphFacts,
-  inspectRustPublicTypeNames,
+  inspectRustModuleGraph,
   inspectRustRunnableTests,
   inspectRustStructure,
   inspectRustSourceIdentities,
@@ -84,7 +86,21 @@ import {
   renderSemanticDuplicatesJson,
   renderSemanticDuplicatesMarkdown,
   taxonomyRelativePathIsExcluded,
+  workspaceAuthorityPath,
+  noFollowDirectoryAncestry,
   semanticPackageAdapterPreview,
+  semanticPackageProjectionCatalog,
+  semanticPackageProjectionAuthority,
+  parseSemanticPackageBrowserProfile,
+  parseGeneratorInputProjection,
+  generatorProjectedInputView,
+  registryCatalogInputView,
+  loadCatalogTaxonomy,
+  resolveWorkspaceTaxonomyAuthority,
+  validateTaxonomy,
+  type RegistryCatalogInputView,
+  type SemanticPackageProjectionCase,
+  type SemanticProjectionAuthorityNode,
   mutationPayloadSchemaRelativePath,
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts";
 import {
@@ -103,8 +119,9 @@ import { builtinModules, createRequire } from "node:module";
 import { dirname, extname, isAbsolute, join, posix, relative, resolve, sep } from "node:path";
 import { createServer } from "node:net";
 import { stat } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 
-const WORKSPACE_ROOT = import.meta.dir;
+const WORKSPACE_ROOT = dirname(fileURLToPath(import.meta.url));
 
 const BUN = process.execPath;
 const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap");
@@ -711,6 +728,150 @@ export function runNestedCargoPackageAdapter(repoRoot: string, mode: string): vo
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, adapter.content, { flag: "wx", mode: 0o644 });
   }
+}
+/** 🌐️ Builds browser artifacts entirely in memory from exact no-follow source or projected inputs. */
+export async function renderWgpuBrowserBundles(repoRoot: string, input: unknown, owner: SemanticPackageProjectionCase, layout: "source" | "destination", options: { readonly taxonomy?: ReturnType<typeof loadTaxonomy>; readonly view?: RegistryCatalogInputView; readonly isCancelled?: () => boolean; readonly progress?: (event: { readonly phase: "module-input" | "bundle"; readonly completed: number; readonly total: number }) => void } = {}): Promise<{ readonly nodes: readonly { readonly path: string; readonly content: string; readonly mode: number; readonly inclusion: "tracked" | "ignored" }[]; readonly inputs: readonly string[] }> {
+  const profile = parseSemanticPackageBrowserProfile(input, owner), taxonomy = options.taxonomy ?? loadTaxonomy();
+  if (layout !== "source" && layout !== "destination") throw new Error("WGPU browser layout must be source or destination");
+  const view = options.view ?? registryCatalogInputView(repoRoot, taxonomy);
+  const projected = (path: string): string => layout === "destination" ? owner.mappings.find((mapping) => mapping.sourcePath === path)?.destinationPath ?? path : path;
+  const allowed = new Set(profile.sourceModulePaths.map(projected)), modules = new Set<string>(), contents = new Map<string, string>();
+  const nodes: { path: string; content: string; mode: number; inclusion: "tracked" | "ignored" }[] = [];
+  const check = (): void => { if (options.isCancelled?.()) throw new Error("WGPU browser generation cancelled"); };
+  const read = (path: string): string => {
+    check();
+    const cached = contents.get(path);
+    if (cached !== undefined) return cached;
+    if (view.kind(path) !== "file") throw new Error("WGPU browser input is missing or not a no-follow file: " + path);
+    const content = view.readText(path), mapping = owner.mappings.find((mapping) => mapping.sourcePath === path);
+    if (layout === "source" && mapping && (createHash("sha256").update(content).digest("hex") !== mapping.sourceHash || Buffer.byteLength(content) !== mapping.sourceSize)) throw new Error("WGPU browser source preimage drift: " + path);
+    contents.set(path, content);
+    return content;
+  };
+  check();
+  for (const [name, binding] of Object.entries(profile.workspaceImports)) {
+    const manifest = JSON.parse(read(binding.manifestPath));
+    if (manifest.name !== name || manifest.exports?.["."] !== "./" + relative(dirname(binding.manifestPath), binding.entryPath).replaceAll("\\", "/")) throw new Error("WGPU browser workspace manifest drift: " + name);
+  }
+  for (const entry of profile.entries) {
+    check();
+    const mapping = owner.mappings.find((mapping) => mapping.sourcePath === owner.sourceRoot + "/" + entry.sourceRelativePath)!;
+    const entryPath = projected(mapping.sourcePath), entryAbsolute = join(repoRoot, entryPath);
+    const result = await Bun.build({ root: repoRoot, entrypoints: [entryAbsolute], target: "browser", format: "esm", define: { "import.meta.vitest": profile.inlineTestDefine }, plugins: [{ name: "semantic-wgpu-owned-inputs", setup(builder) {
+      builder.onResolve({ filter: /.*/u }, (request) => {
+        check();
+        const path = request.path === entryAbsolute ? entryPath : request.path.startsWith(".") ? relative(repoRoot, resolve(repoRoot, dirname(request.importer), request.path)).replaceAll("\\", "/") : profile.workspaceImports[request.path]?.entryPath;
+        if (!path || !allowed.has(path)) throw new Error("WGPU browser import is not schema-owned: " + request.path + " in " + request.importer);
+        return { path, namespace: "owned-wgpu" };
+      });
+      builder.onLoad({ filter: /.*/u, namespace: "owned-wgpu" }, (request) => {
+        if (!allowed.has(request.path)) throw new Error("WGPU browser module is not schema-owned: " + request.path);
+        const content = read(request.path);
+        modules.add(request.path);
+        options.progress?.({ phase: "module-input", completed: modules.size, total: allowed.size });
+        check();
+        return { contents: content, loader: request.path.endsWith(".tsx") ? "tsx" : request.path.endsWith(".json") ? "json" : "ts" };
+      });
+    } }] });
+    check();
+    if (!result.success || result.logs.length || result.outputs.length !== 1) throw new Error("WGPU browser compilation did not produce exactly one clean artifact: " + entry.id);
+    nodes.push({ path: dirname(mapping.destinationPath).replaceAll("\\", "/") + "/🤖️generated/🟨️.js", content: await result.outputs[0]!.text(), mode: 0o644, inclusion: entry.inclusion });
+    options.progress?.({ phase: "bundle", completed: nodes.length, total: profile.entries.length });
+  }
+  check();
+  const unused = [...allowed].filter((path) => !modules.has(path));
+  if (unused.length) throw new Error("WGPU browser module authority includes unread inputs: " + unused.join(" | "));
+  const compare = (left: string, right: string): number => Buffer.compare(Buffer.from(left), Buffer.from(right));
+  return { nodes: nodes.sort((left, right) => compare(left.path, right.path)), inputs: [...contents.keys()].sort(compare) };
+}
+
+/** 🥖️ Requires one exact root package-manager identity for all WGPU artifact commands. */
+export function assertWgpuPackageToolchain(packageManager: unknown, actualVersion: string = Bun.version): string {
+  const expected = typeof packageManager === "string" ? /^bun@(\d+\.\d+\.\d+)$/u.exec(packageManager)?.[1] : undefined;
+  if (!expected || actualVersion !== expected) throw new Error("WGPU generation requires the exact root Bun packageManager identity");
+  return expected;
+}
+
+function loadWgpuPackageTaxonomy(repoRoot: string): ReturnType<typeof loadTaxonomy> {
+  const taxonomy = JSON.parse(readFileSync(resolveWorkspaceTaxonomyAuthority(repoRoot).taxonomyPath, "utf8"));
+  const problems = validateTaxonomy(taxonomy);
+  if (problems.length) throw new Error("WGPU package schema is invalid: " + problems.join(" | "));
+  return taxonomy;
+}
+
+/** 🏗️ Renders six exact artifacts only after proving every canonical authored package leaf. */
+export async function renderWgpuPackageArtifacts(repoRoot: string, options: { readonly taxonomy?: ReturnType<typeof loadTaxonomy>; readonly view?: RegistryCatalogInputView; readonly isCancelled?: () => boolean; readonly progress?: (event: { readonly phase: "module-input" | "bundle"; readonly completed: number; readonly total: number }) => void } = {}) {
+  const taxonomy = options.taxonomy ?? loadWgpuPackageTaxonomy(repoRoot), contract = taxonomy.generatorContracts["wgpu-frame-worker"];
+  const catalog = semanticPackageProjectionCatalog(repoRoot, taxonomy), owner = catalog?.packages.find((entry) => entry.id === "wgpu-renderer");
+  if (!catalog || !owner || !contract?.packageGeneration) throw new Error("WGPU package generation lacks exact catalog authority");
+  const view = options.view ?? registryCatalogInputView(repoRoot, taxonomy), inputs = new Set<string>();
+  const check = (): void => { if (options.isCancelled?.()) throw new Error("WGPU package generation cancelled"); };
+  const read = (path: string): string => { check(); if (view.kind(path) !== "file") throw new Error("WGPU canonical input is missing or not a no-follow file: " + path); inputs.add(path); return view.readText(path); };
+  check();
+  if (owner.mappings.some((mapping) => view.kind(mapping.sourcePath) !== null)) throw new Error("WGPU generation requires canonical package inputs without old source leaves");
+  const rootManifest = read("package.json");
+  assertWgpuPackageToolchain(JSON.parse(rootManifest).packageManager);
+  const browser = await renderWgpuBrowserBundles(repoRoot, contract.packageGeneration.browserProfile, owner, "destination", { ...options, taxonomy, view });
+  const generated = [...owner.adapters.filter((adapter) => !owner.mappings.some((mapping) => mapping.destinationPath === adapter.path)), ...owner.derivedLeaves];
+  const nodes = [...generated.map(({ path, content }) => ({ path, content, mode: 0o644, inclusion: "tracked" as const })), ...browser.nodes].sort((left, right) => Buffer.compare(Buffer.from(left.path), Buffer.from(right.path)));
+  if (canonicalJson(nodes.map(({ path, inclusion }) => ({ path, inclusion }))) !== canonicalJson(contract.outputRoots)) throw new Error("WGPU generated roots disagree with the exact package catalog");
+  for (const node of nodes) { const kind = view.kind(node.path); if (kind !== null && kind !== "file") throw new Error("WGPU generated output is not a no-follow file: " + node.path); }
+  const facts: SemanticProjectionAuthorityNode[] = owner.mappings.map((mapping) => ({ path: mapping.destinationPath, nodeKind: "file", content: mapping.disposition === "generated" ? nodes.find((node) => node.path === mapping.destinationPath)!.content : read(mapping.destinationPath) }));
+  for (const leaf of generated) facts.push({ path: leaf.path, nodeKind: "file", content: view.kind(leaf.path) === "file" ? view.readText(leaf.path) : leaf.content });
+  const authority = semanticPackageProjectionAuthority({ packageId: owner.id, nodes: facts, layout: "destination", cargoWorkspaceContent: read("Cargo.toml"), nodeWorkspaceContent: rootManifest }, catalog, taxonomy);
+  if (authority.problems.length) throw new Error("WGPU canonical package identity: " + authority.problems.join(" | "));
+  check();
+  return { nodes, inputs: [...new Set([...inputs, ...browser.inputs])].sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right))) };
+}
+
+/** ⚙️ Executes exact preview, generation, or freshness commands without writing outside six owned leaves. */
+export async function runWgpuPackageGenerator(repoRoot: string, mode: string, options: { readonly taxonomy?: ReturnType<typeof loadTaxonomy>; readonly isCancelled?: () => boolean } = {}): Promise<void> {
+  if (!["preview", "generate", "check"].includes(mode)) throw new Error("WGPU package mode must be preview, generate, or check");
+  const taxonomy = options.taxonomy ?? loadWgpuPackageTaxonomy(repoRoot);
+  const problems = validateTaxonomy(taxonomy);
+  if (problems.length) throw new Error("WGPU package schema is invalid: " + problems.join(" | "));
+  const contract = taxonomy.generatorContracts["wgpu-frame-worker"], protocol = contract?.packageGeneration?.previewInput;
+  if (!protocol) throw new Error("WGPU package preview authority is absent");
+  const cancelFile = process.env.SEMIO_GENERATOR_PREVIEW_CANCEL_FILE, base = registryCatalogInputView(repoRoot, taxonomy);
+  const cancelPath = cancelFile ? relative(repoRoot, resolve(cancelFile)).replaceAll("\\", "/") : undefined;
+  if (cancelFile && (!cancelPath || cancelPath.startsWith("../") || cancelPath === ".." || isAbsolute(cancelPath))) throw new Error("WGPU cancellation path is outside the repository");
+  const isCancelled = (): boolean => Boolean(options.isCancelled?.() || cancelPath && registryCatalogInputView(repoRoot, taxonomy).kind(cancelPath) !== null);
+  let view = base;
+  const selected = process.env.SEMIO_GENERATOR_PREVIEW_PROTOCOL;
+  if (selected) {
+    if (mode !== "preview" || selected !== protocol.protocol) throw new Error("WGPU projected inputs require the exact preview protocol");
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    for await (const chunk of Bun.stdin.stream()) {
+      if (isCancelled()) throw new Error("WGPU package preview cancelled");
+      size += chunk.byteLength;
+      if (size > protocol.maxBytes) throw new Error("WGPU projected inputs exceed the declared byte bound");
+      chunks.push(chunk);
+    }
+    view = generatorProjectedInputView(repoRoot, taxonomy, parseGeneratorInputProjection(Buffer.concat(chunks).toString("utf8"), taxonomy, "wgpu-frame-worker"), base);
+  }
+  const rendered = await renderWgpuPackageArtifacts(repoRoot, { taxonomy, view, isCancelled });
+  if (mode === "preview") {
+    const nodes = rendered.nodes.map(({ path, content, mode }) => ({ path, nodeKind: "file", mode, bytesBase64: Buffer.from(content).toString("base64") }));
+    process.stdout.write(canonicalJson({ contractId: "wgpu-frame-worker", schemaVersion: 1, nodes, staleRemovals: [] }) + "\n");
+    return;
+  }
+  const changed = rendered.nodes.filter((node) => {
+    const kind = registryCatalogInputView(repoRoot, taxonomy).kind(node.path);
+    if (kind === null) return true;
+    const path = join(repoRoot, node.path);
+    if (kind !== "file" || (lstatSync(path).mode & 0o7777) !== node.mode) throw new Error("WGPU output mode or no-follow kind drift: " + node.path);
+    return readFileSync(path, "utf8") !== node.content;
+  });
+  if (mode === "check" && changed.length) throw new Error("WGPU package output is absent or stale: " + changed[0]!.path);
+  for (const node of changed) {
+    if (isCancelled()) throw new Error("WGPU package generation cancelled");
+    const path = join(repoRoot, node.path);
+    registryCatalogInputView(repoRoot, taxonomy).kind(node.path);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, node.content, { mode: node.mode });
+  }
+  process.stderr.write(`[wgpu] ${mode}: ${rendered.nodes.length} exact artifacts; ${changed.length} changed\n`);
 }
 //#endregion 🧩️Nested Cargo Adapter Generation
 
@@ -1558,6 +1719,164 @@ export function toolJobFactoryProofActivationScan(root: string): { owners: numbe
   return { owners: new Set(proofs.map((proof) => proof.ownerFile)).size, customRows: proofs.filter((proof) => proof.factoryType !== undefined).length, genericRows: proofs.filter((proof) => proof.factoryType === undefined).length, failures };
 }
 
+//#region ⏱️MicrosecondBudgetLaws
+/** ⏱️ Cross-checks exact microsecond deadlines with strict Ajv and independent BigInt arithmetic. */
+function toolJobMicrosecondWorkerExact(pluginRaw: string, jobRaw: string, traceRaw: string): boolean {
+  const plugin = toolJobProductionSource(pluginRaw);
+  const job = toolJobProductionSource(jobRaw);
+  const trace = toolJobProductionSource(traceRaw);
+  const body = (source: string, marker: string): string | undefined => {
+    if (source.split(marker).length !== 2) return undefined;
+    return toolJobRustBlock(source, source.indexOf("{", source.indexOf(marker)))?.body;
+  };
+  const setup = toolJobRetainedDispatchSetup(plugin);
+  const operation = body(plugin, "impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A>");
+  const driver = body(job, "fn drive_step_with_payload_ledger<");
+  const worker = body(job, "fn drive_worker_job_authority<");
+  const duration = body(job, "pub fn from_duration(");
+  const clock = body(job, "pub fn default_now_us(");
+  const preflight = "if budget.fuel == 0 || now_us().is_none_or(|now_us| now_us >= budget.deadline_us)";
+  return toolJobMountedDispatchOneTurnExact(plugin) && !!setup && !!operation && !!driver && !!worker && !!duration && !!clock
+    && /step_budget_us:\s*u64::from\(admission\.proof\.contract\(\)\.max_step_micros\),/.test(setup)
+    && setup.includes("now_us: semio_framework_job::default_now_us,")
+    && setup.includes("fuel_per_step: admission.proof.contract().max_work_units_per_step")
+    && setup.includes("ArtifactOutputChunks::new(admission.proof.contract().max_output_bytes)")
+    && ["self.decoded_items > self.contract.max_decoded_items", "self.contract.max_work_units_per_step == 0", "self.contract.max_output_bytes"].every((token) => operation.includes(token))
+    && plugin.includes("TypedOperationResultPageWriter") && plugin.includes("one typed-operation result exceeds its fixed incremental encoder authority")
+    && duration.includes("start_us.checked_add(duration_us).map(")
+    && worker.includes("(params.now_us)().and_then(|start_us| StepBudget::from_duration(config.fuel_per_step, start_us, config.step_budget_us))")
+    && worker.includes("invalid deadline retains its pre-admitted terminal fault page")
+    && driver.includes(preflight) && driver.indexOf(preflight) < driver.indexOf("job.step(&mut cx)")
+    && clock.includes("semio_framework_trace::try_now_us()")
+    && trace.includes("fn default_clock_us() -> Option<u64> { None }")
+    && trace.includes("elapsed().as_micros()).ok()");
+}
+
+export function toolJobCooperativeMaintenanceSelfTests(): number {
+  const base = join(WORKSPACE_ROOT, "🧰️framework/🔨️modules/⏳️async/⏱️cooperative");
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixture.json"), "utf8"));
+  const Ajv = createRequire(import.meta.url)("ajv");
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️schema.json"), "utf8")));
+  if (!validate(fixture)) throw new Error(`cooperative maintenance schema: ${JSON.stringify(validate.errors)}`);
+  const weights = new Map([["Maintenance", 1], ["Background", 2], ["UserVisible", 4], ["Timer", 3], ["Interactive", 8]]);
+  const seen = new Set<string>();
+  for (const law of fixture.cases) {
+    const cost = BigInt(fixture.unitCost), weight = BigInt(law.weight);
+    const turns = Number((cost + weight - 1n) / weight);
+    if (seen.has(law.lane) || weights.get(law.lane) !== law.weight || turns !== law.selected.length || turns !== law.deficits.length) throw new Error(`cooperative maintenance exact lane: ${law.lane}`);
+    seen.add(law.lane);
+    for (let turn = 1; turn <= turns; turn++) {
+      const accrued = BigInt(turn) * weight;
+      if (law.deficits[turn - 1] !== Number(accrued % cost) || law.selected[turn - 1] !== (accrued >= cost)) throw new Error(`cooperative maintenance arithmetic oracle: ${law.lane}/${turn}`);
+    }
+  }
+  for (const mutation of [{ unitCost: 9 }, { synchronousDrain: true }]) {
+    if (validate({ ...fixture, ...mutation })) throw new Error("cooperative maintenance accepted changed grant or unknown drain");
+  }
+  return fixture.cases.length + 2;
+}
+
+export function toolJobTelemetryContentionSelfTests(): number {
+  const base = join(WORKSPACE_ROOT, "🧰️framework/🔨️modules/⏱️trace/⏱️clock");
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️contention.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "🧬️contention.schema.json"), "utf8"));
+  const Ajv = createRequire(import.meta.url)("ajv");
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  if (!validate(fixture)) throw new Error(`telemetry contention schema: ${JSON.stringify(validate.errors)}`);
+  const ids = new Set<string>();
+  for (const law of fixture.cases) {
+    if (ids.has(law.id)) throw new Error(`duplicate telemetry contention law: ${law.id}`);
+    ids.add(law.id);
+    if (law.violationRetained !== (law.callback === "watchdog") || law.returnedEvent !== (law.callback === "event")) throw new Error(`telemetry exact authority oracle: ${law.id}`);
+    if (law.callback === "event" ? law.lock !== "event" : law.callback === "timer" ? law.lock !== "site" : !["site", "violation"].includes(law.lock)) throw new Error(`telemetry contention owner oracle: ${law.id}`);
+  }
+  for (const change of [{ returnsWhileHeld: false }, { unboundedFallback: true }]) {
+    if (validate({ ...fixture, cases: [{ ...fixture.cases[0], ...change }, ...fixture.cases.slice(1)] })) throw new Error("telemetry contention schema accepted callback waiting or unknown authority");
+  }
+  for (const law of fixture.verdicts) {
+    const clockFault = law.start === null || law.end === null ? "Missing" : BigInt(law.end) < BigInt(law.start) ? "Backward" : null;
+    const fault = clockFault !== null || BigInt(law.end) - BigInt(law.start) >= 8_000n;
+    if (clockFault !== law.clockFault || fault !== law.fault) throw new Error(`exact callback verdict oracle: ${law.id}`);
+  }
+  return fixture.cases.length + fixture.verdicts.length + 2;
+}
+
+export function toolJobMicrosecondBudgetSelfTests(): number {
+  const base = join(WORKSPACE_ROOT, "🧰️framework/🔨️modules/🧵️job/⏱️budget");
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixture.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️component.json"), "utf8"));
+  const Ajv = createRequire(import.meta.url)("ajv");
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  if (!validate(fixture)) throw new Error(`microsecond budget schema: ${JSON.stringify(validate.errors)}`);
+  const maximum = (1n << 64n) - 1n;
+  for (const law of fixture.cases) {
+    const sum = BigInt(law.start) + BigInt(law.grant);
+    const deadline = sum > maximum ? null : sum.toString();
+    if (deadline !== law.deadline) throw new Error(`microsecond checked deadline: ${law.id}`);
+    const expired = law.samples.map((sample: string) => deadline === null || BigInt(sample) >= BigInt(deadline));
+    const yielded = expired.map((value: boolean) => value || law.fuel === 0);
+    if (JSON.stringify(expired) !== JSON.stringify(law.expired) || JSON.stringify(yielded) !== JSON.stringify(law.yielded)) throw new Error(`microsecond deadline boundary: ${law.id}`);
+  }
+  for (const change of [{ unit: "milliseconds" }, { extra: true }]) {
+    if (validate({ ...fixture, ...change })) throw new Error("microsecond schema accepted a forged unit or field");
+  }
+  const clocks = JSON.parse(readFileSync(join(base, "🧪️clock.json"), "utf8"));
+  const validateClocks = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️schema/🔣️clock.json"), "utf8")));
+  if (!validateClocks(clocks)) throw new Error(`host clock schema: ${JSON.stringify(validateClocks.errors)}`);
+  for (const law of clocks.browser) {
+    const [integer, fraction = ""] = law.milliseconds.split(".");
+    const numerator = BigInt(integer) * 10n ** BigInt(fraction.length) + BigInt(fraction || "0");
+    const exact = numerator * 1_000n / 10n ** BigInt(fraction.length);
+    const expected = numerator < 0n || exact > maximum ? null : exact.toString();
+    if (expected !== law.microseconds) throw new Error(`browser clock rational oracle: ${law.milliseconds}`);
+    const actual = microsecondsFromMilliseconds(Number(law.milliseconds));
+    if ((actual === null ? null : actual.toString()) !== expected) throw new Error(`browser clock conversion: ${law.milliseconds}`);
+  }
+  for (const law of clocks.wasi) {
+    if ((BigInt(law.nanoseconds) <= maximum) !== law.accepted) throw new Error(`WASI checked nanoseconds: ${law.nanoseconds}`);
+  }
+  for (const law of clocks.installation) {
+    const authority = new Map<string, string>();
+    if (law.current !== null) authority.set("clock", law.current);
+    const accepted = !authority.has("clock") || authority.get("clock") === law.requested;
+    if (accepted) authority.set("clock", law.requested);
+    if (accepted !== law.accepted || authority.get("clock") !== law.retained) throw new Error(`exact clock installation oracle: ${law.current}/${law.requested}`);
+  }
+  for (const law of clocks.watchdog) {
+    if ((BigInt(law.elapsedMicroseconds) >= 8_000n) !== law.violated) throw new Error(`strict watchdog boundary oracle: ${law.elapsedMicroseconds}`);
+  }
+  for (const invalid of [Number.NaN, Number.POSITIVE_INFINITY]) if (microsecondsFromMilliseconds(invalid) !== null) throw new Error("invalid monotonic source was admitted");
+  const binding = JSON.parse(readFileSync(join(base, "🧪️binding.json"), "utf8"));
+  const validateBinding = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️schema/🔣️binding.json"), "utf8")));
+  if (!validateBinding(binding)) throw new Error(`microsecond binding schema: ${JSON.stringify(validateBinding.errors)}`);
+  const plugin = readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs"), "utf8");
+  const job = readFileSync(join(base, "../🦀️component.rs"), "utf8");
+  const trace = readFileSync(join(base, "../../⏱️trace/🦀️component.rs"), "utf8");
+  const mutations: Record<string, [number, string, string]> = {
+    none: [0, "", ""],
+    "wrong-helper": [0, "self.start_typed_command_operation(command, admission, meta, operation_id, None).await", "self.wrong_operation(command, admission, meta, operation_id, None).await"],
+    "divided-grant": [0, "step_budget_us: u64::from(admission.proof.contract().max_step_micros),", "step_budget_us: u64::from(admission.proof.contract().max_step_micros) / 1_000,"],
+    "rounded-grant": [0, "step_budget_us: u64::from(admission.proof.contract().max_step_micros),", "step_budget_us: u64::from(admission.proof.contract().max_step_micros).max(1_000),"],
+    "coarse-clock": [0, "now_us: semio_framework_job::default_now_us,", "now_us: semio_framework_job::default_now_ms,"],
+    "overflow-fallback": [1, "start_us.checked_add(duration_us)", "Some(start_us.saturating_add(duration_us))"],
+    "expired-entry": [1, "if budget.fuel == 0 || now_us().is_none_or(|now_us| now_us >= budget.deadline_us)", "if budget.fuel == 0"],
+    "synthetic-clock": [2, "fn default_clock_us() -> Option<u64> { None }", "fn default_clock_us() -> Option<u64> { Some(0) }"],
+    "missing-output-limit": [0, "ArtifactOutputChunks::new(admission.proof.contract().max_output_bytes)", "ArtifactOutputChunks::new(u64::MAX)"],
+  };
+  const validBinding = new Ajv({ strict: true }).compile({ const: "none" });
+  for (const law of binding.cases) {
+    const [index, before, after] = mutations[law.mutation]!;
+    const sources = [plugin, job, trace];
+    if (law.mutation !== "none") {
+      if (!sources[index]!.includes(before)) throw new Error(`microsecond hostile target is stale: ${law.mutation}`);
+      sources[index] = sources[index]!.replaceAll(before, after);
+    }
+    if (validBinding(law.mutation) !== law.admitted || toolJobMicrosecondWorkerExact(sources[0]!, sources[1]!, sources[2]!) !== law.admitted) throw new Error(`microsecond exact worker binding: ${law.mutation}`);
+  }
+  return fixture.cases.length + clocks.browser.length + clocks.wasi.length + clocks.installation.length + clocks.watchdog.length + 4 + binding.cases.length * 2;
+}
+//#endregion ⏱️MicrosecondBudgetLaws
+
 //#region 🗝️LatestWinsAuthorityLaws
 /** 🧹️ Cross-checks CAD domain retirement byte counts independently of its Rust ownership cursor. */
 export function cadPresenceRetirementSelfTests(): number {
@@ -1645,7 +1964,141 @@ export function cadPresenceRetirementSelfTests(): number {
     storeSource.replace("fn clone_aliases(&self)", "pub fn clone_aliases(&self)"),
   ];
   for (const hostile of peerHostiles) if (hostile === storeSource || exactPeerRelease(hostile)) throw new Error("presence peer guard accepted shared-owner waiting, implicit root drop, or public owner cloning");
-  return 1 + fixture.cases.length + fixture.storeCases.length + 2 + 1 + storeFixture.cases.length + 13;
+  const replacements = storeFixture.localReplacements;
+  const localOracle = new Ajv({ strict: true }).compile({ const: { ...replacements, capturedValues: replacements.values.slice(0, -1), expectedRetiredWhileOpen: replacements.values.length - 1, expectedFinalSnapshots: replacements.values.length } });
+  if (!localOracle(replacements) || storeFixture.localCapture.expectedValueWhileOpen !== storeFixture.localCapture.value || !storeFixture.localCapture.expectedWorkerTerminal) throw new Error("presence local capture/replacement independent owner ledger");
+  const retirementSource = readFileSync(join(storeBase, "♻️retirement/🦀️component.rs"), "utf8");
+  const cadSource = readFileSync(join(base, "♻️retirement/🦀️component.rs"), "utf8");
+  const exactLocal = (store: string, retirement: string, cad: string): boolean =>
+    toolJobImmutableOperationRootsExact(store)
+    && store.includes("pub base: ArtifactEphemeralBaseRead<P>")
+    && store.includes("Presence(SnapshotRead<P>)")
+    && store.includes("Arc::ptr_eq(installed, &root_retirement_factory)")
+    && store.includes("previous.return_to_registry()")
+    && retirement.includes("advance_returned_local(reads, &mut self.active_returned")
+    && retirement.includes("self.active_returned_local.take()")
+    && retirement.includes("presence store requires its exact detached terminal-empty owner before Drop")
+    && retirement.includes("SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }")
+    && retirement.includes("MountedWorkerJobSession::try_new(job, params)")
+    && retirement.includes("owner.maintenance_local_reads_step(1, 4096)")
+    && cad.includes("*self.owned = Arc::into_inner(root)") && !cad.includes("Arc::try_unwrap(root)");
+  if (!exactLocal(storeSource, retirementSource, cadSource)) throw new Error("presence local read, live return, detached close or final-owner authority is incomplete");
+  const localHostiles = [
+    [storeSource.replace("pub base: ArtifactEphemeralBaseRead<P>", "pub base: Arc<P>"), retirementSource, cadSource],
+    [storeSource.replace("self.local_reads.try_issue(owner.clone())", "unregistered_read(owner.clone())"), retirementSource, cadSource],
+    [storeSource.replace("Arc::ptr_eq(installed, &root_retirement_factory)", "true"), retirementSource, cadSource],
+    [storeSource, retirementSource.replace("self.active_returned_local.take()", "None"), cadSource],
+    [storeSource, retirementSource, cadSource.replace("Arc::into_inner(root)", "Arc::try_unwrap(root).ok()")],
+  ];
+  for (const [store, retirement, cad] of localHostiles) if (exactLocal(store, retirement, cad)) throw new Error("presence local guard accepted a raw alias, foreign factory, lost returned owner or shared wait");
+  const closeBinding = storeFixture.closeFactoryBinding;
+  const closeCounts = ["local", "peer"].reduce((counts, lane) => ({ ...counts, [lane]: counts[lane] + 1 }), { local: 0, peer: 0, foreign: 0 });
+  if (JSON.stringify(closeCounts) !== JSON.stringify({ local: closeBinding.expectedLocal, peer: closeBinding.expectedPeer, foreign: closeBinding.expectedForeign })) throw new Error("Presence close factory oracle substituted an installed owner");
+  const closeSchemaHostiles = [
+    { ...storeFixture, closeFactoryBinding: { ...closeBinding, expectedForeign: 2 } },
+    { ...storeFixture, closeFactoryBinding: { ...closeBinding, expectedLocal: 0 } },
+    { ...storeFixture, closeFactoryBinding: { ...closeBinding, returnReadAfterDetach: false } },
+  ];
+  for (const hostile of closeSchemaHostiles) if (validateStore(hostile)) throw new Error("Presence close schema admitted foreign or lost returned-read ownership");
+  const exactCloseFactories = (source: string): boolean => {
+    const start = source.indexOf("pub fn begin_retirement(");
+    const open = source.indexOf("{", start);
+    const signature = source.slice(start, open);
+    const body = start < 0 ? "" : toolJobRustBlock(source, open)?.body ?? "";
+    const closeStart = source.indexOf("pub fn close_step(");
+    const close = closeStart < 0 ? "" : toolJobRustBlock(source, source.indexOf("{", closeStart))?.body ?? "";
+    return !signature.includes("factory:") && body.includes("let Some(local_factory) = self.local_retirement_factory.as_ref() else")
+      && body.includes("let local_factory = local_factory.clone();") && body.includes("let peer_factory = self.peer_retirement_factory.clone();")
+      && body.includes("!self.peers.is_empty() && self.peer_retirement_factory.is_none()")
+      && close.includes("advance_returned_local(reads, &mut self.active_returned, self.local_factory.as_ref()")
+      && close.includes('self.local_factory.as_ref().expect("detached local root retains its installed factory").retire(local)')
+      && close.includes('self.peer_factory.as_ref().expect("detached nonempty peer root retains its installed factory").clone()');
+  };
+  if (!exactCloseFactories(retirementSource)) throw new Error("Presence close lost exact original local/peer factory separation");
+  const closeSourceHostiles = [
+    retirementSource.replace("terminal_is_empty: fn(&P) -> bool,", "terminal_is_empty: fn(&P) -> bool, factory: Arc<dyn SnapshotRetirementFactory<P>>,"),
+    retirementSource.replace("let local_factory = local_factory.clone();", "let local_factory = self.peer_retirement_factory.clone().unwrap();"),
+    retirementSource.replace("let peer_factory = self.peer_retirement_factory.clone();", "let peer_factory = self.local_retirement_factory.clone();"),
+    retirementSource.replace("advance_returned_local(reads, &mut self.active_returned, self.local_factory.as_ref()", "advance_returned_local(reads, &mut self.active_returned, self.peer_factory.as_ref()"),
+    retirementSource.replace("!self.peers.is_empty() && self.peer_retirement_factory.is_none()", "false"),
+  ];
+  for (const hostile of closeSourceHostiles) if (hostile === retirementSource || exactCloseFactories(hostile)) throw new Error("Presence close guard admitted factory substitution or wrong returned-read retirement");
+  const closeFactoryChecks = 2 + closeSchemaHostiles.length + closeSourceHostiles.length;
+  const commitFixture = JSON.parse(readFileSync(join(storeBase, "🧪️peer-commit.json"), "utf8"));
+  const commitSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🔣️peer-commit.schema.json"), "utf8"));
+  const validateCommit = new Ajv({ strict: true, allErrors: true }).compile(commitSchema);
+  if (!validateCommit(commitFixture)) throw new Error("Presence peer commit fixture violates strict schema");
+  for (const law of commitFixture.cases) if (law.accepted !== (law.sameStore && law.sameFactory && !law.stale) || law.expectedSnapshots !== 3 + Number(law.stale)) throw new Error(`Presence peer commit independent identity oracle: ${law.name}`);
+  const commitSchemaHostiles = [{ ...commitFixture, maximumBytes: 8192 }, { ...commitFixture, cases: commitFixture.cases.map(law => ({ ...law, accepted: true })) }];
+  for (const hostile of commitSchemaHostiles) if (validateCommit(hostile)) throw new Error("Presence peer commit schema admitted forged freshness");
+  const exactPeerCommit = toolJobPeerCommitAuthorityExact;
+  if (!exactPeerCommit(storeSource, retirementSource)) throw new Error("Presence peer commit lost exact base/factory join or retained alias handoff");
+  const commitSourceHostiles = [
+    [storeSource.replace("!Arc::ptr_eq(&self.peers, &commit.base_root)", "false"), retirementSource],
+    [storeSource.replace("Arc::ptr_eq(factory, &commit.factory)", "true"), retirementSource],
+    [storeSource.replace("*retirement.root = Some(previous);\n        drop(commit.base_root);", "drop(commit.base_root);\n        *retirement.root = Some(previous);"), retirementSource],
+    [storeSource, retirementSource.replace("base_root: std::mem::ManuallyDrop::new(Some(self.base_root))", "base_root: std::mem::ManuallyDrop::new(None)")],
+    [storeSource, retirementSource.replace("if self.base_root.take().is_some()", "if false")],
+  ];
+  for (const [store, retirement] of commitSourceHostiles) if (exactPeerCommit(store, retirement)) throw new Error("Presence peer commit guard admitted foreign/stale publication or lost base ownership");
+  const commitChecks = 2 + commitFixture.cases.length + commitSchemaHostiles.length + commitSourceHostiles.length;
+  const peerFixture = JSON.parse(readFileSync(join(storeBase, "🧪️peer-admission.json"), "utf8"));
+  const peerSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🔣️peer-admission.schema.json"), "utf8"));
+  const validatePeer = new Ajv({ strict: true, allErrors: true }).compile(peerSchema);
+  if (!validatePeer(peerFixture)) throw new Error(`peer admission fixture schema: ${JSON.stringify(validatePeer.errors)}`);
+  for (const law of peerFixture.cases) {
+    const bytes = Buffer.byteLength(law.actor.unit.repeat(law.actor.repeat), "utf8");
+    if (bytes !== law.expectedActorBytes || law.accepted !== (law.state === "ready" && bytes > 0 && bytes <= 256) || law.actor.minimumCapacity <= peerFixture.maximumBytes) throw new Error(`peer actor admission independent byte oracle: ${law.name}`);
+  }
+  if (validatePeer({ ...peerFixture, requiresCapacitySizedByteGrant: true })) throw new Error("peer actor fixture admitted capacity-sized byte credit");
+  const rejectionSource = readFileSync(join(storeBase, "🚫️rejection/🦀️component.rs"), "utf8");
+  const pluginSource = readFileSync(join(storeBase, "../../🔌️plugin/🦀️component.rs"), "utf8");
+  const exactRejectedActor = (store: string, rejection: string, plugin: string): boolean => {
+    const start = store.indexOf("pub fn adopt(&mut self, actor: String, presence: P");
+    const adopt = start < 0 ? "" : toolJobRustBlock(store, store.indexOf("{", start))?.body ?? "";
+    return (adopt.match(/return Err\(PresencePeerAdmissionRejected::new\("[^"\n]+", actor, presence, self\.factory\.clone\(\)\)\)/g) ?? []).length === 5
+      && !store.includes("pub fn retire_rejected(")
+      && rejection.includes("pub fn into_retirement(mut self) -> Box<dyn ErasedSnapshotRetirement>")
+      && rejection.includes("self.factory.take().expect(\"rejected admission retains its minting publication factory\")")
+      && rejection.includes("actor: std::mem::ManuallyDrop<String>")
+      && rejection.includes("Some(actor.into_bytes())")
+      && rejection.includes("let released_bytes = actor.len().min(maximum_bytes)")
+      && rejection.includes("actor.truncate(actor.len() - released_bytes)")
+      && rejection.includes("drop(self.actor.take())")
+      && !rejection.includes("capacity() > maximum_bytes")
+      && plugin.includes("Some(rejected.into_retirement())");
+  };
+  if (!exactRejectedActor(storeSource, rejectionSource, pluginSource)) throw new Error("peer rejection lost its exact actor/presence owner or byte cursor");
+  const rejectedHostiles = [
+    [storeSource.replace('"presence peer actor is empty or exceeds its fixed byte authority", actor, presence', '"presence peer actor is empty or exceeds its fixed byte authority", String::new(), presence'), rejectionSource, pluginSource],
+    [storeSource, rejectionSource.replace("actor.len().min(maximum_bytes)", "actor.capacity()"), pluginSource],
+    [storeSource, rejectionSource.replace("drop(self.actor.take())", "return Err(\"capacity() > maximum_bytes\".into())"), pluginSource],
+    [storeSource, rejectionSource, pluginSource.replace("Some(rejected.into_retirement())", "None")],
+    [storeSource.replaceAll("actor, presence, self.factory.clone()", "actor, presence, foreign_factory.clone()"), rejectionSource, pluginSource],
+    [storeSource, rejectionSource.replace('self.factory.take().expect("rejected admission retains its minting publication factory")', "foreign_factory"), pluginSource],
+  ];
+  for (const [store, rejection, plugin] of rejectedHostiles) if (exactRejectedActor(store, rejection, plugin)) throw new Error("peer rejection guard accepted dropped identity, false byte credit or missing mounted owner");
+  if (validatePeer({ ...peerFixture, factoryBinding: { ...peerFixture.factoryBinding, expectedForeignRetirements: 1 } })) throw new Error("peer rejection fixture accepted a foreign factory");
+  const channelSource = readFileSync(join(storeBase, "../../📡️spr/🧵️channel/🦀️component.rs"), "utf8");
+  const captureProof = (plugin: string, store: string, channel: string, retirement: string): boolean => toolJobPeerInteractionRootsExact(plugin, store, channel, retirement);
+  if (!captureProof(pluginSource, storeSource, channelSource, retirementSource)) throw new Error("peer capture census rejected its real exact helper/base/factory authority");
+  const captureHostiles = [
+    [pluginSource.replace("self.start_typed_command_operation(command, admission, meta, operation_id, None).await", "self.foreign_command_operation(command, admission, meta, operation_id, None).await"), storeSource, channelSource, retirementSource],
+    [pluginSource.replace("let presence_peers = self.presence_store.peers_root();", "let presence_peers = self.presence_store.peers().await;"), storeSource, channelSource, retirementSource],
+    [pluginSource, storeSource.replace("!Arc::ptr_eq(&self.peers, &commit.base_root)", "false"), channelSource, retirementSource],
+    [pluginSource, storeSource.replace("Arc::ptr_eq(factory, &commit.factory)", "true"), channelSource, retirementSource],
+    [pluginSource, storeSource.replace("base_root: Arc<PresencePeersRoot<P>>,", "pub base_root: Arc<PresencePeersRoot<P>>,"), channelSource, retirementSource],
+    [pluginSource, storeSource.replace("pub struct PresencePeersCommit<P> {", "pub struct PresencePeersCommit<P> { pub factory_override: Arc<dyn SnapshotRetirementFactory<P>>,"), channelSource, retirementSource],
+    [pluginSource, storeSource.replace("*retirement.root = Some(previous);\n        drop(commit.base_root);", "drop(commit.base_root);\n        *retirement.root = Some(previous);"), channelSource, retirementSource],
+    [pluginSource, storeSource, channelSource, retirementSource.replace("base_root: std::mem::ManuallyDrop::new(Some(self.base_root))", "base_root: std::mem::ManuallyDrop::new(None)")],
+    [pluginSource.replace("self.validate_peer_roster_publication(seq, generation, &cancel)", "self.accept_unchecked_roster(seq, generation, &cancel)"), storeSource, channelSource, retirementSource],
+    [pluginSource, storeSource, channelSource.replace("pub fn admit_page(seq: u64, own_color: Option<u8>, item_count: u32, page: FixedCommandPage)", "pub fn decode_before_admission(seq: u64, own_color: Option<u8>, item_count: u32, page: FixedCommandPage)"), retirementSource],
+  ];
+  for (const [plugin, store, channel, retirement] of captureHostiles) {
+    if (plugin === pluginSource && store === storeSource && channel === channelSource && retirement === retirementSource) throw new Error("peer capture hostile missed its exact source target");
+    if (captureProof(plugin, store, channel, retirement)) throw new Error("peer capture census admitted a forged helper, public authority, stale root, foreign factory or bypassed ingress");
+  }
+  return 1 + fixture.cases.length + fixture.storeCases.length + 2 + 1 + storeFixture.cases.length + 30 + peerFixture.cases.length + closeFactoryChecks + commitChecks + 1 + captureHostiles.length;
 }
 
 /** 🧪️ Cross-checks full-domain scope fixtures with Ajv equality and guards the active retained admission/publication seam. */
@@ -1759,7 +2212,37 @@ export function toolJobLatestWinsSelfTests(): number {
   if (!toolJobStoreOneItemPublicationBounded(storeSource, source)) throw new Error("mounted Store source binding lost its retained owned-preparation helper");
   const replayingOwnedBegin = storeSource.replace("let base = match self.snapshot_read() {", "replay_mutations(); let base = match self.snapshot_read() {");
   if (replayingOwnedBegin === storeSource || toolJobStoreOneItemPublicationBounded(replayingOwnedBegin, source)) throw new Error("mounted Store source binding accepted replay inside extracted preparation");
-  return fixture.cases.length + hostiles.length + obligations.length + integration.cases.length + integrationHostiles.length + rawFixture.cases.length + 4 + mountedChecks.length * 2 + 2;
+  const dispatchFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧪️fixtures/🔣️mounted-dispatch-binding.json"), "utf8"));
+  const dispatchSchema = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧬️schema/🔣️mounted-dispatch-binding.schema.json"), "utf8"));
+  const validateDispatch = ajv.compile(dispatchSchema);
+  if (!validateDispatch(dispatchFixture)) throw new Error(`mounted dispatch fixture: ${JSON.stringify(validateDispatch.errors)}`);
+  const validDispatch = ajv.compile({ const: "none" });
+  const production = toolJobProductionSource(source);
+  const mutateFunction = (text: string, name: string, before: string, after: string): string => {
+    const start = text.lastIndexOf(`async fn ${name}(`);
+    const block = start < 0 ? undefined : toolJobRustBlock(text, text.indexOf("{", start));
+    if (!block) throw new Error(`mounted dispatch hostile target missing: ${name}`);
+    return text.slice(0, start) + text.slice(start, block.end).replace(before, after) + text.slice(block.end);
+  };
+  const mutations: Record<string, (text: string) => string> = {
+    none: (text) => text,
+    "wrong-helper": (text) => text.replace("self.start_typed_command_operation(command, admission, meta, operation_id, None).await", "self.other_command_operation(command, admission, meta, operation_id, None).await"),
+    "missing-helper": (text) => text.replace("async fn start_typed_command_operation(", "async fn unrelated_command_operation("),
+    "duplicate-helper": (text) => `${text}\nasync fn start_typed_command_operation() {}`,
+    "missing-pipeline-guard": (text) => mutateFunction(text, dispatchFixture.dispatcher, "self.require_complete_tool_operation_pipeline(&admission)?", "self.accept_incomplete_pipeline(&admission)?"),
+    "duplicate-session": (text) => mutateFunction(text, dispatchFixture.helper, "let (session, session_rejected) = match semio_framework_job::MountedWorkerJobSession::try_new", "semio_framework_job::MountedWorkerJobSession::try_new(extra, params); let (session, session_rejected) = match semio_framework_job::MountedWorkerJobSession::try_new"),
+    "duplicate-pump": (text) => mutateFunction(text, dispatchFixture.helper, "let _ = active.drive_worker_step(&pool)?", "let _ = active.drive_worker_step(&pool)?; let _ = active.drive_worker_step(&pool)?"),
+    "direct-reducer": (text) => mutateFunction(text, dispatchFixture.dispatcher, "self.require_complete_tool_operation_pipeline(&admission)?", "A::handle(&command).await; self.require_complete_tool_operation_pipeline(&admission)?"),
+    "direct-dispatch": (text) => mutateFunction(text, dispatchFixture.dispatcher, "self.require_complete_tool_operation_pipeline(&admission)?", "self.tool_jobs.dispatch(operation_spec); self.require_complete_tool_operation_pipeline(&admission)?"),
+    "run-to-completion": (text) => mutateFunction(text, dispatchFixture.helper, "let _ = active.drive_worker_step(&pool)?", "let _ = active.run_to_completion(&pool)?; let _ = active.drive_worker_step(&pool)?"),
+  };
+  if (new Set(dispatchFixture.cases.map((law: { mutation: string }) => law.mutation)).size !== Object.keys(mutations).length) throw new Error("mounted dispatch fixture omits an exact hostile case");
+  for (const law of dispatchFixture.cases) {
+    const changed = mutations[law.mutation]!(production);
+    if (validDispatch(law.mutation) !== law.admitted || (law.mutation !== "none" && changed === production)) throw new Error(`mounted dispatch fixture oracle: ${law.mutation}`);
+    if (toolJobMountedDispatchOneTurnExact(changed) !== law.admitted) throw new Error(`mounted dispatch exact helper law: ${law.mutation}`);
+  }
+  return fixture.cases.length + hostiles.length + obligations.length + integration.cases.length + integrationHostiles.length + rawFixture.cases.length + 4 + mountedChecks.length * 2 + 2 + dispatchFixture.cases.length * 2;
 }
 //#endregion 🗝️LatestWinsAuthorityLaws
 
@@ -1946,7 +2429,61 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; schemaHos
     reader.replace("!std::thread::panicking()", "true"),
   ];
   for (const hostile of readerSourceHostiles) if (readerExact(hostile)) throw new Error("canonical reader accepted hostile ownership/grant substitution");
-  return { grants: fixture.grants.length - 1, schemaHostiles: schemaHostiles.length, sourceHostiles: sourceHostiles.length, digestOracles: 1, mapGrants: mapFixture.grants.length - 1, mapSchemaHostiles: mapSchemaHostiles.length, mapSourceHostiles: mapSourceHostiles.length, mapDigestOracles: 1, readerChecks: 1 + readerSchemaHostiles.length + readerFixture.grants.length - 1 + readerSourceHostiles.length };
+  return { grants: fixture.grants.length - 1, schemaHostiles: schemaHostiles.length, sourceHostiles: sourceHostiles.length, digestOracles: 1, mapGrants: mapFixture.grants.length - 1, mapSchemaHostiles: mapSchemaHostiles.length, mapSourceHostiles: mapSourceHostiles.length, mapDigestOracles: 1, readerChecks: 1 + readerSchemaHostiles.length + readerFixture.grants.length - 1 + readerSourceHostiles.length + canonicalErrorProgressSelfTests() };
+}
+
+export function canonicalErrorProgressSelfTests(): number {
+  const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit");
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🔣️canonical-error-progress.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️canonical-error-progress.schema.json"), "utf8"));
+  const Ajv = createRequire(import.meta.url)("ajv");
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  if (!validate(fixture)) throw new Error("canonical error-progress fixture violates strict schema");
+  const prefix = Buffer.from(JSON.stringify([fixture.text, null]).slice(0, -5));
+  if (!prefix.equals(Buffer.from(fixture.expectedPrefix)) || prefix.length !== fixture.expectedBytes || Buffer.byteLength(fixture.text) !== fixture.expectedSnapshotBytes) throw new Error("canonical error-progress independent JSON/UTF-8 oracle mismatch");
+  const hostiles = [{ ...fixture, extra: true }, { ...fixture, expectedBytes: 7 }, { ...fixture, expectedComplete: true }, { ...fixture, grants: [4097] }, { ...fixture, expectedRootRetirements: 0 }];
+  for (const hostile of hostiles) if (validate(hostile)) throw new Error("canonical error-progress schema admitted forged credit or completion");
+  let checks = 1 + hostiles.length;
+  for (const mode of fixture.modes) for (const maximum of fixture.grants) {
+    const grant = Math.min(maximum, 256);
+    let written = 0;
+    if (grant > 0) while (written < prefix.length) { const count = Math.min(grant, prefix.length - written); const output = Buffer.alloc(512, fixture.sentinel); prefix.copy(output, 0, written, written + count); if (!output.subarray(count).every(byte => byte === fixture.sentinel)) throw new Error(`canonical error-progress ${mode} touched uninitialized suffix`); written += count; }
+    if (written !== (grant === 0 ? 0 : fixture.expectedBytes)) throw new Error("canonical error-progress grant oracle changed initialized credit");
+    checks += 1;
+  }
+  const parent = readFileSync(join(base, "🦀️component.rs"), "utf8");
+  const borrowed = readFileSync(join(base, "🧵️borrowed/🦀️component.rs"), "utf8");
+  const reader = readFileSync(join(base, "📖️reader/🦀️component.rs"), "utf8");
+  const method = (text: string, pattern: RegExp) => { const start = text.search(pattern); return start < 0 ? "" : toolJobRustBlock(text, text.indexOf("{", start))?.body ?? ""; };
+  const exact = (parent: string, borrowed: string, reader: string) => {
+    const indexed = method(parent, /pub fn encode_chunk\(/);
+    const borrowing = method(borrowed, /fn encode_chunk</);
+    const reading = method(reader, /fn encode_chunk\(/);
+    const sealing = method(parent, /pub fn advance\(/);
+    return parent.includes("pub struct ArtifactCanonicalJsonEncodeError") && parent.includes("pub written_bytes: usize") && parent.includes("pub reason: String")
+      && indexed.includes("ArtifactCanonicalJsonEncodeError { written_bytes: written, reason }") && borrowing.includes("ArtifactCanonicalJsonEncodeError { written_bytes: written, reason }")
+      && borrowing.includes("ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason }")
+      && reading.includes("Err(error) => { self.failed = true; error.written_bytes }") && reading.includes("self.completed_bytes.checked_add(count as u64)")
+      && reading.indexOf("self.completed_bytes = completed;") >= 0 && reading.indexOf("self.completed_bytes = completed;") < reading.lastIndexOf("result")
+      && sealing.includes("self.cancelled = true; encoding_error = Some(error.reason); error.written_bytes")
+      && sealing.indexOf("self.transcript.update(&self.last_chunk[..self.last_length]);") >= 0 && sealing.indexOf("self.transcript.update(&self.last_chunk[..self.last_length]);") < sealing.indexOf("if let Some(error) = encoding_error { return Err(error); }")
+      && sealing.indexOf("self.completed_bytes =") >= 0 && sealing.indexOf("self.completed_bytes =") < sealing.indexOf("if let Some(error) = encoding_error { return Err(error); }")
+      && sealing.includes("!grant.permits_one() || self.cancelled || self.closing")
+      && !/From<ArtifactCanonicalJsonEncodeError> for String/.test(parent + borrowed + reader);
+  };
+  if (!exact(parent, borrowed, reader)) throw new Error("canonical error-progress live encoder/reader/sealer linkage is missing");
+  const mutations: [string, string, string][] = [
+    [parent.replace("written_bytes: written, reason", "written_bytes: 0, reason"), borrowed, reader],
+    [parent, borrowed.replace("written_bytes: written, reason", "written_bytes: 0, reason"), reader],
+    [parent, borrowed, reader.replace("self.failed = true; error.written_bytes", "self.failed = true; 0")],
+    [parent, borrowed, reader.replace("self.completed_bytes = completed;", "return result;")],
+    [parent.replace("self.cancelled = true; encoding_error", "encoding_error"), borrowed, reader],
+    [parent.replace("self.transcript.update(&self.last_chunk[..self.last_length]);", "self.transcript.update(&[]);"), borrowed, reader],
+    [parent + "\nimpl From<ArtifactCanonicalJsonEncodeError> for String {}", borrowed, reader],
+  ];
+  for (const mutation of mutations) if (exact(...mutation)) throw new Error("canonical error-progress admitted lost initialized bytes or resumed failed authority");
+  checks += 1 + mutations.length;
+  return checks;
 }
 //#endregion 🔏️CanonicalEditSealerLaws
 
@@ -2339,6 +2876,23 @@ function toolJobRetainedDispatchSetup(source: string): string | undefined {
     && reservation >= 0 && prepare > reservation && setup.includes("self.typed_operation_reservations[") && setup.includes("self.can_admit_typed_operation(operation_id.0)") ? setup : undefined;
 }
 
+function toolJobMountedDispatchOneTurnExact(raw: string): boolean {
+  const source = toolJobProductionSource(raw);
+  const count = (text: string, token: string): number => text.split(token).length - 1;
+  if (["dispatch_typed_command_inner", "start_typed_command_operation"].some((name) => count(source, `async fn ${name}(`) !== 1)) return false;
+  const start = source.lastIndexOf("async fn dispatch_typed_command_inner(");
+  const inner = start < 0 ? undefined : toolJobRustBlock(source, source.indexOf("{", start));
+  const setup = toolJobRetainedDispatchSetup(source);
+  if (!inner || !setup) return false;
+  const direct = "self.start_typed_command_operation(command, admission, meta, operation_id, None).await";
+  const stages = ["dispatch_wire_retained_with_spec", "MountedWorkerJobSession::try_new", "self.tool_operations.insert_admitted(", "active.drive_worker_step(&pool)"];
+  const offsets = stages.map((token) => setup.indexOf(token));
+  return count(inner.body, direct) === 1 && stages.every((token) => count(setup, token) === 1)
+    && offsets.every((offset, index) => offset >= 0 && (index === 0 || offset > offsets[index - 1]!))
+    && !["self.tool_jobs.dispatch", "MountedWorkerJobSession::try_new", "drive_worker_step("].some((token) => inner.body.includes(token))
+    && !["run_on_worker_async", "run_to_completion", "thread_local!", "A::handle(", "A::ephemeral("].some((token) => inner.body.includes(token) || setup.includes(token));
+}
+
 function toolJobFullOperationBounded(source: string): boolean {
   const start = source.lastIndexOf("async fn dispatch_typed_command_inner");
   const open = start < 0 ? -1 : source.indexOf("{", start);
@@ -2378,7 +2932,7 @@ function toolJobFullOperationBounded(source: string): boolean {
     retainedSetup.includes("self.tool_operations.insert_admitted(") &&
     retainedSetup.includes("let draft_snapshot = self.draft_store.snapshot_root()") &&
     retainedSetup.includes("let interaction_state = self.interaction_store.snapshot_root()") &&
-    retainedSetup.includes("let presence_local = self.presence_store.local_root()") &&
+    retainedSetup.includes("presence_local: Some(self.presence_store.local_read().map_err(Fault::from)?)") &&
     retainedSetup.includes("let presence_peers = self.presence_store.peers_root()") &&
     retainedSetup.includes("let transient = self.transient_store.current_root()") &&
     source.includes("MountedTypedCommandFullOperationStage::AwaitingAck") &&
@@ -2640,23 +3194,26 @@ function toolJobImmutableOperationRootsExact(store: string): boolean {
     const open = start < 0 ? -1 : store.indexOf("{", start);
     return open < 0 ? undefined : toolJobRustBlock(store, open);
   };
-  const local = blockOf("pub fn local_root(&self) -> Arc<P>");
+  const local = blockOf("pub fn local_read(&self) -> Result<SnapshotRead<P>, String>");
   const transient = blockOf("pub fn current_root(&self) -> Arc<P>");
   const snapshot = blockOf("pub fn snapshot_root(&self) -> Arc<P>");
   return (
     !!local &&
     !!transient &&
     !!snapshot &&
-    store.includes("local: Arc<P>") &&
+    store.includes("local: std::mem::ManuallyDrop<Arc<P>>") &&
     store.includes("current: Arc<P>") &&
-    local.body.trim() === "self.local.clone()" &&
+    local.body.includes("self.local_reads.try_issue(owner.clone())") &&
+    local.body.includes("SnapshotRead::new(owner, lease)") &&
+    local.body.includes("self.close_started || self.local_retirement_factory.is_none()") &&
+    !store.includes("pub fn local_root(") &&
     transient.body.trim() === "self.current.clone()" &&
     (snapshot.body.trim() === "self.current.clone()" || snapshot.body.trim() === "Arc::clone(&*self.current)") &&
     store.includes("self.local = Arc::new(candidate)") &&
     store.includes("self.current = Arc::new(candidate)") &&
     store.includes("pub fn content_revision_now(&self) -> [u8; 32]") &&
     store.includes("artifact_snapshot_root_is_o1_and_generation_stable_until_the_next_event") &&
-    store.includes("presence_local_root_is_o1_and_never_clones_the_payload_at_capture") &&
+    store.includes("presence_local_read_is_o1_and_never_clones_the_payload_at_capture") &&
     store.includes("transient_root_is_o1_and_retains_the_exact_pre_reset_value") &&
     !local.body.includes("Arc::new") &&
     !transient.body.includes("Arc::new") &&
@@ -4034,12 +4591,30 @@ function toolJobChildRetirementInventoryExact(root: string, files: ReadonlyMap<s
   );
 }
 
-function toolJobPeerInteractionRootsExact(plugin: string, store: string, channel: string): boolean {
-  const dispatchStart = plugin.lastIndexOf("async fn dispatch_typed_command_inner");
-  const dispatchOpen = dispatchStart < 0 ? -1 : plugin.indexOf("{", dispatchStart);
-  const dispatch = dispatchOpen < 0 ? undefined : toolJobRustBlock(plugin, dispatchOpen);
+function toolJobPeerCommitAuthorityExact(store: string, retirement: string): boolean {
+  const start = store.indexOf("pub fn publish_peer_commit(");
+  const body = start < 0 ? "" : toolJobRustBlock(store, store.indexOf("{", start))?.body ?? "";
+  const recordStart = store.indexOf("pub struct PresencePeersCommit<P>");
+  const record = recordStart < 0 ? undefined : toolJobRustBlock(store, store.indexOf("{", recordStart));
+  const base = body.indexOf("!Arc::ptr_eq(&self.peers, &commit.base_root)");
+  const factory = body.indexOf("!self.peer_retirement_factory.as_ref().is_some_and(|factory| Arc::ptr_eq(factory, &commit.factory))");
+  const reject = body.indexOf("return Err(commit);");
+  const swap = body.indexOf("std::mem::replace(&mut *self.peers, commit.root)");
+  const retained = body.indexOf("*retirement.root = Some(previous);");
+  return !!record && !/\bpub\b/.test(record.body) && record.body.includes("base_root: Arc<PresencePeersRoot<P>>")
+    && record.body.includes("factory: Arc<dyn SnapshotRetirementFactory<P>>")
+    && base >= 0 && factory >= 0 && reject > base && reject > factory && swap > reject && retained > swap && body.indexOf("drop(commit.base_root);") > retained
+    && store.includes("PresencePeersPublication::new(&self.peers, factory.clone())")
+    && store.includes('base_root: self.base_root.take().expect("peer candidate retains its exact immutable base")')
+    && store.includes("self.base_root.is_none() && self.candidate.is_none()")
+    && retirement.includes("base_root: std::mem::ManuallyDrop::new(Some(self.base_root))")
+    && retirement.includes("if self.base_root.take().is_some()") && retirement.includes("self.base_root.is_none() && self.local.is_none()");
+}
+
+function toolJobPeerInteractionRootsExact(plugin: string, store: string, channel: string, retirement = ""): boolean {
+  const setup = toolJobRetainedDispatchSetup(plugin);
   return (
-    !!dispatch &&
+    !!setup && toolJobMountedDispatchOneTurnExact(plugin) && toolJobPeerCommitAuthorityExact(store, retirement) &&
     plugin.includes("struct PeerPresenceRoot") &&
     plugin.includes("entries: [Option<std::sync::Arc<PeerPresenceEntry>>; PEER_PRESENCE_SLOTS]") &&
     plugin.includes("peer_presence: std::mem::ManuallyDrop<std::sync::Arc<PeerPresenceRoot>>") &&
@@ -4086,14 +4661,14 @@ function toolJobPeerInteractionRootsExact(plugin: string, store: string, channel
     channel.includes('28 => return Err(malformed("channel presence command"') &&
     !channel.includes("async fn read_presence_roster") &&
     !channel.includes("#[derive(Clone, Debug, PartialEq)]\npub struct PresenceRosterWire") &&
-    dispatch.body.includes("let peer_presence = std::sync::Arc::clone(&self.peer_presence)") &&
-    dispatch.body.includes("let draft_snapshot = self.draft_store.snapshot_root()") &&
-    dispatch.body.includes("let interaction_state = self.interaction_store.snapshot_root()") &&
-    dispatch.body.includes("let presence_local = self.presence_store.local_root()") &&
-    dispatch.body.includes("let presence_peers = self.presence_store.peers_root()") &&
-    dispatch.body.includes("let transient = self.transient_store.current_root()") &&
+    setup.includes("let peer_presence = std::sync::Arc::clone(&self.peer_presence)") &&
+    setup.includes("let draft_snapshot = self.draft_store.snapshot_root()") &&
+    setup.includes("let interaction_state = self.interaction_store.snapshot_root()") &&
+    setup.includes("presence_local: Some(self.presence_store.local_read().map_err(Fault::from)?)") &&
+    setup.includes("let presence_peers = self.presence_store.peers_root()") &&
+    setup.includes("let transient = self.transient_store.current_root()") &&
     plugin.includes("peer_roster_saturation_cancel_stale_and_interrupted_close_preserve_exact_authority") &&
-    !dispatch.body.includes("self.presence_store.peers().await") &&
+    !setup.includes("self.presence_store.peers().await") &&
     !plugin.includes("let mut decoded: Vec<protocol::PresencePeer> = Vec::with_capacity(peers.len())")
   );
 }
@@ -8231,7 +8806,7 @@ async fn run_job_on_worker() { WorkerJobSession::try_new(relay, params); self.re
   if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("guest_cold_relay_registry_max_plus_one_generation_and_zero_pump_are_exact", "guest_cold_relay_registry_smoke"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-max-plus-one-generation-fixture-removal was falsely accepted.");
   const scalarConfig = toolJobScalarConfigCohortSelfTests();
   const sealer = storeCanonicalEditSealerSelfTests();
-  return fixtures.length + 401 + toolJobPuzzleReservedRoutesSelfTests() + toolJobOwnerFactoryResolutionSelfTests() + toolJobFactoryProofJoinSelfTests() + toolJobLatestWinsSelfTests() + cadPresenceRetirementSelfTests() + proceduralGenerationRootSelfTests() + flowTypedRetirementSelfTests() + flowSelectedCopySelfTests() + scalarConfig.routes + scalarConfig.mutationOracles + scalarConfig.hostileCases + sealer.grants + sealer.schemaHostiles + sealer.sourceHostiles + sealer.digestOracles + sealer.mapGrants + sealer.mapSchemaHostiles + sealer.mapSourceHostiles + sealer.mapDigestOracles + sealer.readerChecks;
+  return fixtures.length + 401 + toolJobPuzzleReservedRoutesSelfTests() + toolJobOwnerFactoryResolutionSelfTests() + toolJobFactoryProofJoinSelfTests() + toolJobLatestWinsSelfTests() + toolJobMicrosecondBudgetSelfTests() + toolJobTelemetryContentionSelfTests() + toolJobCooperativeMaintenanceSelfTests() + cadPresenceRetirementSelfTests() + proceduralGenerationRootSelfTests() + flowTypedRetirementSelfTests() + flowSelectedCopySelfTests() + scalarConfig.routes + scalarConfig.mutationOracles + scalarConfig.hostileCases + sealer.grants + sealer.schemaHostiles + sealer.sourceHostiles + sealer.digestOracles + sealer.mapGrants + sealer.mapSchemaHostiles + sealer.mapSourceHostiles + sealer.mapDigestOracles + sealer.readerChecks;
 }
 
 function toolJobFixedOperationRegistryExact(source: string): boolean {
@@ -9540,6 +10115,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const plugin = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs");
   const artifactRetainedCommand = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️component.rs");
   const store = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs");
+  const presenceRetirement = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🦀️component.rs");
   const vcs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️component.rs");
   const causal = policyReadFileSafe(root, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️component.rs");
   const channel = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️component.rs");
@@ -9684,7 +10260,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (!toolJobRasterEnvelopeCallerRetainedExact(store, rasterEnvelopeCodec, rasterEditor, rasterWasm, plugin)) failures.push("Raster `.spr`/`.ops` envelope caller lacks the shared retained edit decoder, recursive domain retirement, preflight-before-copy fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
   if (!toolJobDrawEnvelopeCallerRetainedExact(store, drawEnvelopeCodec, drawEditor, plugin, drawEditorTestLaws)) failures.push("Draw `.spr`/`.ops` envelope caller lacks recursive layer/style/asset preflight, one-item clone/retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
   if (!toolJobChildRetirementInventoryExact(root, allRustFiles)) failures.push("child snapshot retirement domain cohorts or callsites do not match the exact machine-readable owner inventory");
-  if (!toolJobPeerInteractionRootsExact(plugin, store, channel)) failures.push("peer ingress, app-typed presence, or interaction roots lack reserve-before-decode retained per-entry publication, atomic validated commit, or O(1) immutable capture");
+  if (!toolJobPeerInteractionRootsExact(plugin, store, channel, presenceRetirement)) failures.push("peer ingress, app-typed presence, or interaction roots lack reserve-before-decode retained per-entry publication, atomic validated commit, or O(1) immutable capture");
   if (!toolJobPagedIngressExact(kernel, reactor, plugin, pluginHost, channel, componentWit, mcpWorkspace, runHost, wgpuHost)) failures.push("paged command ingress lacks fixed-page ownership, retained streaming decode/fault closure, generic multi-page ACK ordering, or terminal-close registries across MCP/run/WGPU callers");
   if (!toolJobActorProgressOverlayExact(actor, shardHost, wgpuHost)) failures.push("actor Job publications lack a fixed preview/progress overlay, independent autonomous-shard authority, presenter-adopted ACK, exact rejected-owner handback, or app/fault/realm retirement");
   if (!toolJobUniversalRetainedOwnershipExact(jobRuntime, nativeIo, wgpuHost, allRustFiles)) failures.push("universal retained job ownership still permits optional job close, post-work fault allocation, legacy drains/constructors, resizable Native I/O outputs, or future-driven mounted session progress");
@@ -9709,29 +10285,8 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const innerOpen = innerStart < 0 ? -1 : plugin.indexOf("{", innerStart);
   const inner = innerOpen < 0 ? undefined : toolJobRustBlock(plugin, innerOpen);
   if (!inner || inner.body.includes("A::handle(&command")) failures.push("dispatch_typed_command_inner still bypasses the job bus with a direct A::handle call");
-  if (
-    !inner?.body.includes("MountedWorkerJobSession::try_new") ||
-    !inner.body.includes("dispatch_wire_retained_with_spec") ||
-    !inner.body.includes("active.drive_worker_step(&pool)") ||
-    (inner.body.match(/MountedWorkerJobSession::try_new/g) ?? []).length !== 1 ||
-    inner.body.includes("run_on_worker_async") ||
-    inner.body.includes("run_to_completion") ||
-    inner.body.includes("thread_local!")
-  ) failures.push("production typed dispatch is not one explicitly admitted WorkerJobSession turn");
-  const jobStart = plugin.indexOf("impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A>");
-  const jobOpen = jobStart < 0 ? -1 : plugin.indexOf("{", jobStart);
-  const job = jobOpen < 0 ? undefined : toolJobRustBlock(plugin, jobOpen);
-  if (
-    !job ||
-    !job.body.includes("self.decoded_items > self.contract.max_decoded_items") ||
-    !job.body.includes("self.contract.max_work_units_per_step == 0") ||
-    !job.body.includes("self.contract.max_output_bytes") ||
-    !inner?.body.includes("fuel_per_step: admission.proof.contract().max_work_units_per_step") ||
-    !inner.body.includes("step_budget_ms: u64::from(admission.proof.contract().max_step_micros) / 1_000") ||
-    !inner.body.includes("ArtifactOutputChunks::new(admission.proof.contract().max_output_bytes)") ||
-    !plugin.includes("TypedOperationResultPageWriter") ||
-    !plugin.includes("one typed-operation result exceeds its fixed incremental encoder authority")
-  ) failures.push("bounded command worker does not enforce decoded, work, step-time, and output contract limits");
+  if (!toolJobMountedDispatchOneTurnExact(plugin)) failures.push("production typed dispatch is not one explicitly admitted WorkerJobSession turn");
+  if (!toolJobMicrosecondWorkerExact(plugin, jobRuntime, policyReadFileSafe(root, "🧰️framework/🔨️modules/⏱️trace/🦀️component.rs"))) failures.push("bounded command worker does not enforce decoded, work, exact microsecond step-time, and output contract limits");
   const forKindStart = manifest.indexOf("pub fn for_kind(kind: ActionKind)");
   const forKindOpen = forKindStart < 0 ? -1 : manifest.indexOf("{", forKindStart);
   const forKind = forKindOpen < 0 ? undefined : toolJobRustBlock(manifest, forKindOpen);
@@ -12414,9 +12969,10 @@ export function interactivityLiveReconcileFailures(reconcileSource: string, patc
     "SURFACE_RECONCILE_PAGE_BYTES: usize = 32 * 1_024",
     "max_nodes: SURFACE_RECONCILE_FIXED_NODES",
     "max_items: 4_097",
-    "max_bytes: 2 * 1_024 * 1_024",
+    "max_bytes: SURFACE_RECONCILE_SURFACE_BYTES",
     "max_identifier_bytes: 256",
-    "SURFACE_RECONCILE_AGGREGATE_BYTES: usize = 8 * 1_024 * 1_024",
+    "SURFACE_RECONCILE_SURFACE_BYTES: usize = 8 * 1_024 * 1_024",
+    "SURFACE_RECONCILE_AGGREGATE_BYTES: usize = SURFACE_RECONCILE_SURFACE_BYTES * 4",
     "SURFACE_RECONCILE_AGGREGATE_ITEMS: usize = 131_076",
   ]) if (!reconcile.includes(cap)) failures.push(`live reconcile fixed credit changed or disappeared: ${cap}`);
   const reserveAt = reconcile.indexOf("let credit = if surface_bytes <= limits.max_identifier_bytes { reserve_surface_reconcile(limits) }");
@@ -12498,7 +13054,10 @@ export function interactivityLiveReconcileFailures(reconcileSource: string, patc
   const reconcilerDrop = reconcile.slice(reconcile.indexOf("impl Drop for SurfaceReconciler"), reconcile.indexOf("impl<K, V> SurfaceLinearMap", reconcile.indexOf("impl Drop for SurfaceReconciler")));
   const readyDrop = reconcile.slice(reconcile.indexOf("impl Drop for SurfaceReconcileReadyPatch"), reconcile.indexOf("pub struct SurfaceReconcilePublishedPatch"));
   if (!reconcilerDrop.includes("handback_surface_reconcile(state)") || reconcilerDrop.includes("self.retained.clear()") || !readyDrop.includes("handback_surface_reconcile") || readyDrop.includes("release_surface_reconcile(credit)") || !reconcile.includes("SURFACE_RECONCILE_TREE_RETIRE_DEPTH: usize = 4_097") || !reconcile.includes("if self.depth == self.frames.len()")) failures.push("populated ordinary Drop or deep-tree retirement can bulk destroy ownership, release credit, or overflow its fixed frames");
-  if ((reactor.match(/patches\.drive_one\(\)/g) ?? []).length !== 1 || !reactor.includes("match PATCHES.with(|patches| patches.reserve_mounted(surface))") || !reactor.includes("let _ = grant.commit_source(tree.root)") || !reactor.includes("Err(_) => grant.cancel()") || !reactor.includes("let _ = patches.defer(surface)") || !reactor.includes("patches.begin_close_instance(*numeric_instance)") || !reactor.includes("patches.close_step()") || !reactor.includes("reconcile_work")) failures.push("production reactor does not mount one pre-reserved reconcile opportunity with deferred-storm and instance-close rearm");
+  const mountedRenderAt = reactor.indexOf("match PATCHES.with(|patches| patches.reserve_mounted(surface))");
+  const mountedRender = reactor.slice(mountedRenderAt, reactor.indexOf("match crate::plugin_runtime::plugin_take_presence", mountedRenderAt)).replace(/\s+/g, " ");
+  const renderFault = "Err(fault) => { grant.cancel(); effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: dsl::encode_fault_bytes(&fault) }); }";
+  if ((reactor.match(/patches\.drive_one\(\)/g) ?? []).length !== 1 || mountedRenderAt < 0 || !mountedRender.includes("let _ = grant.commit_source(tree.root)") || !mountedRender.includes(renderFault) || !mountedRender.includes("let _ = patches.defer(surface)") || !reactor.includes("patches.begin_close_instance(*numeric_instance)") || !reactor.includes("patches.close_step()") || !reactor.includes("reconcile_work")) failures.push("production reactor does not mount one pre-reserved reconcile opportunity with lossless render-fault cancellation, deferred-storm and instance-close rearm");
   if (
     !reactor.includes("fn advance_command_cursor") ||
     !reactor.includes("cursor.page_index.checked_add(1)") ||
@@ -12669,6 +13228,12 @@ export function interactivityLiveReconcileSelfTests(repoRoot: string): void {
   const patches = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE);
   const reactor = [INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_SHARD_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_RUN_FILE, INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE, INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE, INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE, INTERACTIVITY_AUDIT_SHELL_FILE].map((file) => policyReadFileSafe(repoRoot, file)).join("\n");
   const mutations: [string, string, string, string][] = [
+    ["per-surface-credit-cap", reconcile.replace("SURFACE_RECONCILE_SURFACE_BYTES: usize = 8 * 1_024 * 1_024", "SURFACE_RECONCILE_SURFACE_BYTES: usize = 16 * 1_024 * 1_024"), patches, reactor],
+    ["aggregate-credit-cap", reconcile.replace("SURFACE_RECONCILE_AGGREGATE_BYTES: usize = SURFACE_RECONCILE_SURFACE_BYTES * 4", "SURFACE_RECONCILE_AGGREGATE_BYTES: usize = SURFACE_RECONCILE_SURFACE_BYTES * 8"), patches, reactor],
+    ["default-credit-bypass", reconcile.replace("max_bytes: SURFACE_RECONCILE_SURFACE_BYTES", "max_bytes: usize::MAX"), patches, reactor],
+    ["render-fault-cancel-omitted", reconcile, patches, reactor.replace("grant.cancel();", "let _ = &grant;")],
+    ["render-fault-owner-erased", reconcile, patches, reactor.replace("Err(fault) => {\n                        grant.cancel();", "Err(_) => {\n                        grant.cancel();")],
+    ["render-fault-wire-erased", reconcile, patches, reactor.replace("grant.cancel();\n                        effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: dsl::encode_fault_bytes(&fault) });", "grant.cancel(); drop(fault);")],
     ["dynamic-poll-surfaces", reconcile, patches, reactor.replace("surfaces: ui_contract::UiFixedList<(u32, ui_contract::SurfaceId), DIRTY_RENDER_CAPACITY>", "surfaces: Vec<(u32, ui_contract::SurfaceId)>")],
     ["dynamic-poll-intents", reconcile, patches, reactor.replace("intents: ui_contract::UiFixedList<DirtyIntentBatch, DIRTY_INTENT_INSTANCE_CAPACITY>", "intents: Vec<DirtyIntentBatch>")],
     ["tracker-heap-surface", reconcile, patches.replace("surface: ui_contract::SurfaceId", "surface: String"), reactor],
@@ -12745,7 +13310,10 @@ export function interactivityLiveReconcileSelfTests(repoRoot: string): void {
     ["panicking-command-ingress", reconcile, patches, reactor.replace("ingress.borrow_mut()[retained_slot] = Some(retained);", 'let previous = ingress.borrow_mut()[retained_slot].replace(retained); assert!(previous.is_none(), "command ingress has one exact owner");')],
     ["panicking-timer-owner", reconcile, patches, reactor.replace("let Some(tail) = self.slots.get_mut(previous) else {\n                let _ = self.slots.take(index);\n                return Err(id);\n            };", "let tail = self.slots.get_mut(previous).expect(\"fixed timer tail authority\");")],
   ];
-  for (const [name, mutatedReconcile, mutatedPatches, mutatedReactor] of mutations) if (interactivityLiveReconcileFailures(mutatedReconcile, mutatedPatches, mutatedReactor, value, schema).length === 0) throw new Error(`[verify interactivity] live reconcile self-test ${name} was falsely accepted.`);
+  for (const [name, mutatedReconcile, mutatedPatches, mutatedReactor] of mutations) {
+    if (mutatedReconcile === reconcile && mutatedPatches === patches && mutatedReactor === reactor) throw new Error(`[verify interactivity] live reconcile self-test ${name} made no source mutation.`);
+    if (interactivityLiveReconcileFailures(mutatedReconcile, mutatedPatches, mutatedReactor, value, schema).length === 0) throw new Error(`[verify interactivity] live reconcile self-test ${name} was falsely accepted.`);
+  }
   const schemaMutations: [string, string][] = [
     ["btree-schema", value.replace("Map(UiMap)", "Map(std::collections::BTreeMap<String, UiValue>)")],
     ["dynamic-list-schema", value.replace("List(UiList)", "List(Vec<UiValue>)")],
@@ -19560,12 +20128,23 @@ function taxonomyCliSha256(value: string | Uint8Array): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
+function taxonomyCliCanonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${Array.from(value, (row) => row === undefined ? "null" : taxonomyCliCanonicalJson(row)).join(",")}]`;
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return `{${Object.keys(record).sort().filter((key) => record[key] !== undefined).map((key) => `${JSON.stringify(key)}:${taxonomyCliCanonicalJson(record[key])}`).join(",")}}`;
+  }
+  const encoded = JSON.stringify(value);
+  if (encoded === undefined) throw new Error("Inventory shard JSON must contain serializable data.");
+  return encoded;
+}
+
 function taxonomyCliCanonicalArrayDigest(values: readonly unknown[]): string {
   const hash = createHash("sha256");
   hash.update("[");
   for (let index = 0; index < values.length; index += 1) {
     if (index > 0) hash.update(",");
-    hash.update(canonicalJson(values[index]));
+    hash.update(taxonomyCliCanonicalJson(values[index]));
   }
   hash.update("]");
   return hash.digest("hex");
@@ -19576,25 +20155,26 @@ export function* taxonomyInventoryCanonicalChunks(value: unknown): Generator<str
   const inventory = taxonomyCliRecord(value, "Inventory");
   const fields: { readonly key: string; readonly encoded?: string; readonly rows?: readonly unknown[] }[] = [];
   for (const key of Object.keys(inventory).sort()) {
+    if (inventory[key] === undefined) continue;
     if ((key === "entries" || key === "violations") && Array.isArray(inventory[key])) {
       fields.push({ key, rows: inventory[key] as readonly unknown[] });
       continue;
     }
-    const encoded = canonicalJson(inventory[key]);
+    const encoded = taxonomyCliCanonicalJson(inventory[key]);
     if (typeof encoded === "string") fields.push({ key, encoded });
   }
   yield "{";
   for (let fieldIndex = 0; fieldIndex < fields.length; fieldIndex += 1) {
     const field = fields[fieldIndex]!;
     if (fieldIndex > 0) yield ",";
-    yield canonicalJson(field.key);
+    yield taxonomyCliCanonicalJson(field.key);
     yield ":";
     if (field.rows) {
       yield "[";
       const rows = field.rows;
       for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
         if (rowIndex > 0) yield ",";
-        yield canonicalJson(rows[rowIndex]);
+        yield taxonomyCliCanonicalJson(rows[rowIndex]);
       }
       yield "]";
     } else yield field.encoded!;
@@ -19613,15 +20193,19 @@ function taxonomyCliByteCompare(left: string, right: string): number {
   return Buffer.compare(Buffer.from(left), Buffer.from(right));
 }
 
-function taxonomyCliStableViolations(entries: readonly Record<string, unknown>[]): readonly Record<string, unknown>[] {
-  const unique = new Map<string, Record<string, unknown>>();
+function* taxonomyCliEntryViolations(entries: readonly Record<string, unknown>[]): Generator<unknown> {
   for (const entry of entries) {
     if (!Array.isArray(entry.violations)) throw new Error(`Inventory entry ${JSON.stringify(entry.sourcePath)} must have a violations array.`);
-    for (const value of entry.violations) {
-      const violation = taxonomyCliRecord(value, `Inventory entry ${JSON.stringify(entry.sourcePath)} violation`);
-      for (const key of ["path", "code", "severity", "message"] as const) if (typeof violation[key] !== "string") throw new Error(`Inventory violation ${key} must be a string.`);
-      unique.set(`${violation.path}\0${violation.code}\0${violation.severity}\0${violation.message}`, violation);
-    }
+    yield* entry.violations;
+  }
+}
+
+function taxonomyCliStableViolations(values: Iterable<unknown>): readonly Record<string, unknown>[] {
+  const unique = new Map<string, Record<string, unknown>>();
+  for (const value of values) {
+    const violation = taxonomyCliRecord(value, "Inventory violation");
+    for (const key of ["path", "code", "severity", "message"] as const) if (typeof violation[key] !== "string") throw new Error(`Inventory violation ${key} must be a string.`);
+    unique.set(`${violation.path}\0${violation.code}\0${violation.severity}\0${violation.message}`, violation);
   }
   return [...unique.values()].sort((left, right) => {
     for (const key of ["path", "code", "severity", "message"] as const) {
@@ -19662,13 +20246,14 @@ export function buildTaxonomyInventoryArtifactShards(value: unknown): TaxonomyIn
     rows.push(entry);
     owners.set(ownerId, rows);
   }
-  const stableViolations = taxonomyCliStableViolations(entries);
-  if (stableViolations.length !== inventory.violations.length || taxonomyCliCanonicalArrayDigest(stableViolations) !== taxonomyCliCanonicalArrayDigest(inventory.violations)) throw new Error("Inventory top-level violations must equal the canonical violations derived from entries.");
+  const stableViolations = taxonomyCliStableViolations(taxonomyCliEntryViolations(entries));
+  const declaredViolations = taxonomyCliStableViolations(inventory.violations);
+  if (stableViolations.length !== inventory.violations.length || taxonomyCliCanonicalArrayDigest(stableViolations) !== taxonomyCliCanonicalArrayDigest(declaredViolations)) throw new Error("Inventory top-level violations must equal the canonical violations derived from entries.");
   const shards: TaxonomyInventoryArtifactShard[] = [];
   for (const [ownerId, ownerEntries] of [...owners].sort(([left], [right]) => taxonomyCliByteCompare(left, right))) {
     ownerEntries.sort((left, right) => taxonomyCliByteCompare(String(left.sourcePath), String(right.sourcePath)));
     const prefixBytes = Buffer.byteLength('{"entries":[');
-    const suffix = `],"ownerId":${canonicalJson(ownerId)},"schemaVersion":1}\n`;
+    const suffix = `],"ownerId":${taxonomyCliCanonicalJson(ownerId)},"schemaVersion":1}\n`;
     const suffixBytes = Buffer.byteLength(suffix);
     let part = 0;
     let rows: Record<string, unknown>[] = [];
@@ -19676,7 +20261,7 @@ export function buildTaxonomyInventoryArtifactShards(value: unknown): TaxonomyIn
     let bytes = prefixBytes + suffixBytes;
     const flush = (): void => {
       if (rows.length === 0) return;
-      const content = `{"entries":[${rowJson.join(",")}],"ownerId":${canonicalJson(ownerId)},"schemaVersion":1}\n`;
+      const content = `{"entries":[${rowJson.join(",")}],"ownerId":${taxonomyCliCanonicalJson(ownerId)},"schemaVersion":1}\n`;
       const payloadBytes = Buffer.byteLength(content);
       if (payloadBytes >= TAXONOMY_INVENTORY_SHARD_MAX_BYTES) throw new Error(`Inventory shard for ${JSON.stringify(ownerId)} is not strictly below ${TAXONOMY_INVENTORY_SHARD_MAX_BYTES} bytes.`);
       const digest = taxonomyCliSha256(content);
@@ -19697,7 +20282,7 @@ export function buildTaxonomyInventoryArtifactShards(value: unknown): TaxonomyIn
       bytes = prefixBytes + suffixBytes;
     };
     for (const entry of ownerEntries) {
-      const json = canonicalJson(entry);
+      const json = taxonomyCliCanonicalJson(entry);
       const entryBytes = Buffer.byteLength(json);
       const separatorBytes = rows.length === 0 ? 0 : 1;
       if (rows.length > 0 && bytes + separatorBytes + entryBytes >= TAXONOMY_INVENTORY_SHARD_MAX_BYTES) flush();
@@ -19712,14 +20297,14 @@ export function buildTaxonomyInventoryArtifactShards(value: unknown): TaxonomyIn
   const manifest: TaxonomyInventoryShardManifest = {
     schemaVersion: 1,
     inventoryMetadata: taxonomyCliInventoryMetadata(inventory),
-    inventoryCanonicalDigest: taxonomyInventoryIncrementalCanonicalDigest(inventory),
+    inventoryCanonicalDigest: taxonomyInventoryIncrementalCanonicalDigest({ ...inventory, entries: [...entries].sort((left, right) => taxonomyCliByteCompare(String(left.sourcePath), String(right.sourcePath))), violations: stableViolations }),
     entryCount: entries.length,
     violationCount: stableViolations.length,
     violationsDigest: taxonomyCliCanonicalArrayDigest(stableViolations),
-    shardLedgerDigest: taxonomyCliSha256(canonicalJson(descriptors)),
+    shardLedgerDigest: taxonomyCliCanonicalArrayDigest(descriptors),
     shards: descriptors,
   };
-  const result: TaxonomyInventoryArtifactShards = { manifest, manifestContent: `${canonicalJson(manifest)}\n`, shards };
+  const result: TaxonomyInventoryArtifactShards = { manifest, manifestContent: `${taxonomyCliCanonicalJson(manifest)}\n`, shards };
   validateTaxonomyInventoryArtifactShards(result);
   return result;
 }
@@ -19734,13 +20319,13 @@ export function validateTaxonomyInventoryArtifactShards(value: TaxonomyInventory
   if (!Array.isArray(manifest.shards)) throw new Error("Inventory shard descriptors must be an array.");
   if (!Number.isSafeInteger(manifest.entryCount) || manifest.entryCount < 0 || !Number.isSafeInteger(manifest.violationCount) || manifest.violationCount < 0) throw new Error("Inventory shard counts must be non-negative safe integers.");
   if (!/^[a-f0-9]{64}$/u.test(manifest.inventoryCanonicalDigest) || !/^[a-f0-9]{64}$/u.test(manifest.violationsDigest) || !/^[a-f0-9]{64}$/u.test(manifest.shardLedgerDigest)) throw new Error("Inventory shard manifest digests must be lowercase SHA-256.");
-  const manifestContent = `${canonicalJson(manifest)}\n`;
+  const manifestContent = `${taxonomyCliCanonicalJson(manifest)}\n`;
   if (value.manifestContent !== manifestContent) throw new Error("Inventory shard manifest bytes are not canonical.");
   if (Buffer.byteLength(manifestContent) >= TAXONOMY_INVENTORY_SHARD_MAX_BYTES) throw new Error("Inventory shard manifest is not strictly below the shard byte limit.");
-  if (taxonomyCliSha256(canonicalJson(manifest.shards)) !== manifest.shardLedgerDigest) throw new Error("Inventory shard ledger digest mismatch.");
+  if (taxonomyCliCanonicalArrayDigest(manifest.shards) !== manifest.shardLedgerDigest) throw new Error("Inventory shard ledger digest mismatch.");
   if (!Array.isArray(value.shards) || value.shards.length !== manifest.shards.length) throw new Error("Inventory shard payload count does not match the manifest.");
   const expectedOrder = [...manifest.shards].sort((left, right) => taxonomyCliByteCompare(left.ownerId, right.ownerId) || left.part - right.part);
-  if (canonicalJson(expectedOrder) !== canonicalJson(manifest.shards)) throw new Error("Inventory shard descriptors are not in byte-sorted owner/part order.");
+  if (expectedOrder.some((descriptor, index) => descriptor !== manifest.shards[index])) throw new Error("Inventory shard descriptors are not in byte-sorted owner/part order.");
   const available = [...availableShardPaths].sort(taxonomyCliByteCompare);
   if (available.length !== new Set(available).size) throw new Error("Available inventory shard paths contain duplicates.");
   const declaredPaths = manifest.shards.map((descriptor) => descriptor.path).sort(taxonomyCliByteCompare);
@@ -19762,12 +20347,12 @@ export function validateTaxonomyInventoryArtifactShards(value: TaxonomyInventory
     descriptorPaths.add(descriptor.path);
     descriptorDigests.add(descriptor.digest);
     const shard = value.shards[index];
-    if (!shard || canonicalJson(shard.descriptor) !== canonicalJson(descriptor)) throw new Error(`Inventory shard payload ${index} descriptor mismatch.`);
+    if (!shard || taxonomyCliCanonicalJson(shard.descriptor) !== taxonomyCliCanonicalJson(descriptor)) throw new Error(`Inventory shard payload ${index} descriptor mismatch.`);
     if (Buffer.byteLength(shard.content) !== descriptor.bytes || taxonomyCliSha256(shard.content) !== descriptor.digest) throw new Error(`Inventory shard payload ${index} byte/digest mismatch.`);
     const envelope = taxonomyCliRecord(JSON.parse(shard.content) as unknown, `Inventory shard envelope ${index}`);
     taxonomyCliExactKeys(envelope, ["entries", "ownerId", "schemaVersion"], `Inventory shard envelope ${index}`);
     if (envelope.schemaVersion !== 1 || envelope.ownerId !== descriptor.ownerId || !Array.isArray(envelope.entries)) throw new Error(`Inventory shard envelope ${index} identity is invalid.`);
-    if (`${canonicalJson(envelope)}\n` !== shard.content) throw new Error(`Inventory shard payload ${index} is not canonical JSON.`);
+    if (`${taxonomyCliCanonicalJson(envelope)}\n` !== shard.content) throw new Error(`Inventory shard payload ${index} is not canonical JSON.`);
     const shardEntries = envelope.entries.map((entry, entryIndex) => taxonomyCliRecord(entry, `Inventory shard ${index} entry ${entryIndex}`));
     if (shardEntries.length !== descriptor.entryCount) throw new Error(`Inventory shard payload ${index} entry count mismatch.`);
     for (let entryIndex = 0; entryIndex < shardEntries.length; entryIndex += 1) {
@@ -19782,7 +20367,7 @@ export function validateTaxonomyInventoryArtifactShards(value: TaxonomyInventory
   }
   if (entries.length !== manifest.entryCount) throw new Error("Inventory shard manifest entry count mismatch.");
   entries.sort((left, right) => taxonomyCliByteCompare(String(left.sourcePath), String(right.sourcePath)));
-  const violations = taxonomyCliStableViolations(entries);
+  const violations = taxonomyCliStableViolations(taxonomyCliEntryViolations(entries));
   if (violations.length !== manifest.violationCount || taxonomyCliCanonicalArrayDigest(violations) !== manifest.violationsDigest) throw new Error("Inventory shard violation count/digest mismatch.");
   const inventory = { ...metadata, entries, violations };
   if (taxonomyInventoryIncrementalCanonicalDigest(inventory) !== manifest.inventoryCanonicalDigest) throw new Error("Reconstructed inventory canonical digest mismatch.");
@@ -19814,8 +20399,8 @@ function taxonomyCliValidatePublishedShardRoot(root: string): TaxonomyInventoryS
   if (!manifestState.isFile() || manifestState.isSymbolicLink()) throw new Error("Inventory shard manifest must be a real file.");
   const content = readFileSync(manifestPath, "utf8");
   const manifest = taxonomyCliRecord(JSON.parse(content) as unknown, "Published inventory shard manifest") as unknown as TaxonomyInventoryShardManifest;
-  if (`${canonicalJson(manifest)}\n` !== content || Buffer.byteLength(content) >= TAXONOMY_INVENTORY_SHARD_MAX_BYTES) throw new Error("Published inventory shard manifest is not canonical or exceeds the byte limit.");
-  if (!Array.isArray(manifest.shards) || taxonomyCliSha256(canonicalJson(manifest.shards)) !== manifest.shardLedgerDigest) throw new Error("Published inventory shard manifest ledger is invalid.");
+  if (`${taxonomyCliCanonicalJson(manifest)}\n` !== content || Buffer.byteLength(content) >= TAXONOMY_INVENTORY_SHARD_MAX_BYTES) throw new Error("Published inventory shard manifest is not canonical or exceeds the byte limit.");
+  if (!Array.isArray(manifest.shards) || taxonomyCliCanonicalArrayDigest(manifest.shards) !== manifest.shardLedgerDigest) throw new Error("Published inventory shard manifest ledger is invalid.");
   const declared = manifest.shards.map((descriptor) => descriptor.path).sort(taxonomyCliByteCompare);
   if (canonicalJson(available) !== canonicalJson(declared)) throw new Error("Published inventory shard root contains missing or unreferenced shards.");
   for (const descriptor of manifest.shards) {
@@ -20236,84 +20821,9 @@ function mutationTaxonomyRustModuleKey(crateRoot: string, modulePath: readonly s
   return `${crateRoot}\0${modulePath.join("::")}`;
 }
 
-function mutationTaxonomyRustModuleTarget(moduleBase: string, module: { readonly name: string; readonly pathTarget: string | null }, files: ReadonlySet<string>): string | null {
-  const directory = moduleBase;
-  const candidates = module.pathTarget === null
-    ? [posix.join(directory, `${module.name}.rs`), posix.join(directory, module.name, "mod.rs")]
-    : [posix.normalize(posix.join(directory, module.pathTarget))];
-  const matching = candidates.filter((candidate) => !candidate.startsWith("../") && files.has(candidate));
-  return matching.length === 1 ? matching[0]! : null;
-}
-
-function mutationTaxonomyCargoManifest(source: string): { readonly crateName: string | null; readonly libPath: string | null } {
-  const section = (name: string): string | null => {
-    const start = new RegExp(`^\\s*\\[${name}\\]\\s*$`, "mu").exec(source);
-    if (!start || start.index === undefined) return null;
-    const remainder = source.slice(start.index + start[0].length);
-    const end = /^\s*\[[^\]]+\]\s*$/mu.exec(remainder);
-    return end?.index === undefined ? remainder : remainder.slice(0, end.index);
-  };
-  const packageSection = section("package");
-  const libSection = section("lib");
-  const packageName = packageSection ? /^\s*name\s*=\s*"([A-Za-z0-9_-]+)"\s*$/mu.exec(packageSection)?.[1] ?? null : null;
-  const libName = libSection ? /^\s*name\s*=\s*"([A-Za-z0-9_-]+)"\s*$/mu.exec(libSection)?.[1] ?? null : null;
-  const libPath = libSection ? /^\s*path\s*=\s*"([^"]+)"\s*$/mu.exec(libSection)?.[1] ?? null : null;
-  return { crateName: libName ?? packageName, libPath };
-}
-
-function mutationTaxonomyCargoDependencies(source: string): readonly string[] {
-  const start = /^\s*\[dependencies\]\s*$/mu.exec(source);
-  if (!start || start.index === undefined) return [];
-  const remainder = source.slice(start.index + start[0].length);
-  const end = /^\s*\[[^\]]+\]\s*$/mu.exec(remainder);
-  const section = end?.index === undefined ? remainder : remainder.slice(0, end.index);
-  return [...section.matchAll(/^\s*([A-Za-z0-9_-]+)\s*=/gmu)].map((match) => match[1]!.replaceAll("-", "_")).sort(mutationTaxonomyCompare);
-}
-
 /** 🦀️ Builds only crate/module edges demonstrated by a mounted Rust source graph. */
 function mutationTaxonomyRustModuleGraph(files: readonly string[], contents: ReadonlyMap<string, string>): MutationTaxonomyRustModuleGraph {
-  const sourceFiles = new Set(files.filter((path) => path.endsWith(".rs")));
-  const factsBySource = new Map([...sourceFiles].map((path) => [path, inspectRustModuleGraphFacts(contents.get(path) ?? "")]));
-  const targets = new Map<string, string>();
-  const contexts = new Map<string, MutationTaxonomyRustModuleContext[]>();
-  const namedCrates = new Map<string, string[]>();
-  const dependencies = new Map<string, string[]>();
-  const manifestRoots = files.filter((path) => path === "Cargo.toml" || path.endsWith("/Cargo.toml")).flatMap((manifest) => {
-    const facts = mutationTaxonomyCargoManifest(contents.get(manifest) ?? "");
-    const entry = posix.normalize(posix.join(posix.dirname(manifest), facts.libPath ?? "src/lib.rs"));
-    return sourceFiles.has(entry) ? [{ path: entry, crateName: facts.crateName, dependencies: mutationTaxonomyCargoDependencies(contents.get(manifest) ?? "") }] : [];
-  });
-  const conventionalRoots = [...sourceFiles].filter((path) => /(?:^|\/)(?:lib|main)\.rs$/u.test(path) && !manifestRoots.some((root) => root.path === path)).map((path) => ({ path, crateName: null, dependencies: [] as string[] }));
-  const roots = [...manifestRoots, ...conventionalRoots].sort((left, right) => mutationTaxonomyCompare(left.path, right.path));
-  const addContext = (path: string, context: MutationTaxonomyRustModuleContext): boolean => {
-    const existing = contexts.get(path) ?? [];
-    if (existing.some((value) => value.crateRoot === context.crateRoot && value.modulePath.join("::") === context.modulePath.join("::") && value.sourceScope.join("::") === context.sourceScope.join("::") && value.moduleBase === context.moduleBase)) return false;
-    contexts.set(path, [...existing, context]);
-    return true;
-  };
-  for (const root of roots) {
-    const crateRoot = root.path;
-    if (root.crateName) namedCrates.set(root.crateName.replaceAll("-", "_"), [...(namedCrates.get(root.crateName.replaceAll("-", "_")) ?? []), crateRoot]);
-    dependencies.set(crateRoot, root.dependencies);
-    const pending: { readonly sourcePath: string; readonly context: MutationTaxonomyRustModuleContext }[] = [{ sourcePath: crateRoot, context: { crateRoot, modulePath: [], sourceScope: [], moduleBase: posix.dirname(crateRoot) } }];
-    addContext(crateRoot, pending[0]!.context);
-    for (let index = 0; index < pending.length; index += 1) {
-      const { sourcePath, context } = pending[index]!;
-      for (const module of (factsBySource.get(sourcePath)?.modules ?? []).filter((fact) => fact.modulePath.length === context.sourceScope.length + 1 && fact.modulePath.slice(0, -1).join("::") === context.sourceScope.join("::"))) {
-        const target = module.inline ? sourcePath : mutationTaxonomyRustModuleTarget(module.pathTarget !== null && context.sourceScope.length === 0 ? posix.dirname(sourcePath) : context.moduleBase, module, sourceFiles);
-        if (!target) continue;
-        const moduleBase = module.inline ? posix.normalize(posix.join(context.moduleBase, module.pathTarget ?? module.name)) : module.pathTarget === null && target.endsWith(`/${module.name}.rs`) ? posix.join(posix.dirname(target), module.name) : posix.dirname(target);
-        const child: MutationTaxonomyRustModuleContext = { crateRoot, modulePath: [...context.modulePath, module.name], sourceScope: module.inline ? module.modulePath : [], moduleBase };
-        const key = mutationTaxonomyRustModuleKey(crateRoot, child.modulePath);
-        const prior = targets.get(key);
-        if (prior && prior !== target) continue;
-        targets.set(key, target);
-        if (addContext(target, child)) pending.push({ sourcePath: target, context: child });
-      }
-    }
-  }
-  for (const [name, crateRoots] of namedCrates) namedCrates.set(name, crateRoots.sort(mutationTaxonomyCompare));
-  return { targets, contexts, namedCrates, dependencies };
+  return inspectRustModuleGraph(files, (path) => contents.get(path), { conventionalRoots: true });
 }
 
 function mutationTaxonomyRustUsePath(specifier: string): string[] | null {
@@ -20639,6 +21149,7 @@ export class CleanScript extends Script {
       const plan = planTaxonomy(inventory, {
         baselineCommit: options.baseline,
         excludedTreeDigests: [],
+        cancelFile: cancelArgumentPath,
         progress: taxonomyCliProgress,
       });
       const counts = taxonomyCliPlanOperationCounts(plan);
@@ -20800,6 +21311,7 @@ export function cleanRemovalProtection(root: string, candidate: string, view: Cl
   const local = relative(workspace, target);
   if (local === "" || local === ".." || local.startsWith(".." + sep) || isAbsolute(local)) return [target];
   const protectedPaths = new Set<string>(), closedTickets = new Set<string>();
+  const ancestors: { path: string; kind: CleanProtectionNodeKind }[] = [{ path: workspace, kind: "directory" }];
   const inspectDirectory = (directory: string): void => {
     const manifestKind = view.kind(join(directory, "🎫️ticket.json"));
     if (!cleanIsTicketFolderBoundary(workspace, directory) && manifestKind === "missing") return;
@@ -20814,6 +21326,7 @@ export function cleanRemovalProtection(root: string, candidate: string, view: Cl
       ancestor = join(ancestor, segment);
       const kind = view.kind(ancestor);
       if (kind === "symlink" || kind === "missing" || kind === "unreadable" || (ancestor !== target && kind !== "directory")) return [ancestor];
+      ancestors.push({ path: ancestor, kind });
       if (kind === "directory") inspectDirectory(ancestor);
     }
     if (protectedPaths.size > 0) return [...protectedPaths];
@@ -20831,7 +21344,8 @@ export function cleanRemovalProtection(root: string, candidate: string, view: Cl
         else if (kind !== "file") protectedPaths.add(child);
       }
     }
-    for (const directory of closedTickets) if (!cleanTicketManifestIsClosed(directory, view)) protectedPaths.add(directory);
+    for (const entry of ancestors) if (view.kind(entry.path) !== entry.kind) protectedPaths.add(entry.path);
+    for (const directory of closedTickets) if (view.kind(directory) !== "directory" || !cleanTicketManifestIsClosed(directory, view)) protectedPaths.add(directory);
   } catch { protectedPaths.add(ancestor); }
   return [...protectedPaths];
 }
@@ -22617,8 +23131,8 @@ const POLICY_MUTATION_PLAN_DIR = "🧩️plan";
 const POLICY_MUTATIONS_FACET = "🧬️mutations";
 const POLICY_ENGINE_FACET = "⚙️engine";
 const POLICY_OP_FACET = "🔧️op";
-const POLICY_TS_COMPONENT_LEAF = canonicalPrimaryFilenameForKind(loadTaxonomy().componentFileKinds["🟦️typescript"]!, loadTaxonomy());
-const POLICY_RS_COMPONENT_LEAF_NAME = canonicalPrimaryFilenameForKind(loadTaxonomy().componentFileKinds["🦀️rust"]!, loadTaxonomy());
+const POLICY_TS_COMPONENT_LEAF = canonicalPrimaryFilenameForKind(loadCatalogTaxonomy().componentFileKinds["🟦️typescript"]!, loadCatalogTaxonomy());
+const POLICY_RS_COMPONENT_LEAF_NAME = canonicalPrimaryFilenameForKind(loadCatalogTaxonomy().componentFileKinds["🦀️rust"]!, loadCatalogTaxonomy());
 /**
  * ⚖️P3/M4: colliding .grammar.semio/.protocol.semio after name/start normalization. Remove a path once its normalized hash is unique.
  * Seeded 0 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
@@ -26785,7 +27299,7 @@ const POLICY_HANDCRAFTED_SPEC_ROOTS = ["✏️s", "🧰️framework"] as const;
 const POLICY_HANDCRAFTED_FACETS = ["🗣️dsl", "🔧️op", "🔺️diff", "🎒️pack", "📡️spr", "🧬️mutations"] as const;
 const POLICY_GRAMMAR_SPEC_LEAF = canonicalPrimaryFilenameForKind("grammar-semio");
 const POLICY_PROTOCOL_SPEC_LEAF = canonicalPrimaryFilenameForKind("protocol-semio");
-const POLICY_RS_COMPONENT_LEAF = canonicalPrimaryFilenameForKind(loadTaxonomy().componentFileKinds["🦀️rust"]!, loadTaxonomy());
+const POLICY_RS_COMPONENT_LEAF = canonicalPrimaryFilenameForKind(loadCatalogTaxonomy().componentFileKinds["🦀️rust"]!, loadCatalogTaxonomy());
 const POLICY_FAMILY_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family";
 
 /** 🧹Normalizes grammar/protocol headers so distinctness compares body shape, not dialect names. */
@@ -27181,52 +27695,6 @@ function policyCollectGluePathTargets(glueAbs: string): Set<string> {
  * ☠️ Any `.rs` under `📚️examples` must be reachable via `#[path]` from a `📦️glue.rs` — dead definition
  * or test shims are forbidden.
  */
-function policyCollectGluePathTargets(glueAbs: string): Set<string> {
-  const declared = new Set<string>();
-  if (!existsSync(glueAbs)) return declared;
-  const libDir = dirname(glueAbs);
-  const libText = readFileSync(glueAbs, "utf8");
-  const baseStack: string[] = [libDir];
-  let pendingPath: string | null = null;
-  for (const rawLine of libText.split(/\r?\n/)) {
-    const line = rawLine.trim();
-    const pathMatch = line.match(/#\[path\s*=\s*"([^"]+)"\]/);
-    if (pathMatch) {
-      pendingPath = pathMatch[1] ?? null;
-      continue;
-    }
-    const modMatch = line.match(/^(?:pub\s+)?mod\s+([A-Za-z_][A-Za-z0-9_]*)/);
-    if (modMatch) {
-      const modName = modMatch[1]!;
-      const base = baseStack[baseStack.length - 1] ?? libDir;
-      let resolved: string;
-      if (pendingPath === null) {
-        resolved = join(base, modName);
-      } else if (pendingPath === ".") {
-        resolved = base;
-      } else {
-        resolved = join(base, pendingPath);
-      }
-      pendingPath = null;
-      const asFile = resolved.endsWith(".rs") ? resolved : `${resolved}.rs`;
-      const asModFile = join(resolved, "mod.rs");
-      if (existsSync(asFile)) declared.add(resolve(asFile));
-      else if (existsSync(asModFile)) declared.add(resolve(asModFile));
-      else declared.add(resolve(asFile));
-      if (line.includes("{")) baseStack.push(resolved.endsWith(".rs") ? dirname(resolved) : resolved);
-      continue;
-    }
-    pendingPath = null;
-    const opens = (line.match(/\{/g) ?? []).length;
-    const closes = (line.match(/\}/g) ?? []).length;
-    for (let i = 0; i < opens; i++) baseStack.push(baseStack[baseStack.length - 1] ?? libDir);
-    for (let i = 0; i < closes; i++) {
-      if (baseStack.length > 1) baseStack.pop();
-    }
-  }
-  return declared;
-}
-
 function policyDeadExampleLeafBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const reachable = new Set<string>();
@@ -27909,41 +28377,105 @@ function policyMutationRootPurityBreaches(mutationsRel: string, raw: string): Br
   return forbidden.length === 0 ? [] : [policyMutationStructuralBreach("mutation/root-purity", rootRel, `"${rootRel}" contains forbidden aggregate content: ${forbidden.join(", ")}`, "Move mutation-specific payloads, behavior, codecs, fixtures, and tests into their direct leaf owners; retain only visible aggregation and structural correspondence tests.")];
 }
 
-type MutationRootReachability = { readonly leafName: string; readonly variantName: string; readonly moduleName: string; readonly mounted: boolean; readonly wrapped: boolean; readonly reason: string | null };
+export interface WrappedMutationTypeOrigin {
+  readonly sourcePath: string;
+  readonly declarationName: string;
+  readonly modulePath: readonly string[];
+}
 
-/** 🔗️ Proves each direct leaf from one public aggregate mount to one wrapped aggregate type. */
-function policyMutationRootReachability(repoRoot: string, mutationsRel: string, rootSource: string, leafNames: readonly string[], rustFilename: string): readonly MutationRootReachability[] {
+export interface MutationRootReachability {
+  readonly leafName: string;
+  readonly variantName: string;
+  readonly moduleName: string;
+  readonly mounted: boolean;
+  readonly wrapped: boolean;
+  readonly origin: WrappedMutationTypeOrigin | null;
+  readonly reason: string | null;
+}
+
+/** 🔗️ Proves one wrapped aggregate payload's declared source without resolving a second source graph. */
+export function inspectMutationRootReachability(repoRoot: string, mutationsRel: string, rootSource: string, leafNames: readonly string[], rustFilename: string): readonly MutationRootReachability[] {
+  const originRepositoryRootIsSafe = (value: string): boolean => {
+    if (!value || value !== value.normalize("NFC") || /[\u0000-\u001F\u007F\u2028\u2029]/u.test(value)) return false;
+    const windows = /^[A-Za-z]:[\\/]/u.test(value), posix = value.startsWith("/");
+    if (!isAbsolute(value) || !windows && !posix || value.includes(":") && (!windows || value.indexOf(":") !== 1 || value.lastIndexOf(":") !== 1) || posix && value.includes("\\")) return false;
+    const remainder = value.slice(windows ? 3 : 1);
+    return !remainder.split(/[\\/]/u).some((segment) => remainder.length > 0 && (!segment || segment === "." || segment === ".." || segment.toLocaleLowerCase("en-US") === "compose"));
+  };
+  const originLocatorIsSafe = (value: string): boolean => {
+    if (!value || value !== value.normalize("NFC") || value.includes("\\") || value.includes(":") || /[\u0000-\u001F\u007F\u2028\u2029]/u.test(value) || isAbsolute(value)) return false;
+    const segments = value.split("/");
+    return !segments.some((segment) => !segment || segment === "." || segment === ".." || segment.toLocaleLowerCase("en-US") === "compose") && !taxonomyRelativePathIsExcluded(value);
+  };
+  const unresolved = (leafName: string, reason: string): MutationRootReachability => ({ leafName, variantName: policyKebabToPascal(policyStripEmoji(leafName)), moduleName: policyStripEmoji(leafName).replaceAll("-", "_"), mounted: false, wrapped: false, origin: null, reason });
+  if (!originRepositoryRootIsSafe(repoRoot)) return leafNames.map((leafName) => unresolved(leafName, "requires a safe absolute non-excluded repository source boundary"));
+  if (!originLocatorIsSafe(mutationsRel) || !originLocatorIsSafe(rustFilename) || rustFilename.includes("/") || leafNames.some((leafName) => !originLocatorIsSafe(leafName) || leafName.includes("/"))) return leafNames.map((leafName) => unresolved(leafName, "requires safe non-excluded raw mutation source locators"));
+  let sourceRoot: string;
+  try {
+    sourceRoot = workspaceAuthorityPath(repoRoot, "mutation origin repository source boundary");
+    noFollowDirectoryAncestry(sourceRoot, "mutation origin repository source boundary ancestry");
+  } catch { return leafNames.map((leafName) => unresolved(leafName, "requires a no-follow repository source boundary")); }
   const graph = inspectRustModuleGraphFacts(rootSource);
-  const publicTypes = new Set(inspectRustPublicTypeNames(rootSource));
-  const aggregate = inspectRustStructure(rootSource).enums.filter((item) => item.name.endsWith("Mutation") && publicTypes.has(item.name));
-  if (aggregate.length !== 1) return leafNames.map((leafName) => ({ leafName, variantName: policyKebabToPascal(policyStripEmoji(leafName)), moduleName: policyStripEmoji(leafName).replaceAll("-", "_"), mounted: false, wrapped: false, reason: "requires exactly one public top-level aggregate Mutation enum" }));
-  const variants = aggregate.flatMap((item) => item.variants);
+  const aggregates = inspectRustStructure(rootSource).enums.filter((item) => item.name.endsWith("Mutation") && item.visibility === "pub");
+  if (aggregates.length !== 1 || aggregates[0]!.conditional) return leafNames.map((leafName) => unresolved(leafName, "requires exactly one unconditional public top-level aggregate Mutation enum"));
+  const variants = aggregates[0]!.variants;
+  const readOriginSource = (relativePath: string): string | null => {
+    if (!originLocatorIsSafe(relativePath)) return null;
+    const segments = relativePath.split("/");
+    let current = sourceRoot;
+    try {
+      for (const [index, segment] of segments.entries()) {
+        current = join(current, segment);
+        const state = lstatSync(current);
+        if (state.isSymbolicLink() || (index + 1 === segments.length ? !state.isFile() : !state.isDirectory())) return null;
+      }
+      return readFileSync(current, "utf8");
+    } catch { return null; }
+  };
   return leafNames.map((leafName) => {
     const moduleName = policyStripEmoji(leafName).replaceAll("-", "_");
     const variantName = policyKebabToPascal(policyStripEmoji(leafName));
     const namedMounts = graph.modules.filter((module) => module.modulePath.length === 1 && module.name === moduleName);
-    const mount = namedMounts.filter((module) => module.visibility === "pub" && !module.inline && module.pathTarget === `${leafName}/${rustFilename}`);
-    if (namedMounts.length !== 1 || mount.length !== 1) return { leafName, variantName, moduleName, mounted: false, wrapped: false, reason: "requires exactly one public canonical direct-leaf mount" };
+    const mount = namedMounts.filter((module) => module.visibility === "pub" && !module.inline && !module.conditional && module.pathTarget === `${leafName}/${rustFilename}`);
+    if (namedMounts.length !== 1 || mount.length !== 1) return { leafName, variantName, moduleName, mounted: false, wrapped: false, origin: null, reason: "requires exactly one unconditional public canonical direct-leaf mount" };
     const leafRel = `${mutationsRel}/${leafName}`;
-    let leafSource: string, types: readonly string[];
-    try { leafSource = policyReadFileSafe(repoRoot, `${leafRel}/${rustFilename}`); types = inspectRustPublicTypeNames(leafSource); }
-    catch { return { leafName, variantName, moduleName, mounted: true, wrapped: false, reason: "mounted direct leaf type source cannot be inspected" }; }
+    const leafPath = `${leafRel}/${rustFilename}`, leafSource = readOriginSource(leafPath);
+    if (leafSource === null) return { leafName, variantName, moduleName, mounted: true, wrapped: false, origin: null, reason: "mounted direct leaf type source cannot be inspected without symlink traversal" };
+    type OriginCandidate = { readonly origin: WrappedMutationTypeOrigin; readonly conditional: boolean };
+    const origins = new Map<string, OriginCandidate[]>();
+    const addOrigin = (name: string, origin: WrappedMutationTypeOrigin, conditional: boolean): void => origins.set(name, [...(origins.get(name) ?? []), { origin, conditional }]);
+    const declarations = (source: string, sourcePath: string, requiredModulePath?: readonly string[]): readonly OriginCandidate[] => inspectRustMutationMetadataFacts(source).declarations
+      .filter((item) => item.visibility === "pub" && (requiredModulePath === undefined || item.modulePath.join("\0") === requiredModulePath.join("\0")))
+      .map((item) => ({ origin: { sourcePath, declarationName: item.name, modulePath: item.modulePath }, conditional: item.conditional === true }));
+    const leafMetadata = inspectRustMutationMetadataFacts(leafSource);
+    for (const candidate of declarations(leafSource, leafPath, [])) addOrigin(candidate.origin.declarationName, candidate.origin, candidate.conditional);
     const leafGraph = inspectRustModuleGraphFacts(leafSource);
-    for (const use of leafGraph.uses.filter((entry) => entry.modulePath.length === 0 && entry.relation === "reexport" && entry.visibility === "pub")) {
-      const match = /^([A-Za-z_][A-Za-z0-9_]*)::([A-Za-z_][A-Za-z0-9_]*)(?:\s+as\s+([A-Za-z_][A-Za-z0-9_]*))?$/u.exec(use.specifier);
-      const children = match ? leafGraph.modules.filter((entry) => entry.modulePath.length === 1 && entry.name === match[1] && entry.visibility === "pub" && !entry.inline && entry.pathTarget !== null && !entry.pathTarget.startsWith("/") && !entry.pathTarget.split("/").includes("..")) : [];
-      const child = children.length === 1 ? children[0] : undefined;
-      if (!match || !child) continue;
-      try { if (inspectRustPublicTypeNames(policyReadFileSafe(repoRoot, `${leafRel}/${child.pathTarget}`)).includes(match[2]!)) types = [...types, match[3] ?? match[2]!]; } catch {}
+    for (const use of leafMetadata.crateAliases.filter((entry) => entry.modulePath.length === 0 && entry.kind === "reexport" && !entry.restricted)) {
+      const match = /^([A-Za-z_][A-Za-z0-9_]*)::([A-Za-z_][A-Za-z0-9_]*)$/u.exec(use.source);
+      const children = match ? leafGraph.modules.filter((entry) => entry.modulePath.length === 1 && entry.name === match[1] && entry.visibility === "pub" && !entry.inline && entry.pathTarget !== null) : [];
+      const inlineChildren = match ? leafGraph.modules.filter((entry) => entry.modulePath.length === 1 && entry.name === match[1] && entry.visibility === "pub" && entry.inline) : [];
+      const child = children.length + inlineChildren.length === 1 ? [...children, ...inlineChildren][0] : undefined;
+      if (!match || !child || (!child.inline && !originLocatorIsSafe(child.pathTarget!))) continue;
+      const childPath = child.inline ? leafPath : `${leafRel}/${child.pathTarget!}`, childSource = child.inline ? leafSource : readOriginSource(childPath);
+      if (childSource === null) continue;
+      const childOrigins = declarations(childSource, childPath, child.inline ? [child.name] : []).filter((candidate) => candidate.origin.declarationName === match[2]!);
+      if (childOrigins.length === 1) addOrigin(use.alias, childOrigins[0]!.origin, childOrigins[0]!.conditional || child.conditional === true || use.conditional);
     }
-    const aliases = new Set(types.map((type) => `${moduleName}::${type}`));
-    for (const use of graph.uses.filter((entry) => entry.modulePath.length === 0 && entry.relation === "reexport" && entry.visibility === "pub")) {
-      const match = new RegExp(`^${moduleName}::([A-Za-z_][A-Za-z0-9_]*)(?:\\s+as\\s+([A-Za-z_][A-Za-z0-9_]*))?$`, "u").exec(use.specifier);
-      if (match && types.includes(match[1]!)) aliases.add(match[2] ?? match[1]!);
+    const aliases = new Map<string, OriginCandidate[]>();
+    for (const [name, candidates] of origins) aliases.set(`${moduleName}::${name}`, candidates);
+    const rootMetadata = inspectRustMutationMetadataFacts(rootSource);
+    const rootNames = new Set(rootMetadata.declarations.filter((item) => item.modulePath.length === 0).map((item) => item.name));
+    for (const use of rootMetadata.crateAliases.filter((entry) => entry.modulePath.length === 0 && entry.kind === "reexport" && !entry.restricted)) {
+      const match = new RegExp(`^${moduleName}::([A-Za-z_][A-Za-z0-9_]*)$`, "u").exec(use.source);
+      const candidates = match ? origins.get(match[1]!) : undefined;
+      if (candidates && !rootNames.has(use.alias)) aliases.set(use.alias, [...(aliases.get(use.alias) ?? []), ...candidates.map((candidate) => ({ ...candidate, conditional: candidate.conditional || use.conditional }))]);
     }
     const named = variants.filter((variant) => variant.name === variantName);
     const matching = named.filter((variant) => variant.fieldStyle === "tuple" && variant.fieldTypes.length === 1 && aliases.has(variant.fieldTypes[0]!));
-    return named.length === 1 && matching.length === 1 ? { leafName, variantName, moduleName, mounted: true, wrapped: true, reason: null } : { leafName, variantName, moduleName, mounted: true, wrapped: false, reason: "requires exactly one aggregate variant wrapping its mounted Mutation type or visible public alias" };
+    const candidates = matching.length === 1 ? aliases.get(matching[0]!.fieldTypes[0]!) ?? [] : [];
+    return named.length === 1 && !named[0]!.conditional && matching.length === 1 && candidates.length === 1 && !candidates[0]!.conditional
+      ? { leafName, variantName, moduleName, mounted: true, wrapped: true, origin: candidates[0]!.origin, reason: null }
+      : { leafName, variantName, moduleName, mounted: true, wrapped: false, origin: null, reason: "requires exactly one aggregate variant with one unambiguous wrapped payload declaration origin" };
   }).sort((left, right) => mutationTaxonomyCompare(left.leafName, right.leafName));
 }
 
@@ -28044,7 +28576,7 @@ export function policyMutationStructuralBreaches(repoRoot: string, mutationRoots
     const leafNames = policyListMutationDirs(repoRoot, mutationsRel);
     const taxonomy = loadTaxonomy();
     const rustFilename = canonicalPrimaryFilenameForKind(taxonomy.componentFileKinds["🦀️rust"]!, taxonomy);
-    const reachability = policyMutationRootReachability(repoRoot, mutationsRel, rootSource, leafNames, rustFilename);
+    const reachability = inspectMutationRootReachability(repoRoot, mutationsRel, rootSource, leafNames, rustFilename);
     const folderVariants = new Set(leafNames.map((name) => policyKebabToPascal(policyStripEmoji(name))));
     const missingFolders = [...variants].filter((name) => !folderVariants.has(name));
     const missingVariants = [...folderVariants].filter((name) => !variants.has(name));
@@ -28982,11 +29514,6 @@ const POLICY_ARTIFACT_SCHEMA_PREFIXES: Readonly<Record<string, string>> = {
   "space/home": "SHome",
   "sourcing/curate": "Curate",
 };
-
-/** 🔤snake_case → camelCase canonical field name. */
-function policySnakeToCamel(name: string): string {
-  return name.replace(/_([a-z0-9])/g, (_, c: string) => c.toUpperCase());
-}
 
 /** 🔤Normalize state-class tokens to kebab (persistent / shared-ui / …). */
 function policyCanonicalState(raw: string): string {
@@ -32557,6 +33084,7 @@ const POLICY_FACET_MIRROR_DRIFT_SIBLINGS = ["typescript-source", "graphql", "jso
 const POLICY_FACET_MIRROR_DRIFT_FIELD_RE = /(?:^|[\s{,(])(?:pub\s+)?([a-z][a-z0-9_]*)\s*:\s*[A-Za-z_&\[<('"]/gm;
 const POLICY_FACET_MIRROR_DRIFT_KEYWORDS = new Set(["self", "where", "if", "else", "match", "for", "while", "let", "fn", "return", "in", "as", "dyn", "mut", "ref", "impl", "type"]);
 
+/** 🔤️ Converts underscore-delimited field names to their canonical camelCase form. */
 function policySnakeToCamel(name: string): string {
   const parts = name.split("_");
   return parts[0] + parts.slice(1).map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join("");

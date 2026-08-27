@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "packageId": "wgpu-renderer",
+  "contractId": "wgpu-frame-worker",
+  "sourceBodyRelativePath": "📦️glue.rs",
+  "sourceBodySuffix": "\nconst STARTUP_PHASE_ONLY_PROBE: u8 = 1;\n",
+  "expectedSourceLeaves": 32,
+  "expectedOutputLeaves": 6,
+  "invalidCases": ["missing-source", "foreign-source", "symlink-source", "mixed-destination", "generated-destination", "manifest-drift", "workspace-drift", "non-git"],
+  "retainedFixture": "🧪️wgpu-generated-retirement-HT3ZIM"
+}

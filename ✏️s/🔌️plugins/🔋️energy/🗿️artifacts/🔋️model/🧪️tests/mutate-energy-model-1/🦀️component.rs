@@ -1,6 +1,6 @@
 //! 🔋️ `s.energy.model` exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-
 //! REFACTOR. Recorded no-oracle decision `energy-model-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, which also records why
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, which also records why
 //! EnergyPlus and OpenStudio were surveyed and DECLINED, and why the `energyplus` weather reader
 //! registered under `✏️s/🔌️plugins/🗄️stdio`'s `🌦️epw` subset is deliberately not reused here).
 //!

@@ -416,9 +416,9 @@ Created:
 
 Modified (additive only):
 
-* `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json` — one `oracleHostPackages` entry, `ifcopenshell 0.8.4.post1`
-* `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧪️oracle/🔣️component.json` — oracle `ifcopenshell-ifc-4-any-differential`
-* `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧪️oracle/🔣️component.json` — oracle `ifcopenshell-ifc-2x3-any-differential`
+* `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json` — one `oracleHostPackages` entry, `ifcopenshell 0.8.4.post1`
+* `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧪️oracle/🔣️.json` — oracle `ifcopenshell-ifc-4-any-differential`
+* `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧪️oracle/🔣️.json` — oracle `ifcopenshell-ifc-2x3-any-differential`
 
 Ticket working files (`w23-ifc-differential/`): `probe_part21.py`, `negative_controls.py`,
 `crosscheck.py`, `ruststep-crosscheck/` (standalone `[workspace]` crate), `oracle-projections.txt`.

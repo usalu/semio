@@ -1,0 +1,105 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's contribution to the repository test platform — the BMP v3 ✳️any mutation catalog and its dedicated mutate oracle. Discovered by convention (`testContributionDirName` in 🔣️taxonomy.json); the shared stdio manifest (`✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json`) already registers `image-bmp` under capability `bmp-raster` for plain create/round-trip coverage — mutation coverage needs its own capability so the two are never conflated, per the wave-7 fleet brief.",
+  "oracles": [
+    {
+      "id": "image-bmp-3-mutate",
+      "ecosystem": "rust",
+      "package": "image",
+      "version": "0.25",
+      "capabilities": [
+        "bmp-3-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-raster-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/image-rs/image",
+      "rationale": "The same reference BMP encoder/decoder already registered as `image-bmp` (shared stdio manifest), given its own capability for the 7 typed BmpMutation kinds this subset declares. The independent decoder reads both this subset's own encode_bmp output and the oracle's own re-encode, so a mutation's effect is judged the same way regardless of which side produced the bytes. The oracle drives the crate's INDEXED layer, not just its resolved raster: `BmpDecoder::set_indexed_color` for the per-pixel index buffer, `get_palette` for the colour table and `BmpEncoder::encode_with_palette` to write both back as a real indexed BITMAPINFOHEADER. Without that, three of the seven kinds — the palette triple — have nothing to operate on at all, because `load_from_memory` resolves the indices away. Three BITMAPINFOHEADER facts stay outside the crate's reach and are read from, and patched back into, the fixed BMP v3 layout: `biClrUsed` (the crate zero-pads `get_palette` to 256 entries deliberately and exposes the real count nowhere), and both pixels-per-metre fields plus the row order (its encoder hard-codes the first two to 0 and always stores rows bottom-up).",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "productionDebt": {
+        "reachableFrom": [
+          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs",
+          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs"
+        ],
+        "owner": "🧰️framework/🔨️modules/🗺️surface",
+        "plan": "The `image` crate is production-reachable TODAY from two places: the 🎞️animate plugin's video engine and 🧰️framework/🔨️modules/🗺️surface's tiled-map. Discovered by the oracle-purity gate the moment `image` was registered — the gate did its job. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and this record with it."
+      }
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "bmp-3-any",
+      "capability": "bmp-3-mutate",
+      "standardDirectoryName": "🔖️v3",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "change-header-fields",
+          "sourceMutationDirectoryName": "📐️change-header-fields",
+          "mutationDirectoryName": "📐️change-header-fields",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-palette-entry",
+          "sourceMutationDirectoryName": "📥️insert-palette-entry",
+          "mutationDirectoryName": "📥️insert-palette-entry",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-palette-entry",
+          "sourceMutationDirectoryName": "📤️remove-palette-entry",
+          "mutationDirectoryName": "📤️remove-palette-entry",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-palette-entry",
+          "sourceMutationDirectoryName": "🎨️replace-palette-entry",
+          "mutationDirectoryName": "🎨️replace-palette-entry",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-pixel-data",
+          "sourceMutationDirectoryName": "🟪️replace-pixel-data",
+          "mutationDirectoryName": "🟪️replace-pixel-data",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️direct-behavior"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "change-header-fields",
+        "insert-palette-entry",
+        "remove-palette-entry",
+        "replace-palette-entry",
+        "replace-pixel-data"
+      ]
+    }
+  ]
+}

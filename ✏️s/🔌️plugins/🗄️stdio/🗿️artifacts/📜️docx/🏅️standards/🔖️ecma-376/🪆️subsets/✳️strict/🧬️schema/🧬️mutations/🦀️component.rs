@@ -17,7 +17,7 @@
 //! its content edited. Unifying the two behind one type is a deliberate open seam, recorded rather
 //! than guessed at.
 //!
-//! @see ../../🧪️oracle/🔣️component.json — the mutation catalog `KINDS` is measured against.
+//! @see ../../🧪️oracle/🔣️.json — the mutation catalog `KINDS` is measured against.
 //! @see ../🦀️component.rs — this subset's conformance check, one axis per variant below.
 
 use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::diff::{NamedModified, NamedTripleDiff, DocxDiff, DocxOpcContentTypesDiff, DocxOpcCtEntriesDiff, DocxOpcDiff, DocxOpcPartDiff, DocxOpcPartsDiff, DocxOpcRelDiff, DocxOpcRelListDiff, DocxOpcRelationshipsDiff};
@@ -102,7 +102,7 @@ pub enum DocxStrictMutation {
 }
 
 /// 🧾️ Kebab-case spelling of every `DocxStrictMutation` variant, in declaration order — the exhaustive
-/// mutation catalog `docx-ecma-376-strict` (`../../🧪️oracle/🔣️component.json`) is measured against
+/// mutation catalog `docx-ecma-376-strict` (`../../🧪️oracle/🔣️.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-main-namespace", "set-relationship-base", "set-conformance-attribute", "remove-conformance-attribute", "insert-vml-part", "remove-vml-part", "insert-alternate-content", "remove-alternate-content"];
 //#endregion 🔖️Mutations
@@ -509,7 +509,7 @@ mod tests {
         let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
         assert_eq!(from_enum, KINDS, "KINDS must list every DocxStrictMutation variant, in declaration order");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         let needle = "\"kinds\": [";
         let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
         let end = start + manifest[start..].find(']').expect("kinds array is closed");

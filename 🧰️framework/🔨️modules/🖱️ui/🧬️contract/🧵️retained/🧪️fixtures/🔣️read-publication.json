@@ -1,0 +1,4 @@
+{
+  "version": 1, "versions": [0,1,2],
+  "laws": ["staged-read-invisible", "single-epoch-atomic-visibility", "foreign-epoch-rejected", "cancel-preserves-published-read", "stage-cancel-retained-close", "cancelled-token-cannot-publish", "published-token-cannot-cancel", "zero-grant-preserves-owner", "exact-layout-ack", "pending-epoch-capacity", "close-during-staging", "no-ancestor-root-chain"]
+}

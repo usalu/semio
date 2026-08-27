@@ -1,0 +1,22 @@
+{
+  "ifds": {
+    "added": [
+      {
+        "ifd": {
+          "entries": [
+            {
+              "kind": "ascii",
+              "tag": 305,
+              "values": {
+                "kind": "ascii",
+                "value": "Direct Owner"
+              }
+            }
+          ],
+          "pixels": []
+        },
+        "index": 1
+      }
+    ]
+  }
+}

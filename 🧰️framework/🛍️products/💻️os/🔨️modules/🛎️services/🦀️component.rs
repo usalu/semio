@@ -44,8 +44,8 @@ use semio_framework_async::{
     WorkerPoolConfig,
 };
 use semio_framework_job::{
-    default_now_ms, Generation as JobGeneration, InteractiveJob, InteractiveStage, OperationId, StepOutcome, BACKGROUND_LANE_FUEL, BACKGROUND_LANE_WALL_MS, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS,
-    MAINTENANCE_LANE_FUEL, MAINTENANCE_LANE_WALL_MS, USER_VISIBLE_LANE_FUEL, USER_VISIBLE_LANE_WALL_MS,
+    default_now_us, Generation as JobGeneration, InteractiveJob, InteractiveStage, OperationId, StepOutcome, BACKGROUND_LANE_FUEL, BACKGROUND_LANE_WALL_US, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US,
+    MAINTENANCE_LANE_FUEL, MAINTENANCE_LANE_WALL_US, USER_VISIBLE_LANE_FUEL, USER_VISIBLE_LANE_WALL_US,
 };
 
 //#region 🧵️GlobalWorkerPool
@@ -697,13 +697,13 @@ impl ComputePool {
         if ctx.cancel.is_cancelled().await {
             return Ok(StepOutcome::Cancelled);
         }
-        let (stage, fuel, wall_ms) = compute_job_budget(lane);
+        let (stage, fuel, wall_us) = compute_job_budget(lane);
         let params = semio_framework_job::BatchJobParams {
             operation: OperationId(ctx.trace.0),
             generation: JobGeneration(u64::from(ctx.generation)),
             cancel: ctx.cancel.clone(),
-            config: semio_framework_job::BatchDriveConfig { site: "os-services.compute-job", stage, fuel_per_step: fuel, step_budget_ms: wall_ms },
-            now_ms: default_now_ms,
+            config: semio_framework_job::BatchDriveConfig { site: "os-services.compute-job", stage, fuel_per_step: fuel, step_budget_us: wall_us },
+            now_us: default_now_us,
         };
         let session = match semio_framework_job::MountedWorkerJobSession::try_new(job, params) {
             Ok(session) => session,
@@ -792,10 +792,10 @@ struct ComputeJobDriveState<J> {
 #[cfg(test)]
 fn compute_job_budget(lane: Lane) -> (InteractiveStage, u64, u64) {
     match lane {
-        Lane::Interactive => (InteractiveStage::InteractiveStep, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS),
-        Lane::UserVisible => (InteractiveStage::UserVisibleSimStep, USER_VISIBLE_LANE_FUEL, USER_VISIBLE_LANE_WALL_MS),
-        Lane::Background | Lane::Io | Lane::Timer => (InteractiveStage::BackgroundStep, BACKGROUND_LANE_FUEL, BACKGROUND_LANE_WALL_MS),
-        Lane::Maintenance => (InteractiveStage::BackgroundStep, MAINTENANCE_LANE_FUEL, MAINTENANCE_LANE_WALL_MS),
+        Lane::Interactive => (InteractiveStage::InteractiveStep, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US),
+        Lane::UserVisible => (InteractiveStage::UserVisibleSimStep, USER_VISIBLE_LANE_FUEL, USER_VISIBLE_LANE_WALL_US),
+        Lane::Background | Lane::Io | Lane::Timer => (InteractiveStage::BackgroundStep, BACKGROUND_LANE_FUEL, BACKGROUND_LANE_WALL_US),
+        Lane::Maintenance => (InteractiveStage::BackgroundStep, MAINTENANCE_LANE_FUEL, MAINTENANCE_LANE_WALL_US),
     }
 }
 

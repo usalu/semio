@@ -3,7 +3,7 @@
 //! This file registers the SUBJECT half only. The reference half is `🐍️component.py` beside it — a
 //! second implementation of this document and its 266 mutations, in Python, registered as
 //! `architect-program-python-independent` in
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`. Registering a Rust oracle here
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`. Registering a Rust oracle here
 //! would make this repository its own reference and manufacture a green self-comparison, so there
 //! is none. The laws this half claims are asserted inside the subject handlers through the shared
 //! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️component.rs` module, whose helpers are dependency-free

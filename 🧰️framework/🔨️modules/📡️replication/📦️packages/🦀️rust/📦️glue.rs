@@ -64,6 +64,10 @@ pub mod wire {
     mod frames;
     pub use frames::*;
 
+    #[path = "../../📡️wire/🏠️local-interaction/🦀️component.rs"]
+    pub mod local_interaction;
+    pub use local_interaction::*;
+
     // 🧬️ The facade has always surfaced ids/crypto/dictionary through `wire::`.
     pub use super::crypto::*;
     pub use super::dictionary::*;

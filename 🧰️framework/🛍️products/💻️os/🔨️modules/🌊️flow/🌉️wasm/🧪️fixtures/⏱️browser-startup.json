@@ -1,0 +1,10 @@
+{
+  "$schema": "./⏱️browser-startup.schema.json",
+  "clock": { "source": "performance.now", "minimumSamples": 2, "strictlyMonotonic": true },
+  "cases": [
+    { "source": "exports", "initializer": "forbidden", "imports": "empty", "accepted": true },
+    { "source": "bytes", "initializer": "generated", "imports": "empty", "accepted": true },
+    { "source": "bytes", "initializer": "generated", "imports": "foreign", "accepted": false },
+    { "source": "bytes", "initializer": "custom", "imports": "foreign", "accepted": true }
+  ]
+}

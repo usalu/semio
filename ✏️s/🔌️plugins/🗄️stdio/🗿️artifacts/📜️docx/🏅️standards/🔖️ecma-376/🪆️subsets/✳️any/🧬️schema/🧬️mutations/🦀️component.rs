@@ -104,7 +104,7 @@ pub enum DocxMutation {
 }
 
 /// 📇️ Kebab-case spelling of every `DocxMutation` variant, in declaration order -- the exhaustive
-/// mutation catalog `../🧪️oracle/🔣️component.json`'s `kinds` array is required to match verbatim
+/// mutation catalog `../🧪️oracle/🔣️.json`'s `kinds` array is required to match verbatim
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself). Mirrors `print_docx_mutation`'s own keyword
 /// match entry-for-entry, so `KINDS[i]` is exactly what `print_op()` emits for the enum's `i`-th
@@ -1261,7 +1261,7 @@ mod tests {
     /// carries (one instance per variant), must equal `KINDS` entry-for-entry -- the framework never
     /// parses Rust to check this itself (see `KINDS`'s own doc comment), so this test is the one
     /// thing that does. `KINDS` is also kept textually identical, by hand, to
-    /// `../🧪️oracle/🔣️component.json`'s own `kinds` array.
+    /// `../🧪️oracle/🔣️.json`'s own `kinds` array.
     #[test]
     fn kinds_const_matches_enum_variants_in_declaration_order() {
         let cases = demo_mutation_cases();

@@ -113,6 +113,8 @@ if (typeof WebAssembly === "undefined" || typeof WebAssembly.Suspending !== "fun
 }
 
 const actors = new Map(); // actorId -> { api, moduleUrl }
+const activatingActors = new Set();
+let lastActivationGeneration = 0n;
 const inFlightTurnActors = new Set();
 let turnSeq = 0;
 let heartbeatSabView = null;
@@ -179,17 +181,20 @@ function replyError(requestId, error, frames) {
   self.postMessage({ kind: "result", requestId, ok: false, error: (error instanceof Error ? error.message : String(error)) + detail, stack, type, framesBytes });
 }
 
-async function loadActor(actorId, moduleUrl) {
-  const existing = actors.get(actorId);
-  if (existing && existing.moduleUrl === moduleUrl) return existing;
-  const bridge = await import(/* @vite-ignore */ moduleUrl);
-  // 🧪️ terra-web-bridges: \`actorId\` now threads into \`createActorApi\` so \`🟨️host-shim.js\` can bind
-  // its \`host-async\` effect-request envelopes to the right actor — see \`pluginComponentBridgeSource\`'s
-  // own doc for why this is safe (one moduleUrl per actor ⇒ one shim module instance per actor).
-  const api = await bridge.createActorApi(actorId);
-  const entry = { api, moduleUrl, pendingAssets: [] };
-  actors.set(actorId, entry);
-  return entry;
+async function loadActor(actorId, activationGeneration, moduleUrl) {
+  if (typeof activationGeneration !== "bigint" || activationGeneration <= lastActivationGeneration || activationGeneration > 0xffffffffffffffffn) throw new Error("actor-close.invalid-activation-generation");
+  if (actors.has(actorId) || activatingActors.has(actorId)) throw new Error("actor-close.activation-already-owned");
+  lastActivationGeneration = activationGeneration;
+  activatingActors.add(actorId);
+  try {
+    const bridge = await import(/* @vite-ignore */ moduleUrl);
+    const api = await bridge.createActorApi(actorId, activationGeneration);
+    const entry = { api, moduleUrl, activationGeneration, pendingAssets: [] };
+    actors.set(actorId, entry);
+    return entry;
+  } finally {
+    activatingActors.delete(actorId);
+  }
 }
 
 // 🧪️ terra-web-bridges: settles a \`🟨️host-shim.js\` \`effectRequest\` Promise from an \`effect-complete\`/
@@ -235,6 +240,8 @@ self.addEventListener("message", async (event) => {
     return;
   }
   if (kind === "dispose") {
+    const actor = actors.get(msg.actorId);
+    if (!actor || actor.activationGeneration !== msg.activationGeneration) return;
     actors.delete(msg.actorId);
     inFlightTurnActors.delete(msg.actorId);
     grantedBudgets.delete(msg.actorId);
@@ -253,7 +260,7 @@ self.addEventListener("message", async (event) => {
   heartbeat();
   try {
     if (kind === "activate") {
-      const entry = await loadActor(actorId, msg.moduleUrl);
+      const entry = await loadActor(actorId, msg.activationGeneration, msg.moduleUrl);
       entry.pendingAssets = msg.assets ?? [];
       reply(requestId, undefined);
       return;
@@ -379,10 +386,12 @@ function normalizeCommandIngress(status) {
   return { tag, val: status.cursor };
 }
 
-export async function createActorApi(actorId) {
+export async function createActorApi(actorId, activationGeneration) {
+  if (typeof activationGeneration !== "bigint" || activationGeneration <= 0n || activationGeneration > 0xffffffffffffffffn) throw new Error("actor-close.invalid-activation-generation");
   const componentUrl = new URL("./${componentBase}.js", import.meta.url);
   const rebuildVersion = new URL(import.meta.url).searchParams.get("v");
   componentUrl.searchParams.set("actor", actorId);
+  componentUrl.searchParams.set("activation", activationGeneration.toString());
   if (rebuildVersion) componentUrl.searchParams.set("v", rebuildVersion);
   const { reactor, jobs, checkpoint, describe } = await import(componentUrl.href);
   hostShim.__bindHostBridge(actorId);

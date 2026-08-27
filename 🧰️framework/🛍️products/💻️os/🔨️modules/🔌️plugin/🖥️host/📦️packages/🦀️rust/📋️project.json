@@ -1,0 +1,11 @@
+{
+  "name": "@semio-tech/framework-plugin-host",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host",
+  "projectType": "library",
+  "tags": ["lang:rust", "role:framework", "family:os-plugin"],
+  "targets": {
+    "check": { "executor": "nx:run-commands", "options": { "command": "bun 📜️script.ts check", "cwd": "{projectRoot}", "forwardAllArgs": true } },
+    "test": { "executor": "nx:run-commands", "options": { "command": "bun 📜️script.ts test", "cwd": "{projectRoot}", "forwardAllArgs": true } }
+  }
+}

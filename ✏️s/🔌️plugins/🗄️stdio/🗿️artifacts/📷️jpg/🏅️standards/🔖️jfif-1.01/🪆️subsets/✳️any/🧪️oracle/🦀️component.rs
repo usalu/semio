@@ -40,7 +40,7 @@
 //! pass by accident. The metadata half is exact: JFIF fields and segment payload digests survive a
 //! re-encode unchanged or they are wrong.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself.
 
 use semio_repo_test_host::Json;

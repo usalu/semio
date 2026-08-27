@@ -5,6 +5,7 @@
   "description": "framework · os — composable operating system shell (CQRS, workflow, plugin registry)",
   "type": "module",
   "private": true,
+  "nx": { "includedScripts": [] },
   "exports": {
     ".": "./🟦️glue.ts",
     "./backbone-worker": "./🟦️glue.backbone-worker.ts"
@@ -14,6 +15,9 @@
     "@semio-tech/framework-replication": "workspace:*"
   },
   "scripts": {
+    "generate-wgpu": "bun nx run @semio-tech/framework-os:generate-wgpu",
+    "check-wgpu": "bun nx run @semio-tech/framework-os:check-wgpu",
+    "preview-generated": "bun nx run @semio-tech/framework-os:preview-generated",
     "test": "bun nx run @semio-tech/framework-os:test"
   },
   "devDependencies": {

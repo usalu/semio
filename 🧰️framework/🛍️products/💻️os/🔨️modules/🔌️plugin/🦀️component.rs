@@ -199,6 +199,9 @@ pub mod describe;
 #[path = "🧵️retained-command/🦀️component.rs"]
 pub mod retained_command;
 
+#[path = "🕹️interaction/🦀️component.rs"]
+pub(crate) mod local_interaction;
+
 pub mod app {
     // #region app
     //! 🧩️ Declarative app builder and plugin trait.
@@ -10109,8 +10112,9 @@ pub mod app {
                     };
                     drop(pack);
                     let typed = self.typed.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-typed-candidate"), "app-typed peer candidate was already transferred"))?;
-                    if let Err((reason, presence)) = typed.adopt(actor, presence, self.now_ms) {
-                        *self.rejected = Some(typed.retire_rejected(presence));
+                    if let Err(rejected) = typed.adopt(actor, presence, self.now_ms) {
+                        let reason = rejected.reason;
+                        *self.rejected = Some(rejected.into_retirement());
                         return Ok(self.fail(plugin_sdk_fault(reason)));
                     }
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes })
@@ -10149,7 +10153,7 @@ pub mod app {
             assert!(self.terminal_is_empty(), "returned peer candidate must rejoin its exact empty publication owner");
             *self.retirement = Some(PeerPresenceRootRetirement::new(candidate.root));
             *self.rejected = Some(Box::new(candidate.typed.into_retirement()));
-            self.fail(plugin_sdk_fault("presence store closed before peer publication"));
+            self.fail(plugin_sdk_fault("presence peer publication lost its exact live base or factory authority"));
         }
 
         fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
@@ -12396,6 +12400,19 @@ pub mod app {
         async fn tool_public_contracts(&self) -> Vec<ArtifactToolPublicContract>;
         /// 📬️ Advances at most one typed-operation store or host publication unit.
         async fn advance_typed_operation_publication(&mut self) -> Result<(), Fault>;
+        /// 🔁️ Keeps admitted work live through worker preparation, publication, ACK, and retirement.
+        fn has_pending_typed_operations(&self) -> bool;
+        /// 📖️ Captures exact current local roots into the app's single ACK-owned query slot.
+        fn begin_local_interaction_query(&mut self, request_id: u64, _query_generation: u64) -> Option<protocol::LocalInteractionQueryReply> {
+            Some(protocol::LocalInteractionQueryReply::Rejected { request_id, code: protocol::LocalInteractionQueryRejection::Closed })
+        }
+        /// 📨️ ACK and cancellation validate the full runtime-generation and frozen-root token.
+        fn acknowledge_local_interaction_query(&mut self, _token: &protocol::LocalInteractionQueryToken) -> bool { false }
+        fn cancel_local_interaction_query(&mut self, _token: &protocol::LocalInteractionQueryToken) -> bool { false }
+        /// 📤️ Drains at most one bounded page, start token, or terminal outcome.
+        fn take_local_interaction_query_reply(&mut self) -> Option<protocol::LocalInteractionQueryReply> { None }
+        /// 📬️ Transfers a reply only after fixed frame bytes and an output slot are admitted.
+        fn publish_local_interaction_query_reply(&mut self, _frames: &mut Vec<Vec<u8>>, _maximum_frames: usize) -> bool { false }
         /// 📤️ Borrows one fixed result page while its operation retains ACK authority.
         fn take_typed_operation_result_page(&mut self, receiver: u32) -> Option<TypedOperationResultPage>;
         /// 📨️ ACKs one exact receiver/operation/generation/sequence/attempt token.
@@ -16846,7 +16863,7 @@ pub mod app {
                     let Some(outcome) = session.take_checked_out_outcome() else {
                         return Ok(PluginCloseStep::Blocked { reason: "typed operation checked-out outcome changed during one mounted turn" });
                     };
-                    if matches!(outcome, semio_framework_job::StepOutcome::Cancelled) {
+                    if matches!(outcome, semio_framework_job::StepOutcome::Cancelled | semio_framework_job::StepOutcome::Fault(_)) {
                         if let Some(lease) = self.cancellation_lease.as_ref() {
                             lease.cancel();
                         }
@@ -17133,7 +17150,7 @@ pub mod app {
         interaction_state: Option<std::sync::Arc<protocol::InteractionState>>,
         interaction_hover: Option<std::sync::Arc<InteractionHoverState>>,
         peer_presence: Option<std::sync::Arc<PeerPresenceRoot>>,
-        presence_local: Option<std::sync::Arc<A::Presence>>,
+        presence_local: Option<store::SnapshotRead<A::Presence>>,
         presence_peers: Option<std::sync::Arc<store::PresencePeersRoot<A::Presence>>>,
         transient: Option<std::sync::Arc<A::Transient>>,
         contract: semio_framework::ToolExecutionContract,
@@ -17558,11 +17575,12 @@ pub mod app {
     }
 
     #[cfg(test)]
-    pub(crate) async fn test_retained_keyed_dispatch<A: ArtifactApp + Default>(registry: AppActionRegistry, command: fn(&str, i32) -> A::Command, mutation: fn(i32) -> A::Mutation, observe: fn(&A::Snapshot) -> i32) {
+    pub(crate) async fn test_retained_keyed_dispatch<A: ArtifactApp + Default>(registry: AppActionRegistry, command: fn(&str, i32) -> A::Command, mutation: fn(i32) -> A::Mutation, observe: fn(&A::Snapshot) -> i32, clock: Option<fn() -> Option<u64>>) {
         let fixture: Value = serde_json::from_str(include_str!("🧪️tool-latest-wins-integration.json")).unwrap();
         let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1)));
         for case in fixture["cases"].as_array().unwrap() {
             let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry.clone()).await;
+            app.test_tool_clock = clock;
             app.bind_instance_id(7).await;
             let meta = ActionMeta { actor: "fixture".into(), instance_id: 7 };
             let first = Box::new(command(case["firstTarget"].as_str().unwrap(), case["firstValue"].as_i64().unwrap() as i32));
@@ -17953,7 +17971,7 @@ pub mod app {
                 let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(app.store.generation_now()), 17);
                 let cancellations = app.tool_cancellations.clone();
                 let lease = cancellations.begin(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation }).unwrap();
-                let before = app.presence_store.local_root();
+                let before = app.presence_store.local_read().unwrap();
                 let mut mounted = MountedTypedCommandFullOperation::<A> {
                     verb: "setGraphParameter".into(), meta: ActionMeta { actor: "fixture".into(), instance_id: 7 }, operation, canonical_revision: revision,
                     artifact_generation: operation.generation.0, config_generation: 0, draft_generation: 0, presence_generation: 0, transient_generation: 0,
@@ -17963,7 +17981,7 @@ pub mod app {
                     result_page_presented: false, result_sequence: 0, publication_attempt: 0, ui_pending: true, stage: MountedTypedCommandFullOperationStage::Publishing,
                 };
                 if boundary != "producer" {
-                    let pending = app.presence_store.begin_publish_one(operation.operation, 0, NoPresenceMutation::Noop, Some(&TwoTurnNoPresencePreparationFactory), Some(std::sync::Arc::new(NoPresenceLocalRootRetirementFactory))).unwrap();
+                    let pending = app.presence_store.begin_publish_one(operation.operation, 0, NoPresenceMutation::Noop, Some(&TwoTurnNoPresencePreparationFactory), app.presence_local_root_retirement_factory.clone()).unwrap();
                     mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Presence(pending));
                     let target = match boundary {
                         "preparation" => store::ArtifactStoreOneItemPublicationPhase::Preparing,
@@ -17994,7 +18012,7 @@ pub mod app {
                 assert_eq!(cancelled.lane, TypedOperationResultLane::Fault);
                 assert!(std::str::from_utf8(cancelled.bytes()).unwrap().contains("cancelled"));
                 assert_eq!(serde_json::json!({ "committed": app.presence_store.generation_now() != 0 }), serde_json::json!({ "committed": case["committed"] }));
-                assert_eq!(std::sync::Arc::ptr_eq(&before, &app.presence_store.local_root()), !case["committed"].as_bool().unwrap());
+                assert_eq!(std::ptr::eq(before.get(), app.presence_store.local()), !case["committed"].as_bool().unwrap());
                 assert!(!mounted.ui_pending);
                 let token = cancelled.token;
                 assert!(mounted.acknowledge_result_page(token).unwrap());
@@ -18025,7 +18043,9 @@ pub mod app {
                 let key = ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: semio_framework_job::allocate_operation_id(), base_revision: semio_framework_job::RevisionId(3), generation: semio_framework_job::Generation(0) };
                 let lease = cancellations.begin(key.clone()).unwrap();
                 let mut presence = store::PresenceStore::<NoPresence, NoPresenceMutation>::new(NoPresence::default());
-                let mut pending = presence.begin_publish_one(key.operation_id, 0, NoPresenceMutation::Noop, Some(&TwoTurnNoPresencePreparationFactory), Some(std::sync::Arc::new(NoPresenceLocalRootRetirementFactory))).unwrap();
+                let factory: std::sync::Arc<dyn store::SnapshotRetirementFactory<NoPresence>> = std::sync::Arc::new(NoPresenceLocalRootRetirementFactory);
+                presence.install_local_retirement_factory(factory.clone()).unwrap();
+                let mut pending = presence.begin_publish_one(key.operation_id, 0, NoPresenceMutation::Noop, Some(&TwoTurnNoPresencePreparationFactory), Some(factory.clone())).unwrap();
                 for _ in 0..8 {
                     if pending.phase() == store::ArtifactStoreOneItemPublicationPhase::Publishing { break; }
                     assert!(matches!(presence.advance_publish_one(&mut pending, grant).unwrap(), store::ArtifactStoreOneItemAdvance::Progress(_)));
@@ -18051,6 +18071,9 @@ pub mod app {
                 assert!(pending.terminal_is_empty());
                 lease.finish();
                 assert_eq!(cancellations.active_operation_count(), 0);
+                let mut close = presence.begin_retirement(std::sync::Arc::new(NoPresence {}), |_| true).ok().unwrap();
+                for _ in 0..2048 { if close.close_step(1, 4096).unwrap() == store::SnapshotRetirementStep::Complete { break; } }
+                assert!(close.terminal_is_empty());
             }
         }
 
@@ -18319,7 +18342,7 @@ pub mod app {
             for id in [1, 2] {
                 let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(id), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(0), 17);
                 let lease = app.tool_cancellations.begin_keyed(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation }).unwrap();
-                let pending = if id == 2 { Some(PendingArtifactStorePublication::Presence(app.presence_store.begin_publish_one(operation.operation, 0, NoPresenceMutation::Noop, Some(&TwoTurnNoPresencePreparationFactory), Some(std::sync::Arc::new(NoPresenceLocalRootRetirementFactory))).unwrap())) } else { None };
+                let pending = if id == 2 { Some(PendingArtifactStorePublication::Presence(app.presence_store.begin_publish_one(operation.operation, 0, NoPresenceMutation::Noop, Some(&TwoTurnNoPresencePreparationFactory), app.presence_local_root_retirement_factory.clone()).unwrap())) } else { None };
                 app.tool_operations.insert_admitted(id, MountedTypedCommandFullOperation::<A> {
                     verb: "setGraphParameter".into(), meta: ActionMeta { actor: "fixture".into(), instance_id: 7 }, operation, canonical_revision: revision,
                     artifact_generation: 0, config_generation: 0, draft_generation: 0, presence_generation: 0, transient_generation: 0,
@@ -18510,12 +18533,14 @@ pub mod app {
             let canonical_revision = [3; 32];
             let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(93), semio_framework_job::RevisionId(u64::from_be_bytes([3; 8])), semio_framework_job::Generation(0), 17);
             let mut presence = store::PresenceStore::<NoPresence, NoPresenceMutation>::new(NoPresence::default());
-            let initial_root = presence.local_root();
+            let root_factory: std::sync::Arc<dyn store::SnapshotRetirementFactory<NoPresence>> = std::sync::Arc::new(NoPresenceLocalRootRetirementFactory);
+            presence.install_local_retirement_factory(root_factory.clone()).unwrap();
+            let initial_root = presence.local_read().unwrap();
             let factory = TwoTurnNoPresencePreparationFactory;
-            let mut publication = presence.begin_publish_one(operation.operation, 0, NoPresenceMutation::Noop, Some(&factory), Some(std::sync::Arc::new(NoPresenceLocalRootRetirementFactory))).expect("two-turn presence publication admits");
+            let mut publication = presence.begin_publish_one(operation.operation, 0, NoPresenceMutation::Noop, Some(&factory), Some(root_factory.clone())).expect("two-turn presence publication admits");
             let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 64 };
             assert!(matches!(presence.advance_publish_one(&mut publication, grant), Ok(store::ArtifactStoreOneItemAdvance::Progress(_))));
-            assert!(std::sync::Arc::ptr_eq(&initial_root, &presence.local_root()));
+            assert!(std::ptr::eq(initial_root.get(), presence.local()));
             assert_eq!(presence.generation_now(), 0);
 
             let changed_document_revision = [4; 32];
@@ -18527,8 +18552,12 @@ pub mod app {
                 }
             }
             assert!(publication.terminal_is_empty());
-            assert!(std::sync::Arc::ptr_eq(&initial_root, &presence.local_root()));
+            assert!(std::ptr::eq(initial_root.get(), presence.local()));
             assert_eq!(presence.generation_now(), 0);
+            drop(initial_root);
+            let mut close = presence.begin_retirement(std::sync::Arc::new(NoPresence {}), |_| true).ok().unwrap();
+            for _ in 0..2048 { if close.close_step(1, 4096).unwrap() == store::SnapshotRetirementStep::Complete { break; } }
+            assert!(close.terminal_is_empty());
         }
 
         #[test]
@@ -18758,8 +18787,8 @@ pub mod app {
                 operation,
                 generation,
                 cancel: cancel.clone(),
-                config: semio_framework_job::BatchDriveConfig { site: "artifact_envelope_decode", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 64, step_budget_ms: semio_framework_job::INTERACTIVE_LANE_WALL_MS },
-                now_ms: semio_framework_job::default_now_ms,
+                config: semio_framework_job::BatchDriveConfig { site: "artifact_envelope_decode", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 64, step_budget_us: semio_framework_job::INTERACTIVE_LANE_WALL_US },
+                now_us: semio_framework_job::default_now_us,
             };
             let (session, session_rejected) = match semio_framework_job::MountedWorkerJobSession::try_new(decode, params) {
                 Ok(session) => (Some(session), None),
@@ -19044,8 +19073,8 @@ pub mod app {
                 operation,
                 generation,
                 cancel: semio_framework_job::CancelToken::root_now(),
-                config: semio_framework_job::BatchDriveConfig { site: "artifact_store_replacement", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 64, step_budget_ms: semio_framework_job::INTERACTIVE_LANE_WALL_MS },
-                now_ms: semio_framework_job::default_now_ms,
+                config: semio_framework_job::BatchDriveConfig { site: "artifact_store_replacement", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 64, step_budget_us: semio_framework_job::INTERACTIVE_LANE_WALL_US },
+                now_us: semio_framework_job::default_now_us,
             };
             let (session, session_rejected) = match semio_framework_job::MountedWorkerJobSession::try_new(job, params) {
                 Ok(session) => (Some(session), None),
@@ -19325,6 +19354,8 @@ pub mod app {
         tool_cancellations: ToolCancellationHandle,
         live_runtime_instance_id: Option<u32>,
         tool_operations: ArtifactFixedRegistry<MountedTypedCommandFullOperation<A>>,
+        #[cfg(test)]
+        test_tool_clock: Option<fn() -> Option<u64>>,
         typed_operation_reservations: [Option<u64>; ARTIFACT_LIVE_OUTPUT_SLOTS],
         typed_publication_cursor: usize,
         typed_result_cursor: usize,
@@ -19444,6 +19475,14 @@ pub mod app {
         /// exists — see `InteractionConfigMutation`'s own doc comment for the orphan-rule reason its
         /// `Mutation` impl couldn't target `A::Config` directly either way.
         pub(crate) interaction_store: ConfigStore<protocol::InteractionState, InteractionConfigMutation>,
+        local_interaction_query: Option<crate::local_interaction::live::LocalInteractionLiveQuery<A::Snapshot, A::Config>>,
+        local_interaction_authority: crate::local_interaction::authority::LocalInteractionTopologyAuthority,
+        local_interaction_query_stage: u8,
+        local_interaction_query_turn: bool,
+        local_interaction_emitted_bytes: u128,
+        local_interaction_retired_bytes: u128,
+        config_snapshot_read_returns: SnapshotReadReturnPump,
+        interaction_snapshot_read_returns: SnapshotReadReturnPump,
         /// 🐁️ The EPHEMERAL-local half — see `InteractionHoverState`'s own doc comment. Never persisted,
         /// never undoable, mirrored into the ephemeral-shared `PresenceInteraction` broadcast
         /// (`interaction_state`) exactly like `presence_store`'s own local half.
@@ -19597,9 +19636,9 @@ pub mod app {
                     site: "plugin_framework_reserved_route",
                     stage: semio_framework_job::InteractiveStage::InteractiveStep,
                     fuel_per_step: proof.contract().max_work_units_per_step,
-                    step_budget_ms: semio_framework_job::INTERACTIVE_LANE_WALL_MS,
+                    step_budget_us: semio_framework_job::INTERACTIVE_LANE_WALL_US,
                 },
-                now_ms: semio_framework_job::default_now_ms,
+                now_us: semio_framework_job::default_now_us,
             };
             let cores = std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1);
             let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores));
@@ -19648,7 +19687,7 @@ pub mod app {
                     semio_framework_job::StepOutcome::Cancelled => 2,
                     semio_framework_job::StepOutcome::Fault(_) => 3,
                 };
-                let overrun = semio_framework_job::watchdog_step_overrun_us(operation_id, generation).is_some();
+                let overrun = session.callback_verdict().is_some_and(semio_framework_trace::CallbackVerdict::is_fault);
                 loop {
                     plugin_job_yield_once().await;
                     match outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
@@ -19852,7 +19891,7 @@ pub mod app {
                 draft_store.install_member_store_owners_exact(owners);
             }
             let mut interaction_store = ConfigStore::new(interaction_envelope).await.expect("failed to create interaction store");
-            interaction_store.install_member_store_owners_exact(bounded_config_store_owners::<protocol::InteractionState, InteractionConfigMutation>());
+            interaction_store.install_member_store_owners_exact(crate::local_interaction::retirement::interaction_store_owners());
             let genesis_mutations = A::genesis().await;
             if !genesis_mutations.is_empty() {
                 store.dispatch(ArtifactCommand::Apply { mutations: genesis_mutations, description: Some("genesis".to_string()) }).await.expect("ArtifactApp::genesis mutations must apply cleanly onto a freshly constructed store");
@@ -19915,6 +19954,9 @@ pub mod app {
                 assert!(bounded_tool_proofs.insert(tool_id, proof).is_none(), "validated bounded reducer proofs must remain unique by tool id");
             }
             let mut presence_store = store::PresenceStore::new(A::Presence::default());
+            if let Some(factory) = presence_local_root_retirement_factory.as_ref() {
+                presence_store.install_local_retirement_factory(factory.clone()).expect("presence local retirement factory installs exactly once during app construction");
+            }
             if let Some(factory) = A::build_presence_peer_retirement_factory() {
                 presence_store.install_peer_retirement_factory(factory).expect("presence peer retirement factory installs exactly once during app construction");
             }
@@ -19962,6 +20004,8 @@ pub mod app {
                 tool_cancellations: ToolCancellationHandle::default(),
                 live_runtime_instance_id: None,
                 tool_operations: ArtifactFixedRegistry::new(),
+                #[cfg(test)]
+                test_tool_clock: None,
                 typed_operation_reservations: [None; ARTIFACT_LIVE_OUTPUT_SLOTS],
                 typed_publication_cursor: 0,
                 typed_result_cursor: 0,
@@ -20047,6 +20091,14 @@ pub mod app {
                 pending_child_pins: Vec::new(),
                 composition: CompositionCoordinator::new().await,
                 interaction_store,
+                local_interaction_query: None,
+                local_interaction_authority: Default::default(),
+                local_interaction_query_stage: 0,
+                local_interaction_query_turn: false,
+                local_interaction_emitted_bytes: 0,
+                local_interaction_retired_bytes: 0,
+                config_snapshot_read_returns: SnapshotReadReturnPump::new(),
+                interaction_snapshot_read_returns: SnapshotReadReturnPump::new(),
                 interaction_hover: InteractionHoverState::new(),
                 interaction_ui_topology: HashMap::new(),
                 pending_transaction: None,
@@ -20057,6 +20109,31 @@ pub mod app {
 
         pub fn artifact_generation_now(&self) -> semio_framework_job::Generation {
             semio_framework_job::Generation(self.store.generation_now())
+        }
+
+        /// 📃️ Alternates one query unit with exact document, config, and interaction read-return pumps.
+        fn advance_local_interaction_query_one(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            if maximum_items == 0 { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+            let stage = self.local_interaction_query_stage;
+            self.local_interaction_query_stage = (stage + 1) % 4;
+            match stage {
+                0 => match self.local_interaction_query.as_mut() {
+                    None => Ok(PluginCloseStep::Complete),
+                    Some(query) => query.advance(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes }).map_err(plugin_sdk_fault).map(|step| match step {
+                        crate::local_interaction::live::LocalInteractionLiveStep::Complete => PluginCloseStep::Complete,
+                        crate::local_interaction::live::LocalInteractionLiveStep::Blocked => PluginCloseStep::Blocked { reason: "local interaction query awaits admission, ACK, or exact root return" },
+                        crate::local_interaction::live::LocalInteractionLiveStep::Advanced { emitted_bytes, retired_bytes, released_items } => {
+                            self.local_interaction_emitted_bytes += emitted_bytes as u128;
+                            self.local_interaction_retired_bytes += retired_bytes as u128;
+                            PluginCloseStep::Pending { released_items, released_bytes: retired_bytes }
+                        },
+                    }),
+                },
+                1 => self.document_snapshot_read_returns.drive(|| self.store.take_returned_snapshot_read_retirement().map_err(|error| error.into_fault()), 1, maximum_bytes),
+                2 => self.config_snapshot_read_returns.drive(|| self.config_store.take_returned_snapshot_read_retirement().map_err(|error| error.into_fault()), 1, maximum_bytes),
+                3 => self.interaction_snapshot_read_returns.drive(|| self.interaction_store.take_returned_snapshot_read_retirement().map_err(|error| error.into_fault()), 1, maximum_bytes),
+                _ => unreachable!("four fixed query ownership stages"),
+            }
         }
 
         /// 🎟️ Pre-admits the exact page and byte extent before a producer constructs any
@@ -21918,6 +21995,7 @@ pub mod app {
                         if let Some(domain_id) = props.interaction_domain.clone() {
                             let granularity = self.registry.interaction(domain_id.as_str()).await.and_then(|def| def.granularities.first()).map(|granularity| granularity.id.clone()).unwrap_or_default();
                             let topology = ui_tree_domain_topology(&frame.node.children, &granularity).await?;
+                            self.local_interaction_authority.before_cache_mutation().map_err(ui_assembly_error)?;
                             self.interaction_ui_topology.insert(domain_id.to_string(), topology);
                             frame.domain = Some(domain_id);
                         }
@@ -22122,9 +22200,9 @@ pub mod app {
                     site: "plugin_media_export_submission",
                     stage: semio_framework_job::InteractiveStage::InteractiveStep,
                     fuel_per_step: proof.contract().max_work_units_per_step,
-                    step_budget_ms: semio_framework_job::INTERACTIVE_LANE_WALL_MS,
+                    step_budget_us: semio_framework_job::INTERACTIVE_LANE_WALL_US,
                 },
-                now_ms: semio_framework_job::default_now_ms,
+                now_us: semio_framework_job::default_now_us,
             };
             let (session, session_rejected) = match semio_framework_job::MountedWorkerJobSession::try_new(dispatch.job, params) {
                 Ok(session) => (Some(session), None),
@@ -22167,7 +22245,7 @@ pub mod app {
             let pool =
                 semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1)));
             #[cfg(target_arch = "wasm32")]
-            pool.pump(semio_framework_job::default_now_ms());
+            if let Some(now_ms) = semio_framework_job::default_now_ms() { pool.pump(now_ms); }
             if active.retained_outcome.is_none() {
                 if let Some(rejected) = active.session_rejected.as_mut() {
                     let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
@@ -22195,9 +22273,6 @@ pub mod app {
             let Some(outcome) = active.retained_outcome.take() else {
                 return self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Failed("media export mounted outcome changed during one host turn".into()));
             };
-            if let Some(elapsed_us) = semio_framework_job::watchdog_step_overrun_us(active.operation.operation, active.operation.generation) {
-                return self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Failed(format!("media export exceeded the 8 ms step ceiling ({elapsed_us} µs)")));
-            }
             match outcome {
                 outcome @ (semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::PreviewReady(_)) => {
                     active.retained_outcome = Some(outcome);
@@ -23162,7 +23237,6 @@ pub mod app {
             let interaction_hover = self.interaction_hover.clone();
             let (snapshot, config, history) = self.command_cache_inputs();
             let children = std::sync::Arc::new(ChildContentView::clone(&self.child_content_root));
-            let presence_local = self.presence_store.local_root();
             let presence_peers = self.presence_store.peers_root();
             let transient = self.transient_store.current_root();
             let peer_presence = std::sync::Arc::clone(&self.peer_presence);
@@ -23214,7 +23288,7 @@ pub mod app {
                         interaction_state: Some(interaction_state),
                         interaction_hover: Some(std::sync::Arc::new(interaction_hover)),
                         peer_presence: Some(peer_presence),
-                        presence_local: Some(presence_local),
+                        presence_local: Some(self.presence_store.local_read().map_err(Fault::from)?),
                         presence_peers: Some(presence_peers),
                         transient: Some(transient),
                         contract: admission.proof.contract(),
@@ -23282,10 +23356,12 @@ pub mod app {
                     site: "plugin_app_tool_command",
                     stage: semio_framework_job::InteractiveStage::InteractiveStep,
                     fuel_per_step: admission.proof.contract().max_work_units_per_step,
-                    step_budget_ms: u64::from(admission.proof.contract().max_step_micros) / 1_000,
+                    step_budget_us: u64::from(admission.proof.contract().max_step_micros),
                 },
-                now_ms: semio_framework_job::default_now_ms,
+                now_us: semio_framework_job::default_now_us,
             };
+            #[cfg(test)]
+            let params = semio_framework_job::BatchJobParams { now_us: self.test_tool_clock.unwrap_or(params.now_us), ..params };
             let pool =
                 semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1)));
             let (session, session_rejected) = match semio_framework_job::MountedWorkerJobSession::try_new(dispatch.job, params) {
@@ -23719,6 +23795,9 @@ pub mod app {
                 && self.composition.terminal_is_empty()
                 && self.interaction_hover.is_empty()
                 && self.interaction_ui_topology.is_empty()
+                && self.local_interaction_query.is_none()
+                && self.config_snapshot_read_returns.terminal_is_empty()
+                && self.interaction_snapshot_read_returns.terminal_is_empty()
                 && self.pending_transaction.is_none()
                 && self.pending_transaction_proposal.is_none()
                 && self.pending_presence.is_empty()
@@ -23759,8 +23838,22 @@ pub mod app {
             if !self.close_started {
                 self.tool_cancellations.cancel_scope_generation();
                 self.peer_roster_scope.cancel_now();
+                self.local_interaction_authority.close();
+                if let Some(query) = self.local_interaction_query.as_mut() { query.begin_close(); }
                 self.close_started = true;
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if self.local_interaction_query.is_some() {
+                let step = self.advance_local_interaction_query_one(maximum_items, maximum_bytes)?;
+                drop(self.take_local_interaction_query_reply());
+                return Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 0, released_bytes: 0 } } else { step });
+            }
+            if !self.presence_store.retirement_started() && !self.presence_store.local_read_maintenance_is_idle() {
+                return self.presence_store.maintenance_local_reads_step(1, maximum_bytes).map_err(Fault::from).map(|step| match step {
+                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                    store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "presence returned local owner is held during app close" },
+                    store::SnapshotRetirementStep::Complete => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
+                });
             }
             if let Some(instance_id) = self.live_runtime_instance_id {
                 let mounted = A::mounted_job_close_step(instance_id, maximum_items.min(1), maximum_bytes)?;
@@ -24301,13 +24394,14 @@ pub mod app {
                 && self.envelope_completed_records.terminal_is_empty()
                 && self.document_snapshot_read_returns.terminal_is_empty()
                 && self.store.maintenance_retirements_terminal_is_empty()
+                && self.presence_store.local_read_maintenance_is_idle()
             {
                 let pump = &mut self.document_snapshot_read_returns;
                 let store = &mut self.store;
                 return pump.drive(|| store.take_returned_snapshot_read_retirement().map_err(|error| error.into_fault()), maximum_items, maximum_bytes);
             }
             let stage = self.maintenance_stage;
-            self.maintenance_stage = (self.maintenance_stage + 1) % 19;
+            self.maintenance_stage = (self.maintenance_stage + 1) % 20;
             match stage {
                 0 => {
                     let Some((index, operation_id)) = self.tool_operations.next_id_from(self.maintenance_tool_cursor) else {
@@ -24660,6 +24754,11 @@ pub mod app {
                     self.maintenance_cancellation_cursor = (self.maintenance_cancellation_cursor + 1) % (TOOL_CANCELLATION_SLOTS + ARTIFACT_LIVE_OUTPUT_SLOTS);
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
+                19 => self.presence_store.maintenance_local_reads_step(maximum_items.min(1), maximum_bytes).map_err(Fault::from).map(|step| match step {
+                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                    store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "presence local returned owner is held" },
+                    store::SnapshotRetirementStep::Complete => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
+                }),
                 _ => unreachable!("fixed maintenance stage"),
             }
         }
@@ -24700,7 +24799,71 @@ pub mod app {
         }
 
         async fn advance_typed_operation_publication(&mut self) -> Result<(), Fault> {
+            if self.local_interaction_query.as_ref().is_some_and(|query| query.has_pending_work()) {
+                self.local_interaction_query_turn = !self.local_interaction_query_turn;
+                if self.local_interaction_query_turn {
+                    self.advance_local_interaction_query_one(1, TYPED_OPERATION_RESULT_PAGE_BYTES)?;
+                    return Ok(());
+                }
+            }
             self.advance_typed_operation_publication_one().await
+        }
+
+        fn has_pending_typed_operations(&self) -> bool {
+            !self.tool_operations.is_empty() || !self.latest_wins_commands.is_empty() || self.typed_effect_outbox.len() != 0 || self.typed_event_outbox.len() != 0 || self.typed_ui_outbox.len() != 0 || self.local_interaction_query.as_ref().is_some_and(|query| query.has_pending_work())
+        }
+
+        fn begin_local_interaction_query(&mut self, request_id: u64, query_generation: u64) -> Option<protocol::LocalInteractionQueryReply> {
+            if self.close_started || self.live_runtime_instance_id.is_none() {
+                return Some(protocol::LocalInteractionQueryReply::Rejected { request_id, code: protocol::LocalInteractionQueryRejection::Closed });
+            }
+            if self.local_interaction_query.is_some() {
+                return Some(protocol::LocalInteractionQueryReply::Rejected { request_id, code: protocol::LocalInteractionQueryRejection::Busy });
+            }
+            let document_revision = self.store.content_revision_now();
+            let config_revision = self.config_store.content_revision_now();
+            let topology_revision = match self.local_interaction_authority.revision(document_revision, config_revision) {
+                Ok(revision) => revision,
+                Err(_) => return Some(protocol::LocalInteractionQueryReply::Rejected { request_id, code: protocol::LocalInteractionQueryRejection::Closed }),
+            };
+            let identity = protocol::LocalInteractionIdentity { app_instance_id: self.live_runtime_instance_id.expect("live instance checked"), generation: self.interaction_store.generation_now(), revision: self.interaction_store.content_revision_now(), document_revision, topology_revision };
+            self.local_interaction_query = Some(crate::local_interaction::live::LocalInteractionLiveQuery::new(request_id, query_generation, identity, self.store.snapshot_read().ok(), self.store.generation_now(), self.config_store.snapshot_read().ok(), self.config_store.generation_now(), config_revision, self.interaction_store.snapshot_read().ok()));
+            self.local_interaction_query_stage = 0;
+            self.local_interaction_emitted_bytes = 0;
+            self.local_interaction_retired_bytes = 0;
+            None
+        }
+
+        fn acknowledge_local_interaction_query(&mut self, token: &protocol::LocalInteractionQueryToken) -> bool {
+            self.local_interaction_query.as_mut().is_some_and(|query| query.acknowledge(token))
+        }
+
+        fn cancel_local_interaction_query(&mut self, token: &protocol::LocalInteractionQueryToken) -> bool {
+            self.local_interaction_query.as_mut().is_some_and(|query| query.cancel_authorized(token))
+        }
+
+        fn take_local_interaction_query_reply(&mut self) -> Option<protocol::LocalInteractionQueryReply> {
+            let query = self.local_interaction_query.as_mut()?;
+            if query.is_closing() && (!self.document_snapshot_read_returns.terminal_is_empty() || !self.config_snapshot_read_returns.terminal_is_empty() || !self.interaction_snapshot_read_returns.terminal_is_empty()) { return None; }
+            let reply = query.take_reply();
+            if query.terminal_is_empty() { self.local_interaction_query = None; }
+            reply
+        }
+
+        fn publish_local_interaction_query_reply(&mut self, frames: &mut Vec<Vec<u8>>, maximum_frames: usize) -> bool {
+            let Some(query) = self.local_interaction_query.as_mut() else { return false; };
+            if !query.reply_ready() || frames.len() >= maximum_frames { return false; }
+            if query.is_closing() && (!self.document_snapshot_read_returns.terminal_is_empty() || !self.config_snapshot_read_returns.terminal_is_empty() || !self.interaction_snapshot_read_returns.terminal_is_empty()) { return false; }
+            let mut encoded = Vec::new();
+            if frames.try_reserve_exact(1).is_err() || encoded.try_reserve_exact(512).is_err() { return false; }
+            let mut encoded = Some(encoded);
+            let delivered = query.take_reply_admitted(|reply| {
+                if protocol::encode_local_interaction_query_frame_into(reply, encoded.as_mut().expect("one admitted reply buffer")).is_err() { return false; }
+                frames.push(encoded.take().expect("one admitted reply buffer"));
+                true
+            }).is_some();
+            if query.terminal_is_empty() { self.local_interaction_query = None; }
+            delivered
         }
 
         fn take_typed_operation_result_page(&mut self, receiver: u32) -> Option<TypedOperationResultPage> {
@@ -25033,7 +25196,7 @@ pub mod app {
                 protocol::encode_presence_interaction(&interaction, &mut bytes).await;
                 bytes
             };
-            EphemeralSnapshot { presence: self.presence_store.local().await.encode_pack(), presence_generation: self.presence_store.generation().await, transient_generation: self.transient_store.generation().await, interaction: interaction_bytes }
+            EphemeralSnapshot { presence: self.presence_store.local().encode_pack(), presence_generation: self.presence_store.generation().await, transient_generation: self.transient_store.generation().await, interaction: interaction_bytes }
         }
 
         fn reserve_presence_ingress(&mut self, seq: u64) -> Result<PresenceRosterAdmission, Fault> {
@@ -28502,6 +28665,10 @@ pub mod plugin_runtime {
         maintenance_status: AtomicU8,
         maintenance_generation: AtomicU64,
         maintenance_stalled_steps: AtomicU32,
+        #[cfg(target_arch = "wasm32")]
+        maintenance_probe_turns: AtomicU64,
+        #[cfg(target_arch = "wasm32")]
+        maintenance_probe_entries: AtomicU64,
     }
 
     impl<PA: PluginApp> RuntimeAppCell<PA> {
@@ -28513,6 +28680,10 @@ pub mod plugin_runtime {
                 maintenance_status: AtomicU8::new(RUNTIME_MAINTENANCE_READY),
                 maintenance_generation: AtomicU64::new(0),
                 maintenance_stalled_steps: AtomicU32::new(0),
+                #[cfg(target_arch = "wasm32")]
+                maintenance_probe_turns: AtomicU64::new(0),
+                #[cfg(target_arch = "wasm32")]
+                maintenance_probe_entries: AtomicU64::new(0),
             }
         }
     }
@@ -28539,11 +28710,24 @@ pub mod plugin_runtime {
         stalled_steps: AtomicU8,
         preview_sequence: AtomicU64,
         last_callback_elapsed_us: AtomicU64,
+        #[cfg(test)]
+        last_fault: std::sync::Mutex<[u8; 256]>,
+        #[cfg(test)]
+        last_fault_origin: AtomicU8,
+        #[cfg(test)]
+        callback_phase_started_us: AtomicU64,
+        #[cfg(test)]
+        callback_phase_us: [AtomicU64; 24],
     }
 
     struct RuntimeCloseEntry<PA: PluginApp> {
         state: std::sync::Arc<RuntimeCloseWorkerState<PA>>,
     }
+
+    mod instance_lifetime {
+        include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🚪️lifetime/🦀️component.rs"));
+    }
+    pub use instance_lifetime::{plugin_capture_instance_close, PluginInstanceCloseLease};
 
     const PLUGIN_RUNTIME_INSTANCE_SLOTS: usize = 1_024;
     const PLUGIN_RUNTIME_INSTANCE_WORDS: usize = PLUGIN_RUNTIME_INSTANCE_SLOTS / u64::BITS as usize;
@@ -28669,6 +28853,21 @@ pub mod plugin_runtime {
             self.entry(index).map(|(instance_id, value)| (*instance_id, value))
         }
 
+        fn next_entry_from(&self, start: usize) -> Option<(usize, u32, &T)> {
+            let start = start % PLUGIN_RUNTIME_INSTANCE_SLOTS;
+            let word = start / u64::BITS as usize;
+            let bit = start % u64::BITS as usize;
+            for offset in 0..=PLUGIN_RUNTIME_INSTANCE_WORDS {
+                let index = (word + offset) % PLUGIN_RUNTIME_INSTANCE_WORDS;
+                let mask = if offset == 0 { u64::MAX << bit } else if offset == PLUGIN_RUNTIME_INSTANCE_WORDS { (1u64 << bit) - 1 } else { u64::MAX };
+                let occupied = self.occupied[index] & mask;
+                if occupied == 0 { continue; }
+                let slot = index * u64::BITS as usize + occupied.trailing_zeros() as usize;
+                return self.entry_at(slot).map(|(id, value)| (slot, id, value));
+            }
+            None
+        }
+
         fn is_empty(&self) -> bool {
             self.occupied.iter().all(|word| *word == 0)
         }
@@ -28681,6 +28880,22 @@ pub mod plugin_runtime {
     #[cfg(test)]
     mod runtime_instance_registry_tests {
         use super::*;
+
+        #[test]
+        fn sparse_live_instances_receive_successive_round_robin_turns() {
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("⚛️reactor/🧪️fixtures/📬️operation-continuation.json")).unwrap();
+            let mut registry = RuntimeInstanceRegistry::new();
+            for id in fixture["instances"].as_array().unwrap() { registry.insert_admitted(id.as_u64().unwrap() as u32, ()); }
+            let mut cursor = 0;
+            let actual: Vec<_> = fixture["roundRobin"].as_array().unwrap().iter().map(|_| {
+                let (index, id, _) = registry.next_entry_from(cursor).expect("next occupied instance");
+                cursor = index + 1;
+                id
+            }).collect();
+            assert_eq!(serde_json::to_value(actual).unwrap(), fixture["roundRobin"]);
+            for id in fixture["instances"].as_array().unwrap() { registry.take(id.as_u64().unwrap() as u32); }
+            assert!(registry.next_entry_from(cursor).is_none());
+        }
 
         #[test]
         fn runtime_instance_registry_has_fixed_capacity_collision_and_reuse() {
@@ -28767,7 +28982,9 @@ pub mod plugin_runtime {
         close_quarantine: RefCell<RuntimeInstanceRegistry<RuntimeCloseEntry<PA>>>,
         close_cleanup_cursor: std::cell::Cell<usize>,
         live_cleanup_cursor: std::cell::Cell<usize>,
+        typed_continuation_cursor: std::cell::Cell<usize>,
         close_generation: std::cell::Cell<u64>,
+        local_interaction_query_generation: crate::local_interaction::live::LocalInteractionQueryGeneration,
         instance_actors: RefCell<RuntimeInstanceRegistry<RuntimeActorAuthority>>,
     }
 
@@ -28781,7 +28998,9 @@ pub mod plugin_runtime {
                 close_quarantine: RefCell::new(RuntimeInstanceRegistry::new()),
                 close_cleanup_cursor: std::cell::Cell::new(0),
                 live_cleanup_cursor: std::cell::Cell::new(0),
+                typed_continuation_cursor: std::cell::Cell::new(0),
                 close_generation: std::cell::Cell::new(0),
+                local_interaction_query_generation: Default::default(),
                 instance_actors: RefCell::new(RuntimeInstanceRegistry::new()),
             }
         }
@@ -29283,8 +29502,7 @@ pub mod plugin_runtime {
 
     const RUNTIME_CLOSE_ITEMS_PER_STEP: usize = 1;
     const RUNTIME_CLOSE_BYTES_PER_STEP: usize = 4_096;
-    const RUNTIME_CLOSE_INNER_GRANT_MS: u64 = 2;
-    const RUNTIME_CLOSE_CALLBACK_WALL_US: u64 = 8_000;
+    const RUNTIME_CLOSE_INNER_GRANT_US: u64 = 2_000;
     const RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT: u8 = 8;
 
     struct RuntimeLiveCleanupPump<PA: PluginApp> {
@@ -29369,6 +29587,8 @@ pub mod plugin_runtime {
     impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeLiveCleanupJob<PA> {
         fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
             cx.set_stage("plugin-runtime-live-cleanup");
+            self.progress = None;
+            self.contended = false;
             if cx.is_cancelled() {
                 return semio_framework_job::StepOutcome::Cancelled;
             }
@@ -29451,16 +29671,20 @@ pub mod plugin_runtime {
     }
 
     fn run_runtime_live_cleanup_turn<PA: PluginApp + 'static>(cell: &std::sync::Arc<RuntimeAppCell<PA>>, generation: semio_framework_job::Generation) {
-        let started = std::time::Instant::now();
+        let mut now_us = semio_framework_job::default_now_us;
+        let clock = runtime_callback_clock_begin(&mut now_us);
         if cell.maintenance_status.compare_exchange(RUNTIME_MAINTENANCE_QUEUED, RUNTIME_MAINTENANCE_RUNNING, Ordering::SeqCst, Ordering::SeqCst).is_err() {
             return;
         }
+        #[cfg(target_arch = "wasm32")]
+        cell.maintenance_probe_entries.store(cell.maintenance_probe_entries.load(Ordering::Relaxed).saturating_add(1), Ordering::Relaxed);
+        let Ok(clock) = clock else { cell.maintenance_status.store(RUNTIME_MAINTENANCE_FAULT, Ordering::SeqCst); return };
         let status = match cell.maintenance_pump.try_lock() {
             Ok(mut pump) => runtime_live_cleanup_pump_one(cell, generation, &mut pump),
             Err(_) => RUNTIME_MAINTENANCE_READY,
         };
-        let elapsed_us = started.elapsed().as_micros().min(u64::MAX as u128) as u64;
-        cell.maintenance_status.store(if elapsed_us > RUNTIME_CLOSE_CALLBACK_WALL_US { RUNTIME_MAINTENANCE_FAULT } else { status }, Ordering::SeqCst);
+        let elapsed = runtime_callback_clock_elapsed(&mut now_us, clock);
+        cell.maintenance_status.store(if elapsed.is_err() || elapsed.is_ok_and(semio_framework_trace::interactive_step_contract_violated) { RUNTIME_MAINTENANCE_FAULT } else { status }, Ordering::SeqCst);
     }
 
     fn runtime_live_cleanup_pump_one<PA: PluginApp + 'static>(cell: &std::sync::Arc<RuntimeAppCell<PA>>, generation: semio_framework_job::Generation, pump: &mut RuntimeLiveCleanupPump<PA>) -> u8 {
@@ -29511,8 +29735,8 @@ pub mod plugin_runtime {
                 operation: semio_framework_job::OperationId((1u64 << 62) | cell.id as u64),
                 generation,
                 cancel: semio_framework_job::CancelToken::root_now(),
-                config: semio_framework_job::BatchDriveConfig { site: "plugin_runtime_live_cleanup", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: RUNTIME_CLOSE_INNER_GRANT_MS },
-                now_ms: semio_framework_job::default_now_ms,
+                config: semio_framework_job::BatchDriveConfig { site: "plugin_runtime_live_cleanup", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: RUNTIME_CLOSE_INNER_GRANT_US },
+                now_us: semio_framework_job::default_now_us,
             };
             match semio_framework_job::BatchJobSession::try_new(job, params) {
                 Ok(session) => pump.session = Some(session),
@@ -29526,6 +29750,7 @@ pub mod plugin_runtime {
         if session.step().is_err() {
             return RUNTIME_MAINTENANCE_FAULT;
         }
+        if !session.checkout_outcome() { return RUNTIME_MAINTENANCE_FAULT; }
         let Some(job) = session.checked_out_job_mut() else { return RUNTIME_MAINTENANCE_FAULT };
         pump.pending_status = runtime_live_cleanup_nonterminal_status(job.contended, job.progress, &cell.maintenance_stalled_steps);
         let Some(outcome) = session.take_outcome() else { return RUNTIME_MAINTENANCE_FAULT };
@@ -29546,13 +29771,17 @@ pub mod plugin_runtime {
 
     impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeCloseCleanupJob<PA> {
         fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
-            cx.set_stage("plugin-runtime-close-cleanup");
-            if cx.is_cancelled() {
-                return semio_framework_job::StepOutcome::Cancelled;
-            }
             let Some(state) = self.state.as_ref().and_then(std::sync::Weak::upgrade) else {
                 return semio_framework_job::StepOutcome::Cancelled;
             };
+            runtime_close_phase(&state, 8);
+            cx.set_stage("plugin-runtime-close-cleanup");
+            runtime_close_phase(&state, 9);
+            self.progress = None;
+            self.contended = false;
+            if cx.is_cancelled() {
+                return semio_framework_job::StepOutcome::Cancelled;
+            }
             let cell = {
                 let cell = match state.cell.try_lock() {
                     Ok(cell) => cell,
@@ -29584,7 +29813,14 @@ pub mod plugin_runtime {
                         return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin maintenance session authority is poisoned") });
                     }
                 };
-                let _ = maintenance.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                runtime_close_phase(&state, 10);
+                let progress = maintenance.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                runtime_close_phase(&state, 11);
+                match progress {
+                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => self.progress = Some(crate::app::PluginCloseStep::Pending { released_items, released_bytes }),
+                    semio_framework_job::InteractiveJobCloseStep::Blocked => self.contended = true,
+                    semio_framework_job::InteractiveJobCloseStep::Complete => {}
+                }
                 if !maintenance.terminal_is_empty() {
                     cx.consume_fuel(1);
                     return semio_framework_job::StepOutcome::Yield;
@@ -29601,7 +29837,10 @@ pub mod plugin_runtime {
                 }
             };
             cx.consume_fuel(1);
-            match instance.app.close_step(RUNTIME_CLOSE_ITEMS_PER_STEP, RUNTIME_CLOSE_BYTES_PER_STEP) {
+            runtime_close_phase(&state, 12);
+            let progress = instance.app.close_step(RUNTIME_CLOSE_ITEMS_PER_STEP, RUNTIME_CLOSE_BYTES_PER_STEP);
+            runtime_close_phase(&state, 13);
+            let outcome = match progress {
                 Ok(progress @ crate::app::PluginCloseStep::Pending { released_items, released_bytes }) if released_items <= RUNTIME_CLOSE_ITEMS_PER_STEP && released_bytes <= RUNTIME_CLOSE_BYTES_PER_STEP => {
                     self.progress = Some(progress);
                     semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint {
@@ -29629,7 +29868,9 @@ pub mod plugin_runtime {
                     })
                 }
                 Err(error) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, error.message.as_bytes()) }),
-            }
+            };
+            runtime_close_phase(&state, 14);
+            outcome
         }
 
         fn begin_close(&mut self) {
@@ -29676,108 +29917,138 @@ pub mod plugin_runtime {
         }
     }
 
-    fn run_runtime_close_turn_inner<PA: PluginApp + 'static>(state: &std::sync::Arc<RuntimeCloseWorkerState<PA>>) {
+    fn run_runtime_close_turn_inner<PA: PluginApp + 'static>(state: &std::sync::Arc<RuntimeCloseWorkerState<PA>>) -> Option<u8> {
         if state.status.compare_exchange(RUNTIME_CLOSE_QUEUED, RUNTIME_CLOSE_RUNNING, Ordering::SeqCst, Ordering::SeqCst).is_err() {
-            return;
+            return None;
+        }
+        #[cfg(test)]
+        {
+            state.callback_phase_started_us.store(semio_framework_job::default_now_us().unwrap_or(0), Ordering::SeqCst);
+            for elapsed in &state.callback_phase_us { elapsed.store(0, Ordering::SeqCst); }
         }
         let status = match state.pump.try_lock() {
-            Ok(mut pump) => runtime_close_cleanup_pump_one(state, &mut pump),
+            Ok(mut pump) => {
+                let status = runtime_close_cleanup_pump_one(state, &mut pump);
+                runtime_close_phase(state, 20);
+                drop(pump);
+                runtime_close_phase(state, 21);
+                status
+            }
             Err(_) => RUNTIME_CLOSE_READY,
         };
-        match status {
-            RUNTIME_CLOSE_COMPLETE => {
-                let detached = match state.cell.try_lock() {
-                    Ok(mut cell) => cell.take(),
-                    Err(_) => {
-                        state.status.store(RUNTIME_CLOSE_READY, Ordering::SeqCst);
-                        return;
-                    }
-                };
-                let Some(detached) = detached else {
-                    state.status.store(RUNTIME_CLOSE_COMPLETE, Ordering::SeqCst);
-                    return;
-                };
-                let cell = match std::sync::Arc::try_unwrap(detached) {
-                    Ok(cell) => cell,
-                    Err(detached) => {
-                        match state.cell.try_lock() {
-                            Ok(mut owner) => **owner = Some(detached),
-                            Err(std::sync::TryLockError::Poisoned(error)) => **error.into_inner() = Some(detached),
-                            Err(std::sync::TryLockError::WouldBlock) => {
-                                std::mem::forget(detached);
-                                state.status.store(RUNTIME_CLOSE_FAULT, Ordering::SeqCst);
-                                return;
-                            }
-                        }
-                        state.status.store(RUNTIME_CLOSE_EXTERNAL_WAIT, Ordering::SeqCst);
-                        return;
-                    }
-                };
-                let instance = cell.instance.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner);
-                if !instance.app.close_terminal_is_empty() {
-                    std::mem::forget(instance);
-                    state.status.store(RUNTIME_CLOSE_FAULT, Ordering::SeqCst);
-                    return;
-                }
-                drop(instance);
-                state.status.store(RUNTIME_CLOSE_COMPLETE, Ordering::SeqCst);
-            }
-            status => state.status.store(status, Ordering::SeqCst),
+        runtime_close_phase(state, 6);
+        let candidate = if status == RUNTIME_CLOSE_COMPLETE { runtime_close_retire_cell(state) } else { status };
+        runtime_close_phase(state, 7);
+        Some(candidate)
+    }
+
+    fn runtime_close_retire_cell<PA: PluginApp>(state: &RuntimeCloseWorkerState<PA>) -> u8 {
+        let mut owner = match state.cell.try_lock() {
+            Ok(owner) => owner,
+            Err(std::sync::TryLockError::WouldBlock) => return RUNTIME_CLOSE_READY,
+            Err(std::sync::TryLockError::Poisoned(_)) => return runtime_close_fault(state, 3),
+        };
+        let Some(cell) = owner.as_ref() else { return RUNTIME_CLOSE_COMPLETE };
+        {
+            let instance = match cell.instance.try_lock() {
+                Ok(instance) => instance,
+                Err(std::sync::TryLockError::WouldBlock) => return RUNTIME_CLOSE_READY,
+                Err(std::sync::TryLockError::Poisoned(_)) => return runtime_close_fault(state, 2),
+            };
+            if !instance.app.close_terminal_is_empty() { return runtime_close_fault(state, 2); }
+            let maintenance = match cell.maintenance_pump.try_lock() {
+                Ok(maintenance) => maintenance,
+                Err(std::sync::TryLockError::WouldBlock) => return RUNTIME_CLOSE_READY,
+                Err(std::sync::TryLockError::Poisoned(_)) => return runtime_close_fault(state, 13),
+            };
+            if !maintenance.terminal_is_empty() { return runtime_close_fault(state, 13); }
+        }
+        let detached = owner.take().expect("captured owner remains under the same guard");
+        match std::sync::Arc::try_unwrap(detached) {
+            Ok(cell) => { drop(cell); RUNTIME_CLOSE_COMPLETE }
+            Err(detached) => { **owner = Some(detached); RUNTIME_CLOSE_EXTERNAL_WAIT }
         }
     }
 
+    fn runtime_close_fault<PA: PluginApp>(state: &RuntimeCloseWorkerState<PA>, origin: u8) -> u8 {
+        #[cfg(test)]
+        state.last_fault_origin.store(origin, Ordering::SeqCst);
+        #[cfg(not(test))]
+        let _ = (state, origin);
+        RUNTIME_CLOSE_FAULT
+    }
+
+    fn runtime_close_phase<PA: PluginApp>(state: &RuntimeCloseWorkerState<PA>, phase: usize) {
+        #[cfg(test)]
+        if let Some(now) = semio_framework_job::default_now_us() {
+            state.callback_phase_us[phase].store(now.saturating_sub(state.callback_phase_started_us.load(Ordering::SeqCst)), Ordering::SeqCst);
+        }
+        #[cfg(not(test))]
+        let _ = (state, phase);
+    }
+
     fn runtime_close_cleanup_pump_one<PA: PluginApp + 'static>(state: &std::sync::Arc<RuntimeCloseWorkerState<PA>>, pump: &mut RuntimeCloseCleanupPump<PA>) -> u8 {
+        runtime_close_phase(state, 0);
         if let Some(rejected) = pump.rejected.as_mut() {
             let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            runtime_close_phase(state, 5);
             if rejected.terminal_is_empty() {
                 pump.rejected = None;
-                return RUNTIME_CLOSE_FAULT;
+                return runtime_close_fault(state, 4);
             }
             return RUNTIME_CLOSE_READY;
         }
         if let Some(outcome) = pump.outcome.as_mut() {
             let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-            if !outcome.terminal_is_empty() {
+            runtime_close_phase(state, 5);
+            runtime_close_phase(state, 15);
+            let terminal = outcome.terminal_is_empty();
+            runtime_close_phase(state, 16);
+            if !terminal {
                 return RUNTIME_CLOSE_READY;
             }
             pump.outcome = None;
+            runtime_close_phase(state, 17);
             if pump.terminal {
                 if let Some(session) = pump.session.as_mut() {
                     session.begin_close();
                 }
-            } else if pump.session.as_mut().is_some_and(|session| session.resume().is_err()) {
-                return RUNTIME_CLOSE_FAULT;
             } else {
-                return pump.pending_status;
+                runtime_close_phase(state, 18);
+                let failed = pump.session.as_mut().is_some_and(|session| session.resume().is_err());
+                runtime_close_phase(state, 19);
+                return if failed { runtime_close_fault(state, 5) } else { pump.pending_status };
             }
         }
         if pump.terminal {
-            let Some(session) = pump.session.as_mut() else { return RUNTIME_CLOSE_FAULT };
+            let Some(session) = pump.session.as_mut() else { return runtime_close_fault(state, 6) };
             let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            runtime_close_phase(state, 5);
             if !session.terminal_is_empty() {
                 return RUNTIME_CLOSE_READY;
             }
             pump.session = None;
             pump.terminal = false;
-            if pump.complete {
-                return RUNTIME_CLOSE_COMPLETE;
+            if pump.faulted {
+                return runtime_close_fault(state, 10);
             }
             if pump.blocked {
                 return RUNTIME_CLOSE_EXTERNAL_WAIT;
             }
-            if pump.faulted {
-                return RUNTIME_CLOSE_FAULT;
+            if pump.complete {
+                return RUNTIME_CLOSE_COMPLETE;
             }
             return pump.pending_status;
         }
         if pump.session.is_none() {
+            runtime_close_phase(state, 1);
             let job = RuntimeCloseCleanupJob { instance_id: state.instance_id, state: Some(std::sync::Arc::downgrade(state)), progress: None, contended: false, closing: false };
             let params = semio_framework_job::BatchJobParams {
                 operation: semio_framework_job::OperationId((1u64 << 63) | state.instance_id as u64),
                 generation: state.generation,
                 cancel: semio_framework_job::CancelToken::root_now(),
-                config: semio_framework_job::BatchDriveConfig { site: "plugin_runtime_close_cleanup", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: RUNTIME_CLOSE_INNER_GRANT_MS },
-                now_ms: semio_framework_job::default_now_ms,
+                config: semio_framework_job::BatchDriveConfig { site: "plugin_runtime_close_cleanup", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: RUNTIME_CLOSE_INNER_GRANT_US },
+                now_us: semio_framework_job::default_now_us,
             };
             match semio_framework_job::BatchJobSession::try_new(job, params) {
                 Ok(session) => pump.session = Some(session),
@@ -29786,19 +30057,35 @@ pub mod plugin_runtime {
                     return RUNTIME_CLOSE_READY;
                 }
             }
+            runtime_close_phase(state, 2);
         }
-        let Some(session) = pump.session.as_mut() else { return RUNTIME_CLOSE_FAULT };
-        if session.step().is_err() {
-            return RUNTIME_CLOSE_FAULT;
+        let Some(session) = pump.session.as_mut() else { return runtime_close_fault(state, 6) };
+        runtime_close_phase(state, 22);
+        let stepped = session.step();
+        runtime_close_phase(state, 23);
+        if stepped.is_err() {
+            return runtime_close_fault(state, 7);
         }
-        let Some(job) = session.checked_out_job_mut() else { return RUNTIME_CLOSE_FAULT };
+        runtime_close_phase(state, 3);
+        if !session.checkout_outcome() { return runtime_close_fault(state, 8); }
+        let Some(job) = session.checked_out_job_mut() else { return runtime_close_fault(state, 9) };
         pump.complete = job.progress == Some(crate::app::PluginCloseStep::Complete);
         pump.blocked = matches!(job.progress, Some(crate::app::PluginCloseStep::Blocked { .. }));
         pump.pending_status = runtime_close_nonterminal_status(job.contended, job.progress, &state.stalled_steps);
-        let Some(outcome) = session.take_outcome() else { return RUNTIME_CLOSE_FAULT };
+        if pump.pending_status == RUNTIME_CLOSE_FAULT { runtime_close_fault(state, 11); }
+        let Some(outcome) = session.take_outcome() else { return runtime_close_fault(state, 12) };
+        runtime_close_phase(state, 4);
         pump.terminal = outcome.is_terminal();
         let faulted = matches!(outcome, semio_framework_job::StepOutcome::Fault(_) | semio_framework_job::StepOutcome::Cancelled);
         pump.faulted = faulted;
+        #[cfg(test)]
+        if let semio_framework_job::StepOutcome::Fault(fault) = &outcome {
+            if let Some(bytes) = fault.detail.single_page() {
+                let mut last_fault = state.last_fault.lock().unwrap();
+                let count = bytes.len().min(last_fault.len());
+                last_fault[..count].copy_from_slice(&bytes[..count]);
+            }
+        }
         pump.outcome = Some(outcome);
         RUNTIME_CLOSE_READY
     }
@@ -29847,13 +30134,49 @@ pub mod plugin_runtime {
     }
 
     fn run_runtime_close_turn<PA: PluginApp + 'static>(state: &std::sync::Arc<RuntimeCloseWorkerState<PA>>) {
-        let started = std::time::Instant::now();
-        run_runtime_close_turn_inner(state);
-        let elapsed_us = started.elapsed().as_micros().min(u64::MAX as u128) as u64;
+        run_runtime_close_turn_with_clock(state, semio_framework_job::default_now_us);
+    }
+
+    fn runtime_callback_clock_begin(now_us: &mut impl FnMut() -> Option<u64>) -> Result<(u64, u64), u8> {
+        let start = now_us().ok_or(14)?;
+        let preflight = now_us().ok_or(14)?;
+        if preflight < start { return Err(15); }
+        Ok((start, preflight))
+    }
+
+    fn runtime_callback_clock_elapsed(now_us: &mut impl FnMut() -> Option<u64>, (start, preflight): (u64, u64)) -> Result<u64, u8> {
+        let finished = now_us().ok_or(14)?;
+        if finished < preflight { return Err(15); }
+        Ok(finished - start)
+    }
+
+    fn run_runtime_close_turn_with_clock<PA: PluginApp + 'static>(state: &std::sync::Arc<RuntimeCloseWorkerState<PA>>, mut now_us: impl FnMut() -> Option<u64>) {
+        let clock = match runtime_callback_clock_begin(&mut now_us) {
+            Ok(clock) => clock,
+            Err(origin) => {
+                if state.status.compare_exchange(RUNTIME_CLOSE_QUEUED, RUNTIME_CLOSE_RUNNING, Ordering::SeqCst, Ordering::SeqCst).is_ok() {
+                    state.last_callback_elapsed_us.store(u64::MAX, Ordering::SeqCst);
+                    state.status.store(runtime_close_fault(state, origin), Ordering::SeqCst);
+                }
+                return;
+            }
+        };
+        let Some(status) = run_runtime_close_turn_inner(state) else { return };
+        let elapsed_us = match runtime_callback_clock_elapsed(&mut now_us, clock) {
+            Ok(elapsed) => elapsed,
+            Err(origin) => {
+                state.last_callback_elapsed_us.store(u64::MAX, Ordering::SeqCst);
+                state.status.store(runtime_close_fault(state, origin), Ordering::SeqCst);
+                return;
+            }
+        };
+        runtime_close_publish_turn(state, status, elapsed_us);
+    }
+
+    fn runtime_close_publish_turn<PA: PluginApp>(state: &RuntimeCloseWorkerState<PA>, status: u8, elapsed_us: u64) {
         state.last_callback_elapsed_us.store(elapsed_us, Ordering::SeqCst);
-        if elapsed_us > RUNTIME_CLOSE_CALLBACK_WALL_US {
-            state.status.store(RUNTIME_CLOSE_FAULT, Ordering::SeqCst);
-        }
+        let verdict = if semio_framework_trace::interactive_step_contract_violated(elapsed_us) { runtime_close_fault(state, 1) } else { status };
+        state.status.store(verdict, Ordering::SeqCst);
     }
 
     fn try_schedule_runtime_close<PA: PluginApp + 'static>(pool: &semio_framework_async::WorkerPool, state: &std::sync::Arc<RuntimeCloseWorkerState<PA>>) -> bool {
@@ -29884,9 +30207,19 @@ pub mod plugin_runtime {
     }
 
     pub async fn plugin_destroy_app<PA: PluginApp + 'static>(runtime: &PluginRuntime<PA>, instance_id: u32) -> Result<(), Fault> {
+        plugin_begin_instance_close(runtime, instance_id, None).map(|_| ())
+    }
+
+    fn plugin_begin_instance_close<PA: PluginApp + 'static>(runtime: &PluginRuntime<PA>, instance_id: u32, expected: Option<&std::sync::Weak<RuntimeAppCell<PA>>>) -> Result<std::sync::Arc<RuntimeCloseWorkerState<PA>>, Fault> {
         let mut instances = runtime.instances.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?;
         let mut quarantine = runtime.close_quarantine.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime close quarantine is busy"))?;
         let mut actors = runtime.instance_actors.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime actor authority is busy"))?;
+        if let Some(expected) = expected {
+            let current = instances.get(instance_id).ok_or_else(|| plugin_internal_fault("captured app lifetime is no longer live"))?;
+            if !std::sync::Weak::ptr_eq(expected, &std::sync::Arc::downgrade(current)) {
+                return Err(plugin_internal_fault("captured app lifetime does not match the current instance"));
+            }
+        }
         if !quarantine.can_insert(instance_id) {
             return Err(plugin_internal_fault(format!("runtime close quarantine is saturated or collided: {instance_id}")));
         }
@@ -29902,6 +30235,14 @@ pub mod plugin_runtime {
             stalled_steps: AtomicU8::new(0),
             preview_sequence: AtomicU64::new(0),
             last_callback_elapsed_us: AtomicU64::new(0),
+            #[cfg(test)]
+            last_fault: std::sync::Mutex::new([0; 256]),
+            #[cfg(test)]
+            last_fault_origin: AtomicU8::new(0),
+            #[cfg(test)]
+            callback_phase_started_us: AtomicU64::new(0),
+            #[cfg(test)]
+            callback_phase_us: std::array::from_fn(|_| AtomicU64::new(0)),
         });
         quarantine.insert_admitted(instance_id, RuntimeCloseEntry { state: state.clone() });
         drop(actors.take(instance_id));
@@ -29909,14 +30250,13 @@ pub mod plugin_runtime {
         drop(quarantine);
         drop(instances);
         let _ = try_schedule_runtime_close(&runtime_close_pool(), &state);
-        Ok(())
+        Ok(state)
     }
 
     pub fn plugin_step_close_cleanup<PA: PluginApp + 'static>(runtime: &PluginRuntime<PA>) -> Result<bool, Fault> {
-        let index = runtime.close_cleanup_cursor.get();
+        let entry = runtime.close_quarantine.try_borrow().map_err(|_| plugin_internal_fault("runtime close quarantine is busy"))?.next_entry_from(runtime.close_cleanup_cursor.get()).map(|(index, instance_id, entry)| (index, instance_id, entry.state.clone()));
+        let Some((index, instance_id, state)) = entry else { return Ok(false) };
         runtime.close_cleanup_cursor.set((index + 1) % PLUGIN_RUNTIME_INSTANCE_SLOTS);
-        let entry = runtime.close_quarantine.try_borrow().map_err(|_| plugin_internal_fault("runtime close quarantine is busy"))?.entry_at(index).map(|(instance_id, entry)| (instance_id, entry.state.clone()));
-        let Some((instance_id, state)) = entry else { return Ok(false) };
         match state.status.load(Ordering::SeqCst) {
             RUNTIME_CLOSE_COMPLETE => {
                 let removed = runtime.close_quarantine.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime close quarantine is busy"))?.take(instance_id);
@@ -29934,17 +30274,35 @@ pub mod plugin_runtime {
                 let pool = runtime_close_pool();
                 let scheduled = status == RUNTIME_CLOSE_READY && try_schedule_runtime_close(&pool, &state);
                 #[cfg(target_arch = "wasm32")]
-                pool.pump(semio_framework_job::default_now_ms());
+                if let Some(now_ms) = semio_framework_job::default_now_ms() { pool.pump(now_ms); }
                 Ok(scheduled || status == RUNTIME_CLOSE_QUEUED || status == RUNTIME_CLOSE_RUNNING)
             }
         }
     }
 
+    #[cfg(target_arch = "wasm32")]
+    fn pump_runtime_live_cooperative_turn<PA: PluginApp>(cell: &RuntimeAppCell<PA>) -> Result<(), Fault> {
+        let before = cell.maintenance_status.load(Ordering::SeqCst);
+        let turn = cell.maintenance_probe_turns.load(Ordering::Relaxed).saturating_add(1);
+        cell.maintenance_probe_turns.store(turn, Ordering::Relaxed);
+        let pool = runtime_close_pool();
+        let now_ms = semio_framework_job::default_now_ms();
+        if let Some(now_ms) = now_ms {
+            pool.pump(now_ms);
+        } else {
+            cell.maintenance_status.store(RUNTIME_MAINTENANCE_FAULT, Ordering::SeqCst);
+        }
+        if turn <= 4096 && turn.is_power_of_two() {
+            let phase = cell.maintenance_pump.try_lock().ok().map(|pump| u8::from(pump.session.is_some()) | (u8::from(pump.outcome.is_some()) << 1) | (u8::from(pump.rejected.is_some()) << 2) | (u8::from(pump.closing) << 3) | (u8::from(pump.faulted) << 4) | (u8::from(pump.terminal) << 5));
+            eprintln!("[DEBUG] cooperative-maintenance instance={} turn={} generation={} status={}->{} entries={} phase={:?} clock={} pool={:?}", cell.id, turn, cell.maintenance_generation.load(Ordering::SeqCst), before, cell.maintenance_status.load(Ordering::SeqCst), cell.maintenance_probe_entries.load(Ordering::Relaxed), phase, now_ms.is_some(), pool.try_cooperative_snapshot());
+        }
+        now_ms.map(|_| ()).ok_or_else(|| plugin_internal_fault("cooperative maintenance requires an installed monotonic clock"))
+    }
+
     pub fn plugin_step_live_cleanup<PA: PluginApp + 'static>(runtime: &PluginRuntime<PA>) -> Result<bool, Fault> {
-        let index = runtime.live_cleanup_cursor.get();
+        let cell = runtime.instances.try_borrow().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?.next_entry_from(runtime.live_cleanup_cursor.get()).map(|(index, _, cell)| (index, cell.clone()));
+        let Some((index, cell)) = cell else { return Ok(false) };
         runtime.live_cleanup_cursor.set((index + 1) % PLUGIN_RUNTIME_INSTANCE_SLOTS);
-        let cell = runtime.instances.try_borrow().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?.entry_at(index).map(|(_, cell)| cell.clone());
-        let Some(cell) = cell else { return Ok(false) };
         match cell.maintenance_status.load(Ordering::SeqCst) {
             RUNTIME_MAINTENANCE_FAULT => Err(plugin_internal_fault(format!("runtime live cleanup faulted for instance {}", cell.id))),
             RUNTIME_MAINTENANCE_READY => {
@@ -29966,7 +30324,7 @@ pub mod plugin_runtime {
                 match pool.try_submit(semio_framework_async::Lane::Maintenance, job) {
                     Ok(()) => {
                         #[cfg(target_arch = "wasm32")]
-                        pool.pump(semio_framework_job::default_now_ms());
+                        pump_runtime_live_cooperative_turn(&cell)?;
                         Ok(true)
                     }
                     Err(error) => {
@@ -29976,7 +30334,11 @@ pub mod plugin_runtime {
                     }
                 }
             }
-            RUNTIME_MAINTENANCE_QUEUED | RUNTIME_MAINTENANCE_RUNNING => Ok(true),
+            RUNTIME_MAINTENANCE_QUEUED | RUNTIME_MAINTENANCE_RUNNING => {
+                #[cfg(target_arch = "wasm32")]
+                pump_runtime_live_cooperative_turn(&cell)?;
+                Ok(true)
+            }
             _ => Err(plugin_internal_fault(format!("runtime live cleanup has an invalid state for instance {}", cell.id))),
         }
     }
@@ -31012,6 +31374,7 @@ pub mod plugin_runtime {
         }
     }
 
+    #[derive(Default)]
     pub struct PluginExchangeOutput {
         pub frames: Vec<Vec<u8>>,
         pub effects: Vec<Vec<u8>>,
@@ -31023,6 +31386,55 @@ pub mod plugin_runtime {
         pub presence_terminal_fault: Option<Vec<u8>>,
         pub typed_operation_result: Option<TypedOperationResultPage>,
     }
+
+    //#region 🔁️TypedOperationContinuation
+    fn advance_typed_operation_output<PA: PluginApp>(app: &mut PA, instance: u32) -> Result<PluginExchangeOutput, Fault> {
+        resolve_ready(app.advance_typed_operation_publication())?;
+        let mut output = PluginExchangeOutput { typed_operation_result: app.take_typed_operation_result_page(instance), ..PluginExchangeOutput::default() };
+        if let Some(effect) = app.take_typed_operation_effect() { output.effects.push(encode_wire_serialized(&effect)); }
+        if let Some(event) = app.take_typed_operation_event() { output.events.push(encode_wire_serialized(&event)); }
+        if let Some(scope) = app.take_typed_operation_ui_scope() {
+            output.frames.push(resolve_ready(protocol::encode_app_frame(&protocol::AppFrame::Invocation { in_reply_to: 0, output: Vec::new(), diagnostics: Vec::new(), ui_scope: encode_wire_serialized(&scope), history_patch: Vec::new(), messages: Vec::new() })));
+        }
+        app.publish_local_interaction_query_reply(&mut output.frames, 4);
+        Ok(output)
+    }
+
+    fn pending_typed_operation_instance<PA: PluginApp>(runtime: &PluginRuntime<PA>, start: usize) -> Result<(Option<(usize, u32)>, bool), Fault> {
+        let instances = runtime.instances.try_borrow().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?;
+        let mut cursor = start;
+        let mut first = None;
+        let mut contended = false;
+        for _ in 0..PLUGIN_RUNTIME_INSTANCE_SLOTS {
+            let Some((index, id, cell)) = instances.next_entry_from(cursor) else { break };
+            if first == Some(index) { break; }
+            first.get_or_insert(index);
+            cursor = (index + 1) % PLUGIN_RUNTIME_INSTANCE_SLOTS;
+            match cell.instance.try_lock() {
+                Ok(instance) if instance.app.has_pending_typed_operations() => return Ok((Some((index, id)), true)),
+                Ok(_) => {}
+                Err(std::sync::TryLockError::WouldBlock) => contended = true,
+                Err(std::sync::TryLockError::Poisoned(_)) => return Err(plugin_internal_fault(format!("runtime operation authority is poisoned for instance {id}"))),
+            }
+        }
+        Ok((None, contended))
+    }
+
+    /// 📮️ Publishes one admitted operation without requiring another user command.
+    pub async fn plugin_continue_typed_operations<PA: PluginApp>(runtime: &PluginRuntime<PA>) -> Result<(Option<(u32, PluginExchangeOutput)>, bool), Fault> {
+        let (next, pending) = pending_typed_operation_instance(runtime, runtime.typed_continuation_cursor.get())?;
+        let Some((index, instance)) = next else { return Ok((None, pending)) };
+        runtime.typed_continuation_cursor.set((index + 1) % PLUGIN_RUNTIME_INSTANCE_SLOTS);
+        let cell = runtime_instance_cell(runtime, instance)?;
+        let output = match cell.instance.try_lock() {
+            Ok(mut active) => advance_typed_operation_output(&mut active.app, instance)?,
+            Err(std::sync::TryLockError::WouldBlock) => return Ok((None, true)),
+            Err(std::sync::TryLockError::Poisoned(_)) => return Err(plugin_internal_fault(format!("runtime operation authority is poisoned for instance {instance}"))),
+        };
+        let (_, more_work) = pending_typed_operation_instance(runtime, runtime.typed_continuation_cursor.get())?;
+        Ok((Some((instance, output)), more_work))
+    }
+    //#endregion 🔁️TypedOperationContinuation
 
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): erased `AsyncTask` resolution
     /// input for `plugin_resume_task` — mirrors `⚛️reactor`'s own (private) `TaskResumeOutcome`
@@ -31382,6 +31794,22 @@ pub mod plugin_runtime {
             let command = owner.take_for_dispatch().ok_or_else(|| plugin_internal_fault("decoded command owner is terminal before dispatch"))?;
             match command {
                 protocol::AppCommand::Presence { .. } => unreachable!("Presence commands are admitted from their fixed header before whole-command decoding"),
+                protocol::AppCommand::LocalInteractionQuery { seq, command } => {
+                    frames.try_reserve_exact(2).map_err(|_| plugin_internal_fault("local interaction receipt and rejection slots could not be admitted"))?;
+                    let reply = with_instances_mut(runtime, |list| {
+                        let mut instance = find_instance(list, instance_id)?;
+                        Ok(match command {
+                            protocol::LocalInteractionQueryCommand::Read { request_id } => match runtime.local_interaction_query_generation.next() {
+                                Some(generation) => instance.app.begin_local_interaction_query(request_id, generation),
+                                None => Some(protocol::LocalInteractionQueryReply::Rejected { request_id, code: protocol::LocalInteractionQueryRejection::GenerationExhausted }),
+                            },
+                            protocol::LocalInteractionQueryCommand::Acknowledge { token } => { instance.app.acknowledge_local_interaction_query(&token); None },
+                            protocol::LocalInteractionQueryCommand::Cancel { token } => { instance.app.cancel_local_interaction_query(&token); None },
+                        })
+                    }).await?;
+                    if let Some(reply) = reply { frames.push(protocol::AppFrame::LocalInteractionQuery { reply }); }
+                    frames.push(protocol::AppFrame::Done { in_reply_to: seq });
+                },
                 protocol::AppCommand::ConfigCommand { seq, command } => {
                     // 🧮️ B1: `command` is a binary-encoded `store::ArtifactCommand<A::ConfigMutation>` —
                     // real dispatch against the config store (replaces the deleted `apply_config_bytes`
@@ -31729,6 +32157,7 @@ pub mod plugin_runtime {
                                         None => Vec::new(),
                                     };
                                     frames.push(protocol::AppFrame::TransactionPrepared { txn_id, foreign, rejection });
+                                    frames.push(protocol::AppFrame::Done { in_reply_to: seq });
                                 }
                                 Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
                             }
@@ -31745,6 +32174,7 @@ pub mod plugin_runtime {
                         Ok(edit_id) => {
                             mutated = true;
                             frames.push(protocol::AppFrame::TransactionCommitted { txn_id, edit_id });
+                            frames.push(protocol::AppFrame::Done { in_reply_to: seq });
                         }
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
                     }
@@ -31755,7 +32185,10 @@ pub mod plugin_runtime {
                         resolve_ready(instance.app.transaction_rollback(&txn_id))
                     });
                     match outcome.await {
-                        Ok(()) => frames.push(protocol::AppFrame::TransactionRolledBack { txn_id }),
+                        Ok(()) => {
+                            frames.push(protocol::AppFrame::TransactionRolledBack { txn_id });
+                            frames.push(protocol::AppFrame::Done { in_reply_to: seq });
+                        },
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
                     }
                 }
@@ -31851,26 +32284,13 @@ pub mod plugin_runtime {
             }
         }
 
-        let typed_operation_result = with_instances_mut(runtime, |list| {
+        let typed_output = with_instances_mut(runtime, |list| {
             let mut instance = find_instance(list, instance_id)?;
-            resolve_ready(instance.app.advance_typed_operation_publication())?;
-            Ok(instance.app.take_typed_operation_result_page(instance_id))
+            advance_typed_operation_output(&mut instance.app, instance_id)
         })
         .await?;
-        let (typed_effect, typed_event, typed_ui_scope) = with_instances_mut(runtime, |list| {
-            let mut instance = find_instance(list, instance_id)?;
-            Ok((instance.app.take_typed_operation_effect(), instance.app.take_typed_operation_event(), instance.app.take_typed_operation_ui_scope()))
-        })
-        .await?;
-        if let Some(effect) = typed_effect {
-            effect_bytes.push(encode_wire_serialized(&effect));
-        }
-        if let Some(event) = typed_event {
-            event_bytes.push(encode_wire_serialized(&event));
-        }
-        if let Some(ui_scope) = typed_ui_scope {
-            frames.push(protocol::AppFrame::Invocation { in_reply_to: 0, output: Vec::new(), diagnostics: Vec::new(), ui_scope: encode_wire_serialized(&ui_scope), history_patch: Vec::new(), messages: Vec::new() });
-        }
+        effect_bytes.extend(typed_output.effects);
+        event_bytes.extend(typed_output.events);
 
         let ephemeral = with_instances_mut(runtime, |list| {
             let mut instance = find_instance(list, instance_id)?;
@@ -31898,9 +32318,87 @@ pub mod plugin_runtime {
         for frame in frames.iter() {
             frame_bytes.push(protocol::encode_app_frame(frame).await);
         }
-        Ok(PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes, retry_command, command_terminal_fault, presence_pending, presence_terminal, presence_terminal_fault, typed_operation_result })
+        frame_bytes.extend(typed_output.frames);
+        Ok(PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes, retry_command, command_terminal_fault, presence_pending, presence_terminal, presence_terminal_fault, typed_operation_result: typed_output.typed_operation_result })
     }
     //#endregion 🔖️Exchange
+
+    /// 🧩️ One actor-world export implementation shared by plugin and extension component owners.
+    #[doc(hidden)]
+    #[macro_export]
+    macro_rules! __semio_actor_exports {
+        ($guest:ident, $runtime:ident, $ensure:ident, $describe:ident) => {
+            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+            struct $guest;
+
+            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+            impl $crate::component::component::exports::semio::framework::reactor::Guest for $guest {
+                async fn poll(
+                    events: Vec<$crate::component::component::exports::semio::framework::reactor::Event>,
+                    command_page: Option<$crate::component::component::exports::semio::framework::reactor::CommandIngressPage>,
+                    budget: $crate::component::component::exports::semio::framework::reactor::Budget,
+                ) -> Result<$crate::component::component::exports::semio::framework::reactor::TurnResult, $crate::component::component::semio::framework::types::PluginError> {
+                    $ensure();
+                    $runtime.with(|runtime| $crate::reactor::poll(runtime, events, command_page, budget)).await.map_err($crate::component::component::plugin_error)
+                }
+            }
+
+            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+            impl $crate::component::component::exports::semio::framework::jobs::Guest for $guest {
+                async fn start_job(job: u64, kind: String, input: Vec<u8>) -> Result<(), $crate::component::component::semio::framework::types::PluginError> {
+                    $ensure();
+                    $crate::reactor::jobs::start_job(job, &kind, &input).await;
+                    Ok(())
+                }
+
+                async fn step_job(
+                    job: u64,
+                    budget: $crate::component::component::exports::semio::framework::jobs::JobBudget,
+                ) -> Result<$crate::component::component::exports::semio::framework::jobs::JobStep, $crate::component::component::semio::framework::types::PluginError> {
+                    $ensure();
+                    let budget = $crate::reactor::jobs::JobBudget { fuel: budget.fuel, deadline_ms: budget.deadline_ms };
+                    Ok(match $crate::reactor::jobs::step_job(job, budget).await {
+                        $crate::reactor::jobs::JobStep::Running(progress) => $crate::component::component::exports::semio::framework::jobs::JobStep::Running(progress),
+                        $crate::reactor::jobs::JobStep::Done(bytes) => $crate::component::component::exports::semio::framework::jobs::JobStep::Done(bytes),
+                        $crate::reactor::jobs::JobStep::Failed(bytes) => $crate::component::component::exports::semio::framework::jobs::JobStep::Failed(bytes),
+                    })
+                }
+
+                async fn cancel_job(job: u64) {
+                    $crate::reactor::jobs::cancel_job(job).await;
+                }
+
+                async fn take_segmented_download_chunk(instance_id: u32, operation_id: u64) -> Result<Option<Vec<u8>>, $crate::component::component::semio::framework::types::PluginError> {
+                    $ensure();
+                    $runtime.with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_take_segmented_download_chunk(runtime, instance_id, operation_id))).map_err($crate::component::component::plugin_error)
+                }
+            }
+
+            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+            impl $crate::component::component::exports::semio::framework::checkpoint::Guest for $guest {
+                async fn checkpoint() -> Result<Vec<u8>, $crate::component::component::semio::framework::types::PluginError> {
+                    $ensure();
+                    $runtime.with(|runtime| $crate::app::resolve_ready($crate::reactor::checkpoint_now(runtime))).map_err($crate::component::component::plugin_error)
+                }
+
+                async fn restore(state: Vec<u8>) -> Result<(), $crate::component::component::semio::framework::types::PluginError> {
+                    $ensure();
+                    $runtime.with(|runtime| $crate::app::resolve_ready($crate::reactor::restore_now(runtime, &state))).map_err($crate::component::component::plugin_error)
+                }
+            }
+
+            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+            impl $crate::component::component::exports::semio::framework::describe::Guest for $guest {
+                async fn describe() -> Vec<u8> {
+                    $ensure();
+                    $describe()
+                }
+            }
+
+            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+            $crate::__semio_export_component_guest!($guest);
+        };
+    }
 
     #[macro_export]
     macro_rules! plugin_exports {
@@ -32014,74 +32512,11 @@ pub mod plugin_runtime {
             }
 
             #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-            struct __SemioComponentGuest;
-
-            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-            impl $crate::component::component::exports::semio::framework::reactor::Guest for __SemioComponentGuest {
-                async fn poll(
-                    events: Vec<$crate::component::component::exports::semio::framework::reactor::Event>,
-                    command_page: Option<$crate::component::component::exports::semio::framework::reactor::CommandIngressPage>,
-                    budget: $crate::component::component::exports::semio::framework::reactor::Budget,
-                ) -> Result<$crate::component::component::exports::semio::framework::reactor::TurnResult, $crate::component::component::semio::framework::types::PluginError> {
-                    __semio_ensure_plugin_runtime();
-                    __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::reactor::poll(runtime, events, command_page, budget)).await.map_err($crate::component::component::plugin_error)
-                }
+            fn __semio_describe_component() -> Vec<u8> {
+                __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::describe::describe_plugin(runtime)))
             }
 
-            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-            impl $crate::component::component::exports::semio::framework::jobs::Guest for __SemioComponentGuest {
-                async fn start_job(job: u64, kind: String, input: Vec<u8>) -> Result<(), $crate::component::component::semio::framework::types::PluginError> {
-                    __semio_ensure_plugin_runtime();
-                    $crate::reactor::jobs::start_job(job, &kind, &input).await;
-                    Ok(())
-                }
-
-                async fn step_job(
-                    job: u64,
-                    budget: $crate::component::component::exports::semio::framework::jobs::JobBudget,
-                ) -> Result<$crate::component::component::exports::semio::framework::jobs::JobStep, $crate::component::component::semio::framework::types::PluginError> {
-                    __semio_ensure_plugin_runtime();
-                    let budget = $crate::reactor::jobs::JobBudget { fuel: budget.fuel, deadline_ms: budget.deadline_ms };
-                    Ok(match $crate::reactor::jobs::step_job(job, budget).await {
-                        $crate::reactor::jobs::JobStep::Running(progress) => $crate::component::component::exports::semio::framework::jobs::JobStep::Running(progress),
-                        $crate::reactor::jobs::JobStep::Done(bytes) => $crate::component::component::exports::semio::framework::jobs::JobStep::Done(bytes),
-                        $crate::reactor::jobs::JobStep::Failed(bytes) => $crate::component::component::exports::semio::framework::jobs::JobStep::Failed(bytes),
-                    })
-                }
-
-                async fn cancel_job(job: u64) {
-                    $crate::reactor::jobs::cancel_job(job).await;
-                }
-
-                async fn take_segmented_download_chunk(instance_id: u32, operation_id: u64) -> Result<Option<Vec<u8>>, $crate::component::component::semio::framework::types::PluginError> {
-                    __semio_ensure_plugin_runtime();
-                    __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_take_segmented_download_chunk(runtime, instance_id, operation_id))).map_err($crate::component::component::plugin_error)
-                }
-            }
-
-            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-            impl $crate::component::component::exports::semio::framework::checkpoint::Guest for __SemioComponentGuest {
-                async fn checkpoint() -> Result<Vec<u8>, $crate::component::component::semio::framework::types::PluginError> {
-                    __semio_ensure_plugin_runtime();
-                    __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::reactor::checkpoint_now(runtime))).map_err($crate::component::component::plugin_error)
-                }
-
-                async fn restore(state: Vec<u8>) -> Result<(), $crate::component::component::semio::framework::types::PluginError> {
-                    __semio_ensure_plugin_runtime();
-                    __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::reactor::restore_now(runtime, &state))).map_err($crate::component::component::plugin_error)
-                }
-            }
-
-            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-            impl $crate::component::component::exports::semio::framework::describe::Guest for __SemioComponentGuest {
-                async fn describe() -> Vec<u8> {
-                    __semio_ensure_plugin_runtime();
-                    __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::describe::describe_plugin(runtime)))
-                }
-            }
-
-            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-            $crate::__semio_export_component_guest!(__SemioComponentGuest);
+            $crate::__semio_actor_exports!(__SemioComponentGuest, __SEMIO_PLUGIN_RUNTIME, __semio_ensure_plugin_runtime, __semio_describe_component);
 
             // 🚫️async: E4 fn-pointer slot — this fn's VALUE is stored in `PLUGIN_BUNDLE_INSTALLER:
             // OnceLock<fn()>` via `register_plugin_bundle_installer`, so it can never itself be
@@ -32448,6 +32883,25 @@ pub mod plugin_runtime {
     #[macro_export]
     macro_rules! extension_exports {
         ($bundle_fn:expr) => {
+            $crate::component_persistent_local! {
+                static __SEMIO_EXTENSION_RUNTIME: $crate::plugin_runtime::PluginRuntime<$crate::app::NoPluginApp> = $crate::plugin_runtime::PluginRuntime::new();
+            }
+
+            fn __semio_ensure_extension_runtime() {
+                static ONCE: std::sync::Once = std::sync::Once::new();
+                ONCE.call_once(|| {
+                    __semio_install_extension_bundle();
+                    $crate::app::resolve_ready($crate::plugin_runtime::extension_activate()).expect("installed extension activation");
+                });
+            }
+
+            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+            fn __semio_describe_component() -> Vec<u8> {
+                $crate::app::resolve_ready($crate::describe::describe_extension())
+            }
+
+            $crate::__semio_actor_exports!(__SemioExtensionGuest, __SEMIO_EXTENSION_RUNTIME, __semio_ensure_extension_runtime, __semio_describe_component);
+
             // 🚫️async: E4 fn-pointer slot — see `plugin_exports!`'s `__semio_install_plugin_bundle` doc.
             fn __semio_install_extension_bundle() {
                 $crate::app::resolve_ready($crate::plugin_runtime::install_extension_bundle(($bundle_fn)()));
@@ -32456,7 +32910,7 @@ pub mod plugin_runtime {
             #[doc(hidden)]
             #[unsafe(no_mangle)]
             pub extern "C" fn semio_extension_bundle_installer_link_shim() {
-                $crate::plugin_runtime::register_extension_bundle_installer(__semio_install_extension_bundle);
+                $crate::app::resolve_ready($crate::plugin_runtime::register_extension_bundle_installer(__semio_install_extension_bundle));
             }
 
             #[doc(hidden)]
@@ -32486,8 +32940,8 @@ pub mod plugin_runtime {
             #[semio_framework_async_macros::async_test]
             async fn descriptor_is_fresh() {
                 __semio_install_extension_bundle();
-                let extension_id = $crate::plugin_runtime::extension_manifest().extension_id;
-                let assembled = $crate::describe::describe_extension();
+                let extension_id = $crate::plugin_runtime::extension_manifest().await.extension_id;
+                let assembled = $crate::describe::describe_extension().await;
                 let expected_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🛂️descriptor.semio");
                 const DESCRIPTOR_MIGRATED_EXTENSIONS: &[&str] = &[];
                 match std::fs::read(expected_path) {
@@ -32536,6 +32990,9 @@ pub mod plugin_runtime {
         use semio_framework::Fault;
         use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, CommandDefinition, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
         use semio_framework_job::InteractiveJob as _;
+        mod local_interaction_dispatch {
+            include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🕹️interaction/📡️live/🧪️dispatch/🧪️component.rs"));
+        }
         /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): this module names every other type
         /// explicitly (no `use super::*;`), so the `🕹️IntentDispatchTests` fixture needs its own
         /// import too, rather than relying on `mod app`'s outer glob.
@@ -33382,22 +33839,27 @@ pub mod plugin_runtime {
         }
 
         //#region 🧹️ExactEmptyLaneFixtureOwners
-        struct TestEmptyPresenceStoreDisposer;
+        struct TestEmptyPresenceStoreDisposer(Option<store::PresenceStoreRetirement<NoPresence>>);
 
         impl ArtifactOwnedDisposer<store::PresenceStore<NoPresence, NoPresenceMutation>> for TestEmptyPresenceStoreDisposer {
-            fn close_step(&mut self, owner: &mut store::PresenceStore<NoPresence, NoPresenceMutation>, maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            fn close_step(&mut self, owner: &mut store::PresenceStore<NoPresence, NoPresenceMutation>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
                 if maximum_items == 0 {
                     return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
                 }
-                if !owner.peers_root().is_empty() {
-                    return Ok(PluginCloseStep::Blocked { reason: "empty-presence fixture requires its peer roster to be cursor-retired first" });
+                if let Some(active) = self.0.as_mut() {
+                    return active.close_step(1, maximum_bytes).map_err(Fault::from).map(|step| match step {
+                        store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                        store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "presence fixture retains captured readers" },
+                        store::SnapshotRetirementStep::Complete => PluginCloseStep::Complete,
+                    });
                 }
                 assert_eq!(std::mem::size_of::<NoPresence>(), 0);
-                Ok(PluginCloseStep::Complete)
+                self.0 = Some(owner.begin_retirement(std::sync::Arc::new(NoPresence {}), |_| true).map_err(|(reason, _)| Fault::from(reason))?);
+                Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
             }
 
             fn terminal_is_empty(&self, owner: &store::PresenceStore<NoPresence, NoPresenceMutation>) -> bool {
-                owner.peers_root().is_empty() && std::mem::size_of::<NoPresence>() == 0
+                owner.retirement_started() && self.0.as_ref().is_some_and(store::PresenceStoreRetirement::terminal_is_empty) && owner.peers_root().is_empty() && std::mem::size_of::<NoPresence>() == 0
             }
         }
 
@@ -33419,6 +33881,9 @@ pub mod plugin_runtime {
         //#endregion 🧹️ExactEmptyLaneFixtureOwners
 
         impl ArtifactApp for TestApp {
+            fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+                Some(std::sync::Arc::new(NoPresenceRetirementFactory))
+            }
             // 🪪️ Must equal `test_app_surface_id()` — a hand-typed `&'static str` because the runtime
             // `ArtifactApp::APP_ID` const (contract §2.1, "kept") cannot call a heap-allocating fn at
             // compile time; `test_app_id_matches_its_own_dialect` below is the drift guard.
@@ -33465,7 +33930,7 @@ pub mod plugin_runtime {
             }
 
             fn build_presence_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-                Some(Box::new(TestEmptyPresenceStoreDisposer))
+                Some(Box::new(TestEmptyPresenceStoreDisposer(None)))
             }
 
             fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
@@ -33706,6 +34171,9 @@ pub mod plugin_runtime {
         impl semio_framework_job::InteractiveJob for KeyedTestJob {
             fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
                 if cx.is_cancelled() { return semio_framework_job::StepOutcome::Cancelled; }
+                if cx.should_yield() { return semio_framework_job::StepOutcome::Yield; }
+                let Some(now_us) = cx.now_us() else { return semio_framework_job::StepOutcome::Yield; };
+                assert!(cx.deadline_us().saturating_sub(now_us) <= 500, "registered factory deadline must preserve its exact 500us contract");
                 if self.raw.as_ref().is_some_and(|raw| self.page < raw.page_count()) {
                     self.page += 1;
                     return semio_framework_job::StepOutcome::Yield;
@@ -33752,7 +34220,7 @@ pub mod plugin_runtime {
             fn keys(&self) -> &[semio_framework::ToolFactoryKey] { &self.keys }
             fn payload_schema_id(&self) -> &str { "semio.test.keyed-command.v1" }
             fn classification(&self) -> semio_framework::InteractiveJobClassification { semio_framework::InteractiveJobClassification::Migrated }
-            fn execution_contract(&self) -> semio_framework::ToolExecutionContract { semio_framework::ToolExecutionContract::resumable(32_768, 4, 1, 4_096, 7_500, 1, 1) }
+            fn execution_contract(&self) -> semio_framework::ToolExecutionContract { semio_framework::ToolExecutionContract::resumable(32_768, 4, 1, 4_096, 500, 1, 1) }
             fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> { Ok(payload) }
             fn create_job_from_wire_pages_with_payload(&mut self, _operation: semio_framework_job::Operation, mut payload: Self::Payload, input: semio_framework::action_bus::RetainedToolWireInput, checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
                 assert!(checkpoint.is_none());
@@ -33787,7 +34255,7 @@ pub mod plugin_runtime {
             crate::bounded_first_step_tool_proofs! {
                 owner: KeyedTestApp, owner_file: "plugin/🦀️component.rs", controller: "s.test.keyed@1/*#editor", document_schema: "semio.test/v1",
                 factory: "KeyedTestFactory", factory_type: KeyedTestFactory,
-                contract: semio_framework::ToolExecutionContract::resumable(32_768, 4, 1, 4_096, 7_500, 1, 1), tools: ["compositeEdit"]
+                contract: semio_framework::ToolExecutionContract::resumable(32_768, 4, 1, 4_096, 500, 1, 1), tools: ["compositeEdit"]
             }
             fn register_tool_job_factories(registry: &mut crate::app::ArtifactToolFactoryRegistry<'_, Self>) -> Result<(), Fault> {
                 registry.register(KeyedTestFactory { keys: vec![semio_framework::ToolFactoryKey::new(registry.controller_id(), "compositeEdit")] })
@@ -33807,14 +34275,15 @@ pub mod plugin_runtime {
             fn build_presence_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> { TestApp::build_presence_store_disposer() }
             fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> { TestApp::build_transient_store_disposer() }
             fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> { TestApp::build_presence_peer_retirement_factory() }
+            fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> { TestApp::build_presence_local_root_retirement_factory() }
+            fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> { TestApp::build_transient_local_root_retirement_factory() }
             async fn initial_snapshot() -> TestSnapshot { TestSnapshot::default() }
             async fn command_id(command: &TestCommand) -> &'static str { TestApp::command_id(command).await }
             async fn handle(_command: &TestCommand, _doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> { Err(Fault::from("keyed fixture requires its actual retained factory")) }
             async fn render(body: &str, doc: &ArtifactView<'_, TestSnapshot>, cfg: &ConfigView<'_, TestConfig>) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> { TestApp::render(body, doc, cfg).await }
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn retained_latest_wins_registered_dispatch_rebases_worker_and_publishes_real_document() {
+        async fn keyed_test_registry() -> AppActionRegistry {
             let manifest = App::from_builder(
                 App::builder(KeyedTestApp::APP_ID, LocalizedLabel::data("Keyed Fixture"))
                     .await
@@ -33828,11 +34297,83 @@ pub mod plugin_runtime {
                     .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
                     .await,
             ).await;
+            AppActionRegistry::from_definition(&manifest.definition)
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn retained_latest_wins_registered_dispatch_rebases_worker_and_publishes_real_document() {
             crate::app::test_retained_keyed_dispatch::<KeyedTestApp>(
-                AppActionRegistry::from_definition(&manifest.definition),
+                keyed_test_registry().await,
                 |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value },
-                |value| TestMutation::SetCount { value }, |snapshot| snapshot.count,
+                |value| TestMutation::SetCount { value }, |snapshot| snapshot.count, None,
             ).await;
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn microsecond_registered_factory_dispatch_preserves_exact_half_ms_fake_clock() {
+            fn clock() -> Option<u64> { Some(1_000) }
+            crate::app::test_retained_keyed_dispatch::<KeyedTestApp>(
+                keyed_test_registry().await,
+                |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value },
+                |value| TestMutation::SetCount { value }, |snapshot| snapshot.count, Some(clock),
+            ).await;
+            eprintln!("[DEBUG] registered 500us factory completed real dispatch/rebase/publication/ACK/close with exact fake microsecond clock");
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn retained_operation_continues_after_command_admission_until_publication_and_retirement() {
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("⚛️reactor/🧪️fixtures/📬️operation-continuation.json")).unwrap();
+            let id = fixture["wire"]["receiver"].as_u64().unwrap() as u32;
+            let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await).await;
+            app.bind_instance_id(id).await;
+            let value = fixture["command"]["value"].as_i64().unwrap() as i32;
+            let command = TestCommand::CompositeEdit { slot: String::new(), child_id: fixture["command"]["target"].as_str().unwrap().into(), child_value: value };
+            app.dispatch_typed(command, &ActionMeta { actor: "fixture".into(), instance_id: id }).await.unwrap();
+            let runtime = super::PluginRuntime::new();
+            let cell = std::sync::Arc::new(super::RuntimeAppCell::new(crate::app::AppInstance { id, app }));
+            runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
+            let mut terminal = false;
+            let mut receipts = 0;
+            for turn in 0..fixture["command"]["maximumTurns"].as_u64().unwrap() {
+                super::plugin_step_live_cleanup(&runtime).unwrap();
+                let (output, more) = super::plugin_continue_typed_operations(&runtime).await.unwrap();
+                if let Some((receiver, output)) = output {
+                    assert_eq!(receiver, id);
+                    if let Some(page) = output.typed_operation_result {
+                        assert_ne!(page.lane, crate::app::TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
+                        terminal |= page.lane == crate::app::TypedOperationResultLane::Terminal;
+                        receipts += 1;
+                        super::plugin_acknowledge_typed_operation_result(&runtime, page.token).await.unwrap();
+                    }
+                }
+                if !more {
+                    assert!(terminal, "the actor must remain runnable until its terminal result");
+                    eprintln!("[DEBUG] admitted command published and retired after {turn} turns with {receipts} exact receipts");
+                    break;
+                }
+                std::thread::yield_now();
+            }
+            let active = cell.instance.lock().unwrap();
+            assert!(terminal);
+            assert!(!active.app.has_pending_typed_operations());
+            assert_eq!(active.app.snapshot().unwrap().count, value);
+            drop(active);
+            let retired = std::sync::Arc::downgrade(&cell);
+            drop(cell);
+            super::plugin_destroy_app(&runtime, id).await.unwrap();
+            for _ in 0..100_000 {
+                if let Err(error) = super::plugin_step_close_cleanup(&runtime) {
+                    let entries = runtime.close_quarantine.borrow();
+                    let state = &entries.get(id).unwrap().state;
+                    let pump = state.pump.lock().unwrap();
+                    let detail = state.last_fault.lock().unwrap();
+                    panic!("{error:?}: elapsed={} stalled={} terminal={} complete={} blocked={} faulted={} pending={} origin={} detail={}", state.last_callback_elapsed_us.load(std::sync::atomic::Ordering::SeqCst), state.stalled_steps.load(std::sync::atomic::Ordering::SeqCst), pump.terminal, pump.complete, pump.blocked, pump.faulted, pump.pending_status, state.last_fault_origin.load(std::sync::atomic::Ordering::SeqCst), String::from_utf8_lossy(&detail[..]));
+                }
+                if runtime.close_quarantine.borrow().get(id).is_none() { break; }
+                std::thread::yield_now();
+            }
+            assert!(runtime.close_quarantine.borrow().get(id).is_none());
+            assert!(retired.upgrade().is_none());
         }
         //#endregion 🗝️RegisteredKeyedDispatchFixture
 
@@ -34021,7 +34562,7 @@ pub mod plugin_runtime {
         #[test]
         fn shared_framework_job_is_cancellable_resumable_and_boundedly_closeable() {
             fn context<'a>(cancel: semio_framework_job::CancelToken, preview_sequence: &'a mut u64) -> semio_framework_job::StepContext<'a> {
-                semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(7), semio_framework_job::StepBudget::new(4_096, u64::MAX), cancel, || 0, preview_sequence)
+                semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(7), semio_framework_job::StepBudget::new(4_096, u64::MAX), cancel, || Some(0), preview_sequence)
             }
 
             fn close_payload(mut payload: semio_framework_job::RetainedJobPayload) {
@@ -34435,7 +34976,7 @@ pub mod plugin_runtime {
             let mut checkpoint_bytes = None;
             let mut sequence = 0;
             for _ in 0..64 {
-                let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
                 match original.job.step(&mut context) {
                     semio_framework_job::StepOutcome::PreviewReady(mut payload) => test_close_retained_payload(&mut payload),
                     semio_framework_job::StepOutcome::CheckpointReady(mut checkpoint) => {
@@ -34481,7 +35022,7 @@ pub mod plugin_runtime {
             };
             let mut completed = false;
             for _ in 0..96 {
-                let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
                 match resumed.job.step(&mut context) {
                     semio_framework_job::StepOutcome::PreviewReady(mut payload) => test_close_retained_payload(&mut payload),
                     semio_framework_job::StepOutcome::CheckpointReady(mut checkpoint) => test_close_retained_payload(&mut checkpoint.state),
@@ -34523,7 +35064,7 @@ pub mod plugin_runtime {
             };
             let cancel = semio_framework_job::root_cancel_token();
             cancel.cancel_now();
-            let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel, || 0, &mut sequence);
+            let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel, || Some(0), &mut sequence);
             assert!(matches!(cancelled.job.step(&mut context), semio_framework_job::StepOutcome::Cancelled));
             cancelled.job.begin_close();
             for _ in 0..64 {

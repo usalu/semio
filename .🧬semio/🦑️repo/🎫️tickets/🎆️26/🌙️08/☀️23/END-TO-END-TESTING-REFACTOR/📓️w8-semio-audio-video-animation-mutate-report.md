@@ -30,7 +30,7 @@ Per subset:
   declared variants and the module's own per-variant case list (`all_variants` / `sample_mutations`
   / `demo_mutation_cases`) via `variant_ordinal`, and that every `KINDS` entry appears in the
   committed oracle manifest.
-* `🧪️oracle/🔣️component.json` — one recorded `noOracleDecision` plus one `mutationCatalog`
+* `🧪️oracle/🔣️.json` — one recorded `noOracleDecision` plus one `mutationCatalog`
   (`semio-v1-audio` / `semio-v1-video` / `semio-v1-animation`).
 * Two free-function bridges, because the generated test host links only `semio-s-plugin-stdio` and
   cannot name `protocol`/`store` (both are `extern crate semio_framework_os_kernel as …` aliases
@@ -145,7 +145,7 @@ Production (modified):
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️{audio,video,animation}/🧬️schema/📸️snapshot/🦀️component.rs`
 
 Production (new):
-- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️{audio,video,animation}/🧪️oracle/🔣️component.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️{audio,video,animation}/🧪️oracle/🔣️.json`
 
 Cases (new):
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-{audio,video,animation}/component.feature`

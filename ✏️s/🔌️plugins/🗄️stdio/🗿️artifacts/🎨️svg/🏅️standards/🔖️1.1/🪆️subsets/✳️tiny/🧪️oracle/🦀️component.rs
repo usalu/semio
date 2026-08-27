@@ -20,7 +20,7 @@
 //! repository's own `check_svg_tiny_conformance`. Both encode the same normative list; neither is
 //! derived from the other.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the vocabulary itself (`SvgTinyMutation::KINDS`).
 
 use semio_repo_test_host::Json;

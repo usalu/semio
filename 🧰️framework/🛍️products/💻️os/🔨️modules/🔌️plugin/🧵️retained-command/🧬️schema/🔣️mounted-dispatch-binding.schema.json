@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "dispatcher", "helper", "cases"],
+  "properties": {
+    "schemaVersion": { "const": "semio.mounted-dispatch-binding.v1" },
+    "dispatcher": { "const": "dispatch_typed_command_inner" },
+    "helper": { "const": "start_typed_command_operation" },
+    "cases": {
+      "type": "array", "minItems": 10, "maxItems": 10,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["mutation", "admitted"],
+        "properties": {
+          "mutation": { "enum": ["none", "wrong-helper", "missing-helper", "duplicate-helper", "missing-pipeline-guard", "duplicate-session", "duplicate-pump", "direct-reducer", "direct-dispatch", "run-to-completion"] },
+          "admitted": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

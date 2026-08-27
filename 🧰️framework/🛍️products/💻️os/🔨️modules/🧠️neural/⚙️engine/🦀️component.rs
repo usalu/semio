@@ -1,6 +1,6 @@
 //! 🧠️ Headless neural engine: dictionary in, dictionary out.
 
-use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque};
 use std::mem::ManuallyDrop;
 use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -16,6 +16,10 @@ pub use retirement::{ColdDictionaryBuilder, ColdValueOwner, ValueRetirement, Val
 #[path = "🧊️cold/🦀️component.rs"]
 pub mod cold;
 pub use cold::{ColdOwner, ColdRetire};
+
+#[path = "📔️registry/🦀️component.rs"]
+pub mod registry;
+pub use registry::{RegistryRetirement, SharedRegistry};
 
 // #region 🔖️Dictionary
 /// 📚️ Immutable, unordered, collision-free key-value collection.
@@ -580,6 +584,17 @@ impl SchemaComponent {
 impl Operator for SchemaComponent {
         fn retire_cold(self: Box<Self>) { self.schema.retire_cold(); }
 
+    fn retirement_is_empty(&self) -> bool {
+        self.schema.id.is_empty() && self.schema.module.is_empty() && self.schema.name.is_empty() && self.schema.icon.is_empty() && self.schema.summary.is_empty() && self.schema.fields.is_empty()
+    }
+
+    fn retire_step(&mut self, maximum_items: usize, maximum_bytes: usize, values: &mut ValueRetirement) -> Result<ValueRetirementStep, &'static str> {
+        if maximum_items == 0 || maximum_bytes == 0 { return Ok(ValueRetirementStep::Blocked); }
+        if self.retirement_is_empty() { return Ok(ValueRetirementStep::Complete); }
+        values.push_schema(std::mem::take(&mut self.schema));
+        Ok(ValueRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+    }
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let has_instance = schema_input_present(input, &self.schema.id);
         let provided: Vec<&FieldSpec> = self.schema.fields.iter().filter(|field| schema_input_present(input, &field.key)).collect();
@@ -712,6 +727,13 @@ impl std::error::Error for EvalError {}
 /// 🧮️ Computational unit: one dictionary to another.
 pub trait Operator: Send + Sync {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError>;
+    /// 🪶️ Only compiler-proven trivial operators are terminal without domain-specific field retirement.
+    fn retirement_is_empty(&self) -> bool { !std::mem::needs_drop::<Self>() }
+    /// 🧹️ Transfers or retires one granted domain frontier while the caller retains the operator itself.
+    fn retire_step(&mut self, maximum_items: usize, maximum_bytes: usize, _values: &mut ValueRetirement) -> Result<ValueRetirementStep, &'static str> {
+        if maximum_items == 0 || maximum_bytes == 0 { return Ok(ValueRetirementStep::Blocked); }
+        if self.retirement_is_empty() { Ok(ValueRetirementStep::Complete) } else { Err("neural.operator-retirement-not-implemented") }
+    }
     /// 🧊️ Explicit cold registry teardown; implementations owning neural domains retire those fields here.
     fn retire_cold(self: Box<Self>) { drop(self); }
 }
@@ -980,10 +1002,10 @@ pub struct OperatorRecord {
 /// 📋️ Registry of schemas and operators by id.
 #[derive(Default)]
 pub struct Registry {
-    schemas: HashMap<String, Schema>,
-    operators: HashMap<String, OperatorRecord>,
-    operator_produces: HashMap<String, Vec<String>>,
-    schema_providers: HashMap<String, HashSet<String>>,
+    schemas: BTreeMap<String, Schema>,
+    operators: BTreeMap<String, OperatorRecord>,
+    operator_produces: BTreeMap<String, Vec<String>>,
+    schema_providers: BTreeMap<String, BTreeSet<String>>,
     finalized: bool,
 }
 
@@ -1082,6 +1104,11 @@ impl Registry {
         self.operators.get(operator_id).map(|entry| &entry.info)
     }
 
+    /// 📚️ Borrows current metadata in registry order without acquiring nested default-value owners.
+    pub fn operator_infos(&self) -> impl DoubleEndedIterator<Item = &OperatorInfo> + ExactSizeIterator {
+        self.operators.values().map(|entry| &entry.info)
+    }
+
     pub fn schema_ids(&self) -> Vec<String> {
         let mut ids: Vec<String> = self.schemas.keys().cloned().collect();
         ids.sort();
@@ -1105,7 +1132,7 @@ impl Registry {
         items
     }
 
-    fn finalize_operator_info(info: &OperatorInfo, produces: Option<&[String]>, schema_providers: &HashMap<String, HashSet<String>>) -> OperatorInfo {
+    fn finalize_operator_info(info: &OperatorInfo, produces: Option<&[String]>, schema_providers: &BTreeMap<String, BTreeSet<String>>) -> OperatorInfo {
         let mut finalized = info.clone();
         let produces = produces.unwrap_or(&[]);
         for channel in &mut finalized.outputs {

@@ -1,3 +1,0 @@
-command: bun -e <Ajv 2020 validation of mathematical-retained-command.schema.json and mathematical-retained-command-law.json>
-exit: 0
-{"valid":true,"actions":7,"hostileCases":14,"oracle":"ajv-2020"}

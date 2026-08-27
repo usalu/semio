@@ -89,7 +89,7 @@ pub enum SemioFlowMutation {
 /// 🏷️ The declared mutation vocabulary of `s.stdio.semio.flow`, in `SemioFlowMutation`'s own
 /// declaration order and kebab-case spelling — the single source of truth for the binary op frame's
 /// `tag` ordinal (see [`variant_ordinal`]), for `parse_flow_mutation`'s keyword match, and for the
-/// `semio-v1-flow` catalog in `../../🧪️oracle/🔣️component.json`. The framework never parses Rust, so
+/// `semio-v1-flow` catalog in `../../🧪️oracle/🔣️.json`. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps all three honest.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-node", "remove-node", "set-node-kind", "set-node-label", "set-node-position", "set-node-param", "remove-node-param", "insert-edge", "remove-edge", "set-edge-endpoints", "set-edge-kind"];
 //#endregion 🔖️Mutations
@@ -465,7 +465,7 @@ mod tests {
             seen[ordinal] = true;
         }
         assert!(seen.iter().all(|hit| *hit), "demo_mutation_cases must reach every KINDS entry, missing {:?}", KINDS.iter().zip(seen.iter()).filter(|(_, hit)| !**hit).map(|(kind, _)| *kind).collect::<Vec<_>>());
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

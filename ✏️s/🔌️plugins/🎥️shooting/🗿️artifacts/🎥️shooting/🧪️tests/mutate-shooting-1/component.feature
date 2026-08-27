@@ -6,7 +6,7 @@ Feature: Apply every typed SHOOTING mutation to the vocabulary's own committed r
   `s.shooting.shooting` is a semio-NATIVE artifact — the `shooting.shooting.dsl` grammar, with its typed
   table columns and its `deg`-suffixed angle literals, is defined by this repository alone. This case
   carries a recorded no-oracle decision (`shooting-render-scene-mutation-semantics`, in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`) whose third-party survey is
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`) whose third-party survey is
   argued rather than assumed: glTF 2.0, USD and Collada are named, and declined on the one structural
   point that matters here — none of them models a SHOT, and eleven of the thirty-one kinds address
   one.

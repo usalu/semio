@@ -1288,8 +1288,8 @@ pub fn submit_materialize_present_projection(operation: semio_framework_job::Ope
         operation,
         generation,
         cancel: cancel.clone(),
-        config: semio_framework_job::BatchDriveConfig { site: "present_envelope_materialize", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 64, step_budget_ms: semio_framework_job::INTERACTIVE_LANE_WALL_MS },
-        now_ms: semio_framework_job::default_now_ms,
+        config: semio_framework_job::BatchDriveConfig { site: "present_envelope_materialize", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 64, step_budget_us: semio_framework_job::INTERACTIVE_LANE_WALL_US },
+        now_us: semio_framework_job::default_now_us,
     };
     let (session, rejected, state, fault_code) = match semio_framework_job::WorkerJobSession::try_new(job, params) {
         Ok(session) => (Some(session), None, PresentEnvelopeMaterializeHandleState::Active, None),

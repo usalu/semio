@@ -8,6 +8,13 @@
     ]
   },
   "targets": {
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts wasm"
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

@@ -1,0 +1,9 @@
+# Owned Validation and Hash Review
+
+The coordinator read the complete owned validator and snapshot hash modules plus the executor's reports. The actual full validation log records **531/531 across five files**, 48.74 seconds, exit 0. This is reviewed executor evidence, distinct from the coordinator's independently executed earlier 530-test checkpoint. The coordinator's full 532-test rerun including hash is running.
+
+Validation anchors a captured immutable index for the lifetime of graph reads. Node/read owners are retired before that source index; cancellation clears explicit traversal state and retained key/mark/violation tables. The old retained cursor and new owned validator share the same traversal. The returned violation index is not publication authority.
+
+Hashing streams explicit JSON frames and at-most-256-byte output chunks from an exact captured index. String/code-point escaping, SurfaceDoc numeric byte arrays, insertion order and numeric formatting are handled incrementally. Object-key metadata is limited to the normalized native object's 256-field envelope. Cancellation drops one frame before node/read/index owners. The coordinator reviewed the large Surface, Unicode, ordering and own-key test scope recorded in `📓️renderer-owned-hash-2026-08-27.md`; its targeted pass is not itself a full-suite or live-publication pass.
+
+The actual React interpreter already consumes flat node IDs. Replacing the current expand-to-BuiltNode/flatten round trip must retain exact snapshots held by concurrent React reads. The executor is implementing stable per-version snapshot identities, bounded issued-read ownership, generation-specific layout acknowledgements, independent consumer leases, and exact instance-close aggregation. A stale acknowledgement must not retire a later-issued snapshot. Live wire admission, publication, notification, ACK and native wgpu integration remain unfinished.

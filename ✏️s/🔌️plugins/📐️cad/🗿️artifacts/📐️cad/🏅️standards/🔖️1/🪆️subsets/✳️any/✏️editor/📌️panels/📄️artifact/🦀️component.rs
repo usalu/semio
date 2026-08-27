@@ -241,8 +241,8 @@ mod tests {
         // comment) — `object_tree_item_shows_name_with_kind_as_secondary_label`/
         // `object_tree_item_includes_primitive_children` below cover the real (still-working)?
         // tree-item builder directly instead.
-        let mut app = new_app();
-        let node = app.render(CAD_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render");
+        let mut app = new_app().await;
+        let node = app.render(CAD_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).await.expect("render").root;
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("cad-node:"));
     }
@@ -252,14 +252,16 @@ mod tests {
         let mut object = make_object_for_typology("building.building.beam", 0, CadPaneId::Shape);
         object.label = "U2".into();
         let labels = cad_labels(&CadConfig::default());
-        let item = object_tree_item("shape", &object, labels)?;
-        assert_eq!(item.label.as_str(), "U2");
-        assert_eq!(item.description.as_deref(), Some("Beam"));
+        let item = object_tree_item("shape", &object, labels).expect("object tree item");
+        let semio_framework_plugin::Component::TreeItem(props) = &item.component else { panic!("expected tree item"); };
+        assert_eq!(props.label.0.as_str(), "U2");
+        assert_eq!(props.description.as_ref().map(|text| text.as_str()), Some("Beam"));
 
         let de_config = CadConfig { locale: "de".into(), ..CadConfig::default() };
         let de_labels = cad_labels(&de_config);
-        let de_item = object_tree_item("shape", &object, de_labels)?;
-        assert_eq!(de_item.description.as_deref(), Some("Träger"));
+        let de_item = object_tree_item("shape", &object, de_labels).expect("German object tree item");
+        let semio_framework_plugin::Component::TreeItem(props) = &de_item.component else { panic!("expected German tree item"); };
+        assert_eq!(props.description.as_ref().map(|text| text.as_str()), Some("Träger"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -267,7 +269,7 @@ mod tests {
         let mut object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
         object.primitives = vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "solid-1".into(), kind: "solid".into() }];
         let labels = cad_labels(&CadConfig::default());
-        let item = object_tree_item("shape", &object, labels)?;
+        let item = object_tree_item("shape", &object, labels).expect("object tree item");
         let json = serde_json::to_string(&item).unwrap();
         assert!(json.contains("cad-primitive:"));
     }
@@ -279,15 +281,15 @@ mod tests {
         // selection/hover still resolves here (see `document_tree_selected_ids`'s doc comment).
         let scene = default_document();
         let runtime = CadPlayRuntime::default();
-        assert_eq!(document_tree_selected_ids(&scene, &runtime), None);
-        assert_eq!(document_tree_highlighted_ids(&scene, &runtime), None);
+        assert_eq!(document_tree_selected_ids(&scene, &runtime).expect("selection assembly"), None);
+        assert_eq!(document_tree_highlighted_ids(&scene, &runtime).expect("highlight assembly"), None);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn document_tree_selected_ids_resolves_reference_selection() {
         let scene = forest_play_scene();
         let runtime = CadPlayRuntime { selected_reference_model_definition_id: Some(CAD_MODEL_DEFINITION_SHAPE.into()), selected_reference_id: Some("ref-concrete-forest".into()), ..CadPlayRuntime::default() };
-        let selected = document_tree_selected_ids(&scene, &runtime).expect("selected");
+        let selected = document_tree_selected_ids(&scene, &runtime).expect("selection assembly").expect("selected");
         assert!(selected.iter().any(|id| id == "cad-reference:spatial.shape:ref-concrete-forest"));
     }
 
@@ -298,7 +300,7 @@ mod tests {
         let history = empty_history();
         let doc = ArtifactView::new(&scene, &history);
         let config = CadConfig { locale: "de".into(), ..CadConfig::default() };
-        let node = render_direct(&app, CAD_PLAY_BODY_DOCUMENT, &doc, &config);
+        let node = render_direct(&app, CAD_PLAY_BODY_DOCUMENT, &doc, &config).expect("CAD UI assembly");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("\"Form\""));
         assert!(json.contains("Gebäude"));

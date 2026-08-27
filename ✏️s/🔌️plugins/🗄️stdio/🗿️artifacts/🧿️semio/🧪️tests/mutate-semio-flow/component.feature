@@ -13,7 +13,7 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
   the committed `(before, mutation, after)` vectors in this case's own `🧫️fixtures/`, and the semio
   envelope region of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`), importing nothing
   from and transliterating nothing of the Rust it judges. It is registered as the oracle
-  `semio-flow-python-independent` in `…/✳️flow/🧪️oracle/🔣️component.json`; the recorded no-oracle
+  `semio-flow-python-independent` in `…/✳️flow/🧪️oracle/🔣️.json`; the recorded no-oracle
   decision it replaces is gone, because there is now a reference to compare against. That decision
   also recorded json-rust as surveyed and declined — a generic JSON DOM is not a reference
   implementation of the vocabulary carried inside the container — and that judgement still stands;

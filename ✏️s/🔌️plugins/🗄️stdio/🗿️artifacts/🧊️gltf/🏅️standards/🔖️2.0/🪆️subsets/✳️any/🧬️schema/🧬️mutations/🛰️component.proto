@@ -25,7 +25,7 @@ import "✏️🕸️change-mesh-name/🛰️component.proto";
 import "✏️🔘️change-node-extension-data/🛰️component.proto";
 import "✏️🔘️change-node-extra-data/🛰️component.proto";
 import "✏️🔘️change-node-morph-weights/🛰️component.proto";
-import "✏️🔘️change-node-name/🛰️component.proto";
+import "✏️🔘️change-node-name/🛰️.proto";
 import "✏️🔺️change-primitive-extension-data/🛰️component.proto";
 import "✏️🔺️change-primitive-extra-data/🛰️component.proto";
 import "✏️🔺️change-primitive-topology-mode/🛰️component.proto";
@@ -147,7 +147,7 @@ message GltfMutation {
     GltfChangeNodeExtensionDataPayloadV1 change_node_extension_data = 23;
     GltfChangeNodeExtraDataPresenceV1 change_node_extra_data = 24;
     GltfChangeNodeMorphWeightsPayloadV1 change_node_morph_weights = 25;
-    GltfChangeNodeNameOptionalStringV1 change_node_name = 26;
+    GltfChangeNodeNameMutationV1 change_node_name = 26;
     GltfChangePrimitiveExtensionDataPayloadV1 change_primitive_extension_data = 27;
     GltfChangePrimitiveExtraDataPayloadV1 change_primitive_extra_data = 28;
     GltfChangePrimitiveTopologyModePayloadV1 change_primitive_topology_mode = 29;

@@ -110,7 +110,7 @@ committed file directly, not assumed.
 ## Files
 
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs` — filled in (was a stub)
-- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🔣️component.json` — new (catalog + oracle registration + `semantic-spreadsheet-v1` profile)
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🔣️.json` — new (catalog + oracle registration + `semantic-spreadsheet-v1` profile)
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` — added `KINDS` const + `kinds_match_enum_and_catalog` test
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🧪️tests/mutate-xlsx-ecma-376/component.feature` — new
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🧪️tests/mutate-xlsx-ecma-376/🦀️component.rs` — new (adapter, oracle + `sut`-gated subject)

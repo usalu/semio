@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "packageId": "wgpu-renderer",
+  "fragments": [
+    {
+      "id": "cargo-frame-job-prose",
+      "kind": "reference-path",
+      "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml",
+      "oldValue": "# 🧵️ P3b (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): `🦀️frame_job.rs`'s `InteractiveJob`\n",
+      "newValue": "# 🧵️ P3b (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): `../../🧵️frame-job/🦀️.rs`'s `InteractiveJob`\n"
+    },
+    {
+      "id": "cargo-kernel-renderer-prose",
+      "kind": "reference-path",
+      "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml",
+      "oldValue": "# vocabulary the native kernel thread (`📦️glue.rs`'s `kernel_runtime` module) drives directly — see\n",
+      "newValue": "# vocabulary the native kernel thread (`../../🧊️renderer/🦀️.rs`'s `kernel_runtime` module) drives directly — see\n"
+    },
+    {
+      "id": "cargo-worker-pool-prose",
+      "kind": "reference-path",
+      "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml",
+      "oldValue": "# — `📦️glue.rs::renderer_worker_pool()` is the ONE process-wide pool this crate injects into both\n",
+      "newValue": "# — `../../🧊️renderer/🦀️.rs::renderer_worker_pool()` is the ONE process-wide pool this crate injects into both\n"
+    },
+    {
+      "id": "cargo-parallel-runtime-prose",
+      "kind": "reference-path",
+      "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml",
+      "oldValue": "# `🎠️runtime.rs`'s `ParallelRuntime` (shard-turn scheduling) and `Shell/🧊️component.rs`'s\n",
+      "newValue": "# `../../🎠️runtime/🦀️.rs`'s `ParallelRuntime` (shard-turn scheduling) and `Shell/🧊️component.rs`'s\n"
+    },
+    {
+      "id": "script-scale-renderer-prose",
+      "kind": "reference-path",
+      "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts",
+      "oldValue": " * headless scale-bench mode (`scale_bench::run` in `📦️glue.rs`) — no ShellState/GPU/winit, no plugin\n",
+      "newValue": " * headless scale-bench mode (`scale_bench::run` in `../../🧊️renderer/🦀️.rs`) — no ShellState/GPU/winit, no plugin\n"
+    },
+    {
+      "id": "node-renderer-prose",
+      "kind": "reference-path",
+      "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️index.ts",
+      "oldValue": " * comment on `semio_wgpu_mount` in `📦️glue.rs` for why a real one isn't wired up yet), so this remains a\n",
+      "newValue": " * comment on `semio_wgpu_mount` in `../🧊️renderer/🦀️.rs` for why a real one isn't wired up yet), so this remains a\n"
+    },
+    {
+      "id": "plugin-bridge-boot-prose-1",
+      "kind": "reference-path",
+      "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🐚️plugin-bridge.ts",
+      "oldValue": " * and for `🟦️boot.ts`'s own retired `PluginWorkerClient` (one dedicated `Worker` per plugin, the\n",
+      "newValue": " * and for `../🧵️browser-boot/🟦️.ts`'s own retired `PluginWorkerClient` (one dedicated `Worker` per plugin, the\n"
+    },
+    {
+      "id": "plugin-bridge-boot-prose-2",
+      "kind": "reference-path",
+      "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🐚️plugin-bridge.ts",
+      "oldValue": "/** 🐚️ The typed handle this file hands to a `bootFrameworkOsWgpu`/`🟦️boot.ts` caller — narrower than\n",
+      "newValue": "/** 🐚️ The typed handle this file hands to a `bootFrameworkOsWgpu`/`../🧵️browser-boot/🟦️.ts` caller — narrower than\n"
+    },
+    {
+      "id": "plugin-bridge-boot-prose-3",
+      "kind": "reference-path",
+      "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🐚️plugin-bridge.ts",
+      "oldValue": " * state) — this unwraps `.viewState` from it. The pre-rewrite `🟦️boot.ts` fed that whole context\n",
+      "newValue": " * state) — this unwraps `.viewState` from it. The pre-rewrite `../🧵️browser-boot/🟦️.ts` fed that whole context\n"
+    },
+    {
+      "id": "native-bench-command-prose",
+      "kind": "reference-path",
+      "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs",
+      "oldValue": "/// OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `bun ./📜️script.ts bench plugins --renderer native`\n",
+      "newValue": "/// OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `bun nx run @semio-tech/framework-os-dev:bench -- plugins --renderer native`\n"
+    },
+    {
+      "id": "cargo-build-icons-input",
+      "kind": "cargo-runtime-coordinate",
+      "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/build.rs",
+      "oldValue": "    let icons_dir = manifest_dir.join(\"../../../../../../../../../🔨️modules/🖼️assets/🔣️icons\");\n",
+      "newValue": "    let icons_dir = manifest_dir.join(\"../../../../../../../../../🔨️modules/🖼️assets/🔣️icons\");\n"
+    },
+    {
+      "id": "cargo-build-icons-output",
+      "kind": "cargo-runtime-coordinate",
+      "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/build.rs",
+      "oldValue": "    let out_icons = out_dir.join(\"icons\");\n",
+      "newValue": "    let out_icons = out_dir.join(\"icons\");\n"
+    },
+    {
+      "id": "cargo-build-logo-watch",
+      "kind": "cargo-runtime-coordinate",
+      "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/build.rs",
+      "oldValue": "    println!(\"cargo:rerun-if-changed={}\", manifest_dir.join(\"../../../../🔣️semio_logo.svg\").display());\n",
+      "newValue": "    println!(\"cargo:rerun-if-changed={}\", manifest_dir.join(\"../../../../🔣️semio_logo.svg\").display());\n"
+    },
+    {
+      "id": "cargo-build-logo-output",
+      "kind": "cargo-runtime-coordinate",
+      "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/build.rs",
+      "oldValue": "    fs::copy(manifest_dir.join(\"../../../../🔣️semio_logo.svg\"), out_dir.join(\"🔣️semio_logo.svg\")).expect(\"copy semio logo\");\n",
+      "newValue": "    fs::copy(manifest_dir.join(\"../../../../🔣️semio_logo.svg\"), out_dir.join(\"🔣️semio_logo.svg\")).expect(\"copy semio logo\");\n"
+    },
+    {
+      "id": "cargo-build-module-output",
+      "kind": "cargo-runtime-coordinate",
+      "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/build.rs",
+      "oldValue": "    fs::write(out_dir.join(\"icons_🤖️generated.rs\"), out).expect(\"write icons_🤖️generated.rs\");\n",
+      "newValue": "    fs::write(out_dir.join(\"icons_🤖️generated.rs\"), out).expect(\"write icons_🤖️generated.rs\");\n"
+    },
+    {
+      "id": "native-plugin-default-owner",
+      "kind": "cargo-runtime-coordinate",
+      "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️bin.rs",
+      "oldValue": "    let modules_root = env::var(\"SEMIO_PLUGIN_MODULES\").map(PathBuf::from).unwrap_or_else(|_| PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../dev/js/plugin-modules\"));\n",
+      "newValue": "    let modules_root = env::var(\"SEMIO_PLUGIN_MODULES\").map(PathBuf::from).unwrap_or_else(|_| PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../../../../🧑️‍💻️dev/🔌️plugin-modules\"));\n"
+    },
+    {
+      "id": "native-asset-manifest-base",
+      "kind": "cargo-runtime-coordinate",
+      "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs",
+      "oldValue": "        return Ok(std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../..\").join(url.trim_start_matches('/')));\n",
+      "newValue": "        return Ok(std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../..\").join(url.trim_start_matches('/')));\n"
+    }
+  ],
+  "pluginModulesTarget": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules"
+}

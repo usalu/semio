@@ -1,0 +1,28 @@
+{
+  "chunkOrder": {
+    "added": [
+      {
+        "index": 3,
+        "marker": {
+          "chunk": "text",
+          "index": 1
+        }
+      }
+    ]
+  },
+  "textChunks": {
+    "added": [
+      {
+        "chunk": {
+          "compressed": false,
+          "keyword": "Title",
+          "kind": "text",
+          "languageTag": "",
+          "translatedKeyword": "",
+          "value": "Direct Owner"
+        },
+        "index": 1
+      }
+    ]
+  }
+}

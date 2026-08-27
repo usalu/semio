@@ -1,0 +1,14 @@
+{
+  "$schema": "./🧬️schema/🔣️binding.json",
+  "cases": [
+    { "mutation": "none", "admitted": true },
+    { "mutation": "wrong-helper", "admitted": false },
+    { "mutation": "divided-grant", "admitted": false },
+    { "mutation": "rounded-grant", "admitted": false },
+    { "mutation": "coarse-clock", "admitted": false },
+    { "mutation": "overflow-fallback", "admitted": false },
+    { "mutation": "expired-entry", "admitted": false },
+    { "mutation": "synthetic-clock", "admitted": false },
+    { "mutation": "missing-output-limit", "admitted": false }
+  ]
+}

@@ -128,7 +128,7 @@ pub enum JsonIJsonMutation {
 }
 
 /// 🧾️ Kebab-case spelling of every `JsonIJsonMutation` variant, in declaration order — the
-/// `json-rfc8259-i-json` catalog in `../../🧪️oracle/🔣️component.json` is measured against this exact
+/// `json-rfc8259-i-json` catalog in `../../🧪️oracle/🔣️.json` is measured against this exact
 /// list, and `kinds_match_the_enum_and_the_catalog` below proves it never drifts from either side.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-top-level", "upsert-member", "remove-member", "rename-member", "set-safe-number", "set-string", "insert-array-element", "remove-array-element"];
 //#endregion 🔖️Mutations
@@ -393,7 +393,7 @@ mod tests {
     /// never parses Rust, so this test is what keeps the manifest and the enum from drifting.
     #[test]
     fn kinds_match_the_enum_and_the_catalog() {
-        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️component.json")).expect("the subset's own test contribution manifest must parse");
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️.json")).expect("the subset's own test contribution manifest must parse");
         let catalog = manifest["mutationCatalogs"].as_array().expect("mutationCatalogs").iter().find(|entry| entry["id"] == "json-rfc8259-i-json").expect("the json-rfc8259-i-json catalog must be declared");
         let declared: Vec<String> = catalog["kinds"].as_array().expect("kinds").iter().map(|kind| kind.as_str().expect("a kind is a string").to_string()).collect();
         assert_eq!(declared, KINDS.iter().map(|kind| kind.to_string()).collect::<Vec<_>>(), "the catalog's kinds must equal KINDS verbatim, in declaration order");

@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "vectors": [
+    {"value": {"kind": "close", "lifetime": {"activationGeneration": "1", "instanceId": 7}, "requestSequence": 9}, "hex": "00010709"},
+    {"value": {"kind": "accepted", "lifetime": {"activationGeneration": "1", "instanceId": 7}, "requestSequence": 9, "closeGeneration": "41"}, "hex": "0101070929"},
+    {"value": {"kind": "retired", "lifetime": {"activationGeneration": "1", "instanceId": 7}, "requestSequence": 9, "closeGeneration": "41"}, "hex": "0201070929"},
+    {"value": {"kind": "retired", "lifetime": {"activationGeneration": "18446744073709551615", "instanceId": 4294967295}, "requestSequence": 9007199254740991, "closeGeneration": "9007199254740993"}, "hex": "02ffffffffffffffffff01ffffffff0fffffffffffffff0f8180808080808010"}
+  ],
+  "reopen": {
+    "prior": {"activationGeneration": "41", "instanceId": 7},
+    "current": {"activationGeneration": "42", "instanceId": 7},
+    "oldRequestAccepted": false,
+    "oldReceiptAccepted": false
+  },
+  "completion": {
+    "participants": ["app", "reactor", "nativeUi", "hostUi", "ingress", "publication", "transport"],
+    "acceptedIsTerminal": false,
+    "idleIsTerminal": false,
+    "mapRemovalIsTerminal": false,
+    "allExactOwnersRetiredIsTerminal": true
+  },
+  "nativeCases": {"sameIdReplacementRejected": true, "overflowPreservesLiveOwner": true, "quarantineRemovalPreservesTerminalWitness": true, "repeatCloseKeepsReplacement": true, "scopeAfterSurfaceClear": true},
+  "leaseFailures": ["postMessage-throw", "worker-error"],
+  "publishedClose": {"owners": ["surface", "credit", "handback"], "remaining": [["credit", "handback"], ["handback"], [], []], "complete": [false, false, false, true]},
+  "leaseReceipts": [
+    {"name": "accepted-is-not-terminal", "events": ["accepted"], "settled": false},
+    {"name": "terminal-needs-acceptance", "events": ["retired"], "settled": false},
+    {"name": "exact-joined-terminal", "events": ["accepted", "retired"], "settled": true},
+    {"name": "wrong-worker", "events": ["foreign-worker-accepted", "retired"], "settled": false},
+    {"name": "old-activation", "events": ["old-activation-accepted", "retired"], "settled": false},
+    {"name": "wrong-request", "events": ["wrong-request-accepted", "retired"], "settled": false},
+    {"name": "wrong-close-generation", "events": ["accepted", "wrong-generation-retired"], "settled": false},
+    {"name": "duplicate-accepted", "events": ["accepted", "accepted", "retired"], "settled": true}
+  ]
+}

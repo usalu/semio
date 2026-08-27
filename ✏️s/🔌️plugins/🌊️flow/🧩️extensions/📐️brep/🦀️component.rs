@@ -1798,7 +1798,7 @@ mod tests {
         let _serial = test_serial();
         reset_test_kernel();
         let manifest_json = extension_manifest_json();
-        let bundle = ExtensionBundle::new("brep", "Brep", "0.3.0")
+        let bundle = ExtensionBundle::new("flow-extension-brep", "Brep", "0.3.0")
             .extends("flow")
             .contributes_topic(
                 "flow.extension",
@@ -1832,7 +1832,7 @@ mod tests {
             });
         install_extension_bundle(bundle);
         extension_activate().unwrap();
-        assert_eq!(extension_manifest().extension_id, "brep");
+        assert_eq!(extension_manifest().extension_id, "flow-extension-brep");
         let input = Dictionary::new().insert("width", Value::Dictionary(number_dictionary(1.0))).insert("depth", Value::Dictionary(number_dictionary(1.0))).insert("height", Value::Dictionary(number_dictionary(1.0)));
         let req = serde_json::json!({
             "operatorId": "brep.prim3d.box",
@@ -1865,7 +1865,7 @@ mod extension_guest {
         input_json: String,
     }
 
-    async fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
+    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
         let extension_id = "brep";
         let label = "Brep";
         let icon_id = "brep";
@@ -1887,30 +1887,42 @@ mod extension_guest {
         tolerance: f64,
     }
 
-    async fn default_tessellate_tolerance() -> f64 {
+    fn default_tessellate_tolerance() -> f64 {
         0.05
     }
 
-    async fn bundle() -> ExtensionBundle {
-        let manifest_json = super::extension_manifest_json();
+    fn bundle() -> ExtensionBundle {
+        let manifest_json = semio_framework::io::resolve_ready(super::extension_manifest_json());
         let flow_topic_payload = flow_extension_contribution(FLOW_APP_ID, manifest_json.clone());
         let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);
-        ExtensionBundle::new("brep", "Brep", "0.3.0")
-            .extends("flow")
-            .mode(ExecutionMode::Linked)
-            .contributes_topic("flow.extension", flow_topic_payload)
-            .contributes_topic("flow.extension", procedural3d_topic_payload)
-            .handler("evaluate", |req| {
+        let bundle = ExtensionBundle::new("flow-extension-brep", "Brep", "0.3.0").extends("flow");
+        let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Linked));
+        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", flow_topic_payload));
+        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
+        let bundle = semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
                 let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string()))?;
-                Ok(evaluate_json(&neural_engine::ColdOwner::new(module_registry()), &request.operator_id, &request.input_json).into_bytes())
-            })
-            .handler("tessellate", |req| {
+                Ok(evaluate_json(&neural_engine::ColdOwner::new(semio_framework::io::resolve_ready(module_registry())), &request.operator_id, &request.input_json).into_bytes())
+            }));
+        semio_framework::io::resolve_ready(bundle.handler("tessellate", |req| {
                 let request: TessellateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), err.to_string()))?;
                 match flow_extension_sdk::brep_geometry::tessellate_geometry(&request.handle, request.tolerance) {
                     Ok(mesh) => Ok(serde_json::to_vec(&mesh).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.encode"), err.to_string()))?),
                     Err(err) => Ok(serde_json::json!({ "error": err }).to_string().into_bytes()),
                 }
-            })
+            }))
+    }
+
+    #[test]
+    fn bundle_identity_matches_catalogue_fixture() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️package-identities.json")).unwrap();
+        let bundle = bundle();
+        let manifest = serde_json::to_value(&bundle.manifest).unwrap();
+        assert_eq!(manifest["extensionId"], fixture["brep"]["pluginId"]);
+        assert_eq!(bundle.manifest.topic_contributions.len(), 2);
+        for contribution in &bundle.manifest.topic_contributions {
+            let payload: serde_json::Value = contribution.decode().unwrap();
+            assert_eq!(payload["extensionId"], fixture["brep"]["flowId"]);
+        }
     }
 
     semio_framework_plugin::extension_exports!(bundle);

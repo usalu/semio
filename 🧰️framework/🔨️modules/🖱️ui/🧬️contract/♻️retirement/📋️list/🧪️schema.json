@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.ui.fixed-list-retirement.fixture.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "capacity", "cases", "ownership"],
+  "properties": {
+    "version": { "const": 1 },
+    "capacity": { "const": 4 },
+    "cases": {
+      "type": "array", "minItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "values", "popped"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "values": { "type": "array", "maxItems": 4, "items": { "$ref": "#/definitions/value" } },
+          "popped": { "type": "array", "maxItems": 4, "items": { "$ref": "#/definitions/value" } }
+        }
+      }
+    },
+    "ownership": {
+      "type": "object", "additionalProperties": false,
+      "required": ["initializedSlotsEqualLogicalLength", "unreservedPushAccepted", "reservedPushChangesBacking", "zeroCapacityReservesBacking", "releaseWithPayloadAccepted", "popDestroysTransferredPayload", "emptyReleaseDestroysTransferredPayload", "terminalRequiresNoAllocation", "overflowPreservesRejectedOwner", "secondEmptyReleaseCount"],
+      "properties": {
+        "initializedSlotsEqualLogicalLength": { "const": true },
+        "unreservedPushAccepted": { "const": false },
+        "reservedPushChangesBacking": { "const": false },
+        "zeroCapacityReservesBacking": { "const": false },
+        "releaseWithPayloadAccepted": { "const": false },
+        "popDestroysTransferredPayload": { "const": false },
+        "emptyReleaseDestroysTransferredPayload": { "const": false },
+        "terminalRequiresNoAllocation": { "const": true },
+        "overflowPreservesRejectedOwner": { "const": true },
+        "secondEmptyReleaseCount": { "const": 0 }
+      }
+    }
+  },
+  "definitions": {
+    "value": {
+      "anyOf": [
+        { "type": "null" }, { "type": "boolean" }, { "type": "number" }, { "type": "string" },
+        { "type": "array", "items": { "$ref": "#/definitions/value" } },
+        { "type": "object", "additionalProperties": { "$ref": "#/definitions/value" } }
+      ]
+    }
+  }
+}

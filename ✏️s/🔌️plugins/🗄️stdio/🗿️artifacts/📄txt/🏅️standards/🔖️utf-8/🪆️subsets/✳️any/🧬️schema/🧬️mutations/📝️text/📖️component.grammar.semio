@@ -1,8 +1,0 @@
-dialect grammar
-grammar txt.mutations
-extension txt
-start document
-
-# Direct descriptor identities: set-trailing-newline, set-line-ending, insert-line, remove-line, set-line.
-document = "txt-mutation" opcode "payload" "=" hex
-opcode = "set-trailing-newline" | "set-line-ending" | "insert-line" | "remove-line" | "set-line"

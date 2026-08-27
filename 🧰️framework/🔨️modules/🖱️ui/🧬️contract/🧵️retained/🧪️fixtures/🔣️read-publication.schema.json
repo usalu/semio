@@ -1,0 +1,9 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#", "type": "object", "additionalProperties": false,
+  "required": ["version", "versions", "laws"],
+  "properties": {
+    "version": {"const": 1},
+    "versions": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}, "minItems": 3, "maxItems": 3},
+    "laws": {"type": "array", "items": {"type": "string"}, "uniqueItems": true, "minItems": 10}
+  }
+}

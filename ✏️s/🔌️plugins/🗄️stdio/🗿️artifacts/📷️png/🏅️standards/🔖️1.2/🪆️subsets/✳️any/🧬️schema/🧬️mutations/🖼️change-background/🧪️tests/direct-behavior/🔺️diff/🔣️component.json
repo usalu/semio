@@ -1,0 +1,18 @@
+{
+  "bkgd": {
+    "b": 3,
+    "colorType": "rgb",
+    "g": 2,
+    "r": 1
+  },
+  "chunkOrder": {
+    "added": [
+      {
+        "index": 3,
+        "marker": {
+          "chunk": "bkgd"
+        }
+      }
+    ]
+  }
+}

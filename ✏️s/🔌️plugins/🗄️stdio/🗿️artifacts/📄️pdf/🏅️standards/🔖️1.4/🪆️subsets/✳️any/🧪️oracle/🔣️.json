@@ -1,0 +1,96 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧬️ Exact 5-leaf PDF 1.4/ANY catalog. Reference lopdf never links the subject implementation.",
+  "oracles": [
+    {
+      "id": "lopdf-pdf-1-4-mutate",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "capabilities": [
+        "pdf-1-4-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-pdf-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/J-F-Liu/lopdf",
+      "rationale": "Independently reads all pages through lopdf, applies this subset's concrete page operations, reconstructs document bytes, and verifies inverse closure against the original projection."
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "pdf-1-4-any",
+      "capability": "pdf-1-4-mutate",
+      "standardDirectoryName": "🔖️1.4",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [
+        {
+          "mutationId": "insert-page",
+          "sourceMutationDirectoryName": "📥️insert-page",
+          "mutationDirectoryName": "📥️insert-page",
+          "scenarios": [
+            {
+              "id": "round-trips-the-concrete-inverse",
+              "directoryName": "🧪️round-trips-the-concrete-inverse"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-page",
+          "sourceMutationDirectoryName": "🗑️remove-page",
+          "mutationDirectoryName": "🗑️remove-page",
+          "scenarios": [
+            {
+              "id": "round-trips-the-concrete-inverse",
+              "directoryName": "🧪️round-trips-the-concrete-inverse"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-page",
+          "sourceMutationDirectoryName": "🔀️move-page",
+          "mutationDirectoryName": "🔀️move-page",
+          "scenarios": [
+            {
+              "id": "round-trips-the-concrete-inverse",
+              "directoryName": "🧪️round-trips-the-concrete-inverse"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-page",
+          "sourceMutationDirectoryName": "📐️resize-page",
+          "mutationDirectoryName": "📐️resize-page",
+          "scenarios": [
+            {
+              "id": "round-trips-the-concrete-inverse",
+              "directoryName": "🧪️round-trips-the-concrete-inverse"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-page-text",
+          "sourceMutationDirectoryName": "📝️replace-page-text",
+          "mutationDirectoryName": "📝️replace-page-text",
+          "scenarios": [
+            {
+              "id": "round-trips-the-concrete-inverse",
+              "directoryName": "🧪️round-trips-the-concrete-inverse"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "insert-page",
+        "remove-page",
+        "move-page",
+        "resize-page",
+        "replace-page-text"
+      ]
+    }
+  ]
+}

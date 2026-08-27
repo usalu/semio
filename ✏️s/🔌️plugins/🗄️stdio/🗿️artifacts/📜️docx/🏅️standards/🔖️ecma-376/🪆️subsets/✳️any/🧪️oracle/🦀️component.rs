@@ -27,7 +27,7 @@
 //! `Event::GeneralRef`, so a text run is accumulated across `Text`/`GeneralRef` events rather than
 //! read as one event — see [`oracles::resolve_general_ref`], same technique the XML 1.0 oracle uses.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`DocxMutation::KINDS`).
 
 use semio_repo_test_host::Json;

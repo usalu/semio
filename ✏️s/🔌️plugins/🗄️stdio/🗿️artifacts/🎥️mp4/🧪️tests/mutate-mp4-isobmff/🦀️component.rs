@@ -15,7 +15,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::mp4::standards::v_isobmff::subs
 use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
-/// 📇️ The catalog's own kinds (`../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`),
+/// 📇️ The catalog's own kinds (`../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️oracle/🔣️.json`),
 /// duplicated as a plain constant rather than reached through the subject crate — this loop drives
 /// oracle registration too, which must build and run with the subject crate absent entirely.
 const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-ftyp", "insert-track", "remove-track", "set-track-dimensions", "set-track-codec", "insert-sample", "remove-sample", "set-sample-sync"];

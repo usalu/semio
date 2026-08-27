@@ -25,7 +25,7 @@
 //! re-export it used to arrive through.
 //!
 //! @see ../../../../🧬️mvd/🦀️component.rs — the Part-21 editing primitives the three MVD subsets share.
-//! @see ../../🧪️oracle/🔣️component.json — the `ifc-2x3-sav` catalog `KINDS` is checked against.
+//! @see ../../🧪️oracle/🔣️.json — the `ifc-2x3-sav` catalog `KINDS` is checked against.
 
 use crate::artifacts::ifc::standards::v2x3::mvd;
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::Ifc2x3Diff;
@@ -122,7 +122,7 @@ pub enum Ifc2x3SavMutation {
 }
 
 /// 📇️ Kebab-case spelling of every `Ifc2x3SavMutation` variant, in declaration order — the
-/// `ifc-2x3-sav` catalog in `../../🧪️oracle/🔣️component.json` is required to match verbatim.
+/// `ifc-2x3-sav` catalog in `../../🧪️oracle/🔣️.json` is required to match verbatim.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-view-definition", "set-analysis-model", "set-load-group", "set-group-assignment"];
 
 impl Ifc2x3SavMutation {

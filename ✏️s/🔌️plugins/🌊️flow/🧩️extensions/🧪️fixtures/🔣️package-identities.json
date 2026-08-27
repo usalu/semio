@@ -1,0 +1,38 @@
+{
+  "bim": {
+    "pluginId": "flow-extension-bim",
+    "flowId": "bim"
+  },
+  "brep": {
+    "pluginId": "flow-extension-brep",
+    "flowId": "brep"
+  },
+  "dictionary": {
+    "pluginId": "flow-extension-dictionary",
+    "flowId": "dictionary"
+  },
+  "draw": {
+    "pluginId": "flow-extension-draw",
+    "flowId": "draw"
+  },
+  "list": {
+    "pluginId": "flow-extension-list",
+    "flowId": "list"
+  },
+  "logic": {
+    "pluginId": "flow-extension-logic",
+    "flowId": "logic"
+  },
+  "math": {
+    "pluginId": "flow-extension-math",
+    "flowId": "math"
+  },
+  "primitive": {
+    "pluginId": "flow-extension-primitive",
+    "flowId": "core"
+  },
+  "text": {
+    "pluginId": "flow-extension-text",
+    "flowId": "text"
+  }
+}

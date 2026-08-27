@@ -17,7 +17,7 @@ use std::sync::{Mutex, OnceLock};
 
 pub use crate::os_dsl::schema::*;
 pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
-pub use dsl_derive::{DslArtifact, DslDiff, DslEnum, DslOps, DslRecord, DslScalar, Mutations};
+pub use dsl_derive::{DslArtifact, DslDiff, DslEnum, DslOps, DslRecord, DslScalar, MutationLeaf, Mutations};
 
 pub use crate::os_dsl::grammar::{
     parse_grammar, parse_protocol, print_grammar, print_protocol, verify_protocol_bytes, verify_protocol_source, walk_protocol, Block, Count, Field, FragmentRegistry, Framing, GrammarFile, Prim, ProtocolFile, ProtocolMismatch, ProtocolTrace,

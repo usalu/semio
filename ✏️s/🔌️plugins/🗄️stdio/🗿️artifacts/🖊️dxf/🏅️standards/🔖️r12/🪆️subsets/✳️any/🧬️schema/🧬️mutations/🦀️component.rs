@@ -184,7 +184,7 @@ pub enum DxfMutation {
 
 //#region 🔖️Kinds
 /// 📇️ Kebab-case spelling of every `DxfMutation` variant, declaration order — the single source of
-/// truth `../../🧪️oracle/🔣️component.json`'s `mutationCatalogs[].kinds` and every test-case adapter
+/// truth `../../🧪️oracle/🔣️.json`'s `mutationCatalogs[].kinds` and every test-case adapter
 /// duplicate against (per ticket 26/08/23/END-TO-END-TESTING-REFACTOR wave 7's registration rule:
 /// the framework never parses Rust, so this constant plus `kinds_const_matches_enum_variants` below
 /// is what keeps the manifest honest).
@@ -1016,7 +1016,7 @@ mod tests {
     //#region 🔖️KindsCatalogLaw
     /// 🧾️ `KINDS` matches the enum's own variant set (via `demo_mutation_cases`' one-instance-per-
     /// variant coverage) and every entry parses/prints as its own keyword -- what keeps
-    /// `../../🧪️oracle/🔣️component.json`'s `mutationCatalogs[].kinds` honest against Rust, per the
+    /// `../../🧪️oracle/🔣️.json`'s `mutationCatalogs[].kinds` honest against Rust, per the
     /// wave 7 fleet brief's registration rule ("the framework never parses Rust").
     #[semio_framework_async_macros::async_test]
     async fn kinds_const_matches_enum_variants_in_declaration_order() {

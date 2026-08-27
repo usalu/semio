@@ -54,9 +54,8 @@ pub fn contribute(base: &TiffSnapshot, index: usize) -> TiffDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> TiffMutation {
-    let vector: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🔣️component.json")).expect("authored mutation vector");
-    serde_json::from_value(vector["mutation"].clone()).expect("direct mutation payload")
+    serde_json::from_str(include_str!("🧪️tests/direct-behavior/🦠️mutation/🔣️component.json")).expect("committed remove-ifd payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🦀️component.rs"]
-mod tests;
+#[path = "🧪️tests/direct-behavior/🦀️component.rs"]
+mod tests_direct_behavior;

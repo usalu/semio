@@ -1,0 +1,17 @@
+{
+  "chunkOrder": {
+    "added": [
+      {
+        "index": 3,
+        "marker": {
+          "chunk": "phys"
+        }
+      }
+    ]
+  },
+  "phys": {
+    "ppuX": 96,
+    "ppuY": 96,
+    "unitIsMeter": false
+  }
+}

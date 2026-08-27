@@ -1,0 +1,1 @@
+{"maximumBytes":32768,"pageBytes":256,"lengths":[0,1,255,256,257,4096,32768],"pattern":{"multiply":17,"add":3,"modulo":256},"invalidLengths":[-1,0.5,32769,9007199254740991]}

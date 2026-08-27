@@ -13,7 +13,7 @@ Feature: Apply every typed semio CAD mutation to the real committed drawing, aga
   `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` and the semio envelope in
   `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`), importing nothing from and
   transliterating nothing of the Rust it judges. It is registered as the oracle
-  `semio-cad-python-independent` in `…/✳️cad/🧪️oracle/🔣️component.json`; the recorded no-oracle
+  `semio-cad-python-independent` in `…/✳️cad/🧪️oracle/🔣️.json`; the recorded no-oracle
   decision it replaces is gone, because there is now a reference to compare against.
 
   The DXF route the replaced decision surveyed stays rejected and nothing here revives it: the

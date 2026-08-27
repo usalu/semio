@@ -14,15 +14,9 @@
 //! else's dependency graph.
 //!
 //! 🕰️ **Clock**: `std::time::Instant` doesn't exist (usably) on `wasm32-unknown-unknown` without WASI
-//! p2, and this crate has zero `js-sys`/`wasm-bindgen` to bridge to `Date.now()` (the zero-deps mandate
-//! above forbids adding one). [`now_us`] abstracts the reading behind an installable override
-//! ([`install_clock`]) over a per-target default — the same cfg split as `puzzle3d_now_ms`
-//! (`✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️component.rs`)
-//! and the same "host supplies the clock" seam as `HostAsyncRuntime::now_ms`
-//! (`🧰️framework/🔨️modules/⏳️async/🦀️component.rs`), except the `wasm32-unknown-unknown` default
-//! degrades to a monotonically increasing tick counter instead of freezing at zero: percentile/watchdog
-//! math here needs strictly increasing values to stay meaningful, unlike that precompute crate's
-//! one-off step-budget clock, which tolerates freezing because it never actually ships on that target.
+//! p2. The embedding host installs one actual monotonic source shared by tracing and job deadlines.
+//! Missing or backward readings produce an exact callback fault, never synthetic time. Telemetry is
+//! optional and nonblocking; [`CallbackVerdict`] is the caller-owned quarantine authority.
 //!
 //! 🚫️async: this crate deliberately writes NO `async fn` anywhere, breaking with the rest of the
 //! repo's universal-async convention (see `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/
@@ -37,7 +31,6 @@
 //! always-available probe.
 
 use std::cell::Cell;
-use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock, PoisonError};
 
@@ -46,43 +39,47 @@ use std::sync::{Mutex, OnceLock, PoisonError};
 /// back to [`default_clock_us`]. Set at most meaningfully once, at host startup — mirrors
 /// `HostAsyncRuntime::now_ms`'s "the implementation supplies the clock" seam, just via a free fn
 /// instead of a trait method (this crate has no runtime/host object to hang a trait on).
-static CLOCK_OVERRIDE: OnceLock<fn() -> u64> = OnceLock::new();
+static CLOCK_OVERRIDE: OnceLock<fn() -> Option<u64>> = OnceLock::new();
 
-/// 🕰️ Installs a host-supplied monotonic-microseconds clock. Meant for targets where the default in
-/// [`default_clock_us`] is a poor fit (`wasm32-unknown-unknown`, where it degrades to a tick counter) —
-/// a web host installs a `performance.now()`-backed fn once at startup. Only the first call wins (later
-/// calls are silently ignored) — same one-shot-install shape as every other "host installs its own
-/// backend once" seam in this repo.
-pub fn install_clock(clock: fn() -> u64) {
-    let _ = CLOCK_OVERRIDE.set(clock);
+/// 🕰️ Installs one real monotonic-microseconds source shared by deadlines and watchdogs.
+pub fn install_clock(clock: fn() -> Option<u64>) -> Result<(), fn() -> Option<u64>> {
+    install_exact_clock(&CLOCK_OVERRIDE, clock)
 }
 
-/// 🕰️ WASI p2 program components and native targets both have a real OS clock — `Instant`-based, same
-/// as `puzzle3d_now_ms`'s non-`wasm32-unknown-unknown` branch.
+fn install_exact_clock(authority: &OnceLock<fn() -> Option<u64>>, clock: fn() -> Option<u64>) -> Result<(), fn() -> Option<u64>> {
+    let existing = authority.get_or_init(|| clock);
+    if std::ptr::fn_addr_eq(*existing, clock) { Ok(()) } else { Err(clock) }
+}
+
+/// 🌐️ Converts fractional platform milliseconds into checked unsigned microseconds.
+pub fn microseconds_from_milliseconds(milliseconds: f64) -> Option<u64> {
+    let microseconds = milliseconds * 1_000.0;
+    (microseconds.is_finite() && microseconds >= 0.0 && microseconds < 18_446_744_073_709_551_616.0).then(|| microseconds.floor() as u64)
+}
+
+/// 🕰️ Native and WASI p2 clocks preserve their actual monotonic microsecond precision.
 #[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
-fn default_clock_us() -> u64 {
+fn default_clock_us() -> Option<u64> {
     static START: OnceLock<std::time::Instant> = OnceLock::new();
-    START.get_or_init(std::time::Instant::now).elapsed().as_micros() as u64
+    u64::try_from(START.get_or_init(std::time::Instant::now).elapsed().as_micros()).ok()
 }
 
-/// 🕰️ Plain `wasm32-unknown-unknown` has no OS clock and no `js-sys`/`wasm-bindgen` dependency to
-/// bridge to `Date.now()` (zero-deps mandate). Falls back to a monotonically increasing tick counter —
-/// order-correct but NOT wall-clock-accurate — until the host calls [`install_clock`]; this keeps
-/// [`PercentileRing`]/[`Watchdog`] math well-defined (strictly increasing `now_us()`) instead of
-/// freezing at a constant, which would make every sample read as zero elapsed time.
+/// 🔒️ Bare Wasm must install its embedding host's real clock before instrumentation or work.
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-fn default_clock_us() -> u64 {
-    static FALLBACK_TICK: AtomicU64 = AtomicU64::new(0);
-    FALLBACK_TICK.fetch_add(1, Ordering::Relaxed)
-}
+fn default_clock_us() -> Option<u64> { None }
 
 /// 🕰️ Current monotonic microsecond reading: the host's [`install_clock`] override if one was set,
 /// else [`default_clock_us`] for this target.
-pub fn now_us() -> u64 {
+pub fn try_now_us() -> Option<u64> {
     match CLOCK_OVERRIDE.get() {
         Some(clock) => clock(),
         None => default_clock_us(),
     }
+}
+
+/// 🕰️ Instrumentation requires the same installed real clock as interactive deadlines.
+pub fn now_us() -> u64 {
+    try_now_us().expect("real monotonic microsecond clock must be installed before instrumentation")
 }
 //#endregion 🕰️Clock
 
@@ -91,6 +88,11 @@ pub fn now_us() -> u64 {
 /// [`ContractViolation`] once elapsed time crosses this, regardless of which [`InteractiveStage`] the
 /// site belongs to.
 pub const INTERACTIVE_STEP_CEILING_US: u64 = 8_000;
+
+/// 🚨️ Interactive callbacks must finish strictly below the shared eight-millisecond ceiling.
+pub fn interactive_step_contract_violated(elapsed_us: u64) -> bool {
+    elapsed_us >= INTERACTIVE_STEP_CEILING_US
+}
 
 /// 🎯️ Soft target for a UI event handler (input → dispatch), in microseconds.
 pub const UI_EVENT_SOFT_TARGET_US: u64 = 1_000;
@@ -134,22 +136,22 @@ impl InteractiveStage {
 /// `ActorMetrics::wall_us_ring`/[`PercentileRing`] generalized over `T: Copy` so it isn't duplicated
 /// per event type — shared by [`Watchdog`]'s violation store and the [`TraceEvent`] store below.
 struct BoundedRing<T: Copy, const N: usize> {
-    entries: Box<[Option<T>]>,
+    entries: [Option<T>; N],
     pos: usize,
     len: usize,
     total: u64,
 }
 
 impl<T: Copy, const N: usize> BoundedRing<T, N> {
-    fn new() -> BoundedRing<T, N> {
-        BoundedRing { entries: vec![None; N].into_boxed_slice(), pos: 0, len: 0, total: 0 }
+    const fn new() -> BoundedRing<T, N> {
+        BoundedRing { entries: [None; N], pos: 0, len: 0, total: 0 }
     }
 
     fn push(&mut self, value: T) {
         self.entries[self.pos] = Some(value);
         self.pos = (self.pos + 1) % N;
         self.len = (self.len + 1).min(N);
-        self.total += 1;
+        self.total = self.total.saturating_add(1);
     }
 
     /// 📸️ Every retained entry, oldest first.
@@ -193,7 +195,7 @@ pub struct PercentileRing {
 }
 
 impl PercentileRing {
-    pub fn new() -> PercentileRing {
+    pub const fn new() -> PercentileRing {
         PercentileRing { samples: [0; SAMPLE_RING_CAPACITY], len: 0, pos: 0 }
     }
 
@@ -244,21 +246,44 @@ impl Default for PercentileRing {
     }
 }
 
-/// 📇️ Name-keyed registry of one [`PercentileRing`] per labelled site — how [`StepTimer`]/
-/// [`CallbackTimer`]/[`Watchdog`] resolve "the ring for this site" from just a `&'static str` label.
-fn site_registry() -> &'static Mutex<BTreeMap<&'static str, PercentileRing>> {
-    static REGISTRY: OnceLock<Mutex<BTreeMap<&'static str, PercentileRing>>> = OnceLock::new();
-    REGISTRY.get_or_init(|| Mutex::new(BTreeMap::new()))
+const SITE_CAPACITY: usize = 256;
+type SiteRegistry = [Option<(&'static str, PercentileRing)>; SITE_CAPACITY];
+static OMITTED_SITE_SAMPLES: AtomicU64 = AtomicU64::new(0);
+static OMITTED_EVENTS: AtomicU64 = AtomicU64::new(0);
+static OMITTED_VIOLATIONS: AtomicU64 = AtomicU64::new(0);
+
+/// 📇️ Fixed static backing admits optional site samples without a lazy allocation.
+fn site_registry() -> &'static Mutex<SiteRegistry> {
+    static REGISTRY: Mutex<SiteRegistry> = Mutex::new([const { None }; SITE_CAPACITY]);
+    &REGISTRY
 }
 
 fn record_site_sample(site: &'static str, elapsed_us: u64) {
-    site_registry().lock().unwrap_or_else(PoisonError::into_inner).entry(site).or_default().record(elapsed_us);
+    let Ok(mut registry) = site_registry().try_lock() else { OMITTED_SITE_SAMPLES.fetch_add(1, Ordering::Relaxed); return; };
+    let mut vacant = None;
+    for (index, slot) in registry.iter_mut().enumerate() {
+        match slot {
+            Some((label, ring)) if std::ptr::eq(*label, site) => { ring.record(elapsed_us); return; }
+            None if vacant.is_none() => vacant = Some(index),
+            _ => {}
+        }
+    }
+    if let Some(index) = vacant {
+        let mut ring = PercentileRing::new();
+        ring.record(elapsed_us);
+        registry[index] = Some((site, ring));
+    } else { OMITTED_SITE_SAMPLES.fetch_add(1, Ordering::Relaxed); }
 }
 
 /// 📊️ `(p50, p95, p99)` microseconds recorded for `site`, or `None` if nothing has landed there yet.
 pub fn site_percentiles(site: &str) -> Option<(u32, u32, u32)> {
     let registry = site_registry().lock().unwrap_or_else(PoisonError::into_inner);
-    registry.get(site).map(|ring| (ring.p50(), ring.p95(), ring.p99()))
+    registry.iter().flatten().find(|(label, _)| *label == site).map(|(_, ring)| (ring.p50(), ring.p95(), ring.p99()))
+}
+
+/// 📉️ Optional telemetry omissions never replace an exact callback verdict.
+pub fn telemetry_omitted_counts() -> (u64, u64, u64) {
+    (OMITTED_SITE_SAMPLES.load(Ordering::Relaxed), OMITTED_EVENTS.load(Ordering::Relaxed), OMITTED_VIOLATIONS.load(Ordering::Relaxed))
 }
 //#endregion 📈️PercentileRing
 
@@ -269,13 +294,13 @@ pub fn site_percentiles(site: &str) -> Option<(u32, u32, u32)> {
 /// operation (a per-frame simulation tick, a render pass).
 pub struct StepTimer {
     site: &'static str,
-    start_us: u64,
+    start_us: Option<u64>,
 }
 
 impl StepTimer {
     /// ▶️ Starts timing `site` from [`now_us`].
     pub fn start(site: &'static str) -> StepTimer {
-        StepTimer { site, start_us: now_us() }
+        StepTimer { site, start_us: try_now_us() }
     }
 }
 
@@ -283,7 +308,8 @@ impl Drop for StepTimer {
     // 🚫️async: E1 external-trait impl — `Drop::drop`'s signature is fixed by std, so this can never
     // `.await`; same reasoning as `CancelToken`'s `Debug::fmt` impl in `⏳️async/🦀️component.rs`.
     fn drop(&mut self) {
-        record_site_sample(self.site, now_us().saturating_sub(self.start_us));
+        if let Some(elapsed) = self.start_us.zip(try_now_us()).and_then(|(start, end)| end.checked_sub(start)) { record_site_sample(self.site, elapsed); }
+        else { OMITTED_SITE_SAMPLES.fetch_add(1, Ordering::Relaxed); }
     }
 }
 
@@ -315,33 +341,78 @@ pub struct ContractViolation {
     pub elapsed_us: u64,
 }
 
+/// 🕰️ A missing or backward monotonic reading denies callback publication.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CallbackClockFault { Missing, Backward }
+
+/// 🔒️ Immutable verdict minted only by its exact callback guard, independent of telemetry storage.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CallbackVerdict {
+    site: &'static str,
+    operation: OperationId,
+    generation: Generation,
+    stage: InteractiveStage,
+    elapsed: Result<u64, CallbackClockFault>,
+}
+
+impl CallbackVerdict {
+    pub fn is_fault(&self) -> bool { self.elapsed.is_err() || self.elapsed.is_ok_and(interactive_step_contract_violated) }
+    pub fn elapsed_us(&self) -> Option<u64> { self.elapsed.ok() }
+    pub fn clock_fault(&self) -> Option<CallbackClockFault> { self.elapsed.err() }
+    pub fn operation(&self) -> OperationId { self.operation }
+    pub fn generation(&self) -> Generation { self.generation }
+    pub fn violation(&self) -> Option<ContractViolation> {
+        self.elapsed.ok().filter(|elapsed| interactive_step_contract_violated(*elapsed)).map(|elapsed_us| ContractViolation { site: self.site, operation: self.operation, generation: self.generation, stage: self.stage, elapsed_us })
+    }
+}
+
 /// 🚨️ Ring capacity for the process-wide violation store — bounded so a runaway-overrunning site
 /// cannot grow this unboundedly; oldest violations are evicted first (see [`Watchdog::violation_count`]
 /// for the never-shrinking total).
 const VIOLATION_RING_CAPACITY: usize = 128;
 
 fn violation_ring() -> &'static Mutex<BoundedRing<ContractViolation, VIOLATION_RING_CAPACITY>> {
-    static RING: OnceLock<Mutex<BoundedRing<ContractViolation, VIOLATION_RING_CAPACITY>>> = OnceLock::new();
-    RING.get_or_init(|| Mutex::new(BoundedRing::new()))
+    static RING: Mutex<BoundedRing<ContractViolation, VIOLATION_RING_CAPACITY>> = Mutex::new(BoundedRing::new());
+    &RING
 }
 
 /// 🐕️ RAII guard: wraps one [`InteractiveStage`] site for a specific operation/generation, records the
 /// elapsed sample into the same per-site [`PercentileRing`] [`StepTimer`] uses, and reports a
-/// [`ContractViolation`] once elapsed time crosses [`INTERACTIVE_STEP_CEILING_US`] — queryable via
-/// [`Watchdog::violations`] in every build (debug/test callers can assert on it; release callers can
-/// read it to quarantine the offending site) and never panics doing so, even on a poisoned lock (see
-/// the `unwrap_or_else(PoisonError::into_inner)` calls throughout this module).
+/// [`ContractViolation`] at the strict ceiling. [`Watchdog::finish`] transfers the exact verdict;
+/// global snapshots are optional diagnostics and must never authorize publication or quarantine.
 pub struct Watchdog {
     site: &'static str,
     operation: OperationId,
     generation: Generation,
     stage: InteractiveStage,
-    start_us: u64,
+    start_us: Option<u64>,
+    finished: bool,
 }
 
 impl Watchdog {
     pub fn start(site: &'static str, operation: OperationId, generation: Generation, stage: InteractiveStage) -> Watchdog {
-        Watchdog { site, operation, generation, stage, start_us: now_us() }
+        Watchdog { site, operation, generation, stage, start_us: try_now_us(), finished: false }
+    }
+
+    pub fn finish(mut self) -> CallbackVerdict {
+        self.finished = true;
+        self.report(try_now_us())
+    }
+
+    pub fn is_admitted(&self) -> bool { self.start_us.is_some() }
+
+    fn report(&self, end_us: Option<u64>) -> CallbackVerdict {
+        let elapsed = match (self.start_us, end_us) {
+            (Some(start), Some(end)) => end.checked_sub(start).ok_or(CallbackClockFault::Backward),
+            _ => Err(CallbackClockFault::Missing),
+        };
+        let verdict = CallbackVerdict { site: self.site, operation: self.operation, generation: self.generation, stage: self.stage, elapsed };
+        if let Ok(elapsed) = elapsed { record_site_sample(self.site, elapsed); }
+        if let Some(violation) = verdict.violation() {
+            if let Ok(mut ring) = violation_ring().try_lock() { ring.push(violation); }
+            else { OMITTED_VIOLATIONS.fetch_add(1, Ordering::Relaxed); }
+        }
+        verdict
     }
 
     /// 📸️ Every violation recorded so far, oldest first, capped at the last [`VIOLATION_RING_CAPACITY`].
@@ -365,12 +436,7 @@ impl Watchdog {
 impl Drop for Watchdog {
     // 🚫️async: E1 external-trait impl, same reasoning as `StepTimer::drop` above.
     fn drop(&mut self) {
-        let elapsed_us = now_us().saturating_sub(self.start_us);
-        record_site_sample(self.site, elapsed_us);
-        if elapsed_us > INTERACTIVE_STEP_CEILING_US {
-            let violation = ContractViolation { site: self.site, operation: self.operation, generation: self.generation, stage: self.stage, elapsed_us };
-            violation_ring().lock().unwrap_or_else(PoisonError::into_inner).push(violation);
-        }
+        if !self.finished { self.report(try_now_us()); }
     }
 }
 //#endregion 🐕️Watchdog
@@ -615,48 +681,50 @@ const TRACE_RING_CAPACITY: usize = 4096;
 static NEXT_SEQUENCE: AtomicU64 = AtomicU64::new(1);
 
 fn trace_ring() -> &'static Mutex<BoundedRing<TraceEvent, TRACE_RING_CAPACITY>> {
-    static RING: OnceLock<Mutex<BoundedRing<TraceEvent, TRACE_RING_CAPACITY>>> = OnceLock::new();
-    RING.get_or_init(|| Mutex::new(BoundedRing::new()))
+    static RING: Mutex<BoundedRing<TraceEvent, TRACE_RING_CAPACITY>> = Mutex::new(BoundedRing::new());
+    &RING
 }
 
-fn push_trace_event(operation: OperationId, generation: Generation, stage: TraceStage) -> TraceEvent {
-    let event = TraceEvent { operation, generation, sequence: NEXT_SEQUENCE.fetch_add(1, Ordering::SeqCst), stage, at_us: now_us() };
-    trace_ring().lock().unwrap_or_else(PoisonError::into_inner).push(event);
-    event
+fn push_trace_event(operation: OperationId, generation: Generation, stage: TraceStage) -> Option<TraceEvent> {
+    let Some(at_us) = try_now_us() else { OMITTED_EVENTS.fetch_add(1, Ordering::Relaxed); return None; };
+    let event = TraceEvent { operation, generation, sequence: NEXT_SEQUENCE.fetch_add(1, Ordering::SeqCst), stage, at_us };
+    if let Ok(mut ring) = trace_ring().try_lock() { ring.push(event); }
+    else { OMITTED_EVENTS.fetch_add(1, Ordering::Relaxed); }
+    Some(event)
 }
 
-pub fn record_operation_started(operation: OperationId, generation: Generation) -> TraceEvent {
+pub fn record_operation_started(operation: OperationId, generation: Generation) -> Option<TraceEvent> {
     push_trace_event(operation, generation, TraceStage::Started)
 }
 
-pub fn record_stage_changed(operation: OperationId, generation: Generation, label: &'static str) -> TraceEvent {
+pub fn record_stage_changed(operation: OperationId, generation: Generation, label: &'static str) -> Option<TraceEvent> {
     push_trace_event(operation, generation, TraceStage::StageChanged { label })
 }
 
 /// 🏷️ Convenience over [`record_stage_changed`] with [`CANCEL_REQUESTED_STAGE_LABEL`] — the start point
 /// [`cancellation_latency_us`] measures from.
-pub fn record_cancel_requested(operation: OperationId, generation: Generation) -> TraceEvent {
+pub fn record_cancel_requested(operation: OperationId, generation: Generation) -> Option<TraceEvent> {
     record_stage_changed(operation, generation, CANCEL_REQUESTED_STAGE_LABEL)
 }
 
-pub fn record_preview_published(operation: OperationId, generation: Generation) -> TraceEvent {
+pub fn record_preview_published(operation: OperationId, generation: Generation) -> Option<TraceEvent> {
     push_trace_event(operation, generation, TraceStage::PreviewPublished)
 }
 
-pub fn record_checkpoint(operation: OperationId, generation: Generation) -> TraceEvent {
+pub fn record_checkpoint(operation: OperationId, generation: Generation) -> Option<TraceEvent> {
     push_trace_event(operation, generation, TraceStage::Checkpoint)
 }
 
-pub fn record_committed(operation: OperationId, generation: Generation) -> TraceEvent {
+pub fn record_committed(operation: OperationId, generation: Generation) -> Option<TraceEvent> {
     push_trace_event(operation, generation, TraceStage::Committed)
 }
 
 /// 🏁️ The terminal "cancel observed" event — the end point [`cancellation_latency_us`] measures to.
-pub fn record_cancelled(operation: OperationId, generation: Generation) -> TraceEvent {
+pub fn record_cancelled(operation: OperationId, generation: Generation) -> Option<TraceEvent> {
     push_trace_event(operation, generation, TraceStage::Cancelled)
 }
 
-pub fn record_failed(operation: OperationId, generation: Generation) -> TraceEvent {
+pub fn record_failed(operation: OperationId, generation: Generation) -> Option<TraceEvent> {
     push_trace_event(operation, generation, TraceStage::Failed)
 }
 
@@ -699,6 +767,14 @@ pub fn cancellation_latency_us(operation: OperationId) -> Option<u64> {
 //#endregion 🛰️Trace
 
 //#region 🧪️Tests
+#[cfg(test)]
+#[path = "⏱️clock/🧪️component.rs"]
+mod microsecond_clock_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "⏱️clock/🧪️contention.rs"]
+mod microsecond_telemetry_contention_tests;
+
 #[cfg(test)]
 mod tests {
     use super::*;

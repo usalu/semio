@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "grants": [1, 64, 4096],
+  "componentVariants": ["container", "text", "button", "separator", "input", "select", "toggle", "keyValueList", "slider", "numberStepper", "ring", "iconSelect", "tree", "treeSection", "treeItem", "image", "extension", "surface"],
+  "patchVariants": ["upsert", "setComponent", "setLayout", "setActivity", "setChildren", "setStyle", "setAccessibility", "setBindings", "setMenu", "remove", "setRoot"],
+  "document": {
+    "generation": 41,
+    "surface": "native.owned",
+    "nodeId": 1,
+    "value": {"label": "Column Height", "nested": ["Grüße", {"unit": "🌊"}]},
+    "valueTextBytes": 39,
+    "terminalDescendantsRetired": true
+  },
+  "ownership": {
+    "zeroGrantMutates": false,
+    "arenaContentionAdvances": false,
+    "dropWaitsForArena": false,
+    "terminalRequiresNoAllocation": true,
+    "sharedDescendantPreserved": true,
+    "globalDrainConsumesClaimedDocument": false
+  }
+}

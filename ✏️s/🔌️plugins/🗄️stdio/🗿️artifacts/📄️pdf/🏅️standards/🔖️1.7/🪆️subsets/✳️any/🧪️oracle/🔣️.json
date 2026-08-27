@@ -1,0 +1,48 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json manifest: that file registers `lopdf` under the `pdf-edit`/`pdf-parse` capabilities its own cases exercise; this file registers the SAME package under a distinct id and the `pdf-1-7-mutate` capability this subset's exhaustive mutation case (`mutate-pdf-1-7`) actually tags, per the wave 7 fleet brief's oracle-registration gotcha (reusing the shared entry fails the contract with `oracle-capability-mismatch`).",
+  "oracles": [
+    {
+      "id": "lopdf-pdf-1-7-mutate",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "capabilities": ["pdf-1-7-mutate"],
+      "comparisonProfiles": ["semantic-pdf-v1"],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/J-F-Liu/lopdf",
+      "rationale": "The same PDF document-manipulation library the shared pdf-edit/pdf-parse entries already approve, registered under its own id and capability so this subset's exhaustive PdfMutation catalog (16 direct kinds, including page reorder/replace/rotate) is measured against a reference implementation surveyed for exactly that capability rather than borrowing a neighbour's.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "pdf-1-7-any",
+      "capability": "pdf-1-7-mutate",
+      "standardDirectoryName": "🔖️1.7",
+      "subsetDirectoryName": "✳️any",
+      "vectors": [],
+      "kinds": [
+        "insert-page",
+        "remove-page",
+        "set-page-media-box",
+        "set-page-crop-box",
+        "append-page-content",
+        "set-info",
+        "insert-object",
+        "remove-object",
+        "set-object-value",
+        "set-dict-entry",
+        "remove-dict-entry",
+        "set-trailer-entry",
+        "remove-trailer-entry",
+        "move-page",
+        "set-page-content",
+        "set-page-rotation"
+      ]
+    }
+  ]
+}

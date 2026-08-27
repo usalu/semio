@@ -22,7 +22,7 @@ const KINDS: [&str; 15] = ["no-mutation", "set-snapshot", "set-version", "set-sy
 
 //#region 🔖️Profile
 /// 📏️ `semantic-las-v1`'s own declared tolerance (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/
-/// 🧪️oracle/🔣️component.json`) — the scale/offset quantization LAS 1.0 stores coordinates through.
+/// 🧪️oracle/🔣️.json`) — the scale/offset quantization LAS 1.0 stores coordinates through.
 /// Mirrored here so an in-handler law check is exactly as strict as the profile the case is
 /// measured by, never stricter.
 const LAS_TOLERANCE: f64 = 1e-3;

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-27T14:15:21.242Z",
+  "packageId": "wgpu-renderer",
+  "generatorId": "wgpu-frame-worker",
+  "catalogBefore": "f64f2f654e5dc12d57b72148b023b2c9a20d6fd8f147293dac871e2529b2319a",
+  "catalogAfter": "a640e9b8e5154f0cb6276931d55564c8284b6ff45f10b366d089831d431673cf",
+  "sourceLeafCount": 32,
+  "moduleCount": 37,
+  "inputCount": 40,
+  "inputPatternCount": 107,
+  "mode": 420,
+  "mappings": [
+    { "index": 9, "sourceLeaf": "📦️glue.rs", "destinationSuffix": "🧊️renderer/🦀️.rs", "beforeHash": "b4869021b74b86466fbeef3798547bb2cb40381482f03d47f8fd14acf00a7790", "beforeSize": 828737, "afterHash": "214c5ece5918ed0c3255828da5ac0f9441ddc164b7b2efa88cd879b5f6c01c28", "afterSize": 829553 },
+    { "index": 20, "sourceLeaf": "🦀️frame_job.rs", "destinationSuffix": "🧵️frame-job/🦀️.rs", "beforeHash": "4c0602df7cab3a8a912605a221a730006cb613d07b208060556fd76ae195d23f", "beforeSize": 34039, "afterHash": "ced742a20cb55b9b119b2371c0ec2ae0d20e31805ef1daf0af335541c556a0b3", "afterSize": 33418 },
+    { "index": 26, "sourceLeaf": "🦀️surface_lane.rs", "destinationSuffix": "📐️surface-lane/🦀️.rs", "beforeHash": "d6131ff4d56d636a30ebe586e698449799e8391a49a240cb8df9c4b9e2daf3e7", "beforeSize": 22434, "afterHash": "88c7e79a91ba128b22777c3464e93005f283e9d9ad49878ac8eccbcac8036ee3", "afterSize": 22438 }
+  ],
+  "addedModule": {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🔬️graph/🟦️component.ts",
+    "hash": "be54a59db1c254b1a76e1b2e4d78259ba901689a9d59f9f82db33321f8924a99",
+    "size": 5033,
+    "typeOnlyImportCount": 3
+  },
+  "sourceNegatives": ["content-drift", "missing-leaf", "unknown-leaf", "symlink-leaf", "directory-leaf", "cargo-identity", "historical-preimages"],
+  "profileNegatives": ["compose-path", "temp-compose-path", "escaping-path", "duplicate-module", "inline-test-define", "entry-authority", "workspace-authority"],
+  "browserNegatives": ["missing-module", "symlink-module", "undeclared-import", "unread-module", "cancel-before", "cancel-module", "cancel-bundle"]
+}

@@ -1,6 +1,6 @@
 //! 🏠️ `s.space.home` exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-
 //! REFACTOR. Recorded no-oracle decision `s-home-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`): the launcher artifact is
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): the launcher artifact is
 //! semio-NATIVE, its `.shome.dsl.semio`/`.pack.semio` envelopes are read by nobody else, and its one
 //! mutable artifact-lane field is a counter that no interchange format models — so the candidate
 //! category is empty rather than unexplored.

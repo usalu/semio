@@ -5045,6 +5045,7 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-trace",
  "serde",
+ "serde_json",
  "wasm-bindgen",
 ]
 
@@ -5124,6 +5125,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async",
  "semio-framework-trace",
+ "serde_json",
 ]
 
 [[package]]
@@ -5307,8 +5309,10 @@ version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
+ "semio-framework-hash",
  "serde",
  "serde_json",
+ "sha2",
  "syn 2.0.117",
 ]
 
@@ -5448,9 +5452,11 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-schema",
+ "semio-framework-trace",
  "semio-framework-ui",
  "semio-framework-ui-contract",
  "semio-framework-ui-runtime",
@@ -5575,6 +5581,9 @@ dependencies = [
 [[package]]
 name = "semio-framework-trace"
 version = "0.1.0"
+dependencies = [
+ "serde_json",
+]
 
 [[package]]
 name = "semio-framework-ui"

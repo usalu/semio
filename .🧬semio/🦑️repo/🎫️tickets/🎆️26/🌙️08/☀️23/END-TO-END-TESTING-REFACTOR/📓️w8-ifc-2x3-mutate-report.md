@@ -95,7 +95,7 @@ exercises the update branch (only one row is allowed per kind per the parser rul
 
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧫️fixtures/🏗️wellness-center-sama-street-level.ifc` —
   derived real fixture (new)
-- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧪️oracle/🔣️.json`
   — catalog + oracle registration + `semantic-ifc-v1` comparison profile (new)
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs` —
   filled in (was a rejecting stub); bespoke Part-21 writer + mutation dispatcher +

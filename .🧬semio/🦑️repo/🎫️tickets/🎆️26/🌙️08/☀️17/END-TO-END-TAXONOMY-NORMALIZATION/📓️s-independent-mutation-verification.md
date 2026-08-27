@@ -2,7 +2,7 @@
 
 ## Live corpus census
 
-An independent read-only Bun census of every physical `🧪️oracle/🔣️component.json` below `✏️s/🔌️plugins` found:
+An independent read-only Bun census of every physical `🧪️oracle/🔣️.json` below `✏️s/🔌️plugins` found:
 
 - 166 oracle manifests;
 - 144 mutation catalogs;

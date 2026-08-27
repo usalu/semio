@@ -13,7 +13,7 @@ Feature: Apply every typed semio BREP mutation to the real concrete-forest struc
   `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` and the semio envelope in
   `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`), importing nothing from and
   transliterating nothing of the Rust it judges. It is registered as the oracle
-  `semio-brep-python-independent` in `…/✳️brep/🧪️oracle/🔣️component.json`; the recorded no-oracle
+  `semio-brep-python-independent` in `…/✳️brep/🧪️oracle/🔣️.json`; the recorded no-oracle
   decision it replaces is gone, because there is now a reference to compare against.
 
   🌲️ **The solid under test is a real building structure.** The richest `stdio.semio.brep` document

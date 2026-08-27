@@ -20,7 +20,7 @@
 //! reports that honestly (see `oracle_apply_mutation`'s dispatch below) rather than faking a
 //! differential result, per the fleet brief's §6.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself.
 
 use semio_repo_test_host::Json;

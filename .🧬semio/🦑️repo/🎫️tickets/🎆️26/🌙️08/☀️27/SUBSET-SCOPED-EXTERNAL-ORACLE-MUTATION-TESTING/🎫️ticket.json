@@ -1,0 +1,8 @@
+{
+  "title": "Subset Scoped External Oracle Mutation Testing",
+  "emoji": "🧫️",
+  "status": "open",
+  "description": "Upgrade the repository testing platform in place to Repository Test Protocol v2: subset-scoped, externally-oracled mutation testing. Baseline commit a8d1caf41f68204e73ff5e47ce40c5f543ed442d.\n\nFive central changes: (1) runtime mutation inventory becomes authoritative via generated owner manifests; (2) every mutation is owned by the smallest semantic subset (no wildcard/artifact-wide ownership); (3) every mutation requires a qualifying third-party oracle (a second Semio implementation is not qualifying); (4) fixtures carry complete provenance and external-generation evidence; (5) parity becomes a multi-artifact, externally probed comparison pipeline (STEP + mesh + metric probes, scale-relative tolerances, Hausdorff/volume/area/centroid/topology assertions).\n\nDeliverables: protocol v2 schema, TS core library (multi-artifact comparator pipeline, fixture CAS, leases/retention/GC, coverage reporting), Rust protocol + runner v2, language hosts v2, oracle/probe registry with engine-family independence accounting, mutation owner manifests + runtime/catalog/test exact-equality gate, BRep pilot (brepjs generator/oracle, STEP canonicalizer qualification, CGAL probe, fixture corpus, production subject adapters), CAD wildcard migration + legacy deletion, script.ts commands and selectors, Nx/CI/launch wiring, documentation.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": []
+}

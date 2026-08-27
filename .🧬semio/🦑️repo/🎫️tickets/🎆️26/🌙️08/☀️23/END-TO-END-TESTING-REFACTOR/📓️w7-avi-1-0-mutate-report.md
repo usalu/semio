@@ -47,7 +47,7 @@ Rejected without further reading.
 No standalone, credible, AVI-*semantic* read+write crate exists. `riff` reads and writes RIFF
 generically (chunk id/size/data, `LIST` nesting, even-byte padding) but has zero knowledge of AVI's
 own structures — no `avih`/`strh`/`strf`/`idx1` types at all. That mirrors exactly why the BCF case
-(`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`)
+(`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`)
 composed `zip` + `quick-xml` rather than adopting a single BCF-specific crate: *"no standalone BCF
 crate exists ... so the reference here composes the already-linked, genuinely independent `zip` and
 `quick-xml` crates ... rather than adopting a weaker/unlicensed substitute."* The AVI case is the
@@ -192,7 +192,7 @@ Verified real and structurally rich, not synthetic minimal:
 ## 5. What is NOT done yet, and why
 
 Per the brief's explicit instruction for this exact fork ("stop and report, and I will batch it"),
-this report initially did not touch `🧪️oracle/🔣️component.json`, `🧪️oracle/🦀️component.rs`, or the
+this report initially did not touch `🧪️oracle/🔣️.json`, `🧪️oracle/🦀️component.rs`, or the
 `🗿️artifacts/📼️avi/🧪️tests/mutate-avi-1-0/` case — all of them depend on `riff` actually compiling
 into the oracle crate, which requires the `Cargo.toml`/`oracles`-feature edit above. Only the fixture
 (§4), which needs no new dependency, was completed at that point.
@@ -213,7 +213,7 @@ and `oracles` feature. With it linked, the rest of the case was completed:
   standard shape. 6 plain `#[test]`s (not `#[semio_framework_async_macros::async_test]`) cover
   encode/decode round trip, a non-AVI RIFF form rejection, apply+inverse for two kinds, an
   unrecognised-kind error, and projection shape.
-- **Catalog** (`.../🧪️oracle/🔣️component.json`): registers `riff-avi-1-0-mutate` under
+- **Catalog** (`.../🧪️oracle/🔣️.json`): registers `riff-avi-1-0-mutate` under
   `"ecosystem": "rust"`, `capabilities: ["avi-1-0-mutate"]`, with a `rationale` that names exactly
   what `riff` provides (the generic RIFF/LIST/chunk framing) versus what the module provides itself
   (AVI 1.0's own `avih`/`strh`/`strf`/`idx1` semantics) — composition honesty, not overstated
@@ -285,7 +285,7 @@ and that it is unrelated to this case.
 
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🧫️fixtures/📼️bauen-mit-bestand-mjpeg.avi` (new, real fixture)
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs` (filled in)
-- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️oracle/🔣️component.json` (new)
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️oracle/🔣️.json` (new)
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` (`KINDS` + conformance test added)
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🧪️tests/mutate-avi-1-0/component.feature` (new)
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🧪️tests/mutate-avi-1-0/🦀️component.rs` (new)

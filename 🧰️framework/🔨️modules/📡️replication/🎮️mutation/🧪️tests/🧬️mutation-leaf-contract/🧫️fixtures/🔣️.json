@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    { "name": "borrowed-generic-complete", "providesDescriptor": true, "providesProvenance": true, "borrowedGeneric": true, "expectedCompile": true, "stdout": "insert-page:42" },
+    { "name": "missing-descriptor", "providesDescriptor": false, "providesProvenance": true, "borrowedGeneric": false, "expectedCompile": false, "errorCode": "E0046" },
+    { "name": "missing-provenance", "providesDescriptor": true, "providesProvenance": false, "borrowedGeneric": false, "expectedCompile": false, "errorCode": "E0046" }
+  ]
+}

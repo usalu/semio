@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "identity": "wgpu-current-source-lifecycle-2026-08-27",
+  "provenance": "new-current-source-run",
+  "authority": {
+    "taxonomyPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "taxonomyHash": "64a11e3b97c9b21c26093d82d017ef8478f2ef0af7dd4fe383ca455d08a25945",
+    "normalizationHash": "ead932b049d1c18bb9d484c7c8bc5cb2d893b4adb8c1f8abb1f84eb747a68cfd",
+    "catalogId": "nested-cargo-packages-v1",
+    "catalogHash": "a640e9b8e5154f0cb6276931d55564c8284b6ff45f10b366d089831d431673cf",
+    "packageId": "wgpu-renderer",
+    "generatorId": "wgpu-frame-worker",
+    "sourceLeafCount": 32,
+    "sourceMode": 420,
+    "browserModuleCount": 37,
+    "browserInputCount": 40
+  },
+  "fixture": {
+    "runDirectory": "🧾️runs",
+    "repositoryDirectory": "🧪️workspace",
+    "ticketRelativePath": "🧪️acceptance",
+    "planRelativePath": "🧪️acceptance/📊️plan/🔣️.json",
+    "gitPolicy": "new-disposable-repository-only",
+    "inputPolicy": "exact-current-no-follow-source-and-required-tool-closure",
+    "schemaPolicy": "unchanged-reviewed-authority",
+    "sourceFallback": false,
+    "restoreHistoricalRun": false
+  },
+  "executionBoundary": {
+    "approval": "preparation-rehearsal-only",
+    "acceptanceClass": "fixture-rehearsal-only",
+    "productionGuardRequired": true,
+    "functionName": "buildReferenceEdits",
+    "source": "if (row.id === \"wgpu-renderer\") unresolved.push(violation(\"nested-cargo-generation-unresolved\", row.sourceRoot, \"WGPU package generation and transaction acceptance must be complete before projection\"));",
+    "proposedExecutor": "fixture-confined-derived-normalizer",
+    "planFiltering": false,
+    "semanticGuardChanges": false,
+    "invalidClauseCases": ["missing", "duplicate", "different-package", "foreign-function"]
+  },
+  "boundaryArgumentCases": [
+    { "operation": "inventory", "field": "repoRoot", "mutation": "foreign-root" },
+    { "operation": "inventory", "field": "ticketDir", "mutation": "foreign-path" },
+    { "operation": "inventory", "field": "cancelFile", "mutation": "foreign-path" },
+    { "operation": "inventory", "field": "taxonomyPath", "mutation": "foreign-path" },
+    { "operation": "inventory", "field": "scope", "mutation": "escaping-path" },
+    { "operation": "inventory", "field": "scope", "mutation": "opaque-path" },
+    { "operation": "inventory", "field": "baselineCommit", "mutation": "foreign-baseline" },
+    { "operation": "inventory", "field": "externalRoot", "mutation": "foreign-root" },
+    { "operation": "plan", "field": "cancelFile", "mutation": "foreign-path" },
+    { "operation": "plan-inventory", "field": "repoRoot", "mutation": "foreign-root" },
+    { "operation": "plan-inventory", "field": "taxonomyPath", "mutation": "foreign-path" },
+    { "operation": "plan-inventory", "field": "sourcePath", "mutation": "escaping-path" },
+    { "operation": "apply", "field": "repoRoot", "mutation": "foreign-root" },
+    { "operation": "apply", "field": "ticketDir", "mutation": "foreign-path" },
+    { "operation": "apply", "field": "planArtifactPath", "mutation": "foreign-path" },
+    { "operation": "apply", "field": "cancelFile", "mutation": "foreign-path" },
+    { "operation": "apply", "field": "resumeJournal", "mutation": "foreign-path" },
+    { "operation": "apply", "field": "taxonomyPath", "mutation": "foreign-path" },
+    { "operation": "apply-plan", "field": "destinationPath", "mutation": "escaping-path" }
+  ],
+  "confinement": {
+    "inspectionRunId": "00000000-0000-4000-8000-000000000001",
+    "cases": [
+      { "id": "exact-new-run", "accepted": true },
+      { "id": "production-root", "accepted": false },
+      { "id": "acceptance-root", "accepted": false },
+      { "id": "old-ticket-fixture", "accepted": false },
+      { "id": "different-run", "accepted": false },
+      { "id": "parent-segment", "accepted": false },
+      { "id": "relative-root", "accepted": false },
+      { "id": "symlink-ancestor", "accepted": false },
+      { "id": "file-ancestor", "accepted": false }
+    ]
+  },
+  "budget": {
+    "lifecycleElapsedLimitMs": 120000,
+    "scope": "single-monotonic-end-to-end-deadline",
+    "phaseResetAllowed": false,
+    "subprocessesMustBeJoined": true
+  },
+  "expected": {
+    "authoredMoves": 31,
+    "generatedSourceRetirements": 1,
+    "wgpuRegenerations": 1,
+    "generatedArtifacts": 6,
+    "trackedArtifacts": 5,
+    "ignoredArtifacts": 1,
+    "artifactMode": 420,
+    "previewStaleRemovals": [],
+    "rollbackAttemptOrdinal": 1,
+    "commitAttemptOrdinal": 2,
+    "emptyCanonicalPlan": { "moves": 0, "evidenceRemovals": 0, "edits": 0, "regenerations": 0, "unresolved": 0 },
+    "editAuthority": "exact-canonical-plan-reviewed-before-first-transaction"
+  },
+  "phases": [
+    { "id": "capture", "requires": [], "assertions": ["new-run-identity", "complete-32-file-census", "exact-authority-hashes", "no-follow-input-closure", "current-source-compilers", "source-metadata-oracles"] },
+    { "id": "plan-review", "requires": ["capture"], "assertions": ["31-exact-moves", "1-exact-retirement", "6-exact-preview-artifacts", "input-membership-closure", "all-edit-preimages", "canonical-plan-self-digest", "independent-jsonc-roundtrip", "explicit-plan-review"] },
+    { "id": "rollback", "requires": ["plan-review"], "assertions": ["failure-after-regenerations", "attempt-1-rolled-back", "exact-source-bytes-modes-paths", "generated-output-absence", "source-parent-mode-restoration"] },
+    { "id": "staged-interruption", "requires": ["rollback"], "assertions": ["same-ticket-attempt-2", "31-moves-and-retirement-staged", "child-exited", "foreign-reference-rejects", "unchanged-journal-on-rejection"] },
+    { "id": "first-edit-interruption", "requires": ["staged-interruption"], "assertions": ["resume-same-attempt", "first-edit-durable", "child-exited", "foreign-reference-rejects", "unchanged-journal-on-rejection"] },
+    { "id": "commit", "requires": ["first-edit-interruption"], "assertions": ["resume-same-attempt", "attempt-2-committed", "6-output-byte-mode-membership-parity", "recorded-source-parent-prune-set-only", "actual-nx-freshness", "current-canonical-compilers", "cargo-metadata-parity"] },
+    { "id": "fresh-canonical-plan", "requires": ["commit"], "assertions": ["fresh-process", "canonical-owner-scope", "same-ticket-admission", "retained-baseline", "empty-plan", "all-unresolved-rows-printed-on-failure", "no-dangling-children"] }
+  ],
+  "retainedVectors": [
+    { "path": "🔣️wgpu-generated-source-retirement.json", "hash": "e543abd27a80a4a9e4e49b1f39f09e8e3cb3933aa9d9d920cdbdeea52863fef1", "groups": ["invalidProducerCases", "invalidRetirementFields"] },
+    { "path": "🔣️wgpu-canonical-output-authority.json", "hash": "512cedd3881e6e02b2a4ca3ec2f6ebbb4348b33f7e09e5a7caff3f22c9cfe933", "groups": ["invalidNodes", "staleOutputs"] },
+    { "path": "🔣️wgpu-retirement-reference-phase.json", "hash": "aacfe06edd184990dc3c1180182bc568b1081e35780cdfa4fc6897dbf7ee6da4", "groups": ["invalidCases"] },
+    { "path": "🧪️wgpu-current-source-authority/🔣️.json", "hash": "a2bb33e9d637ac8398b756bf81bcab607a876030f3bda6b25a5aabf0b527288c", "groups": ["sourceNegatives", "profileNegatives", "browserNegatives"] }
+  ],
+  "additionalNegatives": {
+    "retirementCatalog": ["missing-declaration", "duplicate-declaration", "authored-source-substitution", "different-destination", "different-generator", "mode-drift", "extra-key"],
+    "membership": ["missing-declared-input", "new-unrelated-input", "moved-edited-destination-shadow", "undeclared-output", "outside-root-stale-removal"],
+    "resume": ["undeclared-consumer", "staged-consumer-exact-backup", "first-edit-result-drift", "planned-symlink-consumer", "malformed-plan-edit", "mismatched-ticket-admission"]
+  }
+}

@@ -240,7 +240,7 @@ repository's codecs.
 New (8 subsets × 4 + 2 engines):
 
 * `📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/{✳️a,✳️e,✳️h,✳️ua,✳️vt,✳️x}/` — `🧪️oracle/🦀️component.rs`,
-  `🧪️oracle/🔣️component.json`, `🧬️schema/🧬️mutations/🦀️component.rs`
+  `🧪️oracle/🔣️.json`, `🧬️schema/🧬️mutations/🦀️component.rs`
 * `📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/{✳️a,✳️x}/` — the same three
 * `📄️pdf/🧪️tests/mutate-pdf-1-7-{a,e,h,ua,vt,x}/`, `📄️pdf/🧪️tests/mutate-pdf-1-4-{a,x}/` —
   `component.feature` + `🦀️component.rs`

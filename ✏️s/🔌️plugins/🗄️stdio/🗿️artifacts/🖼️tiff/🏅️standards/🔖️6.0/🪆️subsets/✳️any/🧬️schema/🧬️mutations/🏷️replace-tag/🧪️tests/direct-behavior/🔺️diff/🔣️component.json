@@ -1,0 +1,23 @@
+{
+  "ifds": {
+    "modified": [
+      {
+        "diff": {
+          "entries": {
+            "modified": [
+              {
+                "kind": "ascii",
+                "tag": 305,
+                "values": {
+                  "kind": "ascii",
+                  "value": "Direct Owner"
+                }
+              }
+            ]
+          }
+        },
+        "index": 0
+      }
+    ]
+  }
+}

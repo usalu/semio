@@ -26,7 +26,7 @@
 //! the glob re-export it used to arrive through.
 //!
 //! @see ../../../../🧬️mvd/🦀️component.rs — the Part-21 editing primitives the three MVD subsets share.
-//! @see ../../🧪️oracle/🔣️component.json — the `ifc-2x3-cv20` catalog `KINDS` is checked against.
+//! @see ../../🧪️oracle/🔣️.json — the `ifc-2x3-cv20` catalog `KINDS` is checked against.
 
 use crate::artifacts::ifc::standards::v2x3::mvd;
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::Ifc2x3Diff;
@@ -84,7 +84,7 @@ pub enum Ifc2x3Cv20Mutation {
 }
 
 /// 📇️ Kebab-case spelling of every `Ifc2x3Cv20Mutation` variant, in declaration order — the
-/// `ifc-2x3-cv20` catalog in `../../🧪️oracle/🔣️component.json` is required to match verbatim, and
+/// `ifc-2x3-cv20` catalog in `../../🧪️oracle/🔣️.json` is required to match verbatim, and
 /// `kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest (the
 /// framework never parses Rust to check it itself).
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-view-definition", "set-structural-entity", "set-project-units", "set-product-placement"];

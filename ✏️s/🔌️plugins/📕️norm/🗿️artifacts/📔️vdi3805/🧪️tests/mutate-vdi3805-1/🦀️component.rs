@@ -1,7 +1,7 @@
 //! 🦀️ VDI 3805 exhaustive mutation case — Rust adapter. Ticket
 //! 26/08/23/END-TO-END-TESTING-REFACTOR, wave 14 (the no-oracle conversion). The recorded
 //! no-oracle decision `vdi3805-1-mutation-semantics` is gone from
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, because a reference now
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, because a reference now
 //! exists to compare against: `s.norm.vdi3805` is a
 //! semio-native artifact with no third-party reader or writer, so its reference is a second
 //! IMPLEMENTATION: the independent Python `🐍️component.py` beside this file, registered as the
@@ -25,7 +25,7 @@
 //! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law` module (`law::mutation_is_observable`,
 //! `law::inverse_restores`, `law::round_trip_preserves`, `law::carrier_is_exact`) that the
 //! stdio mutation cases use, reached through the `oracleHostPackages` entry this plugin
-//! declares in `✏️s/🔌️plugins/📕️norm/🧪️oracle/🔣️component.json`. What `parity` adds on top is the
+//! declares in `✏️s/🔌️plugins/📕️norm/🧪️oracle/🔣️.json`. What `parity` adds on top is the
 //! one thing a single implementation can never provide: that a second implementation, written in
 //! another language from the same written specification, reaches the same document.
 //!

@@ -36,7 +36,7 @@ catalog, no case.
 * `…/✳️drawing/🧬️schema/🧬️mutations/🦀️component.rs` — added `pub const KINDS` (17 entries) and
   `kinds_match_the_enum_and_the_catalog`, which pins the const against the derive's own
   `SemioDrawingMutation::kinds()` AND against the committed manifest.
-* `…/✳️drawing/🧪️oracle/🔣️component.json` — **new**. Records the `semio-drawing-mutation-semantics`
+* `…/✳️drawing/🧪️oracle/🔣️.json` — **new**. Records the `semio-drawing-mutation-semantics`
   no-oracle decision naming `usvg`/`resvg` and `lyon`/`kurbo` as SURVEYED AND DECLINED (with the
   reason: semio's drawing model has no node ids at all, so its structural `NodePath` addressing has
   no SVG counterpart and the four hierarchy verbs would be reimplemented on top of SVG rather than

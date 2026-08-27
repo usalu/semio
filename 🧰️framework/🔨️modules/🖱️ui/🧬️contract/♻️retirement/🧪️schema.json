@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.ui.value-retirement.fixture.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "grants", "cases", "ownership"],
+  "properties": {
+    "version": { "const": 1 },
+    "grants": { "const": [1, 64, 4096] },
+    "cases": {
+      "type": "array", "minItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "value", "textBytes", "pages", "collections"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "value": { "$ref": "#/definitions/value" },
+          "textBytes": { "type": "integer", "minimum": 0 },
+          "pages": { "type": "integer", "minimum": 0, "maximum": 256 },
+          "collections": { "type": "integer", "minimum": 0, "maximum": 256 }
+        }
+      }
+    },
+    "ownership": {
+      "type": "object", "additionalProperties": false,
+      "required": ["zeroItemsMutate", "zeroBytesMutate", "sharedAliasReleaseTouchesPayload", "nestedRootTerminalBeforeDescendants", "unrelatedRootRequiredForTerminal", "epochReuseSatisfiesOldRootOnly", "liveDropRejected", "caughtLiveDropKeepsArenaOwner", "unwindGuardFatal", "nestedSharedAliasRetainsExternalPayload", "exactSlotReusedWithNewEpoch", "globalDrainConsumesClaimedRoot", "arenaContentionAdvancesOwner", "dropWaitsForArena"],
+      "properties": {
+        "zeroItemsMutate": { "const": false },
+        "zeroBytesMutate": { "const": false },
+        "sharedAliasReleaseTouchesPayload": { "const": false },
+        "nestedRootTerminalBeforeDescendants": { "const": false },
+        "unrelatedRootRequiredForTerminal": { "const": false },
+        "epochReuseSatisfiesOldRootOnly": { "const": true },
+        "liveDropRejected": { "const": true },
+        "caughtLiveDropKeepsArenaOwner": { "const": true },
+        "unwindGuardFatal": { "const": true },
+        "nestedSharedAliasRetainsExternalPayload": { "const": true },
+        "exactSlotReusedWithNewEpoch": { "const": true },
+        "globalDrainConsumesClaimedRoot": { "const": false },
+        "arenaContentionAdvancesOwner": { "const": false },
+        "dropWaitsForArena": { "const": false }
+      }
+    }
+  },
+  "definitions": {
+    "value": {
+      "anyOf": [
+        { "type": "null" }, { "type": "boolean" }, { "type": "number" }, { "type": "string", "maxLength": 512 },
+        { "type": "array", "maxItems": 256, "items": { "$ref": "#/definitions/value" } },
+        { "type": "object", "maxProperties": 256, "propertyNames": { "maxLength": 512 }, "additionalProperties": { "$ref": "#/definitions/value" } }
+      ]
+    }
+  }
+}

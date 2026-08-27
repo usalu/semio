@@ -22,6 +22,9 @@ use serde::{Deserialize, Serialize};
 
 pub use semio_framework_job as job;
 
+#[path = "🚪️lifetime/🦀️component.rs"]
+pub mod instance_lifetime;
+
 //#region 🧬️SchemaMetadata
 #[cfg(feature = "typegen")]
 pub mod schema_metadata {
@@ -1765,7 +1768,7 @@ impl JobTurnBridge {
         stage: job::InteractiveStage,
         budget: job::StepBudget,
         cancel: job::CancelToken,
-        now_ms: fn() -> u64,
+        now_us: fn() -> Option<u64>,
     ) -> Result<JobPublication, JobPublicationError> {
         if self.terminal {
             return Err(JobPublicationError::Terminal);
@@ -1796,7 +1799,7 @@ impl JobTurnBridge {
             }
         } else {
             let before = self.operation.preview_sequence;
-            let outcome = job::drive_step(job, site, self.operation.operation, self.operation.generation, stage, budget, cancel, now_ms, &mut self.operation.preview_sequence);
+            let outcome = job::drive_step(job, site, self.operation.operation, self.operation.generation, stage, budget, cancel, now_us, &mut self.operation.preview_sequence, &mut None);
             let after = self.operation.preview_sequence;
             let preview = matches!(outcome, job::StepOutcome::PreviewReady(_));
             if (preview && after != before.saturating_add(1)) || (!preview && after != before) {
@@ -5032,8 +5035,8 @@ mod tests {
             JobTurn { job: 44, operation: JobOperation::from_job(operation), step_sequence }
         }
 
-        fn bridge_now_ms() -> u64 {
-            10
+        fn bridge_now_us() -> Option<u64> {
+            Some(10)
         }
 
         #[derive(Default)]
@@ -5143,7 +5146,7 @@ mod tests {
                     job::InteractiveStage::InteractiveStep,
                     job::StepBudget::new(100, 20),
                     job::root_cancel_token(),
-                    bridge_now_ms,
+                    bridge_now_us,
                 )
                 .expect("first job turn");
             assert_eq!(job.calls, 1);
@@ -5167,7 +5170,7 @@ mod tests {
                     job::InteractiveStage::BackgroundStep,
                     job::StepBudget::new(100, 20),
                     job::root_cancel_token(),
-                    bridge_now_ms,
+                    bridge_now_us,
                 )
                 .expect("checkpoint projection admission");
             assert!(matches!(pending.outcome, JobStepOutcome::Yield));
@@ -5182,7 +5185,7 @@ mod tests {
                     job::InteractiveStage::BackgroundStep,
                     job::StepBudget::new(100, 20),
                     job::root_cancel_token(),
-                    bridge_now_ms,
+                    bridge_now_us,
                 )
                 .expect("checkpoint publication");
             assert_eq!(publication.outcome, JobStepOutcome::CheckpointReady { checkpoint: checkpoint.clone() });
@@ -5197,7 +5200,7 @@ mod tests {
             cancel.cancel().await;
             let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Yield]), calls: 0, ..Default::default() };
             let publication = bridge
-                .step(&mut job, bridge_turn(0, 0), operation.operation, operation.base_revision, operation.generation, "actor.job.cancel", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), cancel, bridge_now_ms)
+                .step(&mut job, bridge_turn(0, 0), operation.operation, operation.base_revision, operation.generation, "actor.job.cancel", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), cancel, bridge_now_us)
                 .expect("cancel publication");
             assert_eq!(job.calls, 0);
             assert!(matches!(publication.outcome, JobStepOutcome::Cancelled));
@@ -5212,7 +5215,7 @@ mod tests {
                     job::InteractiveStage::InteractiveStep,
                     job::StepBudget::new(100, 20),
                     job::root_cancel_token(),
-                    bridge_now_ms
+                    bridge_now_us
                 ),
                 Err(JobPublicationError::Terminal)
             ));
@@ -5233,7 +5236,7 @@ mod tests {
                 job::InteractiveStage::InteractiveStep,
                 job::StepBudget::new(100, 20),
                 job::root_cancel_token(),
-                bridge_now_ms,
+                bridge_now_us,
             );
             assert!(matches!(result, Err(JobPublicationError::Stale { live_revision: 8, live_generation: 3 })));
             assert_eq!(job.calls, 0);
@@ -5255,7 +5258,7 @@ mod tests {
                     job::InteractiveStage::InteractiveStep,
                     job::StepBudget::new(100, 20),
                     job::root_cancel_token(),
-                    bridge_now_ms,
+                    bridge_now_us,
                 ),
                 Err(JobPublicationError::Stale { .. })
             ));
@@ -5277,7 +5280,7 @@ mod tests {
                     job::InteractiveStage::InteractiveStep,
                     job::StepBudget::new(100, 20),
                     job::root_cancel_token(),
-                    bridge_now_ms,
+                    bridge_now_us,
                 ),
                 Err(JobPublicationError::PreviewSequence { before: 0, after: 0 })
             ));
@@ -5303,7 +5306,7 @@ mod tests {
                 let mut turn = bridge_turn(0, 0);
                 loop {
                     let publication = bridge
-                        .step(&mut job, turn, operation.operation, operation.base_revision, operation.generation, "actor.job.replay", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), job::root_cancel_token(), bridge_now_ms)
+                        .step(&mut job, turn, operation.operation, operation.base_revision, operation.generation, "actor.job.replay", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), job::root_cancel_token(), bridge_now_us)
                         .expect("replay publication");
                     let terminal = matches!(&publication.outcome, JobStepOutcome::Complete { .. });
                     turn = JobTurn { step_sequence: publication.turn.step_sequence + 1, ..publication.turn };
@@ -5314,11 +5317,11 @@ mod tests {
                         _ => std::ptr::null(),
                     };
                     let mut preview_sequence = publication.turn.operation.preview_sequence;
-                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut preview_sequence);
+                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut preview_sequence);
                     log.begin_capture(&mut context, ActorId(9), worker_count, worker_slot, 1, 4, publication).expect("capture admission");
                     loop {
                         let mut preview_sequence = turn.operation.preview_sequence;
-                        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut preview_sequence);
+                        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut preview_sequence);
                         if log.capture_step(&mut context) == JobReplayStep::PublicationReady {
                             break;
                         }
@@ -5332,9 +5335,9 @@ mod tests {
                     };
                     assert_eq!(returned_identity, payload_identity);
                     drop(publication);
-                    let now = job::default_now_ms();
+                    let now = job::default_now_us().expect("native test clock");
                     let mut sequence = 0;
-                    let mut context = job::StepContext::new(job::OperationId(operation.operation.0), job::Generation(operation.generation.0), job::StepBudget::new(1, now + 4), job::root_cancel_token(), job::default_now_ms, &mut sequence);
+                    let mut context = job::StepContext::new(job::OperationId(operation.operation.0), job::Generation(operation.generation.0), job::StepBudget::from_duration(1, now, 4_000).expect("test deadline"), job::root_cancel_token(), job::default_now_us, &mut sequence);
                     log.acknowledge_publication(&mut context, JobReplayPublicationPolicy::Accepted).expect("P2d ACK");
                     if terminal {
                         break;
@@ -5365,29 +5368,29 @@ mod tests {
                             job::InteractiveStage::InteractiveStep,
                             job::StepBudget::new(100, 20),
                             job::root_cancel_token(),
-                            bridge_now_ms,
+                            bridge_now_us,
                         )
                         .expect("replayed live publication");
                     assert_eq!(log.expected_turn(), Some(publication.turn));
                     let terminal = matches!(&publication.outcome, JobStepOutcome::Complete { .. });
                     replay_turn = JobTurn { step_sequence: publication.turn.step_sequence + 1, ..publication.turn };
                     let mut preview_sequence = publication.turn.operation.preview_sequence;
-                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut preview_sequence);
+                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut preview_sequence);
                     log.begin_capture(&mut context, ActorId(9), worker_count, worker_slot, 1, 4, publication).expect("replay capture admission");
                     loop {
                         let mut preview_sequence = replay_turn.operation.preview_sequence;
-                        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut preview_sequence);
+                        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut preview_sequence);
                         if log.capture_step(&mut context) == JobReplayStep::PublicationReady {
                             break;
                         }
                     }
                     drop(log.take_captured_publication().expect("matched replay publication"));
                     let mut preview_sequence = replay_turn.operation.preview_sequence;
-                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut preview_sequence);
+                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut preview_sequence);
                     log.acknowledge_publication(&mut context, JobReplayPublicationPolicy::Accepted).expect("matched replay policy");
                     while log.has_pending_work() {
                         let mut preview_sequence = replay_turn.operation.preview_sequence;
-                        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut preview_sequence);
+                        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut preview_sequence);
                         let _ = log.maintenance_step(&mut context);
                     }
                     if terminal {
@@ -5399,7 +5402,7 @@ mod tests {
                 log.begin_close();
                 while !log.terminal_is_empty() {
                     let mut preview_sequence = 0;
-                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut preview_sequence);
+                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut preview_sequence);
                     let _ = log.close_step(&mut context);
                 }
                 digests
@@ -5420,11 +5423,11 @@ mod tests {
             for replaying in [false, true] {
                 let publication = JobPublication { turn, outcome: JobStepOutcome::Cancelled };
                 let mut sequence = 0;
-                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
                 log.begin_capture(&mut context, ActorId(9), 1, 0, 1, 4, publication).expect("cancel capture admission");
                 loop {
                     let mut sequence = 0;
-                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
                     if log.capture_step(&mut context) == JobReplayStep::PublicationReady {
                         break;
                     }
@@ -5432,7 +5435,7 @@ mod tests {
                 assert_eq!(log.record_header(0).expect("cancel record").cancellation_observed, true);
                 assert!(matches!(log.take_captured_publication().expect("exact cancelled owner").outcome, JobStepOutcome::Cancelled));
                 let mut sequence = 0;
-                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
                 log.acknowledge_publication(&mut context, JobReplayPublicationPolicy::Accepted).expect("cancel ACK");
                 if !replaying {
                     log.begin_replay(operation.generation.0).expect("cancel replay generation");
@@ -5442,7 +5445,7 @@ mod tests {
             log.begin_close();
             while !log.terminal_is_empty() {
                 let mut sequence = 0;
-                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
                 let _ = log.close_step(&mut context);
             }
         }
@@ -5462,7 +5465,7 @@ mod tests {
             let cancel = job::root_cancel_token();
             cancel.cancel_now();
             let mut sequence = 0;
-            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), cancel, bridge_now_ms, &mut sequence);
+            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), cancel, bridge_now_us, &mut sequence);
             let cancelled = log.begin_capture(&mut context, ActorId(9), 1, 0, 1, 4, cancelled).expect_err("cancelled capture refuses before transfer").into_publication();
             assert!(matches!(&cancelled.outcome, JobStepOutcome::PreviewReady { preview } if preview.as_ptr() == cancelled_identity));
 
@@ -5472,7 +5475,7 @@ mod tests {
                 _ => unreachable!(),
             };
             let mut sequence = 0;
-            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 10), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 10), job::root_cancel_token(), bridge_now_us, &mut sequence);
             let expired = log.begin_capture(&mut context, ActorId(9), 1, 0, 1, 4, expired).expect_err("expired capture refuses before transfer").into_publication();
             assert!(matches!(&expired.outcome, JobStepOutcome::PreviewReady { preview } if preview.as_ptr() == expired_identity));
 
@@ -5482,7 +5485,7 @@ mod tests {
                 _ => unreachable!(),
             };
             let mut sequence = 0;
-            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
             let stale = log.begin_capture(&mut context, ActorId(9), 1, 0, 1, 4, stale).expect_err("stale capture refuses before transfer").into_publication();
             assert!(matches!(&stale.outcome, JobStepOutcome::PreviewReady { preview } if preview.as_ptr() == stale_identity));
             assert_eq!(log.sealed_records(), 0);
@@ -5502,11 +5505,11 @@ mod tests {
                     _ => unreachable!(),
                 };
                 let mut sequence = 0;
-                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
                 log.begin_capture(&mut context, ActorId(9), 1, 0, 1, 4, publication).expect("fault capture admission");
                 loop {
                     let mut sequence = 0;
-                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
                     if log.capture_step(&mut context) == JobReplayStep::PublicationReady {
                         break;
                     }
@@ -5514,7 +5517,7 @@ mod tests {
                 let publication = log.take_captured_publication().expect("exact fault owner");
                 assert!(matches!(&publication.outcome, JobStepOutcome::Fault { detail } if detail.as_ptr() == payload_identity && detail.as_slice() == [109, 113, 127]));
                 let mut sequence = 0;
-                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
                 log.acknowledge_publication(&mut context, JobReplayPublicationPolicy::Accepted).expect("fault ACK");
                 if !replaying {
                     log.begin_replay(operation.generation.0).expect("fault replay generation");
@@ -5524,7 +5527,7 @@ mod tests {
             log.begin_close();
             while !log.terminal_is_empty() {
                 let mut sequence = 0;
-                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
                 let _ = log.close_step(&mut context);
             }
         }
@@ -6309,13 +6312,13 @@ mod tests {
         //#endregion 🔖️ShardTable
 
         //#region 🔖️JobProgressOverlay
-        fn progress_now_ms() -> u64 {
-            0
+        fn progress_now_us() -> Option<u64> {
+            Some(0)
         }
 
         fn with_progress_context<T>(operation: u64, generation: u64, cancel: job::CancelToken, run: impl FnOnce(&mut job::StepContext<'_>) -> T) -> T {
             let mut preview_sequence = 0;
-            let mut context = job::StepContext::new(job::OperationId(operation), job::Generation(generation), job::StepBudget::new(8, 10), cancel, progress_now_ms, &mut preview_sequence);
+            let mut context = job::StepContext::new(job::OperationId(operation), job::Generation(generation), job::StepBudget::new(8, 10), cancel, progress_now_us, &mut preview_sequence);
             run(&mut context)
         }
 

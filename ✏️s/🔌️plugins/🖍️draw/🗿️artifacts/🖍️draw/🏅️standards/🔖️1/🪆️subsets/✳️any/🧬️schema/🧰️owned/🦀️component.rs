@@ -1265,7 +1265,7 @@ impl DrawMutationArenaPool {
                 semio_framework_job::Generation(79),
                 semio_framework_job::StepBudget::new(1, u64::MAX),
                 cancel.clone(),
-                semio_framework_job::default_now_ms,
+                semio_framework_job::default_now_us,
                 &mut preview_sequence,
             );
             match bootstrap.step(&mut context) {
@@ -5533,7 +5533,7 @@ mod retained_mutation_authority_tests {
         let cancel = semio_framework_job::root_cancel_token();
         let mut preview_sequence = 0;
         for _ in 0..1_000 {
-            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
             match job.step(&mut context) {
                 DrawMutationArenaBootstrapStep::Ready => return,
                 DrawMutationArenaBootstrapStep::Pending { advanced_items } => assert_eq!(advanced_items, 1),
@@ -5626,7 +5626,7 @@ mod retained_mutation_authority_tests {
         let cancel = semio_framework_job::root_cancel_token();
         let mut preview_sequence = 0;
         for _ in 0..200_000 {
-            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
             match authority.step(&mut source, mutation, &mut context) {
                 Ok(true) => {
                     authority.take().expect("Draw mutation overlay exact terminal commit witness");
@@ -5656,7 +5656,7 @@ mod retained_mutation_authority_tests {
         let mut preview_sequence = 0;
         let mut authority = DrawMutationCandidateAuthority::try_new(operation, generation)?;
         for _ in 0..100_000 {
-            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
             authority.step(source, mutation, &mut context)?;
             if let Some(reservation) = authority.reservation {
                 close_candidate(&mut authority, Some(source));
@@ -5680,7 +5680,7 @@ mod retained_mutation_authority_tests {
                 semio_framework_job::Generation(82),
                 semio_framework_job::StepBudget::new(1, u64::MAX),
                 cancel.clone(),
-                semio_framework_job::default_now_ms,
+                semio_framework_job::default_now_us,
                 &mut preview_sequence,
             );
             match authority.step(mutation, &mut output, &mut context) {
@@ -5851,7 +5851,7 @@ mod retained_mutation_authority_tests {
         let cancel = semio_framework_job::root_cancel_token();
         let mut preview_sequence = 0;
         let mut context =
-            semio_framework_job::StepContext::new(semio_framework_job::OperationId(7_902), semio_framework_job::Generation(79), semio_framework_job::StepBudget::new(1, u64::MAX), cancel, semio_framework_job::default_now_ms, &mut preview_sequence);
+            semio_framework_job::StepContext::new(semio_framework_job::OperationId(7_902), semio_framework_job::Generation(79), semio_framework_job::StepBudget::new(1, u64::MAX), cancel, semio_framework_job::default_now_us, &mut preview_sequence);
         bootstrap.step(&mut context)
     }
 
@@ -5859,7 +5859,7 @@ mod retained_mutation_authority_tests {
         let cancel = semio_framework_job::root_cancel_token();
         let mut preview_sequence = 0;
         let mut context =
-            semio_framework_job::StepContext::new(semio_framework_job::OperationId(7_903), semio_framework_job::Generation(79), semio_framework_job::StepBudget::new(1, u64::MAX), cancel, semio_framework_job::default_now_ms, &mut preview_sequence);
+            semio_framework_job::StepContext::new(semio_framework_job::OperationId(7_903), semio_framework_job::Generation(79), semio_framework_job::StepBudget::new(1, u64::MAX), cancel, semio_framework_job::default_now_us, &mut preview_sequence);
         bootstrap.close_step(&mut context)
     }
 
@@ -6004,12 +6004,12 @@ mod retained_mutation_authority_tests {
         let mut job = DrawMutationArenaBootstrapJob::new(operation, generation).expect("fixed Draw bootstrap admission claim");
         let cancel = semio_framework_job::root_cancel_token();
         let mut preview_sequence = 0;
-        let mut exhausted = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(0, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+        let mut exhausted = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(0, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
         assert_eq!(job.step(&mut exhausted), DrawMutationArenaBootstrapStep::Blocked, "zero-budget bootstrap cannot allocate or retire");
 
         let state = DRAW_MUTATION_ARENA_POOL.get_or_init(|| std::sync::Mutex::new(DrawMutationArenaProcessState::Inert));
         let guard = state.try_lock().expect("isolated Draw bootstrap fixture owns process contention");
-        let mut contended = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+        let mut contended = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
         assert_eq!(job.step(&mut contended), DrawMutationArenaBootstrapStep::Blocked, "process contention leaves the exact bootstrap owner untouched");
         drop(guard);
 
@@ -6020,7 +6020,7 @@ mod retained_mutation_authority_tests {
         let mut local_preview_sequence = 0;
         let mut local_state = DrawMutationArenaProcessState::Inert;
         for _ in 0..3 {
-            let mut admitted = semio_framework_job::StepContext::new(local_operation, local_generation, semio_framework_job::StepBudget::new(1, u64::MAX), local_cancel.clone(), semio_framework_job::default_now_ms, &mut local_preview_sequence);
+            let mut admitted = semio_framework_job::StepContext::new(local_operation, local_generation, semio_framework_job::StepBudget::new(1, u64::MAX), local_cancel.clone(), semio_framework_job::default_now_us, &mut local_preview_sequence);
             assert_eq!(local_job.step_locked(&mut local_state, &mut admitted), DrawMutationArenaBootstrapStep::Pending { advanced_items: 1 });
         }
         let allocated = match &local_state {
@@ -6030,7 +6030,7 @@ mod retained_mutation_authority_tests {
         assert_eq!(allocated, 1, "only admitted worker turns may advance allocation boundaries");
         local_cancel.cancel_now();
         for _ in 0..100 {
-            let mut cancelled = semio_framework_job::StepContext::new(local_operation, local_generation, semio_framework_job::StepBudget::new(1, u64::MAX), local_cancel.clone(), semio_framework_job::default_now_ms, &mut local_preview_sequence);
+            let mut cancelled = semio_framework_job::StepContext::new(local_operation, local_generation, semio_framework_job::StepBudget::new(1, u64::MAX), local_cancel.clone(), semio_framework_job::default_now_us, &mut local_preview_sequence);
             match local_job.step_locked(&mut local_state, &mut cancelled) {
                 DrawMutationArenaBootstrapStep::Pending { advanced_items } => assert!(advanced_items <= 1),
                 DrawMutationArenaBootstrapStep::Cancelled => break,
@@ -6105,7 +6105,7 @@ mod retained_mutation_authority_tests {
                 semio_framework_job::Generation(85),
                 semio_framework_job::StepBudget::new(1, u64::MAX),
                 cancel.clone(),
-                semio_framework_job::default_now_ms,
+                semio_framework_job::default_now_us,
                 &mut preview_sequence,
             );
             assert!(!authority.step(&mut context).expect("Draw rebuild advances before interruption"));
@@ -6163,7 +6163,7 @@ mod retained_mutation_authority_tests {
                     if authority.rebuild.as_ref().is_some_and(|rebuild| rebuild.recorded_move_in_phase(phase)) {
                         break;
                     }
-                    let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+                    let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
                     assert!(!authority.step(&mut source, &mutation, &mut context).expect("Draw rollback fixture reaches every internal rebuild phase"));
                 }
                 assert!(authority.rebuild.as_ref().is_some_and(|rebuild| rebuild.recorded_move_in_phase(phase)));
@@ -6175,7 +6175,7 @@ mod retained_mutation_authority_tests {
                     if stale { semio_framework_job::Generation(generation.0 + 1) } else { generation },
                     semio_framework_job::StepBudget::new(1, u64::MAX),
                     cancel,
-                    semio_framework_job::default_now_ms,
+                    semio_framework_job::default_now_us,
                     &mut preview_sequence,
                 );
                 assert_eq!(authority.step(&mut source, &mutation, &mut rejected), Err(if stale { "draw-store.mutation-candidate-stale-authority" } else { "draw-store.mutation-candidate-cancelled" }));
@@ -6231,7 +6231,7 @@ mod retained_mutation_authority_tests {
                 if authority.rebuild_role == Some(DrawContainerRebuildRole::Destination) && authority.rebuild.as_ref().is_some_and(|rebuild| rebuild.recorded_move_in_phase(2)) {
                     break;
                 }
-                let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+                let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
                 assert!(!authority.step(&mut source, &mutation, &mut context).expect("Draw reorder rollback fixture reaches destination rebuild after source handoff"));
             }
             assert_eq!(authority.rebuild_role, Some(DrawContainerRebuildRole::Destination));
@@ -6244,7 +6244,7 @@ mod retained_mutation_authority_tests {
                 if stale { semio_framework_job::Generation(generation.0 + 1) } else { generation },
                 semio_framework_job::StepBudget::new(1, u64::MAX),
                 cancel,
-                semio_framework_job::default_now_ms,
+                semio_framework_job::default_now_us,
                 &mut preview_sequence,
             );
             assert_eq!(authority.step(&mut source, &mutation, &mut rejected), Err(if stale { "draw-store.mutation-candidate-stale-authority" } else { "draw-store.mutation-candidate-cancelled" }));
@@ -6671,7 +6671,7 @@ mod retained_mutation_authority_tests {
                     if authority.phase == stage {
                         break;
                     }
-                    let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+                    let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
                     assert!(!authority.step(&mut source, &mutation, &mut context).expect("Draw stage fixture advances"));
                 }
                 assert_eq!(authority.phase, stage, "fixture reaches each replay/candidate/container stage exactly");
@@ -6683,7 +6683,7 @@ mod retained_mutation_authority_tests {
                     if stale { semio_framework_job::Generation(84) } else { generation },
                     semio_framework_job::StepBudget::new(1, u64::MAX),
                     cancel,
-                    semio_framework_job::default_now_ms,
+                    semio_framework_job::default_now_us,
                     &mut preview_sequence,
                 );
                 assert_eq!(authority.step(&mut source, &mutation, &mut rejected), Err(if stale { "draw-store.mutation-candidate-stale-authority" } else { "draw-store.mutation-candidate-cancelled" }),);

@@ -22,7 +22,7 @@ const KINDS: [&str; 7] = ["no-mutation", "set-snapshot", "set-solid-name", "inse
 
 //#region 🔖️Profile
 /// 📏️ `semantic-stl-ascii-v1`'s own declared tolerances (`../../🏅️standards/🔖️ascii/🪆️subsets/✳️any/
-/// 🧪️oracle/🔣️component.json`), mirrored here so an in-handler law check is exactly as strict as the
+/// 🧪️oracle/🔣️.json`), mirrored here so an in-handler law check is exactly as strict as the
 /// profile the case is measured by — never stricter, which would invent a failure the comparison
 /// itself would forgive.
 const STL_WRITER_FREEDOM: &[&str] = &["byteLength", "fileSize", "precision"];

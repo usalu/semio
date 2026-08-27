@@ -210,7 +210,7 @@ Per case, under `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️sem
 (rewritten), `🦀️component.rs` (rewritten, subject only), and `🧫️fixtures/` (the derived artifact, its
 binary twin and, for `table`/`value`, the real source).
 
-Per subset, `…/🏅️standards/🔖️v1/🪆️subsets/<subset>/🧪️oracle/🔣️component.json`: `noOracleDecisions`
+Per subset, `…/🏅️standards/🔖️v1/🪆️subsets/<subset>/🧪️oracle/🔣️.json`: `noOracleDecisions`
 removed, `oracles[]` gains the entry.
 
 Production code touched, and only inside this scope:

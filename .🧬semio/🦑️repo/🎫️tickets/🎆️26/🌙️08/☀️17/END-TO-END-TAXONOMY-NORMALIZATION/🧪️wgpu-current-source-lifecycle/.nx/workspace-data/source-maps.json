@@ -1,0 +1,104 @@
+{
+  ".": {
+    "root": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "name": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "tags": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "tags.npm:private": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.description": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageName": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageVersion": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageExports": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageMain": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.isInPackageManagerWorkspaces": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets.inspect": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspect.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspect.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspect.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspect.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.inspect.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test-boundary": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test-boundary.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test-boundary.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test-boundary.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test-boundary.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test-boundary.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ]
+  }
+}

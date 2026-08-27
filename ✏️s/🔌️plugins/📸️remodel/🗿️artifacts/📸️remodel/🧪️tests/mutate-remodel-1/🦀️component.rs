@@ -1,5 +1,5 @@
 //! 🦀️ Remodel-scene exhaustive mutation case — Rust adapter. Recorded no-oracle decision
-//! `remodel-mutation-semantics` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`):
+//! `remodel-mutation-semantics` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`):
 //! `s.remodel.remodel` is a semio-NATIVE reconstruction JOB document, not a point cloud or a mesh
 //! file, so no photogrammetry library is a reference for it. `oracle` reads the committed per-kind
 //! specification vectors literally and `subject` drives all 35 `RemodelMutation` variants.

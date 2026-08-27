@@ -3316,7 +3316,7 @@ mod retained_laws {
         let mut preview_sequence = 0;
         let mut complete = false;
         for _ in 0..PROCESS3D_MAXIMUM_DOMAIN_ITEMS {
-            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
             match semio_framework_plugin::ArtifactStoreInitializationAuthority::step(&mut authority, &mut context) {
                 semio_framework_job::StepOutcome::Complete(_) => {
                     complete = true;
@@ -3436,7 +3436,7 @@ mod retained_laws {
             let mut grants = 0;
             loop {
                 grants += 1;
-                let mut grant = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+                let mut grant = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
                 if reader.step(&bytes, &mut grant).expect("retained semantic grant") {
                     break;
                 }
@@ -3459,7 +3459,7 @@ mod retained_laws {
             for interruption in 1..grants {
                 let mut interrupted = Process3dRetainedMutationReader::new();
                 for _ in 0..interruption {
-                    let mut grant = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+                    let mut grant = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
                     assert!(!interrupted.step(&bytes, &mut grant).expect("interrupted retained semantic grant"), "pre-terminal interruption must remain resumable");
                     assert_eq!(grant.fuel_remaining(), 0, "one retained mutation substate consumes one grant");
                 }

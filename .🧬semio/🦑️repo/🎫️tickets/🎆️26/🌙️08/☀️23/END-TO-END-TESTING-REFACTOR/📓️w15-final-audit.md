@@ -683,7 +683,7 @@ unchanged. The removal primitive is used only as the inverse of `insert-entity`,
 
 ### 4.2 The governance rule w14 called "one manifest edit" was lifted — properly
 
-`✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json` gained exactly six lines
+`✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json` gained exactly six lines
 (`{"implementation": "python", "package": "ifcopenshell", "version": "0.8.4.post1", "module":
 "ifcopenshell"}`), and both new registrations declare `"ecosystem": "python", "package":
 "ifcopenshell", "version": "0.8.4.post1"` — a real package name and a real pinned version, not the

@@ -13,7 +13,7 @@ Feature: Apply every typed semio KIT mutation to the Nakagin Capsule Tower kit o
   `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`, and `ArtifactRef::to_uri` plus
   `LinkPin`/`BlobRef` for the dialect coordinate and the three pin shapes), importing nothing from
   and transliterating nothing of the Rust it judges. It is registered as the oracle
-  `semio-kit-python-independent` in `…/✳️kit/🧪️oracle/🔣️component.json`; the recorded no-oracle
+  `semio-kit-python-independent` in `…/✳️kit/🧪️oracle/🔣️.json`; the recorded no-oracle
   decision it replaces is gone, because there is now a reference to compare against.
 
   🏗️ **The kit under test is a real building, read as a kit of parts.** The richest

@@ -1,0 +1,6 @@
+{
+  "mutation": "remove-palette-entry",
+  "payload": {
+    "index": 1
+  }
+}

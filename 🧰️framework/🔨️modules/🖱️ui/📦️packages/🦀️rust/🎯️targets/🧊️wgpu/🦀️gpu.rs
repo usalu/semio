@@ -415,7 +415,7 @@ impl GpuContext {
         if !cursor.matches(packet) || cursor.phase == PreparedGpuPresentPhase::Closing {
             return Err("prepared GPU cursor was stale, uncredited, or closing".to_string());
         }
-        let started = semio_framework_job::default_now_ms();
+        let started = semio_framework_job::default_now_us().ok_or_else(|| "GPU opportunity requires a real monotonic clock".to_string())?;
         match cursor.phase {
             PreparedGpuPresentPhase::EnsureTarget => {
                 self.ensure_scene_color();
@@ -497,7 +497,7 @@ impl GpuContext {
         if !cursor.matches(packet) {
             return Err("prepared GPU cursor became stale after a platform call".to_string());
         }
-        if semio_framework_job::default_now_ms() - started > 2 {
+        if semio_framework_job::default_now_us().and_then(|now| now.checked_sub(started)).is_none_or(|elapsed| elapsed > 2_000) {
             return Err("prepared GPU opportunity exceeded the two millisecond ceiling".to_string());
         }
         Ok(cursor.phase == PreparedGpuPresentPhase::Complete)

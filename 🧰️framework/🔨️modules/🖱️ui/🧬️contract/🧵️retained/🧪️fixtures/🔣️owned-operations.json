@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "parent": 7,
+  "child": 9007199254740991,
+  "replacement": { "type": "text", "value": "Geändert 😀" },
+  "expected": { "removedIds": [7, 9007199254740991], "replacementId": 9007199254740991, "remainingIds": [7, 9007199254740991] },
+  "laws": ["typed-operation-captures-exact-input", "source-snapshot-never-mutates", "old-reader-retains-replaced-bytes", "remove-reads-children-before-final-entry-close", "cancel-every-subtree-phase", "unknown-node-rejects-without-publication", "wrong-field-owner-rejects-before-capture", "step-zero-keeps-all-owners"]
+}

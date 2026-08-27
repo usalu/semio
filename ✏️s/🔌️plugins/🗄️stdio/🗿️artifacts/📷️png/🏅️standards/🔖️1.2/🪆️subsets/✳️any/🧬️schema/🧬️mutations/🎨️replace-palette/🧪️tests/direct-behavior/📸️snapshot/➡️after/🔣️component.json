@@ -1,0 +1,64 @@
+{
+  "bitDepth": 8,
+  "bkgd": null,
+  "chrm": null,
+  "chunkOrder": [
+    {
+      "chunk": "ihdr"
+    },
+    {
+      "chunk": "gama"
+    },
+    {
+      "chunk": "text",
+      "index": 0
+    },
+    {
+      "chunk": "plte"
+    },
+    {
+      "chunk": "idat"
+    },
+    {
+      "chunk": "iend"
+    }
+  ],
+  "colorType": "rgba",
+  "gama": 100000,
+  "height": 1,
+  "interlace": false,
+  "phys": null,
+  "pixels": [
+    255,
+    0,
+    0,
+    255,
+    0,
+    0,
+    255,
+    255
+  ],
+  "plte": [
+    {
+      "b": 255,
+      "g": 0,
+      "r": 255
+    }
+  ],
+  "schema": "stdio.png",
+  "srgb": null,
+  "textChunks": [
+    {
+      "compressed": false,
+      "keyword": "Title",
+      "kind": "text",
+      "languageTag": "",
+      "translatedKeyword": "",
+      "value": "Two Pixel Swatch"
+    }
+  ],
+  "time": null,
+  "trns": null,
+  "unknownChunks": [],
+  "width": 2
+}

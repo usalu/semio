@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "domain": "semio.local-interaction.topology-authority.v1\u0000",
+  "generationEncoding": "u64-le",
+  "cases": [
+    {"id": "initial", "documentByte": 1, "configByte": 2, "uiGeneration": "0", "expected": "79ba6f1a5d0b99ac369ddad340ab55d47653b18f3be965a59f532a277f636af8"},
+    {"id": "document-only", "documentByte": 3, "configByte": 2, "uiGeneration": "0", "expected": "f99b8f081e2057b8213e88de26c5001b51a1f3dfc6b42020b4bfec2685b04b80"},
+    {"id": "config-only", "documentByte": 1, "configByte": 4, "uiGeneration": "0", "expected": "f7300f172d5eef78695827b0cdd4e1169d066dc653e57be9948934f48fe7d5e6"},
+    {"id": "ui-cache-only", "documentByte": 1, "configByte": 2, "uiGeneration": "1", "expected": "58732cb03d9ca8c82a41fd32d98867a1e0954dde68e778489ec39268e4dfef83"},
+    {"id": "maximum", "documentByte": 1, "configByte": 2, "uiGeneration": "18446744073709551615", "expected": "c52e5af9531af53cc9352e2504eb1de0f427c215d65eba076dfa3780804f9d9a"}
+  ],
+  "overflowMutatesCache": false,
+  "closedAuthorityReadable": false,
+  "canonicalTopologyHash": false
+}

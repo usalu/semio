@@ -1,0 +1,10 @@
+{
+  "mutation": "change-header",
+  "payload": {
+    "bitDepth": 8,
+    "colorType": "rgba",
+    "height": 2,
+    "interlace": true,
+    "width": 3
+  }
+}

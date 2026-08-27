@@ -31,7 +31,7 @@
 //! for this artifact's own whole-document DSL encoding, kept here rather than reaching for a new
 //! base64 dependency this artifact does not otherwise need.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`BcfMutation::KINDS`).
 
 use semio_repo_test_host::Json;

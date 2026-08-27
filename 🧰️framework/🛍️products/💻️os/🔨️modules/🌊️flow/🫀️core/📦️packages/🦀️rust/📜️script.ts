@@ -8,6 +8,24 @@ const FAMILY_RS_DIR = join(import.meta.dir, "../../../📦️packages/🦀️rus
 const CORE_PKG_DIR = join(import.meta.dir, "../../pkg");
 const BROWSER_BRIDGE_DIR = join(import.meta.dir, "../../../🌉️wasm/📦️packages/🟨️javascript");
 
+//#region 🌐️BrowserPackage
+async function bundleBrowserModule(write: boolean) {
+  const entry = join(BROWSER_BRIDGE_DIR, "🟨️flow-browser.js");
+  const source = readFileSync(entry, "utf8");
+  const generated = 'import("../../../🫀️core/pkg/flow_core.js")';
+  if (source.split(generated).length !== 2) throw new Error("Flow browser package requires exactly one generated initializer binding");
+  const browser = await Bun.build({
+    entrypoints: [entry], outdir: CORE_PKG_DIR, write, target: "browser", format: "esm",
+    plugins: [{ name: "flow-generated-owner", setup(build) {
+      build.onLoad({ filter: /.*/ }, (args) => args.path === entry ? { contents: source.replace(generated, 'import("./flow_core.js")'), loader: "js" } : undefined);
+      build.onResolve({ filter: /.*/ }, (args) => ["./flow_core.js", "./🟨️flow-host.js"].includes(args.path) ? { path: args.path, external: true } : undefined);
+    } }],
+  });
+  if (!browser.success) throw new AggregateError(browser.logs, "Flow browser package binding failed");
+  return browser.outputs;
+}
+//#endregion 🌐️BrowserPackage
+
 //#region 📝️BrowserDeclarations
 async function publishBrowserDeclarations(): Promise<void> {
   const { writeFlowBrowserDeclaration } = await import("../../../🌉️wasm/📦️packages/🟨️javascript/📜️script.ts");
@@ -57,9 +75,8 @@ class WasmScript extends BundleScript {
       const src = join(familyPkg, name);
       if (existsSync(src)) copyFileSync(src, join(CORE_PKG_DIR, name));
     }
-    for (const name of ["🟨️flow-browser.js", "🟨️flow-host.js"]) {
-      copyFileSync(join(BROWSER_BRIDGE_DIR, name), join(CORE_PKG_DIR, name));
-    }
+    copyFileSync(join(BROWSER_BRIDGE_DIR, "🟨️flow-host.js"), join(CORE_PKG_DIR, "🟨️flow-host.js"));
+    await bundleBrowserModule(true);
     const manifestPath = join(CORE_PKG_DIR, "package.json");
     const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
     manifest.files = [...new Set([...manifest.files, "🟨️flow-browser.js", "🟨️flow-host.js"])];
@@ -92,6 +109,23 @@ class SourceTestScript extends BundleScript {
   async run(): Promise<void> { await import("../../../🖥️host/🧹️retirement/📜️script.ts"); }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("check", CheckScript).register("test", TestScript).register("test-source", SourceTestScript).register("declarations", BrowserDeclarationsScript);
+class BrowserTestScript extends BundleScript {
+  async run(): Promise<void> {
+    await import("../../../🌉️wasm/📦️packages/🟨️javascript/🧪️tests/🧪️flow-host.test.js");
+    const outputs = await bundleBrowserModule(false);
+    const module = await outputs[0]?.text();
+    if (outputs.length !== 1 || !module?.includes('import("./flow_core.js")') || !module.includes('from "./🟨️flow-host.js"') || module.includes("../../../🫀️core/pkg")) throw new Error("Flow browser package lost its exact sibling module bindings");
+    console.log("[DEBUG] Flow packaged browser entry preserves its generated initializer and owned host sibling without external source-tree paths");
+  }
+}
+
+class BrowserClockTestScript extends BundleScript {
+  async run(): Promise<void> {
+    const { testFlowBrowserClock } = await import("../../../🌉️wasm/📦️packages/🟨️javascript/🧪️tests/⏱️clock.test.js");
+    await testFlowBrowserClock();
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("check", CheckScript).register("test", TestScript).register("test-source", SourceTestScript).register("test-browser", BrowserTestScript).register("test-browser-clock", BrowserClockTestScript).register("declarations", BrowserDeclarationsScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "wasm" });

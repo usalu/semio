@@ -29,7 +29,7 @@ Per subset:
 2. A plain `#[test] kinds_match_the_enum_and_the_catalog` — asserts the length, walks
    `demo_mutation_cases()` asserting `KINDS[variant_ordinal(m)] == print_*_mutation(m)`'s keyword,
    asserts every ordinal was reached, and asserts every spelling appears in the committed manifest.
-3. `🧪️oracle/🔣️component.json` — a recorded `noOracleDecision` with
+3. `🧪️oracle/🔣️.json` — a recorded `noOracleDecision` with
    `substitutes: ["specification-vectors", "metamorphic-laws"]`, plus the `semio-v1-<subset>` catalog.
 4. `🧪️tests/mutate-semio-<subset>/` — `component.feature` + `🦀️component.rs` + `🧫️fixtures/🦠️<kind>.json`.
 5. Reachability wrappers in production so an owner-root test can actually drive the subset from
@@ -194,7 +194,7 @@ Production, per `<subset>` ∈ {`✳️cad`, `✳️document`, `✳️flow`} und
 - `<subset>/🧬️schema/🧬️mutations/🦀️component.rs` — `KINDS`, `inverse_semio_*_mutation`,
   `decode_semio_*_mutation_json`, conformance test
 - `<subset>/🧬️schema/📸️snapshot/🦀️component.rs` — `🌉️ExternalCodecBridge` region
-- `<subset>/🧪️oracle/🔣️component.json` — new
+- `<subset>/🧪️oracle/🔣️.json` — new
 - `✳️document/🧬️schema/🔺️diff/🦀️component.rs` — the `Q[{}.await]` fix
 
 Cases under `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/`:

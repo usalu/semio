@@ -19,7 +19,7 @@ Feature: Apply every typed DIN 4108 mutation against an independent Python imple
   states, never from a table copied out of `🧬️mutations/**` — and the paragraph below names the
   spellings in THIS subset where that resolution can genuinely go wrong. The recorded no-oracle
   decision it replaces is gone from
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, because there is now a
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, because there is now a
   reference to compare against.
 
   Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)`

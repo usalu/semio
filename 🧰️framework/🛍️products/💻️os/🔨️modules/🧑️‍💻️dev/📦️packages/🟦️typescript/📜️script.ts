@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** @emoji 🧭️ `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
-import { createWriteStream, copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
+import { createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { EventEmitter } from "node:events";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, resolve } from "node:path";
@@ -35,7 +36,7 @@ import {
   semioBuildMode,
   semioShipEnv,
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri, decodeDocumentPackBytes, encodeDocumentPackBytes } from "@semio-tech/framework-os";
+import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri, decodeDocumentPackBytes, encodeDocumentPackBytes, decodePackValue, encodePackValue } from "@semio-tech/framework-os";
 import type { PluginSourceEvent } from "@semio-tech/framework";
 import { generatePluginRegistry, isHostPluginFilter, writePlaygroundSession, type PluginRegistryEntry } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts";
 import { DEFAULT_HOST_VARIANT } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
@@ -908,31 +909,64 @@ export function syncBuiltExtensionsToInstallRoot(entries: readonly PluginRegistr
   }
 }
 
-/** @emoji 🛂️ `describe`s one just-built plugin/extension component into `<owner>/` — the plugin/
- * extension OWNER ROOT, sibling of the tracked `🛂️manifest.json` (`📓️design-abi.md` §3, path
- * corrected by D0-descriptor-plumbing per the registrar ruling in `📌️important.md`: NOT
- * `🤖️generated/`, which is globally gitignored and would mean a "checked-in" descriptor could never
- * survive a commit) — best-effort, non-fatal: most plugin crates have not migrated to the new
- * `describe` WIT export yet (W3's `M0`…`M8`/D-packets migrate them one at a time), so every call still
- * fails today against the old-ABI wasm most crates build; failing the whole plugin build over that
- * would regress `dev`/`build` for the entire fleet. `📇️registry:check`'s own descriptor gate is what
- * tracks "not yet migrated" — this step just keeps a migrated crate's descriptor fresh automatically. */
-function describeBuiltPlugin(target: PluginRegistryEntry, artifact: string): void {
-  const describeScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/📜️script.ts");
-  const ownerRoot = join(repoRoot, target.cratePath, "..", "..");
-  const status = runCmdStatus("bun", [describeScript, "describe", artifact, "--out", ownerRoot], { cwd: repoRoot, budgetMs: buildBudgetMs() });
-  if (status !== 0) {
-    console.log(`describe skipped for ${target.pluginId} (not yet migrated to the world-actor \`describe\` export, or its wasm isn't built for it) — see 📓️design-abi.md §3`);
-  } else {
-    console.log(`described ${target.pluginId} -> ${ownerRoot}`);
+//#region 🛂️DescriptorPublication
+const ACTOR_COMPONENT_EXPORTS = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "🧪️fixtures/🔣️actor-exports.json"), "utf8")) as Record<string, string[]>;
+
+/** 🛂️ Both package roles must expose the complete actor world before publication. */
+function assertActorComponentExports(component: Record<string, unknown>, required: Record<string, string[]>): void {
+  for (const [name, methods] of Object.entries(required)) {
+    const api = component[name] as Record<string, unknown> | undefined;
+    for (const method of methods) {
+      if (typeof api?.[method] !== "function") throw new Error(`Missing actor export ${name}.${method}`);
+    }
   }
 }
 
-/** @emoji 🎯️ One target's CARGO stage only: `cargo build` + the `describe` emitter (which itself
- * shells out to `cargo build -p semio-framework-plugin-describe` — see that script's doc — so it
- * belongs on the serial/cargo side, not the parallel materialize side below, even though it is not
- * technically compiling `target` itself). Never call two of these concurrently — see
- * `buildPluginCatalog`'s doc for why cargo must stay serial. */
+const PLUGIN_DESCRIPTOR_PROBE_SOURCE = `
+import { pathToFileURL } from "node:url";
+${assertActorComponentExports.toString()}
+const component = await import(pathToFileURL(process.argv[1]).href);
+assertActorComponentExports(component, ${JSON.stringify(ACTOR_COMPONENT_EXPORTS)});
+const bytes = await component.describe.describe();
+if (!(bytes instanceof Uint8Array) || bytes.length === 0 || bytes.length > 8 * 1024 * 1024) throw new Error("Invalid descriptor byte extent");
+process.stdout.write(Buffer.from(bytes).toString("base64"));
+`;
+
+/** 🔏️ Uses the same native pack self-hash convention for the genuine guest descriptor. */
+function finalizePluginDescriptor(bytes: Uint8Array, pluginId: string, wasmSha256: string, coreWasmSha256: string): { pack: Uint8Array; json: string } {
+  const descriptor = decodePackValue(bytes) as { manifest?: { pluginId?: string }; hashes?: Record<string, string> };
+  if (descriptor?.manifest?.pluginId === "assembly-failed") throw new Error("Plugin descriptor assembly failed");
+  if (descriptor?.manifest?.pluginId !== pluginId || !descriptor.hashes) throw new Error("Plugin descriptor identity mismatch");
+  if (![wasmSha256, coreWasmSha256].every((hash) => /^[a-f0-9]{64}$/.test(hash))) throw new Error("Invalid plugin artifact digest");
+  descriptor.hashes.wasmSha256 = wasmSha256;
+  descriptor.hashes.coreWasmSha256 = coreWasmSha256;
+  descriptor.hashes.descriptorSha256 = "";
+  descriptor.hashes.descriptorSha256 = createHash("sha256").update(encodePackValue(descriptor)).digest("hex");
+  return { pack: encodePackValue(descriptor), json: JSON.stringify(descriptor, null, 2) + "\n" };
+}
+
+async function pluginFileDigest(path: string): Promise<string> {
+  const hash = createHash("sha256");
+  for await (const chunk of createReadStream(path)) hash.update(chunk);
+  return hash.digest("hex");
+}
+
+/** 🛂️ Describes the freshly materialized component with the same JSPI engine as web actors. */
+async function describeBuiltPlugin(target: PluginRegistryEntry, artifact: string, componentModule: string): Promise<void> {
+  const probe = runProbe("node", ["--experimental-wasm-jspi", "--input-type=module", "--eval", PLUGIN_DESCRIPTOR_PROBE_SOURCE, componentModule], { cwd: repoRoot, budgetMs: 60_000 });
+  if (probe.status !== 0) throw new Error(`Plugin descriptor failed for ${target.pluginId}: ${probe.stderr}`);
+  const base64 = probe.stdout.trim();
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(base64)) throw new Error(`Invalid descriptor response for ${target.pluginId}`);
+  const [wasmHash, coreHash] = await Promise.all([pluginFileDigest(artifact), pluginFileDigest(componentModule.replace(/\.js$/, ".core.wasm"))]);
+  const descriptor = finalizePluginDescriptor(Buffer.from(base64, "base64"), target.pluginId, wasmHash, coreHash);
+  const ownerRoot = join(repoRoot, target.cratePath, "..", "..");
+  mkdirSync(ownerRoot, { recursive: true });
+  writeFileSync(join(ownerRoot, "🛂️descriptor.semio"), descriptor.pack);
+  writeFileSync(join(ownerRoot, "🔣️descriptor.json"), descriptor.json);
+  console.log(`described ${target.pluginId} -> ${ownerRoot}`);
+}
+//#endregion 🛂️DescriptorPublication
+/** 🎯️ Serial component compilation; descriptor extraction runs after materialization. */
 async function buildPluginCargo(target: PluginRegistryEntry): Promise<{ readonly target: PluginRegistryEntry; readonly artifact: string }> {
   const packageName = await readPackageName(target.cratePath);
   const profile = pluginWasmProfile();
@@ -941,7 +975,6 @@ async function buildPluginCargo(target: PluginRegistryEntry): Promise<{ readonly
   }
   const cargoTargetRoot = process.env.CARGO_TARGET_DIR ? resolve(repoRoot, process.env.CARGO_TARGET_DIR) : join(repoRoot, "target");
   const artifact = join(cargoTargetRoot, PLUGIN_WASM_TARGET, cargoProfileDir(profile), `${packageName.replace(/-/g, "_")}.wasm`);
-  describeBuiltPlugin(target, artifact);
   return { target, artifact };
 }
 
@@ -959,7 +992,6 @@ async function materializePlugin(target: PluginRegistryEntry, artifact: string):
   const componentBase = `${jsBase}_component`;
   cleanStalePluginOutputs(outDir, jsBase, componentBase);
   writeFileSync(join(outDir, "🟨️host-shim.js"), hostShimSource());
-  stagePluginDescriptor(target, outDir);
   // 🪶️ Transpile straight from cargo's own build output — plugin-modules never receives a copy of the
   // full component `.wasm` (see `emitRustArtifacts`'s doc comment). The browser only ever fetches
   // jco's extracted `${componentBase}.core.wasm`, so shipping the untranspiled component alongside it
@@ -967,6 +999,8 @@ async function materializePlugin(target: PluginRegistryEntry, artifact: string):
   // 🚀️ T-P8: the ASYNC (non-blocking-spawn) transpile — see its doc — is what makes `buildPluginCatalog`'s
   // bounded-parallel materialize stage actually overlap in wall-clock time, not just in scheduling.
   await transpilePluginComponentAsync(artifact, outDir, componentBase, pluginWebMaterializeContext());
+  await describeBuiltPlugin(target, artifact, join(outDir, `${componentBase}.js`));
+  if (!stagePluginDescriptor(target, outDir)) throw new Error(`Missing fresh descriptor for ${target.pluginId}`);
   const jsOut = join(outDir, `${jsBase}.js`);
   writeFileSync(jsOut, pluginComponentBridgeSource(componentBase, target.wasmOut));
   // 🧩️ Publish extension artifacts before the hot-swap marker: the browser reloads `/extensions/...`
@@ -1487,47 +1521,48 @@ function ensureAppleDeveloperDir(): void {
  * editor host engines unconditionally (shared studio chrome, not any one app), then whatever the
  * active playground variant declares via `engines = […]` on its `[[…playground]]` Cargo.toml row —
  * replaces the previous hardcoded `if (pluginId === "flow" | "gis2d" | "gis3d" | "raster" | "puzzle2d")` branches. */
-export async function buildEngineWasm(variant: string, renderer: string): Promise<void> {
+//#region 🌉️LinkedSessionEngines
+export function linkedSessionEngines(declarations: unknown): readonly string[] {
+  if (!Array.isArray(declarations)) throw new Error("Linked browser session factories must be an array");
+  const engines = new Set<string>();
+  for (const entry of declarations) {
+    if (entry === null || typeof entry !== "object" || Array.isArray(entry) || Object.keys(entry).length !== 2) throw new Error("Invalid linked browser session factory");
+    const module: unknown = Reflect.get(entry, "module");
+    const engine: unknown = Reflect.get(entry, "engine");
+    if (typeof module !== "string" || module.length === 0 || typeof engine !== "string" || !/^\.\/(?!.*(?:^|\/)\.\.(?:\/|$))[^\\]+$/.test(engine)) throw new Error("Invalid linked browser session factory path");
+    engines.add(engine);
+  }
+  return [...engines];
+}
+
+function compositionSessionEngines(packageJsonPath: string): readonly string[] {
+  const manifest: unknown = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+  if (manifest === null || typeof manifest !== "object" || Array.isArray(manifest)) throw new Error("Invalid composition manifest");
+  const metadata: unknown = Reflect.get(manifest, "semio");
+  if (metadata === undefined) return [];
+  if (metadata === null || typeof metadata !== "object" || Array.isArray(metadata)) throw new Error("Invalid composition metadata");
+  const declarations: unknown = Reflect.get(metadata, "browserSessionFactories");
+  return declarations === undefined ? [] : linkedSessionEngines(declarations);
+}
+//#endregion 🌉️LinkedSessionEngines
+
+export async function buildEngineWasm(variant: string, renderer: string, compositionPackageJson = join(dirname(fileURLToPath(import.meta.url)), "package.json"), buildEngine = (script: string) => runCmdStatus("bun", [script, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() })): Promise<void> {
   ensureAppleDeveloperDir();
   if (renderer !== "react" || process.env.SKIP_ENGINE_BUILD === "1") return;
-  if (process.env.FORCE_ENGINE_BUILD !== "1") {
-    const surfacePkgJs = join(repoRoot, "./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/pkg/framework_surface.js");
-    const editorPkgWasm = join(repoRoot, "./🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg/framework_editor_bg.wasm");
-    const flowPkgWasm = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core_bg.wasm");
-    if (existsSync(surfacePkgJs) && existsSync(editorPkgWasm) && existsSync(flowPkgWasm)) {
-      console.log("reusing existing engine wasm pkg/ (set FORCE_ENGINE_BUILD=1 to rebuild)");
-      return;
-    }
-  }
   // Each recurses into a crate's own `wasm` script (wasm-pack/cargo build under the hood) — budgeted at
   // the build class rather than the generic command default since those inner builds can legitimately
   // approach [[buildBudgetMs]] themselves.
   const graphScript = join(repoRoot, "./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/📜️script.ts");
-  if (runCmdStatus("bun", [graphScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-surface-node-graph wasm build failed");
+  if (buildEngine(graphScript) !== 0) throw new Error("framework-surface-node-graph wasm build failed");
   const editorScript = join(repoRoot, "./🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/📜️script.ts");
-  if (runCmdStatus("bun", [editorScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-editor wasm build failed");
-  const boardScript = join(repoRoot, "./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/📜️script.ts");
-  if (runCmdStatus("bun", [boardScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-surface-board-2d wasm build failed");
-  // React renderer `import("@semio-tech/flow-core")` for `createFlowSession`, so the pkg should exist
-  // even when the active playground's `engines = []` (e.g. Aggregator / puzzle).
-  //
-  // ⚠️ That import is LAZY — it happens inside `createFlowSession`, so a shell whose surfaces never open
-  // a flow graph (Home, Space, Writer, …) runs perfectly without it. A broken flow crate must therefore
-  // degrade this build, not abort it: throwing here meant one unrelated subsystem's compile errors took
-  // down every `dev` server, including both hub user launchers. Warn loudly and continue; anything that
-  // actually needs a flow session fails visibly at that point instead.
-  const flowCorePkgWasm = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core_bg.wasm");
-  if (!existsSync(flowCorePkgWasm)) {
-    const flowCoreScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts");
-    if (runCmdStatus("bun", [flowCoreScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
-      console.warn("[dev] flow-core wasm build failed — continuing without it; surfaces that open a flow graph will fail until it builds again.");
-    }
-  }
-  const row = playgroundCatalog.find((entry) => entry.variant === variant);
-  for (const engineCratePath of row?.engines ?? []) {
+  if (buildEngine(editorScript) !== 0) throw new Error("framework-editor wasm build failed");
+  const flowCoreScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts");
+  if (buildEngine(flowCoreScript) !== 0) throw new Error("flow-core wasm build failed");
+  const rows = isHostPluginFilter(variant) ? playgroundCatalog : playgroundCatalog.filter((entry) => entry.variant === variant);
+  for (const engineCratePath of new Set([...compositionSessionEngines(compositionPackageJson), ...rows.flatMap((entry) => entry.engines ?? [])])) {
     if (engineCratePath === "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust" || engineCratePath === "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🟦️typescript/🫀️core") continue;
     const script = engineWasmScriptPath(engineCratePath);
-    if (runCmdStatus("bun", [script, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error(`${engineCratePath} wasm build failed`);
+    if (buildEngine(script) !== 0) throw new Error(`${engineCratePath} wasm build failed`);
   }
 }
 
@@ -5167,6 +5202,67 @@ if (import.meta.main) {
 if (import.meta.vitest) {
   const { describe, expect, it, beforeEach, afterEach } = import.meta.vitest;
 
+  //#region 🌉️LinkedSessionEnginesTests
+  describe("linkedSessionEngines", () => {
+    it("matches strict schema validation and deduplicates only exact owner engine paths", async () => {
+      const { default: Ajv } = await import("ajv");
+      const schema = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧪️fixtures/🔣️linked-session-engines.schema.json"), "utf8"));
+      const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧪️fixtures/🔣️linked-session-engines.json"), "utf8"));
+      const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+      for (const vector of fixture.valid) {
+        expect(validate(vector.declarations)).toBe(true);
+        expect(linkedSessionEngines(vector.declarations)).toEqual(vector.engines);
+      }
+      for (const declarations of fixture.invalid) {
+        expect(validate(declarations)).toBe(false);
+        expect(() => linkedSessionEngines(declarations)).toThrow();
+      }
+    });
+
+    it("uses actual linked factory module and owner crate declarations for every product composition", async () => {
+      const { default: Ajv } = await import("ajv");
+      const ts = await import("typescript");
+      const schema = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧪️fixtures/🔣️linked-session-engines.schema.json"), "utf8"));
+      const validate = new Ajv({ strict: true }).compile(schema);
+      const devRoot = dirname(fileURLToPath(import.meta.url));
+      const compositions = [
+        { manifest: join(devRoot, "package.json"), entries: [join(devRoot, "../../🟦️component.ts"), join(devRoot, "../../🧩️multi.tsx")] },
+        { manifest: join(repoRoot, "♻️mit-bestand/🧺️demonstrator/package.json"), entries: [join(repoRoot, "♻️mit-bestand/🧺️demonstrator/📦️index.tsx")] },
+      ];
+      for (const composition of compositions) {
+        const manifest = JSON.parse(readFileSync(composition.manifest, "utf8"));
+        const declarations = manifest.semio.browserSessionFactories;
+        expect(validate(declarations)).toBe(true);
+        expect(declarations.map((entry: { module: string }) => entry.module)).toContain("@semio-tech/puzzle-js/board-session");
+        expect(linkedSessionEngines(declarations)).toContain("./✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust");
+        for (const engine of linkedSessionEngines(declarations)) expect(existsSync(join(repoRoot, engine, "📜️script.ts"))).toBe(true);
+        for (const entry of composition.entries) {
+          const ast = ts.createSourceFile(entry, readFileSync(entry, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+          const imports = ast.statements.flatMap((node) => ts.isImportDeclaration(node) && !node.importClause?.isTypeOnly && ts.isStringLiteral(node.moduleSpecifier) ? [node.moduleSpecifier.text] : []);
+          for (const declaration of declarations) expect(imports).toContain(declaration.module);
+        }
+      }
+    });
+  });
+  //#endregion 🌉️LinkedSessionEnginesTests
+
+  //#region 🧱️EnginePublicationTests
+  describe("buildEngineWasm", () => {
+    const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧪️fixtures/🔣️engine-publication.json"), "utf8"));
+    it("revalidates every required engine on each build even when outputs already exist", async () => {
+      for (let run = 0; run < fixture.repetitions; run++) {
+        const calls: string[] = [];
+        await buildEngineWasm(fixture.variant, "react", join(repoRoot, fixture.composition), (script) => { calls.push(script); return 0; });
+        expect(calls).toEqual(fixture.engines.map((engine: string) => join(repoRoot, engine, "📜️script.ts")));
+      }
+    });
+    it("fails publication when the required Flow engine fails", async () => {
+      const flow = join(repoRoot, fixture.engines[2], "📜️script.ts");
+      await expect(buildEngineWasm(fixture.variant, "react", join(repoRoot, fixture.composition), (script) => script === flow ? 1 : 0)).rejects.toThrow("flow-core wasm build failed");
+    });
+  });
+  //#endregion 🧱️EnginePublicationTests
+
   //#region 🔖️PixelCompare-tests
   describe("compareOwnedParityPixels", () => {
     const options = { ignoreAntialiasing: true, threshold: 0.1 } as const;
@@ -5495,6 +5591,34 @@ if (import.meta.vitest) {
   });
 
   describe("pluginComponentBridgeSource", () => {
+    it("requires every actor export from plugin and extension component namespaces", () => {
+      const actor = Object.fromEntries(Object.entries(ACTOR_COMPONENT_EXPORTS).map(([name, methods]) => [name, Object.fromEntries(methods.map((method) => [method, () => undefined]))]));
+      expect(() => assertActorComponentExports(actor, ACTOR_COMPONENT_EXPORTS)).not.toThrow();
+      expect(() => assertActorComponentExports({ _util: {} }, ACTOR_COMPONENT_EXPORTS)).toThrow("Missing actor export reactor.poll");
+      for (const [name, methods] of Object.entries(ACTOR_COMPONENT_EXPORTS)) {
+        for (const method of methods) {
+          const incomplete = { ...actor, [name]: { ...actor[name], [method]: undefined } };
+          expect(() => assertActorComponentExports(incomplete, ACTOR_COMPONENT_EXPORTS)).toThrow(`${name}.${method}`);
+        }
+      }
+    });
+
+    it("finalizes genuine descriptor bytes identically to the native descriptor oracle", async () => {
+      const { decodePackValue, encodePackValue } = await import("@semio-tech/framework-os");
+      const { createHash } = await import("node:crypto");
+      const bytes = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🎪️demonstrator/🛂️descriptor.semio"));
+      const descriptor = decodePackValue(bytes) as { manifest: { pluginId: string }; hashes: { wasmSha256: string; coreWasmSha256: string; descriptorSha256: string } };
+      const finalized = finalizePluginDescriptor(bytes, descriptor.manifest.pluginId, descriptor.hashes.wasmSha256, descriptor.hashes.coreWasmSha256);
+      expect(Buffer.from(finalized.pack)).toEqual(bytes);
+      expect(JSON.parse(finalized.json)).toEqual(descriptor);
+      const prehash = structuredClone(descriptor);
+      prehash.hashes.descriptorSha256 = "";
+      expect(createHash("sha256").update(encodePackValue(prehash)).digest("hex")).toBe(descriptor.hashes.descriptorSha256);
+      expect(() => finalizePluginDescriptor(bytes, "wrong-plugin", descriptor.hashes.wasmSha256, descriptor.hashes.coreWasmSha256)).toThrow("identity");
+      descriptor.manifest.pluginId = "assembly-failed";
+      expect(() => finalizePluginDescriptor(encodePackValue(descriptor), "assembly-failed", descriptor.hashes.wasmSha256, descriptor.hashes.coreWasmSha256)).toThrow("assembly");
+    });
+
     it("adapts the shard envelope into the canonical jco variant representation", () => {
       const source = pluginComponentBridgeSource("plugin", "plugin.core.wasm");
       expect(source).toContain('kind === "wake" ? ({ tag: kind }) : ({ tag: kind, val: payload })');

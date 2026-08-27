@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SetLineEndingPayload",
+  "description": "Canonical payload schema for set-line-ending.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "value"
+  ],
+  "properties": {
+    "value": {
+      "enum": [
+        "lf",
+        "crLf"
+      ]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+scalar GltfChangeNodeNameUInt32V1
+
+input GltfChangeNodeNameOptionalStringV1 @oneOf {
+  present: String
+  absent: Boolean
+}
+input GltfChangeNodeNameApplyV1 {
+  node: GltfChangeNodeNameUInt32V1!
+  value: GltfChangeNodeNameOptionalStringV1!
+}
+input GltfChangeNodeNameRestoreV1 {
+  node: GltfChangeNodeNameUInt32V1!
+  before: GltfChangeNodeNameOptionalStringV1!
+  after: GltfChangeNodeNameOptionalStringV1!
+}
+input GltfChangeNodeNameMutationInputV1 @oneOf {
+  apply: GltfChangeNodeNameApplyV1
+  restore: GltfChangeNodeNameRestoreV1
+}
+type GltfChangeNodeNameMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

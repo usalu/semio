@@ -6,7 +6,7 @@ Feature: Apply every typed layout-document mutation to its committed specificati
   `s.layout.layout` is a semio-NATIVE artifact: no third party reads or writes
   `.dsl.semio`/`.pack.semio`, so no reference LIBRARY is registered. That is recorded as the
   `layout-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, and its substitutes are the
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, and its substitutes are the
   committed per-kind specification vectors plus the inverse law. This case re-exercises those SAME
   committed bytes end-to-end through `apply_layout_mutation_json`/`undo_layout_mutation_json`.
 

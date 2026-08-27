@@ -1,0 +1,24 @@
+{
+  "chunkOrder": {
+    "added": [
+      {
+        "index": 3,
+        "marker": {
+          "chunk": "plte"
+        }
+      }
+    ]
+  },
+  "plte": {
+    "added": [
+      {
+        "index": 0,
+        "rgb": {
+          "b": 255,
+          "g": 0,
+          "r": 255
+        }
+      }
+    ]
+  }
+}

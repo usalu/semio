@@ -13,7 +13,7 @@ vocabularies, not versions of one list. Everything you write follows that shape:
 |---|---|
 | Mutation vocabulary (already exists) | `<artifact>/🏅️standards/🔖️<std>/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` |
 | **Mutation oracle** (yours to write) | `<artifact>/🏅️standards/🔖️<std>/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs` |
-| **Catalog + oracle registration** (yours) | `<artifact>/🏅️standards/🔖️<std>/🪆️subsets/✳️any/🧪️oracle/🔣️component.json` |
+| **Catalog + oracle registration** (yours) | `<artifact>/🏅️standards/🔖️<std>/🪆️subsets/✳️any/🧪️oracle/🔣️.json` |
 | **Test case** (yours) | `<artifact>/🧪️tests/mutate-<fmt>-<std>/component.feature` + `🦀️component.rs` |
 | Shared reference-library helpers | `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/{📄️document,🖼️raster,🎒️archive,🔊️audio,📊️tabular,🧊️mesh}/🦀️component.rs` |
 
@@ -29,7 +29,7 @@ Nobody else writes your subset's file.
 
 ## 1. The catalog and the oracle registration
 
-`<artifact>/🏅️standards/🔖️<std>/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`:
+`<artifact>/🏅️standards/🔖️<std>/🪆️subsets/✳️any/🧪️oracle/🔣️.json`:
 
 ```json
 {

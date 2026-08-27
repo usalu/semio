@@ -41,7 +41,7 @@ pub enum SemioObjectMutation {
 }
 
 /// 🏷️ Kebab-case spelling of every `SemioObjectMutation` variant, in declaration order — the
-/// vocabulary the `semio-v1-object` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares
+/// vocabulary the `semio-v1-object` mutation catalog (`../../🧪️oracle/🔣️.json`) declares
 /// and `mutate-semio-object`'s exhaustive test case measures itself against. `kinds_match_the_enum_
 /// and_the_catalog` below is what keeps this list honest against the enum, since the framework
 /// never parses Rust.
@@ -207,7 +207,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

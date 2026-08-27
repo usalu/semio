@@ -1,0 +1,22 @@
+{
+  "declaredOutcome": "applied",
+  "solids": 1,
+  "empty": false,
+  "volume": 5616.518640503103,
+  "area": 2427.433388232287,
+  "boundingBox": {
+    "xMin": -5.0000001,
+    "xMax": 5.0000001,
+    "yMin": -20.0000001,
+    "yMax": 20.0000001,
+    "zMin": -1e-7,
+    "zMax": 40.0000001
+  },
+  "boundingBoxDiagonal": 57.44562677872007,
+  "faces": 8,
+  "edges": 14,
+  "vertices": 8,
+  "validSolid": true,
+  "meshVertexCount": 2816,
+  "meshTriangleCount": 2800
+}

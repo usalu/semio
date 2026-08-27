@@ -1,0 +1,12 @@
+{
+  "mutation": "insert-palette-entry",
+  "payload": {
+    "entry": {
+      "b": 255,
+      "g": 0,
+      "r": 255,
+      "reserved": 0
+    },
+    "index": 1
+  }
+}

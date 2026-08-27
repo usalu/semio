@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "grant", "components", "defaults", "hostile", "lifecycle"],
+  "properties": {
+    "version": { "const": 1 },
+    "grant": { "type": "object", "additionalProperties": false, "required": ["maxItems", "maxBytes"], "properties": { "maxItems": { "const": 1 }, "maxBytes": { "const": 4096 } } },
+    "components": { "type": "array", "minItems": 18, "maxItems": 18, "items": { "type": "object", "additionalProperties": false, "required": ["wire", "expected"], "properties": { "wire": { "type": "object" }, "expected": { "type": "object" } } } },
+    "defaults": { "type": "object", "additionalProperties": false, "required": ["style", "accessibility"], "properties": { "style": { "type": "object" }, "accessibility": { "type": "object" } } },
+    "hostile": { "type": "array", "minItems": 10, "items": { "type": "object" } },
+    "lifecycle": { "type": "array", "minItems": 8, "uniqueItems": true, "items": { "enum": ["cancel-before-decode", "cancel-during-value", "cancel-during-normalization", "cancel-after-byte-capture", "decoder-close-before-publication", "two-snapshot-readers", "older-reader-closes-last", "zero-grant-close"] } }
+  }
+}

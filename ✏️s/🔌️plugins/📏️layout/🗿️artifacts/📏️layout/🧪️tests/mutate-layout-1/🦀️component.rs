@@ -1,5 +1,5 @@
 //! 🦀️ Layout-document exhaustive mutation case — Rust adapter. Recorded no-oracle decision
-//! `layout-mutation-semantics` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`):
+//! `layout-mutation-semantics` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`):
 //! `s.layout.layout` is a semio-NATIVE format with no third-party reader or writer, so `oracle` here
 //! reads the committed, independently handcrafted per-kind specification vectors literally, and
 //! `subject` drives this repository's own vocabulary over all 25 `LayoutMutation` variants.

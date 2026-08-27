@@ -33,7 +33,7 @@ mod tests {
     use super::*;
     use crate::artifacts::curate::{CuratedItem, GeometryRecipe, ObjectKind};
 
-    async fn object_kind(id: &str) -> ObjectKind {
+    fn object_kind(id: &str) -> ObjectKind {
         ObjectKind { id: id.into(), name: id.into(), module_id: "beams".into(), typology_path: vec!["beams".into()], availability: 1, geometry: Box::new(GeometryRecipe::Box { width: 0.2, height: 0.4, depth: 6.0 }) }
     }
 

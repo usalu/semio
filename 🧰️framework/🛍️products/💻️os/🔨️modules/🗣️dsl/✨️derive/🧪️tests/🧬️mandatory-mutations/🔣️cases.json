@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    { "name": "two-direct-leaves", "source": "#[mutations(snapshot = Doc, diff = Delta, schema = \"probe\")] enum Ops { InsertPage(insert_page::InsertPage), RemovePage(remove_page::RemovePage) }", "accepted": true, "leaves": 2, "generic": false },
+    { "name": "generic-direct-leaf", "source": "#[mutations(snapshot = Doc<T>, diff = Delta<T>, schema = \"probe\")] enum Ops<T> where T: Clone { InsertPage(insert_page::InsertPage<T>) }", "accepted": true, "leaves": 1, "generic": true },
+    { "name": "inline-payload", "source": "#[mutations(snapshot = Doc, diff = Delta, schema = \"probe\")] enum Ops { InsertPage { index: u32 } }", "accepted": false },
+    { "name": "sentinel", "source": "#[mutations(snapshot = Doc, diff = Delta, schema = \"probe\")] enum Ops { None }", "accepted": false },
+    { "name": "multiple-payloads", "source": "#[mutations(snapshot = Doc, diff = Delta, schema = \"probe\")] enum Ops { InsertPage(A, B) }", "accepted": false },
+    { "name": "conditional-leaf", "source": "#[mutations(snapshot = Doc, diff = Delta, schema = \"probe\")] enum Ops { #[cfg(feature = \"hidden\")] InsertPage(Leaf) }", "accepted": false },
+    { "name": "conditional-field", "source": "#[mutations(snapshot = Doc, diff = Delta, schema = \"probe\")] enum Ops { InsertPage(#[cfg_attr(feature = \"hidden\", cfg(any()))] Leaf) }", "accepted": false },
+    { "name": "conditional-aggregate", "source": "#[cfg(feature = \"hidden\")] #[mutations(snapshot = Doc, diff = Delta, schema = \"probe\")] enum Ops { InsertPage(Leaf) }", "accepted": false },
+    { "name": "empty-aggregate", "source": "#[mutations(snapshot = Doc, diff = Delta, schema = \"probe\")] enum Ops {}", "accepted": false },
+    { "name": "borrowed-wrapper", "source": "#[mutations(snapshot = Doc, diff = Delta, schema = \"probe\")] enum Ops { InsertPage(&'static Leaf) }", "accepted": false },
+    { "name": "missing-contract", "source": "enum Ops { InsertPage(Leaf) }", "accepted": false }
+  ]
+}

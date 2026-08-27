@@ -149,7 +149,7 @@ mod tests {
 /// so the inverse law is checked against the mutation's OWN computed inverse rather than against a
 /// hand-written undo.
 ///
-/// @see ../../🧪️oracle/🔣️component.json — the catalog and the recorded no-oracle decision.
+/// @see ../../🧪️oracle/🔣️.json — the catalog and the recorded no-oracle decision.
 pub fn s_space_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
     let decode_snapshot = |text: &str| -> Result<SSpaceSnapshot, String> {
         let decoded: SSpaceSnapshot = serde_json::from_str(text).map_err(|error| error.to_string())?;

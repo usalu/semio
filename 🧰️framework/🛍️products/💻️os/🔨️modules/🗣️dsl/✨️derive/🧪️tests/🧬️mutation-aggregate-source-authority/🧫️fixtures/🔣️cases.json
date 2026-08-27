@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    { "name": "direct-canonical", "accepted": true },
+    { "name": "compiler-relative", "accepted": true },
+    { "name": "parent-mounted", "accepted": true },
+    { "name": "leaf-primary", "accepted": false, "diagnostic": "directly inside" },
+    { "name": "historical-primary", "accepted": false, "diagnostic": "canonical mutation primary" },
+    { "name": "outside-root", "accepted": false, "diagnostic": "directly inside" },
+    { "name": "virtual-compose", "accepted": false, "diagnostic": "compose" },
+    { "name": "nested-nx-anchor", "accepted": false, "diagnostic": "lacks paired" },
+    { "name": "taxonomy-filename-change", "accepted": true },
+    { "name": "symlink-source", "accepted": false, "diagnostic": "symlink" },
+    { "name": "symlink-root", "accepted": false, "diagnostic": "symlink" }
+  ]
+}

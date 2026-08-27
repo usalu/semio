@@ -713,4 +713,46 @@ mod tests {
         let result: Result<Sample, PackError> = from_bytes(&[TAG_SEQ]);
         assert!(result.is_err());
     }
+
+    //#region 🎬️RetainedSceneOracle
+    #[test]
+    fn owned_scene_neutral_vectors_match_native_serde_packet() {
+        #[derive(Serialize)]
+        enum FixtureVariant {
+            Idle,
+            Scale(u64),
+        }
+        struct Bytes<'a>(&'a [u8]);
+        impl Serialize for Bytes<'_> {
+            fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+                serializer.serialize_bytes(self.0)
+            }
+        }
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧵️retained/🧪️fixtures/🔣️owned-scene.json")).unwrap();
+        let cases = fixture["cases"].as_array().unwrap();
+        assert_eq!(cases.len(), 19);
+        for case in cases {
+            let name = case["name"].as_str().unwrap();
+            let expected: Vec<u8> = case["hex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|digits| u8::from_str_radix(std::str::from_utf8(digits).unwrap(), 16).unwrap()).collect();
+            let actual = match name {
+                "unit" => to_bytes(&()).unwrap(),
+                "false" => to_bytes(&false).unwrap(),
+                "true" => to_bytes(&true).unwrap(),
+                "unsigned" => to_bytes(&300u64).unwrap(),
+                "negative" => to_bytes(&-3i64).unwrap(),
+                "double" => to_bytes(&1.5f64).unwrap(),
+                "unicode" | "bom-preserved" => to_bytes(case["value"].as_str().unwrap()).unwrap(),
+                "bytes" => to_bytes(&Bytes(&[0, 128, 255])).unwrap(),
+                "none" => to_bytes(&Option::<bool>::None).unwrap(),
+                "some" => to_bytes(&Some(true)).unwrap(),
+                "char" => to_bytes(&'🧹').unwrap(),
+                "unit-variant" => to_bytes(&FixtureVariant::Idle).unwrap(),
+                "data-variant" => to_bytes(&FixtureVariant::Scale(2)).unwrap(),
+                "sequence" | "nested-map" | "prototype-key" | "empty-containers" | "fnv-collision-exact-keys" => to_bytes(&case["value"]).unwrap(),
+                _ => panic!("Unmatched neutral scene case: {name}"),
+            };
+            assert_eq!(actual, expected, "{name}");
+        }
+    }
+    //#endregion 🎬️RetainedSceneOracle
 }

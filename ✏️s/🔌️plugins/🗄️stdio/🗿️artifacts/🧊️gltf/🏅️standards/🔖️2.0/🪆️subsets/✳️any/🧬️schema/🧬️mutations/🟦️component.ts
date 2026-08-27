@@ -24,7 +24,7 @@ import type { GltfChangeMeshNamePayload } from './✏️🕸️change-mesh-name/
 import type { GltfChangeNodeExtensionDataPayload } from './✏️🔘️change-node-extension-data/🟦️component.ts';
 import type { GltfChangeNodeExtraDataPayload } from './✏️🔘️change-node-extra-data/🟦️component.ts';
 import type { GltfChangeNodeMorphWeightsPayload } from './✏️🔘️change-node-morph-weights/🟦️component.ts';
-import type { GltfChangeNodeNamePayload } from './✏️🔘️change-node-name/🟦️component.ts';
+import type { GltfChangeNodeNameMutation } from './✏️🔘️change-node-name/🟦️.ts';
 import type { GltfChangePrimitiveExtensionDataPayload } from './✏️🔺️change-primitive-extension-data/🟦️component.ts';
 import type { GltfChangePrimitiveExtraDataPayload } from './✏️🔺️change-primitive-extra-data/🟦️component.ts';
 import type { GltfChangePrimitiveTopologyModePayload } from './✏️🔺️change-primitive-topology-mode/🟦️component.ts';
@@ -146,7 +146,7 @@ export type GltfMutation =
   | { readonly mutation: 'change-node-extension-data'; readonly payload: GltfChangeNodeExtensionDataPayload }
   | { readonly mutation: 'change-node-extra-data'; readonly payload: GltfChangeNodeExtraDataPayload }
   | { readonly mutation: 'change-node-morph-weights'; readonly payload: GltfChangeNodeMorphWeightsPayload }
-  | { readonly mutation: 'change-node-name'; readonly payload: GltfChangeNodeNamePayload }
+  | { readonly mutation: 'change-node-name'; readonly payload: GltfChangeNodeNameMutation }
   | { readonly mutation: 'change-primitive-extension-data'; readonly payload: GltfChangePrimitiveExtensionDataPayload }
   | { readonly mutation: 'change-primitive-extra-data'; readonly payload: GltfChangePrimitiveExtraDataPayload }
   | { readonly mutation: 'change-primitive-topology-mode'; readonly payload: GltfChangePrimitiveTopologyModePayload }

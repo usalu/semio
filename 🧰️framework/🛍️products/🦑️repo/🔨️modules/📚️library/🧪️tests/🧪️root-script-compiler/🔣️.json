@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "declarations": ["policyCollectGluePathTargets", "policySnakeToCamel"],
+  "fieldNames": [
+    { "input": "field_name", "output": "fieldName" },
+    { "input": "field__name", "output": "fieldName" },
+    { "input": "field_", "output": "field" },
+    { "input": "_field", "output": "Field" },
+    { "input": "a_1_field", "output": "a1Field" },
+    { "input": "alreadyCamel", "output": "alreadyCamel" },
+    { "input": "field_Name", "output": "fieldName" },
+    { "input": "___", "output": "" },
+    { "input": "", "output": "" }
+  ],
+  "schemaFields": ["field_name", "field__name", "field_", "a_1_field"],
+  "glue": {
+    "entry": "📦️glue.rs",
+    "inputs": {
+      "📦️glue.rs": "#[path = \"./first/🦀️.rs\"]\npub mod first;\n#[path = \"./second/🦀️.rs\"]\npub mod second;\nmod third;\n",
+      "first/🦀️.rs": "pub const VALUE: u8 = 1;\n",
+      "second/🦀️.rs": "pub const VALUE: u8 = 2;\n",
+      "third/mod.rs": "pub const VALUE: u8 = 3;\n"
+    },
+    "targets": ["first/🦀️.rs", "second/🦀️.rs", "third/mod.rs"]
+  },
+  "execution": {
+    "target": "test-root-script-compiler",
+    "command": "bun ./📜️script.ts test root-script-compiler",
+    "launchName": "🧹clean🧩️taxonomy🧪️root-script-compiler",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-root-script-compiler --skip-nx-cache",
+    "launchGroup": "4_gate",
+    "launchOrder": 410.11
+  }
+}

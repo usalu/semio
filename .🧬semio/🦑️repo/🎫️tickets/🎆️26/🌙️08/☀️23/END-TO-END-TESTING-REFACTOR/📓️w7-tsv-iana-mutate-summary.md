@@ -35,7 +35,7 @@ the way CSV's `has_header` convention does — those two kinds are this subset's
 serialization concerns, genuinely rewriting bytes. Reusing the ignoring profile would make both
 kinds no-ops. Following the `zip-2-0-any` precedent (`semantic-archive-mutate-v1`, which keeps
 `comment` live for the same reason), this case declares its own `semantic-tabular-mutate-v1`
-profile in its own catalog (`🧪️oracle/🔣️component.json`), differing from the base profile only in
+profile in its own catalog (`🧪️oracle/🔣️.json`), differing from the base profile only in
 that `trailingNewline`/`lineTerminator` are NOT ignored.
 
 ## Oracle: the already-linked `csv` crate, reconfigured
@@ -95,7 +95,7 @@ so it compiles into the subject role the moment that lands; only the oracle phas
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`
   — filled in (was a rejecting stub): `oracle_apply_mutation`, `read_grid`/`write_grid`/`TsvGrid`,
   `project_tsv_grid`, unit tests.
-- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧪️oracle/🔣️.json`
   — new: oracle registration + mutation catalog + `semantic-tabular-mutate-v1` profile.
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🧫️fixtures/reuse-marketplaces.tsv` — new, real derived
   fixture.

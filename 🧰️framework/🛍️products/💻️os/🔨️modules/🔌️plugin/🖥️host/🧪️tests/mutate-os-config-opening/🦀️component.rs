@@ -1,7 +1,7 @@
 //! 🦀️ Opening-preferences exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-
 //! TESTING-REFACTOR. Recorded no-oracle decision
 //! `os-config-opening-preferences-mutation-semantics`
-//! (`../../../../../🎚️config/🧪️oracle/🔣️component.json`): `os.config.opening` is this operating
+//! (`../../../../../🎚️config/🧪️oracle/🔣️.json`): `os.config.opening` is this operating
 //! system's own preference record with no third-party implementation, so `oracle` here reads the
 //! committed, independently handcrafted per-kind specification fixtures
 //! (`../../../../../🎚️config/🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`) literally — no

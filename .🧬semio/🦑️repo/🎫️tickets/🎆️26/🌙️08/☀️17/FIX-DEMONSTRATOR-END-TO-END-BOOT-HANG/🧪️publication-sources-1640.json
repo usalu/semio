@@ -1,0 +1,173 @@
+{
+  "captured": "2026-08-27T14:39:09.924Z",
+  "sources": [
+    {
+      "path": "Cargo.toml",
+      "bytes": 26596,
+      "modified": "2026-08-26T13:53:25.985Z",
+      "sha256": "75a0268cbb9249a698c451ff498e633e2a161d1de06b1de0a37a4378b337fc29"
+    },
+    {
+      "path": "Cargo.lock",
+      "bytes": 251762,
+      "modified": "2026-08-27T14:26:11.322Z",
+      "sha256": "1466c3b4751da9ea1fdead0f608b4a0c61a85badb0c8d37391866a4160f1bf13"
+    },
+    {
+      "path": ".cargo/config.toml",
+      "bytes": 932,
+      "modified": "2026-08-03T14:02:39.548Z",
+      "sha256": "660e2572b2ef648da226ae300985cd561650be38e8f161d1f1ecf0b08dd1bd35"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🦀️component.rs",
+      "bytes": 172106,
+      "modified": "2026-08-27T14:09:45.618Z",
+      "sha256": "2212448b88ef3481fb1d0c90d730a68e6725a007334d7b601c7b4b4f59cc4fa3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/⏱️clock/🦀️component.rs",
+      "bytes": 1742,
+      "modified": "2026-08-27T12:23:53.788Z",
+      "sha256": "d4fb6cce049d7f545727b694a7199a7831c76b4f74c6b4f38378fe97ac3ef8c4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
+      "bytes": 2393062,
+      "modified": "2026-08-27T14:28:34.210Z",
+      "sha256": "de8787e1d4d66a29f7b9876a7cd4aab2a39447bea16af5639bbba9dfcefcc6df"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs",
+      "bytes": 166990,
+      "modified": "2026-08-27T11:49:45.638Z",
+      "sha256": "d1cba5645d374a00230f0c528a00a73cca96a939b7d211faa99a33e483669ddf"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs",
+      "bytes": 1531865,
+      "modified": "2026-08-27T14:25:34.114Z",
+      "sha256": "887890e127e47967a33711b18a924dadc0d659ad6fbbb2e305726bdf97bccaf0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🦀️component.rs",
+      "bytes": 131047,
+      "modified": "2026-08-27T14:17:55.054Z",
+      "sha256": "b610e4f5d9476c67c578d0d48f81055d7edc47b16dbd51fafe8c62d7f259283d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🦀️component.rs",
+      "bytes": 6289,
+      "modified": "2026-08-27T14:23:58.448Z",
+      "sha256": "ac6ab29d51b021d46e82ed550540bc1360da2c346eb8cefb99b8db11403fa004"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🦀️component.rs",
+      "bytes": 10962,
+      "modified": "2026-08-27T14:15:07.266Z",
+      "sha256": "d2157e8014a389b9daa03980feb8b2cdb74adadb95d285cbb12ead91d4ad6895"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📔️registry/🦀️component.rs",
+      "bytes": 15872,
+      "modified": "2026-08-27T14:31:25.405Z",
+      "sha256": "e8e156724c6da4625c6197ced0f88a938e7fc44ec0e083db145e03aa1d832fb4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️component.rs",
+      "bytes": 230198,
+      "modified": "2026-08-27T14:35:11.342Z",
+      "sha256": "a98278b85e991627f45b62ef326c4c5b419b7a128ce68bc98d20cd239e288a81"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📚️catalogue/🦀️component.rs",
+      "bytes": 13691,
+      "modified": "2026-08-27T14:21:07.415Z",
+      "sha256": "acdff6f2494849249ed67cc1a001c73f8ddcded3c81d17dc68d6fab043bffa83"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs",
+      "bytes": 20181,
+      "modified": "2026-08-27T14:31:59.215Z",
+      "sha256": "cdb3ef6c1d29483002d894de62d6f379a49f89bf3f37695685595374207865ae"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/🦀️component.rs",
+      "bytes": 37178,
+      "modified": "2026-08-27T14:35:11.336Z",
+      "sha256": "ee6d5c5da62cef9fe487a94aa83190ffb64cf27ff2a34bedfbcca0b6f82ac14a"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs",
+      "bytes": 88222,
+      "modified": "2026-08-27T14:33:19.087Z",
+      "sha256": "45f535197236cb4753ca4398bb3b83ee8dd34b79ec15f720d97a5bb4129adb64"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/🦀️component.rs",
+      "bytes": 17467,
+      "modified": "2026-08-27T14:33:19.060Z",
+      "sha256": "70262d5c525510759fa8caa0f0ed59a230a12958be5ee5f4b7974d68a99cd2c0"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs",
+      "bytes": 54093,
+      "modified": "2026-08-27T14:33:19.085Z",
+      "sha256": "5a2c1b894b314567f534fd7ececab19e77ce795c3f4773dd387c1084747eacb0"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/🦀️component.rs",
+      "bytes": 21207,
+      "modified": "2026-08-27T14:33:19.063Z",
+      "sha256": "90fb63b7a212d11afe4501572a496deaa5ed5da10dd4adfa6a9c2aec50306a27"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/🦀️component.rs",
+      "bytes": 9252,
+      "modified": "2026-08-27T14:33:19.065Z",
+      "sha256": "a6692d4f3d67348c6e5971f836840ed3450965802b2addf09347a07c168cc670"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/🦀️component.rs",
+      "bytes": 33791,
+      "modified": "2026-08-27T14:33:19.067Z",
+      "sha256": "4281b958923de217cd06165dd66650a43755c729a02dfae595cc286902709ddd"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/🦀️component.rs",
+      "bytes": 13273,
+      "modified": "2026-08-27T14:33:19.069Z",
+      "sha256": "49137894c649153e99ff0582632d3d115f46c4efa9491b8a842d9f7ee0498c50"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/🦀️component.rs",
+      "bytes": 8715,
+      "modified": "2026-08-27T14:33:19.077Z",
+      "sha256": "c2cc23225d779d43b4a403a041b00089a2c6ed784700287f10c6585e722ce39f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️component.rs",
+      "bytes": 252707,
+      "modified": "2026-08-27T09:23:54.986Z",
+      "sha256": "cfe22a5d2c52928b38c5c0df47b67cfd0e100c143ab833eff5e39c68d50afe5d"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "bytes": 82216,
+      "modified": "2026-08-27T13:49:47.480Z",
+      "sha256": "74eb5dade11d28df48be21ef15ac7736f2bca81fb8bdbd62c70ed17db229622b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts",
+      "bytes": 345451,
+      "modified": "2026-08-27T14:03:30.021Z",
+      "sha256": "f7a1ce09af5a3e4f3aec90d5737efc9a5de8a1d54c8ea83ed58bd294ddf563d4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx",
+      "bytes": 176798,
+      "modified": "2026-08-27T11:37:43.114Z",
+      "sha256": "c97146edc3921247d1321a6094f4177b2854e34ac5949020e4458faa58867615"
+    }
+  ]
+}

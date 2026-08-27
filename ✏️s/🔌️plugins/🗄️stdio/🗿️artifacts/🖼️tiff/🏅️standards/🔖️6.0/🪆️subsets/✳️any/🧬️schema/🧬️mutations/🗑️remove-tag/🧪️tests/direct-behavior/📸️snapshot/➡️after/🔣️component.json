@@ -1,0 +1,82 @@
+{
+  "byteOrder": "littleEndian",
+  "ifds": [
+    {
+      "entries": [
+        {
+          "kind": "short",
+          "tag": 256,
+          "values": {
+            "kind": "short",
+            "value": [
+              2
+            ]
+          }
+        },
+        {
+          "kind": "short",
+          "tag": 257,
+          "values": {
+            "kind": "short",
+            "value": [
+              2
+            ]
+          }
+        },
+        {
+          "kind": "short",
+          "tag": 258,
+          "values": {
+            "kind": "short",
+            "value": [
+              8,
+              8,
+              8,
+              8
+            ]
+          }
+        },
+        {
+          "kind": "short",
+          "tag": 259,
+          "values": {
+            "kind": "short",
+            "value": [
+              1
+            ]
+          }
+        },
+        {
+          "kind": "short",
+          "tag": 262,
+          "values": {
+            "kind": "short",
+            "value": [
+              2
+            ]
+          }
+        }
+      ],
+      "pixels": []
+    }
+  ],
+  "pixels": [
+    255,
+    0,
+    0,
+    255,
+    0,
+    255,
+    0,
+    255,
+    0,
+    0,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255
+  ],
+  "schema": "stdio.tiff"
+}

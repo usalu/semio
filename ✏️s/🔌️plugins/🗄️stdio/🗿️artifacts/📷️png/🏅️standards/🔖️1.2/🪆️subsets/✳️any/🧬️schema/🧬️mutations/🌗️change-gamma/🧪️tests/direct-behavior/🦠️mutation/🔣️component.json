@@ -1,0 +1,6 @@
+{
+  "mutation": "change-gamma",
+  "payload": {
+    "gama": 45455
+  }
+}

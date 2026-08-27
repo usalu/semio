@@ -807,8 +807,8 @@ impl Ui {
                     operation: cx.operation(),
                     generation: semio_framework_job::Generation(generation),
                     cancel: cx.cancel_token(),
-                    config: semio_framework_job::BatchDriveConfig { site: "ui.layout-text.worker", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 1 },
-                    now_ms: semio_framework_job::default_now_ms,
+                    config: semio_framework_job::BatchDriveConfig { site: "ui.layout-text.worker", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
+                    now_us: semio_framework_job::default_now_us,
                 };
                 match semio_framework_job::MountedWorkerJobSession::try_new(job, params) {
                     Ok(session) => window.layout_session = Some(session),
@@ -1519,8 +1519,8 @@ mod tests {
         UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: Label::data(label), action: action(), style: None, presence: UiPresence::default(), menu: None })
     }
 
-    fn test_clock() -> u64 {
-        0
+    fn test_clock() -> Option<u64> {
+        Some(0)
     }
 
     fn test_layout_pool() -> semio_framework_async::WorkerPool {
@@ -2978,13 +2978,13 @@ mod retained_document_hostile_fixtures {
     }
 
     fn step(generation: u64, preview: &mut u64) -> StepContext<'_> {
-        let now = semio_framework_job::default_now_ms();
+        let now = semio_framework_job::default_now_us();
         StepContext::new(
             semio_framework_job::OperationId(generation),
             semio_framework_job::Generation(generation),
-            semio_framework_job::StepBudget::new(1, now.saturating_add(100)),
+            now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, 100000)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
             semio_framework_job::CancelToken::root_now(),
-            semio_framework_job::default_now_ms,
+            semio_framework_job::default_now_us,
             preview,
         )
     }
@@ -2992,7 +2992,7 @@ mod retained_document_hostile_fixtures {
     fn cancelled_step(generation: u64, preview: &mut u64) -> StepContext<'_> {
         let cancel = semio_framework_job::CancelToken::root_now();
         cancel.cancel_now();
-        StepContext::new(semio_framework_job::OperationId(generation), semio_framework_job::Generation(generation), semio_framework_job::StepBudget::new(1, u64::MAX), cancel, semio_framework_job::default_now_ms, preview)
+        StepContext::new(semio_framework_job::OperationId(generation), semio_framework_job::Generation(generation), semio_framework_job::StepBudget::new(1, u64::MAX), cancel, semio_framework_job::default_now_us, preview)
     }
 
     #[test]

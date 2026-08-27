@@ -18,7 +18,7 @@
 //! reader both the oracle's and the subject's re-serialized bytes are read back through before
 //! comparison.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`SvgMutation::KINDS`).
 
 use semio_repo_test_host::Json;

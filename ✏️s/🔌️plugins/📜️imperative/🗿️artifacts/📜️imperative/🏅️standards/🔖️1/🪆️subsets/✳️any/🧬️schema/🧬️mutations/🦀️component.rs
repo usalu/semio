@@ -40,7 +40,7 @@ mod structural_correspondence_tests {
         ];
         let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
         let descriptor_kinds: Vec<_> = <ImperativeMutation as protocol::SemanticMutation<ImperativeSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
-        let catalog_source = std::fs::read_to_string(mutation_root.join("../../🧪️oracle/🔣️component.json")).expect("language-neutral oracle catalog");
+        let catalog_source = std::fs::read_to_string(mutation_root.join("../../🧪️oracle/🔣️.json")).expect("language-neutral oracle catalog");
         let catalog: serde_json::Value = serde_json::from_str(&catalog_source).expect("valid language-neutral oracle catalog");
         let mutation_catalog = &catalog["mutationCatalogs"][0];
         let catalog_kinds: Vec<_> = mutation_catalog["kinds"].as_array().expect("catalog kinds").iter().map(|kind| kind.as_str().expect("string kind")).collect();

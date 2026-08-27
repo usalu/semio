@@ -52,7 +52,7 @@
 //! report every kind as green while the mutation never reached a byte, which is the precise shape of
 //! shallow green ticket 26/08/23/END-TO-END-TESTING-REFACTOR exists to remove.
 //!
-//! The catalog `jpg-jfif-1-01-baseline` (`../../🧪️oracle/🔣️component.json`) is therefore declared
+//! The catalog `jpg-jfif-1-01-baseline` (`../../🧪️oracle/🔣️.json`) is therefore declared
 //! and claimed by `mutate-jpg-jfif-1-01-baseline`, and that case measures this vocabulary where its
 //! axes actually live: on the DECODED SNAPSHOT, against [`check_baseline_conformance`]'s verdict.
 //! Each kind must move its own axis and raise its own diagnostic; each inverse must restore the
@@ -144,7 +144,7 @@ pub enum JpgBaselineMutation {
 }
 
 /// 🏷️ Kebab-case spelling of every `JpgBaselineMutation` variant, in declaration order — the
-/// vocabulary the `jpg-jfif-1-01-baseline` mutation catalog (`../../🧪️oracle/🔣️component.json`)
+/// vocabulary the `jpg-jfif-1-01-baseline` mutation catalog (`../../🧪️oracle/🔣️.json`)
 /// declares and `mutate-jpg-jfif-1-01-baseline` measures itself against.
 /// `kinds_match_enum_variants_in_declaration_order` below is what keeps the two honest against the
 /// enum, and `kinds_match_the_committed_catalog` against the manifest.
@@ -376,7 +376,7 @@ mod tests {
     /// all until the completeness gate learned to see an unregistered one.
     #[test]
     fn kinds_match_the_committed_catalog() {
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

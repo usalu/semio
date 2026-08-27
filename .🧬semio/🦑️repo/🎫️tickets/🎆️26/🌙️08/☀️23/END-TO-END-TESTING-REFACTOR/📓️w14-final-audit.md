@@ -425,7 +425,7 @@ Three real qualifications, none of which makes an oracle fake, all of which shri
 
 * **Pillow.** `mutate-semio-image`'s reference does `from PIL import Image`
   (`🐍️component.py:520`) and its registration
-  (`🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧪️oracle/🔣️component.json`) declares
+  (`🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧪️oracle/🔣️.json`) declares
   `"ecosystem": "python", "package": ""`. **Pillow appears nowhere in `./🔒️dependencies.json`** — that
   file has `pypdf 6.14.2` and `simplejson 4.1.1` and no Pillow. Re-verified in this audit against the
   runner's own venv, which is created `--system-site-packages` (`📜️script.ts:381`):
@@ -483,7 +483,7 @@ $ .🧬semio/🦑️repo/⚡️cache/tests/hosts/python-env-…/bin/python -c "i
 
 Their stated reason for not adopting it is **not a capability gap**: putting a Python distribution on
 a generated host's import path needs an `oracleHostPackages` entry in the *shared*
-`✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json` (host packages resolve by owner prefix, and a
+`✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json` (host packages resolve by owner prefix, and a
 subset manifest is not a prefix of the case owner `🗿️artifacts/🏗️ifc`), and the wave brief forbade an
 executor from editing that shared file. **A governance rule, written for a parallel-execution wave, is
 the only thing standing between five IFC cases (75 scenarios) and the exact oracle the owner asked

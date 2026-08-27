@@ -21,6 +21,19 @@ class SourceTestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("build", BuildScript).register("test-source", SourceTestScript);
+class LocalInteractionSourceTestScript extends BundleScript {
+  async run(): Promise<void> {
+    await import("../../📡️wire/🏠️local-interaction/🧪️fixtures/📜️script.ts");
+  }
+}
+
+class LocalInteractionNativeTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    await runCargo(["test", "-p", "semio-framework-replication", "--lib", "local_interaction_", ...rest], this.repoRoot);
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("build", BuildScript).register("test-source", SourceTestScript).register("test-local-interaction-source", LocalInteractionSourceTestScript).register("test-local-interaction-native", LocalInteractionNativeTestScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

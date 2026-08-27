@@ -1,6 +1,6 @@
 //! 🪐️ `s.space.space` exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-
 //! REFACTOR. Recorded no-oracle decision `s-space-index-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, which also records why generic
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, which also records why generic
 //! table readers and content-addressed store crates were surveyed and DECLINED).
 //!
 //! This artifact is a hub space's INDEX: rows of artifact metadata — id, name, kind id, schema, a

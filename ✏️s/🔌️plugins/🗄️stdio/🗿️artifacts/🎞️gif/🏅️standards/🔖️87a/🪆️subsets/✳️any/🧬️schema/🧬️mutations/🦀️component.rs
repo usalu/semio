@@ -81,7 +81,7 @@ pub enum GifMutation {
 }
 
 /// 🏷️ Wave 7 mutation-oracle catalog: the kebab-case spelling of every `GifMutation` variant, in
-/// declaration order — what `../../🧪️oracle/🔣️component.json`'s `mutationCatalogs[].kinds` and
+/// declaration order — what `../../🧪️oracle/🔣️.json`'s `mutationCatalogs[].kinds` and
 /// `../../../../../../🧪️tests/mutate-gif-87a/component.feature`'s `@id-mutate`/`@id-inverse` row
 /// ids are measured against. `kinds_match_enum_variants` below is what keeps this honest — the
 /// framework never parses Rust, so nothing else notices if this list and the enum drift apart.
@@ -327,7 +327,7 @@ mod tests {
     async fn kinds_match_enum_variants_and_manifest_catalog() {
         assert_eq!(KINDS, ["no-mutation", "set-snapshot", "set-screen-size", "set-global-color-table", "set-background-color-index", "set-pixel-aspect-ratio", "insert-image", "remove-image", "move-image", "set-image-geometry", "set-image-pixels", "set-image-interlace"]);
         assert_eq!(KINDS.len(), 12, "one kebab-case entry per GifMutation variant, including NoMutation and SetSnapshot");
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "manifest mutationCatalogs[].kinds must list {kind:?}");
         }

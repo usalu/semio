@@ -71,7 +71,7 @@ the host runs, instead of surfacing as an adapter import error that never mentio
 `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/extract-text-pdf-1-4/` — `component.feature` +
 `🐍️component.py`. Oracle `pypdf-pdf-1-4-text` (ecosystem `python`, package `pypdf` 6.14.2),
 registered together with the `python` host package in
-`✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json`.
+`✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json`.
 
 Why Python genuinely helps and Rust does not: `lopdf` — the registered PDF editing and parsing
 oracle — exposes the object graph and raw content streams. Reconstructing a page's reading order

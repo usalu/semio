@@ -730,8 +730,8 @@ mod tests {
     use crate::wgpu::component::ui::{UiPresence, UiStackNode, UiTextNode};
     use crate::wgpu::Label;
 
-    fn clock_zero() -> u64 {
-        0
+    fn clock_zero() -> Option<u64> {
+        Some(0)
     }
 
     fn text_tree(value: String) -> (UiTree, NodeId) {
@@ -894,8 +894,8 @@ mod tests {
             operation: semio_framework_job::OperationId(29),
             generation: semio_framework_job::Generation(11),
             cancel,
-            config: semio_framework_job::BatchDriveConfig { site: "ui.layout-text.worker.law", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 1 },
-            now_ms: semio_framework_job::default_now_ms,
+            config: semio_framework_job::BatchDriveConfig { site: "ui.layout-text.worker.law", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
+            now_us: semio_framework_job::default_now_us,
         };
         let mut session = semio_framework_job::MountedWorkerJobSession::try_new(job, params).unwrap_or_else(|_| panic!("mounted worker session credit"));
         let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));

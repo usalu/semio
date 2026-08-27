@@ -1,0 +1,17 @@
+# TXT Root Cutover Audit
+
+The read-only Luna audit found five leaf modules mounted as siblings of the aggregate component in STDIO glue. The aggregate reexports those siblings through `super`. The intended ownership cutover moves the five explicit canonical Rust mounts into the aggregate primary and changes its reexports to local paths; the five glue sibling mounts are removed. Generic text/binary mounts may remain at their current shared framing boundary while their imports resolve through the aggregate reexport. The enum and generic `apply_txt_mutation` have no per-kind branching.
+
+The audit found no remaining production references to the five removed direct-leaf historical Rust filenames in its inspected scope. Semantic Rust imports in editor, viewer, IO and adapters should survive a physical-mount correction. This is source inspection, not compile/runtime acceptance.
+
+The auditor proposed retaining historical aggregate and language primary filenames. That recommendation is not accepted: the current canonical Rust authority already requires `🦀️.rs` for aggregate source proof as well as leaf proof. The coordinator requested a focused read-only reconciliation against the current taxonomy for Rust, TypeScript, GraphQL, JSON/schema, Protocol Buffers and codec primaries before assigning the complete coherent cutover. No dual-name fallback is approved.
+
+Other findings needing resolution are the declared `mutationPayloadSchemaProjection.descriptorSourceFilename` value versus the canonical computed descriptor filename, and three leaf names sharing the `✏️` emoji while the governing brief calls for unique approved identities. These are not permission to invent unvalidated taxonomy names or to preserve a contradictory contract.
+
+The separate registered TXT gate is red with 48 of 50 tests passing; both failures concern the committed mutation binary protocol. TXT-PROTOCOL-22 owns only that protocol, its generic framing tests, and ticket-local evidence. It does not own physical mounts or canonical filename changes. The root cutover must wait for this exact overlapping binary-surface write set to be released.
+
+Required closure includes exact folder/variant/descriptor correspondence, all five metadata tests, canonical required-language parity, real codec behavior, the registered TXT schema selection, the `mutate-txt-utf-8` feature suite and eventually full STDIO runtime. None of those broader closures is inferred from the 34-test leaf diagnostic harness.
+
+The follow-up audit corrected its unconditional historical-root recommendation but still omitted the current canonical payload-schema destination. Root independently inspected the current source: `mutationPayloadSchemaRelativePath` returns the taxonomy-owned `🧬️schema/🔣️.json`, and active mutation schema parity checks require that exact pointer. The root structural parity code also derives canonical aggregate language filenames. The normalization projection admits historical filenames as source inputs for planning; that is distinct from final runtime authority, and this TXT packet does not modify that shared mechanism.
+
+Root also found the existing emoji uniqueness policy and new-mutation sibling check, contrary to the auditor's narrower claim that only directory shape was validated. The complete cutover contract now selects and requires validation of unique TXT owner symbols without changing semantic/wire identities. `📓️txt-canonical-root-contract.md` is the controlling next packet; the protocol writer's source hold is respected before production edits begin.

@@ -1,0 +1,11 @@
+[package]
+name = 'consumer'
+
+[lib]
+name = 'consumer'
+path = '📦️glue.rs'
+
+[dependencies]
+derive = { package = 'semio-framework-os-kernel-dsl-derive', path = '../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust' }
+facade = { package = 'semio-framework-os-kernel', path = '../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust' }
+lower = { package = 'semio-framework-replication', path = '../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust' }

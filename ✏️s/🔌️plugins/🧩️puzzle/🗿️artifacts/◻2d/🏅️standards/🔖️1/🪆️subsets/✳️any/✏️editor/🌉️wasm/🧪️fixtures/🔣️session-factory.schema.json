@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["pluginId", "appIds", "sessionExport", "buildTarget", "cratePath", "moduleFile", "binaryFile", "scopes", "cancellation", "retryFailures", "isolation"],
+  "properties": {
+    "pluginId": { "type": "string", "minLength": 1 },
+    "appIds": { "type": "array", "uniqueItems": true, "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "sessionExport": { "type": "string", "minLength": 1 }, "buildTarget": { "type": "string", "minLength": 1 },
+    "cratePath": { "type": "string", "minLength": 1 }, "moduleFile": { "type": "string", "minLength": 1 }, "binaryFile": { "type": "string", "minLength": 1 },
+    "retryFailures": { "type": "array", "items": { "enum": ["network", "initialization"] }, "uniqueItems": true, "minItems": 2 },
+    "isolation": { "type": "object", "additionalProperties": false, "required": ["controllerId", "surfaceIds", "selection"], "properties": {
+      "controllerId": { "type": "string" }, "surfaceIds": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string" } }, "selection": { "type": "array", "items": { "type": "string" } }
+    } },
+    "cancellation": { "type": "array", "minItems": 3, "items": {
+      "type": "object", "additionalProperties": false, "required": ["phase", "attachCalls", "freeBeforeSettle", "freeAfterSettle"],
+      "properties": { "phase": { "enum": ["constructing", "attaching", "ready"] }, "attachCalls": { "type": "integer", "minimum": 0, "maximum": 1 }, "freeBeforeSettle": { "type": "integer", "minimum": 0, "maximum": 1 }, "freeAfterSettle": { "const": 1 } }
+    } },
+    "scopes": { "type": "array", "minItems": 1, "items": {
+      "type": "object", "additionalProperties": false, "required": ["pluginId", "appId", "instanceId", "matches"],
+      "properties": { "pluginId": { "type": "string" }, "appId": { "type": "string" }, "instanceId": { "type": "integer", "minimum": 0, "maximum": 4294967295 }, "matches": { "type": "boolean" } }
+    } }
+  }
+}

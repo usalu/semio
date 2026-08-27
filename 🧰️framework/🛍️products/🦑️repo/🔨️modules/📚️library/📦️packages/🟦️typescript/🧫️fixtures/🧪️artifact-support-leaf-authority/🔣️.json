@@ -2,6 +2,34 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model",
   "subset": "🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "ownerReadiness": {
+    "nodes": 332,
+    "physicalNodes": 329,
+    "files": 195,
+    "sourceBytes": 383479,
+    "sourceTreeDigest": "4a4ed81731e59bb7773a9e242caab31f8c16eddc3517e6de8ee43228d85d6a42",
+    "contextSources": [
+      { "path": "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/Cargo.toml", "size": 1722, "sha256": "f5c91d8f7f3d21e55c0b95f183967f96128d904058ed0d163f20d43cdbdd11b1" },
+      { "path": "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/📦️glue.rs", "size": 35055, "sha256": "06eafa94edc07d29087d80781a2f6affa152cb9a7cd343b96729d09dac3b8e82" }
+    ]
+  },
+  "execution": {
+    "target": "test-artifact-support",
+    "command": "bun ./📜️script.ts test artifact-support long",
+    "launchName": "🧹clean🧩️taxonomy🧪️artifact-support",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-artifact-support --skip-nx-cache",
+    "launchGroup": "4_gate",
+    "launchOrder": 410.06,
+    "generatorEnvironment": { "name": "SEMIO_TAXONOMY_GENERATOR_SENTINEL", "value": "current-process-environment" },
+    "oracleRetention": { "rootPrefix": "🧪️energy-pointer-oracle-", "retainedInputs": ["Cargo.toml", "🦀️.rs"], "disposableOutputs": ["Cargo.lock", "🎯️target"], "retainOnFailure": true },
+    "fixtureRetention": { "ownerPath": "📓️energy-support-acceptance/🧾️runs", "prefixes": { "support": "🧪️energy-support-current-", "oracle": "🧪️energy-pointer-oracle-", "unowned": "🧪️energy-oracle-unowned-" }, "rejectedChildren": ["../escape", "nested/child", "", "🧪️energy-pointer-oracle-foreign"] }
+  },
+  "sourceInputs": {
+    "simulation-events": "{\n  \"schema\": \"semio.energy.simulation-event.v1\",\n  \"events\": [\n    { \"kind\": \"start\", \"request\": 1, \"locale\": \"en\", \"checkpointToken\": 0, \"zoneTimestepMinutes\": 60, \"systemTimestepMinutes\": 60, \"warmupDays\": 7, \"runPeriodStartMonth\": 1, \"runPeriodStartDay\": 1, \"runPeriodEndMonth\": 12, \"runPeriodEndDay\": 31 },\n    { \"kind\": \"cancel\", \"request\": 1, \"operation\": 101, \"generation\": 1, \"configDigest\": 1001 },\n    { \"kind\": \"retry\", \"request\": 1, \"operation\": 101, \"generation\": 1, \"configDigest\": 1001 },\n    { \"kind\": \"discard\", \"request\": 1, \"operation\": 101, \"generation\": 1, \"configDigest\": 1001 },\n    { \"kind\": \"start\", \"request\": 2, \"locale\": \"de\", \"checkpointToken\": 0, \"zoneTimestepMinutes\": 15, \"systemTimestepMinutes\": 5, \"warmupDays\": 14, \"runPeriodStartMonth\": 1, \"runPeriodStartDay\": 1, \"runPeriodEndMonth\": 1, \"runPeriodEndDay\": 31 },\n    { \"kind\": \"adopt\", \"request\": 2, \"operation\": 102, \"generation\": 2, \"configDigest\": 1002 }\n  ],\n  \"hostile\": {\n    \"activeSlotMaxPlusOne\": 17,\n    \"shellMaxPlusOne\": 33,\n    \"eventMaxPlusOne\": 65,\n    \"staleGeneration\": 0,\n    \"queueFullRetainsOwner\": true,\n    \"cancelBeforeAdmission\": true,\n    \"cancelDuringEveryTier\": true,\n    \"deadlineBeforeEveryChannelTransition\": true,\n    \"dropRequeuesGeneration\": true,\n    \"finalTransferExactOnce\": true,\n    \"commitLeaseAckMakesNumericalTerminal\": true,\n    \"revisionChangeAfterCaptureBeforeAdmissionRetainsOwner\": true,\n    \"crossAppSameDocumentAdoptRejected\": true,\n    \"adoptedRequestOperationGenerationConfigAbaRejected\": true\n  }\n}\n",
+    "native-dsl-example": "semio energy.model.dsl v1\nschema=656e657267792e6d6f64656c\nstructure=[656e657267792d7363656e652d38633132653137326139366433663434,656e657267792d76616c756521732e737464696f2e73656d696f4076312f76616c7565]\nzones=[656e657267792d7363656e652d38633132653137326139366433663434,656e657267792d7461626c6521732e737464696f2e73656d696f4076312f7461626c65]\nreferencedModel=6e756c6c\n",
+    "mutation-payload-schema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"title\": \"ReplaceModel\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"newModelJson\"\n  ],\n  \"properties\": {\n    \"newModelJson\": {\n      \"type\": \"string\"\n    }\n  }\n}\n",
+    "mutation-descriptor": "{\n  \"schemaVersion\": 1,\n  \"owner\": \"✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model\",\n  \"semanticKind\": \"replace-model\",\n  \"displayName\": \"Replace Model\",\n  \"emoji\": \"♻️\",\n  \"aggregateVariant\": \"ReplaceModel\",\n  \"payloadSchema\": \"🔣️payload.schema.json\",\n  \"textOpcode\": \"replace-model\",\n  \"binaryTag\": 0,\n  \"invertibility\": \"self\",\n  \"diffParticipation\": \"detect\",\n  \"outcomeClasses\": [\n    \"applied\",\n    \"warning\"\n  ],\n  \"composition\": \"atomic\",\n  \"requiredLanguageSurfaces\": [\n    \"rust\",\n    \"typescript\",\n    \"graphql\",\n    \"protobuf\",\n    \"json-schema\",\n    \"text\",\n    \"binary\"\n  ]\n}\n"
+  },
   "cases": [
     {
       "id": "simulation-events",

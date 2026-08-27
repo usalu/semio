@@ -1,0 +1,6 @@
+{
+  "mutation": "remove-page",
+  "payload": {
+    "index": 0
+  }
+}

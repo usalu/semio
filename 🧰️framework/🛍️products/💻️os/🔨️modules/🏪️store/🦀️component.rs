@@ -28,7 +28,7 @@
 
 use crate::os_dsl::{from_dsl_value, to_dsl_value, DslOps, DslRecord, DslValue};
 use crate::os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId, UndoPolicy};
-use crate::os_spr::{Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText};
+use crate::os_spr::{DiffRegions, Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText, TouchedPaths};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
@@ -176,8 +176,10 @@ impl SnapshotReadLeaseRegistry {
     }
 
     fn try_take_one_returned<T: Send + Sync + 'static>(&self) -> Result<Option<Arc<T>>, String> {
-        let Ok(mut state) = self.state.try_lock() else {
-            return Err("snapshot read lease registry is busy".into());
+        let mut state = match self.state.try_lock() {
+            Ok(state) => state,
+            Err(std::sync::TryLockError::WouldBlock) => return Err("snapshot read lease registry is busy".into()),
+            Err(std::sync::TryLockError::Poisoned(_)) => return Err("snapshot read lease registry is poisoned".into()),
         };
         let index = state.cleanup_cursor;
         state.cleanup_cursor = (index + 1) % SNAPSHOT_READ_LEASE_CAPACITY;
@@ -1804,7 +1806,7 @@ where
             ArtifactStoreCursorDisposerPhase::Displaced => match store.maintenance_retirements_step(1, maximum_bytes)? {
                 SnapshotRetirementStep::Complete if store.maintenance_retirements_terminal_is_empty() => {
                     self.phase = ArtifactStoreCursorDisposerPhase::ReturnedReads;
-                    Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
                 SnapshotRetirementStep::Complete => Err("artifact store displaced authority reported a false terminal".into()),
                 step => Ok(step),
@@ -1814,19 +1816,19 @@ where
                 None if !store.snapshot_read_leases_terminal_is_empty() => Ok(SnapshotRetirementStep::Blocked),
                 None => {
                     self.phase = ArtifactStoreCursorDisposerPhase::HistoryMutations(store.history_edit_count().checked_sub(1));
-                    Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
             },
             ArtifactStoreCursorDisposerPhase::HistoryMutations(edit_index) => {
                 let Some(index) = *edit_index else {
                     self.phase = ArtifactStoreCursorDisposerPhase::HistoryEdits;
-                    return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                    return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
                 };
                 match store.take_history_mutation_at(index).map_err(|error| error.to_string())? {
                     Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
                     None => {
                         *edit_index = index.checked_sub(1);
-                        Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                        Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                     }
                 }
             }
@@ -1834,7 +1836,7 @@ where
                 Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
                 None => {
                     self.phase = ArtifactStoreCursorDisposerPhase::HistoryMetadata(0);
-                    Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
             },
             ArtifactStoreCursorDisposerPhase::HistoryMetadata(lane) => {
@@ -1844,27 +1846,27 @@ where
                     2 => ArtifactStoreHistoryMetadataLane::Alternatives,
                     _ => {
                         self.phase = ArtifactStoreCursorDisposerPhase::MessageLedgers(0);
-                        return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                        return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
                     }
                 };
                 match store.take_history_metadata_retirement(lane_value) {
                     Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
                     None => {
                         *lane += 1;
-                        Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                        Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                     }
                 }
             }
             ArtifactStoreCursorDisposerPhase::MessageLedgers(lane) => {
                 if *lane != 0 {
                     self.phase = ArtifactStoreCursorDisposerPhase::Conflicts;
-                    return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                    return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
                 }
                 match store.take_message_ledger_retirement(ArtifactStoreMessageLedgerLane::Durable) {
                     Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
                     None => {
                         *lane = 1;
-                        Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                        Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                     }
                 }
             }
@@ -1872,14 +1874,14 @@ where
                 Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
                 None => {
                     self.phase = ArtifactStoreCursorDisposerPhase::PendingReport;
-                    Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
             },
             ArtifactStoreCursorDisposerPhase::PendingReport => match store.take_pending_report_retirement() {
                 Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
                 None => {
                     self.phase = ArtifactStoreCursorDisposerPhase::RuntimeStrings(0);
-                    Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
             },
             ArtifactStoreCursorDisposerPhase::RuntimeStrings(lane) => {
@@ -1893,14 +1895,14 @@ where
                     6 => ArtifactStoreCloseStringLane::TailUndoEditId,
                     _ => {
                         self.phase = ArtifactStoreCursorDisposerPhase::EnvelopeMetadata;
-                        return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                        return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
                     }
                 };
                 match store.take_runtime_string_retirement(lane_value) {
                     Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
                     None => {
                         *lane += 1;
-                        Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                        Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                     }
                 }
             }
@@ -1908,7 +1910,7 @@ where
                 Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
                 None => {
                     self.phase = ArtifactStoreCursorDisposerPhase::TailSnapshot;
-                    Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
             },
             ArtifactStoreCursorDisposerPhase::TailSnapshot => match store.take_tail_snapshot_retirement().map_err(|error| error.to_string())? {
@@ -1922,26 +1924,26 @@ where
                 Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
                 None => {
                     self.phase = ArtifactStoreCursorDisposerPhase::Backbone;
-                    Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
             },
             ArtifactStoreCursorDisposerPhase::Backbone => match store.take_backbone_retirement() {
                 Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
                 None => {
                     self.phase = ArtifactStoreCursorDisposerPhase::Causal;
-                    Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
             },
             ArtifactStoreCursorDisposerPhase::Causal => match store.take_causal_owner_retirement() {
                 Some(owner) => Ok(Self::retain(&mut self.active, Some(owner))),
                 None => {
                     self.phase = ArtifactStoreCursorDisposerPhase::Structural;
-                    Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
             },
             ArtifactStoreCursorDisposerPhase::Structural if store.structural_owners_terminal_is_empty() => {
                 self.phase = ArtifactStoreCursorDisposerPhase::Envelope;
-                Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
             }
             ArtifactStoreCursorDisposerPhase::Structural => Err("artifact store cursor reached an unowned structural authority".into()),
             ArtifactStoreCursorDisposerPhase::Envelope => match store.take_final_envelope_retirement().map_err(|error| error.to_string())? {
@@ -3303,10 +3305,31 @@ pub struct ArtifactEphemeralOneItemPrepared<P> {
     pub next_root: Arc<P>,
 }
 
+pub struct ArtifactEphemeralBaseRead<P>(ArtifactEphemeralBaseOwner<P>);
+
+enum ArtifactEphemeralBaseOwner<P> {
+    Presence(SnapshotRead<P>),
+    Transient(Arc<P>),
+}
+
+impl<P> AsRef<P> for ArtifactEphemeralBaseRead<P> {
+    fn as_ref(&self) -> &P {
+        match &self.0 {
+            ArtifactEphemeralBaseOwner::Presence(read) => read.get(),
+            ArtifactEphemeralBaseOwner::Transient(root) => root.as_ref(),
+        }
+    }
+}
+
+impl<P> std::ops::Deref for ArtifactEphemeralBaseRead<P> {
+    type Target = P;
+    fn deref(&self) -> &P { self.as_ref() }
+}
+
 pub struct ArtifactEphemeralOneItemPreparationRequest<P, Mutation> {
     pub operation: semio_framework_job::OperationId,
     pub generation: semio_framework_job::Generation,
-    pub base: Arc<P>,
+    pub base: ArtifactEphemeralBaseRead<P>,
     pub mutation: Mutation,
 }
 
@@ -3472,9 +3495,12 @@ impl<P, Mutation> Drop for ArtifactEphemeralOneItemPublication<P, Mutation> {
 /// `generation` bumps on every local change so the host can tell "something to broadcast" from
 /// "nothing changed" without diffing snapshots — the signal a heartbeat coalescer throttles on.
 pub struct PresenceStore<P, Mutation> {
-    local: Arc<P>,
-    peers: Arc<PresencePeersRoot<P>>,
+    local: std::mem::ManuallyDrop<Arc<P>>,
+    peers: std::mem::ManuallyDrop<Arc<PresencePeersRoot<P>>>,
     peer_retirement_factory: Option<Arc<dyn SnapshotRetirementFactory<P>>>,
+    local_retirement_factory: Option<Arc<dyn SnapshotRetirementFactory<P>>>,
+    local_reads: std::mem::ManuallyDrop<Arc<SnapshotReadLeaseRegistry>>,
+    active_returned_local: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     generation: u64,
     close_started: bool,
     _mutation: PhantomData<fn() -> Mutation>,
@@ -3662,6 +3688,7 @@ pub struct PresencePeersRetirement<P> {
 }
 
 pub struct PresencePeersPublication<P> {
+    base_root: std::mem::ManuallyDrop<Option<Arc<PresencePeersRoot<P>>>>,
     candidate: std::mem::ManuallyDrop<Option<PresencePeersRoot<P>>>,
     created: std::mem::ManuallyDrop<PresencePeersRetiredEntries<P>>,
     retired: std::mem::ManuallyDrop<PresencePeersRetiredEntries<P>>,
@@ -3672,14 +3699,20 @@ pub struct PresencePeersPublication<P> {
 }
 
 pub struct PresencePeersCommit<P> {
+    base_root: Arc<PresencePeersRoot<P>>,
     root: Arc<PresencePeersRoot<P>>,
     retirement: Option<PresencePeersRetirement<P>>,
     factory: Arc<dyn SnapshotRetirementFactory<P>>,
 }
 
+#[path = "👥️presence/🚫️rejection/🦀️component.rs"]
+mod presence_peer_rejection;
+pub use presence_peer_rejection::PresencePeerAdmissionRejected;
+
 impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
-    fn new(current: &PresencePeersRoot<P>, factory: Arc<dyn SnapshotRetirementFactory<P>>) -> Self {
+    fn new(current: &Arc<PresencePeersRoot<P>>, factory: Arc<dyn SnapshotRetirementFactory<P>>) -> Self {
         Self {
+            base_root: std::mem::ManuallyDrop::new(Some(current.clone())),
             candidate: std::mem::ManuallyDrop::new(Some(current.clone_aliases())),
             created: std::mem::ManuallyDrop::new(PresencePeersRetiredEntries::empty()),
             retired: std::mem::ManuallyDrop::new(PresencePeersRetiredEntries::empty()),
@@ -3712,18 +3745,18 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
         Ok(true)
     }
 
-    pub fn adopt(&mut self, actor: String, presence: P, received_at_ms: i64) -> Result<(), (String, P)> {
+    pub fn adopt(&mut self, actor: String, presence: P, received_at_ms: i64) -> Result<(), PresencePeerAdmissionRejected<P>> {
         if !self.pruning_complete {
-            return Err(("presence peer publication must finish stale-entry pruning before decode adoption".into(), presence));
+            return Err(PresencePeerAdmissionRejected::new("presence peer publication must finish stale-entry pruning before decode adoption", actor, presence, self.factory.clone()));
         }
         let Some(candidate) = self.candidate.as_ref() else {
-            return Err(("presence peer publication candidate is not owned".to_string(), presence));
+            return Err(PresencePeerAdmissionRejected::new("presence peer publication candidate is not owned", actor, presence, self.factory.clone()));
         };
         if actor.is_empty() || actor.len() > PRESENCE_PEER_ID_BYTES {
-            return Err(("presence peer actor is empty or exceeds its fixed byte authority".into(), presence));
+            return Err(PresencePeerAdmissionRejected::new("presence peer actor is empty or exceeds its fixed byte authority", actor, presence, self.factory.clone()));
         }
         if candidate.len == PRESENCE_PEER_SLOTS && !candidate.entries[..candidate.len].iter().any(|entry| entry.as_ref().is_some_and(|entry| entry.actor.as_str() == actor.as_str())) {
-            return Err(("presence peer root exceeds its fixed item authority".into(), presence));
+            return Err(PresencePeerAdmissionRejected::new("presence peer root exceeds its fixed item authority", actor, presence, self.factory.clone()));
         }
         let mut next = candidate.clone_aliases();
         let mut index = 0usize;
@@ -3732,7 +3765,7 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
         }
         let replaces = next.entries.get(index).and_then(Option::as_ref).is_some_and(|entry| entry.actor.as_str() == actor.as_str());
         if self.created.len == PRESENCE_PEER_SLOTS || (replaces && self.retired.len == PRESENCE_PEER_SLOTS) {
-            return Err(("presence peer publication ownership authority is saturated".into(), presence));
+            return Err(PresencePeerAdmissionRejected::new("presence peer publication ownership authority is saturated", actor, presence, self.factory.clone()));
         }
         let presence = Arc::new(presence);
         let inserted = Arc::new(PresencePeerEntry::new(actor, presence, received_at_ms));
@@ -3769,10 +3802,6 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
         true
     }
 
-    pub fn retire_rejected(&self, presence: P) -> Box<dyn ErasedSnapshotRetirement> {
-        self.factory.retire(Arc::new(presence))
-    }
-
     pub fn take_commit(&mut self) -> Result<PresencePeersCommit<P>, String> {
         if !self.pruning_complete || self.created.len != 0 || self.active.is_some() {
             return Err("presence peer publication is not terminal-ready for commit".into());
@@ -3780,7 +3809,7 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
         let candidate = Arc::new(self.candidate.take().ok_or_else(|| "presence peer publication candidate was already transferred".to_string())?);
         let retired = std::mem::replace(&mut *self.retired, PresencePeersRetiredEntries::empty());
         let retirement = (!retired.is_empty()).then(|| PresencePeersRetirement::new(retired, self.factory.clone()));
-        Ok(PresencePeersCommit { root: candidate, retirement, factory: self.factory.clone() })
+        Ok(PresencePeersCommit { base_root: self.base_root.take().expect("peer candidate retains its exact immutable base"), root: candidate, retirement, factory: self.factory.clone() })
     }
 
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
@@ -3818,17 +3847,20 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
             *self.active = Some(PresencePeersRetirement::new(created, self.factory.clone()));
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
+        if self.base_root.take().is_some() {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
         Ok(SnapshotRetirementStep::Complete)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.candidate.is_none() && self.created.len == 0 && self.retired.len == 0 && self.active.is_none()
+        self.base_root.is_none() && self.candidate.is_none() && self.created.len == 0 && self.retired.len == 0 && self.active.is_none()
     }
 }
 
 impl<P> Drop for PresencePeersPublication<P> {
     fn drop(&mut self) {
-        debug_assert!(self.candidate.is_none() && self.created.len == 0 && self.retired.len == 0 && self.active.is_none(), "incomplete presence peer publication reached Drop without bounded disposal");
+        if !std::thread::panicking() { assert!(self.base_root.is_none() && self.candidate.is_none() && self.created.len == 0 && self.retired.len == 0 && self.active.is_none(), "incomplete presence peer publication reached Drop without bounded disposal"); }
     }
 }
 
@@ -3927,32 +3959,62 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
     /// 🏗️ A roster holding only this actor's own initial presence.
     // 🚫️async: E1 pure constructor, consumed by `Default::default()` — see R9.
     pub fn new(local: P) -> Self {
-        Self { local: Arc::new(local), peers: Arc::new(PresencePeersRoot::empty()), peer_retirement_factory: None, generation: 0, close_started: false, _mutation: PhantomData }
+        Self { local: std::mem::ManuallyDrop::new(Arc::new(local)), peers: std::mem::ManuallyDrop::new(Arc::new(PresencePeersRoot::empty())), peer_retirement_factory: None, local_retirement_factory: None, local_reads: std::mem::ManuallyDrop::new(Arc::new(SnapshotReadLeaseRegistry::new())), active_returned_local: std::mem::ManuallyDrop::new(None), generation: 0, close_started: false, _mutation: PhantomData }
     }
 
     /// 👤️ This actor's own presence — what gets broadcast.
-    pub async fn local(&self) -> &P {
+    pub fn local(&self) -> &P {
         self.local.as_ref()
     }
 
     /// 🧵️ Captures the event-maintained local presence root without cloning its payload.
-    pub fn local_root(&self) -> Arc<P> {
-        self.local.clone()
+    pub fn local_read(&self) -> Result<SnapshotRead<P>, String>
+    where P: Send + Sync + 'static,
+    {
+        if self.close_started || self.local_retirement_factory.is_none() {
+            return Err("presence local read requires a live exact local retirement owner".into());
+        }
+        let owner = Arc::clone(&self.local);
+        let lease = self.local_reads.try_issue(owner.clone()).map_err(|_| "presence local read registry is busy or exhausted".to_string())?;
+        Ok(SnapshotRead::new(owner, lease))
+    }
+
+    pub fn install_local_retirement_factory(&mut self, factory: Arc<dyn SnapshotRetirementFactory<P>>) -> Result<(), String> {
+        if self.close_started || self.local_retirement_factory.is_some() {
+            return Err("presence local retirement factory is already installed".into());
+        }
+        self.local_retirement_factory = Some(factory);
+        Ok(())
+    }
+
+    pub fn maintenance_local_reads_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String>
+    where P: Send + Sync + 'static,
+    {
+        presence_retirement::advance_returned_local(&self.local_reads, &mut self.active_returned_local, self.local_retirement_factory.as_ref(), maximum_items, maximum_bytes)
+    }
+
+    pub fn local_read_maintenance_is_idle(&self) -> bool {
+        self.active_returned_local.is_none() && !self.local_reads.has_returned()
     }
 
     /// ✍️ Applies local presence operations atomically, bumping `generation` after the full batch.
-    pub async fn apply(&mut self, mutations: &[Mutation]) -> crate::os_spr::MutationApplyResult<()> {
+    pub async fn apply(&mut self, mutations: &[Mutation]) -> crate::os_spr::MutationApplyResult<()>
+    where P: Send + Sync + 'static,
+    {
         if self.close_started {
             return Err(crate::os_spr::MutationApplyError::new("presence.store.closed", "presence store no longer admits local mutations"));
         }
+        if mutations.is_empty() { return Ok(()); }
+        let previous = self.local_read().map_err(|reason| crate::os_spr::MutationApplyError::new("presence.local.owner", reason))?;
         let mut candidate = self.local.as_ref().clone();
         for mutation in mutations {
             candidate = mutation.diff(&candidate).diff().apply(&candidate)?;
         }
         if !mutations.is_empty() {
-            self.local = Arc::new(candidate);
+            *self.local = Arc::new(candidate);
             self.generation = self.generation.wrapping_add(1);
         }
+        previous.return_to_registry();
         Ok(())
     }
 
@@ -3963,7 +4025,9 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
         mutation: Mutation,
         factory: Option<&dyn ArtifactEphemeralOneItemPreparationFactory<P, Mutation>>,
         root_retirement_factory: Option<Arc<dyn SnapshotRetirementFactory<P>>>,
-    ) -> Result<ArtifactEphemeralOneItemPublication<P, Mutation>, ArtifactEphemeralOneItemAdmissionRejected<Mutation>> {
+    ) -> Result<ArtifactEphemeralOneItemPublication<P, Mutation>, ArtifactEphemeralOneItemAdmissionRejected<Mutation>>
+    where P: Send + Sync + 'static,
+    {
         let reject = |reason: String, mutation: Mutation| ArtifactEphemeralOneItemAdmissionRejected { reason, mutation };
         if self.close_started {
             return Err(reject("presence store no longer admits local publication".into(), mutation));
@@ -3982,7 +4046,14 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
             Ok(_) => return Err(reject("presence publication footprint exceeds its fixed item or byte capacity".into(), mutation)),
             Err(reason) => return Err(reject(reason, mutation)),
         };
-        let request = ArtifactEphemeralOneItemPreparationRequest { operation, generation: semio_framework_job::Generation(expected_generation), base: Arc::clone(&self.local), mutation };
+        if !self.local_retirement_factory.as_ref().is_some_and(|installed| Arc::ptr_eq(installed, &root_retirement_factory)) {
+            return Err(reject("presence publication requires its exact installed local-root retirement factory".into(), mutation));
+        }
+        let base = match self.local_read() {
+            Ok(read) => ArtifactEphemeralBaseRead(ArtifactEphemeralBaseOwner::Presence(read)),
+            Err(reason) => return Err(reject(reason, mutation)),
+        };
+        let request = ArtifactEphemeralOneItemPreparationRequest { operation, generation: semio_framework_job::Generation(expected_generation), base, mutation };
         let preparation = match factory.begin(request) {
             Ok(preparation) => preparation,
             Err(request) => return Err(reject("presence preparation factory rejected its exact owner bundle".into(), request.mutation)),
@@ -4063,7 +4134,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
             ArtifactStoreOneItemPublicationPhase::Publishing => {
                 let prepared = publication.preparation.as_mut().and_then(|owner| owner.take_prepared()).ok_or_else(|| "presence publication lost its prepared root".to_string())?;
                 let generation_before = self.generation;
-                let previous = std::mem::replace(&mut self.local, prepared.next_root);
+                let previous = std::mem::replace(&mut *self.local, prepared.next_root);
                 let retirement_factory = publication.root_retirement_factory.as_ref().ok_or_else(|| "presence publication lost its local-root retirement factory".to_string())?;
                 publication.displaced_root_retirement = Some(retirement_factory.retire(previous));
                 self.generation += 1;
@@ -4090,7 +4161,9 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
 
     /// 🎯️ Applies one retained publication item against an exact generation and returns its
     /// per-lane receipt. A stale item is rejected before its mutation is inspected.
-    pub fn apply_one(&mut self, expected_generation: u64, mutation: Mutation) -> Result<LaneItemReceipt, (String, Mutation)> {
+    pub fn apply_one(&mut self, expected_generation: u64, mutation: Mutation) -> Result<LaneItemReceipt, (String, Mutation)>
+    where P: Send + Sync + 'static,
+    {
         if self.close_started {
             return Err(("presence store no longer admits local mutations".into(), mutation));
         }
@@ -4098,17 +4171,22 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
             return Err(("presence publication generation is stale".into(), mutation));
         }
         let before = self.generation;
+        let previous = match self.local_read() {
+            Ok(previous) => previous,
+            Err(reason) => return Err((reason, mutation)),
+        };
         let candidate = match mutation.diff(self.local.as_ref()).diff().apply(self.local.as_ref()) {
             Ok(candidate) => candidate,
             Err(error) => return Err((error.to_string(), mutation)),
         };
-        self.local = Arc::new(candidate);
+        *self.local = Arc::new(candidate);
         self.generation = self.generation.wrapping_add(1);
+        previous.return_to_registry();
         Ok(LaneItemReceipt { generation_before: before, generation_after: self.generation })
     }
 
     pub fn peers_root(&self) -> Arc<PresencePeersRoot<P>> {
-        self.peers.clone()
+        Arc::clone(&self.peers)
     }
 
     pub fn install_peer_retirement_factory(&mut self, factory: Arc<dyn SnapshotRetirementFactory<P>>) -> Result<(), String> {
@@ -4139,19 +4217,21 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
             return Err("presence store no longer admits peer publication".into());
         }
         let factory = self.peer_retirement_factory.as_ref().ok_or_else(|| "presence peer publication has no exact bounded snapshot retirement factory".to_string())?;
-        Ok(PresencePeersPublication::new(self.peers.as_ref(), factory.clone()))
+        Ok(PresencePeersPublication::new(&self.peers, factory.clone()))
     }
 
     pub fn publish_peer_commit(&mut self, commit: PresencePeersCommit<P>) -> Result<Option<PresencePeersRetirement<P>>, PresencePeersCommit<P>>
     where
         P: Send + Sync + 'static,
     {
-        if self.close_started {
+        if self.close_started || !Arc::ptr_eq(&self.peers, &commit.base_root)
+            || !self.peer_retirement_factory.as_ref().is_some_and(|factory| Arc::ptr_eq(factory, &commit.factory)) {
             return Err(commit);
         }
-        let previous = std::mem::replace(&mut self.peers, commit.root);
+        let previous = std::mem::replace(&mut *self.peers, commit.root);
         let mut retirement = commit.retirement.unwrap_or_else(|| PresencePeersRetirement::new(PresencePeersRetiredEntries::empty(), commit.factory));
         *retirement.root = Some(previous);
+        drop(commit.base_root);
         Ok(Some(retirement))
     }
 
@@ -4238,7 +4318,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
             Ok(_) => return Err(reject("transient publication footprint exceeds its fixed item or byte capacity".into(), mutation)),
             Err(reason) => return Err(reject(reason, mutation)),
         };
-        let request = ArtifactEphemeralOneItemPreparationRequest { operation, generation: semio_framework_job::Generation(expected_generation), base: Arc::clone(&self.current), mutation };
+        let request = ArtifactEphemeralOneItemPreparationRequest { operation, generation: semio_framework_job::Generation(expected_generation), base: ArtifactEphemeralBaseRead(ArtifactEphemeralBaseOwner::Transient(Arc::clone(&self.current))), mutation };
         let preparation = match factory.begin(request) {
             Ok(preparation) => preparation,
             Err(request) => return Err(reject("transient preparation factory rejected its exact owner bundle".into(), request.mutation)),
@@ -12531,7 +12611,7 @@ impl Drop for ArtifactEditMessageLedger {
 //#region 📬️OneItemPublication
 #[path = "🧵️canonical-edit/🦀️component.rs"]
 mod canonical_edit;
-pub use canonical_edit::{ArtifactCanonicalJson, ArtifactCanonicalJsonArray, ArtifactCanonicalJsonCursor, ArtifactCanonicalJsonNode, ArtifactCanonicalJsonObject, ArtifactCanonicalJsonReader, ArtifactCanonicalJsonValue, ArtifactStoreOneItemSealCheckpoint, ArtifactStoreOneItemSealer, ARTIFACT_CANONICAL_JSON_CHUNK_BYTES, ARTIFACT_CANONICAL_JSON_DEPTH};
+pub use canonical_edit::{ArtifactCanonicalJson, ArtifactCanonicalJsonArray, ArtifactCanonicalJsonCursor, ArtifactCanonicalJsonEncodeError, ArtifactCanonicalJsonNode, ArtifactCanonicalJsonObject, ArtifactCanonicalJsonReader, ArtifactCanonicalJsonValue, ArtifactStoreOneItemSealCheckpoint, ArtifactStoreOneItemSealer, ARTIFACT_CANONICAL_JSON_CHUNK_BYTES, ARTIFACT_CANONICAL_JSON_DEPTH};
 
 pub const ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS: usize = 65_536;
 pub const ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES: usize = 1_048_576;
@@ -17883,33 +17963,9 @@ pub struct SpaceHistorySnapshot {
     pub active_alternative_id: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "operation", rename_all = "camelCase")]
-pub enum SpaceHistoryMutation {
-    CommitSpaceCheckpoint {
-        checkpoint: SpaceCheckpoint,
-    },
-    CreateSpaceAlternative {
-        alternative: SpaceAlternative,
-    },
-    SwitchSpaceAlternative {
-        alternative_id: String,
-    },
-    /// @emoji ↩️ Mechanical inverse of `CommitSpaceCheckpoint`; never dispatched directly by
-    /// `SpaceHost` (space undo is derived and member-local, see `SpaceHost::undo`), only
-    /// produced by `inverse` for VCS round-trip correctness.
-    RemoveSpaceCheckpoint {
-        checkpoint_id: String,
-    },
-    /// @emoji ↩️ Mechanical inverse of `CreateSpaceAlternative`; see `RemoveSpaceCheckpoint`.
-    RemoveSpaceAlternative {
-        alternative_id: String,
-    },
-    /// @emoji ↩️ Mechanical inverse of `SwitchSpaceAlternative`; see `RemoveSpaceCheckpoint`.
-    SetActiveSpaceAlternative {
-        alternative_id: Option<String>,
-    },
-}
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+mod space_history_mutations;
+pub use space_history_mutations::{CommitSpaceCheckpoint, CreateSpaceAlternative, RemoveSpaceAlternative, RemoveSpaceCheckpoint, RestoreActiveSpaceAlternative, SpaceHistoryMutation, SwitchSpaceAlternative};
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -17983,42 +18039,22 @@ impl MutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {
     }
 }
 
-impl Mutation<SpaceHistorySnapshot> for SpaceHistoryMutation {
-    type Diff = SpaceHistoryDiff;
-
-    /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
-    /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet.
-    fn diff(&self, _snapshot: &SpaceHistorySnapshot) -> crate::os_spr::MutationOutcome<SpaceHistoryDiff> {
-        let diff = match self {
-            SpaceHistoryMutation::CommitSpaceCheckpoint { checkpoint } => SpaceHistoryDiff { add_checkpoint: Some(checkpoint.clone()), ..Default::default() },
-            SpaceHistoryMutation::CreateSpaceAlternative { alternative } => SpaceHistoryDiff { add_alternative: Some(alternative.clone()), set_active_alternative_id: Some(Some(alternative.id.clone())), ..Default::default() },
-            SpaceHistoryMutation::SwitchSpaceAlternative { alternative_id } => SpaceHistoryDiff { set_active_alternative_id: Some(Some(alternative_id.clone())), ..Default::default() },
-            SpaceHistoryMutation::RemoveSpaceCheckpoint { checkpoint_id } => SpaceHistoryDiff { remove_checkpoint_id: Some(checkpoint_id.clone()), ..Default::default() },
-            SpaceHistoryMutation::RemoveSpaceAlternative { alternative_id } => SpaceHistoryDiff { remove_alternative_id: Some(alternative_id.clone()), ..Default::default() },
-            SpaceHistoryMutation::SetActiveSpaceAlternative { alternative_id } => SpaceHistoryDiff { set_active_alternative_id: Some(alternative_id.clone()), ..Default::default() },
-        };
-        crate::os_spr::MutationOutcome::new(diff)
-    }
-
-    fn inverse(&self, snapshot: &SpaceHistorySnapshot) -> Vec<Self> {
-        match self {
-            SpaceHistoryMutation::CommitSpaceCheckpoint { checkpoint } => {
-                vec![SpaceHistoryMutation::RemoveSpaceCheckpoint { checkpoint_id: checkpoint.id.clone() }]
-            }
-            SpaceHistoryMutation::CreateSpaceAlternative { alternative } => {
-                vec![SpaceHistoryMutation::SetActiveSpaceAlternative { alternative_id: snapshot.active_alternative_id.clone() }, SpaceHistoryMutation::RemoveSpaceAlternative { alternative_id: alternative.id.clone() }]
-            }
-            SpaceHistoryMutation::SwitchSpaceAlternative { .. } => vec![SpaceHistoryMutation::SetActiveSpaceAlternative { alternative_id: snapshot.active_alternative_id.clone() }],
-            SpaceHistoryMutation::RemoveSpaceCheckpoint { checkpoint_id } => {
-                snapshot.checkpoints.iter().find(|checkpoint| checkpoint.id == *checkpoint_id).map(|checkpoint| vec![SpaceHistoryMutation::CommitSpaceCheckpoint { checkpoint: checkpoint.clone() }]).unwrap_or_default()
-            }
-            SpaceHistoryMutation::RemoveSpaceAlternative { alternative_id } => {
-                snapshot.alternatives.iter().find(|alternative| alternative.id == *alternative_id).map(|alternative| vec![SpaceHistoryMutation::CreateSpaceAlternative { alternative: alternative.clone() }]).unwrap_or_default()
-            }
-            SpaceHistoryMutation::SetActiveSpaceAlternative { .. } => vec![SpaceHistoryMutation::SetActiveSpaceAlternative { alternative_id: snapshot.active_alternative_id.clone() }],
+impl DiffRegions for SpaceHistoryDiff {
+    fn touches(&self) -> TouchedPaths {
+        let mut regions = Vec::new();
+        if self.add_checkpoint.is_some() || self.remove_checkpoint_id.is_some() {
+            regions.push("checkpoints");
         }
+        if self.add_alternative.is_some() || self.remove_alternative_id.is_some() {
+            regions.push("alternatives");
+        }
+        if self.set_active_alternative_id.is_some() {
+            regions.push("activeAlternativeId");
+        }
+        TouchedPaths::new(regions)
     }
 }
+
 
 // 🎯️ B2: `ArtifactStore`'s shared impl block now requires `P: ArtifactPack` + `Mutation: OpText
 // + OpBinary` for every instantiation (the pack+spr binary snapshot pipeline, needed by
@@ -18182,7 +18218,7 @@ impl<M: SpaceMember> SpaceHost<M> {
         // id-based dedup silently absorbed the duplicate); now that `Operations` messages carry
         // per-OP ids (distinct from the edit's own id — see `flush_outbound`), the two flushes are
         // no longer accidentally deduplicable, so avoiding the redundant one is the real fix.
-        self.meta.dispatch_inner(ArtifactCommand::Apply { mutations: vec![SpaceHistoryMutation::CommitSpaceCheckpoint { checkpoint }], description: Some(message) }).await?;
+        self.meta.dispatch_inner(ArtifactCommand::Apply { mutations: vec![SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint })], description: Some(message) }).await?;
         self.meta.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).await?;
         Ok(checkpoint_id)
     }
@@ -18196,7 +18232,7 @@ impl<M: SpaceMember> SpaceHost<M> {
         space_alternative_payload.extend_from_slice(checkpoint_ids.join("\0").as_bytes());
         let alternative_id = content_addressed_entity_id("space-alternative", &space_alternative_payload).await;
         let alternative = SpaceAlternative { id: alternative_id.clone(), name, checkpoint_ids };
-        self.meta.dispatch(ArtifactCommand::Apply { mutations: vec![SpaceHistoryMutation::CreateSpaceAlternative { alternative }], description: None }).await?;
+        self.meta.dispatch(ArtifactCommand::Apply { mutations: vec![SpaceHistoryMutation::CreateSpaceAlternative(CreateSpaceAlternative { alternative })], description: None }).await?;
         Ok(alternative_id)
     }
 
@@ -18218,7 +18254,7 @@ impl<M: SpaceMember> SpaceHost<M> {
         let snapshot = self.meta.snapshot()?;
         let alternative = snapshot.alternatives.iter().find(|alternative| alternative.id == alternative_id).ok_or_else(|| VcsError::UnknownAlternative(alternative_id.to_string()))?;
         let checkpoint_id = alternative.checkpoint_ids.last().cloned().ok_or(VcsError::NoCheckpoint)?;
-        self.meta.dispatch(ArtifactCommand::Apply { mutations: vec![SpaceHistoryMutation::SwitchSpaceAlternative { alternative_id: alternative_id.to_string() }], description: None }).await?;
+        self.meta.dispatch(ArtifactCommand::Apply { mutations: vec![SpaceHistoryMutation::SwitchSpaceAlternative(SwitchSpaceAlternative { alternative_id: alternative_id.to_string() })], description: None }).await?;
         self.checkout_space_checkpoint(&checkpoint_id).await
     }
 
@@ -20129,7 +20165,7 @@ mod tests {
                 semio_framework_job::Generation(1),
                 semio_framework_job::StepBudget::new(fuel, u64::MAX),
                 cancel.clone(),
-                semio_framework_job::default_now_ms,
+                semio_framework_job::default_now_us,
                 &mut preview_sequence,
             );
             match cursor.step(&mut context) {
@@ -20206,7 +20242,7 @@ mod tests {
             semio_framework_job::Generation(2),
             semio_framework_job::StepBudget::new(64, u64::MAX),
             semio_framework_job::root_cancel_token(),
-            semio_framework_job::default_now_ms,
+            semio_framework_job::default_now_us,
             &mut preview_sequence,
         );
         let OwnedSchemaRecordStep::Fault(diagnostic) = cursor.step(&mut context) else { panic!("stale generation must fault before syntax work") };
@@ -20224,7 +20260,7 @@ mod tests {
                 semio_framework_job::Generation(1),
                 semio_framework_job::StepBudget::new(32, u64::MAX),
                 semio_framework_job::root_cancel_token(),
-                semio_framework_job::default_now_ms,
+                semio_framework_job::default_now_us,
                 &mut preview_sequence,
             );
             match cursor.step(&mut context) {
@@ -20249,7 +20285,7 @@ mod tests {
                 semio_framework_job::Generation(1),
                 semio_framework_job::StepBudget::new(3, u64::MAX),
                 semio_framework_job::root_cancel_token(),
-                semio_framework_job::default_now_ms,
+                semio_framework_job::default_now_us,
                 &mut preview_sequence,
             );
             match string.step(&cursor, &mut context) {
@@ -20272,7 +20308,7 @@ mod tests {
             semio_framework_job::Generation(1),
             semio_framework_job::StepBudget::new(32, u64::MAX),
             semio_framework_job::root_cancel_token(),
-            semio_framework_job::default_now_ms,
+            semio_framework_job::default_now_us,
             &mut preview_sequence,
         );
         let OwnedSchemaStringStep::Fault(diagnostic) = limited.step(&cursor, &mut context) else { panic!("semantic byte plus one must fault") };
@@ -20289,7 +20325,7 @@ mod tests {
         cancel.cancel_now();
         let mut preview_sequence = 0;
         let mut context =
-            semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), cancel, semio_framework_job::default_now_ms, &mut preview_sequence);
+            semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), cancel, semio_framework_job::default_now_us, &mut preview_sequence);
         assert_eq!(cursor.step(&mut context), OwnedSchemaRecordStep::Cancelled);
         assert!(matches!(cursor.close_step(1), SnapshotRetirementStep::Pending { released_items: 1, released_bytes } if released_bytes <= OWNED_SCHEMA_DECODE_PAGE_BYTES));
         assert!(matches!(cursor.close_step(1), SnapshotRetirementStep::Pending { released_items: 1, released_bytes } if released_bytes <= OWNED_SCHEMA_DECODE_PAGE_BYTES));
@@ -20380,7 +20416,7 @@ mod tests {
                 semio_framework_job::Generation(7),
                 semio_framework_job::StepBudget::new(4, u64::MAX),
                 semio_framework_job::root_cancel_token(),
-                semio_framework_job::default_now_ms,
+                semio_framework_job::default_now_us,
                 &mut preview_sequence,
             );
             match job.step(&mut context) {
@@ -20421,7 +20457,7 @@ mod tests {
                 semio_framework_job::Generation(7),
                 semio_framework_job::StepBudget::new(1, u64::MAX),
                 cancel.clone(),
-                semio_framework_job::default_now_ms,
+                semio_framework_job::default_now_us,
                 &mut preview_sequence,
             );
             turns += 1;
@@ -22027,22 +22063,25 @@ mod tests {
         let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 64 };
         let presence_factory = DemoEphemeralPreparationFactory::admissible();
         let mut presence = PresenceStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: 0 });
-        let old_presence_root = Arc::downgrade(&presence.local_root());
-        let mut presence_publication = presence.begin_publish_one(semio_framework_job::OperationId(5), 0, DemoMutation::SetN { n: 5 }, Some(&presence_factory), Some(Arc::new(DemoSnapshotRetirementFactory))).expect("presence factory admits");
+        let root_factory: Arc<dyn SnapshotRetirementFactory<DemoSnapshot>> = Arc::new(DemoSnapshotRetirementFactory);
+        presence.install_local_retirement_factory(root_factory.clone()).unwrap();
+        let old_presence_root = Arc::downgrade(&presence.local);
+        let mut presence_publication = presence.begin_publish_one(semio_framework_job::OperationId(5), 0, DemoMutation::SetN { n: 5 }, Some(&presence_factory), Some(root_factory.clone())).expect("presence factory admits");
         let presence_receipt = loop {
             if let ArtifactStoreOneItemAdvance::Published(receipt) = presence.advance_publish_one(&mut presence_publication, grant).expect("presence step") {
                 break receipt;
             }
         };
         assert_eq!(presence_receipt, LaneItemReceipt { generation_before: 0, generation_after: 1 });
-        assert_eq!(presence.local().await.n, 5);
+        assert_eq!(presence.local().n, 5);
         let presence_root = presence_factory.published_root.lock().expect("presence witness").as_ref().and_then(std::sync::Weak::upgrade).expect("presence root");
-        assert!(Arc::ptr_eq(&presence_root, &presence.local_root()));
+        assert!(std::ptr::eq(presence_root.as_ref(), presence.local()));
         assert!(presence_publication.acknowledge());
         assert!(old_presence_root.upgrade().is_some(), "displaced presence root remains retained before bounded close");
         let _ = presence_publication.close_step(grant).expect("presence close advances one owner");
         assert!(old_presence_root.upgrade().is_some(), "first close unit cannot destroy the displaced root");
         close_ephemeral_publication(&mut presence_publication);
+        for _ in 0..2048 { if presence.maintenance_local_reads_step(1, 4096).unwrap() == SnapshotRetirementStep::Complete { break; } }
         assert!(old_presence_root.upgrade().is_none(), "bounded retirement releases the displaced presence root");
         assert!(presence.begin_publish_one(semio_framework_job::OperationId(6), 0, DemoMutation::SetN { n: 9 }, Some(&presence_factory), Some(Arc::new(DemoSnapshotRetirementFactory))).is_err());
 
@@ -22078,6 +22117,10 @@ mod tests {
         };
         assert!(transient.begin_publish_one(semio_framework_job::OperationId(9), 1, DemoMutation::SetN { n: 7 }, Some(&oversized), Some(Arc::new(DemoSnapshotRetirementFactory))).is_err());
         assert!(transient.begin_publish_one(semio_framework_job::OperationId(10), 1, DemoMutation::SetN { n: 7 }, None, Some(Arc::new(DemoSnapshotRetirementFactory))).is_err());
+        drop(presence_root);
+        let mut close = presence.begin_retirement(Arc::new(DemoSnapshot { n: 0 }), |value| value.n == 0).ok().unwrap();
+        for _ in 0..2048 { if close.close_step(1, 4096).unwrap() == SnapshotRetirementStep::Complete { break; } }
+        assert!(close.terminal_is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -23303,18 +23346,25 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn presence_local_root_is_o1_and_never_clones_the_payload_at_capture() {
+    async fn presence_local_read_is_o1_and_never_clones_the_payload_at_capture() {
         let mut store = PresenceStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: 1 });
-        let before = store.local_root();
-        assert!(Arc::ptr_eq(&before, &store.local_root()));
+        let factory: Arc<dyn SnapshotRetirementFactory<DemoSnapshot>> = Arc::new(DemoSnapshotRetirementFactory);
+        store.install_local_retirement_factory(factory.clone()).unwrap();
+        let before = store.local_read().unwrap();
+        assert!(std::ptr::eq(before.get(), store.local()));
         assert_eq!(store.generation_now(), 0);
 
         store.apply(&[DemoMutation::SetN { n: 2 }]).await.expect("presence apply");
-        let after = store.local_root();
-        assert!(!Arc::ptr_eq(&before, &after));
+        let after = store.local_read().unwrap();
+        assert!(!std::ptr::eq(before.get(), after.get()));
         assert_eq!(before.n, 1);
         assert_eq!(after.n, 2);
         assert_eq!(store.generation_now(), 1);
+        drop(before);
+        drop(after);
+        let mut close = store.begin_retirement(Arc::new(DemoSnapshot { n: 0 }), |value| value.n == 0).ok().unwrap();
+        for _ in 0..2048 { if close.close_step(1, 4096).unwrap() == SnapshotRetirementStep::Complete { break; } }
+        assert!(close.terminal_is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -24431,18 +24481,22 @@ mod tests {
             timestamp: HybridLogicalTimestamp::new(0, 1),
             members: vec![SpaceMemberPin { document_id: "member-a".into(), checkpoint_id: "cp-1".into(), alternative_id: String::new() }],
         };
-        test_support::assert_operation_round_trip(&SpaceHistorySnapshot::default(), SpaceHistoryMutation::CommitSpaceCheckpoint { checkpoint: checkpoint.clone() }).await;
+        test_support::assert_operation_round_trip(&SpaceHistorySnapshot::default(), SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint: checkpoint.clone() })).await;
 
         let with_checkpoint = SpaceHistorySnapshot { checkpoints: vec![checkpoint], alternatives: Vec::new(), active_alternative_id: None };
         let alternative = SpaceAlternative { id: "sa-1".into(), name: "branch".into(), checkpoint_ids: vec!["sc-1".into()] };
-        test_support::assert_operation_round_trip(&with_checkpoint, SpaceHistoryMutation::CreateSpaceAlternative { alternative }).await;
+        test_support::assert_operation_round_trip(&with_checkpoint, SpaceHistoryMutation::CreateSpaceAlternative(CreateSpaceAlternative { alternative })).await;
 
         let with_alternative_active = SpaceHistorySnapshot {
             alternatives: vec![SpaceAlternative { id: "sa-1".into(), name: "branch".into(), checkpoint_ids: vec!["sc-1".into()] }, SpaceAlternative { id: "sa-other".into(), name: "other".into(), checkpoint_ids: vec!["sc-1".into()] }],
             active_alternative_id: Some("sa-1".into()),
             ..with_checkpoint
         };
-        test_support::assert_operation_round_trip(&with_alternative_active, SpaceHistoryMutation::SwitchSpaceAlternative { alternative_id: "sa-other".into() }).await;
+        test_support::assert_operation_round_trip(&with_alternative_active, SpaceHistoryMutation::SwitchSpaceAlternative(SwitchSpaceAlternative { alternative_id: "sa-other".into() })).await;
+        test_support::assert_operation_round_trip(&with_checkpoint, SpaceHistoryMutation::RemoveSpaceCheckpoint(RemoveSpaceCheckpoint { checkpoint_id: "sc-1".into() })).await;
+        test_support::assert_operation_round_trip(&with_alternative_active, SpaceHistoryMutation::RemoveSpaceAlternative(RemoveSpaceAlternative { alternative_id: "sa-other".into() })).await;
+        test_support::assert_operation_round_trip(&with_alternative_active, SpaceHistoryMutation::RemoveSpaceAlternative(RemoveSpaceAlternative { alternative_id: "sa-1".into() })).await;
+        test_support::assert_operation_round_trip(&with_alternative_active, SpaceHistoryMutation::RestoreActiveSpaceAlternative(RestoreActiveSpaceAlternative { alternative_id: None })).await;
     }
 
     //#endregion 🏛️StudioTests

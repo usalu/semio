@@ -13,6 +13,14 @@
       "executor": "nx:run-commands",
       "options": {"command":"bun ./📜️script.ts check", "forwardAllArgs":true, "cwd":"{projectRoot}"}
     },
+    "test-browser": {
+      "executor": "nx:run-commands",
+      "options": { "command": "bun ./📜️script.ts test-browser", "cwd": "{projectRoot}" }
+    },
+    "test-browser-clock": {
+      "executor": "nx:run-commands",
+      "options": { "command": "bun ./📜️script.ts test-browser-clock", "cwd": "{projectRoot}" }
+    },
     "test-source": {
       "executor": "nx:run-commands",
       "options": {"command":"bun ./📜️script.ts test-source", "cwd":"{projectRoot}"}

@@ -1706,7 +1706,7 @@ mod retained_structural_laws {
         let mut reader = Process3dRetainedSnapshotReader::new(8_192);
         let mut grants = 0;
         loop {
-            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
             grants += 1;
             if reader.step(&bytes, &mut context).expect("retained structural step") {
                 break;
@@ -1730,7 +1730,7 @@ mod retained_structural_laws {
         let mut preview_sequence = 0;
         let mut reader = Process3dRetainedSnapshotReader::new(8_192);
         for _ in 0..96 {
-            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
             if reader.step(&bytes, &mut context).expect("nested retained structural step") {
                 break;
             }
@@ -1787,11 +1787,11 @@ mod retained_structural_laws {
                 if reader.phase == target {
                     break;
                 }
-                let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+                let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
                 assert!(!reader.step(&bytes, &mut context).expect("drive to retained snapshot substate"), "target substate must occur before completion");
             }
             assert_eq!(reader.phase, target, "every catalogued nested substate must be reachable");
-            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel, semio_framework_job::default_now_ms, &mut preview_sequence);
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel, semio_framework_job::default_now_us, &mut preview_sequence);
             assert!(!reader.step(&bytes, &mut context).expect("interrupt one retained snapshot substate"));
             assert_eq!(context.fuel_remaining(), 0, "one substate consumes exactly one grant");
             let partial = reader.take_rejected().expect("interrupted substate exact handback");

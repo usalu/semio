@@ -45,6 +45,12 @@ use std::task::{Context, Poll, Waker};
 use serde::{Deserialize, Serialize};
 
 //#region 🌐️BrowserFutureBridge
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+#[path = "⏱️clock/🦀️component.rs"]
+mod browser_clock;
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+pub use browser_clock::install_browser_monotonic_clock;
+
 #[cfg(target_arch = "wasm32")]
 pub mod browser {
     use js_sys::Promise;
@@ -1806,19 +1812,34 @@ mod native_pool {
 //#endregion 🧵️WorkerPoolNative
 
 //#region 🧵️WorkerPoolWasm
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(target_arch = "wasm32", test))]
 mod wasm_pool {
     use super::*;
+
+    /// 📊️ Fixed-size diagnostic copy; no queued closure or scheduling authority escapes.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct CooperativePoolSnapshot {
+        pub pump_calls: u64,
+        pub selections: u64,
+        pub no_selection: u64,
+        pub selected_by_lane: [u64; LANE_COUNT],
+        pub queued_by_lane: [usize; LANE_COUNT],
+        pub deficits: [i64; LANE_COUNT],
+        pub cursor: usize,
+    }
 
     struct SchedulerState {
         queues: [VecDeque<Job>; LANE_COUNT],
         cursor: usize,
         deficits: [i64; LANE_COUNT],
+        selections: u64,
+        no_selection: u64,
+        selected_by_lane: [u64; LANE_COUNT],
     }
 
     impl SchedulerState {
         fn new() -> SchedulerState {
-            SchedulerState { queues: std::array::from_fn(|_| admitted_job_queue()), cursor: 0, deficits: [0; LANE_COUNT] }
+            SchedulerState { queues: std::array::from_fn(|_| admitted_job_queue()), cursor: 0, deficits: [0; LANE_COUNT], selections: 0, no_selection: 0, selected_by_lane: [0; LANE_COUNT] }
         }
 
         fn select_and_pop(&mut self) -> Option<(Lane, Job)> {
@@ -1835,9 +1856,12 @@ mod wasm_pool {
                 if self.deficits[lane.index()] >= UNIT_COST {
                     self.deficits[lane.index()] -= UNIT_COST;
                     let job = queue.pop_front().expect("WorkerPool: queue observed non-empty then empty");
+                    self.selections = self.selections.saturating_add(1);
+                    self.selected_by_lane[lane.index()] = self.selected_by_lane[lane.index()].saturating_add(1);
                     return Some((lane, job));
                 }
             }
+            self.no_selection = self.no_selection.saturating_add(1);
             None
         }
 
@@ -1850,6 +1874,7 @@ mod wasm_pool {
         state: Mutex<SchedulerState>,
         wheel: TimerWheel,
         now_ms: std::sync::atomic::AtomicU64,
+        pump_calls: std::sync::atomic::AtomicU64,
         shutdown: std::sync::atomic::AtomicBool,
         ledger: PermitLedger,
         trace_workers: semio_framework_trace::WorkerCounters,
@@ -1880,6 +1905,7 @@ mod wasm_pool {
                 state: Mutex::new(SchedulerState::new()),
                 wheel: TimerWheel::new(),
                 now_ms: std::sync::atomic::AtomicU64::new(0),
+                pump_calls: std::sync::atomic::AtomicU64::new(0),
                 shutdown: std::sync::atomic::AtomicBool::new(false),
                 ledger: PermitLedger::new(1),
                 trace_workers: semio_framework_trace::WorkerCounters::new(),
@@ -1980,6 +2006,7 @@ mod wasm_pool {
         /// is still queued, so the host knows whether to reschedule a pump immediately or wait for
         /// its next natural tick.
         pub fn pump(&self, now_ms: u64) -> bool {
+            self.inner.pump_calls.store(self.inner.pump_calls.load(Ordering::Relaxed).saturating_add(1), Ordering::Relaxed);
             if self.is_shutdown() {
                 return false;
             }
@@ -1999,9 +2026,28 @@ mod wasm_pool {
             self.has_pending_work()
         }
 
+        /// 🔎️ Nonblocking six-lane observation; contention retains all scheduler owners untouched.
+        pub fn try_cooperative_snapshot(&self) -> Option<CooperativePoolSnapshot> {
+            let state = self.inner.state.try_lock().ok()?;
+            Some(CooperativePoolSnapshot {
+                pump_calls: self.inner.pump_calls.load(Ordering::Relaxed),
+                selections: state.selections,
+                no_selection: state.no_selection,
+                selected_by_lane: state.selected_by_lane,
+                queued_by_lane: std::array::from_fn(|index| state.queues[index].len()),
+                deficits: state.deficits,
+                cursor: state.cursor,
+            })
+        }
+
         pub fn has_pending_work(&self) -> bool {
             self.inner.state.lock().unwrap_or_else(PoisonError::into_inner).has_pending()
         }
+    }
+
+    #[cfg(test)]
+    mod cooperative_tests {
+        include!("⏱️cooperative/🧪️component.rs");
     }
 }
 //#endregion 🧵️WorkerPoolWasm
@@ -2009,7 +2055,7 @@ mod wasm_pool {
 #[cfg(not(target_arch = "wasm32"))]
 pub use native_pool::WorkerPool;
 #[cfg(target_arch = "wasm32")]
-pub use wasm_pool::WorkerPool;
+pub use wasm_pool::{CooperativePoolSnapshot, WorkerPool};
 
 //#region 🌐️ProcessWorkerPool
 static PROCESS_WORKER_POOL_CONFIG: OnceLock<WorkerPoolConfig> = OnceLock::new();

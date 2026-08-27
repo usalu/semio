@@ -40,7 +40,7 @@
 //! index 0 was "a palette entry no pixel actually resolves to" when index 0 is in fact the most
 //! referenced entry in the image, covering 5 659 668 of its 5 975 040 pixels.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`KINDS`).
 
 use semio_repo_test_host::Json;

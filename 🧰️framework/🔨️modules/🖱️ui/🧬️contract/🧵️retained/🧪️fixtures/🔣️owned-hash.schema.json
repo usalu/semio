@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#", "type": "object", "additionalProperties": false,
+  "required": ["version", "surface", "revision", "root", "ids", "text", "depth", "surfaceBytes", "laws"],
+  "properties": {
+    "version": { "const": 1 }, "surface": { "type": "string", "minLength": 1 },
+    "revision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }, "root": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "ids": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 } },
+    "text": { "type": "string" }, "depth": { "type": "integer", "minimum": 1, "maximum": 512 }, "surfaceBytes": { "type": "integer", "minimum": 4097, "maximum": 32768 },
+    "laws": { "type": "array", "minItems": 7, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+  }
+}

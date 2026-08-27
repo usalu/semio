@@ -1,0 +1,12 @@
+{
+  "mutation": "replace-palette",
+  "payload": {
+    "plte": [
+      {
+        "b": 255,
+        "g": 0,
+        "r": 255
+      }
+    ]
+  }
+}

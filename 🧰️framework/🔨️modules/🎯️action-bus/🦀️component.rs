@@ -1029,7 +1029,7 @@ mod tests {
         let operation = Operation::new(allocate_operation_id(), RevisionId(19), Generation(5), 13);
         let mut dispatch = bus.dispatch_wire("number", "decode-wire", "test.number.v1", &42u64.to_le_bytes(), Some(vec![7, 8]), operation).expect("wire dispatch");
         let mut sequence = 0;
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
         let mut expected = 42u64.to_le_bytes().to_vec();
         expected.extend([7, 8]);
         let StepOutcome::Complete(mut candidate) = dispatch.job.step(&mut context) else { panic!("wire job did not complete") };
@@ -1187,7 +1187,7 @@ mod tests {
         };
         let mut sequence = 0;
         for _ in 0..8 {
-            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             assert!(matches!(dispatch.job.step(&mut context), StepOutcome::CheckpointReady(_)));
         }
         dispatch.job.begin_close();
@@ -1214,7 +1214,7 @@ mod tests {
         };
         let mut sequence = 0;
         for _ in 0..8 {
-            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             assert!(matches!(dispatch.job.step(&mut context), StepOutcome::CheckpointReady(_)));
         }
         dispatch.job.begin_close();

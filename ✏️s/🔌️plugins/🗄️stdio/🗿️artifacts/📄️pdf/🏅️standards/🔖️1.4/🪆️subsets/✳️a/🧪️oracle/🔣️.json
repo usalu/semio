@@ -1,0 +1,69 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧬️ Exact 2-leaf PDF 1.4/A catalog. Reference lopdf never links the subject implementation.",
+  "oracles": [
+    {
+      "id": "lopdf-pdf-1-4-a-mutate",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "capabilities": [
+        "pdf-1-4-a-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-pdf-1-4-conformance-a-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/J-F-Liu/lopdf",
+      "rationale": "Independently reads all pages through lopdf, applies this subset's concrete page operations, reconstructs document bytes, and verifies inverse closure against the original projection.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "pdf-1-4-a",
+      "capability": "pdf-1-4-a-mutate",
+      "standardDirectoryName": "🔖️1.4",
+      "subsetDirectoryName": "✳️a",
+      "vectors": [
+        {
+          "mutationId": "set-page-text",
+          "sourceMutationDirectoryName": "📝️set-page-text",
+          "mutationDirectoryName": "📝️set-page-text",
+          "scenarios": [
+            {
+              "id": "round-trips-the-concrete-inverse",
+              "directoryName": "🧪️round-trips-the-concrete-inverse"
+            }
+          ]
+        },
+        {
+          "mutationId": "clear-page-text",
+          "sourceMutationDirectoryName": "🧹️clear-page-text",
+          "mutationDirectoryName": "🧹️clear-page-text",
+          "scenarios": [
+            {
+              "id": "round-trips-the-concrete-inverse",
+              "directoryName": "🧪️round-trips-the-concrete-inverse"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "set-page-text",
+        "clear-page-text"
+      ]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-pdf-1-4-conformance-a-v1",
+      "description": "A PDF 1.4 document compared by the CONFORMANCE surface check_pdf_a_conformance actually reads, every field read back out of the bytes by the independent `lopdf` reader: page 1's extractable text, the emptiness verdict the checker computes from it, the page count as a stability anchor, and the unconditional schema-gap flag. Page CONTENT beyond that axis is deliberately absent — it belongs to the ✳️any subset's own profile, and this conformance check says nothing about it. `schemaGapUnverifiable` is the constant `true` the checker genuinely raises on every PDF 1.4 document; it is recorded as honest bookkeeping of an axis no mutation can move, never as evidence. No numeric field carries evidence, hence no tolerance.",
+      "tolerance": 0,
+      "ignoreKeys": []
+    }
+  ]
+}

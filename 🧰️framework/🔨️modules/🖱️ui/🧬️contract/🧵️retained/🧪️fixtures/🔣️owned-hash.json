@@ -1,0 +1,5 @@
+{
+  "version": 1, "surface": "Werkstatt 😀\n\"surface\"\ud800", "revision": 9007199254740991, "root": 7,
+  "ids": [7, 9007199254740991, 0], "text": "\u0000\b\f\n\r\t\"\\😀Ü\ud800\udfff", "depth": 80, "surfaceBytes": 8193,
+  "laws": ["node-json-buffer-byte-parity", "insertion-order-preserved", "frozen-source-identity", "surface-bytes-as-canonical-array", "cancel-frames-before-node", "zero-grant-no-hash", "no-whole-snapshot-materialization"]
+}

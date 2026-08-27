@@ -209,9 +209,9 @@ async fn run_interactive_inference(ctx: JobCtx, request: crate::app::WireArtifac
             site: "semio.infer.action-bus",
             stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
             fuel_per_step: request.budgets.work_units.min(semio_framework_job::USER_VISIBLE_LANE_FUEL).max(1),
-            step_budget_ms: semio_framework_job::USER_VISIBLE_LANE_WALL_MS,
+            step_budget_us: semio_framework_job::USER_VISIBLE_LANE_WALL_US,
         },
-        now_ms: semio_framework_job::default_now_ms,
+        now_us: semio_framework_job::default_now_us,
     };
     let cores = std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1);
     let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores));

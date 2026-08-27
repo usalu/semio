@@ -1,0 +1,2 @@
+# 🧬 canonical set-line/SetLine
+input SetLinePayload { index: TxtMutationUInt32V1! text: String! }

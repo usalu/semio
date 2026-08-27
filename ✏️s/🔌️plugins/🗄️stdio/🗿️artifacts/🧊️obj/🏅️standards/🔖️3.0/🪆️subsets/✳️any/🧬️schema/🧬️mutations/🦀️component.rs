@@ -128,7 +128,7 @@ pub enum ObjMutation {
 }
 
 /// 🏷️ Kebab-case spelling of every `ObjMutation` variant, in declaration order — the vocabulary the
-/// `obj-3-0-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and the exhaustive
+/// `obj-3-0-any` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and the exhaustive
 /// mutate/inverse test case measures itself against. `kinds_cover_every_variant` below is what keeps
 /// this list honest against the enum it names, since the framework never parses Rust.
 pub const KINDS: &[&str] = &[
@@ -694,7 +694,7 @@ mod tests {
     /// 🏷️ `KINDS` must name exactly the enum's variants (kebab-case), one entry each — an
     /// exhaustive `match` so the compiler itself fails the moment a variant is added, renamed or
     /// removed without this list being updated alongside it. The manifest side of the same claim
-    /// (`../../🧪️oracle/🔣️component.json`'s `obj-3-0-any` catalog `kinds`) is checked by the
+    /// (`../../🧪️oracle/🔣️.json`'s `obj-3-0-any` catalog `kinds`) is checked by the
     /// mutate/inverse test case's own contract gate, which fails if the two lists ever diverge.
     #[semio_framework_async_macros::async_test]
     async fn kinds_cover_every_variant() {

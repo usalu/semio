@@ -647,7 +647,7 @@ should say "cleared for the default feature set."
   adapter header mentions the other.
 * **A real broken `include_str!`**, found by building the stdio lib's test target:
   `🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:163` reads
-  `"../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🔣️component.json"`, which resolves inside
+  `"../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🔣️.json"`, which resolves inside
   `🔖️ac1024/` and needs one more `../`. The file it wants exists. That `#[cfg(test)]` catalog
   cross-check has never compiled.
 * **`cargo check -p semio-s-plugin-stdio --lib --profile test` — exit 101, `913 previous errors`.**

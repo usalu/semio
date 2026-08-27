@@ -1,68 +1,43 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/WasmSessionLoader/component.tsx
-/** @emoji 🕸️ `WasmSessionLoader` — the lazy wasm-pack module loader table (`createEngineSession`) and
- * per-surface session factories (`createGraphSession`/`createFlowSession`/`createEditorSession`/
- * `createRasterSession`/`createMapSession`/`createTerrainSession`/`createBoard2dSession`), plus the
- * shared render-on-demand `createDemandFrameScheduler` and the `isFlowGraphScene` capability sniff.
- * Each `*Host` component below (NodeGraph/TextEditor/TiledMapHost/Board2dHost/Paint2dHost/
- * WorldTerrainLayer) leases exactly one session kind through this table.
+/** 🕸️ Compiler-checked shared surface constructors and app-owned session factory scopes.
+ * Board sessions are supplied by the owning product composition, never by the shared surface module.
+ * Demand scheduling and Flow scene capability detection are shared by surface hosts.
  */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
 import { type GraphWasmSession } from "@semio-tech/infinite-canvas-react-renderer";
+import { createContext } from "react";
 // #endregion 🔌️Adapters
 
 //#region 🔖️wasm-session-loader
 
-//#region 🔖️EngineSessionLoader
-/** 🔌️ One generic lazy-loader table for every `framework/surface/*` engine crate (plus `board-2d`,
- * still app-hosted) — each surface kind maps to its wasm-pack package; a single cached module promise
- * per kind replaces the five near-identical hand-rolled `let xPromise…create X()` blocks this used to be. */
-type EngineSessionWasmModule = { readonly default: (input?: unknown) => Promise<unknown> } & Record<string, new () => unknown>;
-
-const ENGINE_SESSION_IMPORTERS: Record<string, () => Promise<EngineSessionWasmModule>> = {
-  "board-2d": () => import("@semio-tech/framework-surface-rs"),
-};
-
-const engineSessionModulePromises = new Map<string, Promise<EngineSessionWasmModule>>();
-
-/** 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: deliberately NOT wired through the framework core's
- * `createLeasePool` — this cache's `dispose` would be a no-op. A wasm-bindgen ES-module engine is a
- * module-scope singleton in its realm (`node_modules/@semio-tech/flow-core/flow_core.js`'s cached
- * `wasm`/`wasmInstance`, `__wbg_init`/`initSync` both early-return once set); there is no deinit
- * export, and `WebAssembly.Memory` never shrinks. Once instantiated, an engine's compiled code and
- * memory high-water mark are pinned for the document's lifetime — that ceiling is real and cannot be
- * evicted from here. The actual mitigation is prompt `session.free()` on every consuming surface's
- * unmount (see each `*Host` component below) so the wasm-side allocator reuses freed pages instead of
- * growing further; that keeps the ceiling from climbing, even though it can't lower it. True unload
- * requires hosting an engine in a dedicated Worker whose `terminate()` actually releases the isolate —
- * a larger follow-up, out of this slice. */
-async function createEngineSession<TSession>(engineKind: keyof typeof ENGINE_SESSION_IMPORTERS, sessionClassName: string): Promise<TSession> {
-  let modulePromise = engineSessionModulePromises.get(engineKind);
-  if (!modulePromise) {
-    modulePromise = ENGINE_SESSION_IMPORTERS[engineKind]().then(async (mod) => {
-      await mod.default();
-      return mod;
-    });
-    engineSessionModulePromises.set(engineKind, modulePromise);
-  }
-  const mod = await modulePromise;
-  return new mod[sessionClassName]() as TSession;
-}
-//#endregion 🔖️EngineSessionLoader
 
 //#region 🗺️SharedSurfaceSessionLoader
 type SurfaceSessionModule = typeof import("@semio-tech/framework-surface-rs");
-let surfaceSessionModulePromise: Promise<SurfaceSessionModule> | undefined;
+
+/** 📦️ Deduplicates in-flight module initialization and retires only the exact failed attempt. */
+export function createWasmModuleLoader<T>(load: () => Promise<T>): () => Promise<T> {
+  let pending: Promise<T> | undefined;
+  return () => {
+    if (pending) return pending;
+    const attempt = Promise.resolve().then(load);
+    pending = attempt;
+    void attempt.catch(() => { if (pending === attempt) pending = undefined; });
+    return attempt;
+  };
+}
+
+const loadSurfaceSessionModule = createWasmModuleLoader<SurfaceSessionModule>(async () => {
+  const module = await import("@semio-tech/framework-surface-rs");
+  await module.default();
+  return module;
+});
 
 /** 🗺️ Initializes the actual shared surface module before invoking a compiler-checked constructor. */
 async function createSurfaceSession<T>(construct: (module: SurfaceSessionModule) => T): Promise<T> {
-  surfaceSessionModulePromise ??= import("@semio-tech/framework-surface-rs").then(async (module) => {
-    await module.default();
-    return module;
-  });
-  return construct(await surfaceSessionModulePromise);
+  return construct(await loadSurfaceSessionModule());
 }
 //#endregion 🗺️SharedSurfaceSessionLoader
 
@@ -190,21 +165,15 @@ export type EditorWasmSession = GraphWasmSession & {
   setCaretVisible(visible: boolean): void;
 };
 
-type EditorSessionModule = {
-  readonly default: (input?: unknown) => Promise<unknown>;
-  readonly EditorSession: new () => EditorWasmSession;
-};
-
-let editorSessionPromise: Promise<EditorSessionModule> | null = null;
+type EditorSessionModule = typeof import("@semio-tech/framework-editor-rs");
+const loadEditorSessionModule = createWasmModuleLoader<EditorSessionModule>(async () => {
+  const module = await import("@semio-tech/framework-editor-rs");
+  await module.default();
+  return module;
+});
 
 export async function createEditorSession(): Promise<EditorWasmSession> {
-  if (!editorSessionPromise) {
-    editorSessionPromise = import("@semio-tech/framework-editor-rs").then(async (mod) => {
-      await mod.default();
-      return mod as EditorSessionModule;
-    });
-  }
-  const mod = await editorSessionPromise;
+  const mod = await loadEditorSessionModule();
   return new mod.EditorSession();
 }
 //#endregion EditorSession
@@ -345,8 +314,40 @@ export type Board2dWasmSession = {
   free(): void;
 };
 
-export async function createBoard2dSession(): Promise<Board2dWasmSession> {
-  return createEngineSession<Board2dWasmSession>("board-2d", "BoardSession");
+export type AppSurfaceSessionFactory = {
+  readonly kind: "board-2d";
+  readonly pluginId: string;
+  readonly appId: string;
+  readonly create: () => Promise<Board2dWasmSession>;
+};
+
+export type ScopedBoardSessionFactory = {
+  readonly pluginId: string;
+  readonly appId: string;
+  readonly instanceId: number;
+  readonly create: () => Promise<Board2dWasmSession>;
+  readonly scope: BoardPeerScope;
+};
+
+export type Board2dPeer = { readonly session: Board2dWasmSession; readonly onPeerGestureEnded: (flushed: boolean) => void };
+export type BoardPeerScope = {
+  readonly peers: Map<string, Map<string, Board2dPeer>>;
+  readonly gestures: Map<string, { readonly surfaceId: string; readonly peer: Board2dPeer }>;
+};
+
+export function createBoardPeerScope(): BoardPeerScope {
+  return { peers: new Map(), gestures: new Map() };
+}
+
+export const BoardSessionFactoryContext = createContext<ScopedBoardSessionFactory | null>(null);
+
+/** 🪪️ Joins one exact app-owned constructor to the current shell instance without constructing it. */
+export function resolveAppSurfaceSessionFactory(registrations: readonly AppSurfaceSessionFactory[], identity: { readonly pluginId: string; readonly appId: string; readonly instanceId: number } | null): ScopedBoardSessionFactory | null {
+  if (!identity) return null;
+  const matches = registrations.filter((registration) => registration.kind === "board-2d" && registration.pluginId === identity.pluginId && registration.appId === identity.appId);
+  if (matches.length > 1) throw new Error(`Duplicate board session factory for ${identity.pluginId}/${identity.appId}`);
+  const registration = matches[0];
+  return registration ? { pluginId: identity.pluginId, appId: identity.appId, instanceId: identity.instanceId, create: registration.create, scope: createBoardPeerScope() } : null;
 }
 //#endregion Board2dSession
 

@@ -133,7 +133,7 @@ go green, per the standalone verification above.
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`
   — added `pub const KINDS` + `oracle_mutation_kinds_law_matches_enum_variants` /
   `oracle_mutation_kinds_law_matches_manifest_catalog` tests.
-- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧪️oracle/🔣️.json`
   — new: oracle registration (`lopdf-pdf-1-4-mutate`) + mutation catalog (`pdf-1-4-any`).
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`
   — filled in `oracle_apply_mutation` + independent reader/writer helpers.

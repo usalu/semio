@@ -1,5 +1,5 @@
 //! 🔮️ Mutation oracle for this subset — recorded no-oracle decision `raw-buffer-no-format`
-//! (`../🧪️oracle/🔣️component.json`).
+//! (`../🧪️oracle/🔣️.json`).
 //!
 //! A raw byte buffer has no format: there is nothing a third-party library could be authoritative
 //! about, and no independent reader exists either (there is no grammar to parse). So this module is
@@ -15,7 +15,7 @@
 //! The vocabulary is per SUBSET, not per artifact. This one has exactly 5 kinds: `no-mutation`,
 //! `set-snapshot`, `splice`, `append-bytes`, `truncate-at`.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog and the recorded no-oracle decision.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog and the recorded no-oracle decision.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`BinaryMutation::KINDS`).
 
 use semio_repo_test_host::Json;

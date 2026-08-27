@@ -7,7 +7,7 @@ Feature: Apply the one typed s.space.home mutation to its committed specificatio
   `s.space.home` is a semio-NATIVE artifact: nothing outside this repository reads `.shome.dsl.semio`
   or its `.pack.semio` twin, so no reference library is registered — recorded as the
   `s-home-mutation-semantics` no-oracle decision in
-  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, which also records why the candidate
+  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, which also records why the candidate
   category is empty rather than merely unexplored.
 
   ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "sourceRelativePath": "🟦️typescript/🐚️plugin-bridge.ts",
+  "retainedFixture": "🧪️wgpu-generated-retirement-HT3ZIM",
+  "oldHash": "46963d8345ab343daaca9be0d867c7a1d8045ecb5ff5cf8d1beae43c8a787435",
+  "oldSize": 25226,
+  "newHash": "e383b9b555dca8dbd7c5cd54864651b6271010da3d91cef01697d01770b8a9ce",
+  "newSize": 25329,
+  "sourceModule": "@semio-tech/framework-os",
+  "sequenceClass": "AppChannelRequestSequence",
+  "ownerBinding": "channelRequests",
+  "ownerFunction": "loadPluginModule",
+  "clientConstructor": "AppChannelClient",
+  "clientArguments": ["channelHandle", "channelRequests", "instanceId", "appId", "\"local\""],
+  "splices": [
+    { "oldValue": "import { AppChannelClient, decodeFaultFromWire", "newValue": "import { AppChannelClient, AppChannelRequestSequence, decodeFaultFromWire" },
+    { "oldValue": "  const channelByInstance = new Map<number, AppChannelClient>();\n", "newValue": "  const channelByInstance = new Map<number, AppChannelClient>();\n  const channelRequests = new AppChannelRequestSequence();\n" },
+    { "oldValue": "new AppChannelClient(channelHandle, instanceId, appId, \"local\")", "newValue": "new AppChannelClient(channelHandle, channelRequests, instanceId, appId, \"local\")" }
+  ],
+  "sequenceResults": [1, { "sequence": 2, "cancelSequence": 3, "request": "1" }, 4, { "sequence": 5, "cancelSequence": 6, "request": "2" }],
+  "checkpoint": { "sequence": 6, "request": "2" }
+}

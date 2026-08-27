@@ -28,6 +28,11 @@ component-guest-async = []
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
 semio-framework-job = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+# ⏱️ `runtime_live_cleanup_pump`/`runtime_callback_clock_elapsed` judge each maintenance step against
+# the interactive-step contract, which this crate calls directly as `semio_framework_trace::…`. The
+# call site landed without the manifest edge, so every build of this crate failed on an unlinked crate.
+semio-framework-trace = { workspace = true }
+semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 # 🗃️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-dedyn, O1): `#[dyn_enum]` on `trait PluginApp` —
 # each fleet plugin crate closes its own per-plugin app enum via `dyn_enum_close!` (cross-crate,
 # see 📓️terra-dyn-enum-macro-report.md's recipe §5).

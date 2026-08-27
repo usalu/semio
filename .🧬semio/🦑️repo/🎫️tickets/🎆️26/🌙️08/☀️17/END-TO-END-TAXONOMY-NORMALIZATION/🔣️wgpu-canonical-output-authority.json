@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "generatorContractId": "wgpu-frame-worker",
+  "packageId": "wgpu-renderer",
+  "entryId": "browser-boot",
+  "sourceRelativePath": "🟦️typescript/🟦️boot.ts",
+  "outputRelativePath": "🧵️browser-boot/🤖️generated/🟨️.js",
+  "inclusion": "ignored",
+  "mode": 420,
+  "invalidNodes": ["unknown-sibling", "symlink-output", "directory-output", "tracked-instead-of-ignored", "missing-active-output"],
+  "staleOutputs": ["missing", "bytes", "mode"]
+}

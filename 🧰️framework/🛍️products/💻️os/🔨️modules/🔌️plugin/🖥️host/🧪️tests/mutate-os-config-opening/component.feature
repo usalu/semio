@@ -8,7 +8,7 @@ Feature: Apply every typed opening-preferences mutation to its committed specifi
   the app a semio `AppRef`. No third party implements it and none could adjudicate it, so there is
   no reference implementation to register (recorded as the
   `os-config-opening-preferences-mutation-semantics` no-oracle decision in
-  `../../../../../🎚️config/🧪️oracle/🔣️component.json`).
+  `../../../../../🎚️config/🧪️oracle/🔣️.json`).
 
   ⚠️ Two things about this case are unusual and both are deliberate. First, the case lives under
   `🔌️plugin/🖥️host` rather than beside the vocabulary it exercises, because `🎚️config` has no crate

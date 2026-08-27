@@ -491,11 +491,13 @@ struct UiDocumentSlot {
     complete: bool,
     retiring: bool,
     retire_scalar: u8,
+    retirement_claimed: bool,
+    retirement: crate::UiTypedRetirementCursor,
 }
 
 impl Default for UiDocumentSlot {
     fn default() -> Self {
-        Self { epoch: 0, generation: 0, surface: None, revision: UiRevision::default(), root: None, layout_epoch: 0, nodes: UiNodeTable::default(), aliases: 0, occupied: false, complete: false, retiring: false, retire_scalar: 0 }
+        Self { epoch: 0, generation: 0, surface: None, revision: UiRevision::default(), root: None, layout_epoch: 0, nodes: UiNodeTable::default(), aliases: 0, occupied: false, complete: false, retiring: false, retire_scalar: 0, retirement_claimed: false, retirement: Default::default() }
     }
 }
 
@@ -538,7 +540,7 @@ impl UiDocumentArena {
         let Some(epoch) = self.slots[slot_index].epoch.checked_add(1) else {
             return Err((UiDocumentBuildError::ArenaFull, surface));
         };
-        self.slots[slot_index] = UiDocumentSlot { epoch, generation, surface: Some(surface), revision, root, layout_epoch, nodes: UiNodeTable::default(), aliases: 1, occupied: true, complete: false, retiring: false, retire_scalar: 0 };
+        self.slots[slot_index] = UiDocumentSlot { epoch, generation, surface: Some(surface), revision, root, layout_epoch, nodes: UiNodeTable::default(), aliases: 1, occupied: true, complete: false, retiring: false, retire_scalar: 0, retirement_claimed: false, retirement: Default::default() };
         Ok(UiDocumentHandle { slot: slot_index, epoch, generation })
     }
 
@@ -612,38 +614,8 @@ impl UiDocumentArena {
         self.slot(handle).is_some()
     }
 
-    fn retire_one(&mut self) -> Option<UiNodeRecord> {
-        for offset in 0..UI_DOCUMENT_LEASE_SLOTS {
-            let index = (self.close_cursor + offset) % UI_DOCUMENT_LEASE_SLOTS;
-            if !self.slots[index].occupied || !self.slots[index].retiring {
-                continue;
-            }
-            self.close_cursor = (index + 1) % UI_DOCUMENT_LEASE_SLOTS;
-            let id = self.slots[index].nodes.keys().next().copied();
-            if let Some(id) = id {
-                return self.slots[index].nodes.remove(&id);
-            }
-            match self.slots[index].retire_scalar {
-                0 => self.slots[index].root = None,
-                1 => self.slots[index].surface = None,
-                2 => self.slots[index].revision = UiRevision::default(),
-                3 => self.slots[index].layout_epoch = 0,
-                4 => {
-                    let epoch = self.slots[index].epoch;
-                    self.slots[index] = UiDocumentSlot { epoch, ..UiDocumentSlot::default() };
-                    return None;
-                }
-                _ => return None,
-            }
-            let Some(next) = self.slots[index].retire_scalar.checked_add(1) else { return None };
-            self.slots[index].retire_scalar = next;
-            return None;
-        }
-        None
-    }
-
     fn has_retirement(&self) -> bool {
-        self.slots.iter().any(|slot| slot.occupied && slot.retiring)
+        self.slots.iter().any(|slot| slot.occupied && slot.retiring && !slot.retirement_claimed)
     }
 }
 
@@ -651,11 +623,12 @@ impl UiDocumentArena {
 pub struct UiDocumentBuilder {
     handle: Option<UiDocumentHandle>,
     released: bool,
+    claimed: bool,
 }
 
 impl UiDocumentBuilder {
     pub fn try_new(generation: u64, surface: SurfaceId, revision: UiRevision, root: Option<UiNodeId>, layout_epoch: u64) -> Result<Self, (UiDocumentBuildError, SurfaceId)> {
-        with_ui_document_arena(|arena| arena.reserve(generation, surface, revision, root, layout_epoch)).map(|handle| Self { handle: Some(handle), released: false })
+        with_ui_document_arena(|arena| arena.reserve(generation, surface, revision, root, layout_epoch)).map(|handle| Self { handle: Some(handle), released: false, claimed: false })
     }
 
     pub fn try_push(&mut self, record: UiNodeRecord) -> Result<(), (UiDocumentBuildError, UiNodeRecord)> {
@@ -669,21 +642,16 @@ impl UiDocumentBuilder {
             return Err((error, self));
         }
         self.handle = None;
-        Ok(UiDocumentLease { handle: Some(handle), released: false })
+        Ok(UiDocumentLease { handle: Some(handle), released: false, claimed: false })
     }
 
     pub fn close_step(&mut self) -> bool {
-        let Some(handle) = self.handle else { return true };
-        if !self.released {
-            with_ui_document_arena(|arena| arena.release(handle));
-            self.released = true;
-        }
-        let retired = with_ui_document_arena(UiDocumentArena::retire_one);
-        drop(retired);
-        if !with_ui_document_arena(|arena| arena.active(handle)) {
-            self.handle = None;
-        }
-        self.terminal_is_empty()
+        self.close_step_with_grant(1, 4096).expect("document builder retirement remains valid").complete
+    }
+
+    /// 🧵️ Closes only this exact builder and its typed descendants within one admitted grant.
+    pub fn close_step_with_grant(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<crate::UiValueRetirementStep, &'static str> {
+        close_document_owner(&mut self.handle, &mut self.released, &mut self.claimed, maximum_items, maximum_bytes)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -693,11 +661,7 @@ impl UiDocumentBuilder {
 
 impl Drop for UiDocumentBuilder {
     fn drop(&mut self) {
-        if !self.released {
-            if let Some(handle) = self.handle.take() {
-                with_ui_document_arena(|arena| arena.release(handle));
-            }
-        }
+        hand_back_document_owner(self.handle.take(), self.released, self.claimed);
     }
 }
 
@@ -705,6 +669,7 @@ impl Drop for UiDocumentBuilder {
 pub struct UiDocumentLease {
     handle: Option<UiDocumentHandle>,
     released: bool,
+    claimed: bool,
 }
 
 impl UiDocumentLease {
@@ -715,7 +680,7 @@ impl UiDocumentLease {
     pub fn try_alias(&self) -> Result<Self, UiDocumentLeaseError> {
         let handle = self.handle.ok_or(UiDocumentLeaseError::StaleHandle)?;
         let handle = with_ui_document_arena(|arena| arena.alias(handle))?;
-        Ok(Self { handle: Some(handle), released: false })
+        Ok(Self { handle: Some(handle), released: false, claimed: false })
     }
 
     pub fn header(&self) -> Result<UiDocumentLeaseHeader, UiDocumentLeaseError> {
@@ -729,18 +694,12 @@ impl UiDocumentLease {
     }
 
     pub fn close_step(&mut self) -> bool {
-        let Some(handle) = self.handle else { return true };
-        if !self.released {
-            with_ui_document_arena(|arena| arena.release(handle));
-            self.released = true;
-        }
-        let retired = with_ui_document_arena(UiDocumentArena::retire_one);
-        drop(retired);
-        let active = with_ui_document_arena(|arena| arena.active(handle));
-        if !active {
-            self.handle = None;
-        }
-        !active
+        self.close_step_with_grant(1, 4096).expect("document lease retirement remains valid").complete
+    }
+
+    /// 🧵️ Retains the exact final-alias document until every typed descendant is empty.
+    pub fn close_step_with_grant(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<crate::UiValueRetirementStep, &'static str> {
+        close_document_owner(&mut self.handle, &mut self.released, &mut self.claimed, maximum_items, maximum_bytes)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -750,19 +709,17 @@ impl UiDocumentLease {
 
 impl Drop for UiDocumentLease {
     fn drop(&mut self) {
-        if !self.released {
-            if let Some(handle) = self.handle.take() {
-                with_ui_document_arena(|arena| arena.release(handle));
-            }
-        }
+        hand_back_document_owner(self.handle.take(), self.released, self.claimed);
     }
 }
 
 pub fn close_ui_document_page_one() -> bool {
-    let retired = with_ui_document_arena(UiDocumentArena::retire_one);
-    drop(retired);
-    with_ui_document_arena(|arena| !arena.has_retirement())
+    close_ui_document_page_with_grant(1, 4096).expect("queued document retirement remains valid").complete
 }
+#[path = "../../♻️retirement/🌳️typed/🦀️document.rs"]
+mod typed_retirement;
+pub use typed_retirement::close_ui_document_page_with_grant;
+use typed_retirement::{close_document_owner, hand_back_document_owner};
 //#endregion 🪪️DocumentLease
 
 //#region 🧪️Tests

@@ -3,7 +3,15 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
-import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargoTestBudgeted, runCmdStatus, resolveTestLevel } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargo, runCargoTestBudgeted, runCmdStatus, resolveTestLevel } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+
+//#region 🦀️Checks
+class CheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    await runCargo(["check", "--manifest-path", "Cargo.toml", ...segments], this.root);
+  }
+}
+//#endregion 🦀️Checks
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -65,6 +73,6 @@ class PreviewGeneratedScript extends BundleScript {
 }
 //#endregion 🔖️Typegen
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript);
+const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

@@ -23,7 +23,7 @@
 //! `crate::artifacts::xml::schema::snapshot::XmlDoctype` itself models (this subset's own writer
 //! freedom, documented rather than silently dropped).
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`XmlMutation::KINDS`).
 
 use semio_repo_test_host::Json;

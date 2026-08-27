@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "cases": [
+    {"id":"timer-site-held","lock":"site","callback":"timer","returnsWhileHeld":true,"violationRetained":false,"returnedEvent":false},
+    {"id":"watchdog-site-held","lock":"site","callback":"watchdog","returnsWhileHeld":true,"violationRetained":true,"returnedEvent":false},
+    {"id":"watchdog-violation-held","lock":"violation","callback":"watchdog","returnsWhileHeld":true,"violationRetained":true,"returnedEvent":false},
+    {"id":"event-ring-held","lock":"event","callback":"event","returnsWhileHeld":true,"violationRetained":false,"returnedEvent":true}
+  ],
+  "verdicts": [
+    {"id":"strict-equality","start":100,"end":8100,"fault":true,"clockFault":null},
+    {"id":"under-ceiling","start":100,"end":8099,"fault":false,"clockFault":null},
+    {"id":"backward","start":100,"end":99,"fault":true,"clockFault":"Backward"},
+    {"id":"missing-end","start":100,"end":null,"fault":true,"clockFault":"Missing"},
+    {"id":"missing-start","start":null,"end":100,"fault":true,"clockFault":"Missing"}
+  ]
+}

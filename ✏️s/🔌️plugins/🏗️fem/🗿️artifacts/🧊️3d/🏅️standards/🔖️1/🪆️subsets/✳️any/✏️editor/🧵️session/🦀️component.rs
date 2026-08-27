@@ -2892,9 +2892,9 @@ impl MountedState {
         if budget.fuel == 0 || budget.deadline_ms == 0 {
             return JobStep::Running(None);
         }
-        let now = semio_framework_job::default_now_ms();
+        let Some(now) = semio_framework_job::default_now_us() else { return JobStep::Running(None) };
         let deadline = now.saturating_add(u64::from(budget.deadline_ms).min(8));
-        let mut cx = StepContext::new(self.identity.operation, self.identity.generation, StepBudget::new(budget.fuel, deadline), self.cancel.clone(), semio_framework_job::default_now_ms, &mut self.preview_sequence);
+        let mut cx = StepContext::new(self.identity.operation, self.identity.generation, StepBudget::new(budget.fuel, deadline), self.cancel.clone(), semio_framework_job::default_now_us, &mut self.preview_sequence);
         if cx.should_yield() {
             return JobStep::Running(None);
         }
@@ -4027,8 +4027,8 @@ mod tests {
         let mut preview = 0;
         let mut terminal = false;
         for _ in 0..200_000 {
-            let deadline = semio_framework_job::default_now_ms().saturating_add(8);
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, deadline), cancel.clone(), semio_framework_job::default_now_ms, &mut preview);
+            let deadline = semio_framework_job::default_now_us().unwrap().checked_add(8_000).unwrap();
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, deadline), cancel.clone(), semio_framework_job::default_now_us, &mut preview);
             let started = std::time::Instant::now();
             terminal = child.step(&doc, &mut fields, freshness(19), operation, &mut context).expect("production numerical child");
             assert_eq!(context.fuel_remaining(), 0);

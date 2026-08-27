@@ -44,7 +44,7 @@ length it replaced.
 ## The two undeclared oracle libraries
 
 `mutate-semio-image`'s `🐍️component.py:520` does `from PIL import Image`. Its registration
-(`…/🪆️subsets/✳️image/🧪️oracle/🔣️component.json`) declares `"ecosystem": "python", "package": ""`.
+(`…/🪆️subsets/✳️image/🧪️oracle/🔣️.json`) declares `"ecosystem": "python", "package": ""`.
 **Pillow appears nowhere in `🔒️dependencies.json`** (17 python entries; pypdf and simplejson are
 there, Pillow is not). The runner's venv is created `--system-site-packages`, and this machine
 happens to carry `PIL 11.3.0` — which is the exact version the rationale names.

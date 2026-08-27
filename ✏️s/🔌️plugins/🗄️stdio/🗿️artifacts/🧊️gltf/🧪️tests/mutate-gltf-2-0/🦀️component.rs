@@ -49,7 +49,7 @@ fn json_spec(kind: &str, params: Json) -> Json {
 
 //#region 🔖️Profile
 /// 📏️ `semantic-gltf-v1`'s own declared writer freedom (`../../🏅️standards/🔖️2.0/🪆️subsets/✳️any/
-/// 🧪️oracle/🔣️component.json`), mirrored here so an in-handler law check is exactly as strict as
+/// 🧪️oracle/🔣️.json`), mirrored here so an in-handler law check is exactly as strict as
 /// the profile the case is measured by — never stricter.
 const GLTF_WRITER_FREEDOM: &[&str] = &["byteLength", "fileSize", "generator", "copyright"];
 //#endregion 🔖️Profile

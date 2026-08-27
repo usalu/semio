@@ -34,7 +34,7 @@
 //!
 //! @see ../../../✳️any/🚪️io/🪜️ladder/🦀️component.rs — the class-neutral edit implementations all six
 //!      `✳️ccN` vocabularies route through, so each axis has ONE implementation and six callers.
-//! @see ../🧪️oracle/🔣️component.json — the `step-ap214-cc3` catalog `KINDS` is checked against.
+//! @see ../🧪️oracle/🔣️.json — the `step-ap214-cc3` catalog `KINDS` is checked against.
 
 use crate::artifacts::step::schema::diff::StepDiff;
 use crate::artifacts::step::standards::v_ap214::engine::ladder::{self, ClassEdit, ProductIdentity, ShapeRepresentationRow};
@@ -81,7 +81,7 @@ pub enum StepCc3Mutation {
 }
 
 /// 📇️ Kebab-case spelling of every `StepCc3Mutation` variant, in declaration order — the
-/// `step-ap214-cc3` catalog in `../../🧪️oracle/🔣️component.json` must match verbatim.
+/// `step-ap214-cc3` catalog in `../../🧪️oracle/🔣️.json` must match verbatim.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-file-schema", "set-product-identity", "set-shape-representation", "demote-shape-representation"];
 
 impl StepCc3Mutation {

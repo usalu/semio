@@ -1,0 +1,13 @@
+# Owned Operation Checkpoint
+
+`🧵️retained/🩹️operations/🟦️component.ts` now connects exact normalized payload owners to persistent candidate edits. Upsert captures the seven-field node owner. Field/activity commands validate and capture their private normalization profile; the cursor consumes the command capability only after its source snapshot capture succeeds. Scalar root/remove commands validate safe nonnegative IDs.
+
+The cursor retains each lookup result independently. Subtree removal holds that node across the index deletion and pushes one child ID per step before releasing the node. Replacements retain the old captured node and the new direct-field node separately until their index/input ownership transfers complete. All temporary readers, edits, old indexes, node/field owners, remove-stack cells and touched-index roots have explicit retained close phases. Cancellation never publishes a partial candidate.
+
+The result is explicitly an unvalidated operation candidate, not a publication token. The live wire ingestion, full final validation, tree/hash, notifications, atomic exact-owner root swap and native ACK still need the later joined pipeline. No live React/wgpu or aggregate instance-close credit is claimed here.
+
+Schema-first fixtures: `🧵️retained/🧪️fixtures/🔣️owned-operations{,.schema}.json`, validated with strict Ajv; expected normalized replacement is checked with existing Immer. The integration test builds parent/child exact typed owners, replaces the child surface, preserves a captured old byte reader, removes the subtree in retained steps, cancels every removal prefix while preserving the source snapshot, and rejects an unknown-node activity edit.
+
+Canonical `bun x nx run @semio-tech/framework-renderer-react:test-long --skip-nx-cache --args='--run -t OwnedOperation'` passes one integration test, 529 skipped, 530 total, five files, 12.14 seconds (`🧪️renderer-owned-operation-r2-2026-08-27.txt`). The prior expected missing-module RED was a four-suite import failure with no behavioral tests (`🧪️renderer-owned-operation-red-r1-2026-08-27.txt`). Targeted diff checks pass. Full strict typecheck and full-suite reruns for this new snapshot are pending coordinator verification.
+
+Native domain evidence remains explicit: `document.rs` defines 128 native document nodes/children and 1153 patch slots. WIT `set-children` is a typed `list<u64>`, whereas the other field payloads are pack bytes. The future live ingestion must preserve this distinct path rather than route children through a fabricated JSON encoding or infer unlimited typed-domain coverage from the native envelope.

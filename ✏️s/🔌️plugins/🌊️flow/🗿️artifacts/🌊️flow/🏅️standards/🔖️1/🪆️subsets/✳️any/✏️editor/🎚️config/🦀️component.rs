@@ -276,8 +276,10 @@ impl Mutation<FlowConfig> for FlowConfigMutation {
                 }
             }
             FlowConfigMutation::SetContributions { json } => {
+                if let Err(reason) = flow::sync_host_flow_extension_contributions(json) {
+                    return protocol::MutationOutcome::new(base.clone()).absorb_messages([protocol::MutationMessage::error(reason, reason)]);
+                }
                 next.contributions_json = json.clone();
-                flow::sync_host_flow_extension_contributions(json);
             }
             FlowConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }

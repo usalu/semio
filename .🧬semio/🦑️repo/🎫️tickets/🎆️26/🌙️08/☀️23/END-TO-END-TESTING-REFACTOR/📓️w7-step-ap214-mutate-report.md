@@ -53,7 +53,7 @@ from-scratch Part-21 writer (ruststep has nothing to reuse there), operating on 
 ## Files written
 
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧫️fixtures/📐️hexagonal-cut-concrete-forest-left-ap214.stp` — derived real fixture (new)
-- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧪️oracle/🔣️component.json` — catalog + oracle registration + `semantic-step-v1` comparison profile (new)
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧪️oracle/🔣️.json` — catalog + oracle registration + `semantic-step-v1` comparison profile (new)
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs` — filled in (was a rejecting stub); bespoke Part-21 writer + mutation dispatcher + `project_step_ap214_any`, plus a `#[cfg(all(test, feature = "oracles"))]` validation suite against the real fixture (11 tests, all passing standalone)
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` — added `pub const KINDS` (11 entries) + `kinds_const_matches_enum_variants_in_declaration_order` test, beside the pre-existing `StepMutation` enum
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214/component.feature` — new case, 23 scenarios (11 kinds × mutate + inverse, plus identity round trip)

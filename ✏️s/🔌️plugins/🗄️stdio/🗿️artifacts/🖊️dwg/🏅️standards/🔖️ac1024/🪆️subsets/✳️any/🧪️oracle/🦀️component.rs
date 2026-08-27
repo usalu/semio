@@ -40,7 +40,7 @@
 //! the same reason `../../../../🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🦀️component.rs` is a `pub use` of this
 //! standard's schema: the AC1018 subset does not declare a vocabulary of its own. See that file.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself.
 
 use semio_repo_test_host::Json;
@@ -459,7 +459,7 @@ mod tests {
         let vocabulary = include_str!("../🧬️schema/🧬️mutations/🦀️component.rs");
         let variants = ["NoMutation", "SetSnapshot", "SetVersionInfo"];
         assert_eq!(KINDS.len(), variants.len());
-        for manifest in [include_str!("🔣️component.json"), include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🔣️component.json")] {
+        for manifest in [include_str!("🔣️component.json"), include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🔣️.json")] {
             for kind in KINDS {
                 assert!(manifest.contains(&format!("\"{kind}\"")), "a committed DWG catalog is missing kind {kind:?}");
             }

@@ -1,0 +1,4 @@
+{
+  "version": 1, "capacity": 2, "node": 9007199254740991, "versions": [0,1,2],
+  "laws": ["repeated-read-stable-no-capture", "two-issued-root-backpressure", "exact-consumer-ack", "stale-ack-preserves-newer", "retirement-before-capacity-reuse", "independent-subscribers", "unsubscribe-drains-speculative-root", "zero-grant-close-preserves-bytes", "aborted-render-mints-no-owner", "null-is-not-an-issued-token"]
+}

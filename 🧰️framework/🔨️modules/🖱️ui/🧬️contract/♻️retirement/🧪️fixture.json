@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "grants": [1, 64, 4096],
+  "cases": [
+    { "name": "nested-list-map-unicode", "value": [{ "a": ["Grüße", "🌊"], "z": "終" }, "tail"], "textBytes": 20, "pages": 6, "collections": 3 },
+    { "name": "scalar-unicode", "value": "Grüße🌊", "textBytes": 11, "pages": 0, "collections": 0 },
+    { "name": "nested-empty", "value": [{ "empty": [] }], "textBytes": 5, "pages": 2, "collections": 2 },
+    { "name": "shared-child", "value": ["shared🌊"], "textBytes": 10, "pages": 1, "collections": 1 }
+  ],
+  "ownership": {
+    "zeroItemsMutate": false,
+    "zeroBytesMutate": false,
+    "sharedAliasReleaseTouchesPayload": false,
+    "nestedRootTerminalBeforeDescendants": false,
+    "unrelatedRootRequiredForTerminal": false,
+    "epochReuseSatisfiesOldRootOnly": true,
+    "liveDropRejected": true,
+    "caughtLiveDropKeepsArenaOwner": true,
+    "unwindGuardFatal": true,
+    "nestedSharedAliasRetainsExternalPayload": true,
+    "exactSlotReusedWithNewEpoch": true,
+    "globalDrainConsumesClaimedRoot": false,
+    "arenaContentionAdvancesOwner": false,
+    "dropWaitsForArena": false
+  }
+}

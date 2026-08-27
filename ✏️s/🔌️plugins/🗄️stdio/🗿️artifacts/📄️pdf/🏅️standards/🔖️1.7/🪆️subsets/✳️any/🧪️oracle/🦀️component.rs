@@ -12,7 +12,7 @@
 //! inverse, land back on the start" law `PdfMutation::inverse` proves at the Rust-model level,
 //! proven here independently against the registered reference library.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`PdfMutation::KINDS`).
 
 use semio_repo_test_host::Json;

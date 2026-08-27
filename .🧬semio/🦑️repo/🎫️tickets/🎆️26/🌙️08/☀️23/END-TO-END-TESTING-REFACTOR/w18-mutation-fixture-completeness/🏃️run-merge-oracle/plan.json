@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host",
+  "case": "ticket-local",
+  "featurePath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/mutate-os-config-merge-policy/component.feature",
+  "featureHash": "ticket-local",
+  "featureName": "Apply every typed merge-policy mutation to its committed specification vector",
+  "capability": "os-config-merge-policy-1-mutate",
+  "oracle": null,
+  "noOracleDecision": "os-config-merge-policy-mutation-semantics",
+  "comparison": "ordered-json-v1",
+  "background": [],
+  "scenarios": [
+    {
+      "id": "mutate-change-merge-policy",
+      "name": "Apply <id> to its committed before-snapshot fixture [id=change-merge-policy, policy=Vigilant, wasPolicy=Normal]",
+      "level": "exhaustive",
+      "mode": "conformance",
+      "tags": [
+        "@id-mutate",
+        "@level-exhaustive",
+        "@mode-conformance"
+      ],
+      "steps": [
+        {
+          "keyword": "Given",
+          "rawKeyword": "Given",
+          "text": "the committed before-snapshot, mutation and outcome fixtures for the change-merge-policy kind"
+        },
+        {
+          "keyword": "When",
+          "rawKeyword": "When",
+          "text": "change-merge-policy is applied through apply_merge_policy_config_mutation_reporting",
+          "docString": "{\"kind\": \"change-merge-policy\", \"policy\": \"Vigilant\", \"wasPolicy\": \"Normal\"}"
+        },
+        {
+          "keyword": "Then",
+          "rawKeyword": "Then",
+          "text": "the resulting setting matches the committed after-snapshot, carries the Vigilant authority, no longer carries Normal, and reports the committed outcome"
+        }
+      ],
+      "platforms": [],
+      "requires": [],
+      "outlineOf": "mutate",
+      "line": 38
+    },
+    {
+      "id": "inverse-change-merge-policy",
+      "name": "Undoing <id> restores the committed before-snapshot fixture [id=change-merge-policy, policy=Vigilant, wasPolicy=Normal]",
+      "level": "exhaustive",
+      "mode": "property",
+      "tags": [
+        "@id-inverse",
+        "@level-exhaustive",
+        "@mode-property"
+      ],
+      "steps": [
+        {
+          "keyword": "Given",
+          "rawKeyword": "Given",
+          "text": "the committed before-snapshot and mutation fixtures for the change-merge-policy kind"
+        },
+        {
+          "keyword": "When",
+          "rawKeyword": "When",
+          "text": "change-merge-policy is applied and then its own computed inverse steps are applied",
+          "docString": "{\"kind\": \"change-merge-policy\", \"policy\": \"Vigilant\", \"wasPolicy\": \"Normal\"}"
+        },
+        {
+          "keyword": "Then",
+          "rawKeyword": "Then",
+          "text": "the setting equals the committed before-snapshot again and carries Normal once more"
+        }
+      ],
+      "platforms": [],
+      "requires": [],
+      "outlineOf": "inverse",
+      "line": 52
+    },
+    {
+      "id": "no-op-guard",
+      "name": "Re-applying the policy a record already carries is a warned no-op that keeps the record",
+      "level": "exhaustive",
+      "mode": "error",
+      "tags": [
+        "@id-no-op-guard",
+        "@level-exhaustive",
+        "@mode-error"
+      ],
+      "steps": [
+        {
+          "keyword": "Given",
+          "rawKeyword": "Given",
+          "text": "the committed before-snapshot of the change-merge-policy vector"
+        },
+        {
+          "keyword": "When",
+          "rawKeyword": "When",
+          "text": "change-merge-policy is applied carrying the policy that record already holds"
+        },
+        {
+          "keyword": "Then",
+          "rawKeyword": "Then",
+          "text": "a mutation.no-op warning is raised and the setting is returned unchanged rather than reset to the facet default"
+        }
+      ],
+      "platforms": [],
+      "requires": [],
+      "line": 66
+    },
+    {
+      "id": "identity-round-trip",
+      "name": "Decode and re-encode the committed merge-policy setting without passing bytes through",
+      "level": "long",
+      "mode": "round-trip",
+      "tags": [
+        "@id-identity-round-trip",
+        "@level-long",
+        "@mode-round-trip"
+      ],
+      "steps": [
+        {
+          "keyword": "Given",
+          "rawKeyword": "Given",
+          "text": "the committed before-snapshot of the change-merge-policy vector"
+        },
+        {
+          "keyword": "When",
+          "rawKeyword": "When",
+          "text": "the setting is decoded into MergePolicySetting and re-encoded from the typed value alone"
+        },
+        {
+          "keyword": "Then",
+          "rawKeyword": "Then",
+          "text": "the re-encoded projection is the committed one, and the decode is proven real by reading the active policy back off the typed value rather than off the text"
+        }
+      ],
+      "platforms": [],
+      "requires": [],
+      "line": 74
+    }
+  ],
+  "adapters": {},
+  "fixtures": [],
+  "role": "oracle",
+  "implementation": "rust",
+  "level": "exhaustive",
+  "workDir": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w18-mutation-fixture-completeness/🏃️run-merge-oracle/work",
+  "outputDir": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w18-mutation-fixture-completeness/🏃️run-merge-oracle/out",
+  "resultsPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w18-mutation-fixture-completeness/🏃️run-merge-oracle/out/📤️results.jsonl"
+}

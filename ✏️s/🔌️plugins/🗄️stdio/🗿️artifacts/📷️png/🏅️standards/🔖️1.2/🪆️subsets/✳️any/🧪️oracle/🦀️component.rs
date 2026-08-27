@@ -46,7 +46,7 @@
 //! one there first, through this same independent implementation, following the OOXML conformance
 //! cases' own `conformance_arrange` precedent rather than inventing a second convention.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`KINDS`).
 
 use semio_repo_test_host::Json;

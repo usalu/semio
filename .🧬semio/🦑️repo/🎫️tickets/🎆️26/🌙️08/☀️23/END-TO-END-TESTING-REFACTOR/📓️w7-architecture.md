@@ -28,7 +28,7 @@ existing family helpers — never by copying it into both.
     🏅️standards/🔖️<std>/🪆️subsets/✳️any/
       🧬️schema/🧬️mutations/🦀️component.rs        the vocabulary (XMutation + apply + diff + inverse)
       🧪️oracle/🦀️component.rs                    ← the subset's mutation oracle
-      🧪️oracle/🔣️component.json                  ← its catalog + its own oracle registration
+      🧪️oracle/🔣️.json                  ← its catalog + its own oracle registration
     🧪️tests/mutate-<fmt>-<std>/                  ← the case (artifact root, so asset:// reaches
       component.feature  🦀️component.rs             examples committed under any standard)
     🧫️fixtures/                                  ← real-world inputs too far from an examples dir

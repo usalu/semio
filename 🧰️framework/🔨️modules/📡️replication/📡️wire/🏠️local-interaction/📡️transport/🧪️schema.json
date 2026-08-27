@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#", "type": "object", "additionalProperties": false,
+  "required": ["version", "appCommandTag", "appFrameTag", "unsigned", "malformedUnsigned", "commandKinds", "replyKinds", "maximumPageBytes", "requestReuseNeedsNewGeneration", "lateAcknowledgementAfterCloseAccepted"],
+  "properties": {
+    "version": {"const": 1}, "appCommandTag": {"const": 29}, "appFrameTag": {"const": 23},
+    "unsigned": {"type": "array", "minItems": 5, "items": {"type": "object", "additionalProperties": false, "required": ["decimal", "hex"], "properties": {"decimal": {"$ref": "semio:local-interaction#/$defs/generation"}, "hex": {"type": "string", "pattern": "^([0-9a-f]{2}){1,10}$"}}}},
+    "malformedUnsigned": {"type": "array", "minItems": 3, "items": {"type": "string", "pattern": "^([0-9a-f]{2}){1,10}$"}},
+    "commandKinds": {"const": ["read", "acknowledge", "cancel"]}, "replyKinds": {"const": ["started", "page", "closed", "rejected"]},
+    "maximumPageBytes": {"const": 4096}, "requestReuseNeedsNewGeneration": {"const": true}, "lateAcknowledgementAfterCloseAccepted": {"const": false}
+  }
+}

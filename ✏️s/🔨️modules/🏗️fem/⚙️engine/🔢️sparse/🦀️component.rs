@@ -2638,7 +2638,7 @@ pub fn pcg(a: &Csr, b: &VecD, x0: &mut VecD, tol_rel: f64, max_iter: usize) -> P
     let mut job = PcgJob::new(operation, a.clone(), b.clone(), x0.clone(), tol_rel, max_iter, 1_024);
     let mut preview_sequence = 0;
     loop {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut preview_sequence);
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut preview_sequence);
         if matches!(job.step(&mut context), StepOutcome::Complete(_)) {
             let (solution, stats) = job.solution();
             *x0 = solution.clone();
@@ -4712,7 +4712,7 @@ pub fn subspace_iteration(k_factor: &LdltFactor, b: &Csr, n: usize, p: usize, ma
     let mut job = SubspaceIterationJob::new(operation, k_factor.clone(), b.clone(), n, p, max_iter);
     let mut preview_sequence = 0;
     loop {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut preview_sequence);
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut preview_sequence);
         match job.step(&mut context) {
             StepOutcome::Complete(candidate) => {
                 close_batch_payload(candidate.state);
@@ -5131,7 +5131,7 @@ mod tests {
     fn drive_pcg_job(mut job: PcgJob, operation: Operation) -> (VecD, PcgStats) {
         let mut sequence = 0;
         loop {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             match job.step(&mut context) {
                 StepOutcome::Complete(_) => {
                     let (solution, stats) = job.solution();
@@ -5148,7 +5148,7 @@ mod tests {
         let mut restore = LdltRestoreCursor::new(operation, payload);
         let mut sequence = 0;
         for _ in 0..200_000 {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             match restore.step(&mut context) {
                 Ok(Some(job)) => return Ok(job),
                 Ok(None) => {}
@@ -5167,7 +5167,7 @@ mod tests {
         let mut restore = SubspaceRestoreCursor::new(operation, payload);
         let mut sequence = 0;
         for _ in 0..400_000 {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             match restore.step(&mut context) {
                 Ok(Some(job)) => return Ok(job),
                 Ok(None) => {}
@@ -5216,7 +5216,7 @@ mod tests {
         let mut job = PcgJob::new(operation, csr, b, VecD::zeros(n), 1e-12, 200, 7);
         let mut sequence = 0;
         let checkpoint = loop {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
                 break checkpoint.state;
             }
@@ -5236,7 +5236,7 @@ mod tests {
         let mut job = PcgJob::new(operation, csr, b, VecD::zeros(n), 1e-12, 200, 512);
         let mut sequence = 0;
         loop {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             match job.step(&mut context) {
                 StepOutcome::PreviewReady(bytes) => {
                     let preview: PcgPreview = serde_json::from_slice(&bytes).expect("pcg preview decodes");
@@ -5262,7 +5262,7 @@ mod tests {
         let mut stale = PcgJob::new(operation, csr.clone(), VecD::from_vec(vec![1.0; 8]), VecD::zeros(8), 1e-9, 20, 8);
         let before = stale.checkpoint_bytes();
         let mut sequence = 0;
-        let mut context = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), StepBudget::new(100, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        let mut context = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), StepBudget::new(100, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
         assert!(matches!(stale.step(&mut context), StepOutcome::Fault(_)));
         assert_eq!(stale.checkpoint_bytes(), before);
 
@@ -5270,7 +5270,7 @@ mod tests {
         let before = cancelled.checkpoint_bytes();
         let token = semio_framework_job::root_cancel_token();
         semio_framework_async::block_on(token.cancel());
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(100, u64::MAX), token, || 0, &mut sequence);
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(100, u64::MAX), token, || Some(0), &mut sequence);
         assert_eq!(cancelled.step(&mut context), StepOutcome::Cancelled);
         assert_eq!(cancelled.checkpoint_bytes(), before);
     }
@@ -5285,7 +5285,7 @@ mod tests {
         let mut job = LdltJob::new(operation, matrix, 3);
         let mut sequence = 0;
         let checkpoint = loop {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             match job.step(&mut context) {
                 StepOutcome::CheckpointReady(checkpoint) => break checkpoint.state,
                 StepOutcome::Yield => {}
@@ -5294,7 +5294,7 @@ mod tests {
         };
         let mut resumed = restore_ldlt(operation, checkpoint).expect("retained LDLT checkpoint restores");
         loop {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(2, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(2, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             match resumed.step(&mut context) {
                 StepOutcome::Complete(candidate) => {
                     close_payload(candidate.state);
@@ -5325,7 +5325,7 @@ mod tests {
             let mut job = LdltJob::new(operation, matrix.clone(), 1);
             let mut sequence = 0;
             loop {
-                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
                 match job.step(&mut context) {
                     StepOutcome::Complete(mut candidate) => {
                         close_payload(candidate.state);
@@ -5349,19 +5349,19 @@ mod tests {
         let mut zero_fuel = LdltJob::new(operation, matrix.clone(), 1);
         let before = zero_fuel.state.clone();
         let mut sequence = 0;
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(0, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(0, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
         assert_eq!(zero_fuel.step(&mut context), StepOutcome::Yield);
         assert!(zero_fuel.state == before);
 
         let mut deadline = LdltJob::new(operation, matrix.clone(), 1);
         let before = deadline.state.clone();
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
         assert_eq!(deadline.step(&mut context), StepOutcome::Yield);
         assert!(deadline.state == before);
 
         let mut stale = LdltJob::new(operation, matrix.clone(), 1);
         let before = stale.state.clone();
-        let mut context = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        let mut context = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
         assert!(matches!(stale.step(&mut context), StepOutcome::Fault(_)));
         assert!(stale.state == before);
 
@@ -5369,7 +5369,7 @@ mod tests {
         let before = cancelled.state.clone();
         let token = semio_framework_job::root_cancel_token();
         semio_framework_async::block_on(token.cancel());
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || 0, &mut sequence);
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || Some(0), &mut sequence);
         assert_eq!(cancelled.step(&mut context), StepOutcome::Cancelled);
         assert!(cancelled.state == before);
 
@@ -5378,17 +5378,17 @@ mod tests {
         for _ in 0..200_000 {
             if lookup.state.cursor.stage == LdltColumnStage::ContributorLookup && lookup.state.cursor.lookup_initialized && lookup.state.cursor.lookup_lower < lookup.state.cursor.lookup_upper {
                 let before = lookup.state.clone();
-                let mut expired = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                let mut expired = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
                 assert_eq!(lookup.step(&mut expired), StepOutcome::Yield);
                 assert!(lookup.state == before);
-                let mut one = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                let mut one = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
                 assert_eq!(lookup.step(&mut one), StepOutcome::Yield);
                 assert_eq!(lookup.state.cursor.contributor, before.cursor.contributor);
                 assert!(lookup.state.cursor.lookup_lower != before.cursor.lookup_lower || lookup.state.cursor.lookup_upper != before.cursor.lookup_upper);
                 observed_lookup = true;
                 break;
             }
-            let mut one = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut one = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             if let StepOutcome::CheckpointReady(checkpoint) = lookup.step(&mut one) {
                 close_payload(checkpoint.state);
             }
@@ -5400,12 +5400,12 @@ mod tests {
 
         let refused = CscSym { n: LDLT_MAXIMUM_ORDER + 1, colptr: vec![0; LDLT_MAXIMUM_ORDER + 2], rowind: Vec::new(), vals: Vec::new() };
         let mut maximum_plus_one = LdltJob::new(operation, refused, 1);
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
         assert!(matches!(maximum_plus_one.step(&mut context), StepOutcome::Fault(_)));
 
         let mut publishing = LdltJob::new(operation, deadline.state.a.clone(), 1);
         for _ in 0..200_000 {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             if let StepOutcome::CheckpointReady(checkpoint) = publishing.step(&mut context) {
                 close_payload(checkpoint.state);
             }
@@ -5423,7 +5423,7 @@ mod tests {
         assert!(InteractiveJob::terminal_is_empty(&publishing));
 
         let checkpoint = loop {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             if let StepOutcome::CheckpointReady(checkpoint) = zero_fuel.step(&mut context) {
                 break checkpoint.state;
             }
@@ -5440,7 +5440,7 @@ mod tests {
             let mut source = LdltJob::new(operation, graph_laplacian_plus_identity(6, &[(0, 1), (1, 2)]).to_csc_sym_upper(), 1);
             let mut local_sequence = id;
             loop {
-                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut local_sequence);
+                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut local_sequence);
                 if let StepOutcome::CheckpointReady(checkpoint) = source.step(&mut context) {
                     break checkpoint.state;
                 }
@@ -5449,7 +5449,7 @@ mod tests {
         assert!(matches!(restore_ldlt(wrong_revision, fresh_checkpoint(1)), Err(NumericalCheckpointFault::Stale)));
         assert!(matches!(restore_ldlt(wrong_seed, fresh_checkpoint(2)), Err(NumericalCheckpointFault::Stale)));
         let mut interrupted_restore = LdltRestoreCursor::new(operation, fresh_checkpoint(3));
-        let mut restore_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        let mut restore_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
         assert!(matches!(interrupted_restore.step(&mut restore_context), Ok(None)));
         while !interrupted_restore.terminal_is_empty() {
             match interrupted_restore.close_step(1, usize::MAX) {
@@ -5494,7 +5494,7 @@ mod tests {
         let mut uninterrupted = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 4, 30);
         let mut sequence = 0;
         let expected = loop {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             match uninterrupted.step(&mut context) {
                 StepOutcome::Complete(candidate) => {
                     close_payload(candidate.state);
@@ -5509,7 +5509,7 @@ mod tests {
 
         let mut interrupted = SubspaceIterationJob::new(operation, factor, mass, n, 4, 30);
         let checkpoint = loop {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             match interrupted.step(&mut context) {
                 StepOutcome::CheckpointReady(checkpoint) => break checkpoint.state,
                 StepOutcome::Yield | StepOutcome::PreviewReady(_) => {}
@@ -5521,9 +5521,9 @@ mod tests {
             let _ = InteractiveJob::close_step(&mut interrupted, 1, usize::MAX);
         }
         loop {
-            let mut yielded = StepContext::new(operation.operation, operation.generation, StepBudget::new(0, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut yielded = StepContext::new(operation.operation, operation.generation, StepBudget::new(0, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             assert!(matches!(resumed.step(&mut yielded), StepOutcome::Yield));
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             match resumed.step(&mut context) {
                 StepOutcome::Complete(candidate) => {
                     close_payload(candidate.state);
@@ -5561,7 +5561,7 @@ mod tests {
             let mut replay = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 3);
             let mut replay_sequence = 0;
             for _ in 0..200_000 {
-                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut replay_sequence);
+                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut replay_sequence);
                 match replay.step(&mut context) {
                     StepOutcome::Complete(candidate) => {
                         close_payload(candidate.state);
@@ -5587,10 +5587,10 @@ mod tests {
         let mut validating = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 1);
         let before = validating.state.clone();
         let mut validation_sequence = 0;
-        let mut expired = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || 0, &mut validation_sequence);
+        let mut expired = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || Some(0), &mut validation_sequence);
         assert_eq!(validating.step(&mut expired), StepOutcome::Yield);
         assert!(validating.state == before);
-        let mut one = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut validation_sequence);
+        let mut one = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut validation_sequence);
         assert_eq!(validating.step(&mut one), StepOutcome::Yield);
         assert_eq!(validating.state.factor_validation_cursor, 1, "one construction grant validates one factor owner");
         while !InteractiveJob::terminal_is_empty(&validating) {
@@ -5604,7 +5604,7 @@ mod tests {
         columns[0] = oversized;
         let mut refused_owner = SubspaceIterationJob::new(operation, LdltFactor { n, l_cols: columns, d: vec![1.0; n] }, mass.clone(), n, 3, 1);
         let mut refused_sequence = 0;
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut refused_sequence);
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut refused_sequence);
         assert!(matches!(refused_owner.step(&mut context), StepOutcome::Fault(_)));
         while !InteractiveJob::terminal_is_empty(&refused_owner) {
             let _ = InteractiveJob::close_step(&mut refused_owner, 1, usize::MAX);
@@ -5615,7 +5615,7 @@ mod tests {
             let mass = Csr::from_owned_parts(refused_order, vec![0; refused_order + 1], Vec::new(), Vec::new());
             let mut refused = SubspaceIterationJob::new(operation, factor, mass, refused_order, usize::from(refused_order != 0), 1);
             let mut refused_sequence = 0;
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut refused_sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut refused_sequence);
             assert!(matches!(refused.step(&mut context), StepOutcome::Fault(_)));
             while !InteractiveJob::terminal_is_empty(&refused) {
                 let _ = InteractiveJob::close_step(&mut refused, 1, usize::MAX);
@@ -5625,7 +5625,7 @@ mod tests {
         let mut publishing = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 1);
         let mut publishing_sequence = 0;
         for _ in 0..200_000 {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut publishing_sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut publishing_sequence);
             if let StepOutcome::CheckpointReady(checkpoint) = publishing.step(&mut context) {
                 close_payload(checkpoint.state);
             }
@@ -5652,7 +5652,7 @@ mod tests {
             seen.insert(job.state.work.stage as u8);
             job.state.checkpoint_due = true;
             let checkpoint = loop {
-                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
                 if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
                     break checkpoint.state;
                 }
@@ -5661,13 +5661,13 @@ mod tests {
             let before = cancelled.state.clone();
             let token = semio_framework_job::root_cancel_token();
             semio_framework_async::block_on(token.cancel());
-            let mut cancelled_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || 0, &mut sequence);
+            let mut cancelled_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || Some(0), &mut sequence);
             assert_eq!(cancelled.step(&mut cancelled_context), StepOutcome::Cancelled);
             assert!(cancelled.state == before);
             while !InteractiveJob::terminal_is_empty(&cancelled) {
                 let _ = InteractiveJob::close_step(&mut cancelled, 1, usize::MAX);
             }
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             if let StepOutcome::Fault(fault) = job.step(&mut context) {
                 panic!("subspace stage walk fault: {:?}", fault.detail);
             }
@@ -5678,7 +5678,7 @@ mod tests {
         let wrong_generation = Operation::new(operation.operation, operation.base_revision, semio_framework_job::Generation(operation.generation.0 + 1), operation.seed);
         job.state.checkpoint_due = true;
         let checkpoint = loop {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
                 break checkpoint.state;
             }
@@ -5686,13 +5686,13 @@ mod tests {
         assert!(matches!(restore_subspace(wrong_generation, checkpoint), Err(NumericalCheckpointFault::Stale)));
         job.state.checkpoint_due = true;
         let checkpoint = loop {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
                 break checkpoint.state;
             }
         };
         let mut interrupted_restore = SubspaceRestoreCursor::new(operation, checkpoint);
-        let mut restore_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        let mut restore_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
         assert!(matches!(interrupted_restore.step(&mut restore_context), Ok(None)));
         while !interrupted_restore.terminal_is_empty() {
             match interrupted_restore.close_step(1, usize::MAX) {
@@ -5725,7 +5725,7 @@ mod tests {
         let operation = test_operation(106);
         let mut pcg = PcgJob::new(operation, coo.to_csr(), VecD::from_vec(vec![1.0; n]), VecD::zeros(n), 1e-9, 20, 1);
         let mut sequence = 0;
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
         let started = std::time::Instant::now();
         let _ = pcg.step(&mut context);
         assert!(started.elapsed() < std::time::Duration::from_millis(8));

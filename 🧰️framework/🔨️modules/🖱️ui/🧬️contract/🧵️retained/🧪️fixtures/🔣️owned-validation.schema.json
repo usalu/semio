@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false, "required": ["version", "cases", "laws"],
+  "properties": {
+    "version": { "const": 1 },
+    "cases": { "type": "array", "minItems": 8, "items": { "type": "object", "additionalProperties": false, "required": ["name", "root", "maxNodes", "maxDepth", "nodes", "expected"], "properties": {
+      "name": { "type": "string", "minLength": 1 }, "root": { "type": ["integer", "null"], "minimum": 0, "maximum": 9007199254740991 },
+      "maxNodes": { "type": "integer", "minimum": 0 }, "maxDepth": { "type": "integer", "minimum": 0 },
+      "nodes": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["id", "key", "children"], "properties": {
+        "id": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }, "key": { "type": "string" },
+        "children": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 } }
+      } } },
+      "expected": { "type": "array", "items": { "enum": ["nodeQuota", "cycle", "depthQuota", "orphanChild", "duplicateSiblingKey", "danglingRoot"] } }
+    } } },
+    "laws": { "type": "array", "minItems": 6, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "sourcePath": "🧪️old/🌐️index.html",
+  "destinationPath": "🧪️new/🌐️index.html",
+  "sourceContent": "<script src=\"./worker.js\"></script>\n",
+  "resultContent": "<script src=\"./🤖️generated/🟨️.js\"></script>\n",
+  "oldValue": "./worker.js",
+  "newValue": "./🤖️generated/🟨️.js",
+  "offset": 13,
+  "mode": 420,
+  "invalidCases": ["source-byte-drift", "source-mode-drift", "source-size-drift", "conflicting-edit-preimage", "move-edit-preimage-drift", "missing-offset", "wrong-offset", "overlapping-edits", "uninstalled-destination", "installed-source", "applied-result-drift", "applied-backup-drift"]
+}

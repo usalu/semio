@@ -336,8 +336,8 @@ mod wasm_session {
                 operation: operation.operation,
                 generation: operation.generation,
                 cancel: cancel.clone(),
-                config: BatchDriveConfig { site: "layout.export.wasm", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 1 },
-                now_ms: semio_framework_job::default_now_ms,
+                config: BatchDriveConfig { site: "layout.export.wasm", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
+                now_us: semio_framework_job::default_now_us,
             };
             let retirement_slot = reserve_layout_export_rejection(&self.export_rejections).ok_or_else(|| JsValue::from_str("layout-export-rejection-registry-full"))?;
             let admission = match WorkerJobSession::try_new(job, params) {

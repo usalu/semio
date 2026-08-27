@@ -3,7 +3,7 @@
 //! with no catalog).
 //!
 //! Recorded no-oracle decision `shooting-render-scene-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`): `s.shooting.shooting` is a
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): `s.shooting.shooting` is a
 //! semio-NATIVE artifact, and the 3D-scene interchange formats that come closest (glTF 2.0, USD,
 //! Collada) model no SHOT at all — eleven of the thirty-one kinds address one — so this adapter
 //! registers NO oracle handler. That is deliberate and it is the honest shape: a recorded no-oracle

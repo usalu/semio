@@ -71,14 +71,27 @@ fn poll_ready_now<F: Future>(fut: F) -> F::Output {
 //#endregion 🔁️SyncPoll
 
 //#region 🕰️Clock
-/// 🕰️ Default millisecond wall clock for callers that don't already own one (tests, the batch
-/// adapter's default). Mirrors `semio_framework_trace::now_us`'s per-process monotonic-since-first-
-/// call shape, at millisecond rather than microsecond resolution to match [`StepBudget::deadline_ms`]/
-/// the actor layer's `Budget::wall_ms`. A host with its own clock (a UI frame clock, a replay clock)
-/// supplies its own `fn() -> u64` to [`drive_step`]/[`run_to_completion`] instead of this default.
-pub fn default_now_ms() -> u64 {
-    static START: OnceLock<Instant> = OnceLock::new();
-    START.get_or_init(Instant::now).elapsed().as_millis() as u64
+/// 🕰️ Coarse scheduler clock, never used to measure an interactive step deadline.
+pub fn default_now_ms() -> Option<u64> {
+    default_now_us().map(|now_us| now_us / 1_000)
+}
+
+/// 🔌️ Installs the embedding host's real monotonic microsecond clock exactly once.
+pub fn install_microsecond_clock(clock: fn() -> Option<u64>) -> Result<(), fn() -> Option<u64>> {
+    semio_framework_trace::install_clock(clock)
+}
+
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+pub use semio_framework_async::install_browser_monotonic_clock;
+
+/// ⏱️ Reads a real microsecond clock; an unbound bare-Wasm host cannot admit work.
+pub fn default_now_us() -> Option<u64> {
+    semio_framework_trace::try_now_us()
+}
+
+/// 🌐️ Converts the browser's fractional monotonic milliseconds without losing its sub-ms precision.
+pub fn microseconds_from_milliseconds(milliseconds: f64) -> Option<u64> {
+    semio_framework_trace::microseconds_from_milliseconds(milliseconds)
 }
 //#endregion 🕰️Clock
 
@@ -560,30 +573,34 @@ mod fixed_operation_registry_tests {
 
 //#region ⛽️Budget
 /// ⛽️ Two-bound step budget: a fuel counter (job-defined instruction-equivalent units, decremented via
-/// [`StepContext::consume_fuel`]) AND an absolute wall-clock `deadline_ms` — design doc Decision 3.
-/// `deadline_ms` is ABSOLUTE (`now_ms() + slice`), not a remaining duration, so a job never has to
+/// [`StepContext::consume_fuel`]) AND an absolute wall-clock `deadline_us` — design doc Decision 3.
+/// `deadline_us` is ABSOLUTE (`now_us() + slice`), not a remaining duration, so a job never has to
 /// re-derive wall-clock math from a countdown.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct StepBudget {
     pub fuel: u64,
-    pub deadline_ms: u64,
+    pub deadline_us: u64,
 }
 
 impl StepBudget {
-    pub fn new(fuel: u64, deadline_ms: u64) -> StepBudget {
-        StepBudget { fuel, deadline_ms }
+    pub fn new(fuel: u64, deadline_us: u64) -> StepBudget {
+        StepBudget { fuel, deadline_us }
+    }
+
+    pub fn from_duration(fuel: u64, start_us: u64, duration_us: u64) -> Option<StepBudget> {
+        start_us.checked_add(duration_us).map(|deadline_us| Self { fuel, deadline_us })
     }
 }
 
 /// 🎯️ Per-step wall budgets. Actor lane grants may span many steps; they are never reused as one
 /// step's deadline. These values leave watchdog margin below the hard eight-millisecond ceiling.
-pub const INTERACTIVE_LANE_WALL_MS: u64 = 1;
+pub const INTERACTIVE_LANE_WALL_US: u64 = 1_000;
 pub const INTERACTIVE_LANE_FUEL: u64 = 2_000_000;
-pub const USER_VISIBLE_LANE_WALL_MS: u64 = 2;
+pub const USER_VISIBLE_LANE_WALL_US: u64 = 2_000;
 pub const USER_VISIBLE_LANE_FUEL: u64 = 6_000_000;
-pub const BACKGROUND_LANE_WALL_MS: u64 = 4;
+pub const BACKGROUND_LANE_WALL_US: u64 = 4_000;
 pub const BACKGROUND_LANE_FUEL: u64 = 20_000_000;
-pub const MAINTENANCE_LANE_WALL_MS: u64 = 4;
+pub const MAINTENANCE_LANE_WALL_US: u64 = 4_000;
 pub const MAINTENANCE_LANE_FUEL: u64 = 80_000_000;
 //#endregion ⛽️Budget
 
@@ -1123,8 +1140,8 @@ pub struct StepContext<'a> {
     operation: OperationId,
     generation: Generation,
     fuel_remaining: u64,
-    deadline_ms: u64,
-    now_ms: fn() -> u64,
+    deadline_us: u64,
+    now_us: fn() -> Option<u64>,
     cancel: CancelToken,
     stage: &'static str,
     preview_sequence: &'a mut u64,
@@ -1133,14 +1150,14 @@ pub struct StepContext<'a> {
 }
 
 impl<'a> StepContext<'a> {
-    pub fn new(operation: OperationId, generation: Generation, budget: StepBudget, cancel: CancelToken, now_ms: fn() -> u64, preview_sequence: &'a mut u64) -> StepContext<'a> {
-        StepContext::with_payload_ledger(operation, generation, budget, cancel, now_ms, preview_sequence, Arc::new(JobPayloadOperationLedger::new(operation, generation)))
+    pub fn new(operation: OperationId, generation: Generation, budget: StepBudget, cancel: CancelToken, now_us: fn() -> Option<u64>, preview_sequence: &'a mut u64) -> StepContext<'a> {
+        StepContext::with_payload_ledger(operation, generation, budget, cancel, now_us, preview_sequence, Arc::new(JobPayloadOperationLedger::new(operation, generation)))
     }
 
-    fn with_payload_ledger(operation: OperationId, generation: Generation, budget: StepBudget, cancel: CancelToken, now_ms: fn() -> u64, preview_sequence: &'a mut u64, payload_ledger: Arc<JobPayloadOperationLedger>) -> StepContext<'a> {
+    fn with_payload_ledger(operation: OperationId, generation: Generation, budget: StepBudget, cancel: CancelToken, now_us: fn() -> Option<u64>, preview_sequence: &'a mut u64, payload_ledger: Arc<JobPayloadOperationLedger>) -> StepContext<'a> {
         assert_eq!(payload_ledger.operation, operation, "job payload ledger operation must match its step context");
         assert_eq!(payload_ledger.generation, generation, "job payload ledger generation must match its step context");
-        StepContext { operation, generation, fuel_remaining: budget.fuel, deadline_ms: budget.deadline_ms, now_ms, cancel, stage: "initial", preview_sequence, payload_ledger, payload_page_granted: false }
+        StepContext { operation, generation, fuel_remaining: budget.fuel, deadline_us: budget.deadline_us, now_us, cancel, stage: "initial", preview_sequence, payload_ledger, payload_page_granted: false }
     }
 
     pub fn operation(&self) -> OperationId {
@@ -1157,16 +1174,16 @@ impl<'a> StepContext<'a> {
         self.stage
     }
 
-    pub fn now_ms(&self) -> u64 {
-        (self.now_ms)()
+    pub fn now_us(&self) -> Option<u64> {
+        (self.now_us)()
     }
 
-    pub fn deadline_ms(&self) -> u64 {
-        self.deadline_ms
+    pub fn deadline_us(&self) -> u64 {
+        self.deadline_us
     }
 
     pub fn deadline_exceeded(&self) -> bool {
-        self.now_ms() >= self.deadline_ms
+        self.now_us().is_none_or(|now_us| now_us >= self.deadline_us)
     }
 
     pub fn fuel_remaining(&self) -> u64 {
@@ -1207,7 +1224,7 @@ impl<'a> StepContext<'a> {
     /// brush → fill switch is the template). Terminal per-call events (preview/checkpoint/commit/
     /// cancel/fail) are recorded once by [`drive_step`] from the returned [`StepOutcome`] instead —
     /// see the module doc's "trace, not a second instrumentation layer" section.
-    pub fn set_stage(&mut self, label: &'static str) -> TraceEvent {
+    pub fn set_stage(&mut self, label: &'static str) -> Option<TraceEvent> {
         self.stage = label;
         record_stage_changed(self.operation, self.generation, label)
     }
@@ -1356,10 +1373,11 @@ pub fn drive_step<J: InteractiveJob + ?Sized>(
     stage: InteractiveStage,
     budget: StepBudget,
     cancel: CancelToken,
-    now_ms: fn() -> u64,
+    now_us: fn() -> Option<u64>,
     preview_sequence: &mut u64,
+    callback_verdict: &mut Option<semio_framework_trace::CallbackVerdict>,
 ) -> StepOutcome {
-    drive_step_with_payload_ledger(job, site, operation, generation, stage, budget, cancel, now_ms, preview_sequence, Arc::new(JobPayloadOperationLedger::new(operation, generation)))
+    drive_step_with_payload_ledger(job, site, operation, generation, stage, budget, cancel, now_us, preview_sequence, callback_verdict, Arc::new(JobPayloadOperationLedger::new(operation, generation)))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -1371,19 +1389,31 @@ fn drive_step_with_payload_ledger<J: InteractiveJob + ?Sized>(
     stage: InteractiveStage,
     budget: StepBudget,
     cancel: CancelToken,
-    now_ms: fn() -> u64,
+    now_us: fn() -> Option<u64>,
     preview_sequence: &mut u64,
+    callback_verdict: &mut Option<semio_framework_trace::CallbackVerdict>,
     payload_ledger: Arc<JobPayloadOperationLedger>,
 ) -> StepOutcome {
+    *callback_verdict = None;
     if poll_ready_now(cancel.is_cancelled()) {
         record_cancelled(operation, generation);
         return StepOutcome::Cancelled;
     }
+    if budget.fuel == 0 || now_us().is_none_or(|now_us| now_us >= budget.deadline_us) {
+        return StepOutcome::Yield;
+    }
     let outcome = {
-        let _watchdog = Watchdog::start(site, operation, generation, stage);
-        let mut cx = StepContext::with_payload_ledger(operation, generation, budget, cancel, now_ms, preview_sequence, payload_ledger);
-        job.step(&mut cx)
+        let watchdog = Watchdog::start(site, operation, generation, stage);
+        if !watchdog.is_admitted() {
+            *callback_verdict = Some(watchdog.finish());
+            return StepOutcome::Yield;
+        }
+        let mut cx = StepContext::with_payload_ledger(operation, generation, budget, cancel, now_us, preview_sequence, payload_ledger);
+        let outcome = job.step(&mut cx);
+        *callback_verdict = Some(watchdog.finish());
+        outcome
     };
+    if callback_verdict.as_ref().is_some_and(semio_framework_trace::CallbackVerdict::is_fault) { return outcome; }
     match &outcome {
         StepOutcome::Yield => {}
         StepOutcome::PreviewReady(_) => {
@@ -1412,11 +1442,6 @@ fn drive_step_with_payload_ledger<J: InteractiveJob + ?Sized>(
 /// creation, mirroring [`StepContext::is_cancelled`]'s single-owner pattern.
 pub fn root_cancel_token() -> CancelToken {
     poll_ready_now(CancelToken::root())
-}
-
-/// 🐕️ Returns the latest hard-ceiling violation for one operation generation.
-pub fn watchdog_step_overrun_us(operation: OperationId, generation: Generation) -> Option<u64> {
-    Watchdog::violations().into_iter().rev().find(|violation| violation.operation == operation && violation.generation == generation).map(|violation| violation.elapsed_us)
 }
 
 pub const JOB_CHILD_SLOTS: usize = 64;
@@ -2019,7 +2044,7 @@ pub struct BatchDriveConfig {
     pub site: &'static str,
     pub stage: InteractiveStage,
     pub fuel_per_step: u64,
-    pub step_budget_ms: u64,
+    pub step_budget_us: u64,
 }
 
 #[derive(Clone)]
@@ -2028,7 +2053,7 @@ pub struct BatchJobParams {
     pub generation: Generation,
     pub cancel: CancelToken,
     pub config: BatchDriveConfig,
-    pub now_ms: fn() -> u64,
+    pub now_us: fn() -> Option<u64>,
 }
 
 struct WorkerJobAuthority<J> {
@@ -2039,6 +2064,8 @@ struct WorkerJobAuthority<J> {
     payload_ledger: Arc<JobPayloadOperationLedger>,
     preadmitted_fault: Option<RetainedJobPayload>,
     outcome: Option<StepOutcome>,
+    callback_verdict: Option<semio_framework_trace::CallbackVerdict>,
+    quarantined_outcome: Option<StepOutcome>,
     close_stage: u8,
 }
 
@@ -2050,7 +2077,7 @@ impl<J> WorkerJobAuthority<J> {
             Ok(payload) => payload,
             Err(fault_source) => return Err((job, params, fault_source)),
         };
-        Ok(Self { job: Some(job), params: Some(params), preview_sequence: 0, step_sequence: 0, payload_ledger, preadmitted_fault: Some(preadmitted_fault), outcome: None, close_stage: 0 })
+        Ok(Self { job: Some(job), params: Some(params), preview_sequence: 0, step_sequence: 0, payload_ledger, preadmitted_fault: Some(preadmitted_fault), outcome: None, callback_verdict: None, quarantined_outcome: None, close_stage: 0 })
     }
 }
 
@@ -2184,6 +2211,10 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
         self.checked_out.as_ref().map(WorkerJobOutcome::outcome)
     }
 
+    pub fn callback_verdict(&self) -> Option<&semio_framework_trace::CallbackVerdict> {
+        self.checked_out.as_ref().and_then(WorkerJobOutcome::callback_verdict)
+    }
+
     pub fn take_checked_out_outcome(&mut self) -> Option<StepOutcome> {
         self.checked_out.as_mut().map(WorkerJobOutcome::take_outcome)
     }
@@ -2271,6 +2302,10 @@ impl<J: InteractiveJob + 'static> BatchJobSession<J> {
 
     pub fn checked_out_outcome(&self) -> Option<&StepOutcome> {
         self.checked_out.as_ref()?.authority.as_ref()?.outcome.as_ref()
+    }
+
+    pub fn callback_verdict(&self) -> Option<&semio_framework_trace::CallbackVerdict> {
+        self.checked_out.as_ref().and_then(WorkerJobOutcome::callback_verdict)
     }
 
     pub fn checked_out_job_mut(&mut self) -> Option<&mut J> {
@@ -2585,7 +2620,10 @@ fn drive_worker_job_authority<J: InteractiveJob>(authority: &mut WorkerJobAuthor
     }
     let params = authority.params.as_ref().expect("submitted job authority owns parameters").clone();
     let config = params.config;
-    let budget = StepBudget::new(config.fuel_per_step, (params.now_ms)().checked_add(config.step_budget_ms).unwrap_or(u64::MAX));
+    let Some(budget) = (params.now_us)().and_then(|start_us| StepBudget::from_duration(config.fuel_per_step, start_us, config.step_budget_us)) else {
+        authority.outcome = Some(StepOutcome::Fault(JobFault { detail: authority.preadmitted_fault.take().expect("invalid deadline retains its pre-admitted terminal fault page") }));
+        return true;
+    };
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         drive_step_with_payload_ledger(
             authority.job.as_mut().expect("submitted authority owns job"),
@@ -2595,13 +2633,18 @@ fn drive_worker_job_authority<J: InteractiveJob>(authority: &mut WorkerJobAuthor
             config.stage,
             budget,
             params.cancel.clone(),
-            params.now_ms,
+            params.now_us,
             &mut authority.preview_sequence,
+            &mut authority.callback_verdict,
             Arc::clone(&authority.payload_ledger),
         )
     }));
     authority.step_sequence = authority.step_sequence.checked_add(1).unwrap_or(u64::MAX);
     authority.outcome = Some(match result {
+        Ok(outcome) if authority.callback_verdict.as_ref().is_some_and(semio_framework_trace::CallbackVerdict::is_fault) => {
+            authority.quarantined_outcome = Some(outcome);
+            StepOutcome::Fault(JobFault { detail: authority.preadmitted_fault.take().expect("callback quarantine retains its pre-admitted terminal fault page") })
+        }
         Ok(outcome) => outcome,
         Err(_) => StepOutcome::Fault(JobFault { detail: authority.preadmitted_fault.take().expect("worker panic retains its pre-admitted terminal fault page") }),
     });
@@ -2656,6 +2699,23 @@ fn worker_job_close_step<J: InteractiveJob>(inner: &WorkerJobSessionInner<J>, ma
         return if inner.phase() == SESSION_EMPTY { WorkerJobCloseStep::Complete } else { WorkerJobCloseStep::Blocked };
     }
     let mut authority = unsafe { inner.take_authority() };
+    if let Some(outcome) = authority.quarantined_outcome.as_mut() {
+        if !outcome.terminal_is_empty() {
+            let result = match outcome.close_step(maximum_items, maximum_bytes) {
+                JobPayloadCloseStep::Pending { released_items, released_bytes } => WorkerJobCloseStep::Pending { released_items, released_bytes },
+                JobPayloadCloseStep::Complete => WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 },
+            };
+            unsafe { inner.put_authority(authority, SESSION_CLOSE) };
+            return result;
+        }
+        if maximum_items == 0 {
+            unsafe { inner.put_authority(authority, SESSION_CLOSE) };
+            return WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        authority.quarantined_outcome = None;
+        unsafe { inner.put_authority(authority, SESSION_CLOSE) };
+        return WorkerJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+    }
     if let Some(outcome) = authority.outcome.as_mut() {
         if !outcome.terminal_is_empty() {
             let step = outcome.close_step(maximum_items, maximum_bytes);
@@ -2964,6 +3024,10 @@ pub struct WorkerJobOutcome<J> {
 }
 
 impl<J> WorkerJobOutcome<J> {
+    pub fn callback_verdict(&self) -> Option<&semio_framework_trace::CallbackVerdict> {
+        self.authority.as_ref().and_then(|authority| authority.callback_verdict.as_ref())
+    }
+
     pub fn job(&self) -> &J {
         self.authority.as_ref().and_then(|authority| authority.job.as_ref()).expect("checked-out worker outcome owns exact job")
     }
@@ -3119,7 +3183,7 @@ pub struct TortureJob {
 
 /// 🩺️ How many units [`TortureJob::step`] processes between cheap `should_yield` polls — small enough
 /// that overshoot past the 8 ms ceiling within one check interval is negligible (each unit is a
-/// handful of integer ops), large enough that the `now_ms`/fuel check itself isn't the hot-loop
+/// handful of integer ops), large enough that the `now_us`/fuel check itself isn't the hot-loop
 /// bottleneck.
 const TORTURE_YIELD_CHECK_INTERVAL: u64 = 64;
 
@@ -3291,12 +3355,16 @@ impl InteractiveJob for TortureJob {
 
 //#region 🧪️Tests
 #[cfg(test)]
+#[path = "⏱️budget/🧪️component.rs"]
+mod microsecond_budget_tests;
+
+#[cfg(test)]
 mod retained_ownership_tests {
     use super::*;
     use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
 
     fn params(operation: OperationId, generation: Generation, cancel: CancelToken) -> BatchJobParams {
-        BatchJobParams { operation, generation, cancel, config: BatchDriveConfig { site: "test.retained-job", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: 1 }, now_ms: default_now_ms }
+        BatchJobParams { operation, generation, cancel, config: BatchDriveConfig { site: "test.retained-job", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 1_000 }, now_us: default_now_us }
     }
 
     fn wait_for(session: &WorkerJobSession<HostileJob>, expected: WorkerJobPoll) {
@@ -3314,12 +3382,12 @@ mod retained_ownership_tests {
         let ledger = Arc::new(JobPayloadOperationLedger::new(OperationId(90_000), Generation(6)));
         let operation_mismatch = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             let mut sequence = 0;
-            let _ = StepContext::with_payload_ledger(OperationId(90_001), Generation(6), StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_ms, &mut sequence, Arc::clone(&ledger));
+            let _ = StepContext::with_payload_ledger(OperationId(90_001), Generation(6), StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
         }));
         assert!(operation_mismatch.is_err());
         let generation_mismatch = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             let mut sequence = 0;
-            let _ = StepContext::with_payload_ledger(OperationId(90_000), Generation(7), StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_ms, &mut sequence, Arc::clone(&ledger));
+            let _ = StepContext::with_payload_ledger(OperationId(90_000), Generation(7), StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
         }));
         assert!(generation_mismatch.is_err());
     }
@@ -3333,14 +3401,14 @@ mod retained_ownership_tests {
         let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState);
         for index in 0..JOB_PAYLOAD_OPERATION_PAGES {
             let mut preview_sequence = index as u64;
-            let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_ms, &mut preview_sequence, Arc::clone(&ledger));
+            let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut preview_sequence, Arc::clone(&ledger));
             let source = JobPayloadPageSource::new();
             let mut page = context.admit_payload_page(&mut writer, source).expect("each fixed payload page is admitted before write");
             page.write(&[index as u8]).expect("one byte fits admitted page");
             page.commit();
         }
         let mut sequence = 0;
-        let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_ms, &mut sequence, Arc::clone(&ledger));
+        let mut context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
         let plus_one = JobPayloadPageSource::new();
         let plus_one_pointer = plus_one.backing_identity();
         let rejected = match context.admit_payload_page(&mut writer, plus_one) {
@@ -3370,11 +3438,11 @@ mod retained_ownership_tests {
         let mut state_writer = RetainedJobPayloadWriter::new(JobPayloadStream::CommitState);
         let mut output_writer = RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput);
         let mut sequence = 0;
-        let mut state_context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_ms, &mut sequence, Arc::clone(&ledger));
+        let mut state_context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
         let mut state_page = state_context.admit_payload_page(&mut state_writer, JobPayloadPageSource::new()).expect("state page");
         state_page.write(b"state").expect("state bytes");
         state_page.commit();
-        let mut output_context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_ms, &mut sequence, Arc::clone(&ledger));
+        let mut output_context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
         let mut output_page = output_context.admit_payload_page(&mut output_writer, JobPayloadPageSource::new()).expect("separate output page");
         output_page.write(b"output").expect("output bytes");
         output_page.commit();
@@ -3394,13 +3462,13 @@ mod retained_ownership_tests {
         let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput);
         let mut cursor = 0;
         let mut sequence = 0;
-        let mut zero = StepContext::with_payload_ledger(operation, generation, StepBudget::new(0, u64::MAX), root_cancel_token(), default_now_ms, &mut sequence, Arc::clone(&ledger));
+        let mut zero = StepContext::with_payload_ledger(operation, generation, StepBudget::new(0, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
         assert_eq!(writer.write_slice_page(&mut zero, &bytes, &mut cursor), Ok(false));
         assert_eq!(cursor, 0);
-        let mut first = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_ms, &mut sequence, Arc::clone(&ledger));
+        let mut first = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
         assert_eq!(writer.write_slice_page(&mut first, &bytes, &mut cursor), Ok(false));
         assert_eq!(cursor, JOB_PAYLOAD_PAGE_BYTES);
-        let mut second = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_ms, &mut sequence, Arc::clone(&ledger));
+        let mut second = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
         assert_eq!(writer.write_slice_page(&mut second, &bytes, &mut cursor), Ok(true));
         let mut payload = writer.finish().expect("two-page retained payload");
         let mut reader = payload.reader();

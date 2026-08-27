@@ -3,7 +3,7 @@
 //!
 //! **This file no longer serves the oracle role.** The reference for `semio-v1-value-mutate` is the
 //! registered oracle `semio-value-python-independent` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️value/
-//! 🧪️oracle/🔣️component.json`) — an independent Python implementation of the semio value carrier and
+//! 🧪️oracle/🔣️.json`) — an independent Python implementation of the semio value carrier and
 //! its nine verbs, written from the committed grammar, protocol and specification vectors, living
 //! beside this file as `🐍️component.py`. The runner dispatches the oracle role to that adapter and
 //! the subject role here, and compares the two projections under `@comparison-ordered-json-v1`.

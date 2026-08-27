@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "semio.mounted-dispatch-binding.v1",
+  "dispatcher": "dispatch_typed_command_inner",
+  "helper": "start_typed_command_operation",
+  "cases": [
+    { "mutation": "none", "admitted": true },
+    { "mutation": "wrong-helper", "admitted": false },
+    { "mutation": "missing-helper", "admitted": false },
+    { "mutation": "duplicate-helper", "admitted": false },
+    { "mutation": "missing-pipeline-guard", "admitted": false },
+    { "mutation": "duplicate-session", "admitted": false },
+    { "mutation": "duplicate-pump", "admitted": false },
+    { "mutation": "direct-reducer", "admitted": false },
+    { "mutation": "direct-dispatch", "admitted": false },
+    { "mutation": "run-to-completion", "admitted": false }
+  ]
+}

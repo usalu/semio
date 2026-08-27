@@ -10,7 +10,7 @@
 //! `KINDS` is duplicated locally rather than imported from `semio_s_plugin_stdio` because the
 //! oracle-only host does not link that crate at all (`sut` is off), so registration must not name it.
 //! Keep this list in sync with `../../🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s own
-//! `KINDS` and `../../🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`'s
+//! `KINDS` and `../../🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧪️oracle/🔣️.json`'s
 //! `mutationCatalogs[0].kinds` — the `kinds_manifest_law` test there is what keeps those two honest;
 //! this third copy is test-harness wiring, not vocabulary.
 

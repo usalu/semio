@@ -6,7 +6,7 @@ Feature: Route every typed semio ENVELOPE mutation into the subset arm it names
   `s.stdio.semio` is the ENVELOPE union over all eighteen semio subsets, and a semio-NATIVE format:
   no third party reads or writes `.dsl.semio`/`.pack.semio`, so no oracle is registered and the
   `semio-envelope-routing` no-oracle decision is recorded instead (see the subset's own
-  `🧪️oracle/🔣️component.json`).
+  `🧪️oracle/🔣️.json`).
 
   What this subset OWNS is not the payload semantics of its eighteen wrapper variants — those belong
   to the arms, are handcrafted in their own `🧬️mutations/<kind>/🧪️tests/` leaves and are measured by

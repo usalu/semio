@@ -11374,7 +11374,7 @@ mod tests {
             semio_framework_job::Generation(1),
             semio_framework_job::StepBudget::new(fuel, u64::MAX),
             semio_framework_job::root_cancel_token(),
-            semio_framework_job::default_now_ms,
+            semio_framework_job::default_now_us,
             &mut sequence,
         );
         step(&mut context)

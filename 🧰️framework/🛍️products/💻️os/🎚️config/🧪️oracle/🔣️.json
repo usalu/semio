@@ -1,0 +1,128 @@
+{
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This owner's contribution. 🎚️config carries three typed mutation vocabularies, all mounted by the plugin host from direct semantic leaves: opening preferences (set-default-app, clear-default-app), merge policy (change-merge-policy), and identity (sign-in, sign-out). Each vocabulary is claimed by exactly one exhaustive case under 🔌️plugin/🖥️host/🧪️tests, and every kind in every vocabulary carries a committed (before, mutation, after, diff, outcome) specification vector beside its own leaf.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "os-config-opening-preferences-mutation-semantics",
+      "capabilities": [
+        "os-config-opening-1-mutate"
+      ],
+      "rationale": "`os.config.opening` is this operating system's own preference record — a list of `(artifact dialect, role) -> app` pins, where the dialect is a semio `ArtifactDialect` triple and the app is a semio `AppRef`. There is no third-party implementation of it and no third party could hold an opinion about it: what is under test is that a pin is an UPSERT keyed on `(dialect, role)` rather than an append, that clearing a pin nobody set is a warned no-op rather than an error, and that `set` and `clear` are exact inverses of each other on that key — statements about this repository's own preference semantics, not about JSON or key-value storage. Confidence comes instead from the two committed, independently handcrafted `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`, each already unit-tested inside the facet itself, re-exercised end to end through `apply_opening_config_mutation_reporting`; and from the inverse law as a metamorphic property. Both vectors run against the same two-pin document — a cad viewer pin and a cad editor pin — which is what lets each kind be held to the claim that it touches ONE pin and leaves its sibling alone.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    },
+    {
+      "id": "os-config-merge-policy-mutation-semantics",
+      "capabilities": [
+        "os-config-merge-policy-1-mutate"
+      ],
+      "rationale": "`os.config.merge-policy` is repository-owned authority configuration with no independent third-party implementation: what is under test is that a policy change replaces the WHOLE single-field record, that asking for the policy already active is a warned no-op which hands the unchanged record back rather than resetting it to the facet default, and that the undo carries the policy read off the pre-mutation record. Those are statements about this repository's own authority semantics, not about JSON or enums. Confidence comes instead from the committed, independently handcrafted `tightens-the-authority-to-vigilant` specification vector under `../🧬️schema/🧬️mutations/🛡️change-merge-policy/🧪️tests/`, already unit-tested inside the facet itself and re-exercised end to end through `apply_merge_policy_config_mutation_reporting`; and from the inverse law as a metamorphic property.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    },
+    {
+      "id": "os-config-identity-mutation-semantics",
+      "capabilities": [
+        "os-config-identity-1-mutate"
+      ],
+      "rationale": "`os.config.identity` is repository-owned session configuration with no independent third-party implementation. `IdentitySetting` is `Option<Identity>` and nothing else, so a session is established whole or absent whole and the vocabulary closes at two kinds. What is under test is that both kinds read their undo off the PRE-MUTATION record rather than off their own payload — replacing one session must undo to the prior session and not to a sign-out, and clearing an already-cleared record must offer no undo step at all rather than inventing an account. Confidence comes from the two committed, independently handcrafted specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`, each already unit-tested inside its own leaf and re-exercised end to end through `apply_identity_config_mutation_reporting`; from the inverse law as a metamorphic property; and from the Rust and TypeScript leaves agreeing on the shared camel-case JSON projection.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws",
+        "independent-implementations"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "os-config-opening-1-any",
+      "capability": "os-config-opening-1-mutate",
+      "kinds": [
+        "set-default-app",
+        "clear-default-app"
+      ],
+      "vectors": [
+        {
+          "mutationId": "set-default-app",
+          "sourceMutationDirectoryName": "📌️set-default-app",
+          "mutationDirectoryName": "📌️set-default-app",
+          "scenarios": [
+            {
+              "id": "repins-the-cad-editor-to-the-drafting-app",
+              "directoryName": "🧪️repins-the-cad-editor-to-the-drafting-app"
+            }
+          ]
+        },
+        {
+          "mutationId": "clear-default-app",
+          "sourceMutationDirectoryName": "🧹clear-default-app",
+          "mutationDirectoryName": "🧹clear-default-app",
+          "scenarios": [
+            {
+              "id": "unpins-the-cad-editor-and-keeps-the-viewer-pin",
+              "directoryName": "🧪️unpins-the-cad-editor-and-keeps-the-viewer-pin"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "os-config-merge-policy-1-any",
+      "capability": "os-config-merge-policy-1-mutate",
+      "kinds": [
+        "change-merge-policy"
+      ],
+      "vectors": [
+        {
+          "mutationId": "change-merge-policy",
+          "sourceMutationDirectoryName": "🛡️change-merge-policy",
+          "mutationDirectoryName": "🛡️change-merge-policy",
+          "scenarios": [
+            {
+              "id": "tightens-the-authority-to-vigilant",
+              "directoryName": "🧪️tightens-the-authority-to-vigilant"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "os-config-identity-1-any",
+      "capability": "os-config-identity-1-mutate",
+      "kinds": [
+        "sign-in",
+        "sign-out"
+      ],
+      "vectors": [
+        {
+          "mutationId": "sign-in",
+          "sourceMutationDirectoryName": "🪪️sign-in",
+          "mutationDirectoryName": "🪪️sign-in",
+          "scenarios": [
+            {
+              "id": "replaces-the-active-session-with-a-second-account",
+              "directoryName": "🧪️replaces-the-active-session-with-a-second-account"
+            }
+          ]
+        },
+        {
+          "mutationId": "sign-out",
+          "sourceMutationDirectoryName": "🚪️sign-out",
+          "mutationDirectoryName": "🚪️sign-out",
+          "scenarios": [
+            {
+              "id": "clears-the-active-session",
+              "directoryName": "🧪️clears-the-active-session"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

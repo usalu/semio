@@ -1,8 +1,9 @@
 {
   "$schema": "../🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
-  "_comment": "📇️ The framework's OWN registry. It holds only what is domain-neutral: decisions about the test platform itself. Every reference implementation that knows a file format, a UI contract or any other domain belongs to that domain's owner and reaches the platform through `<owner>/🧪️oracle/🔣️component.json`, which is discovered by convention. Nothing in this file may name a plugin, a product or a format.",
+  "schemaVersion": 2,
+  "_comment": "📇️ The framework's OWN registry. It holds only what is domain-neutral: decisions about the test platform itself, plus the tolerance vocabulary every owner's comparison pipeline resolves against. Every reference implementation and every measurement probe that knows a file format, a geometry kernel or any other domain belongs to that domain's owner and reaches the platform through `<owner>/🧪️oracle/🔣️.json`, which is discovered by convention. Nothing in this file may name a plugin, a product or a format.",
   "oracles": [],
+  "probes": [],
   "noOracleDecisions": [
     {
       "id": "repo-test-platform",
@@ -13,16 +14,21 @@
         "test-clean",
         "test-dependency"
       ],
-      "rationale": "The repository test platform is the thing under test; no third-party library implements this repository's taxonomy, feature profile or cache contract, so an external reference would be meaningless. Confidence comes from specification vectors (the frozen contract), metamorphic laws (discovery is idempotent, clean is a no-op on a clean tree) and independently written assertions per behaviour.",
+      "rationale": "The repository test platform is the thing under test; no third-party library implements this repository's taxonomy, feature profile or cache contract, so an external reference would be meaningless. Confidence comes from specification vectors (the frozen contract), metamorphic laws (discovery is idempotent, clean is a no-op on a clean tree) and independently written assertions per behaviour. This decision covers NO runtime mutation capability — under Protocol v2 a mutation's oracle requirement is discharged only by a qualifying third-party reference, and `noOracleMisuseBreaches` fails the contract phase if this list ever names one.",
       "substitutes": [
         "specification-vectors",
         "metamorphic-laws"
-      ]
+      ],
+      "coversMutations": false
     }
   ],
   "comparisonProfiles": [],
+  "comparisonPipelines": [],
+  "toleranceProfiles": [],
+  "mutationManifests": [],
+  "fixtureManifests": [],
   "oracleHostPackages": [],
   "migrationStatus": {
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test": "complete"
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test": "protocol-v2"
   }
 }

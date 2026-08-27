@@ -10,7 +10,7 @@
 //! 4180 CSV under a different configuration for a different capability), so its independent
 //! reading/writing lives here rather than in the shared `tabular` module.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself.
 //! @see ../🧬️schema/📸️snapshot/🦀️component.rs — the subject's own byte-exact split/rejoin codec
 //! this module deliberately does NOT import (the oracle role must not link the subject crate).

@@ -75,6 +75,18 @@ Everything end to end.
 
 ---
 
+Our testing infrastructure is still extremely adhoc.
+The target is that every single mutation for all artifacts is tested by an external library.
+The testing must happen at subset level not at global artifact level.
+When using an oracle to predict the output, never reimplement the same code e.g. in python.
+The testing must happen over fixtures and fixtures are either real-world examples, handcrafted or generated with a third party library.
+
+e.g. for testing all brep mutations
+It should use https://github.com/andymai/brepjs for creating STEP files (both breps and the resulting meshes), then every mutation must produce the same STEP file and a similar mesh (it can use different tesselation but must have similar hasudorf distance, volume, etc)
+We want to write a complex brep kernel and we need test files for it. We want STEP files for all tests. It should test complicated boolean operations, make sure that the produced meshes only differ slightely (different tesselation is allowed)
+
+---
+
 Persisted state is event sourced/materialized/projected   
 
 ---

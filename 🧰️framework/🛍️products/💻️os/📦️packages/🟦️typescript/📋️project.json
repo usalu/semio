@@ -5,6 +5,18 @@
     "default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🟦️component.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🟦️backbone-worker.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧫️fixtures/**/*", "{projectRoot}/**/*"]
   },
   "targets": {
+    "generate-wgpu": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts generate-wgpu" }
+    },
+    "preview-generated": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts preview-generated" }
+    },
+    "check-wgpu": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts check-wgpu" }
+    },
     "test": {
       "executor": "nx:run-commands",
       "dependsOn": [],

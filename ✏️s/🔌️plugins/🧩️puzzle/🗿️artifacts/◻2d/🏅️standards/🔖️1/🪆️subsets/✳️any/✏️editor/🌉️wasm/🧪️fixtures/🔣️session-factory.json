@@ -1,0 +1,22 @@
+{
+  "pluginId": "puzzle",
+  "appIds": ["s.puzzle2d@1/*#editor", "s.puzzle2d@1/*#viewer"],
+  "sessionExport": "BoardSession",
+  "buildTarget": "@semio-tech/puzzle-plugin:wasm",
+  "cratePath": "./✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
+  "moduleFile": "semio_puzzle.js",
+  "binaryFile": "semio_puzzle_bg.wasm",
+  "retryFailures": ["network", "initialization"],
+  "isolation": { "controllerId": "board", "surfaceIds": ["pane.a", "pane.b"], "selection": ["α,β", "🧩️"] },
+  "cancellation": [
+    { "phase": "constructing", "attachCalls": 0, "freeBeforeSettle": 0, "freeAfterSettle": 1 },
+    { "phase": "attaching", "attachCalls": 1, "freeBeforeSettle": 0, "freeAfterSettle": 1 },
+    { "phase": "ready", "attachCalls": 1, "freeBeforeSettle": 1, "freeAfterSettle": 1 }
+  ],
+  "scopes": [
+    { "pluginId": "puzzle", "appId": "s.puzzle2d@1/*#editor", "instanceId": 1, "matches": true },
+    { "pluginId": "puzzle", "appId": "s.puzzle2d@1/*#viewer", "instanceId": 2, "matches": true },
+    { "pluginId": "other", "appId": "s.puzzle2d@1/*#editor", "instanceId": 1, "matches": false },
+    { "pluginId": "puzzle", "appId": "s.puzzle3d@1/*#editor", "instanceId": 1, "matches": false }
+  ]
+}

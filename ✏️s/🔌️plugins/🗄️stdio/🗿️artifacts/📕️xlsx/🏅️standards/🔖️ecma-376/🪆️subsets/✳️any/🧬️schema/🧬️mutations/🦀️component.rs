@@ -89,7 +89,7 @@ pub enum XlsxMutation {
 }
 
 /// 🧾️ Kebab-case spelling of every `XlsxMutation` variant, in declaration order — the exhaustive
-/// mutation catalog `xlsx-ecma-376-any` (`../../🧪️oracle/🔣️component.json`) is measured against
+/// mutation catalog `xlsx-ecma-376-any` (`../../🧪️oracle/🔣️.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-sheet", "remove-sheet", "rename-sheet", "set-cell", "remove-cell", "insert-shared-string", "remove-shared-string", "set-shared-string"];
 //#endregion 🔖️Mutations
@@ -1130,7 +1130,7 @@ mod tests {
         let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
         assert_eq!(from_enum, KINDS, "KINDS must list every XlsxMutation variant, in declaration order");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         let needle = "\"kinds\": [";
         let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
         let end = start + manifest[start..].find(']').expect("kinds array is closed");

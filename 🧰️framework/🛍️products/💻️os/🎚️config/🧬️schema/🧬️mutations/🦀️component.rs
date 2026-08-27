@@ -20,7 +20,10 @@ pub enum OpeningConfigMutation {
 //#endregion 🔖️Opening
 
 //#region 🔖️MergePolicy
-pub use super::change_merge_policy::{change_merge_policy, ChangeMergePolicy, MergePolicySetting, MERGE_POLICY_CONFIG_SCHEMA};
+pub use super::change_merge_policy::{
+    apply_merge_policy_config_mutation, apply_merge_policy_config_mutation_reporting, change_merge_policy, decode_merge_policy_config_mutation_json, decode_merge_policy_setting_json, encode_merge_policy_setting_json,
+    inverse_merge_policy_config_mutation, inverse_merge_policy_config_mutation_steps, ChangeMergePolicy, MergePolicySetting, MERGE_POLICY_CONFIG_SCHEMA,
+};
 
 /// 🛡️ Typed, invertible merge-policy mutation vocabulary.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
@@ -32,7 +35,10 @@ pub enum MergePolicyConfigMutation {
 //#endregion 🔖️MergePolicy
 
 //#region 🔖️Identity
-pub use super::sign_in::{sign_in, Identity, IdentitySetting, SignIn, IDENTITY_CONFIG_SCHEMA};
+pub use super::sign_in::{
+    apply_identity_config_mutation, apply_identity_config_mutation_reporting, decode_identity_config_mutation_json, decode_identity_setting_json, encode_identity_setting_json, inverse_identity_config_mutation,
+    inverse_identity_config_mutation_steps, sign_in, Identity, IdentitySetting, SignIn, IDENTITY_CONFIG_SCHEMA,
+};
 pub use super::sign_out::{sign_out, SignOut};
 
 /// 🪪️ Typed, invertible identity mutation vocabulary.

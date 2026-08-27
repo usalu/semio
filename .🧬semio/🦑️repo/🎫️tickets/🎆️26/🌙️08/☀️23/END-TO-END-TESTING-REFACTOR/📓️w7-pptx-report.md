@@ -15,7 +15,7 @@ shape copied from the green cases in `📓️w7-results.md` (closest precedents:
 - **Oracle** (new): `.../🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs` →
   `semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::any::{oracle_apply_mutation,
   oracle_apply_mutation_inverse, oracle_round_trip, project_pptx_mutation}`.
-- **Catalog + registration** (new): `.../🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`
+- **Catalog + registration** (new): `.../🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🔣️.json`
   — oracle id `pptx-ecma-376-mutate`, `"ecosystem": "rust"`, capability `pptx-ecma-376-mutate`,
   catalog `pptx-ecma-376-any` (9 kinds), comparison profile `semantic-pptx-mutate-v1`.
 - **Test case** (new): `.../🎞️pptx/🧪️tests/mutate-pptx-ecma-376/component.feature` + `🦀️component.rs`

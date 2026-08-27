@@ -29,13 +29,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn set_filter_min_availability_clamps_to_zero() {
-        let mut app = new_app();
-        dispatch(&mut app, SourcingCurateCommand::SetFilterMinAvailability(SetFilterMinAvailability { delta: Some(-1000.0), value: None }));
+        let mut app = new_app().await;
+        dispatch(&mut app, SourcingCurateCommand::SetFilterMinAvailability(SetFilterMinAvailability { delta: Some(-1000.0), value: None })).await;
         // Filters are config-only now — the pool render reflects the clamp indirectly via an empty result
         // for an unreasonably high min-availability; assert the clamp directly through a second command
         // that reports back the applied absolute value.
-        dispatch(&mut app, SourcingCurateCommand::SetFilterMinAvailability(SetFilterMinAvailability { delta: Some(0.0), value: None }));
-        let node = render(&mut app, pool::SOURCING_CURATE_BODY_POOL);
+        dispatch(&mut app, SourcingCurateCommand::SetFilterMinAvailability(SetFilterMinAvailability { delta: Some(0.0), value: None })).await;
+        let node = render(&mut app, pool::SOURCING_CURATE_BODY_POOL).await;
         // A clamped-to-zero min-availability keeps every stock row (all availabilities are >= 0).
         assert!(node.contains("Glulam"));
     }

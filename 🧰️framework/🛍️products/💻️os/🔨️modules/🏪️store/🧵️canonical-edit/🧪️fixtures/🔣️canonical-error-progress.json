@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "text": "aä🧵",
+  "modes": ["indexed", "borrowed"],
+  "grants": [0, 1, 7, 256, 4096],
+  "sentinel": 165,
+  "expectedPrefix": "[\"aä🧵\",",
+  "expectedBytes": 11,
+  "expectedError": "canonical-reader.fixture-child",
+  "expectedComplete": false,
+  "expectedRootRetirements": 1,
+  "expectedSnapshotBytes": 7
+}

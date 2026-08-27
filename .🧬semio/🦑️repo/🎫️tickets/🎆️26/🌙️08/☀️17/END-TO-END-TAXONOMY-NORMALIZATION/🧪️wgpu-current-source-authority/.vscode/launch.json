@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "🧹clean🧩️taxonomy🧪️wgpu-current-source-authority",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"../../../../../../../../node_modules/nx/bin/nx.js\" run @fixture/wgpu-current-source-authority:check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "env": { "NX_DAEMON": "false", "NX_ISOLATE_PLUGINS": "false" },
+      "presentation": { "group": "4_gate", "order": 410.16 }
+    }
+  ]
+}

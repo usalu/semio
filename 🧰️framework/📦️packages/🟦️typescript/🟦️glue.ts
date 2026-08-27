@@ -12,6 +12,8 @@ export * from "../../🔨️modules/🛂️manifest/🟦️component.ts";
 export type { PresenceDomain, PresenceInteraction } from "../../🔨️modules/🕹️interaction/🧬️schema/🟦️component.ts";
 export * from "../../🔨️modules/🎠️kernel/🟦️component.ts";
 export * from "../../🔨️modules/🔄️machine/🟦️component.ts";
+export { NumericIndex, NumericIndexEdit, NumericIndexReader, NumericIndexRetirement, type NumericIndexGrant, type NumericIndexStep, type NumericIndexReadStep, type NumericIndexOrdinal } from "../../🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️component.ts";
+export { RetainedUiPatchCursor, RetainedUiSnapshotCursor, RetainedUiSurfaceOwner, RetainedUiTransaction, type RetainedUiState, type RetainedUiStep, type RetainedUiResult, type RetainedUiRejection, type RetainedUiSurfaceIdentity, type RetainedUiAcknowledgement } from "../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️component.ts";
 
 import {
   organizeContextMenu,

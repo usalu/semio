@@ -4,7 +4,7 @@
 //! This file registers the SUBJECT role only. The reference answer comes from `🐍️component.py`
 //! beside it — an independent Python implementation of the same carrier and the same ten verbs,
 //! written from the committed grammars, registered as the oracle `semio-audio-python-independent`
-//! in `../../🏅️standards/🔖️v1/🪆️subsets/✳️audio/🧪️oracle/🔣️component.json`. Registering oracle
+//! in `../../🏅️standards/🔖️v1/🪆️subsets/✳️audio/🧪️oracle/🔣️.json`. Registering oracle
 //! handlers here as well would put this repository's own answer on both sides of the comparison,
 //! which is the one failure the platform exists to prevent, so the registrations this file used to
 //! carry are gone rather than merely unused.

@@ -431,7 +431,7 @@ TAIL_NEW = (
     "names is resolved by normalised spelling against the document's own keys, which is what the naming mechanic "
     "states, never from a table copied out of `🧬️mutations/**` — and the paragraph below names the spellings in THIS "
     "subset where that resolution can genuinely go wrong. The recorded no-oracle decision it replaces is gone from "
-    "`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, because there is now a reference to "
+    "`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, because there is now a reference to "
     "compare against."
 )
 

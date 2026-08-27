@@ -1,0 +1,6 @@
+{
+  "mutation": "remove-text-chunk",
+  "payload": {
+    "index": 0
+  }
+}

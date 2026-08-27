@@ -2,6 +2,51 @@
 use crate::artifacts::txt::TxtSnapshot;
 use crate::artifacts::txt::schema::snapshot::LineEnding;
 
+//#region 🔖️Transport
+pub fn txt_u32_to_usize(value: u32) -> Result<usize, String> {
+    usize::try_from(value).map_err(|_| format!("line index {value} is not representable on this platform"))
+}
+
+pub fn txt_usize_to_u32(value: usize) -> Result<u32, String> {
+    u32::try_from(value).map_err(|_| format!("line index {value} exceeds the uint32 transport domain"))
+}
+
+pub fn txt_graphql_u32_variable(value: &dsl::DslValue) -> Result<u32, String> {
+    let value = value.as_f64().ok_or_else(|| "GraphQL UInt32 variable must be numeric".to_string())?;
+    if !value.is_finite() || value.fract() != 0.0 || !(0.0..=u32::MAX as f64).contains(&value) {
+        return Err("GraphQL UInt32 variable must be a finite uint32".to_string());
+    }
+    Ok(value as u32)
+}
+
+pub fn txt_graphql_u32_literal(kind: &str, value: &str) -> Result<u32, String> {
+    if kind != "IntValue" || (value != "0" && (value.starts_with('0') || value.is_empty() || !value.bytes().all(|byte| byte.is_ascii_digit()))) {
+        return Err("GraphQL UInt32 literal must be an IntValue decimal".to_string());
+    }
+    value.parse::<u32>().map_err(|_| "GraphQL UInt32 literal exceeds uint32".to_string())
+}
+
+pub fn txt_required_object<'a>(value: &'a dsl::DslValue, keys: &[&'a str]) -> Result<Vec<(&'a str, &'a dsl::DslValue)>, String> {
+    let entries = value.as_object().ok_or_else(|| "payload must be an object".to_string())?;
+    if entries.len() != keys.len() || entries.iter().any(|(key, _)| !keys.contains(&key.as_str())) {
+        return Err("payload has unexpected fields".to_string());
+    }
+    let mut result = Vec::with_capacity(keys.len());
+    for key in keys {
+        let values = entries.iter().filter(|(candidate, _)| candidate == key).collect::<Vec<_>>();
+        if values.len() != 1 {
+            return Err(format!("payload field `{key}` is missing or duplicated"));
+        }
+        result.push((*key, &values[0].1));
+    }
+    Ok(result)
+}
+
+pub fn txt_unicode_string(value: &dsl::DslValue, field: &str) -> Result<String, String> {
+    value.as_str().map(str::to_owned).ok_or_else(|| format!("payload field `{field}` must be a Unicode string"))
+}
+//#endregion 🔖️Transport
+
 //#region 🔖️Shape
 pub fn non_canonical_shape(line_count: usize, last_line_is_empty: bool, trailing_newline: bool) -> Option<String> {
     if trailing_newline && line_count == 0 {

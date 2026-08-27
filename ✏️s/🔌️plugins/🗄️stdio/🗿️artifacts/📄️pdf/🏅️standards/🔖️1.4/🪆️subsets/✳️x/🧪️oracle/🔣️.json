@@ -1,0 +1,69 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧬️ Exact 2-leaf PDF 1.4/X catalog. Reference lopdf never links the subject implementation.",
+  "oracles": [
+    {
+      "id": "lopdf-pdf-1-4-x-mutate",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "capabilities": [
+        "pdf-1-4-x-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-pdf-1-4-conformance-x-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/J-F-Liu/lopdf",
+      "rationale": "Independently reads all pages through lopdf, applies this subset's concrete page operations, reconstructs document bytes, and verifies inverse closure against the original projection.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "pdf-1-4-x",
+      "capability": "pdf-1-4-x-mutate",
+      "standardDirectoryName": "🔖️1.4",
+      "subsetDirectoryName": "✳️x",
+      "vectors": [
+        {
+          "mutationId": "set-page-size",
+          "sourceMutationDirectoryName": "📐️set-page-size",
+          "mutationDirectoryName": "📐️set-page-size",
+          "scenarios": [
+            {
+              "id": "round-trips-the-concrete-inverse",
+              "directoryName": "🧪️round-trips-the-concrete-inverse"
+            }
+          ]
+        },
+        {
+          "mutationId": "collapse-page-size",
+          "sourceMutationDirectoryName": "📉️collapse-page-size",
+          "mutationDirectoryName": "📉️collapse-page-size",
+          "scenarios": [
+            {
+              "id": "round-trips-the-concrete-inverse",
+              "directoryName": "🧪️round-trips-the-concrete-inverse"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "set-page-size",
+        "collapse-page-size"
+      ]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-pdf-1-4-conformance-x-v1",
+      "description": "A PDF 1.4 document compared by the CONFORMANCE surface check_pdf_x_conformance actually reads, every field read back out of the bytes by the independent `lopdf` reader: page 1's real /MediaBox extents, the degeneracy verdict the checker computes from them, the page count as a stability anchor, and the unconditional schema-gap flag. Page CONTENT beyond that axis is deliberately absent — it belongs to the ✳️any subset's own profile, and this conformance check says nothing about it. `schemaGapUnverifiable` is the constant `true` the checker genuinely raises on every PDF 1.4 document; it is recorded as honest bookkeeping of an axis no mutation can move, never as evidence. Page dimensions are PDF single-precision reals, so the tolerance is a thousandth of a user-space unit — well under a typesetter's tolerance and well over the representation error.",
+      "tolerance": 0.001,
+      "ignoreKeys": []
+    }
+  ]
+}

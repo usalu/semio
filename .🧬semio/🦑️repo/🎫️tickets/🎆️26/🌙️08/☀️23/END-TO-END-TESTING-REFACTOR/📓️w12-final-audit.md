@@ -274,7 +274,7 @@ easily have skipped: `…/✳️any/🧬️schema/🧬️mutations/🦀️compon
 | `mutate-pptx-ecma-376` | 9 | `mutation_is_observable(&spec.str("kind"), &projection, &project_pptx_mutation(&input)?, &[])?` | none |
 
 `PDF_WRITER_FREEDOM` is not a new loosening: it is a verbatim mirror of `semantic-pdf-v1`'s own
-declared `ignoreKeys` and `tolerance` in `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json`, and that
+declared `ignoreKeys` and `tolerance` in `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json`, and that
 manifest is **unchanged since before w11** (`git diff dced3e936e HEAD` on it is empty). The adapter says
 why in as many words: *"never stricter, which would invent a failure the comparison itself would
 forgive, and never looser, which would let a real one through."*

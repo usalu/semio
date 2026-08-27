@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#", "$id": "semio:local-interaction-query-transport",
+  "oneOf": [{"$ref": "#/$defs/command"}, {"$ref": "#/$defs/reply"}],
+  "$defs": {
+    "token": {"type": "object", "additionalProperties": false, "required": ["requestId", "queryGeneration", "identity", "ordinal"], "properties": {
+      "requestId": {"$ref": "semio:local-interaction#/$defs/generation"}, "queryGeneration": {"$ref": "semio:local-interaction#/$defs/generation"}, "identity": {"$ref": "semio:local-interaction#/$defs/identity"}, "ordinal": {"$ref": "semio:local-interaction#/$defs/generation"}
+    }},
+    "command": {"oneOf": [
+      {"type": "object", "additionalProperties": false, "required": ["kind", "requestId"], "properties": {"kind": {"const": "read"}, "requestId": {"$ref": "semio:local-interaction#/$defs/generation"}}},
+      {"type": "object", "additionalProperties": false, "required": ["kind", "token"], "properties": {"kind": {"enum": ["acknowledge", "cancel"]}, "token": {"$ref": "#/$defs/token"}}}
+    ]},
+    "reply": {"oneOf": [
+      {"type": "object", "additionalProperties": false, "required": ["kind", "token"], "properties": {"kind": {"const": "started"}, "token": {"$ref": "#/$defs/token"}}},
+      {"type": "object", "additionalProperties": false, "required": ["kind", "page"], "properties": {"kind": {"const": "page"}, "page": {"$ref": "semio:local-interaction#/$defs/page"}}},
+      {"type": "object", "additionalProperties": false, "required": ["kind", "token", "cancelled"], "properties": {"kind": {"const": "closed"}, "token": {"$ref": "#/$defs/token"}, "cancelled": {"type": "boolean"}}},
+      {"type": "object", "additionalProperties": false, "required": ["kind", "requestId", "code"], "properties": {"kind": {"const": "rejected"}, "requestId": {"$ref": "semio:local-interaction#/$defs/generation"}, "code": {"enum": ["busy", "closed", "generation-exhausted", "source-failed"]}}}
+    ]}
+  }
+}

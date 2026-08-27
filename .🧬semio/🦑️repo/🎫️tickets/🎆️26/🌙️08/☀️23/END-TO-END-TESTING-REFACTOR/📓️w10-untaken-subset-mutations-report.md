@@ -82,7 +82,7 @@ inverse, never a second diff semantics.
 ### Why the oracle runs in Python
 
 `simplejson` 4.1.1, `ecosystem: "python"`, registered in the subset's own
-`🧪️oracle/🔣️component.json` under the capability `json-rfc8259-i-json-mutate`.
+`🧪️oracle/🔣️.json` under the capability `json-rfc8259-i-json-mutate`.
 
 RFC 7493 constrains the value space, so the reference has to surface three facts a normalizing codec
 throws away: every object's ORDERED member list including duplicate names, the exact number LEXEME,
@@ -133,10 +133,10 @@ run, exactly as the `📓️cross-language-oracle-hosts-2026-08-24.md` design de
 | `🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🧬️schema/🧬️mutations/🦀️component.rs` | new — `JsonIJsonMutation`, `JsonIJsonRoot`, `KINDS`, `lower`, `apply_json_i_json_mutation`, `impl Mutation<JsonSnapshot>`, 8 plain `#[test]`s |
 | …`/🧬️mutations/{🔣️component.json,🟦️component.ts,🛰️component.proto,🔗️component.graphql}` | new — the leaf's schema sidecars, mirroring the ✳️any leaf's shape |
 | …`/✳️i-json/🧬️schema/🦀️component.rs` | edited — the builder now holds `JsonSnapshot` directly (the `ZipIso21320BuilderConstruction` shape) and declares `type Mutation = JsonIJsonMutation` |
-| …`/✳️i-json/🧪️oracle/🔣️component.json` | new — oracle, comparison profile, mutation catalog |
+| …`/✳️i-json/🧪️oracle/🔣️.json` | new — oracle, comparison profile, mutation catalog |
 | `🗿️artifacts/🔣️json/🧪️tests/mutate-json-rfc8259-i-json/{component.feature,🐍️component.py,🦀️component.rs}` | new — feature, Python ORACLE adapter, Rust SUBJECT adapter (`sut`-gated) |
 | `📦️packages/🦀️rust/📦️glue.rs` | edited — 6 lines mounting the new mutations leaf under `…::subsets::i_json::schema::mutations` |
-| `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json` | edited — one additive `oracleHostPackages` entry (`python:simplejson@4.1.1`) |
+| `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json` | edited — one additive `oracleHostPackages` entry (`python:simplejson@4.1.1`) |
 | `🔒️dependencies.json` | edited — one additive entry, `kinds:["test-oracle"]`, `productionReachable:false` |
 
 `bun ./📜️script.ts dependency` → `ecosystems=4 entries=229 production-reachable=151 test-oracle=27`,
@@ -256,6 +256,6 @@ the repository — a decision for the coordinator, not something to fabricate.
 No `git commit`/`stash`/`checkout`. The ticket was not closed or reopened. Nothing under `./compose`
 was touched. All new tests are plain `#[test]`. `🧪️oracle/📦️packages/🦀️rust/{Cargo.toml,📦️lib.rs}`
 were not edited — which is precisely why the delivered oracle runs in Python. Two shared files were
-edited additively and are reported above: the plugin's `🧪️oracle/🔣️component.json`
+edited additively and are reported above: the plugin's `🧪️oracle/🔣️.json`
 (`oracleHostPackages` + one entry) and `🔒️dependencies.json` (one entry) — both are the mechanism the
 just-landed cross-language host requires, and both were verified with `bun ./📜️script.ts dependency`.

@@ -109,7 +109,7 @@ pub enum SemioModelMutation {
 
 /// 🏷️ This subset's DECLARED mutation vocabulary, kebab-case, in enum declaration order — the one
 /// list the repository test platform's completeness gate measures `mutate-semio-model` against
-/// (catalog `semio-v1-model` in `../../🧪️oracle/🔣️component.json`). It aliases [`OP_KEYWORDS`],
+/// (catalog `semio-v1-model` in `../../🧪️oracle/🔣️.json`). It aliases [`OP_KEYWORDS`],
 /// which the binary op frame's `tag` byte already indexes by [`variant_ordinal`], so the vocabulary
 /// is declared exactly once and `kinds_match_the_enum_and_the_catalog` keeps that declaration
 /// honest against both the enum and the manifest.
@@ -446,7 +446,7 @@ mod tests {
         let uncovered: Vec<&&str> = KINDS.iter().zip(&covered).filter(|(_, hit)| !**hit).map(|(kind, _)| kind).collect();
         assert!(uncovered.is_empty(), "semio-model: demo_mutation_cases carries no instance of {uncovered:?}, so those kinds are declared but never exercised");
 
-        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️component.json")).expect("the subset's own oracle manifest decodes");
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️.json")).expect("the subset's own oracle manifest decodes");
         let catalog = manifest["mutationCatalogs"].as_array().expect("the manifest declares mutationCatalogs").iter().find(|entry| entry["id"] == "semio-v1-model").expect("the manifest declares the semio-v1-model catalog");
         let declared: Vec<&str> = catalog["kinds"].as_array().expect("the catalog declares kinds").iter().map(|kind| kind.as_str().expect("every declared kind is a string")).collect();
         assert_eq!(declared, KINDS.to_vec(), "semio-model: the declared catalog and KINDS have drifted apart");

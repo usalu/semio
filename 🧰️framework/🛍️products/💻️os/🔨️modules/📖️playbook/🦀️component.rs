@@ -816,7 +816,7 @@ pub mod generation_forms {
 
     #[cfg(test)]
     mod generation_forms_tests {
-        use super::super::{PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
+        use super::super::{DslValue, PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
         use super::*;
 
         fn sample_spec() -> PlaybookSpec {

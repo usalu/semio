@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "pageBytes": 256,
+  "grants": [1, 64, 4096],
+  "sourceCases": ["sparse-anchor-comma-private-preserved", "semantic-unicode-over-page"],
+  "cancelAfterBytes": [0, 17, 4097],
+  "wrongAcknowledgements": ["request", "queryGeneration", "ordinal", "instance", "generation", "interaction", "document", "topology"],
+  "zeroItemMutates": false,
+  "unacknowledgedPageAdvances": false,
+  "duplicateAcknowledgementAccepted": false,
+  "cancelledPageReadable": false,
+  "terminalRequiresReadReturn": true,
+  "partialError": {"first": "retained✓", "expectedPrefix": "{\"first\":\"retained✓\",\"second\":", "error": "query.hostile-source"}
+}

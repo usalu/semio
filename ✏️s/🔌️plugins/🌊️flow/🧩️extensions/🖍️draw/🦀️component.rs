@@ -1065,7 +1065,7 @@ mod tests {
         use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};
 
         let manifest_json = build_manifest_json("draw", "Draw", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
-        let bundle = ExtensionBundle::new("draw", "Draw", "0.1.0")
+        let bundle = ExtensionBundle::new("flow-extension-draw", "Draw", "0.1.0")
             .extends("flow")
             .contributes_topic(
                 "flow.extension",
@@ -1151,7 +1151,7 @@ mod extension_guest {
         let manifest_json = build_manifest_json("draw", "Draw", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
         let flow_topic_payload = flow_extension_contribution(FLOW_APP_ID, manifest_json.clone());
         let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);
-        let bundle = ExtensionBundle::new("draw", "Draw", "0.1.0").extends("flow");
+        let bundle = ExtensionBundle::new("flow-extension-draw", "Draw", "0.1.0").extends("flow");
         let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Linked));
         let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", flow_topic_payload));
         let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
@@ -1159,6 +1159,19 @@ mod extension_guest {
             let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string()))?;
             Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
         }))
+    }
+
+    #[test]
+    fn bundle_identity_matches_catalogue_fixture() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️package-identities.json")).unwrap();
+        let bundle = bundle();
+        let manifest = serde_json::to_value(&bundle.manifest).unwrap();
+        assert_eq!(manifest["extensionId"], fixture["draw"]["pluginId"]);
+        assert_eq!(bundle.manifest.topic_contributions.len(), 2);
+        for contribution in &bundle.manifest.topic_contributions {
+            let payload: serde_json::Value = contribution.decode().unwrap();
+            assert_eq!(payload["extensionId"], fixture["draw"]["flowId"]);
+        }
     }
 
     semio_framework_plugin::extension_exports!(bundle);

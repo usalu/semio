@@ -1,0 +1,6 @@
+{
+  "name": "@fixture/wgpu-current-source-lifecycle",
+  "private": true,
+  "packageManager": "bun@1.3.14",
+  "scripts": { "inspect": "nx run @fixture/wgpu-current-source-lifecycle:inspect", "test-boundary": "nx run @fixture/wgpu-current-source-lifecycle:test-boundary" }
+}

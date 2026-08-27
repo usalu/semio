@@ -105,8 +105,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_pool_table_scene() {
-        let mut app = new_app();
-        assert!(render_body(&mut app, SOURCING_CURATE_BODY_POOL).contains("table"));
+        let mut app = new_app().await;
+        assert!(render_body(&mut app, SOURCING_CURATE_BODY_POOL).await.contains("table"));
     }
 }
 //#endregion 🧪️Tests

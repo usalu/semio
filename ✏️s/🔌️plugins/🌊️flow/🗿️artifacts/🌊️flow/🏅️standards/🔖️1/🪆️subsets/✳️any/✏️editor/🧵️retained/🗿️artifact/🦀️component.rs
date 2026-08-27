@@ -198,14 +198,17 @@ pub(super) struct SceneHash {
     hash: Option<semio_framework_hash::Sha256>,
     domain_offset: usize,
     digest: Option<[u8; 32]>,
+    failed: bool,
+    retirement: Retirement,
 }
 
 impl SceneHash {
     pub(super) fn new(scene: Arc<FlowWorkingScene>) -> Self {
-        Self { reader: store::ArtifactCanonicalJsonReader::new(scene, Arc::new(SceneRetirementFactory)), hash: Some(semio_framework_hash::Sha256::new()), domain_offset: 0, digest: None }
+        Self { reader: store::ArtifactCanonicalJsonReader::new(scene, Arc::new(SceneRetirementFactory)), hash: Some(semio_framework_hash::Sha256::new()), domain_offset: 0, digest: None, failed: false, retirement: Retirement::default() }
     }
 
     pub(super) fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<usize, String> {
+        if self.failed { return Err("Flow canonical scene encoding failed".into()); }
         if !grant.permits_one() || self.digest.is_some() || self.hash.is_none() { return Ok(0); }
         let domain = crate::artifacts::flow::FLOW_CONTENT_ID_DOMAIN;
         if self.domain_offset < domain.len() {
@@ -214,7 +217,16 @@ impl SceneHash {
             let bytes = end - self.domain_offset; self.domain_offset = end; return Ok(bytes);
         }
         let mut chunk = [0; 256];
-        let bytes = self.reader.encode_chunk(grant, &mut chunk)?;
+        let bytes = match self.reader.encode_chunk(grant, &mut chunk) {
+            Ok(bytes) => bytes,
+            Err(error) => {
+                self.failed = true;
+                self.hash = None;
+                self.reader.cancel(); self.reader.begin_close();
+                self.retirement.push(Owner::Bytes(error.reason.into_bytes()));
+                return Ok(error.written_bytes);
+            }
+        };
         self.hash.as_mut().unwrap().update(&chunk[..bytes]);
         if self.reader.is_complete() { self.digest = Some(self.hash.take().unwrap().finalize()); }
         Ok(bytes)
@@ -224,8 +236,11 @@ impl SceneHash {
     pub(super) fn take(&mut self) -> Option<(Arc<FlowWorkingScene>, [u8; 32])> { let digest = self.digest.take()?; Some((self.reader.take_root()?, digest)) }
     pub(super) fn cancel(&mut self) { self.reader.cancel(); }
     pub(super) fn begin_close(&mut self) { self.reader.begin_close(); self.hash = None; self.digest = None; }
-    pub(super) fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> { self.reader.close_step(grant) }
-    pub(super) fn terminal_is_empty(&self) -> bool { self.reader.terminal_is_empty() && self.hash.is_none() && self.digest.is_none() }
+    pub(super) fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.retirement.is_empty() { return store::ErasedSnapshotRetirement::close_step(&mut self.retirement, grant.maximum_items, grant.maximum_bytes); }
+        self.reader.close_step(grant)
+    }
+    pub(super) fn terminal_is_empty(&self) -> bool { self.reader.terminal_is_empty() && self.hash.is_none() && self.digest.is_none() && self.retirement.is_empty() }
 }
 //#endregion 🪪️SceneIdentity
 

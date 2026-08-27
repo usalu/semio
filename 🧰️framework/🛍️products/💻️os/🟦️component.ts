@@ -20,8 +20,8 @@ import { conflictResolutionAsU8, createTurnOutcomeBroadcast, fetchWithTimeout, m
 import type { DirectoryCommand, DirectoryEvent, DirectoryStreamMessage } from "./🔨️modules/📇️directory/🟦️component.ts";
 /** 📡️ The replication wire contract lives in `🧰️framework/🔨️modules/📡️replication` — os speaks it,
  * it is not os-owned. Frames/envelopes/presence peers all come from there. */
-import type { ArtifactPresencePeer, ClientFrame, MutationEnvelope, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "@semio-tech/framework-replication";
-import { decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame, mutationEnvelopeFromWire, mutationEnvelopeToWire } from "@semio-tech/framework-replication";
+import type { ArtifactPresencePeer, ClientFrame, LocalInteractionIdentity, LocalInteractionPage, LocalInteractionQueryCommand, LocalInteractionQueryReply, LocalInteractionQueryToken, MutationEnvelope, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "@semio-tech/framework-replication";
+import { decodeClientFrame, decodeLocalInteractionQueryCommand, decodeLocalInteractionQueryReply, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodeLocalInteractionQueryCommand, encodeLocalInteractionQueryReply, encodePresencePeer, encodeServerFrame, localInteractionIdentityEquals, mutationEnvelopeFromWire, mutationEnvelopeToWire } from "@semio-tech/framework-replication";
 /** 🔢️ Shared byte-codec floor — the same primitives the wire frames are built from; os reuses them
  * for its backbone-envelope and app-channel codecs rather than keeping a second copy. */
 import { decodeCausalEnvelopeBatch, encodeCausalEnvelopeBatch, readBool, readBytes, readF64, readHash32, readStr, readU8, readVarintU64, readVecBytes, readVecEnvelope, readVecStr, writeBool, writeBytes, writeF64, writeHash32, writeStr, writeVarintU64, writeVecBytes, writeVecEnvelope, writeVecStr } from "@semio-tech/framework-replication";
@@ -1211,6 +1211,7 @@ export function decodeScenePackValue(bytes: Uint8Array): unknown {
 export type ChildPackEntry = { readonly slot: string; readonly child_id: string; readonly dialect: string; readonly envelope_pack: readonly number[] };
 
 export type AppCommandValue =
+  | { readonly LocalInteractionQuery: { readonly seq: number; readonly command: LocalInteractionQueryCommand } }
   | { readonly ConfigCommand: { readonly seq: number; readonly command: readonly number[] } }
   | { readonly Command: { readonly seq: number; readonly command: readonly number[]; readonly view_state: readonly number[] } }
   | { readonly CommandText: { readonly seq: number; readonly line: string } }
@@ -1266,6 +1267,7 @@ export type AppCommandValue =
   | { readonly presence: { readonly seq: number; readonly own_color: number | null; readonly peers: readonly (readonly number[])[] } };
 
 export type AppFrameValue =
+  | { readonly LocalInteractionQuery: { readonly reply: LocalInteractionQueryReply } }
   | { readonly Done: { readonly in_reply_to: number } }
   | {
       readonly Invocation: {
@@ -1362,13 +1364,13 @@ const APP_COMMAND_TAGS = {
   transactionPrepare: 17, transactionCommit: 18, transactionRollback: 19, transactionUndo: 20, transactionRedo: 21,
   openArtifact: 22, setDefaultApp: 23, clearDefaultApp: 24,
   setMergePolicy: 25, resolveConflict: 26, readConflicts: 27,
-  presence: 28,
+  presence: 28, LocalInteractionQuery: 29,
 } as const;
 const APP_FRAME_TAGS = {
   Done: 0, Invocation: 1, DocumentChanged: 2, Document: 3,
   Config: 4, ConfigChanged: 5, ContextMenu: 6, Media: 7, MediaFingerprint: 8, Error: 9, Emit: 10, Draft: 11, Children: 12, Ephemeral: 13, HistorySnapshot: 14,
   transactionProposal: 15, transactionPrepared: 16, transactionCommitted: 17, transactionRolledBack: 18,
-  MergeReport: 19, Conflicts: 20, UiPatch: 21, UiSnapshotEnd: 22,
+  MergeReport: 19, Conflicts: 20, UiPatch: 21, UiSnapshotEnd: 22, LocalInteractionQuery: 23,
 } as const;
 
 /** 📤️ `tag u8 | fields` — the TS twin of `protocol_channel::encode_app_command` (agreed contract). */
@@ -1513,6 +1515,10 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
   } else if ("readConflicts" in cmd) {
     out.push(APP_COMMAND_TAGS.readConflicts);
     writeVarintU64(out, cmd.readConflicts.seq);
+  } else if ("LocalInteractionQuery" in cmd) {
+    out.push(APP_COMMAND_TAGS.LocalInteractionQuery);
+    writeVarintU64(out, cmd.LocalInteractionQuery.seq);
+    writeBytes(out, Array.from(encodeLocalInteractionQueryCommand(cmd.LocalInteractionQuery.command)));
   } else if ("presence" in cmd) {
     out.push(APP_COMMAND_TAGS.presence);
     writeVarintU64(out, cmd.presence.seq);
@@ -1655,6 +1661,13 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
       const peers = readVecBytes(bytes, pos);
       return { presence: { seq, own_color, peers } };
     }
+    case APP_COMMAND_TAGS.LocalInteractionQuery: {
+      const seq = readVarintU64(bytes, pos);
+      const length = readVarintU64(bytes, pos);
+      if (length > 142 || pos[0] + length !== bytes.length) throw new Error("local-interaction.command-envelope");
+      const command = decodeLocalInteractionQueryCommand(bytes.subarray(pos[0]));
+      return { LocalInteractionQuery: { seq, command } };
+    }
     default:
       throw new Error(`decodeAppCommand: unknown tag ${bytes[0]}`);
   }
@@ -1778,6 +1791,9 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     writeVarintU64(out, frame.UiPatch.revision);
     writeVarintU64(out, frame.UiPatch.base_revision);
     writeBytes(out, frame.UiPatch.ops);
+  } else if ("LocalInteractionQuery" in frame) {
+    out.push(APP_FRAME_TAGS.LocalInteractionQuery);
+    writeBytes(out, Array.from(encodeLocalInteractionQueryReply(frame.LocalInteractionQuery.reply)));
   } else if ("UiSnapshotEnd" in frame) {
     out.push(APP_FRAME_TAGS.UiSnapshotEnd);
     writeVarintU64(out, frame.UiSnapshotEnd.revision);
@@ -1894,6 +1910,11 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
     }
     case APP_FRAME_TAGS.UiSnapshotEnd:
       return { UiSnapshotEnd: { revision: readVarintU64(bytes, pos) } };
+    case APP_FRAME_TAGS.LocalInteractionQuery: {
+      const length = readVarintU64(bytes, pos);
+      if (length > 4256 || pos[0] + length !== bytes.length) throw new Error("local-interaction.reply-envelope");
+      return { LocalInteractionQuery: { reply: decodeLocalInteractionQueryReply(bytes.subarray(pos[0])) } };
+    }
     default:
       throw new Error(`decodeAppFrame: unknown tag ${bytes[0]}`);
   }
@@ -1973,19 +1994,86 @@ export function decodeConflictsFromWire(conflictsBytes: readonly number[], decod
  * had moved to 10, so the pin exists to make a half-done bump fail a test instead of a session.
  * Channel v12 retired the `Hello`/`Welcome` handshake this constant used to be carried on — it now
  * exists purely for the drift-guard test below. */
-const APP_CHANNEL_VERSION = 12;
+const APP_CHANNEL_VERSION = 13;
 
 /** 📡️ The slice of {@link PluginWasmHandle} {@link AppChannelClient} needs — deliberately narrower
  * than the full handle so a caller can hand in any object shaped like it (a real handle, a test
  * double, ...) without importing the rest of `@semio-tech/framework`'s plugin-loading surface. */
 export type AppChannelHandle = Pick<PluginWasmHandle, "enqueue" | "outcomes">;
 
+//#region 🏠️LocalQueryOwnership
+type LocalInteractionClientQuery = {
+  readonly requestId: string;
+  readonly cancelSequence: number;
+  readonly consume: (page: LocalInteractionPage) => Promise<void>;
+  readonly resolve: (identity: LocalInteractionIdentity) => void;
+  readonly reject: (error: unknown) => void;
+  readonly signal: AbortSignal | undefined;
+  readonly abort: () => void;
+  token: LocalInteractionQueryToken | null;
+  nextOrdinal: bigint;
+  consuming: boolean;
+  cancelled: boolean;
+  terminalConsumed: boolean;
+  failure: unknown;
+};
+
+function sameLocalInteractionQuery(left: LocalInteractionQueryToken, right: LocalInteractionQueryToken): boolean {
+  return left.requestId === right.requestId && left.queryGeneration === right.queryGeneration && localInteractionIdentityEquals(left.identity, right.identity);
+}
+type AppChannelTransactionReply = { readonly kind: "prepared" | "committed" | "rolledBack"; readonly id: string };
+
+function appChannelTransactionReply(command: AppCommandValue): AppChannelTransactionReply | null {
+  if ("transactionPrepare" in command) return { kind: "prepared", id: command.transactionPrepare.txn_id };
+  if ("transactionCommit" in command) return { kind: "committed", id: command.transactionCommit.txn_id };
+  if ("transactionRollback" in command) return { kind: "rolledBack", id: command.transactionRollback.txn_id };
+  return null;
+}
+
+function appChannelReplySequence(frame: AppFrameValue): number | null {
+  const value = Object.values(frame)[0];
+  return value && "in_reply_to" in value && typeof value.in_reply_to === "number" ? value.in_reply_to : null;
+}
+
+function appChannelFrameBelongsTo(frame: AppFrameValue, sequence: number, transaction: AppChannelTransactionReply | null): boolean {
+  const replySequence = appChannelReplySequence(frame);
+  if (replySequence !== null) return replySequence === sequence;
+  if ("transactionPrepared" in frame) return transaction?.kind === "prepared" && transaction.id === frame.transactionPrepared.txn_id;
+  if ("transactionCommitted" in frame) return transaction?.kind === "committed" && transaction.id === frame.transactionCommitted.txn_id;
+  if ("transactionRolledBack" in frame) return transaction?.kind === "rolledBack" && transaction.id === frame.transactionRolledBack.txn_id;
+  return true;
+}
+/** 🪪️ One checked handle-lifetime owner spans every client recreation; query admission reserves its cancellation receipt identity. */
+export class AppChannelRequestSequence {
+  constructor(private sequence = 0, private request = 0n) {
+    if (!Number.isSafeInteger(sequence) || sequence < 0 || request < 0n || request > 0xffffffffffffffffn) throw new Error("app-channel.invalid-sequence-owner");
+  }
+
+  nextSequence(): number {
+    if (this.sequence === Number.MAX_SAFE_INTEGER) throw new Error("app-channel.sequence-exhausted");
+    return ++this.sequence;
+  }
+
+  nextQuery(): { readonly sequence: number; readonly cancelSequence: number; readonly request: string } {
+    if (this.sequence > Number.MAX_SAFE_INTEGER - 2) throw new Error("app-channel.sequence-exhausted");
+    if (this.request === 0xffffffffffffffffn) throw new Error("local-interaction.request-exhausted");
+    const sequence = this.sequence + 1;
+    this.sequence += 2;
+    return { sequence, cancelSequence: this.sequence, request: (++this.request).toString() };
+  }
+
+  checkpoint(): { readonly sequence: number; readonly request: string } {
+    return { sequence: this.sequence, request: this.request.toString() };
+  }
+}
+//#endregion 🏠️LocalQueryOwnership
+
 /**
  * 📡️ Typed facade over one plugin instance's app channel — encodes an {@link AppCommandValue}, queues
  * it via {@link PluginWasmHandle.enqueue}, and decodes every {@link AppFrameValue} the matching
  * {@link TurnOutcome} carries. This is the ONLY place `AppCommand`/`AppFrame` framing happens on the
  * host side; callers (a React renderer's dispatch/refresh loop, a headless workflow runner) work with
- * decoded frames and plain JS values, never raw bytes or wire tags. `seq` is a per-client monotonic
+ * decoded frames and plain JS values, never raw bytes or wire tags. `seq` is a handle-owned monotonic
  * counter — the host has no other way to correlate a `Command`/`ConfigCommand`/`LoadDocument`/
  * `ReadDocument`/`LoadConfig`/`ReadConfig` with the `Invocation`/`Document` frame(s) it produced
  * (`AppFrame.*.in_reply_to`). Channel v12 retired the `hello()`/`refreshUi()`/`attachBackbone()`/
@@ -1999,20 +2087,20 @@ export type AppChannelHandle = Pick<PluginWasmHandle, "enqueue" | "outcomes">;
  * ({@link PluginWasmHandle.enqueue}) and replies arrive on the handle-wide {@link
  * PluginWasmHandle.outcomes} stream instead, so THIS class is what turns that stream back into the
  * one-reply-per-call shape every method below still returns. One background loop
- * ({@link pumpOutcomes}) owns the handle's async iterator for this instance's whole lifetime, matching
- * each incoming {@link TurnOutcome} to the OLDEST still-unresolved {@link sendCommand} call — sound
- * because every real call site here still awaits one command before sending the next, and
- * `PluginRuntime`'s own turn scheduler serializes one actor's turns in submission order (never
- * reordered within a lane), so outcomes for this instance can never arrive out of send order.
+ * ({@link pumpOutcomes}) owns the handle's async iterator for this instance's lifetime and routes
+ * every explicit numeric receipt to its exact waiter. Empty outcomes and uncorrelated notifications
+ * cannot complete a command. Transaction payloads accompany their numeric receipt and additionally
+ * match the pending transaction identity. One outcome may complete several distinct commands.
  */
 export class AppChannelClient {
-  private seq = 0;
+  private localQuery: LocalInteractionClientQuery | null = null;
+  private disposed = false;
   private readonly handle: AppChannelHandle;
   private readonly instanceId: number;
   private readonly appId: string;
   private readonly actor: string;
   private readonly outcomeIterator: AsyncIterator<TurnOutcome>;
-  private readonly pending: { readonly resolve: (frames: AppFrameValue[]) => void; readonly reject: (error: unknown) => void }[] = [];
+  private readonly pending: { readonly seq: number; readonly queryReceipt: boolean; readonly transaction: AppChannelTransactionReply | null; readonly resolve: (frames: AppFrameValue[]) => void; readonly reject: (error: unknown) => void }[] = [];
   /** 📦️ Per-instance document-pack cache (ticket
    * 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS, scout-1 §4: "the
    * browser host keeps NO document pack per instance today"). Populated from BOTH directions —
@@ -2023,7 +2111,7 @@ export class AppChannelClient {
   private cachedPack: Uint8Array | null = null;
   private cachedSpr: Uint8Array | null = null;
 
-  constructor(handle: AppChannelHandle, instanceId: number, appId: string, actor: string = "local") {
+  constructor(handle: AppChannelHandle, private readonly sequenceOwner: AppChannelRequestSequence, instanceId: number, appId: string, actor: string = "local") {
     this.handle = handle;
     this.instanceId = instanceId;
     this.appId = appId;
@@ -2036,24 +2124,48 @@ export class AppChannelClient {
    * stream for its whole lifetime — runs until {@link dispose} calls the iterator's own `return()`
    * (what breaks this loop) or the handle itself completes it. Every outcome for a DIFFERENT
    * `instanceId` is silently skipped (it belongs to a sibling `AppChannelClient` on the same handle);
-   * an outcome with no pending {@link sendCommand} waiter (should not happen given the FIFO guarantee
-   * this class's own header doc argues for, but a defensive drop rather than a throw if it ever does)
-   * is also skipped. */
+   * stale or duplicate numeric receipts do not consume another command's waiter. Query pages retain
+   * their separate ACK-owned lifecycle even when coalesced with ordinary replies or notifications. */
   private async pumpOutcomes(): Promise<void> {
     for (;;) {
       const step = await this.outcomeIterator.next();
-      if (step.done) return;
+      if (step.done) {
+        this.finishLocalInteractionQuery(new Error("local-interaction.channel-closed"));
+        for (const waiter of this.pending.splice(0)) waiter.reject(new Error("app-channel.closed"));
+        return;
+      }
       const outcome = step.value;
       if (outcome.instanceId !== this.instanceId) continue;
-      const waiter = this.pending.shift();
-      if (!waiter) continue;
       if ("error" in outcome) {
-        waiter.reject(outcome.error);
+        this.finishLocalInteractionQuery(outcome.error);
+        this.pending.shift()?.reject(outcome.error);
         continue;
       }
-      const frames = outcome.frames.map(decodeAppFrame);
-      this.captureDocumentFrames(frames);
-      waiter.resolve(frames);
+      const frames: AppFrameValue[] = [];
+      for (const encoded of outcome.frames) {
+        try { frames.push(decodeAppFrame(encoded)); }
+        catch (error) {
+          this.cancelLocalInteractionQuery(error);
+          for (let index = this.pending.length - 1; index >= 0; index -= 1) {
+            if (!this.pending[index]!.queryReceipt) this.pending.splice(index, 1)[0]!.reject(error);
+          }
+        }
+      }
+      const ordinary: AppFrameValue[] = [];
+      for (const frame of frames) {
+        if ("LocalInteractionQuery" in frame) this.receiveLocalInteractionQuery(frame.LocalInteractionQuery.reply);
+        else ordinary.push(frame);
+      }
+      const correlated = new Set(ordinary.flatMap((frame) => { const sequence = appChannelReplySequence(frame); return sequence === null ? [] : [sequence]; }));
+      for (let index = 0; index < this.pending.length;) {
+        const waiter = this.pending[index]!;
+        if (!correlated.has(waiter.seq)) { index += 1; continue; }
+        this.pending.splice(index, 1);
+        const reply = ordinary.filter((frame) => appChannelFrameBelongsTo(frame, waiter.seq, waiter.transaction));
+        this.captureDocumentFrames(reply);
+        waiter.resolve(reply);
+      }
+      this.finishDisposal();
     }
   }
 
@@ -2061,12 +2173,20 @@ export class AppChannelClient {
    * `destroyApp` (`PluginRuntime/🟦️component.tsx`) so a torn-down instance doesn't leak a live
    * subscriber against the handle-wide outcome stream for the rest of the handle's lifetime. */
   dispose(): void {
-    void this.outcomeIterator.return?.();
+    this.disposed = true;
+    for (let index = this.pending.length - 1; index >= 0; index -= 1) {
+      if (!this.pending[index]!.queryReceipt) this.pending.splice(index, 1)[0]!.reject(new Error("app-channel.disposed"));
+    }
+    if (this.localQuery) this.cancelLocalInteractionQuery(new Error("local-interaction.disposed"));
+    this.finishDisposal();
+  }
+
+  private finishDisposal(): void {
+    if (this.disposed && this.localQuery === null && this.pending.length === 0) void this.outcomeIterator.return?.();
   }
 
   private nextSeq(): number {
-    this.seq += 1;
-    return this.seq;
+    return this.sequenceOwner.nextSequence();
   }
 
   /** 📦️ Scans every frame one sent command's outcome carried for `AppFrame::Document` and refreshes
@@ -2092,11 +2212,105 @@ export class AppChannelClient {
   /** 🔀️ Queues one encoded command and resolves with every frame its matching {@link TurnOutcome}
    * carries — see this class's own header doc for how the reply gets correlated back to this call. */
   private sendCommand(command: AppCommandValue): Promise<AppFrameValue[]> {
+    if (this.disposed) return Promise.reject(new Error("app-channel.disposed"));
     return new Promise<AppFrameValue[]>((resolve, reject) => {
-      this.pending.push({ resolve, reject });
+      const seq = Object.values(command)[0]!.seq;
+      this.pending.push({ seq, queryReceipt: false, transaction: appChannelTransactionReply(command), resolve, reject });
       this.handle.enqueue(this.instanceId, [encodeAppCommand(command)]);
     });
   }
+
+  //#region 🏠️LocalInteractionQuery
+  /** 📃️ Each page remains native-owned until its consumer resolves; completion waits for exact native root retirement. */
+  readLocalInteractionPages(consume: (page: LocalInteractionPage) => Promise<void>, signal?: AbortSignal): Promise<LocalInteractionIdentity> {
+    if (this.disposed) return Promise.reject(new Error("app-channel.disposed"));
+    if (this.localQuery) return Promise.reject(new Error("local-interaction.busy"));
+    if (signal?.aborted) return Promise.reject(new Error("local-interaction.cancelled"));
+    let admission: ReturnType<AppChannelRequestSequence["nextQuery"]>;
+    try { admission = this.sequenceOwner.nextQuery(); }
+    catch (error) { return Promise.reject(error); }
+    const requestId = admission.request;
+    return new Promise((resolve, reject) => {
+      const abort = () => this.cancelLocalInteractionQuery(new Error("local-interaction.cancelled"));
+      this.localQuery = { requestId, cancelSequence: admission.cancelSequence, consume, resolve, reject, signal, abort, token: null, nextOrdinal: 0n, consuming: false, cancelled: false, terminalConsumed: false, failure: null };
+      signal?.addEventListener("abort", abort, { once: true });
+      this.sendLocalInteractionQuery(admission.sequence, { kind: "read", requestId });
+    });
+  }
+
+  private sendLocalInteractionQuery(seq: number, command: LocalInteractionQueryCommand): void {
+    this.pending.push({ seq, queryReceipt: true, transaction: null, resolve: () => {}, reject: (error: unknown) => this.finishLocalInteractionQuery(error) });
+    try { this.handle.enqueue(this.instanceId, [encodeAppCommand({ LocalInteractionQuery: { seq, command } })]); }
+    catch (error) {
+      const index = this.pending.findIndex((waiter) => waiter.seq === seq);
+      if (index !== -1) this.pending.splice(index, 1);
+      this.finishLocalInteractionQuery(error);
+    }
+  }
+
+  private cancelLocalInteractionQuery(error: unknown): void {
+    const query = this.localQuery;
+    if (!query || query.cancelled) return;
+    query.cancelled = true;
+    query.failure = error;
+    if (query.token) this.sendLocalInteractionQuery(query.cancelSequence, { kind: "cancel", token: query.token });
+  }
+
+  private finishLocalInteractionQuery(error: unknown = null): void {
+    const query = this.localQuery;
+    if (!query) return;
+    this.localQuery = null;
+    for (let index = this.pending.length - 1; index >= 0; index -= 1) {
+      if (this.pending[index]!.queryReceipt) this.pending.splice(index, 1);
+    }
+    query.signal?.removeEventListener("abort", query.abort);
+    const failure = query.failure ?? error;
+    if (failure !== null) query.reject(failure);
+    else if (query.token && query.terminalConsumed) query.resolve(query.token.identity);
+    else query.reject(new Error("local-interaction.incomplete-close"));
+    this.finishDisposal();
+  }
+
+  private receiveLocalInteractionQuery(reply: LocalInteractionQueryReply): void {
+    const query = this.localQuery;
+    if (!query) return;
+    if (reply.kind === "rejected") {
+      if (reply.requestId === query.requestId) this.finishLocalInteractionQuery(new Error(`local-interaction.${reply.code}`));
+      return;
+    }
+    if (reply.kind === "started") {
+      if (reply.token.requestId !== query.requestId || reply.token.identity.appInstanceId !== this.instanceId || query.token !== null) return;
+      query.token = reply.token;
+      if (query.cancelled) this.sendLocalInteractionQuery(query.cancelSequence, { kind: "cancel", token: query.token });
+      return;
+    }
+    const token = reply.kind === "page" ? reply.page : reply.token;
+    if (!query.token || !sameLocalInteractionQuery(query.token, token)) return;
+    if (reply.kind === "closed") {
+      if (!query.cancelled && (!query.terminalConsumed || token.ordinal !== query.token.ordinal)) return;
+      this.finishLocalInteractionQuery(reply.cancelled ? new Error("local-interaction.cancelled") : null);
+      return;
+    }
+    if (query.cancelled || query.consuming || token.ordinal !== query.nextOrdinal.toString()) return;
+    query.token = { requestId: token.requestId, queryGeneration: token.queryGeneration, identity: token.identity, ordinal: token.ordinal };
+    query.consuming = true;
+    void Promise.resolve().then(() => query.consume(reply.page)).then(() => {
+      if (this.localQuery !== query) return;
+      query.consuming = false;
+      if (query.cancelled) return;
+      query.terminalConsumed = reply.page.terminal;
+      query.nextOrdinal += 1n;
+      let seq: number;
+      try { seq = this.nextSeq(); }
+      catch (error) { this.cancelLocalInteractionQuery(error); return; }
+      this.sendLocalInteractionQuery(seq, { kind: "acknowledge", token: query.token! });
+    }, (error: unknown) => {
+      if (this.localQuery !== query) return;
+      query.consuming = false;
+      this.cancelLocalInteractionQuery(error);
+    });
+  }
+  //#endregion 🏠️LocalInteractionQuery
 
   /** 🎛️ Forwards one opaque app-specific command (already encoded by the caller's own command
    * grammar) plus the current view state; may return several frames (`Invocation` + any dirtied
@@ -2811,6 +3025,213 @@ if (import.meta.vitest) {
   });
 
   describe("@semio-tech/framework-os AppChannelClient", () => {
+    it("local interaction outer wire matches strict fixtures and the independent LEB128 oracle", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: Ajv } = await import("ajv");
+      const oracleModule = "@webassemblyjs/leb128/lib/leb.js";
+      const imported: unknown = await import(oracleModule);
+      if (!imported || typeof imported !== "object") throw new Error("invalid LEB128 oracle module");
+      const oracle: unknown = Reflect.get(imported, "default");
+      if (!oracle || typeof oracle !== "object") throw new Error("invalid LEB128 oracle interface");
+      const encodeUnsigned: unknown = Reflect.get(oracle, "encodeUIntBuffer");
+      if (typeof encodeUnsigned !== "function") throw new Error("missing LEB128 oracle encoder");
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🔣️query.json", import.meta.url), "utf8"));
+      const schema = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🧬️schema.json", import.meta.url), "utf8"));
+      const validate = new Ajv({ strict: true }).compile(schema);
+      expect(validate(fixture)).toBe(true);
+      expect(validate({ ...fixture, lateTokenAccepted: true })).toBe(false);
+      expect(validate({ ...fixture, terminalBeforeClosed: true })).toBe(false);
+      const read: AppCommandValue = { LocalInteractionQuery: { seq: 9, command: { kind: "read", requestId: "13" } } };
+      const rejected: AppFrameValue = { LocalInteractionQuery: { reply: { kind: "rejected", requestId: "13", code: "busy" } } };
+      const u64 = (value: bigint): number[] => {
+        const bytes = Buffer.alloc(8); bytes.writeBigUInt64LE(value);
+        const encoded: unknown = encodeUnsigned(bytes);
+        if (!(encoded instanceof Uint8Array)) throw new Error("invalid LEB128 oracle bytes");
+        return Array.from(encoded);
+      };
+      expect([...encodeAppCommand(read)]).toEqual([29, ...u64(9n), ...u64(2n), 0, ...u64(13n)]);
+      expect(Buffer.from(encodeAppCommand(read)).toString("hex")).toBe(fixture.outerReadHex);
+      expect(Buffer.from(encodeAppFrame(rejected)).toString("hex")).toBe(fixture.outerRejectedHex);
+      const receipt: AppFrameValue = { Done: { in_reply_to: 2 } };
+      expect([...encodeAppFrame(receipt)]).toEqual([0, ...u64(2n)]);
+      expect(Buffer.from(encodeAppFrame(receipt)).toString("hex")).toBe(fixture.receiptHex);
+      for (const row of fixture.sequenceCases) {
+        if (row.result === null) continue;
+        const sequence = row.result.sequence;
+        expect([...encodeAppCommand({ ReadDocument: { seq: sequence } })]).toEqual([7, ...u64(BigInt(sequence))]);
+        if (row.result.request !== null) {
+          const inner = [0, ...u64(BigInt(row.result.request))];
+          expect([...encodeAppCommand({ LocalInteractionQuery: { seq: sequence, command: { kind: "read", requestId: row.result.request } } })]).toEqual([29, ...u64(BigInt(sequence)), ...u64(BigInt(inner.length)), ...inner]);
+        }
+      }
+      expect(decodeAppCommand(encodeAppCommand(read))).toEqual(read);
+      expect(decodeAppFrame(encodeAppFrame(rejected))).toEqual(rejected);
+      expect(() => decodeAppCommand(Uint8Array.from([...encodeAppCommand(read), 0]))).toThrow();
+      expect(() => decodeAppFrame(Uint8Array.from([...encodeAppFrame(rejected), 0]))).toThrow();
+    });
+
+    it("local interaction client fixture lifecycles preserve ACK ownership and ordinary replies", async () => {
+      const { readFileSync } = await import("node:fs");
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🔣️query.json", import.meta.url), "utf8"));
+      for (const row of fixture.lifecycles) {
+        const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
+        const sent: AppCommandValue[] = [];
+        const handle: AppChannelHandle = { enqueue: (_id, events) => {
+          for (const command of events.map(decodeAppCommand)) {
+            sent.push(command);
+            if ("LocalInteractionQuery" in command && !(["disposal-before-read-receipt", "coalesced-query-and-ordinary-receipts"].includes(row.id) && command.LocalInteractionQuery.command.kind === "read")) broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ Done: { in_reply_to: command.LocalInteractionQuery.seq } })] });
+          }
+        }, outcomes: broadcast.stream };
+        const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 7, "fixture");
+        const abort = new AbortController();
+        let consume!: () => void;
+        const consumed = new Promise<void>((resolve) => { consume = resolve; });
+        let complete = false;
+        let queryResult: Promise<LocalInteractionIdentity | unknown> | undefined;
+        let ordinary: Promise<AppFrameValue[]> | undefined;
+        let ordinaryComplete = false;
+        const token: LocalInteractionQueryToken = { requestId: "1", queryGeneration: "41", identity: { appInstanceId: 7, generation: "9007199254740993", revision: "11".repeat(32), documentRevision: "22".repeat(32), topologyRevision: "33".repeat(32) }, ordinal: "0" };
+        const push = (reply: LocalInteractionQueryReply) => broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ LocalInteractionQuery: { reply } })] });
+        const flush = async () => { for (let index = 0; index < 12; index += 1) await Promise.resolve(); };
+        for (const event of row.events) {
+          if (event === "read") queryResult = client.readLocalInteractionPages(() => {
+            if (row.id === "synchronous-consumer-failure") throw new Error("synchronous consumer fixture");
+            if (row.id === "consumer-failure") return Promise.reject(new Error("consumer fixture"));
+            return consumed;
+          }, abort.signal).then((identity) => { complete = true; return identity; }, (error: unknown) => { complete = true; return error; });
+          else if (event === "ordinary") ordinary = client.readDocument().then((frames) => { ordinaryComplete = true; return frames; });
+          else if (event === "started") push({ kind: "started", token });
+          else if (event === "abort") abort.abort();
+          else if (event === "dispose") client.dispose();
+          else if (event === "malformed") broadcast.push({ instanceId: 7, frames: [Uint8Array.from(Buffer.from(fixture.malformedFrameHex, "hex"))] });
+          else if (event === "readReceipt") broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ Done: { in_reply_to: 1 } })] });
+          else if (event === "wrongReceipt" || event === "duplicateReadReceipt") {
+            broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ Done: { in_reply_to: event === "wrongReceipt" ? 999 : 1 } })] });
+            await flush();
+            expect(ordinaryComplete).toBe(false);
+          }
+          else if (event === "ordinaryDone") { broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ Done: { in_reply_to: 3 } })] }); expect(await ordinary).toEqual([{ Done: { in_reply_to: 3 } }]); }
+          else if (event === "ordinaryEmpty") { broadcast.push({ instanceId: 7, frames: [] }); await flush(); expect(ordinaryComplete).toBe(false); }
+          else if (event === "mixedReceipts") {
+            broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ Done: { in_reply_to: 1 } }), encodeAppFrame({ Done: { in_reply_to: 3 } })] });
+            await flush(); expect(ordinaryComplete).toBe(true);
+            expect(await ordinary).toEqual([{ Done: { in_reply_to: 3 } }]);
+          }
+          else if (event === "startedWithNotice" || event === "pageWithNotice") {
+            const reply: LocalInteractionQueryReply = event === "startedWithNotice" ? { kind: "started", token } : { kind: "page", page: { ...token, terminal: true, bytes: [0xe2, 0x9c, 0x93] } };
+            broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ LocalInteractionQuery: { reply } }), encodeAppFrame({ Ephemeral: { presence: [], presence_generation: 0, transient_generation: 0, interaction: [] } }), encodeAppFrame({ UiPatch: { in_reply_to: null, surface: "fixture", kind: "graph", revision: 1, base_revision: 0, ops: [] } })] });
+            await flush(); expect(ordinaryComplete).toBe(false);
+          }
+          else if (event === "page") push({ kind: "page", page: { ...token, terminal: true, bytes: [0xe2, 0x9c, 0x93] } });
+          else if (event === "consume") consume();
+          else if (event === "consumeError") await flush();
+          else if (event === "ack" || event === "cancel") {
+            await flush();
+            const last = sent.at(-1);
+            expect(last && "LocalInteractionQuery" in last ? last.LocalInteractionQuery.command : null).toEqual({ kind: event === "ack" ? "acknowledge" : "cancel", token });
+          } else if (event === "closed") {
+            expect(complete).toBe(false);
+            push({ kind: "closed", token, cancelled: row.cancelled });
+          }
+          await flush();
+        }
+        const result = await queryResult;
+        expect(complete).toBe(true);
+        if (!row.cancelled) expect(result).toEqual(token.identity);
+        else expect(result).toBeInstanceOf(Error);
+        client.dispose();
+      }
+    });
+    it("local interaction sequence admission matches the checked shared-owner fixture", async () => {
+      const { readFileSync } = await import("node:fs");
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🔣️query.json", import.meta.url), "utf8"));
+      for (const row of fixture.sequenceCases) {
+        const owner = new AppChannelRequestSequence(row.sequence, BigInt(row.request));
+        const allocate = () => row.operation === "query" ? owner.nextQuery() : { sequence: owner.nextSequence(), cancelSequence: null, request: null };
+        if (row.result === null) expect(allocate).toThrow();
+        else expect(allocate()).toEqual(row.result);
+        expect(owner.checkpoint()).toEqual(row.after);
+      }
+      for (const invalid of [-1, Number.MAX_SAFE_INTEGER + 1, NaN, 0.5]) expect(() => new AppChannelRequestSequence(invalid)).toThrow();
+      for (const invalid of [-1n, 0x1_0000_0000_0000_0000n]) expect(() => new AppChannelRequestSequence(0, invalid)).toThrow();
+    });
+
+    it("local interaction reopened clients reject delayed Started pages and ordinary receipts", async () => {
+      const { readFileSync } = await import("node:fs");
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🔣️query.json", import.meta.url), "utf8")).reopen;
+      const owner = new AppChannelRequestSequence();
+      const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
+      const sent: AppCommandValue[] = [];
+      const handle: AppChannelHandle = { enqueue: (_instance, bytes) => {
+        for (const command of bytes.map(decodeAppCommand)) {
+          sent.push(command);
+          if ("LocalInteractionQuery" in command) broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ Done: { in_reply_to: command.LocalInteractionQuery.seq } })] });
+        }
+      }, outcomes: broadcast.stream };
+      const flush = async () => { for (let index = 0; index < 16; index += 1) await Promise.resolve(); };
+      const push = (reply: LocalInteractionQueryReply) => broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ LocalInteractionQuery: { reply } })] });
+      const oldToken: LocalInteractionQueryToken = { requestId: fixture.requests[0], queryGeneration: "41", identity: { appInstanceId: 7, generation: "7", revision: "11".repeat(32), documentRevision: "22".repeat(32), topologyRevision: "33".repeat(32) }, ordinal: "0" };
+      const newToken: LocalInteractionQueryToken = { ...oldToken, requestId: fixture.requests[1], queryGeneration: "42" };
+      const first = new AppChannelClient(handle, owner, 7, "fixture");
+      const firstResult = first.readLocalInteractionPages(async () => {}).catch((error: unknown) => error);
+      first.dispose();
+      await flush();
+      push({ kind: "started", token: oldToken });
+      await flush();
+      push({ kind: "closed", token: oldToken, cancelled: true });
+      expect(await firstResult).toBeInstanceOf(Error);
+      const second = new AppChannelClient(handle, owner, 7, "fixture");
+      let consumed = 0;
+      let ordinaryComplete = false;
+      const secondResult = second.readLocalInteractionPages(async () => { consumed += 1; });
+      const ordinary = second.readDocument().then((frames) => { ordinaryComplete = true; return frames; });
+      for (const sequence of [...fixture.readSequences.slice(0, 1), ...fixture.cancelSequences.slice(0, 1), 999]) broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ Done: { in_reply_to: sequence } })] });
+      push({ kind: "started", token: oldToken });
+      push({ kind: "page", page: { ...oldToken, terminal: true, bytes: [1] } });
+      push({ kind: "closed", token: oldToken, cancelled: false });
+      await flush();
+      expect(consumed).toBe(0);
+      expect(ordinaryComplete).toBe(false);
+      push({ kind: "started", token: newToken });
+      push({ kind: "page", page: { ...newToken, terminal: true, bytes: [2] } });
+      await flush();
+      expect(consumed).toBe(1);
+      expect(sent.at(-1)).toEqual({ LocalInteractionQuery: { seq: fixture.ackSequence, command: { kind: "acknowledge", token: newToken } } });
+      broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ Done: { in_reply_to: fixture.ordinarySequence } })] });
+      expect(await ordinary).toEqual([{ Done: { in_reply_to: fixture.ordinarySequence } }]);
+      push({ kind: "closed", token: newToken, cancelled: false });
+      expect(await secondResult).toEqual(newToken.identity);
+      expect(sent.filter((command) => "LocalInteractionQuery" in command && command.LocalInteractionQuery.command.kind === "read").map((command) => "LocalInteractionQuery" in command ? command.LocalInteractionQuery.seq : 0)).toEqual(fixture.readSequences);
+      second.dispose();
+    });
+
+    it("local interaction exhausted admission leaves no query slot and retains a cancellation sequence", async () => {
+      const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
+      const sent: AppCommandValue[] = [];
+      const handle: AppChannelHandle = { enqueue: (_instance, bytes) => {
+        for (const command of bytes.map(decodeAppCommand)) {
+          sent.push(command);
+          broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ Done: { in_reply_to: Object.values(command)[0]!.seq } })] });
+        }
+      }, outcomes: broadcast.stream };
+      const exhausted = new AppChannelClient(handle, new AppChannelRequestSequence(Number.MAX_SAFE_INTEGER - 1), 7, "fixture");
+      await expect(exhausted.readLocalInteractionPages(async () => {})).rejects.toThrow("sequence-exhausted");
+      await expect(exhausted.readLocalInteractionPages(async () => {})).rejects.toThrow("sequence-exhausted");
+      expect(sent).toHaveLength(0);
+      await exhausted.readDocument();
+      expect(sent).toEqual([{ ReadDocument: { seq: Number.MAX_SAFE_INTEGER } }]);
+      exhausted.dispose();
+      sent.length = 0;
+      const last = new AppChannelClient(handle, new AppChannelRequestSequence(Number.MAX_SAFE_INTEGER - 2), 7, "fixture");
+      const result = last.readLocalInteractionPages(async () => {}).catch((error: unknown) => error);
+      const token: LocalInteractionQueryToken = { requestId: "1", queryGeneration: "43", identity: { appInstanceId: 7, generation: "7", revision: "11".repeat(32), documentRevision: "22".repeat(32), topologyRevision: "33".repeat(32) }, ordinal: "0" };
+      broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ LocalInteractionQuery: { reply: { kind: "started", token } } }), encodeAppFrame({ LocalInteractionQuery: { reply: { kind: "page", page: { ...token, terminal: true, bytes: [1] } } } })] });
+      for (let index = 0; index < 16; index += 1) await Promise.resolve();
+      expect(sent.at(-1)).toEqual({ LocalInteractionQuery: { seq: Number.MAX_SAFE_INTEGER, command: { kind: "cancel", token } } });
+      broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ LocalInteractionQuery: { reply: { kind: "closed", token, cancelled: true } } })] });
+      expect(await result).toBeInstanceOf(Error);
+      last.dispose();
+    });
     /** 🧪️ A fake handle that decodes whatever {@link AppChannelClient} `enqueue`d and pushes
      * caller-supplied frames back as this SAME instance's next outcome — enough to assert the client
      * frames/unframes correctly (and correlates replies through the real `outcomes` broadcast) without
@@ -2837,7 +3258,7 @@ if (import.meta.vitest) {
           { UiPatch: { in_reply_to: seqsSeen.at(-1) ?? 0, surface: "1:body", kind: "window", revision: 1, base_revision: 0, ops: [] } },
         ];
       });
-      const client = new AppChannelClient(handle, 1, "app.demo");
+      const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
       const first = await client.command(new Uint8Array([1, 2]), { cursor: 0 });
       const second = await client.command(new Uint8Array([3]), { cursor: 1 });
       expect(seqsSeen).toEqual([1, 2]);
@@ -2849,9 +3270,9 @@ if (import.meta.vitest) {
       const seen: AppCommandValue[] = [];
       const handle = fakeHandle((_instanceId, commands) => {
         seen.push(...commands);
-        return [{ Done: { in_reply_to: 1 } }];
+        return [{ Done: { in_reply_to: Object.values(commands[0]!)[0]!.seq } }];
       });
-      const client = new AppChannelClient(handle, 1, "app.demo");
+      const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
       await client.configure({ locale: "en" });
       await client.readDocument();
       await client.loadDocument(new Uint8Array([1]), new Uint8Array([2]));
@@ -2862,7 +3283,7 @@ if (import.meta.vitest) {
 
     it("caches the document pack from loadDocument()'s own arguments before any reply arrives", async () => {
       const handle = fakeHandle(() => [{ Done: { in_reply_to: 1 } }]);
-      const client = new AppChannelClient(handle, 1, "app.demo");
+      const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
       expect(client.documentPack()).toBeNull();
       await client.loadDocument(new Uint8Array([1, 2]), new Uint8Array([3]));
       expect(client.documentPack()).toEqual({ pack: new Uint8Array([1, 2]), spr: new Uint8Array([3]) });
@@ -2876,7 +3297,7 @@ if (import.meta.vitest) {
         }
         return [{ Done: { in_reply_to: 1 } }];
       });
-      const client = new AppChannelClient(handle, 1, "app.demo");
+      const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
       await client.readDocument();
       expect(client.documentPack()).toEqual({ pack: new Uint8Array([9, 9]), spr: new Uint8Array([8]) });
     });
@@ -2885,9 +3306,9 @@ if (import.meta.vitest) {
       const seen: AppCommandValue[] = [];
       const handle = fakeHandle((_instanceId, commands) => {
         seen.push(...commands);
-        return [{ Done: { in_reply_to: 1 } }];
+        return [{ Done: { in_reply_to: Object.values(commands[0]!)[0]!.seq } }];
       });
-      const client = new AppChannelClient(handle, 1, "app.demo");
+      const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
       await client.transactionPrepareOwner("txn-1", "s.doc#kind", new Uint8Array([1]));
       await client.transactionPreparePlanned("txn-1", [new Uint8Array([2]), new Uint8Array([3])], "duplicate", new Uint8Array([4]));
       await client.transactionCommit("txn-1");
@@ -2923,9 +3344,9 @@ if (import.meta.vitest) {
       const seen: AppCommandValue[] = [];
       const handle = fakeHandle((_instanceId, commands) => {
         seen.push(...commands);
-        return [{ Done: { in_reply_to: 1 } }];
+        return [{ Done: { in_reply_to: Object.values(commands[0]!)[0]!.seq } }];
       });
-      const client = new AppChannelClient(handle, 1, "app.demo");
+      const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
       await client.configure({});
       await client.configure({});
       await client.configure({});
@@ -2948,7 +3369,7 @@ if (import.meta.vitest) {
         { MergeReport: { in_reply_to: null, report: [1] } },
         { Conflicts: { in_reply_to: null, conflicts: [2] } },
       ]);
-      const client = new AppChannelClient(handle, 1, "app.demo");
+      const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
       const frames = await client.command(new Uint8Array([1]), {});
       expect(frames).toHaveLength(3);
       const invocation = frames.find((frame): frame is Extract<AppFrameValue, { readonly Invocation: unknown }> => "Invocation" in frame);

@@ -31,7 +31,7 @@ mod structural_correspondence_tests {
         let descriptor: serde_json::Value = serde_json::from_str(&descriptor_source).expect("direct descriptor must be valid JSON");
         let payload_schema_source = std::fs::read_to_string(owner.join("🔣️payload.schema.json")).expect("direct payload schema");
         let payload_schema: serde_json::Value = serde_json::from_str(&payload_schema_source).expect("direct payload schema must be valid JSON");
-        let catalog_source = std::fs::read_to_string(mutation_root.join("../../🧪️oracle/🔣️component.json")).expect("language-neutral oracle catalog");
+        let catalog_source = std::fs::read_to_string(mutation_root.join("../../🧪️oracle/🔣️.json")).expect("language-neutral oracle catalog");
         let catalog: serde_json::Value = serde_json::from_str(&catalog_source).expect("language-neutral oracle catalog must be valid JSON");
         let descriptors = EnergyModelMutation::kinds();
 
@@ -41,7 +41,7 @@ mod structural_correspondence_tests {
         assert!(!source.contains(concat!("::", "mutation::")));
         assert_eq!(descriptor["semanticKind"], "replace-model");
         assert_eq!(descriptor["aggregateVariant"], "ReplaceModel");
-        assert_eq!(descriptor["payloadSchema"], "🔣️payload.schema.json");
+        assert_eq!(owner.join(descriptor["payloadSchema"].as_str().expect("payload schema pointer")), owner.join("🔣️payload.schema.json"));
         assert_eq!(payload_schema["title"], "ReplaceModel");
         for surface in ["🟦️component.ts", "🔗️component.graphql", "🛰️component.proto", "📝️text/🦀️component.rs", "💾️binary/🦀️component.rs"] {
             let surface_source = std::fs::read_to_string(owner.join(surface)).expect("direct mutation surface");

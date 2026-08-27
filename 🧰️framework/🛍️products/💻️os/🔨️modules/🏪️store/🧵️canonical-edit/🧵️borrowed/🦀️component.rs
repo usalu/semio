@@ -179,11 +179,11 @@ impl ArtifactCanonicalEditEncoder {
         Err("canonical-edit.borrowed-expansion-limit".into())
     }
 
-    pub(super) fn encode_chunk<T: ArtifactCanonicalJson>(&mut self, root: &T, output: &mut [u8]) -> Result<usize, String> {
-        self.bind(root)?;
+    pub(super) fn encode_chunk<T: ArtifactCanonicalJson>(&mut self, root: &T, output: &mut [u8]) -> Result<usize, ArtifactCanonicalJsonEncodeError> {
+        self.bind(root).map_err(|reason| ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason })?;
         let mut written = 0;
         while written < output.len().min(ARTIFACT_CANONICAL_JSON_CHUNK_BYTES) {
-            let Some(byte) = self.next_byte()? else { break };
+            let Some(byte) = self.next_byte().map_err(|reason| ArtifactCanonicalJsonEncodeError { written_bytes: written, reason })? else { break };
             output[written] = byte;
             written += 1;
         }

@@ -111,7 +111,7 @@ only channel from input to output, but its own compile/run is unverified and rep
   — filled in the dispatcher stub: independent `HNode`/`HDoc` tree, `html5ever`/`rcdom`-backed
   parse/serialize, `oracle_apply_mutation`/`oracle_apply_mutation_inverse`/`project_html_5`, 13 unit
   tests (incl. the real-fixture exhaustive sweep).
-- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️oracle/🔣️.json`
   — new: oracle registration (`html5ever-html-5-mutate`) + `semantic-html-v1` comparison profile +
   mutation catalog (`html-5-any`, 10 kinds).
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🧫️fixtures/🌐️zukunft-bau-entwerfen-mit-bestand.html` —

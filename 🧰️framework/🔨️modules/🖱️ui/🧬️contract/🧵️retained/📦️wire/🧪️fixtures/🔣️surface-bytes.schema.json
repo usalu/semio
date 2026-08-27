@@ -1,0 +1,12 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"object","additionalProperties":false,
+  "required":["maximumBytes","pageBytes","lengths","pattern","invalidLengths"],
+  "properties":{
+    "maximumBytes":{"const":32768},
+    "pageBytes":{"const":256},
+    "lengths":{"type":"array","items":{"type":"integer","minimum":0,"maximum":32768},"minItems":7},
+    "pattern":{"type":"object","additionalProperties":false,"required":["multiply","add","modulo"],"properties":{"multiply":{"const":17},"add":{"const":3},"modulo":{"const":256}}},
+    "invalidLengths":{"type":"array","items":{"type":"number"},"minItems":4}
+  }
+}

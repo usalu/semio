@@ -6,6 +6,10 @@
     "default": ["{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/**/*.rs", "{projectRoot}/**/*"]
   },
   "targets": {
+    "check": {
+      "executor": "nx:run-commands",
+      "options": { "command": "bun ./📜️script.ts check", "cwd": "{projectRoot}", "forwardAllArgs": true }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

@@ -14,7 +14,7 @@
 //! `description`, `entityKind`/`layer`/`center`/`radius`/`start`/`end`/`startAngle`/`endAngle`/
 //! `position`/`height`/`value`/`points`/`blockName`, `basePoint`, `entities`).
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`KINDS`).
 
 use semio_repo_test_host::Json;
@@ -41,7 +41,7 @@ pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8
 
 /// 📄️ Independent semantic projection of a DXF R12 document, read back by `dxf` itself (never by
 /// this subset's own codec) — used to compare the oracle's and the subject's results under the
-/// `semantic-dxf-r12-v1` comparison profile declared in `../🧪️oracle/🔣️component.json`.
+/// `semantic-dxf-r12-v1` comparison profile declared in `../🧪️oracle/🔣️.json`.
 #[cfg(feature = "oracles")]
 pub fn project_dxf_r12(bytes: &[u8]) -> Result<Json, String> {
     imp::project_dxf_r12(bytes)

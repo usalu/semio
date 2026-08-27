@@ -1,5 +1,11 @@
 # Retained Group Publication: Exact Next Boundary
 
+## Current Native Regression
+
+The combined `retained_group_` kernel gate passed all six tests, zero failures,890 filtered,9.50 seconds compilation and0.02 seconds test time on the current Store snapshot (`🧪️member-group-read-regression-r3-native-2026-08-27.txt`). These are the two history, two cursor and two whole-envelope capture laws described below. Runtime DEBUG confirms the four compound-read fixture cases. This supersedes their earlier source-only status, not the still-open complete Store snapshot/stamp/log authority or active Child executor.
+
+The retained-member gate also passed all three tests, zero failures,893 filtered,7.75 seconds compilation and0.01 seconds test time (`🧪️member-publication-regression-r2-native-2026-08-27.txt`). Runtime DEBUG covers real two-member reservations without visible edits, stale/cancelled abort without undo, and ordered17/-23/42 publication. Its8194-byte ingress case is scalar JSON with padding, not a large semantic edit or mounted atomic group proof.
+
 ## What Is Already Implemented
 
 The Store member seam owns a retained wire decoder/preparation, validates exact member identity and revision/generation, seals group id before the edit digest, reserves a real history slot plus displaced-owner credits, and supports bounded abort/close. Tests keep both direct Store snapshots and envelope history unchanged throughout all-member preparation. Child admission remains fail-closed in the active plugin publisher; no singleton dispatch fallback remains.

@@ -18,7 +18,7 @@ features touched=115
       ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🧪️tests/mutate-en1999-1/component.feature
       ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🧪️tests/mutate-en1997-1/component.feature
       ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🧪️tests/mutate-en1990-1/component.feature
-### 15  The recorded no-oracle decision it replaces is gone from `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, because there is now a reference to compare against.
+### 15  The recorded no-oracle decision it replaces is gone from `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, because there is now a reference to compare against.
       ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🧪️tests/mutate-din4108-1/component.feature
       ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🧪️tests/mutate-din18599-1/component.feature
       ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🧪️tests/mutate-din16798-1/component.feature

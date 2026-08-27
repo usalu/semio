@@ -308,6 +308,7 @@ import {
   wireLabel,
 } from "../Interpreter/🟦️component.tsx";
 import { builtNodeToSnapshot, UiDocumentStore } from "../UiDocumentStore/🟦️component.tsx";
+import { BoardSessionFactoryContext, resolveAppSurfaceSessionFactory, type AppSurfaceSessionFactory } from "../WasmSessionLoader/🟦️component.tsx";
 import {
   actionStageKey,
   type ActiveSession,
@@ -800,6 +801,7 @@ export class TutorialRecorder {
  * sync via `bootFrameworkOs`), `storageNamespace` prefixes this shell's durable storage keys so
  * co-mounted shells don't share `semio.os.dock`/`ui.chrome.*` state. */
 export interface FrameworkOsShellProps {
+  readonly surfaceSessionFactories?: readonly AppSurfaceSessionFactory[];
   readonly pluginFilter?: string;
   readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
   readonly appId?: string;
@@ -1056,6 +1058,7 @@ export function FrameworkOsShell(props: FrameworkOsShellProps): React.ReactEleme
 function FrameworkOsShellInner({
   pluginFilter,
   plugins,
+  surfaceSessionFactories,
   appId,
   appRole,
   locks: locksProp,
@@ -1065,6 +1068,7 @@ function FrameworkOsShellInner({
 }: {
   readonly pluginFilter?: string;
   readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
+  readonly surfaceSessionFactories?: readonly AppSurfaceSessionFactory[];
   readonly appId?: string;
   readonly appRole?: AppRole;
   readonly locks?: ResolvedShellLocks;
@@ -1086,6 +1090,7 @@ function FrameworkOsShellInner({
   const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks, defaults, storage: scope.storage }));
   const [historyProjection, setHistoryProjection] = useState<{ readonly cursor: number; readonly entries: Readonly<Record<number, HistoryEntry>>; readonly canUndo: boolean; readonly canRedo: boolean; readonly currentCheckpointId: string | undefined }>({ cursor: 0, entries: {}, canUndo: false, canRedo: false, currentCheckpointId: undefined });
   const { loadedPlugins, pluginStatusById, pluginSupervisorById, session, error } = shellState.pluginRuntime;
+  const boardSessionFactory = useMemo(() => resolveAppSurfaceSessionFactory(surfaceSessionFactories ?? [], session ? { pluginId: session.pluginId, appId: session.app.id, instanceId: session.instanceId } : null), [surfaceSessionFactories, session?.pluginId, session?.app.id, session?.instanceId]);
   const applyHistoryPatch = useCallback((patch: HistoryPatch | undefined, replace = false) => {
     if (!patch) return;
     setHistoryProjection((current) => {
@@ -6998,6 +7003,7 @@ function FrameworkOsShellInner({
   //#endregion 🖱️ShellContextMenu
 
   return (
+    <BoardSessionFactoryContext.Provider value={boardSessionFactory}>
     <SetWindowTitleContext.Provider value={setWindowTitle}>
     <SetWindowIconContext.Provider value={setWindowIcon}>
     <AppKeybindingsContext.Provider value={keysByActionId}>
@@ -7125,6 +7131,7 @@ function FrameworkOsShellInner({
     </AppKeybindingsContext.Provider>
     </SetWindowIconContext.Provider>
     </SetWindowTitleContext.Provider>
+    </BoardSessionFactoryContext.Provider>
   );
 }
 //#endregion FrameworkOsShell

@@ -39,3 +39,11 @@ SEMIO_TEST_BUDGET_MS=180000 SEMIO_TEST_CASE_BUDGET_MS=30000 bun ./📜️script.
 ```
 
 That replay must establish whether the existing downstream codec and inverse assertions pass. Any resulting failure is a new runtime boundary and is outside this test-only assertion repair until separately authorized.
+
+## Coordinator Runtime Acceptance
+
+After repairing positional Nextest filter routing, the coordinator's fresh registered STDIO invocation compiled and ran exactly9 matching tests:9 passed,5997 skipped, exit0. Transcript: `🧪️pdf14-targeted-registered.log`; binaries metadata: `🧪️pdf14-targeted-registered-artifacts/semio-nextest-qjgb7p/binaries-metadata.json`. The build used `--lib --no-default-features --build-jobs 1 language_neutral_forward_and_concrete_inverse` and an isolated `🧪️pdf14-contract-target`.
+
+An independent listing then verified the exact nine non-ignored PDF1.4 Any/A/X test identities in the retained executable and reran them without fail-fast. All9 passed again; its SHA-256 remained `b1e6539470418a62ce71cf4aea8931ae0f5e2cbebeb7c5fb626133ea73192a7e`. Evidence: `🧪️pdf14-runtime-selection/🧪️root-verified-selection-retry.log`, exact selected roster/results under `🧪️pdf14-runtime-selection/🧫️run-jePvq4`. The initial listing harness failed before test execution because it imported a private capture helper; that invocation error is separately retained in `🧪️root-verified-selection.log` and was corrected using a bounded subprocess.
+
+This accepts the nine assertion repairs and their existing downstream concrete inverse/codec law loops on that compiled source boundary. It is not a full STDIO suite pass, a complete PDF owner conversion, or validation of the subsequent lower metadata/public derive changes. The known wider runtime failures and remaining canonical-filename/metadata/registry work remain open.

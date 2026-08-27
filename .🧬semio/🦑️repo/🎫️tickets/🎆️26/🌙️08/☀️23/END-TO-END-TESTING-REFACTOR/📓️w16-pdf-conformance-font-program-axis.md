@@ -176,4 +176,4 @@ and re-producing that one scenario with the corrected oracle closes both. The ha
 
 * `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📄️document/🦀️component.rs`
 * `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️{a,e,h,ua,vt,x}/🧪️oracle/🦀️component.rs`
-* `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️{a,e,h,ua,vt,x}/🧪️oracle/🔣️component.json`
+* `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️{a,e,h,ua,vt,x}/🧪️oracle/🔣️.json`

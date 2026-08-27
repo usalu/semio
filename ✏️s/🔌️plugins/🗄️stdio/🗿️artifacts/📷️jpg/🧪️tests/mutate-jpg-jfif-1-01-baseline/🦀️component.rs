@@ -1,7 +1,7 @@
 //! 🦀️ JFIF 1.01 ✳️baseline conformance-class mutation case — Rust adapter. Ticket
 //! 26/08/23/END-TO-END-TESTING-REFACTOR. Recorded no-oracle decision
 //! `jpg-jfif-1-01-baseline-conformance-class-semantics`
-//! (`../../🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🧪️oracle/🔣️component.json`).
+//! (`../../🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🧪️oracle/🔣️.json`).
 //!
 //! **Why there is no oracle here when the sibling subset has one.** `image` 0.25 is registered by
 //! `✳️any` and is the right reference for a JPEG raster, but its public surface is pixels,

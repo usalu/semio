@@ -1,0 +1,304 @@
+{
+  "schemaVersion": 1,
+  "mutationRoot": "✏️s/🔌️plugins/🧪️probe/🧬️mutations",
+  "leaf": "➕️insert-page",
+  "rustFilename": "🦀️.rs",
+  "cases": [
+    {
+      "id": "direct-declaration",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": true,
+      "expected": { "sourcePath": "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page/🦀️.rs", "declarationName": "Mutation", "modulePath": [] }
+    },
+    {
+      "id": "semantic-public-alias",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub use insert_page::SemanticPayload;\npub enum ProbeMutation { InsertPage(SemanticPayload) }\n",
+      "leafSource": "pub struct SemanticPayload;\n",
+      "compileAccepted": true,
+      "expected": { "sourcePath": "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page/🦀️.rs", "declarationName": "SemanticPayload", "modulePath": [] }
+    },
+    {
+      "id": "renamed-public-alias",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub use insert_page::SemanticPayload as InsertPagePayload;\npub enum ProbeMutation { InsertPage(InsertPagePayload) }\n",
+      "leafSource": "pub struct SemanticPayload;\n",
+      "compileAccepted": true,
+      "expected": { "sourcePath": "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page/🦀️.rs", "declarationName": "SemanticPayload", "modulePath": [] }
+    },
+    {
+      "id": "grouped-public-alias",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub use insert_page::{SemanticPayload as InsertPagePayload};\npub enum ProbeMutation { InsertPage(InsertPagePayload) }\n",
+      "leafSource": "pub struct SemanticPayload;\n",
+      "compileAccepted": true,
+      "expected": { "sourcePath": "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page/🦀️.rs", "declarationName": "SemanticPayload", "modulePath": [] }
+    },
+    {
+      "id": "public-child-reexport",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::ChildPayload) }\n",
+      "leafSource": "#[path = \"🧩️payload/🦀️.rs\"] pub mod payload;\npub use payload::ChildPayload;\n",
+      "extraFiles": [{ "path": "🧩️payload/🦀️.rs", "source": "pub struct ChildPayload;\n" }],
+      "compileAccepted": true,
+      "expected": { "sourcePath": "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page/🧩️payload/🦀️.rs", "declarationName": "ChildPayload", "modulePath": [] }
+    },
+    {
+      "id": "grouped-child-reexport",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::ChildPayload) }\n",
+      "leafSource": "#[path = \"🧩️payload/🦀️.rs\"] pub mod payload;\npub use payload::{ChildPayload};\n",
+      "extraFiles": [{ "path": "🧩️payload/🦀️.rs", "source": "pub struct ChildPayload;\n" }],
+      "compileAccepted": true,
+      "expected": { "sourcePath": "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page/🧩️payload/🦀️.rs", "declarationName": "ChildPayload", "modulePath": [] }
+    },
+    {
+      "id": "inline-public-child-reexport",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::ChildPayload) }\n",
+      "leafSource": "pub mod payload { pub struct ChildPayload; }\npub use payload::ChildPayload;\n",
+      "compileAccepted": true,
+      "expected": { "sourcePath": "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page/🦀️.rs", "declarationName": "ChildPayload", "modulePath": ["payload"] }
+    },
+    {
+      "id": "unbound-wrapper",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Unknown) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "ambiguous-wrapper",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation), InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "conditional-mount",
+      "rootSource": "#[cfg(feature = \"optional\")]\n#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "inner-conditional-mount",
+      "rootSource": "#![cfg(feature = \"optional\")]\n#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "cfg-attr-conditional-mount",
+      "rootSource": "#[cfg_attr(feature = \"optional\", cfg(feature = \"optional\"))]\n#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "private-mount",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "conditional-declaration",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "#[cfg(any())]\npub struct Mutation;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "shadowed-root-alias",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub use insert_page::Mutation as Wrapped;\nstruct Wrapped;\npub enum ProbeMutation { InsertPage(Wrapped) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "conflicting-root-aliases",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub use insert_page::First as Payload;\npub use insert_page::Second as Payload;\npub enum ProbeMutation { InsertPage(Payload) }\n",
+      "leafSource": "pub struct First;\npub struct Second;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "escaping-child-source",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::ChildPayload) }\n",
+      "leafSource": "#[path = \"../foreign/🦀️.rs\"] pub mod payload;\npub use payload::ChildPayload;\n",
+      "extraFiles": [{ "path": "../foreign/🦀️.rs", "source": "pub struct ChildPayload;\n" }],
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "symlinked-child-source",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::ChildPayload) }\n",
+      "leafSource": "#[path = \"🧩️payload/🦀️.rs\"] pub mod payload;\npub use payload::ChildPayload;\n",
+      "extraFiles": [{ "path": "🧩️target/🦀️.rs", "source": "pub struct ChildPayload;\n" }],
+      "links": [{ "path": "🧩️payload/🦀️.rs", "target": "../target/🦀️.rs" }],
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "disabled-aggregate-cfg",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\n#[cfg(any())]\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": true,
+      "expected": null
+    },
+    {
+      "id": "conditional-aggregate-cfg-attr",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\n#[cfg_attr(all(), cfg(any()))]\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": true,
+      "expected": null
+    },
+    {
+      "id": "root-inner-cfg",
+      "rootSource": "#![cfg(any())]\n#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": true,
+      "expected": null
+    },
+    {
+      "id": "disabled-variant-cfg",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { #[cfg(any())] InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": true,
+      "expected": null
+    },
+    {
+      "id": "conditional-variant-cfg-attr",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { #[cfg_attr(all(), cfg(any()))] InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": true,
+      "expected": null
+    },
+    {
+      "id": "conditional-ancestor-inline-enum",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\n#[cfg(any())]\npub mod aggregate { pub enum ProbeMutation { InsertPage(insert_page::Mutation) } }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": true,
+      "expected": null
+    },
+    {
+      "id": "unsafe-root-compose-casefold",
+      "mutationRoot": "✏️s/COMPOSE/🧪️probe/🧬️mutations",
+      "virtualFilesystem": true,
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "unsafe-root-nfd",
+      "mutationRoot": "é/🧬️mutations",
+      "virtualFilesystem": true,
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "unsafe-leaf-compose-casefold",
+      "leaf": "COMPOSE",
+      "virtualFilesystem": true,
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "unsafe-rust-filename-colon",
+      "rustFilename": "🦀️:rs",
+      "virtualFilesystem": true,
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "unsafe-child-compose-casefold",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::ChildPayload) }\n",
+      "leafSource": "#[path = \"COMPOSE/🦀️.rs\"] pub mod payload;\npub use payload::ChildPayload;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "unsafe-child-colon",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::ChildPayload) }\n",
+      "leafSource": "#[path = \"🧩️:payload/🦀️.rs\"] pub mod payload;\npub use payload::ChildPayload;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "unsafe-child-backslash",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::ChildPayload) }\n",
+      "leafSource": "#[path = \"🧩️\\\\payload/🦀️.rs\"] pub mod payload;\npub use payload::ChildPayload;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "unsafe-child-control",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::ChildPayload) }\n",
+      "leafSource": "#[path = \"🧩️ payload/🦀️.rs\"] pub mod payload;\npub use payload::ChildPayload;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "unsafe-child-nfd",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::ChildPayload) }\n",
+      "leafSource": "#[path = \"é/🦀️.rs\"] pub mod payload;\npub use payload::ChildPayload;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "unsafe-repository-compose-casefold",
+      "repoRoot": "/__semio-origin/COMPOSE/workspace",
+      "virtualFilesystem": true,
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "unsafe-repository-dot-segment",
+      "repoRoot": "/__semio-origin/workspace/../workspace",
+      "virtualFilesystem": true,
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "unsafe-repository-ads-colon",
+      "repoRoot": "/__semio-origin/workspace:stream",
+      "virtualFilesystem": true,
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "unsafe-rust-filename-nested",
+      "rustFilename": "nested/🦀️.rs",
+      "virtualFilesystem": true,
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "symlinked-repository-base",
+      "repositoryRootSymlink": true,
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": false,
+      "expected": null
+    },
+    {
+      "id": "symlinked-repository-ancestor",
+      "repositoryAncestorSymlink": true,
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": false,
+      "expected": null
+    }
+  ]
+}

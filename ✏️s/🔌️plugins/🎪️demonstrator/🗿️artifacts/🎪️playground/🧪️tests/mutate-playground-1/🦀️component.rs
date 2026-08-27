@@ -1,6 +1,6 @@
 //! 🦀️ Playground exhaustive mutation case — Rust adapter. Recorded no-oracle decision
 //! `playground-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`): `s.demonstrator.playground`
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): `s.demonstrator.playground`
 //! is a semio-NATIVE format with no third-party reader or writer.
 //!
 //! The vocabulary is one kind because the snapshot is one field, and what this case is really

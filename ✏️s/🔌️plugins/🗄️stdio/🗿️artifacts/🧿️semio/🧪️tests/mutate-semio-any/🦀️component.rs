@@ -1,6 +1,6 @@
 //! 🦀️ Semio ENVELOPE exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-
 //! REFACTOR. Recorded no-oracle decision `semio-envelope-routing` (`../../🏅️standards/🔖️v1/
-//! 🪆️subsets/✳️any/🧪️oracle/🔣️component.json`): `s.stdio.semio` is the ENVELOPE union over all
+//! 🪆️subsets/✳️any/🧪️oracle/🔣️.json`): `s.stdio.semio` is the ENVELOPE union over all
 //! eighteen semio subsets and has no third-party reader or writer, so `oracle` here answers with the
 //! routing outcome the feature's own `Then` steps declare — envelope subset tag, fault codes and
 //! whether the resulting document still equals the one the scenario started from — while `subject`

@@ -33,8 +33,8 @@ WHAT REPLACED THEM
 3. Oracles moved to the owner of the format they reference.
      ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/{📄️document,🖼️raster,🎒️archive,🔊️audio,📊️tabular}/🦀️component.rs
      ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust  → semio-s-plugin-stdio-test-oracle
-     ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json    → 8 oracles, 6 profiles, 1 host package
-     🧰️framework/🔨️modules/🖱️ui/🧪️oracle/🔣️component.json → clsx, cva, 1 no-oracle decision
+     ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json    → 8 oracles, 6 profiles, 1 host package
+     🧰️framework/🔨️modules/🖱️ui/🧪️oracle/🔣️.json → clsx, cva, 1 no-oracle decision
 
 4. The framework Rust host has NO dependencies at all:
      $ dependency table of 📦️packages/🦀️rust/Cargo.toml → empty (asserted by a self-test)
@@ -86,7 +86,7 @@ NOTHING REGRESSED
 TWO THINGS TO KNOW
 
 · Adding a new artifact family now touches ZERO framework files: create
-  `<owner>/🧪️oracle/🔣️component.json`, put the reference libraries in a crate beside it,
+  `<owner>/🧪️oracle/🔣️.json`, put the reference libraries in a crate beside it,
   and write the adapter. Discovery, profile resolution, host linking and the dependency
   gate all pick it up by convention.
 

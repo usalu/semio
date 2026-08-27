@@ -26,7 +26,7 @@
 //! `doctype.opaqueDeclarations`, so a document carrying real content-model markup is visibly out of
 //! the subject's reach rather than silently equal to one without it.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the vocabulary itself (`XmlValidMutation::KINDS`).
 
 use semio_repo_test_host::Json;

@@ -4269,8 +4269,8 @@ pub fn run_layout_export_headless_batch(operation: Operation, request: LayoutExp
         operation: operation.operation,
         generation: operation.generation,
         cancel: semio_framework_job::root_cancel_token(),
-        config: BatchDriveConfig { site: "layout.export.batch", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 1 },
-        now_ms: semio_framework_job::default_now_ms,
+        config: BatchDriveConfig { site: "layout.export.batch", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
+        now_us: semio_framework_job::default_now_us,
     };
     let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) {
         Ok(session) => session,
@@ -4429,8 +4429,8 @@ mod tests {
             operation: operation.operation,
             generation,
             cancel,
-            config: BatchDriveConfig { site: "layout.export.worker-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 1 },
-            now_ms: semio_framework_job::default_now_ms,
+            config: BatchDriveConfig { site: "layout.export.worker-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
+            now_us: semio_framework_job::default_now_us,
         };
         let _ = worker_count;
         let outcome = drive_test_job(dispatch.job, params);
@@ -4476,8 +4476,8 @@ mod tests {
             operation: operation().operation,
             generation: operation().generation,
             cancel,
-            config: BatchDriveConfig { site: "layout.retained-wire.worker-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 1 },
-            now_ms: semio_framework_job::default_now_ms,
+            config: BatchDriveConfig { site: "layout.retained-wire.worker-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
+            now_us: semio_framework_job::default_now_us,
         };
         assert!(matches!(drive_test_job(dispatch("exportSvg", LayoutExportKind::Svg).job, params(semio_framework_job::root_cancel_token())), StepOutcome::Complete(_)));
         assert!(matches!(drive_test_job(dispatch("exportPdf", LayoutExportKind::Svg).job, params(semio_framework_job::root_cancel_token())), StepOutcome::Fault(_)));
@@ -4501,8 +4501,8 @@ mod tests {
             operation: operation.operation,
             generation: operation.generation,
             cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { site: "layout.media-export.worker-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 1 },
-            now_ms: semio_framework_job::default_now_ms,
+            config: BatchDriveConfig { site: "layout.media-export.worker-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
+            now_us: semio_framework_job::default_now_us,
         };
         assert!(matches!(drive_test_job(dispatch.job, params), StepOutcome::Complete(_)));
         drop(snapshot_owner);
@@ -4783,8 +4783,8 @@ mod tests {
             operation: operation.operation,
             generation: operation.generation,
             cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { site: "layout.export.segment-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 1 },
-            now_ms: semio_framework_job::default_now_ms,
+            config: BatchDriveConfig { site: "layout.export.segment-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
+            now_us: semio_framework_job::default_now_us,
         };
         drop(snapshot_owner);
         let candidate = match drive_test_job(job, params.clone()) {
@@ -4816,10 +4816,10 @@ mod tests {
         let mut job = LayoutExportJob::new(operation, request(LayoutExportKind::Svg)).expect("job");
         let mut sequence = 0;
         for _ in 0..2 {
-            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_ms, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence);
             assert_eq!(job.step(&mut context), StepOutcome::Yield);
         }
-        let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_ms, &mut sequence);
+        let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence);
         assert!(matches!(job.step(&mut stale), StepOutcome::Fault(_)));
     }
 
@@ -4831,7 +4831,7 @@ mod tests {
         let cancel = semio_framework_job::root_cancel_token();
         let mut sequence = 0;
         let mut checkpoint = loop {
-            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut sequence);
             if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
                 break checkpoint;
             }
@@ -4847,8 +4847,8 @@ mod tests {
             operation: operation.operation,
             generation: operation.generation,
             cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { site: "layout.export.restore-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 1 },
-            now_ms: semio_framework_job::default_now_ms,
+            config: BatchDriveConfig { site: "layout.export.restore-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
+            now_us: semio_framework_job::default_now_us,
         };
         match drive_test_job(restored, params.clone()) {
             StepOutcome::Complete(candidate) => assert!(candidate.output.is_empty()),

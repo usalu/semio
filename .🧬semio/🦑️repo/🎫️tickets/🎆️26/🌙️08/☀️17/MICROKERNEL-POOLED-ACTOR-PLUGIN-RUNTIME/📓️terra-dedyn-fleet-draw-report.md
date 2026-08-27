@@ -25,7 +25,7 @@ any).
 (a crate this packet does not own). That framework file exists and is near-line-identical, but the draw
 plugin carries its **own independent fork**, `semio-s-plugin-draw-fsm` (package `fsm`, `extern crate self
 as fsm`), at
-`✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/`
+[historical 🔄️fsm/ directory beneath the recorded source root](../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️cad-draw-path-projection/🔣️.json#/projections/1/sourceRoot)
 — fully inside this packet's owned paths ("the plugin and its extension crates, which ride with their
 parent"). `CommandSink` and `Migration` are declared and consumed entirely inside this crate; nothing
 outside it references either. This matters for every remaining sibling with a similarly-named
@@ -217,19 +217,19 @@ packet owns), no root-manifest edit required.
 
 ## Files touched
 
-- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/🦀️component.rs`
+- [historical FSM component source (catalog mapping 9)](../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️cad-draw-path-projection/🔣️.json#/projections/1/mappings/9/sourcePath)
   — `ActionFn<M>` concrete-typed; `CommandSink` trait+impl deleted; 5 generic-bound sigs → concrete;
   `#[dyn_enum]` on `Migration`; `NoMigrations` zero-variant enum; `restore` generic over `Mg: Migration`,
   await-hoisted loop; 4 call sites updated; crate re-export list updated; doc-comment fixes.
-- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs`
+- [historical canvas-pointer-down component source (catalog mapping 10)](../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️cad-draw-path-projection/🔣️.json#/projections/1/mappings/10/sourcePath)
   — 12 `gesture_*` action fn signatures, `dyn fsm::CommandSink<...>` → `Vec<fsm::Command<...>>`.
-- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/📦️glue.rs`
+- [historical FSM library glue source (catalog mapping 8)](../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️cad-draw-path-projection/🔣️.json#/projections/1/mappings/8/sourcePath)
   — `#![allow(async_fn_in_trait)]` added.
-- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/Cargo.toml`
+- [historical FSM Cargo manifest source (catalog mapping 5)](../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️cad-draw-path-projection/🔣️.json#/projections/1/mappings/5/sourcePath)
   — added `semio-framework-dispatch-macros` path dependency.
-- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/🦀️component.rs`
+- [historical macros component source (catalog mapping 4)](../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️cad-draw-path-projection/🔣️.json#/projections/1/mappings/4/sourcePath)
   — 37 `async fn` → `fn` (E3-transitive), each tagged.
-- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/📦️glue.rs`
+- [historical macros library glue source (catalog mapping 3)](../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️cad-draw-path-projection/🔣️.json#/projections/1/mappings/3/sourcePath)
   — 4 proc-macro entry points `async fn` → `fn` (E3), tagged.
 - `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📓️terra-dedyn-fleet-draw-report.md`
   (this file, new).

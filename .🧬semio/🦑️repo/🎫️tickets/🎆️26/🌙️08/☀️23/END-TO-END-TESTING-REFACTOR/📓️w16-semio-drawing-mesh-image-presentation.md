@@ -388,7 +388,7 @@ $ bun ./📜️script.ts dependency                                             
 ## 7. Files
 
 Per case: `component.feature` (rewritten), the new oracle adapter, `🦀️component.rs` (rewritten,
-subject-only), the subset's `🧪️oracle/🔣️component.json` (`noOracleDecisions` removed, `oracles[]`
+subject-only), the subset's `🧪️oracle/🔣️.json` (`noOracleDecisions` removed, `oracles[]`
 added) and a `🧫️fixtures/` directory holding the derived artifact and the per-kind payloads.
 
 ```
@@ -397,7 +397,7 @@ added) and a `🧫️fixtures/` directory holding the derived artifact and the p
   🧪️tests/mutate-semio-presentation/{component.feature, 🐍️component.py, 🦀️component.rs, 🧫️fixtures/}
   🧪️tests/mutate-semio-mesh/{component.feature, 🟦️component.ts, 🦀️component.rs, 🧫️fixtures/}
   🧪️tests/mutate-semio-drawing/{component.feature, 🐍️component.py, 🦀️component.rs, 🧫️fixtures/}
-  🏅️standards/🔖️v1/🪆️subsets/✳️{image,presentation,mesh,drawing}/🧪️oracle/🔣️component.json
+  🏅️standards/🔖️v1/🪆️subsets/✳️{image,presentation,mesh,drawing}/🧪️oracle/🔣️.json
 ```
 
 Derivation scripts and scratch drivers (ticket folder,

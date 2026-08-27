@@ -1,0 +1,39 @@
+{
+  "arithmetic": false,
+  "frame": null,
+  "height": 1,
+  "huffmanTables": [],
+  "jfifDensityUnits": "aspect",
+  "jfifThumbnail": null,
+  "jfifVersion": [
+    1,
+    1
+  ],
+  "jfifXDensity": 1,
+  "jfifYDensity": 1,
+  "otherSegments": [
+    {
+      "data": [
+        83,
+        119,
+        97,
+        116,
+        99,
+        104
+      ],
+      "marker": 254
+    }
+  ],
+  "pixels": [
+    18,
+    52,
+    86,
+    255
+  ],
+  "quantTables": [],
+  "reEncodeQuality": 90,
+  "restartInterval": 8,
+  "schema": "stdio.jpg",
+  "sofMarker": 0,
+  "width": 1
+}

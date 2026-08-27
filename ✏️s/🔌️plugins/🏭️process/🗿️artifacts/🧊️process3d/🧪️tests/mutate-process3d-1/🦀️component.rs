@@ -1,6 +1,6 @@
 //! 🏭️ `process.process3d` exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-
 //! REFACTOR. Recorded no-oracle decision `process3d-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, which also records why G-code
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, which also records why G-code
 //! parsers and STEP/BREP kernels were surveyed and DECLINED).
 //!
 //! One document, three collection shapes, and a vocabulary derived from the difference: `steps` is an

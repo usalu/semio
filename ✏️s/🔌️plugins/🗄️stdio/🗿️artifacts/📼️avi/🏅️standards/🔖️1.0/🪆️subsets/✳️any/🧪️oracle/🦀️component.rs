@@ -6,7 +6,7 @@
 //! nesting) composed with a hand-written AVI 1.0 `hdrl`/`strl`/`movi`/`idx1` codec (the `avih`/
 //! `strh`/`strf` field layouts and the `idx1` keyframe-flag/offset convention, all written fresh
 //! against the format's own public byte layout — see the "What `riff` provides / what this module
-//! provides" note in `../🧪️oracle/🔣️component.json`'s `rationale`). No standalone Rust crate reads
+//! provides" note in `../🧪️oracle/🔣️.json`'s `rationale`). No standalone Rust crate reads
 //! AND writes AVI credibly: `avirus` 0.2.5 never parses a typed header at all and its "write" path
 //! copies the whole `hdrl` section byte-for-byte (exactly the pass-through this platform forbids);
 //! `rff-format-avi` 0.1.0's own doc comment says its muxer is "still scaffolded"; `oxideav-avi`
@@ -65,7 +65,7 @@
 //! bytes) travel through mutation params as lowercase hex — the same convention `💬️bcf`'s oracle and
 //! `AviSnapshot::parse_dsl`/`print_dsl` already use for binary-in-text.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`AviMutation::KINDS`).
 
 use semio_repo_test_host::Json;

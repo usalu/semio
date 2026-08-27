@@ -1,0 +1,41 @@
+{
+  "schema": {
+    "id": "sample",
+    "module": "fixture",
+    "name": "Sample",
+    "icon": "emoji:🧪️",
+    "summary": "Nested registry defaults",
+    "fields": [
+      {
+        "key": "nested",
+        "value": { "kind": "list", "of": { "kind": "schema", "of": "sample" } },
+        "default": { "nested": { "label": "retained 🌊" } },
+        "label": "Nested"
+      }
+    ]
+  },
+  "operator": {
+    "id": "fixture.echo",
+    "extension": "fixture",
+    "name": "Echo",
+    "abbreviation": "E",
+    "icon": "emoji:🧪️",
+    "summary": "Owned operator payload",
+    "inputs": [
+      {
+        "code": "I",
+        "abbreviation": "In",
+        "name": "input",
+        "fullName": "Input",
+        "default": { "label": "channel 🌊" },
+        "cardinality": "?"
+      }
+    ],
+    "outputs": [],
+    "group": ["Tests"]
+  },
+  "implementationSchemas": ["sample"],
+  "payload": "dynamic 🌊",
+  "grants": [1, 64, 4096],
+  "expected": { "dropsBeforeRetirement": 0, "dropsAfterRetirement": 1 }
+}

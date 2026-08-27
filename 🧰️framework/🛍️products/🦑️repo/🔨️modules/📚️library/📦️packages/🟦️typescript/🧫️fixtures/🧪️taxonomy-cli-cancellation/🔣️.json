@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "contract": "taxonomy-cli-plan-cancellation-v1",
+  "sourcePath": "🧰️framework/🧪️tests/🧪️cli-cancellation/🦀️component.rs",
+  "source": "pub const VALUE: usize = 1;\n",
+  "cancelPath": "🧪️control/⛔️cancel",
+  "phase": "incoming-candidates",
+  "execution": {
+    "target": "test-taxonomy-cli-cancellation",
+    "command": "bun ./📜️script.ts test taxonomy-cli-cancellation",
+    "launchName": "🧹clean🧩️taxonomy🧪️cli-cancellation",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-taxonomy-cli-cancellation --skip-nx-cache",
+    "launchGroup": "4_gate",
+    "launchOrder": 410.09
+  }
+}

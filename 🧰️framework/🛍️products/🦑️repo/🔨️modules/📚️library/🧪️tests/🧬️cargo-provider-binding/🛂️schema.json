@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "required": ["schemaVersion", "accepted", "rejected", "traces"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "accepted": { "type": "array", "minItems": 4, "items": { "$ref": "#/$defs/case" } },
+    "rejected": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/case" } },
+    "traces": { "type": "array", "minItems": 5, "items": { "$ref": "#/$defs/trace" } }
+  },
+  "$defs": {
+    "trace": {
+      "type": "object",
+      "required": ["id", "workspaceRootSegments", "consumerManifest", "dependencyKey", "expectedLstatSegments"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "workspaceRootSegments": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "consumerManifest": { "type": "string", "minLength": 1 },
+        "dependencyKey": { "type": "string" },
+        "symlinkSegments": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "expectedLstatSegments": { "type": "array", "items": { "type": "array", "items": { "type": "string", "minLength": 1 } } }
+      }
+    },
+    "case": {
+      "type": "object",
+      "required": ["id", "consumerManifest", "consumerSource", "providerManifest", "providerSource", "librarySource", "dependencyKey", "expected"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "consumerManifest": { "type": "string", "pattern": "Cargo\\.toml$" },
+        "consumerSource": { "type": "string" },
+        "providerManifest": { "type": "string", "pattern": "Cargo\\.toml$" },
+        "providerSource": { "type": "string" },
+        "librarySource": { "type": "string" },
+        "dependencyKey": { "type": "string", "minLength": 1 },
+        "workspaceSource": { "type": "string" },
+        "workspaceRoot": { "type": "string", "minLength": 1 },
+        "workspaceRootSymlink": { "const": true },
+        "workspaceAncestorSymlink": { "const": true },
+        "virtualFilesystem": { "const": true },
+        "extraFiles": { "type": "array", "items": { "type": "object", "required": ["path", "source"], "additionalProperties": false, "properties": { "path": { "type": "string", "minLength": 1 }, "source": { "type": "string" } } } },
+        "links": { "type": "array", "items": { "type": "object", "required": ["path", "target"], "additionalProperties": false, "properties": { "path": { "type": "string", "minLength": 1 }, "target": { "type": "string", "minLength": 1 } } } },
+        "omitProviderManifest": { "const": true },
+        "omitLibrarySource": { "const": true },
+        "expected": { "type": ["object", "null"] }
+      }
+    }
+  }
+}

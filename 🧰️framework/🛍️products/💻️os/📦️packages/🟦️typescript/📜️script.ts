@@ -1,14 +1,27 @@
 #!/usr/bin/env bun
 /** 🖥️ `@semio-tech/framework-os` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runVitest(this.root, rest, "🧪️vitest.config.ts");
+    await runVitest(this.root, rest, "🧪️vitest.config.ts");
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+/** 🏗️ Routes the package generator through the shared workspace implementation. */
+class GenerateWgpuScript extends BundleScript {
+  async run(): Promise<void> { await (await import("../../../../../📜️script.ts")).runWgpuPackageGenerator(getWorkspaceRoot(), "generate"); }
+}
+/** 🔎️ Checks the exact package artifacts without writing outputs. */
+class CheckWgpuScript extends BundleScript {
+  async run(): Promise<void> { await (await import("../../../../../📜️script.ts")).runWgpuPackageGenerator(getWorkspaceRoot(), "check"); }
+}
+/** 🔮️ Streams the canonical read-only package preview. */
+class PreviewGeneratedScript extends BundleScript {
+  async run(): Promise<void> { await (await import("../../../../../📜️script.ts")).runWgpuPackageGenerator(getWorkspaceRoot(), "preview"); }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("generate-wgpu", GenerateWgpuScript).register("check-wgpu", CheckWgpuScript).register("preview-generated", PreviewGeneratedScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

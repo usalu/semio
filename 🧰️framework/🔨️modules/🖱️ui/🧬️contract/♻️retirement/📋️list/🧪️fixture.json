@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "capacity": 4,
+  "cases": [
+    { "name": "empty", "values": [], "popped": [] },
+    { "name": "unicode", "values": ["Grüße", "🌊"], "popped": ["🌊", "Grüße"] },
+    { "name": "nested", "values": [{ "label": "Column Height", "values": [1, 2] }], "popped": [{ "label": "Column Height", "values": [1, 2] }] },
+    { "name": "full", "values": [1, true, null, "same"], "popped": ["same", null, true, 1] }
+  ],
+  "ownership": {
+    "initializedSlotsEqualLogicalLength": true,
+    "unreservedPushAccepted": false,
+    "reservedPushChangesBacking": false,
+    "zeroCapacityReservesBacking": false,
+    "releaseWithPayloadAccepted": false,
+    "popDestroysTransferredPayload": false,
+    "emptyReleaseDestroysTransferredPayload": false,
+    "terminalRequiresNoAllocation": true,
+    "overflowPreservesRejectedOwner": true,
+    "secondEmptyReleaseCount": 0
+  }
+}

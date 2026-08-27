@@ -64,7 +64,7 @@ for(const d of descriptors){
 }
 const rootSchema=JSON.parse(read(root+"/🔣️component.json"));
 if(rootSchema.oneOf.length!==11)errors.push("root schema count");
-const manifest=JSON.parse(read("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧪️oracle/🔣️component.json"));
+const manifest=JSON.parse(read("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧪️oracle/🔣️.json"));
 if(JSON.stringify(manifest.mutationCatalogs[0].kinds)!==JSON.stringify(kinds))errors.push("oracle manifest kinds");
 for(const file of ["✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧪️oracle/🦀️component.rs","✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-ua/🦀️component.rs"]){
  const local=read(file).match(/(?:pub )?const KINDS:.*?= &\[(.*?)\];/s);

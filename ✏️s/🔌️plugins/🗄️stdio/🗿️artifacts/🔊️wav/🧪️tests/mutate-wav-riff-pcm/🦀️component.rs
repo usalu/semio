@@ -15,7 +15,7 @@ use semio_s_plugin_stdio_test_oracle::law;
 //#region 🔖️Input
 const INPUT: &str = "shared://🔊️bauen-mit-bestand-ausschnitt.wav";
 
-/// 🦠️ The catalog's own kinds (`../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`),
+/// 🦠️ The catalog's own kinds (`../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️oracle/🔣️.json`),
 /// duplicated as a plain constant rather than reached through the subject crate — this loop drives
 /// oracle registration too, which must build and run with the subject crate absent entirely.
 const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-fmt", "set-data", "set-other-chunks"];

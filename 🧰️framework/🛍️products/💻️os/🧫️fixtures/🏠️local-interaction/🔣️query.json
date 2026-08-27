@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "outerReadHex": "1d0902000d",
+  "outerRejectedHex": "1703030d00",
+  "receiptHex": "0002",
+  "malformedFrameHex": "ff",
+  "maximumCommandBytes": 142,
+  "maximumReplyBytes": 4256,
+  "reopen": {"requests": ["1", "2"], "readSequences": [1, 3], "cancelSequences": [2, 4], "ordinarySequence": 5, "ackSequence": 6},
+  "sequenceCases": [
+    {"sequence": 0, "request": "0", "operation": "query", "result": {"sequence": 1, "cancelSequence": 2, "request": "1"}, "after": {"sequence": 2, "request": "1"}},
+    {"sequence": 9007199254740990, "request": "0", "operation": "ordinary", "result": {"sequence": 9007199254740991, "cancelSequence": null, "request": null}, "after": {"sequence": 9007199254740991, "request": "0"}},
+    {"sequence": 9007199254740989, "request": "0", "operation": "query", "result": {"sequence": 9007199254740990, "cancelSequence": 9007199254740991, "request": "1"}, "after": {"sequence": 9007199254740991, "request": "1"}},
+    {"sequence": 9007199254740990, "request": "0", "operation": "query", "result": null, "after": {"sequence": 9007199254740990, "request": "0"}},
+    {"sequence": 0, "request": "18446744073709551615", "operation": "query", "result": null, "after": {"sequence": 0, "request": "18446744073709551615"}},
+    {"sequence": 0, "request": "9007199254740992", "operation": "query", "result": {"sequence": 1, "cancelSequence": 2, "request": "9007199254740993"}, "after": {"sequence": 2, "request": "9007199254740993"}}
+  ],
+  "lifecycles": [
+    {"id": "consume-before-ack", "events": ["read", "started", "page", "consume", "ack", "closed"], "cancelled": false},
+    {"id": "cancel-before-started", "events": ["read", "abort", "started", "cancel", "closed"], "cancelled": true},
+    {"id": "ordinary-command-interleaving", "events": ["read", "ordinary", "started", "ordinaryDone", "page", "consume", "ack", "closed"], "cancelled": false},
+    {"id": "consumer-failure", "events": ["read", "started", "page", "consumeError", "cancel", "closed"], "cancelled": true},
+    {"id": "disposal-before-started", "events": ["read", "dispose", "started", "cancel", "closed"], "cancelled": true},
+    {"id": "ordinary-empty-is-not-a-receipt", "events": ["read", "ordinary", "started", "ordinaryEmpty", "ordinaryDone", "page", "consume", "ack", "closed"], "cancelled": false},
+    {"id": "disposal-before-read-receipt", "events": ["read", "dispose", "readReceipt", "started", "cancel", "closed"], "cancelled": true},
+    {"id": "wrong-and-duplicate-receipts", "events": ["read", "ordinary", "started", "wrongReceipt", "duplicateReadReceipt", "ordinaryDone", "page", "consume", "ack", "closed"], "cancelled": false},
+    {"id": "coalesced-query-and-ordinary-receipts", "events": ["read", "ordinary", "mixedReceipts", "started", "page", "consume", "ack", "closed"], "cancelled": false},
+    {"id": "query-notifications-do-not-complete-ordinary", "events": ["read", "ordinary", "startedWithNotice", "pageWithNotice", "ordinaryDone", "consume", "ack", "closed"], "cancelled": false},
+    {"id": "synchronous-consumer-failure", "events": ["read", "started", "page", "cancel", "closed"], "cancelled": true},
+    {"id": "malformed-before-started", "events": ["read", "malformed", "started", "cancel", "closed"], "cancelled": true},
+    {"id": "malformed-after-started", "events": ["read", "started", "malformed", "cancel", "closed"], "cancelled": true}
+  ],
+  "lateTokenAccepted": false,
+  "terminalBeforeClosed": false
+}

@@ -16,7 +16,7 @@
 //! `ArchiveSpec` projects neither the archive-level comment nor per-entry ISO conformance, both of
 //! which this subset's vocabulary and comparison profile depend on.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the vocabulary itself (`ZipIso21320Mutation::KINDS`).
 
 use semio_repo_test_host::Json;

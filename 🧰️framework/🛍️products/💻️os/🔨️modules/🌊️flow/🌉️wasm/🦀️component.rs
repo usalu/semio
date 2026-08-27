@@ -5636,6 +5636,13 @@ fn dwg_encode_mesh(mesh_json: &str) -> String {
 
 //#region 🌉️LinearMemory
 
+fn flow_bridge_clock_ready() -> bool {
+    #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+    { semio_framework_job::install_browser_monotonic_clock().is_ok() }
+    #[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
+    { semio_framework_job::default_now_us().is_some() }
+}
+
 struct RetainedMessage {
     _message: AbiMessage,
     bytes: Vec<u8>,
@@ -5648,7 +5655,7 @@ thread_local! {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn flow_bridge_allocate(length: usize) -> *mut u8 {
-    if length == 0 || length > protocol::FLOW_MAX_REQUEST_BYTES + 32 {
+    if length == 0 || length > protocol::FLOW_MAX_REQUEST_BYTES + 32 || !flow_bridge_clock_ready() {
         return std::ptr::null_mut();
     }
     let mut bytes = Vec::<u8>::with_capacity(length);
@@ -5666,7 +5673,7 @@ pub unsafe extern "C" fn flow_bridge_release(pointer: *mut u8, capacity: usize) 
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn flow_bridge_send(pointer: *const u8, length: usize, byte_credit: usize, now_ms: u64, deadline_ms: u64) -> i32 {
-    if pointer.is_null() || length == 0 || length > protocol::FLOW_MAX_REQUEST_BYTES + 32 {
+    if pointer.is_null() || length == 0 || length > protocol::FLOW_MAX_REQUEST_BYTES + 32 || !flow_bridge_clock_ready() {
         return -1;
     }
     let Ok(message) = decode_abi_message(unsafe { std::slice::from_raw_parts(pointer, length) }) else {
@@ -5678,7 +5685,7 @@ pub unsafe extern "C" fn flow_bridge_send(pointer: *const u8, length: usize, byt
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn flow_bridge_poll(pointer: *mut u8, capacity: usize, byte_credit: usize, now_ms: u64, deadline_ms: u64) -> i32 {
-    if pointer.is_null() || capacity == 0 || capacity > protocol::FLOW_MAX_REQUEST_BYTES + 32 {
+    if pointer.is_null() || capacity == 0 || capacity > protocol::FLOW_MAX_REQUEST_BYTES + 32 || !flow_bridge_clock_ready() {
         return -1;
     }
     RETAINED.with(|retained| {
@@ -5704,12 +5711,14 @@ pub unsafe extern "C" fn flow_bridge_poll(pointer: *mut u8, capacity: usize, byt
 
 #[unsafe(no_mangle)]
 pub extern "C" fn flow_bridge_begin_close() {
+    if !flow_bridge_clock_ready() { return; }
     RETAINED.with(|retained| retained.borrow_mut().take());
     BRIDGE.with(|bridge| bridge.borrow_mut().begin_close());
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn flow_bridge_terminal_is_empty() -> i32 {
+    if !flow_bridge_clock_ready() { return 0; }
     i32::from(RETAINED.with(|retained| retained.borrow().is_none()) && BRIDGE.with(|bridge| bridge.borrow().terminal_is_empty()))
 }
 

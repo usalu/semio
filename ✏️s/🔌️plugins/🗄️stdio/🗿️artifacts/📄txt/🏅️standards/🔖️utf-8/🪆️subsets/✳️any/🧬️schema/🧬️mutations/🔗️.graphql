@@ -1,0 +1,15 @@
+# 🧬 Transparent TxtMutation aggregate roster.
+# set-trailing-newline/SetTrailingNewline
+# set-line-ending/SetLineEnding
+# insert-line/InsertLine
+# remove-line/RemoveLine
+# set-line/SetLine
+scalar TxtMutationUInt32V1
+
+input TxtMutationInput @oneOf {
+  setTrailingNewline: SetTrailingNewlinePayload
+  setLineEnding: SetLineEndingPayload
+  insertLine: InsertLinePayload
+  removeLine: RemoveLinePayload
+  setLine: SetLinePayload
+}

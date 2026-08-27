@@ -22,7 +22,7 @@ unrelated concurrent checkout changes and never includes `compose/**`.
 - `.../✏️editor/🦀️component.rs`
 - `.../🧬️schema/🔺️diff/🦀️component.rs`
 - `.../🧪️oracle/🦀️component.rs`
-- `.../🧪️oracle/🔣️component.json`
+- `.../🧪️oracle/🔣️.json`
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🧪️tests/mutate-txt-utf-8/🦀️component.rs`
 - `.../📚️examples/🎬️demo/🦀️component.rs` (removal of the stale whole-enum
   byte constant only).

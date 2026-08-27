@@ -6,7 +6,7 @@ Feature: Apply the playground artifact's whole one-kind mutation vocabulary
   `s.demonstrator.playground` is a semio-NATIVE artifact and no third party reads or writes
   `.dsl.semio`/`.pack.semio`, so no reference LIBRARY is registered. That is recorded as the
   `playground-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`.
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`.
 
   ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party
   LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever

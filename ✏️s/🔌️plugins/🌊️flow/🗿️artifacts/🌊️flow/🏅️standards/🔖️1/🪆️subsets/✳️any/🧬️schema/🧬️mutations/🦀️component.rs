@@ -37,7 +37,7 @@ pub enum FlowMutation {
 /// 🏷️ The kebab spelling of every [`FlowMutation`] variant, in DECLARATION ORDER — the one list the
 /// language-neutral test platform is measured against. It is duplicated in exactly two other places
 /// on purpose: this subset's own oracle manifest catalog `flow-1-any`
-/// (`../../🧪️oracle/🔣️component.json`), which the completeness gate counts, and the `mutate-flow-1`
+/// (`../../🧪️oracle/🔣️.json`), which the completeness gate counts, and the `mutate-flow-1`
 /// case adapter, which must not link this crate in the oracle role.
 /// [`tests::kinds_match_the_enum_and_the_catalog`] is what keeps all three honest.
 pub const KINDS: &[&str] = &["create-widget", "delete-widget", "reorder-widgets", "replace-widget", "connect-widgets", "disconnect-widgets", "reorder-synapses", "update-synapse-endpoints", "move-widgets", "duplicate-widget"];
@@ -404,7 +404,7 @@ mod tests {
     fn kinds_match_the_enum_and_the_catalog() {
         let declared: Vec<&str> = <FlowMutation as protocol::SemanticMutation<FlowSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
         assert_eq!(KINDS, declared.as_slice(), "KINDS must name every FlowMutation variant, in declaration order, spelled as its own MutationKind::SEMANTICS.kind");
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in this subset's committed oracle manifest catalog flow-1-any");
         }

@@ -110,7 +110,7 @@ pub enum GifMutation {
 
 //#region 🔖️Kinds
 impl GifMutation {
-    /// 🏷️ Kebab-case kind spelling — the exact vocabulary `.../🧪️oracle/🔣️component.json`'s
+    /// 🏷️ Kebab-case kind spelling — the exact vocabulary `.../🧪️oracle/🔣️.json`'s
     /// `mutationCatalogs[].kinds` declares and the exhaustive mutation test case's Scenario Outline
     /// row ids equal. Hand-matched (never derived) so `kinds_matches_every_variant_and_manifest`
     /// below actually catches drift instead of restating the enum.
@@ -180,7 +180,7 @@ mod kinds_tests {
         let from_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
         assert_eq!(from_variants, from_kinds, "KINDS must equal every GifMutation variant's kind()");
         assert_eq!(KINDS.len(), 21, "KINDS must list exactly the declared 21 kinds");
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "oracle catalog manifest must declare kind {kind:?}");
         }

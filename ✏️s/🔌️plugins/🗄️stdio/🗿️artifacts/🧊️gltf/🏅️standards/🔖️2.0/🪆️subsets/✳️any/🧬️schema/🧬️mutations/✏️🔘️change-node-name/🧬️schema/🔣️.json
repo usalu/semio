@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.change-node-name.v1.mutation",
+  "title": "GltfChangeNodeNameMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["phase", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "phase": { "const": "apply" },
+        "value": {
+          "type": "object",
+          "required": ["node", "value"],
+          "additionalProperties": false,
+          "properties": {
+            "node": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+            "value": { "oneOf": [{ "type": "null" }, { "type": "string", "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$" }] }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["phase", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "phase": { "const": "restore" },
+        "value": {
+          "type": "object",
+          "required": ["node", "before", "after"],
+          "additionalProperties": false,
+          "properties": {
+            "node": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+            "before": { "oneOf": [{ "type": "null" }, { "type": "string", "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$" }] },
+            "after": { "oneOf": [{ "type": "null" }, { "type": "string", "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$" }] }
+          }
+        }
+      }
+    }
+  ],
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.change-node-name.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "change",
+    "touchedPaths": ["document/nodes/*/name"],
+    "referencePolicy": "none"
+  },
+  "x-semio-mutation": "change-node-name"
+}

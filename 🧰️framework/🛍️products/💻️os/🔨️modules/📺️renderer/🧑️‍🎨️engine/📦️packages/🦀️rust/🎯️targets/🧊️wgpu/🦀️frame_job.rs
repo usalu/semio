@@ -12,7 +12,7 @@
 
 use semio_framework_async::Lane;
 use semio_framework_job::{
-    root_cancel_token, BatchDriveConfig, BatchJobParams, BatchJobSession, CancelToken, CommitCandidate, InteractiveJob, StepContext, StepOutcome, WorkerJobSessionAdmissionRejected, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS,
+    root_cancel_token, BatchDriveConfig, BatchJobParams, BatchJobSession, CancelToken, CommitCandidate, InteractiveJob, StepContext, StepOutcome, WorkerJobSessionAdmissionRejected, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US,
 };
 use semio_framework_trace::{Generation, InteractiveStage, OperationId};
 use std::sync::Arc;
@@ -107,11 +107,9 @@ impl InteractiveJob for FrameBuildJob {
 //#endregion 🧩️FrameBuildJob
 
 //#region ⏱️Clock
-/// ⏱️ `BatchJobParams::now_ms` is a plain `fn() -> u64` pointer (not a closure) — `crate::app_now_ms`
-/// returns `f64` wall-clock milliseconds, so this wraps it to the integer form the job protocol wants
-/// without changing `app_now_ms`'s own signature (used elsewhere for sub-millisecond arithmetic).
-fn now_ms_u64() -> u64 {
-    crate::app_now_ms() as u64
+/// ⏱️ Reads the shared real microsecond clock used by job deadlines and watchdogs.
+fn now_us() -> Option<u64> {
+    semio_framework_job::default_now_us()
 }
 
 fn batch_params(operation: OperationId, generation: Generation, cancel: CancelToken) -> BatchJobParams {
@@ -119,8 +117,8 @@ fn batch_params(operation: OperationId, generation: Generation, cancel: CancelTo
         operation,
         generation,
         cancel,
-        config: BatchDriveConfig { site: "os_renderer_frame_build", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_ms: INTERACTIVE_LANE_WALL_MS },
-        now_ms: now_ms_u64,
+        config: BatchDriveConfig { site: "os_renderer_frame_build", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_us: INTERACTIVE_LANE_WALL_US },
+        now_us,
     }
 }
 //#endregion ⏱️Clock
@@ -201,10 +199,6 @@ fn retire_active_phase(phase: &mut ActiveFramePhase) -> bool {
     }
 }
 
-fn frame_phase_overran(before: u64, site: &'static str, operation: OperationId, generation: Generation) -> bool {
-    semio_framework_trace::Watchdog::violation_count() > before && semio_framework_trace::Watchdog::violations().into_iter().rev().any(|violation| violation.site == site && violation.operation == operation && violation.generation == generation)
-}
-
 impl ActiveFrameBuild {
     fn new(runtime: crate::RuntimeMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation, dpr: f32, cancel: CancelToken) -> Self {
         let handle = runtime.downgrade();
@@ -241,13 +235,12 @@ impl ActiveFrameBuild {
         }
         match &mut self.phase {
             ActiveFramePhase::Deadlines(session) => {
-                let violations = semio_framework_trace::Watchdog::violation_count();
                 let poll = session.step();
-                if frame_phase_overran(violations, "os_renderer.frame.deadlines", self.operation, self.generation) {
-                    self.quarantine_overrun("os_renderer.frame.deadlines overran the interactive ceiling");
+                if !matches!(poll, Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal)) || !session.checkout_outcome() {
                     return ActiveFrameStep::Pending;
                 }
-                if !matches!(poll, Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal)) || !session.checkout_outcome() {
+                if session.callback_verdict().is_some_and(semio_framework_trace::CallbackVerdict::is_fault) {
+                    self.quarantine_overrun("os_renderer.frame.deadlines exceeded its exact clock authority");
                     return ActiveFrameStep::Pending;
                 }
                 match session.checked_out_outcome() {
@@ -279,12 +272,13 @@ impl ActiveFrameBuild {
                 }
             }
             ActiveFramePhase::ApplyPending(directives) => {
-                let violations = semio_framework_trace::Watchdog::violation_count();
-                let applied = {
-                    let _watchdog = semio_framework_trace::Watchdog::start("os_renderer.frame.apply_pending", self.operation, self.generation, InteractiveStage::InteractiveStep);
-                    self.runtime.apply_pending_step()
-                };
-                if frame_phase_overran(violations, "os_renderer.frame.apply_pending", self.operation, self.generation) {
+                let watchdog = semio_framework_trace::Watchdog::start("os_renderer.frame.apply_pending", self.operation, self.generation, InteractiveStage::InteractiveStep);
+                if !watchdog.is_admitted() {
+                    self.quarantine_overrun("os_renderer.frame.apply_pending has no monotonic clock");
+                    return ActiveFrameStep::Pending;
+                }
+                let applied = self.runtime.apply_pending_step();
+                if watchdog.finish().is_fault() {
                     self.quarantine_overrun("os_renderer.frame.apply_pending overran the interactive ceiling");
                     return ActiveFrameStep::Pending;
                 }
@@ -295,14 +289,17 @@ impl ActiveFrameBuild {
                 ActiveFrameStep::Pending
             }
             ActiveFramePhase::Build(transaction) => {
-                let violations = semio_framework_trace::Watchdog::violation_count();
+                let watchdog = semio_framework_trace::Watchdog::start("os_renderer.frame.transaction", self.operation, self.generation, InteractiveStage::InteractiveStep);
+                if !watchdog.is_admitted() {
+                    self.quarantine_overrun("os_renderer.frame.transaction has no monotonic clock");
+                    return ActiveFrameStep::Pending;
+                }
                 let transaction_step = {
-                    let _watchdog = semio_framework_trace::Watchdog::start("os_renderer.frame.transaction", self.operation, self.generation, InteractiveStage::InteractiveStep);
-                    let now = now_ms_u64();
-                    let mut context = StepContext::new(self.operation, self.generation, semio_framework_job::StepBudget::new(1, now.saturating_add(INTERACTIVE_LANE_WALL_MS)), self.cancel.clone(), now_ms_u64, &mut self.preview_sequence);
+                    let now = now_us();
+                    let mut context = StepContext::new(self.operation, self.generation, now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, INTERACTIVE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)), self.cancel.clone(), now_us, &mut self.preview_sequence);
                     transaction.step(&self.runtime, &self.handle, &mut context)
                 };
-                if frame_phase_overran(violations, "os_renderer.frame.transaction", self.operation, self.generation) {
+                if watchdog.finish().is_fault() {
                     if let crate::AppFrameTransactionStep::Complete(frame) = transaction_step {
                         let preparation = frame.into_preparation();
                         self.phase = ActiveFramePhase::Prepare(preparation);
@@ -323,9 +320,8 @@ impl ActiveFrameBuild {
                 }
             }
             ActiveFramePhase::Prepare(preparation) => {
-                let violations = semio_framework_trace::Watchdog::violation_count();
                 let outcome = preparation.drive_step(self.operation, self.generation, self.cancel.clone(), &mut self.preview_sequence);
-                if frame_phase_overran(violations, "os_renderer.prepare.worker", self.operation, self.generation) {
+                if preparation.callback_verdict().is_some_and(semio_framework_trace::CallbackVerdict::is_fault) {
                     self.quarantine_overrun("os_renderer.prepare.worker overran the interactive ceiling");
                     return ActiveFrameStep::Pending;
                 }

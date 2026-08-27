@@ -5,6 +5,7 @@
 // cache-local project that links this support library and the committed adapter; nothing here is
 // generated. The host never parses a feature file — the plan is the whole contract.
 
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -36,6 +37,13 @@ public sealed record Scenario(
     [property: JsonPropertyName("seed")] string? Seed,
     [property: JsonPropertyName("steps")] List<Step>? Steps);
 
+/// <summary>🪆️ The smallest owning subset a case is scoped to. A case with no target is UNSCOPED,
+/// and Protocol v2 reports that rather than letting a host widen itself to the whole artifact.</summary>
+public sealed record SubsetTarget(
+    [property: JsonPropertyName("artifact")] string Artifact,
+    [property: JsonPropertyName("standard")] string Standard,
+    [property: JsonPropertyName("subset")] string Subset);
+
 /// <summary>📋️ The owned execution plan one host receives.</summary>
 public sealed record Plan(
     [property: JsonPropertyName("owner")] string Owner,
@@ -50,7 +58,14 @@ public sealed record Plan(
     [property: JsonPropertyName("outputDir")] string OutputDir,
     [property: JsonPropertyName("resultsPath")] string ResultsPath,
     [property: JsonPropertyName("fixtures")] List<Fixture>? Fixtures,
-    [property: JsonPropertyName("scenarios")] List<Scenario>? Scenarios);
+    [property: JsonPropertyName("scenarios")] List<Scenario>? Scenarios,
+    [property: JsonPropertyName("baselineSha")] string? BaselineSha = null,
+    [property: JsonPropertyName("comparisonPipeline")] string? ComparisonPipeline = null,
+    [property: JsonPropertyName("toleranceProfile")] string? ToleranceProfile = null,
+    [property: JsonPropertyName("target")] SubsetTarget? Target = null,
+    [property: JsonPropertyName("mutationManifestDigest")] string? MutationManifestDigest = null,
+    [property: JsonPropertyName("platform")] string? Platform = null,
+    [property: JsonPropertyName("artifactDir")] string? ArtifactDir = null);
 
 /// <summary>💬️ One message attached to a result.</summary>
 public sealed record Diagnostic(
@@ -62,7 +77,15 @@ public sealed record Diagnostic(
 
 #region 🔖️Adapter
 
-/// <summary>🎯️ What one scenario handler returns: the raw artifact and the compared projection.</summary>
+/// <summary>📦️ One file this handler produced, addressed by ROLE so no comparison stage names a path.</summary>
+public sealed record ResultArtifact(string Role, string Path, string MediaType);
+
+/// <summary>🏭️ Proof a SUBJECT handler reached production dispatch. Its ABSENCE is how a
+/// vector-replay adapter is detected — a replayed expectation and a computed one are otherwise
+/// indistinguishable on the wire.</summary>
+public sealed record ProductionDispatch(string Operation, int BridgeVersion);
+
+/// <summary>🎯️ What one scenario handler returns: an artifact BUNDLE plus the compared projection.</summary>
 public sealed class Outcome
 {
     /// <summary>🎯️ Creates an outcome from a projection and an optional raw artifact.</summary>
@@ -76,6 +99,22 @@ public sealed class Outcome
     public object? Projection { get; }
     public byte[]? Raw { get; }
     public IReadOnlyList<Diagnostic> Diagnostics { get; }
+    public List<ResultArtifact> Artifacts { get; } = new();
+    public ProductionDispatch? Dispatch { get; private set; }
+
+    /// <summary>📦️ Adds one produced file to the bundle under its role.</summary>
+    public Outcome Artifact(string role, string path, string mediaType)
+    {
+        Artifacts.Add(new ResultArtifact(role, path, mediaType));
+        return this;
+    }
+
+    /// <summary>🏭️ Records that this outcome came out of PRODUCTION dispatch, not a committed vector.</summary>
+    public Outcome Dispatched(string operation, int bridgeVersion)
+    {
+        Dispatch = new ProductionDispatch(operation, bridgeVersion);
+        return this;
+    }
 }
 
 /// <summary>🧭️ Everything one scenario handler is given.</summary>
@@ -94,6 +133,18 @@ public sealed class Context
     public string Role { get; }
     public string RepoRoot { get; }
     public string WorkDir => Plan.WorkDir;
+    public string ArtifactDir => string.IsNullOrEmpty(Plan.ArtifactDir) ? System.IO.Path.Combine(Plan.WorkDir, "📦️artifacts") : Plan.ArtifactDir!;
+
+    /// <summary>📦️ Absolute path to write one named result artifact to, creating parent directories.</summary>
+    public string Artifact(string role, string filename)
+    {
+        var directory = System.IO.Path.Combine(ArtifactDir, role);
+        Directory.CreateDirectory(directory);
+        return System.IO.Path.Combine(directory, filename);
+    }
+
+    /// <summary>🪆️ The smallest owning subset this case is scoped to; a handler must not invent one.</summary>
+    public SubsetTarget Target => Plan.Target ?? throw new InvalidOperationException($"case {Plan.Case} declares no subset target — Protocol v2 scopes every mutation case to its smallest owning subset");
 
     /// <summary>🧫️ Absolute path of a declared fixture; an undeclared URI throws.</summary>
     public string Fixture(string uri)
@@ -159,6 +210,11 @@ public static class TestHost
     /// <summary>#⃣ The coordinator's content digest: sha256, hex, truncated to 32 characters.</summary>
     public static string Digest(byte[]? payload) => Convert.ToHexString(SHA256.HashData(payload ?? Array.Empty<byte>())).ToLowerInvariant()[..32];
 
+    /// <summary>#⃣ The FULL <c>sha256:&lt;64 hex&gt;</c> content address of a produced file. Protocol v2
+    /// addresses fixture blobs and result artifacts by content, and a truncated digest is not a
+    /// content address — the store's whole safety argument is that a blob's name IS its content.</summary>
+    public static string ContentDigest(string path) => "sha256:" + Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
+
     private static string? FlagValue(string[] argv, string flag)
     {
         var index = Array.IndexOf(argv, flag);
@@ -197,6 +253,7 @@ public static class TestHost
         var repoRoot = RepoRootFrom(plan.WorkDir);
         Directory.CreateDirectory(plan.WorkDir);
         Directory.CreateDirectory(plan.OutputDir);
+        Directory.CreateDirectory(string.IsNullOrEmpty(plan.ArtifactDir) ? System.IO.Path.Combine(plan.WorkDir, "📦️artifacts") : plan.ArtifactDir!);
 
         var lines = new List<string>();
         var failed = false;
@@ -207,6 +264,7 @@ public static class TestHost
             string status;
             object? projection = null;
             byte[]? raw = null;
+            Outcome? produced = null;
             var handler = adapter.Handler(scenario.Id, plan.Role);
             if (handler is null)
             {
@@ -220,6 +278,7 @@ public static class TestHost
                 {
                     var outcome = handler(new Context(plan, scenario, plan.Role, repoRoot));
                     status = "passed";
+                    produced = outcome;
                     projection = outcome.Projection;
                     raw = outcome.Raw;
                     diagnostics.AddRange(outcome.Diagnostics);
@@ -249,19 +308,36 @@ public static class TestHost
             File.WriteAllBytes(projectionPath, projectionBytes);
             output["projectionPath"] = projectionPath;
 
+            // 📦️Every produced file is re-hashed HERE rather than trusted from the handler: the digest
+            // a comparison stage keys on must describe the bytes that actually reached disk.
+            var artifacts = (produced?.Artifacts ?? new List<ResultArtifact>())
+                .Select(artifact => new Dictionary<string, object?>
+                {
+                    ["role"] = artifact.Role,
+                    ["path"] = artifact.Path,
+                    ["mediaType"] = artifact.MediaType,
+                    ["sha256"] = ContentDigest(artifact.Path),
+                    ["bytes"] = new FileInfo(artifact.Path).Length,
+                })
+                .ToList();
+
             var result = new Dictionary<string, object?>
             {
+                ["schemaVersion"] = 2,
                 ["testId"] = $"{plan.Owner}::{plan.Case}::{scenario.Id}::{plan.Implementation}::{plan.Role}",
+                ["baselineSha"] = plan.BaselineSha ?? string.Empty,
                 ["owner"] = plan.Owner,
                 ["case"] = plan.Case,
                 ["scenario"] = scenario.Id,
                 ["implementation"] = plan.Implementation,
                 ["role"] = plan.Role,
                 ["level"] = scenario.Level,
+                ["platform"] = plan.Platform ?? string.Empty,
                 ["status"] = status,
                 ["durationMs"] = (DateTime.UtcNow - started).TotalMilliseconds,
                 ["seed"] = scenario.Seed ?? string.Empty,
                 ["featureHash"] = plan.FeatureHash,
+                ["artifacts"] = artifacts,
                 ["output"] = output,
                 ["diagnostics"] = diagnostics,
             };

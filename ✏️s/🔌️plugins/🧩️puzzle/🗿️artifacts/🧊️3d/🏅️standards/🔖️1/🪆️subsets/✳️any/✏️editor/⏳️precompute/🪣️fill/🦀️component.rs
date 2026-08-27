@@ -4299,8 +4299,8 @@ mod tests {
     }
 
     fn test_context<'a>(builder: &FillBuilder, cancel: semio_framework_job::CancelToken, sequence: &'a mut u64) -> StepContext<'a> {
-        fn now() -> u64 {
-            0
+        fn now() -> Option<u64> {
+            Some(0)
         }
         StepContext::new(builder.operation.operation, builder.operation.generation, StepBudget::new(100, 10), cancel, now, sequence)
     }
@@ -5078,7 +5078,7 @@ mod tests {
         let mut builder = empty_builder();
         let before = (builder.base.objects.len(), builder.placed.len(), builder.placed_lookup.len());
         let mut sequence = 0;
-        let mut context = StepContext::new(builder.operation.operation, Generation(builder.operation.generation.0 + 1), StepBudget::new(1, 1), root_cancel_token(), || 0, &mut sequence);
+        let mut context = StepContext::new(builder.operation.operation, Generation(builder.operation.generation.0 + 1), StepBudget::new(1, 1), root_cancel_token(), || Some(0), &mut sequence);
         assert!(matches!(builder.step(&mut context), StepOutcome::Fault(_)));
         assert_eq!((builder.base.objects.len(), builder.placed.len(), builder.placed_lookup.len()), before);
     }
@@ -5269,8 +5269,8 @@ mod tests {
 
     #[test]
     fn stale_generation_faults_without_progress() {
-        fn now() -> u64 {
-            0
+        fn now() -> Option<u64> {
+            Some(0)
         }
         let mut builder = empty_builder();
         let mut sequence = 0;

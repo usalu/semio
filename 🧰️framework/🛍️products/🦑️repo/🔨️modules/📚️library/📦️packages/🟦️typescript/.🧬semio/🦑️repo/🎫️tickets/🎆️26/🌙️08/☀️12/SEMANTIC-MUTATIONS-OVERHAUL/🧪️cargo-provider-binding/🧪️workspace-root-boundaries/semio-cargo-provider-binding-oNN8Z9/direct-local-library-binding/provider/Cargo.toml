@@ -1,0 +1,6 @@
+[package]
+name = 'upstream-package'
+
+[lib]
+name = 'actual_library'
+path = 'src/lib.rs'

@@ -28,10 +28,10 @@ import {
   writeSync,
 } from "node:fs";
 import type { Stats } from "node:fs";
-import { registryCatalogInputPaths, registryCatalogInputView, registryCatalogPathMayAffect, semanticPackageAdapterPreview, semanticPackageJoinedPathReferenceAuthority, semanticPackageProjectionAuthority, semanticPackageProjectionCatalog, type GeneratorProjectionActivation, type RegistryCatalogInputDiscovery, type RegistryCatalogInputView, type SemanticPackageProjectionCase } from "../🔍️discovery/🟦️component.ts";
+import { registryCatalogInputPaths, registryCatalogInputView, registryCatalogPathMayAffect, semanticPackageAdapterPreview, semanticPackageGeneratedLeafPreview, semanticPackageIgnoredGeneratedOutputPaths, semanticPackageJoinedPathReferenceAuthority, semanticPackageAuthoredFragmentReferences, semanticPackageProjectionAuthority, semanticPackageProjectionCatalog, type GeneratorProjectionActivation, type RegistryCatalogInputDiscovery, type RegistryCatalogInputView, type SemanticPackageGeneration, type SemanticPackageProjectionCase } from "../🔍️discovery/🟦️component.ts";
 import { tmpdir } from "node:os";
-import { parseRegistryCatalogProjection, parseSemanticOwnedDocumentCorrections, semanticExactOwnedDocumentCorrectionAuthority, type RegistryCatalogProjection } from "../🔍️discovery/🟦️component.ts";
-import { validateFrozenCoordinateEvidenceContracts, type FrozenCoordinateEvidenceContract } from "../🔍️discovery/🟦️component.ts";
+import { parseGeneratorInputProjection, parseSemanticOwnedDocumentCorrections, semanticExactOwnedDocumentCorrectionAuthority, type GeneratorInputProjection } from "../🔍️discovery/🟦️component.ts";
+import { inspectRustAssertionMessageSpans, inspectRustJoinArgumentSpans, inspectRustManifestPathReferences, inspectRustModuleGraph, validateFrozenCoordinateEvidenceContracts, type RustModuleGraph, type FrozenCoordinateEvidenceContract } from "../🔍️discovery/🟦️component.ts";
 import { mutationPayloadSchemaRelativePath } from "../🔍️discovery/🟦️component.ts";
 import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } from "node:path";
 import { artifactPathProjectionCatalogRoots, renderArtifactPathProjectionRoot, semanticArtifactEmptyFacetProjectionAuthority, semanticExactOwnedFileCatalog, semanticExactOwnedFileProjectionAuthority, semanticOwnedFileHistoryProjectionAuthority, semanticOwnedFileProjectionAuthority, semanticOwnedPrimaryFileProjectionAuthority, semanticPathProjectionAuthority, semanticPathProjectionReferenceConsumers, taxonomyPathPatternMatches, validateTaxonomy, type SemanticExactOwnedFileCase, type SemanticExactOwnedFileCatalog, type SemanticFacetPrimaryFileProjectionContract, type SemanticPathProjectionReferenceConsumerForm, type SemanticProjectionAuthorityNode, type Taxonomy as DiscoveryTaxonomy } from "../🔍️discovery/🟦️component.ts";
@@ -179,6 +179,7 @@ export interface TaxonomyEvidenceMember {
 }
 
 export type TaxonomyRemovalAuthority =
+  | Readonly<{ kind: "nested-cargo-generated-source"; catalogPath: string; catalogContentHash: string; packageId: "wgpu-renderer"; generatorContractId: string; destinationPath: string; sourcePreimage: Extract<TaxonomyLeafPreimage, { nodeKind: "file" }>; authorityDigest: string }>
   | Readonly<{ kind: "exact-owner-generated-source"; catalogPath: string; catalogContentHash: string; generatorContractId: string; destinationPath: string; outputPreimage: Extract<TaxonomyLeafPreimage, { nodeKind: "file" }>; authorityDigest: string }>
   | Readonly<{ kind: "byte-and-mode-identical"; evidenceSetDigest: string; retainedFinalPath: string; members: readonly TaxonomyEvidenceMember[] }>
   | Readonly<{ kind: "exact-path-mutation"; catalogPath: string; catalogContentHash: string; caseId: string; sourcePath: string; sourcePreimage: Extract<TaxonomyLeafPreimage, { nodeKind: "file" }>; disposition: "remove"; authorityDigest: string }>
@@ -191,7 +192,7 @@ export interface TaxonomyEvidenceRemoval {
   readonly preimage: TaxonomyLeafPreimage;
   readonly authority: TaxonomyRemovalAuthority;
   readonly embeddedTicketRootId?: string;
-  readonly rationaleRule: "redundant-ticket-evidence-v1" | "serialized-platform-sentinel-v1" | "ticket-important-closed-empty-v1" | "ticket-important-exact-empty-residue-v1" | "exact-owner-generated-source-retirement-v1";
+  readonly rationaleRule: "redundant-ticket-evidence-v1" | "serialized-platform-sentinel-v1" | "ticket-important-closed-empty-v1" | "ticket-important-exact-empty-residue-v1" | "exact-owner-generated-source-retirement-v1" | "nested-cargo-generated-source-retirement-v1";
   readonly ownerId: string;
 }
 
@@ -679,6 +680,7 @@ interface GeneratorContractSpec {
   readonly checkTarget?: string;
   readonly inputPatterns: readonly string[];
   readonly inputDiscovery?: RegistryCatalogInputDiscovery;
+  readonly packageGeneration?: SemanticPackageGeneration;
   readonly projectionActivation?: GeneratorProjectionActivation;
   readonly outputRoots: readonly GeneratorOutputRootSpec[];
   readonly reason: string;
@@ -1429,7 +1431,8 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
     const inputDiscovery = spec.inputDiscovery === undefined ? undefined : record(spec.inputDiscovery, `generatorContracts.${id}.inputDiscovery`) as unknown as RegistryCatalogInputDiscovery;
     if (inputDiscovery && (id !== "plugin-registry" || ownership !== "owned" || inputDiscovery.kind !== "registry-catalog")) throw new Error(`Taxonomy v7 generatorContracts.${id}.inputDiscovery has no exact catalog authority`);
     const projectionActivation = spec.projectionActivation === undefined ? undefined : record(spec.projectionActivation, `generatorContracts.${id}.projectionActivation`) as unknown as GeneratorProjectionActivation;
-    generatorContracts[id] = { ownership, ownerPath, target, previewTarget, checkTarget, inputPatterns: [...new Set(inputPatterns)].sort(), inputDiscovery, projectionActivation, outputRoots, reason: requiredString(spec.reason, `generatorContracts.${id}.reason`) };
+    const packageGeneration = spec.packageGeneration === undefined ? undefined : record(spec.packageGeneration, `generatorContracts.${id}.packageGeneration`) as unknown as SemanticPackageGeneration;
+    generatorContracts[id] = { ownership, ownerPath, target, previewTarget, checkTarget, inputPatterns: [...new Set(inputPatterns)].sort(), inputDiscovery, packageGeneration, projectionActivation, outputRoots, reason: requiredString(spec.reason, `generatorContracts.${id}.reason`) };
   }
   if (Object.keys(generatorContracts).length === 0) throw new Error("Taxonomy v7 generatorContracts must not be empty");
   for (let left = 0; left < generatorRoots.length; left++) for (let right = left + 1; right < generatorRoots.length; right++) {
@@ -1698,7 +1701,16 @@ function parseEvidenceMember(value: unknown, name: string): TaxonomyEvidenceMemb
 }
 
 function parseRemovalAuthority(value: unknown, name: string): TaxonomyRemovalAuthority {
-  const candidate = planRecord(value, name, ["kind"], ["evidenceSetDigest", "retainedFinalPath", "members", "catalogPath", "catalogContentHash", "caseId", "sourcePath", "sourcePreimage", "disposition", "contractId", "ownerPath", "manifestPath", "manifestPreimage", "status", "contentState", "fixturePath", "fixtureContentHash", "serializedInputPath", "expectedViolationCode", "authorityDigest", "generatorContractId", "destinationPath", "outputPreimage"]);
+  const candidate = planRecord(value, name, ["kind"], ["evidenceSetDigest", "retainedFinalPath", "members", "catalogPath", "catalogContentHash", "caseId", "sourcePath", "sourcePreimage", "disposition", "contractId", "ownerPath", "manifestPath", "manifestPreimage", "status", "contentState", "fixturePath", "fixtureContentHash", "serializedInputPath", "expectedViolationCode", "authorityDigest", "generatorContractId", "destinationPath", "outputPreimage", "packageId"]);
+  if (candidate.kind === "nested-cargo-generated-source") {
+    const row = planRecord(value, name, ["kind", "catalogPath", "catalogContentHash", "packageId", "generatorContractId", "destinationPath", "sourcePreimage", "authorityDigest"]);
+    const sourcePreimage = parseLeafPreimage(row.sourcePreimage, name + ".sourcePreimage");
+    if (row.packageId !== "wgpu-renderer" || sourcePreimage.nodeKind !== "file") throw new Error(name + " requires the exact generated WGPU source file");
+    const result = { kind: "nested-cargo-generated-source" as const, catalogPath: planPath(row.catalogPath, name + ".catalogPath"), catalogContentHash: planString(row.catalogContentHash, name + ".catalogContentHash", PLAN_HASH), packageId: row.packageId, generatorContractId: planString(row.generatorContractId, name + ".generatorContractId"), destinationPath: planPath(row.destinationPath, name + ".destinationPath"), sourcePreimage, authorityDigest: planString(row.authorityDigest, name + ".authorityDigest", PLAN_HASH) };
+    const { authorityDigest: _digest, ...digestible } = result;
+    if (result.authorityDigest !== sha256(canonicalJson(digestible))) throw new Error(name + ".authorityDigest does not match nested Cargo generated source authority");
+    return result;
+  }
   if (candidate.kind === "exact-owner-generated-source") {
     const row = planRecord(value, name, ["kind", "catalogPath", "catalogContentHash", "generatorContractId", "destinationPath", "outputPreimage", "authorityDigest"]);
     const outputPreimage = parseLeafPreimage(row.outputPreimage, name + ".outputPreimage");
@@ -1845,10 +1857,12 @@ export function parseTaxonomyPlan(value: unknown): TaxonomyPlan {
   const evidenceRemovals = (row.evidenceRemovals as unknown[]).map((value, index) => {
     const name = `taxonomy plan evidenceRemovals[${index}]`;
     const entry = planRecord(value, name, ["operationId", "sourcePath", "preimage", "authority", "rationaleRule", "ownerId"], ["embeddedTicketRootId"]);
-    if (entry.rationaleRule !== "redundant-ticket-evidence-v1" && entry.rationaleRule !== "serialized-platform-sentinel-v1" && entry.rationaleRule !== "ticket-important-closed-empty-v1" && entry.rationaleRule !== "ticket-important-exact-empty-residue-v1" && entry.rationaleRule !== "exact-owner-generated-source-retirement-v1") throw new Error(`${name}.rationaleRule is invalid`);
+    if (entry.rationaleRule !== "redundant-ticket-evidence-v1" && entry.rationaleRule !== "serialized-platform-sentinel-v1" && entry.rationaleRule !== "ticket-important-closed-empty-v1" && entry.rationaleRule !== "ticket-important-exact-empty-residue-v1" && entry.rationaleRule !== "exact-owner-generated-source-retirement-v1" && entry.rationaleRule !== "nested-cargo-generated-source-retirement-v1") throw new Error(`${name}.rationaleRule is invalid`);
     const operationId = parseOperationId(entry, name);
     const result: TaxonomyEvidenceRemoval = { operationId, sourcePath: planPath(entry.sourcePath, `${name}.sourcePath`), preimage: parseLeafPreimage(entry.preimage, `${name}.preimage`), authority: parseRemovalAuthority(entry.authority, `${name}.authority`), embeddedTicketRootId: entry.embeddedTicketRootId === undefined ? undefined : planString(entry.embeddedTicketRootId, `${name}.embeddedTicketRootId`, PLAN_OPERATION_ID), rationaleRule: entry.rationaleRule, ownerId: planString(entry.ownerId, `${name}.ownerId`) };
-    if (result.authority.kind === "exact-owner-generated-source") {
+    if (result.authority.kind === "nested-cargo-generated-source") {
+      if (result.rationaleRule !== "nested-cargo-generated-source-retirement-v1" || result.embeddedTicketRootId !== undefined || canonicalJson(result.preimage) !== canonicalJson(result.authority.sourcePreimage)) throw new Error(name + " nested Cargo generated source is not bound to its frozen preimage");
+    } else if (result.authority.kind === "exact-owner-generated-source") {
       if (result.rationaleRule !== "exact-owner-generated-source-retirement-v1" || result.embeddedTicketRootId !== undefined || canonicalJson(result.preimage) !== canonicalJson(result.authority.outputPreimage)) throw new Error(name + " generated source retirement is not byte-and-mode-preserving");
     } else if (result.authority.kind === "byte-and-mode-identical") {
       const removals = result.authority.members.filter((member) => member.disposition === "remove" && member.sourcePath === result.sourcePath && canonicalJson(member.preimage) === canonicalJson(result.preimage));
@@ -2811,7 +2825,7 @@ function incomingReferenceSnapshot(inventory: TaxonomyInventory, taxonomy: Loade
   for (const path of paths) for (let parent = posix.dirname(path); parent && parent !== "."; parent = posix.dirname(parent)) knownPaths.add(parent);
   validateObservedFrozenEvidenceNodes(inventory.repoRoot, knownPaths, taxonomy);
   const coordinateRoots = referenceCoordinateRoots(inventory.repoRoot, paths, taxonomy, options.cancelFile);
-  const known = referencePathIndex(knownPaths, inventory.repoRoot, coordinateRoots), admitted = new Set(inventory.entries.map((entry) => entry.sourcePath));
+  const known = referencePathIndex(knownPaths, inventory.repoRoot, coordinateRoots, undefined, options.cancelFile, changing), admitted = new Set(inventory.entries.map((entry) => entry.sourcePath));
   const admitsText = incomingReferenceLexicalAdmission(changing);
   const entries: TaxonomyInventoryEntry[] = [], contents = new Map<string, string>();
   for (const [index, path] of referenceCandidatesWithProgress(paths, "plan", options.progress)) {
@@ -2827,7 +2841,8 @@ function incomingReferenceSnapshot(inventory: TaxonomyInventory, taxonomy: Loade
       frozenEvidenceCoordinateAuthority(path, bytes, taxonomy);
       if (!admitsText(content)) continue;
       report(options.progress, "plan", "incoming-parse", index + 1, paths.length, path);
-      const relevant = [...referenceTokens(path, content), ...unsupportedReferenceTokens(content, referenceAdapter(path))].some((token) => {
+      const relevant = referenceTokensIncludingUnsupported(path, content, known).some((token) => {
+        if (token.unsupportedReason && token.physicalTargets?.some((target) => changing.has(target))) return true;
         const target = resolveReferenceTokenPath(path, token, known);
         return target !== null && changing.has(target) && !isFrozenSourceCoordinateToken(path, bytes, token, target, taxonomy, inventory.repoRoot);
       });
@@ -2852,7 +2867,8 @@ interface ReferenceToken {
   readonly end: number;
   readonly value: string;
   readonly targetValues?: readonly string[];
-  readonly rewriteKind?: "rust-mod" | "python-entrypoint" | "artifact-uri" | "projection-prose" | "structural-projection" | "path-prefix" | "artifact-catalog-glob" | "artifact-catalog-prose" | "exact-owner-reference";
+  readonly physicalTargets?: readonly string[];
+  readonly rewriteKind?: "rust-mod" | "rust-path-join" | "python-entrypoint" | "artifact-uri" | "projection-prose" | "structural-projection" | "path-prefix" | "artifact-catalog-glob" | "artifact-catalog-prose" | "exact-owner-reference";
   readonly rewriteData?: Readonly<Record<string, string>>;
   readonly unsupportedReason?: string;
 }
@@ -3018,6 +3034,7 @@ function structuralTokensInFragment(content: string, fragment: string, fragmentS
 function jsonTokens(path: string, content: string, adapter: "json" | "jsonc"): ReferenceToken[] {
   const rows: ReferenceToken[] = [];
   let ordinal = 0;
+  let artifactRoot: string | null | undefined;
   const embeddedArgv = /(?:^|\/)(?:launch(?:\.seed)?\.jsonc?|tasks\.json|project\.json|package\.json)$/iu.test(path);
   for (const match of content.matchAll(/"((?:\\.|[^"\\])*)"/g)) {
     if (match.index === undefined) continue;
@@ -3035,7 +3052,10 @@ function jsonTokens(path: string, content: string, adapter: "json" | "jsonc"): R
     const workspaceGlob = !key && raw === value ? value.match(/^\{workspaceRoot\}\/(.+?)(\/\*\*\/\*[^/]*)$/u) : null;
     if (workspaceGlob) rows.push({ adapter, structuredLocation: `${key ? "/@key" : "/@value"}[${Math.max(0, ordinal - 1)}]/workspace-glob@${start}`, start, end: start + raw.length, value, targetValues: [workspaceGlob[1]], rewriteKind: "path-prefix", rewriteData: { prefix: "{workspaceRoot}/", suffix: workspaceGlob[2] } });
     if (!key && raw !== value && /^\{workspaceRoot\}\/.+\/\*\*/u.test(value)) rows.push({ adapter, structuredLocation: `/@value[${Math.max(0, ordinal - 1)}]/workspace-glob@${start}`, start, end: start + raw.length, value: raw, rewriteKind: "path-prefix", unsupportedReason: "Escaped workspace projection glob has no proven decoded-to-raw offset map" });
-    if (!key && raw === value) rows.push(...structuralTokensInFragment(content, raw, start, adapter, `/@value[${Math.max(0, ordinal - 1)}]/prose`, artifactRootForPath(path)));
+    if (!key && raw === value) {
+      if (artifactRoot === undefined) artifactRoot = artifactRootForPath(path);
+      rows.push(...structuralTokensInFragment(content, raw, start, adapter, `/@value[${Math.max(0, ordinal - 1)}]/prose`, artifactRoot));
+    }
     if (!key && raw !== value && mutationStructuralPaths(value).length > 0) rows.push({ adapter, structuredLocation: `/@value[${Math.max(0, ordinal - 1)}]/prose@${start}`, start, end: start + raw.length, value: raw, unsupportedReason: "Escaped JSON projection prose has no proven decoded-to-raw offset map" });
     if (!key && embeddedArgv) rows.push(...embeddedArgumentTokens(content, raw, start, adapter, "embedded-argv"));
   }
@@ -3062,8 +3082,13 @@ function tomlTokens(path: string, content: string): ReferenceToken[] {
   return rows;
 }
 
-function rustTokens(path: string, content: string): ReferenceToken[] {
-  const rows = regexTokens(content, "rust", "rust-string-path", [/#\s*\[\s*path\s*=\s*"([^"]+)"/gu, /\b(?:include|include_str|include_bytes)!\s*\(\s*"([^"]+)"/gu, /\.join\(\s*"([^"]+)"\s*\)/gu]);
+function rustTokens(path: string, content: string, index?: ReferencePathIndex): ReferenceToken[] {
+  const rows = regexTokens(content, "rust", "rust-string-path", [/#\s*\[\s*path\s*=\s*"([^"]+)"/gu, /\b(?:include|include_str|include_bytes)!\s*\(\s*"([^"]+)"/gu]);
+  if (index) rows.push(...rustManifestReferenceTokens(path, content, index));
+  for (const message of inspectRustAssertionMessageSpans(content)) for (const token of unsupportedReferenceTokens(message.value, "rust")) {
+    const start = message.start + token.start;
+    rows.push({ adapter: "rust", structuredLocation: lineLocation(content, start, `rust-assertion-message:${message.macroName}`), start, end: message.start + token.end, value: token.value });
+  }
   for (const match of content.matchAll(/\.join\(\s*"([^"]*🖼️assets\/🏗️modelDefinitions)"\s*\)/gu)) {
     if (match.index === undefined) continue;
     const start = match.index + match[0].indexOf(match[1]);
@@ -3216,9 +3241,9 @@ function htmlTokens(content: string, adapter: "xml" | "markdown"): ReferenceToke
   return regexTokens(content, adapter, "html-attribute", [/<(?:a|img|script|link|source|video|audio|form)\b[^>]*\b(?:href|src|srcset|poster|data|action)\s*=\s*["']([^"']+)["'][^>]*>/giu]);
 }
 
-function referenceTokens(path: string, content: string): readonly ReferenceToken[] {
+function referenceTokens(path: string, content: string, index?: ReferencePathIndex): readonly ReferenceToken[] {
   const lower = path.toLowerCase();
-  if (lower.endsWith(".rs")) return rustTokens(path, content);
+  if (lower.endsWith(".rs")) return rustTokens(path, content, index);
   if (lower.endsWith(".feature")) return gherkinTokens(path, content);
   if (/\.(?:ts|tsx|js|jsx|mjs|cjs|mts|cts)$/u.test(lower)) return typescriptTokens(path, content);
   if (/\.(?:go|mod|work)$/u.test(lower) || /(?:^|\/)go\.(?:mod|work)$/u.test(lower)) return goTokens(path, content);
@@ -3256,6 +3281,118 @@ interface ReferencePathIndex {
   readonly coordinateRoots: readonly string[];
   readonly coordinateRootSet: ReadonlySet<string>;
   readonly coordinateRootByReference: Map<string, string | undefined>;
+  readonly contextPaths: readonly string[];
+  readonly affectedPaths: ReadonlySet<string>;
+  readonly cancelFile?: string;
+}
+
+interface RustReferenceGraphView {
+  readonly graph: RustModuleGraph;
+  readonly hashes: ReadonlyMap<string, string>;
+  readonly unreadableInputs: ReadonlyMap<string, Error>;
+}
+
+const rustReferenceGraphs = new WeakMap<ReferencePathIndex, Map<string, RustReferenceGraphView>>();
+const rustUnprovenReferenceTargets = new WeakMap<ReferencePathIndex, Map<string, readonly string[]>>();
+const rustReferenceContextFiles = new WeakMap<ReferencePathIndex, Map<string, readonly string[]>>();
+
+function rustContextFiles(path: string, index: ReferencePathIndex): readonly string[] {
+  const coordinateRoot = ancestorReferenceCoordinateRoot(path, index.coordinateRootSet) ?? "";
+  const views = rustReferenceContextFiles.get(index) ?? new Map<string, readonly string[]>();
+  rustReferenceContextFiles.set(index, views);
+  const cached = views.get(coordinateRoot);
+  if (cached) return cached;
+  const files = index.contextPaths.filter((candidate) => (candidate.endsWith(".rs") || basename(candidate) === "Cargo.toml") && (ancestorReferenceCoordinateRoot(candidate, index.coordinateRootSet) ?? "") === coordinateRoot);
+  views.set(coordinateRoot, files);
+  return files;
+}
+
+function unprovenRustReferenceTargets(referencePath: string, value: string, index: ReferencePathIndex): readonly string[] {
+  const cache = rustUnprovenReferenceTargets.get(index) ?? new Map<string, readonly string[]>();
+  rustUnprovenReferenceTargets.set(index, cache);
+  const coordinateRoot = ancestorReferenceCoordinateRoot(referencePath, index.coordinateRootSet), key = `${coordinateRoot ?? ""}\0${value}`;
+  const cached = cache.get(key);
+  if (cached) return cached;
+  const decoded = unsupportedReferenceTokens(`"${value}"`, "rust")[0]?.targetValues?.[0] ?? value, suffix = decoded.replace(/^(?:\.\.?\/)+/u, "");
+  const explicitEscape = /^(?:\.\.\/|\/|[A-Za-z]:[\\/])/u.test(decoded);
+  const targets = [...index.exact].filter((candidate) => (!coordinateRoot || candidate.startsWith(`${coordinateRoot}/`) || explicitEscape) && suffix !== "" && (candidate === suffix || candidate.endsWith(`/${suffix}`)));
+  cache.set(key, targets);
+  return targets;
+}
+
+function rustReferenceNeedsOwnership(path: string, references: ReturnType<typeof inspectRustManifestPathReferences>, index: ReferencePathIndex): boolean {
+  if (index.affectedPaths.has(path)) return true;
+  const affected = (candidate: string): boolean => index.affectedPaths.has(candidate) || index.affectedPaths.has(index.nfc.get(candidate.normalize("NFC")) ?? "");
+  const manifests = rustContextFiles(path, index).filter((candidate) => basename(candidate) === "Cargo.toml");
+  for (const reference of references) {
+    if (unprovenRustReferenceTargets(path, reference.value, index).some(affected)) return true;
+    for (const manifest of manifests) {
+      try { if (affected(normalizeRelative(posix.join(posix.dirname(manifest), ...reference.base, reference.value)))) return true; } catch {}
+    }
+  }
+  return false;
+}
+
+function rustReferenceGraph(path: string, index: ReferencePathIndex): RustReferenceGraphView | null {
+  if (!index.repoRoot) return null;
+  const coordinateRoot = ancestorReferenceCoordinateRoot(path, index.coordinateRootSet) ?? "";
+  const views = rustReferenceGraphs.get(index) ?? new Map<string, RustReferenceGraphView>();
+  rustReferenceGraphs.set(index, views);
+  const cached = views.get(coordinateRoot);
+  if (cached) return cached;
+  const files = rustContextFiles(path, index);
+  const contents = new Map<string, string | undefined>(), hashes = new Map<string, string>(), unreadableInputs = new Map<string, Error>();
+  const read = (candidate: string): string | undefined => {
+    checkCancellation(index.repoRoot!, index.cancelFile);
+    if (contents.has(candidate)) return contents.get(candidate);
+    let absolute: string;
+    try { absolute = assertLexicalInputOutsideOpaque(index.repoRoot!, candidate, "Rust module ownership", true); }
+    catch (error) { unreadableInputs.set(candidate, error instanceof Error ? error : new Error(String(error))); contents.set(candidate, undefined); return undefined; }
+    const stat = lstatOrNull(absolute);
+    if (!stat) { contents.set(candidate, undefined); return undefined; }
+    if (!stat.isFile()) { unreadableInputs.set(candidate, new Error(`Rust module ownership is not a regular file: ${candidate}`)); contents.set(candidate, undefined); return undefined; }
+    const bytes = readFileSync(absolute), after = lstatSync(absolute);
+    if (after.mode !== stat.mode || after.size !== stat.size || after.mtimeMs !== stat.mtimeMs || bytes.byteLength !== stat.size) throw new Error(`Rust module ownership changed during its snapshot: ${candidate}`);
+    hashes.set(candidate, sha256(bytes));
+    contents.set(candidate, bytes.toString("utf8"));
+    return contents.get(candidate);
+  };
+  const graph = inspectRustModuleGraph(files, read, { strictManifests: true, checkCancellation: () => checkCancellation(index.repoRoot!, index.cancelFile) });
+  const view = { graph, hashes, unreadableInputs };
+  views.set(coordinateRoot, view);
+  return view;
+}
+
+function rustManifestReferenceTokens(path: string, content: string, index: ReferencePathIndex): readonly ReferenceToken[] {
+  const references = inspectRustManifestPathReferences(content);
+  const arguments_ = inspectRustJoinArgumentSpans(content);
+  if (references.length === 0 && arguments_.length === 0) return [];
+  const view = references.length === 0 || !rustReferenceNeedsOwnership(path, references, index) ? null : rustReferenceGraph(path, index), contexts = view?.graph.contexts.get(path) ?? [];
+  for (const [candidate, error] of view?.unreadableInputs ?? []) if (candidate === path || basename(candidate) === "Cargo.toml" && (posix.dirname(candidate) === "." || path.startsWith(`${posix.dirname(candidate)}/`))) throw error;
+  if (view?.hashes.has(path) && view.hashes.get(path) !== sha256(content)) throw new Error(`Rust reference source changed during ownership resolution: ${path}`);
+  const manifests = [...new Set(contexts.map((context) => context.manifestPath).filter((manifest): manifest is string => manifest !== null))];
+  const proofPaths = [...new Set(contexts.flatMap((context) => [context.manifestPath!, ...context.sourceChain]))].sort(generatorPathCompare);
+  const digest = sha256(canonicalJson(proofPaths.map((source) => ({ path: source, sha256: view?.hashes.get(source) }))));
+  const rows: ReferenceToken[] = references.map((reference) => {
+    let sourceBase: string | undefined, physicalTargets: string[] = [], unsupportedReason: string | undefined;
+    try {
+      if ([...reference.base, reference.value].some((segment) => posix.isAbsolute(segment) || /^[A-Za-z]:/u.test(segment))) throw new Error("Rust joined path is not repository-relative");
+      physicalTargets = manifests.map((manifest) => normalizeRelative(posix.join(dirname(manifest), ...reference.base, reference.value)));
+      if (manifests.length === 1) sourceBase = normalizeRelative(posix.join(dirname(manifests[0]!), ...reference.base));
+      else unsupportedReason = `Rust manifest-relative path requires one proven Cargo owner, found ${manifests.length}`;
+    } catch (error) { unsupportedReason = error instanceof Error ? error.message : String(error); }
+    if (unsupportedReason && physicalTargets.length === 0) {
+      physicalTargets = [...unprovenRustReferenceTargets(path, reference.value, index)];
+    }
+    return { adapter: "rust" as const, structuredLocation: lineLocation(content, reference.start, `rust-path-join:${digest}`), start: reference.start, end: reference.end, value: reference.value, physicalTargets, ...(unsupportedReason ? { unsupportedReason } : { rewriteKind: "rust-path-join" as const, rewriteData: { sourceBase: sourceBase! } }) };
+  });
+  for (const argument of arguments_) if (!references.some((reference) => reference.start === argument.start && reference.end === argument.end)) rows.push({ adapter: "rust", structuredLocation: lineLocation(content, argument.start, "rust-path-join-unproven"), ...argument, physicalTargets: unprovenRustReferenceTargets(path, argument.value, index), unsupportedReason: "Rust join argument has no proven immutable manifest-relative base" });
+  return rows;
+}
+
+function referenceTokensIncludingUnsupported(path: string, content: string, index: ReferencePathIndex): readonly ReferenceToken[] {
+  const supported = referenceTokens(path, content, index);
+  return [...supported, ...unsupportedReferenceTokens(content, referenceAdapter(path)).filter((candidate) => !supported.some((token) => token.rewriteKind === "rust-path-join" && token.start <= candidate.start && token.end >= candidate.end))];
 }
 
 function addUniqueIndex(index: Map<string, string | null>, key: string, value: string): void {
@@ -3265,7 +3402,7 @@ function addUniqueIndex(index: Map<string, string | null>, key: string, value: s
   else if (existing !== value) index.set(key, null);
 }
 
-function referencePathIndex(paths: Iterable<string>, repoRoot?: string, coordinateRoots: readonly string[] = []): ReferencePathIndex {
+function referencePathIndex(paths: Iterable<string>, repoRoot?: string, coordinateRoots: readonly string[] = [], contextPaths?: Iterable<string>, cancelFile?: string, affectedPaths?: ReadonlySet<string>): ReferencePathIndex {
   const exact = new Set<string>();
   const nfc = new Map<string, string | null>();
   const extensionless = new Map<string, string | null>();
@@ -3279,7 +3416,7 @@ function referencePathIndex(paths: Iterable<string>, repoRoot?: string, coordina
     const moduleSegments = (normalized.endsWith("/__init__.py") ? dirname(normalized) : normalized.slice(0, -3)).split("/").filter(Boolean);
     for (let index = 0; index < moduleSegments.length; index++) addUniqueIndex(pythonModule, moduleSegments.slice(index).join("."), path);
   }
-  return { exact, nfc, extensionless, pythonModule, repoRoot, coordinateRoots, coordinateRootSet: new Set(coordinateRoots), coordinateRootByReference: new Map() };
+  return { exact, nfc, extensionless, pythonModule, repoRoot, coordinateRoots, coordinateRootSet: new Set(coordinateRoots), coordinateRootByReference: new Map(), contextPaths: [...(contextPaths ?? exact)], affectedPaths: affectedPaths ?? exact, cancelFile };
 }
 
 function resolveReferencePath(referencePath: string, token: string, index: ReferencePathIndex): string | null {
@@ -3312,6 +3449,10 @@ function resolveReferencePath(referencePath: string, token: string, index: Refer
 }
 
 function resolveReferenceTokenPath(referencePath: string, token: ReferenceToken, index: ReferencePathIndex): string | null {
+  if (token.physicalTargets !== undefined) {
+    const matches = [...new Set(token.physicalTargets.map((value) => index.exact.has(value) ? value : index.nfc.get(value.normalize("NFC"))).filter((value): value is string => typeof value === "string"))];
+    return matches.length === 1 ? matches[0]! : null;
+  }
   const matches = [...new Set((token.targetValues ?? [token.value]).map((value) => resolveReferencePath(referencePath, value, index)).filter((value): value is string => value !== null))];
   return matches.length === 1 ? matches[0] : null;
 }
@@ -3360,7 +3501,14 @@ function rewriteReferenceValue(referencePath: string, oldValue: string, oldTarge
   return `${value}${split.suffix}`;
 }
 
-function rewriteReferenceToken(referencePath: string, sourceReferencePath: string, token: ReferenceToken, oldTarget: string, newTarget: string, repoRoot?: string): string {
+function rewriteReferenceToken(referencePath: string, sourceReferencePath: string, token: ReferenceToken, oldTarget: string, newTarget: string, repoRoot?: string, entries: readonly TaxonomyInventoryEntry[] = []): string {
+  if (token.rewriteKind === "rust-path-join") {
+    const base = token.rewriteData?.sourceBase;
+    if (base === undefined) throw new Error("Rust join has no exact physical base");
+    let value = posix.relative(projectedPath(base, entries), newTarget);
+    if (token.value.startsWith("./") && !value.startsWith(".")) value = `./${value}`;
+    return value || ".";
+  }
   if (token.rewriteKind === "rust-mod") {
     let relativeTarget = posix.relative(dirname(referencePath), newTarget);
     if (!relativeTarget.startsWith(".")) relativeTarget = `./${relativeTarget}`;
@@ -3459,7 +3607,8 @@ function referenceGraph(repoRoot: string, entries: ReadonlyMap<string, MutableIn
       report(progress, "inventory", "references", index + 1, files.length, entry.sourcePath);
       continue;
     }
-    for (const token of referenceTokens(entry.sourcePath, content)) {
+    for (const token of referenceTokens(entry.sourcePath, content, known)) {
+      if (token.unsupportedReason) continue;
       const target = resolveReferenceTokenPath(entry.sourcePath, token, known);
       if (!target || !entries.has(target)) {
         const opaque = lexicalOpaqueReferenceTarget(entry.sourcePath, token, taxonomy);
@@ -3748,13 +3897,18 @@ function artifactEmptyFacetReferenceTokens(path: string, content: string, moves:
 function nestedCargoReferenceTokens(path: string, content: string, packages: readonly SemanticPackageProjectionCase[]): Readonly<{ tokens: readonly ReferenceToken[]; problems: readonly string[] }> {
   const row = packages.find((entry) => entry.mappings.some((mapping) => mapping.sourcePath === path));
   if (!row) return { tokens: [], problems: [] };
+  const mapping = row.mappings.find((entry) => entry.sourcePath === path)!;
+  if (sha256(content) !== mapping.sourceHash || Buffer.byteLength(content) !== mapping.sourceSize) return { tokens: [], problems: ["Nested Cargo reference source preimage drift: " + path] };
   const tokens: ReferenceToken[] = [], problems: string[] = [];
+  const authored = semanticPackageAuthoredFragmentReferences({ path, content, layout: "source" }, row);
+  problems.push(...authored.problems);
+  for (const reference of authored.references) tokens.push({ adapter: referenceAdapter(path), structuredLocation: lineLocation(content, reference.start, "nested-cargo-authored-fragment"), start: reference.start, end: reference.end, value: reference.oldValue, targetValues: [reference.targetSourcePath], rewriteKind: "exact-owner-reference", rewriteData: { newValue: reference.newValue } });
   for (const binding of row.joinedPathBindings.filter((binding) => path === row.sourceRoot + "/" + binding.consumerRelativePath)) {
     const authority = semanticPackageJoinedPathReferenceAuthority({ path, content, layout: "source" }, binding, row);
     problems.push(...authority.problems);
     for (const reference of authority.references) tokens.push({ adapter: "typescript", structuredLocation: lineLocation(content, reference.start, "nested-cargo-joined-path"), start: reference.start, end: reference.end, value: reference.oldValue, targetValues: [reference.targetSourcePath], rewriteKind: "exact-owner-reference", rewriteData: { newValue: reference.newValue } });
   }
-  const add = (needle: string, value: string, newValue: string, target: string, adapter: "rust" | "toml" | "json") => {
+  const add = (needle: string, value: string, newValue: string, target: string, adapter: "rust" | "toml" | "json" | "typescript") => {
     const start = content.indexOf(needle);
     if (start < 0 || content.indexOf(needle, start + needle.length) >= 0) { problems.push("Nested Cargo exact reference is missing or repeated: " + needle); return; }
     const offset = start + needle.indexOf(value);
@@ -3770,8 +3924,23 @@ function nestedCargoReferenceTokens(path: string, content: string, packages: rea
     }
   }
   if (row.id === "wgpu-renderer" && path === row.sourceRoot + "/package.json") {
+    add('".": "./📦️index.ts"', ".", ".", row.sourceRoot, "json");
     add('".": "./📦️index.ts"', "./📦️index.ts", "./🟦️typescript/📚️library/🟦️.ts", row.sourceRoot + "/📦️index.ts", "json");
     add('"directory": "framework/product/os/module/renderer/wgpu"', "framework/product/os/module/renderer/wgpu", row.destinationRoot, row.sourceRoot, "json");
+  }
+  if (row.id === "wgpu-renderer" && path === row.sourceRoot + "/📋️project.json") {
+    const named = content.match(/"namedInputs"\s*:\s*\{\s*"default"\s*:\s*(\[[^\]]+\])/u);
+    if (!named || !Array.isArray(JSON.parse(named[1]!))) problems.push("Nested Cargo exact Nx default inputs drifted");
+    else add(named[0], named[1]!, JSON.stringify([...JSON.parse(named[1]!), `{workspaceRoot}/${row.semanticOwnerRoot}/**/*`]), row.sourceRoot, "json");
+  }
+  if (row.id === "wgpu-renderer" && path === row.sourceRoot + "/📜️script.ts") {
+    const config = row.mappings.find((entry) => entry.sourcePath === row.sourceRoot + "/🧪️vitest.config.ts")!;
+    const calls = [...content.matchAll(/^    await runVitest\(this\.root, [^\r\n]+\);$/gmu)];
+    if (calls.length !== 3 || calls.some((call) => !call[0].endsWith(', "🧪️vitest.config.ts");'))) problems.push("Nested Cargo exact Vitest call authority drifted");
+    else for (const call of calls) {
+      add(call[0], basename(config.sourcePath), posix.relative(row.destinationRoot, config.destinationPath), config.sourcePath, "typescript");
+      for (const selector of row.mappings.filter((entry) => entry.sourcePath.endsWith(".test.ts") && call[0].includes(JSON.stringify(basename(entry.sourcePath))))) add(call[0], basename(selector.sourcePath), posix.relative(row.destinationRoot, selector.destinationPath), selector.sourcePath, "typescript");
+    }
   }
   if (row.id === "jcoprobe-guest" && path === row.sourceRoot + "/🦀️component.rs") {
     const target = row.sourceRoot + "/🧬️schema/📜️world.wit", rendered = "../📦️packages/🦀️rust/🧬️schema/📜️world.wit";
@@ -3829,12 +3998,12 @@ function dependencyPolicyStateTokens(repoRoot: string, path: string, content: st
 }
 //#endregion 🔒️Dependency Policy State
 
-function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly TaxonomyMove[], taxonomy: LoadedTaxonomy, options: TaxonomyPlanOptions, known: ReferencePathIndex): { readonly edits: readonly ReferenceEdit[]; readonly editTargets: ReadonlyMap<string, string>; readonly resultHashes: ReadonlyMap<string, string>; readonly resultSizes: ReadonlyMap<string, number>; readonly unresolved: readonly TaxonomyViolation[] } {
+function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly TaxonomyMove[], taxonomy: LoadedTaxonomy, options: TaxonomyPlanOptions, known: ReferencePathIndex, removals: readonly TaxonomyEvidenceRemoval[]): { readonly edits: readonly ReferenceEdit[]; readonly editTargets: ReadonlyMap<string, string>; readonly resultHashes: ReadonlyMap<string, string>; readonly resultSizes: ReadonlyMap<string, number>; readonly unresolved: readonly TaxonomyViolation[] } {
   const incoming = incomingReferenceSnapshot(inventory, taxonomy, options);
   const ownerCatalog = exactOwnedFileCatalog(inventory.repoRoot, taxonomy);
   const ownerConsumers = externalExactOwnedReferenceEntries(inventory, moves, ownerCatalog, taxonomy);
   const facetConsumers = externalArtifactEmptyFacetReferenceEntries(inventory, moves, taxonomy);
-  known = referencePathIndex([...known.exact, ...incoming.paths, ...ownerConsumers.map((entry) => entry.sourcePath), ...facetConsumers.map((entry) => entry.sourcePath), ...(ownerCatalog?.cases.flatMap((entry) => [entry.sourcePath, entry.destinationPath]) ?? [])], inventory.repoRoot, incoming.coordinateRoots);
+  known = referencePathIndex([...known.exact, ...incoming.paths, ...ownerConsumers.map((entry) => entry.sourcePath), ...facetConsumers.map((entry) => entry.sourcePath), ...(ownerCatalog?.cases.flatMap((entry) => [entry.sourcePath, entry.destinationPath]) ?? [])], inventory.repoRoot, incoming.coordinateRoots, undefined, options.cancelFile, new Set(inventory.entries.filter((entry) => entry.sourcePath !== entry.normalizedPath).map((entry) => entry.sourcePath)));
   const moveBySource = new Map(moves.map((move) => [move.sourcePath, move]));
   const destinationBySource = new Map(inventory.entries
     .filter((entry) => entry.sourcePath !== entry.normalizedPath && generatorContractsForOutputPath(entry.sourcePath, taxonomy).length === 0)
@@ -3856,7 +4025,7 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
     } catch (error) { unresolved.push(violation("policy-state-authority-invalid", contract.statePath, error instanceof Error ? error.message : String(error))); }
   }
   for (const row of packages) {
-    if (row.id === "wgpu-renderer") unresolved.push(violation("nested-cargo-generation-unresolved", row.sourceRoot, "WGPU still needs exact producers for three new package adapters and its semantic registration leaf, phase-correct worker/boot generation, and complete authored reference closure"));
+    if (row.id === "wgpu-renderer") unresolved.push(violation("nested-cargo-generation-unresolved", row.sourceRoot, "WGPU package generation and transaction acceptance must be complete before projection"));
     for (const consumer of packageCatalog!.referenceConsumers.filter((entry) => entry.packageId === row.id && entry.ownership === "generated")) {
       if (policyStates.get(consumer.path)?.manifestSources.has(row.sourceRoot + "/Cargo.toml")) continue;
       const absolute = assertLexicalInputOutsideOpaque(inventory.repoRoot, consumer.path, "Nested Cargo generated consumer", true), stat = lstatOrNull(absolute);
@@ -3881,6 +4050,13 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
     activeProjectionProfiles.add(`${structural.standard}\u0000${structural.subset}`);
   }
   const generatedOwnerSources = new Set(ownerCatalog?.cases.filter((entry) => entry.generatorOwnerId !== null).map((entry) => entry.sourcePath) ?? []);
+  for (const removal of removals) if (removal.authority.kind === "nested-cargo-generated-source") {
+    const authority = removal.authority, catalogContract = taxonomy.schema.semanticPackageProjectionContracts["nested-cargo-packages-v1"];
+    const row = packageCatalog?.packages.find((row) => row.id === authority.packageId), mapping = row?.mappings.find((mapping) => mapping.sourcePath === removal.sourcePath);
+    const entry = inventory.entries.find((entry) => entry.sourcePath === removal.sourcePath);
+    if (!mapping || mapping.disposition !== "generated" || authority.catalogPath !== catalogContract.authorityCatalogPath || authority.catalogContentHash !== catalogContract.authorityCatalogSha256 || authority.destinationPath !== mapping.destinationPath || removal.preimage.nodeKind !== "file" || removal.preimage.contentHash !== mapping.sourceHash || removal.preimage.size !== mapping.sourceSize || !entry || canonicalJson(inventoryLeafPreimage(entry)) !== canonicalJson(removal.preimage) || !row!.generatedSourceRetirements.some((item) => item.sourcePath === removal.sourcePath && item.destinationPath === authority.destinationPath && item.generatorContractId === authority.generatorContractId && item.sourceMode === removal.preimage.mode)) throw new Error("Generated source reference exclusion lacks exact retirement authority: " + removal.sourcePath);
+    generatedOwnerSources.add(removal.sourcePath);
+  }
   const candidates = [...new Map([...inventory.entries, ...incoming.entries, ...externalProjectionReferenceEntries(inventory, moves, artifactContexts, taxonomy), ...ownerConsumers, ...facetConsumers].map((entry) => [entry.sourcePath, entry])).values()].filter((entry) => entry.nodeKind === "file" && textualPath(entry.sourcePath) && !generatedOwnerSources.has(entry.sourcePath) && generatorContractsForOutputPath(entry.sourcePath, taxonomy).length === 0).sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath));
   for (let index = 0; index < candidates.length; index++) {
     checkCancellation(inventory.repoRoot, options.cancelFile);
@@ -3906,10 +4082,14 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
     if (policyTokens?.active && policyTokens.contentHash !== entry.contentHash) { unresolved.push(violation("policy-state-authority-invalid", entry.sourcePath, "Dependency policy preimage changed during planning")); continue; }
     const exactTokens = { tokens: [...ownedTokens.tokens, ...facetTokens.tokens, ...packageTokens.tokens, ...(policyTokens?.tokens ?? [])], problems: [...ownedTokens.problems, ...facetTokens.problems, ...packageTokens.problems] };
     for (const problem of exactTokens.problems) unresolved.push(violation("owner-reference-authority-invalid", entry.sourcePath, problem));
-    const genericTokens = referenceTokens(entry.sourcePath, content).filter((token) => !exactTokens.tokens.some((exact) => exact.start <= token.start && exact.end >= token.end));
+    const genericTokens = referenceTokens(entry.sourcePath, content, known).filter((token) => !exactTokens.tokens.some((exact) => exact.start <= token.start && exact.end >= token.end));
     const tokens = [...new Map([...genericTokens, ...exactTokens.tokens].map((token) => [`${token.start}\u0000${token.end}\u0000${token.value}\u0000${(token.targetValues ?? []).join("\u0000")}`, token])).values()].sort((left, right) => left.start - right.start || left.end - right.end || left.structuredLocation.localeCompare(right.structuredLocation));
     const supported = tokens.map((token) => ({ token, target: exactOwnedMarkdownTarget(entry.sourcePath, token, ownerCatalog, moves, taxonomy) ?? resolveReferenceTokenPath(entry.sourcePath, token, known) }));
     for (const { token, target: oldTarget } of supported) {
+      if (token.unsupportedReason && token.physicalTargets !== undefined && (finalReferencePath !== entry.sourcePath || token.physicalTargets.some((target) => destinationBySource.has(target)))) {
+        unresolved.push(violation("reference-syntax-unsupported", entry.sourcePath, `${token.structuredLocation}: ${token.unsupportedReason}`));
+        continue;
+      }
       if (oldTarget && isFrozenSourceCoordinateToken(entry.sourcePath, contentBytes, token, oldTarget, taxonomy, inventory.repoRoot)) continue;
       const rebase = exactOwnedMarkdownTarget(entry.sourcePath, token, ownerCatalog, moves, taxonomy);
       const destination = oldTarget ? destinationBySource.get(oldTarget) ?? (rebase || finalReferencePath !== entry.sourcePath ? oldTarget : undefined) : undefined;
@@ -3938,7 +4118,7 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
         unresolved.push(violation("immutable-plan-reference-unowned", entry.sourcePath, `${token.structuredLocation} is not an exact typed coordinate in a canonical digest-verified plan`));
         continue;
       }
-      const newValue = token.rewriteKind === "exact-owner-reference" ? token.rewriteData!.newValue : artifactRewrite?.newValue ?? (oldTarget && destination ? rewriteReferenceToken(finalReferencePath, entry.sourcePath, token, oldTarget, destination, inventory.repoRoot) : token.rewriteData!.newValue);
+      const newValue = token.rewriteKind === "exact-owner-reference" ? token.rewriteData!.newValue : artifactRewrite?.newValue ?? (oldTarget && destination ? rewriteReferenceToken(finalReferencePath, entry.sourcePath, token, oldTarget, destination, inventory.repoRoot, inventory.entries) : token.rewriteData!.newValue);
       if (oldTarget) accountedIncoming.add(`${oldTarget}\u0000${entry.sourcePath}`);
       if (newValue === token.value) continue;
       const edit = {
@@ -3953,6 +4133,7 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
       if (oldTarget) fileTargets.set(referenceEditIdentity(edit), oldTarget);
     }
     for (const candidate of unsupportedReferenceTokens(content, referenceAdapter(entry.sourcePath))) {
+      if (supported.some(({ token }) => token.rewriteKind === "rust-path-join" && token.start <= candidate.start && token.end >= candidate.end)) continue;
       const oldTarget = resolveReferenceTokenPath(entry.sourcePath, candidate, known);
       if (!oldTarget || !destinationBySource.has(oldTarget) && finalReferencePath === entry.sourcePath || isFrozenSourceCoordinateToken(entry.sourcePath, contentBytes, candidate, oldTarget, taxonomy, inventory.repoRoot)) continue;
       if (frozenEvidence !== null) {
@@ -4649,10 +4830,16 @@ function projectNestedCargoPackages(repoRoot: string, entries: Map<string, Mutab
     try {
       const nodes = candidates.map((entry): SemanticProjectionAuthorityNode => ({ path: entry.sourcePath, nodeKind: entry.nodeKind, ...(entry.nodeKind === "file" ? { content: readFileSync(assertLexicalInputOutsideOpaque(repoRoot, entry.sourcePath, "Nested Cargo source", true), "utf8") } : {}) }));
       const admitted = new Set(candidates.map((entry) => entry.sourcePath));
+      const ignoredOutputParents = new Set(destination ? semanticPackageIgnoredGeneratedOutputPaths(row, taxonomy.discoverySchema).map((path) => posix.dirname(path)) : []);
       for (const directory of candidates.filter((entry) => entry.nodeKind === "directory")) {
         for (const name of readdirSync(assertLexicalInputOutsideOpaque(repoRoot, directory.sourcePath, "Nested Cargo directory", true))) {
           const path = directory.sourcePath + "/" + name;
           if (admitted.has(path)) continue;
+          if (ignoredOutputParents.has(path)) {
+            const absolute = assertLexicalInputOutsideOpaque(repoRoot, path, "Nested Cargo ignored output parent", true);
+            const stat = lstatOrNull(absolute);
+            if (stat?.isDirectory() && !stat.isSymbolicLink() && readdirSync(absolute).length === 0) { nodes.push({ path, nodeKind: "directory" }); continue; }
+          }
           if (prunableSourceParents.has(path)) {
             if (!lstatOrNull(assertLexicalInputOutsideOpaque(repoRoot, path, "Nested Cargo prunable source parent", true))?.isDirectory()) throw new Error("Nested Cargo prunable source parent changed kind: " + path);
             continue;
@@ -4662,7 +4849,7 @@ function projectNestedCargoPackages(repoRoot: string, entries: Map<string, Mutab
           throw new Error("Nested Cargo has an unadmitted physical child: " + path);
         }
       }
-      const occupiedPaths = [...entries.keys()].filter((path) => !candidates.some((entry) => entry.sourcePath === path));
+      const occupiedPaths = [...entries.keys()].filter((path) => !admitted.has(path));
       if (!destination) for (const path of new Set([...row.mappings.map((mapping) => mapping.destinationPath), ...row.adapters.map((adapter) => adapter.path), ...row.derivedLeaves.map((leaf) => leaf.path)])) {
         if (lstatOrNull(assertLexicalInputOutsideOpaque(repoRoot, path, "Nested Cargo destination", true))) occupiedPaths.push(path);
       }
@@ -5331,7 +5518,7 @@ function validatePreviewPreState(manifest: TaxonomyGeneratorPreviewManifest, pre
   for (const path of prePaths) if (!expected.has(path) && !manifest.staleRemovals.some((stale) => path === stale || path.startsWith(`${stale}/`))) throw new Error(`Generator preview omits stale output from staleRemovals: ${path}`);
 }
 
-function registryPreviewProjection(inventory: TaxonomyInventory, moves: readonly TaxonomyMove[], edits: readonly ReferenceEdit[], removals: readonly TaxonomyEvidenceRemoval[], taxonomy: LoadedTaxonomy, cancelFile?: string): RegistryCatalogProjection {
+function generatorPreviewProjection(contractId: GeneratorInputProjection["contractId"], inventory: TaxonomyInventory, moves: readonly TaxonomyMove[], edits: readonly ReferenceEdit[], removals: readonly TaxonomyEvidenceRemoval[], taxonomy: LoadedTaxonomy, cancelFile?: string): GeneratorInputProjection {
   const projectedEdits = [...new Set(edits.map((edit) => edit.path))].sort(generatorPathCompare).map((path) => {
     checkCancellation(inventory.repoRoot, cancelFile);
     const sourcePath = moves.find((move) => move.destinationPath === path)?.sourcePath ?? inventory.entries.find((entry) => entry.normalizedPath === path)?.sourcePath ?? path;
@@ -5339,14 +5526,14 @@ function registryPreviewProjection(inventory: TaxonomyInventory, moves: readonly
     const bytes = applyEditsToContent(readFileSync(absolute, "utf8"), edits.filter((edit) => edit.path === path));
     return { path, bytesBase64: Buffer.from(bytes).toString("base64") };
   });
-  return parseRegistryCatalogProjection(canonicalJson({ contractId: "plugin-registry", schemaVersion: 1, moves: moves.map((move) => ({ sourcePath: move.sourcePath, destinationPath: move.destinationPath, nodeKind: move.sourcePreimage.nodeKind })), edits: projectedEdits, removals: removals.map((removal) => removal.sourcePath) }), taxonomy.discoverySchema);
+  return parseGeneratorInputProjection(canonicalJson({ contractId, schemaVersion: 1, moves: moves.map((move) => ({ sourcePath: move.sourcePath, destinationPath: move.destinationPath, nodeKind: move.sourcePreimage.nodeKind })), edits: projectedEdits, removals: removals.map((removal) => removal.sourcePath) }), taxonomy.discoverySchema, contractId);
 }
 
-function invokeGeneratorPreview(inventory: TaxonomyInventory, id: string, contract: GeneratorContractSpec, taxonomy: LoadedTaxonomy, projection?: RegistryCatalogProjection, cancelFile?: string): { readonly manifest: TaxonomyGeneratorPreviewManifest; readonly digest: string } {
+function invokeGeneratorPreview(inventory: TaxonomyInventory, id: string, contract: GeneratorContractSpec, taxonomy: LoadedTaxonomy, projection?: GeneratorInputProjection, cancelFile?: string): { readonly manifest: TaxonomyGeneratorPreviewManifest; readonly digest: string } {
   if (!contract.ownerPath || !contract.previewTarget) throw new Error(`Owned generator ${id} has no preview target`);
   assertGeneratorPreviewTarget(inventory.repoRoot, contract.ownerPath, contract.previewTarget);
   checkCancellation(inventory.repoRoot, cancelFile);
-  const protocol = contract.inputDiscovery?.previewInput;
+  const protocol = contract.inputDiscovery?.previewInput ?? contract.packageGeneration?.previewInput;
   const input = projection ? canonicalJson(projection) + "\n" : undefined;
   if (input && (!protocol || Buffer.byteLength(input) > protocol.maxBytes)) throw new Error(`Generator ${id} projected input exceeds its declared byte limit`);
   const cancellationPath = cancelFile ? assertLexicalInputOutsideOpaque(inventory.repoRoot, cancelFile, "Generator preview cancellation", true) : "";
@@ -5508,7 +5695,7 @@ function jsonStringCoordinates(content: string): readonly JsonStringCoordinate[]
   try { visit(""); return cursor === lexemes.length ? rows : []; } catch { return []; }
 }
 
-/** 🧷️ One exact unescaped JSON value span owned by a digest-bound evidence declaration. */
+/** 🧷️ An exact JSON coordinate span, optionally derived from one declared fixed identity prefix. */
 export interface FrozenEvidenceCoordinate extends JsonStringCoordinate { readonly kind: "source" | "destination" }
 
 /** 🔒️ Resolves only explicitly supplied evidence contracts; it performs no filesystem access. */
@@ -5532,16 +5719,17 @@ export function frozenCoordinateEvidenceCoordinates(path: string, bytes: Uint8Ar
     const visit = (value: unknown, index: number, pointer: string): void => {
       if (index === segments.length) {
         if (typeof value !== "string" || !value || /[\u0000-\u001f]/u.test(value)) fail(`coordinate ${pointer} must be a physical repository-relative path string`);
-        const prefix = "representation" in declaration ? declaration.recordedRepositoryRoot + "/" : "";
-        if (prefix && !(value as string).startsWith(prefix)) fail(`coordinate ${pointer} does not match its exact recorded repository root`);
+        const ownerIdentity = "representation" in declaration && declaration.representation === "recorded-package-owner-identity";
+        const prefix = "representation" in declaration ? declaration.representation === "recorded-package-owner-identity" ? declaration.identityPrefix : declaration.recordedRepositoryRoot + "/" : "";
+        if (prefix && !(value as string).startsWith(prefix)) fail(`coordinate ${pointer} does not match its exact recorded prefix`);
         const relativeValue = prefix ? (value as string).slice(prefix.length) : value as string;
-        if (!relativeValue || /^[A-Za-z]:/u.test(relativeValue)) fail(`coordinate ${pointer} must have a nonempty repository-relative suffix`);
+        if (!relativeValue || /^[A-Za-z]:/u.test(relativeValue) || ownerIdentity && relativeValue.includes(":")) fail(`coordinate ${pointer} must have a nonempty repository-relative suffix`);
         try { if (normalizeRelative(relativeValue) !== relativeValue) fail(`coordinate ${pointer} is not repository-relative`); } catch { fail(`coordinate ${pointer} is not repository-relative`); }
         const span = spans.get(pointer);
         if (!span || span.value !== value) fail(`coordinate ${pointer} has no exact unescaped JSON value span`);
         if (seen.has(pointer)) fail(`coordinate selectors overlap at ${pointer}`);
         seen.add(pointer);
-        rows.push({ ...span!, kind: declaration.kind });
+        rows.push({ ...span!, start: span!.start + (ownerIdentity ? prefix.length : 0), value: ownerIdentity ? relativeValue : span!.value, kind: declaration.kind });
         return;
       }
       const segment = segments[index];
@@ -5637,7 +5825,8 @@ function isFrozenSourceCoordinateToken(path: string, bytes: Uint8Array, token: R
     }
     if (path === packageContract.authorityCatalogPath && sha256(bytes) === packageContract.authorityCatalogSha256) {
       const catalog = semanticPackageProjectionCatalog(repoRoot, taxonomy.discoverySchema)!;
-      catalog.packages.forEach((row, index) => { add(`/packages/${index}/sourceRoot`, row.sourceRoot); row.mappings.forEach((mapping, mappingIndex) => add(`/packages/${index}/mappings/${mappingIndex}/sourcePath`, mapping.sourcePath)); row.sourceSplices.forEach((splice, spliceIndex) => add(`/packages/${index}/sourceSplices/${spliceIndex}/sourcePath`, splice.sourcePath)); row.derivedLeaves.forEach((leaf, leafIndex) => add(`/packages/${index}/derivedLeaves/${leafIndex}/originSourcePath`, leaf.originSourcePath)); });
+      catalog.packages.forEach((row, index) => { add(`/packages/${index}/sourceRoot`, row.sourceRoot); row.mappings.forEach((mapping, mappingIndex) => add(`/packages/${index}/mappings/${mappingIndex}/sourcePath`, mapping.sourcePath)); row.sourceSplices.forEach((splice, spliceIndex) => add(`/packages/${index}/sourceSplices/${spliceIndex}/sourcePath`, splice.sourcePath)); row.derivedLeaves.forEach((leaf, leafIndex) => add(`/packages/${index}/derivedLeaves/${leafIndex}/originSourcePath`, leaf.originSourcePath)); row.generatedSourceRetirements.forEach((retirement, retirementIndex) => add(`/packages/${index}/generatedSourceRetirements/${retirementIndex}/sourcePath`, retirement.sourcePath)); });
+      catalog.packages.forEach((row, index) => row.authoredSourceFragments.forEach((fragment, fragmentIndex) => add(`/packages/${index}/authoredSourceFragments/${fragmentIndex}/sourcePath`, fragment.sourcePath)));
       catalog.referenceConsumers.forEach((row, index) => add(`/referenceConsumers/${index}/path`, row.path));
       for (const [id, row] of Object.entries(catalog.referenceTokenTransforms)) add(`/referenceTokenTransforms/${pointer(id)}/sourceToken`, row.sourceToken);
     }
@@ -5660,6 +5849,8 @@ function isFrozenSourceCoordinateToken(path: string, bytes: Uint8Array, token: R
         if (canonicalJson(data?.projectionActivation) !== canonicalJson(activation)) continue;
         add(`/generatorContracts/${pointer(id)}/projectionActivation/sourceManifestPath`, activation.sourceManifestPath);
         if (Array.isArray(data.inputPatterns)) data.inputPatterns.forEach((value: unknown, index: number) => { if (typeof value === "string" && contract.inputPatterns.includes(value) && row.mappings.some((mapping) => mapping.sourcePath === value)) add(`/generatorContracts/${pointer(id)}/inputPatterns/${index}`, value); });
+        const generation = contract.packageGeneration;
+        if (generation && canonicalJson(data.packageGeneration) === canonicalJson(generation)) generation.browserProfile.sourceModulePaths.forEach((value, index) => { if (row.mappings.some((mapping) => mapping.sourcePath === value)) add(`/generatorContracts/${pointer(id)}/packageGeneration/browserProfile/sourceModulePaths/${index}`, value); });
       }
     }
     const coordinates = new Set(jsonStringCoordinates(content).filter((row) => allowed.get(row.pointer) === row.value).map((row) => `${row.start}\0${row.end}\0${row.value}`));
@@ -5669,7 +5860,7 @@ function isFrozenSourceCoordinateToken(path: string, bytes: Uint8Array, token: R
   return cached.targets.has(target) && cached.coordinates.has(`${token.start}\0${token.end}\0${token.value}`);
 }
 
-function lexicalTargetIncomingReferences(repoRoot: string, targetPaths: ReadonlySet<string>, ignoredSourceRoots: readonly string[], taxonomy: LoadedTaxonomy, ticketDir?: string, planAuthority?: Readonly<{ path: string; bytes: Uint8Array }>, transactionRoot?: string, authorityPlan?: TaxonomyPlan, cancelFile?: string, progress?: TaxonomyApplyOptions["progress"]): readonly string[] {
+function lexicalTargetIncomingReferences(repoRoot: string, targetPaths: ReadonlySet<string>, ignoredSourceRoots: readonly string[], taxonomy: LoadedTaxonomy, ticketDir?: string, planAuthority?: Readonly<{ path: string; bytes: Uint8Array }>, transactionRoot?: string, authorityPlan?: TaxonomyPlan, cancelFile?: string, progress?: TaxonomyApplyOptions["progress"], projectReference?: ReturnType<typeof removalReferenceProjection>): readonly string[] {
   checkCancellation(repoRoot, cancelFile);
   if (targetPaths.size === 0) return [];
   const context = { ticketDir, transactionRoots: transactionRoot ? [transactionRoot] : [], exactEvidencePaths: [] };
@@ -5677,7 +5868,7 @@ function lexicalTargetIncomingReferences(repoRoot: string, targetPaths: Readonly
   const knownPaths = new Set(candidates);
   for (const path of candidates) for (let parent = posix.dirname(path); parent && parent !== "."; parent = posix.dirname(parent)) knownPaths.add(parent);
   validateObservedFrozenEvidenceNodes(repoRoot, knownPaths, taxonomy);
-  const targetIndex = referencePathIndex(targetPaths, repoRoot, referenceCoordinateRoots(repoRoot, candidates, taxonomy, cancelFile));
+  const targetIndex = referencePathIndex(targetPaths, repoRoot, referenceCoordinateRoots(repoRoot, candidates, taxonomy, cancelFile), knownPaths, cancelFile);
   const admitsText = incomingReferenceLexicalAdmission(targetPaths);
   const rows: string[] = [];
   for (const [, path] of referenceCandidatesWithProgress([...candidates].sort(generatorPathCompare), "apply", progress)) {
@@ -5695,14 +5886,16 @@ function lexicalTargetIncomingReferences(repoRoot: string, targetPaths: Readonly
       continue;
     }
     if (!stat.isFile() || !textualPath(path)) continue;
-    const bytes = readFileSync(absolute);
-    if (planAuthority?.path === path && bytes.equals(planAuthority.bytes)) continue;
-    frozenEvidenceCoordinateAuthority(path, bytes, taxonomy);
+    const physicalBytes = readFileSync(absolute);
+    if (planAuthority?.path === path && physicalBytes.equals(planAuthority.bytes)) continue;
+    const projected = projectReference?.(path, physicalBytes, stat.mode & 0o7777) ?? { path, bytes: physicalBytes }, bytes = projected.bytes;
+    frozenEvidenceCoordinateAuthority(projected.path, bytes, taxonomy);
     const content = bytes.toString("utf8");
     if (!admitsText(content)) continue;
-    for (const token of [...referenceTokens(path, content), ...unsupportedReferenceTokens(content, referenceAdapter(path))]) {
-      const target = resolveReferenceTokenPath(path, token, targetIndex);
-      if (target && targetPaths.has(target) && !isFrozenSourceCoordinateToken(path, bytes, token, target, taxonomy, repoRoot)) rows.push(`text\u0000${path}\u0000${target}`);
+    for (const token of referenceTokensIncludingUnsupported(projected.path, content, targetIndex)) {
+      if (token.unsupportedReason && token.physicalTargets !== undefined) for (const target of token.physicalTargets) if (targetPaths.has(target)) rows.push(`text\u0000${path}\u0000${target}`);
+      const target = resolveReferenceTokenPath(projected.path, token, targetIndex);
+      if (target && targetPaths.has(target) && !isFrozenSourceCoordinateToken(projected.path, bytes, token, target, taxonomy, repoRoot)) rows.push(`text\u0000${path}\u0000${target}`);
     }
   }
   return [...new Set(rows)].sort(generatorPathCompare);
@@ -5836,6 +6029,25 @@ function planExactGeneratedOwnerRemovals(inventory: TaxonomyInventory, taxonomy:
   return rows.sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath));
 }
 
+function planNestedCargoGeneratedSourceRemovals(inventory: TaxonomyInventory, taxonomy: LoadedTaxonomy): readonly TaxonomyEvidenceRemoval[] {
+  const catalog = semanticPackageProjectionCatalog(inventory.repoRoot, taxonomy.discoverySchema);
+  const contract = taxonomy.discoverySchema.semanticPackageProjectionContracts["nested-cargo-packages-v1"];
+  if (!catalog || !contract) return [];
+  const entries = new Map(inventory.entries.map((entry) => [entry.sourcePath, entry])), removals: TaxonomyEvidenceRemoval[] = [];
+  for (const row of catalog.packages) {
+    if (row.id !== "wgpu-renderer" || !row.mappings.every((mapping) => { const source = entries.get(mapping.sourcePath); return source?.nodeKind === "file" && source.normalizedPath === mapping.destinationPath && source.contentHash === mapping.sourceHash && source.size === mapping.sourceSize && !source.violations.some((violation) => violation.severity === "error"); })) continue;
+    for (const retirement of row.generatedSourceRetirements) {
+      const source = entries.get(retirement.sourcePath)!, sourcePreimage = inventoryLeafPreimage(source);
+      if (sourcePreimage.nodeKind !== "file" || sourcePreimage.mode !== retirement.sourceMode) continue;
+      const digestible = { kind: "nested-cargo-generated-source" as const, catalogPath: contract.authorityCatalogPath, catalogContentHash: contract.authorityCatalogSha256, packageId: row.id, generatorContractId: retirement.generatorContractId, destinationPath: retirement.destinationPath, sourcePreimage };
+      const authority = { ...digestible, authorityDigest: sha256(canonicalJson(digestible)) };
+      const provisional = { sourcePath: retirement.sourcePath, preimage: sourcePreimage, authority, rationaleRule: "nested-cargo-generated-source-retirement-v1" as const, ownerId: source.ownerId };
+      removals.push({ operationId: dispositionOperationId("evidence-removal", provisional), ...provisional });
+    }
+  }
+  return removals.sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath));
+}
+
 function planTicketImportantRemovals(inventory: TaxonomyInventory, taxonomy: LoadedTaxonomy): { readonly removals: readonly TaxonomyEvidenceRemoval[]; readonly violations: readonly TaxonomyViolation[] } {
   const removals: TaxonomyEvidenceRemoval[] = [];
   const violations: TaxonomyViolation[] = [];
@@ -5964,8 +6176,8 @@ function planMoveReferenceAuthority(inventory: TaxonomyInventory, taxonomy: Load
       referenceEdits: [],
     }); })
     .sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath) || generatorPathCompare(left.destinationPath, right.destinationPath));
-  const generatedReferenceMoves = evidenceRemovals.filter((entry) => entry.authority.kind === "exact-owner-generated-source").map((entry): TaxonomyMove => ({ operationId: entry.operationId, sourcePath: entry.sourcePath, destinationPath: (entry.authority as Extract<TaxonomyRemovalAuthority, { kind: "exact-owner-generated-source" }>).destinationPath, sourcePreimage: entry.preimage, rationaleRule: "readme-license-owner-projection-v1", ownerId: entry.ownerId, referenceEdits: [] }));
-  const references = buildReferenceEdits(inventory, [...preliminaryMoves, ...generatedReferenceMoves], taxonomy, options, referencePathIndex(inventory.entries.map((entry) => entry.sourcePath)));
+  const generatedReferenceMoves = evidenceRemovals.flatMap((entry): TaxonomyMove[] => entry.authority.kind === "exact-owner-generated-source" || entry.authority.kind === "nested-cargo-generated-source" ? [{ operationId: entry.operationId, sourcePath: entry.sourcePath, destinationPath: entry.authority.destinationPath, sourcePreimage: entry.preimage, rationaleRule: entry.authority.kind === "nested-cargo-generated-source" ? "nested-cargo-package-projection-v1" : "readme-license-owner-projection-v1", ownerId: entry.ownerId, referenceEdits: [] }] : []);
+  const references = buildReferenceEdits(inventory, [...preliminaryMoves, ...generatedReferenceMoves], taxonomy, options, referencePathIndex(inventory.entries.map((entry) => entry.sourcePath)), evidenceRemovals);
   return {
     moves: preliminaryMoves.map((move) => ({ ...move, referenceEdits: references.edits.filter((edit) => references.editTargets.get(referenceEditIdentity(edit)) === move.sourcePath) })),
     edits: references.edits,
@@ -5977,7 +6189,7 @@ function planMoveReferenceAuthority(inventory: TaxonomyInventory, taxonomy: Load
   };
 }
 
-function packageGeneratorActivated(repoRoot: string, moves: readonly TaxonomyMove[], contract: GeneratorContractSpec, taxonomy: LoadedTaxonomy): boolean {
+function packageGeneratorActivated(repoRoot: string, moves: readonly TaxonomyMove[], contract: GeneratorContractSpec, taxonomy: LoadedTaxonomy, removals: readonly TaxonomyEvidenceRemoval[]): boolean {
   const activation = contract.projectionActivation;
   if (!activation) return true;
   const source = lstatOrNull(assertLexicalInputOutsideOpaque(repoRoot, activation.sourceManifestPath, "Generator source activation", true));
@@ -5987,17 +6199,21 @@ function packageGeneratorActivated(repoRoot: string, moves: readonly TaxonomyMov
   const row = semanticPackageProjectionCatalog(repoRoot, taxonomy.discoverySchema)?.packages.find((row) => row.id === activation.packageId);
   if (!row || activation.sourceManifestPath !== `${row.sourceRoot}/Cargo.toml` || activation.destinationManifestPath !== `${row.destinationRoot}/Cargo.toml`) throw new Error("Generator package activation disagrees with its exact catalog");
   const relevant = moves.filter((move) => row.mappings.some((mapping) => mapping.sourcePath === move.sourcePath));
-  if (relevant.length > 0 && (relevant.length !== row.mappings.length || !row.mappings.every((mapping) => relevant.some((move) => move.sourcePath === mapping.sourcePath && move.destinationPath === mapping.destinationPath && move.sourcePreimage.contentHash === mapping.sourceHash && move.sourcePreimage.size === mapping.sourceSize)))) throw new Error("Generator package activation has an incomplete projection");
-  if (source && relevant.length === 0) return false;
-  semanticPackageAdapterPreview(repoRoot, activation.packageId, taxonomy.discoverySchema);
-  return Boolean(destination) || relevant.length === row.mappings.length;
+  const retired = removals.filter((removal) => removal.authority.kind === "nested-cargo-generated-source" && removal.authority.packageId === row.id);
+  const projected = relevant.length + retired.length;
+  if (projected > 0 && (projected !== row.mappings.length || !row.mappings.every((mapping) => mapping.disposition === "generated" ? retired.some((removal) => removal.sourcePath === mapping.sourcePath && removal.preimage.nodeKind === "file" && removal.preimage.contentHash === mapping.sourceHash && removal.preimage.size === mapping.sourceSize && removal.authority.kind === "nested-cargo-generated-source" && removal.authority.destinationPath === mapping.destinationPath && row.generatedSourceRetirements.some((entry) => entry.sourcePath === mapping.sourcePath && entry.generatorContractId === removal.authority.generatorContractId && entry.sourceMode === removal.preimage.mode)) : relevant.some((move) => move.sourcePath === mapping.sourcePath && move.destinationPath === mapping.destinationPath && move.sourcePreimage.contentHash === mapping.sourceHash && move.sourcePreimage.size === mapping.sourceSize)))) throw new Error("Generator package activation has an incomplete projection");
+  if (source && projected === 0) return false;
+  if (activation.packageId === "jcoprobe-guest") semanticPackageAdapterPreview(repoRoot, activation.packageId, taxonomy.discoverySchema);
+  else semanticPackageGeneratedLeafPreview(repoRoot, activation.packageId, taxonomy.discoverySchema);
+  return Boolean(destination) || projected === row.mappings.length;
 }
 
 function generatorPlanning(inventory: TaxonomyInventory, moves: readonly TaxonomyMove[], edits: readonly ReferenceEdit[], taxonomy: LoadedTaxonomy, options: TaxonomyPlanOptions, evidenceRemovals: readonly TaxonomyEvidenceRemoval[] = []): GeneratorPlanningResult {
-  const jco = semanticPackageProjectionCatalog(inventory.repoRoot, taxonomy.discoverySchema)?.packages.find((row) => row.id === "jcoprobe-guest");
+  const packageCatalog = semanticPackageProjectionCatalog(inventory.repoRoot, taxonomy.discoverySchema);
+  const jco = packageCatalog?.packages.find((row) => row.id === "jcoprobe-guest");
   const preservedLocks = new Set(jco?.mappings.filter((mapping) => basename(mapping.sourcePath) === "Cargo.lock" && moves.some((move) => move.sourcePath === mapping.sourcePath && move.destinationPath === mapping.destinationPath && move.sourcePreimage.contentHash === mapping.sourceHash && move.sourcePreimage.size === mapping.sourceSize) && !edits.some((edit) => edit.path === mapping.destinationPath)).map((mapping) => mapping.destinationPath) ?? []);
   const mutations = new Set<string>();
-  const generatedRetirements = evidenceRemovals.filter((entry): entry is TaxonomyEvidenceRemoval & { authority: Extract<TaxonomyRemovalAuthority, { kind: "exact-owner-generated-source" }> } => entry.authority.kind === "exact-owner-generated-source");
+  const generatedRetirements = evidenceRemovals.filter((entry): entry is TaxonomyEvidenceRemoval & { authority: Extract<TaxonomyRemovalAuthority, { kind: "exact-owner-generated-source" | "nested-cargo-generated-source" }> } => entry.authority.kind === "exact-owner-generated-source" || entry.authority.kind === "nested-cargo-generated-source");
   for (const entry of generatedRetirements) mutations.add(entry.authority.destinationPath);
   for (const move of moves) {
     mutations.add(move.sourcePath);
@@ -6019,8 +6235,10 @@ function generatorPlanning(inventory: TaxonomyInventory, moves: readonly Taxonom
     const outputMutation = [...mutations].some((path) => roots.some((root) => pathsOverlap(path, root)) && !(id === "external-cargo-locks" && preservedLocks.has(path)));
     const catalogInputs = contract.inputDiscovery && [...mutations].some((path) => registryCatalogPathMayAffect(path, taxonomy.discoverySchema)) ? generatorInputInventory(inventory, contract, taxonomy, options.cancelFile) : undefined;
     const inputMutation = [...mutations].some((path) => contract.inputPatterns.some((pattern) => taxonomyPathPatternMatches(path, pattern))) || Boolean(catalogInputs && (edits.some((edit) => catalogInputs.some((input) => input.path === edit.path)) || moves.some((move) => catalogInputs.some((input) => input.path === move.sourcePath || input.path === move.destinationPath || input.nodeKind === "directory" && (inScope(move.sourcePath, input.path) || inScope(move.destinationPath, input.path))))));
-    if (!outputProblem && !outputMutation && !inputMutation) continue;
-    try { if (!packageGeneratorActivated(inventory.repoRoot, moves, contract, taxonomy)) continue; }
+    const packageOwner = contract.packageGeneration ? packageCatalog?.packages.find((row) => row.id === contract.projectionActivation?.packageId) : undefined;
+    const packageOutputVerification = packageOwner && (!inventory.scope || pathsOverlap(inventory.scope, packageOwner.semanticOwnerRoot));
+    if (!outputProblem && !outputMutation && !inputMutation && !packageOutputVerification) continue;
+    try { if (!packageGeneratorActivated(inventory.repoRoot, moves, contract, taxonomy, evidenceRemovals)) continue; }
     catch (error) { rows.push(violation("generator-activation-invalid", roots[0], `Generator ${id}: ${error instanceof Error ? error.message : String(error)}`)); continue; }
     const inputs = catalogInputs ?? generatorInputInventory(inventory, contract, taxonomy, options.cancelFile);
     const preOutputs = generatorTreeInventory(inventory.repoRoot, roots, taxonomy);
@@ -6033,7 +6251,7 @@ function generatorPlanning(inventory: TaxonomyInventory, moves: readonly Taxonom
     }
     try {
       checkCancellation(inventory.repoRoot, options.cancelFile);
-      const projection = contract.inputDiscovery ? registryPreviewProjection(inventory, moves, edits, evidenceRemovals, taxonomy, options.cancelFile) : undefined;
+      const projection = contract.inputDiscovery ? generatorPreviewProjection("plugin-registry", inventory, moves, edits, evidenceRemovals, taxonomy, options.cancelFile) : contract.packageGeneration ? generatorPreviewProjection("wgpu-frame-worker", inventory, moves, edits, evidenceRemovals, taxonomy, options.cancelFile) : undefined;
       const preview = invokeGeneratorPreview(inventory, id, contract, taxonomy, projection, options.cancelFile);
       checkCancellation(inventory.repoRoot, options.cancelFile);
       validatePreviewPreState(preview.manifest, preOutputs);
@@ -6041,7 +6259,9 @@ function generatorPlanning(inventory: TaxonomyInventory, moves: readonly Taxonom
       const retirements = generatedRetirements.filter((entry) => entry.authority.generatorContractId === id);
       for (const retirement of retirements) {
         const generated = outputs.find((output) => output.path === retirement.authority.destinationPath);
-        if (!generated || generated.nodeKind !== "file" || generated.contentHash !== retirement.authority.outputPreimage.contentHash || generated.mode !== retirement.authority.outputPreimage.mode || generated.size !== retirement.authority.outputPreimage.size) throw new Error("Exact generated owner preview differs from frozen source: " + retirement.sourcePath);
+        if (!generated || generated.nodeKind !== "file") throw new Error("Generated retirement preview lacks its exact canonical file: " + retirement.sourcePath);
+        if (retirement.authority.kind === "exact-owner-generated-source" && (generated.contentHash !== retirement.authority.outputPreimage.contentHash || generated.mode !== retirement.authority.outputPreimage.mode || generated.size !== retirement.authority.outputPreimage.size)) throw new Error("Exact generated owner preview differs from frozen source: " + retirement.sourcePath);
+        if (retirement.authority.kind === "nested-cargo-generated-source" && generated.mode !== retirement.authority.sourcePreimage.mode) throw new Error("Nested Cargo generated retirement changes output mode: " + retirement.sourcePath);
       }
       const changed = retirements.length > 0 || canonicalJson(preOutputs) !== canonicalJson(outputs) || preview.manifest.staleRemovals.length > 0;
       if (inputMutation || outputMutation || changed) {
@@ -6133,7 +6353,7 @@ function plannedAffectedStateDigests(inventory: TaxonomyInventory, plan: Pick<Ta
       post.push(member.preimage.nodeKind === "symlink" ? { path: member.finalPath, state: "symlink", targetHash: member.preimage.contentHash, targetSize: member.preimage.size } : { path: member.finalPath, state: "file", contentHash: member.preimage.contentHash, mode: member.preimage.mode, size: member.preimage.size });
     }
     if (removal.authority.kind === "owner-manifest-status") { const manifest = authorityStateRow(removal.authority.manifestPath); pre.push(manifest); post.push(manifest); }
-    if (removal.authority.kind === "exact-path-mutation" || removal.authority.kind === "exact-owner-generated-source") { const catalog = authorityStateRow(removal.authority.catalogPath); pre.push(catalog); post.push(catalog); }
+    if (removal.authority.kind === "exact-path-mutation" || removal.authority.kind === "exact-owner-generated-source" || removal.authority.kind === "nested-cargo-generated-source") { const catalog = authorityStateRow(removal.authority.catalogPath); pre.push(catalog); post.push(catalog); }
     if (removal.authority.kind === "serialized-path-sentinel") { const fixture = authorityStateRow(removal.authority.fixturePath); pre.push(fixture); post.push(fixture); }
   }
   for (const root of plan.embeddedTicketRoots) { pre.push({ path: root.sourceMetadataRoot, state: "directory-tree", tree: root.sourceTreeDigest }); post.push({ path: root.sourceMetadataRoot, state: "absent" }); }
@@ -6179,7 +6399,7 @@ export function planTaxonomy(inventory: TaxonomyInventory, options: TaxonomyPlan
   const trailingRemovals = planTrailingEvidenceRemovals(inventory);
   const serializedRemovals = planSerializedEvidenceRemovals(inventory);
   const ticketImportantRemovals = planTicketImportantRemovals(inventory, taxonomy);
-  const generatedOwnerRemovals = planExactGeneratedOwnerRemovals(inventory, taxonomy);
+  const generatedOwnerRemovals = [...planExactGeneratedOwnerRemovals(inventory, taxonomy), ...planNestedCargoGeneratedSourceRemovals(inventory, taxonomy)];
   const serializedSources = new Set(serializedRemovals.removals.map((entry) => entry.sourcePath));
   const ticketImportantSources = new Set(ticketImportantRemovals.removals.map((entry) => entry.sourcePath));
   const evidenceRemovals = [...embedded.removals, ...trailingRemovals.filter((entry) => !serializedSources.has(entry.sourcePath) && !ticketImportantSources.has(entry.sourcePath)), ...serializedRemovals.removals, ...ticketImportantRemovals.removals, ...generatedOwnerRemovals].sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath));
@@ -7001,17 +7221,61 @@ function assertRegenerationContract(regeneration: TaxonomyRegeneration, taxonomy
 function removalAuthorityPaths(authority: TaxonomyRemovalAuthority): readonly string[] {
   if (authority.kind === "byte-and-mode-identical") return authority.members.flatMap((member) => [member.sourcePath, member.finalPath]);
   if (authority.kind === "owner-manifest-status") return [authority.manifestPath];
-  if (authority.kind === "exact-path-mutation" || authority.kind === "exact-owner-generated-source") return [authority.catalogPath];
+  if (authority.kind === "exact-path-mutation" || authority.kind === "exact-owner-generated-source" || authority.kind === "nested-cargo-generated-source") return [authority.catalogPath];
   return [authority.fixturePath];
 }
 
 function removalIncomingIgnoredSourceRoots(removal: TaxonomyEvidenceRemoval): readonly string[] {
-  if (removal.authority.kind === "exact-path-mutation" || removal.authority.kind === "exact-owner-generated-source") return [removal.sourcePath, removal.authority.catalogPath];
+  if (removal.authority.kind === "exact-path-mutation" || removal.authority.kind === "exact-owner-generated-source" || removal.authority.kind === "nested-cargo-generated-source") return [removal.sourcePath, removal.authority.catalogPath];
   if (removal.authority.kind === "serialized-path-sentinel") return [removal.sourcePath, removal.authority.fixturePath];
   return [removal.sourcePath];
 }
 
+/** 🪞️ Projects only immutable move/edit preimages during generated-source retirement preflight. */
+function removalReferenceProjection(repoRoot: string, plan: TaxonomyPlan, journal?: MutableJournalRecord): (path: string, bytes: Buffer, mode: number) => Readonly<{ path: string; bytes: Buffer }> {
+  const sourceMoves = new Map(plan.moves.map((move) => [move.sourcePath, move])), destinationMoves = new Map(plan.moves.map((move) => [move.destinationPath, move]));
+  const groups = new Map<string, ReferenceEdit[]>();
+  for (const edit of plan.edits) groups.set(edit.path, [...(groups.get(edit.path) ?? []), edit]);
+  for (const [path, edits] of groups) {
+    const preimage = edits[0]!.preimage, move = destinationMoves.get(path);
+    if (preimage.nodeKind !== "file" || edits.some((edit) => canonicalJson(edit.preimage) !== canonicalJson(preimage)) || move && (path !== move.destinationPath || canonicalJson(move.sourcePreimage) !== canonicalJson(preimage))) throw new Error(`Retirement reference has conflicting frozen preimages: ${path}`);
+    const spans = edits.map((edit) => ({ start: Number(edit.structuredLocation.match(/@(\d+)$/u)?.[1] ?? NaN), length: edit.oldValue.length })).sort((left, right) => left.start - right.start);
+    if (spans.some((span, index) => !Number.isSafeInteger(span.start) || span.start < 0 || span.length === 0 || index > 0 && span.start < spans[index - 1]!.start + spans[index - 1]!.length)) throw new Error(`Retirement reference has malformed or overlapping planned edits: ${path}`);
+  }
+  return (path, bytes, mode) => {
+    const candidates = [...new Set([sourceMoves.get(path), destinationMoves.get(path)].filter((move): move is TaxonomyMove => Boolean(move)))];
+    const active = candidates.filter((move) => path === (journal?.installedMoveIds.includes(move.operationId) ? move.destinationPath : journal?.stagedMoveIds.includes(move.operationId) ? null : move.sourcePath));
+    if (candidates.length && active.length !== 1) throw new Error(`Retirement reference move phase differs from its journal: ${path}`);
+    const move = active[0], finalPath = move?.destinationPath ?? path, edits = groups.get(finalPath) ?? [];
+    if (!move && edits.length === 0) return { path, bytes };
+    const preimage = edits[0]?.preimage ?? move!.sourcePreimage;
+    if (preimage.nodeKind !== "file") throw new Error(`Retirement reference requires a frozen regular file: ${path}`);
+    if (journal?.appliedEditPaths.includes(finalPath)) {
+      const backup = journal.backups[finalPath];
+      if (backup?.kind !== "file" || canonicalJson(backup) !== canonicalJson(expectedBackupRecord(finalPath, preimage))) throw new Error(`Retirement reference lacks its exact applied-edit backup: ${path}`);
+      assertLeafPreimage(repoRoot, `${journal.backupRoot}/${backup.backupPath}`, preimage);
+      const result = referenceEditResult(repoRoot, plan, journal, finalPath).bytes;
+      if (path !== finalPath || mode !== preimage.mode || !bytes.equals(result)) throw new Error(`Retirement reference applied result drift: ${path}`);
+      return { path, bytes };
+    }
+    if (mode !== preimage.mode || bytes.byteLength !== preimage.size || sha256(bytes) !== preimage.contentHash) throw new Error(`Retirement reference source preimage drift: ${path}`);
+    return { path: finalPath, bytes: Buffer.from(applyEditsToContent(bytes.toString("utf8"), edits)) };
+  };
+}
+
+function evidenceRemovalIncomingReferences(repoRoot: string, removal: TaxonomyEvidenceRemoval, plan: TaxonomyPlan, taxonomy: LoadedTaxonomy, ticketDir?: string, planAuthority?: Readonly<{ path: string; bytes: Uint8Array }>, transactionRoot?: string, journal?: MutableJournalRecord, cancelFile?: string, progress?: TaxonomyApplyOptions["progress"]): readonly string[] {
+  const project = removal.authority.kind === "nested-cargo-generated-source" || removal.authority.kind === "exact-owner-generated-source" ? removalReferenceProjection(repoRoot, plan, journal) : undefined;
+  return lexicalTargetIncomingReferences(repoRoot, new Set([removal.sourcePath]), removalIncomingIgnoredSourceRoots(removal), taxonomy, ticketDir, planAuthority, transactionRoot, plan, cancelFile, progress, project);
+}
+
 function assertTicketImportantRemovalAuthority(repoRoot: string, removal: TaxonomyEvidenceRemoval, taxonomy: LoadedTaxonomy): void {
+  if (removal.authority.kind === "nested-cargo-generated-source") {
+    const contract = taxonomy.discoverySchema.semanticPackageProjectionContracts["nested-cargo-packages-v1"], authority = removal.authority;
+    const row = semanticPackageProjectionCatalog(repoRoot, taxonomy.discoverySchema)?.packages.find((entry) => entry.id === authority.packageId);
+    const declaration = row?.generatedSourceRetirements.find((entry) => entry.sourcePath === removal.sourcePath), mapping = row?.mappings.find((entry) => entry.sourcePath === removal.sourcePath);
+    if (!contract || !declaration || !mapping || mapping.disposition !== "generated" || contract.authorityCatalogPath !== authority.catalogPath || contract.authorityCatalogSha256 !== authority.catalogContentHash || declaration.generatorContractId !== authority.generatorContractId || declaration.destinationPath !== authority.destinationPath || mapping.sourceHash !== authority.sourcePreimage.contentHash || mapping.sourceSize !== authority.sourcePreimage.size || declaration.sourceMode !== authority.sourcePreimage.mode || canonicalJson(removal.preimage) !== canonicalJson(authority.sourcePreimage)) throw new Error("Nested Cargo generated retirement authority changed: " + removal.sourcePath);
+    return;
+  }
   if (removal.authority.kind === "exact-owner-generated-source") {
     const contract = taxonomy.schema.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];
     const owner = exactOwnedFileCatalog(repoRoot, taxonomy)?.cases.find((entry) => entry.sourcePath === removal.sourcePath);
@@ -7040,6 +7304,11 @@ function assertTicketImportantExactRemovalAuthority(repoRoot: string, removal: T
 
 function assertPlanOutsideTransaction(plan: TaxonomyPlan, transactionRoot: string, taxonomy: LoadedTaxonomy, repoRoot: string): void {
   transactionBackupAuthorities(plan);
+  for (const removal of plan.evidenceRemovals) if (removal.authority.kind === "nested-cargo-generated-source") {
+    const authority = removal.authority;
+    const owners = plan.regenerations.filter((regeneration) => regeneration.contractId === authority.generatorContractId && regeneration.outputs.some((output) => output.path === authority.destinationPath && output.nodeKind === "file" && output.mode === authority.sourcePreimage.mode));
+    if (owners.length !== 1 || owners[0]!.outputRoots.some((root) => pathsOverlap(root, removal.sourcePath))) throw new Error("Nested Cargo generated retirement requires exactly one disjoint canonical generator: " + removal.sourcePath);
+  }
   const paths = [
     ...(plan.scope ? [plan.scope] : []),
     ...plan.moves.flatMap((move) => [move.sourcePath, move.destinationPath]),
@@ -9058,7 +9327,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
       if (lexicalIncoming.length > 0) throw new Error(`Embedded root structured incoming reference set changed: ${root.sourceMetadataRoot}`);
     }
     for (const removal of plan.evidenceRemovals) {
-      const incoming = lexicalTargetIncomingReferences(repoRoot, new Set([removal.sourcePath]), removalIncomingIgnoredSourceRoots(removal), taxonomy, options.ticketDir, planAuthority, transactionRootRelative, plan, options.cancelFile, options.progress);
+      const incoming = evidenceRemovalIncomingReferences(repoRoot, removal, plan, taxonomy, options.ticketDir, planAuthority, transactionRootRelative, undefined, options.cancelFile, options.progress);
       if (incoming.length > 0) throw new Error(`Evidence-removal structured incoming reference set changed: ${removal.sourcePath}`);
     }
     for (const regeneration of plan.regenerations) {
@@ -9125,7 +9394,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
       if (incoming.length > 0) throw new Error(`resume-state-drift: embedded incoming references ${root.sourceMetadataRoot}`);
     }
     for (const removal of plan.evidenceRemovals) {
-      const incoming = lexicalTargetIncomingReferences(repoRoot, new Set([removal.sourcePath]), removalIncomingIgnoredSourceRoots(removal), taxonomy, options.ticketDir, planAuthority, transactionRootRelative, plan, undefined, options.progress);
+      const incoming = evidenceRemovalIncomingReferences(repoRoot, removal, plan, taxonomy, options.ticketDir, planAuthority, transactionRootRelative, tupleProbe, undefined, options.progress);
       if (incoming.length > 0) throw new Error(`resume-state-drift: evidence-removal incoming references ${removal.sourcePath}`);
     }
     return durable;
@@ -9201,7 +9470,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
       if (incoming.length > 0) throw new Error(`resume-state-drift: embedded incoming references ${root.sourceMetadataRoot}`);
     }
     for (const removal of plan.evidenceRemovals) {
-      const incoming = lexicalTargetIncomingReferences(repoRoot, new Set([removal.sourcePath]), removalIncomingIgnoredSourceRoots(removal), taxonomy, options.ticketDir, planAuthority, transactionRootRelative, plan, undefined, options.progress);
+      const incoming = evidenceRemovalIncomingReferences(repoRoot, removal, plan, taxonomy, options.ticketDir, planAuthority, transactionRootRelative, journal, undefined, options.progress);
       if (incoming.length > 0) throw new Error(`resume-state-drift: evidence-removal incoming references ${removal.sourcePath}`);
     }
     try {
@@ -9424,7 +9693,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
       if (validateResumeTuples(repoRoot, plan, journal, taxonomy)) persistJournal(repoRoot, journalPath, journal);
       if (journal.completedRegenerationIds.includes(regeneration.id)) {
         if (canonicalJson(generatorTreeInventory(repoRoot, regeneration.outputRoots, taxonomy)) !== canonicalJson(regeneration.outputs)) throw new Error(`Completed regeneration output changed: ${regeneration.id}`);
-        if (regeneration.verifyCommand) execFileSync(regeneration.verifyCommand[0], [...regeneration.verifyCommand.slice(1)], { cwd: absolutePath(repoRoot, regeneration.cwd), stdio: "inherit" });
+        if (regeneration.verifyCommand) execFileSync(regeneration.verifyCommand[0], [...regeneration.verifyCommand.slice(1)], { cwd: absolutePath(repoRoot, regeneration.cwd), env: { ...process.env }, stdio: "inherit" });
         report(options.progress, "apply", "regenerations", index + 1, plan.regenerations.length, regeneration.contractId);
         continue;
       }
@@ -9434,12 +9703,12 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
         journal.startedRegenerationIds.push(regeneration.id);
         persistJournal(repoRoot, journalPath, journal);
       }
-      execFileSync(regeneration.command[0], [...regeneration.command.slice(1)], { cwd: absolutePath(repoRoot, regeneration.cwd), stdio: "inherit" });
+      execFileSync(regeneration.command[0], [...regeneration.command.slice(1)], { cwd: absolutePath(repoRoot, regeneration.cwd), env: { ...process.env }, stdio: "inherit" });
       checkCancellation(repoRoot, options.cancelFile);
       const actualOutputs = generatorTreeInventory(repoRoot, regeneration.outputRoots, taxonomy);
       if (canonicalJson(actualOutputs) !== canonicalJson(regeneration.outputs)) throw new Error(`Regeneration ${regeneration.id} produced missing, stale, unexpected, byte-different, or mode-different output`);
       durablySyncGeneratorRecords(repoRoot, actualOutputs);
-      if (regeneration.verifyCommand) execFileSync(regeneration.verifyCommand[0], [...regeneration.verifyCommand.slice(1)], { cwd: absolutePath(repoRoot, regeneration.cwd), stdio: "inherit" });
+      if (regeneration.verifyCommand) execFileSync(regeneration.verifyCommand[0], [...regeneration.verifyCommand.slice(1)], { cwd: absolutePath(repoRoot, regeneration.cwd), env: { ...process.env }, stdio: "inherit" });
       checkCancellation(repoRoot, options.cancelFile);
       journal.completedRegenerationIds.push(regeneration.id);
       persistJournal(repoRoot, journalPath, journal);

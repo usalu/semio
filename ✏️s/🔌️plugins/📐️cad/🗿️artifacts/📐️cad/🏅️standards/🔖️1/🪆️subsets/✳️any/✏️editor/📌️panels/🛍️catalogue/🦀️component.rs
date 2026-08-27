@@ -55,7 +55,7 @@ mod tests {
         let history = empty_history();
         let doc = ArtifactView::new(&scene, &history);
         let config = CadConfig { locale: "de".into(), ..CadConfig::default() };
-        let node = render_direct(&app, CAD_PLAY_BODY_CATALOGUE, &doc, &config);
+        let node = render_direct(&app, CAD_PLAY_BODY_CATALOGUE, &doc, &config).expect("CAD UI assembly");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Typologien"));
         assert!(json.contains("Quader"));

@@ -1,0 +1,632 @@
+bun test v1.3.14 (0d9b296a)
+
+🧪️index.test.ts:
+42 |   });
+43 | 
+44 |   test("every exempt area is excluded by the discovery library itself, not by a caller's filter", () => {
+45 |     const areas = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")).areas as Record<string, string>;
+46 |     const exempt = Object.entries(areas).filter(([, state]) => state === "exempt").map(([area]) => area);
+47 |     expect(exempt.length).toBeGreaterThan(0);
+                               ^
+error: expect(received).toBeGreaterThan(expected)
+
+Expected: > 0
+Received: 0
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:47:27)
+(fail) 🔣️ contract > every exempt area is excluded by the discovery library itself, not by a caller's filter [2.52ms]
+148 |   });
+149 | 
+150 |   test("semantic-pdf-v1 canonicalizes the nondeterministic artefacts and keeps the normative fields", () => {
+151 |     const oracle = { version: "1.7", pageCount: 1, objectNumber: 5, creationDate: "A", pages: [{ mediaBox: [0, 0, 595, 842] }] };
+152 |     const subject = { version: "1.7", pageCount: 1, objectNumber: 9, creationDate: "B", pages: [{ mediaBox: [0, 0, 595, 842.00001] }] };
+153 |     expect(compareProjections("semantic-pdf-v1", oracle, subject, contributed()).equal).toBe(true);
+                                                                                              ^
+error: expect(received).toBe(expected)
+
+Expected: true
+Received: false
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:153:89)
+(fail) ⚖️ comparison profiles > semantic-pdf-v1 canonicalizes the nondeterministic artefacts and keeps the normative fields [63763.31ms]
+  ^ this test timed out after 30000ms.
+162 |     expect(compareProjections("utf8-text-v1", "a", "b").equal).toBe(false);
+163 |   });
+164 | 
+165 |   test("every profile — core and contributed — is applicable and produces a stable projection hash", () => {
+166 |     const profiles = profileTable(loadOracleRegistry(repoRoot));
+167 |     expect(profiles.size).toBeGreaterThan(CORE_COMPARISON_PROFILES.length);
+                                ^
+error: expect(received).toBeGreaterThan(expected)
+
+Expected: > 8
+Received: 8
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:167:27)
+(fail) ⚖️ comparison profiles > every profile — core and contributed — is applicable and produces a stable projection hash [0.18ms]
+201 | });
+202 | 
+203 | describe("📇️ oracle registry", () => {
+204 |   test("every registered oracle is test-only and declares its license and capabilities", () => {
+205 |     const registry = loadOracleRegistry(repoRoot);
+206 |     expect(registry.oracles.length).toBeGreaterThan(0);
+                                          ^
+error: expect(received).toBeGreaterThan(expected)
+
+Expected: > 0
+Received: 0
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:206:37)
+(fail) 📇️ oracle registry > every registered oracle is test-only and declares its license and capabilities [0.10ms]
+223 | describe("🔍️ discovery and contract", () => {
+224 |   test("discovery finds the committed cases and never returns a compose path", () => {
+225 |     const cases = discoverTestCases(repoRoot);
+226 |     expect(cases.length).toBeGreaterThan(0);
+227 |     for (const area of exemptAreas()) expect(cases.every((entry) => !entry.owner.startsWith(`${area}/`) && !entry.caseDir.includes(`${area}/`)), `an exempt area leaked into discovery: ${area}`).toBe(true);
+228 |     expect(cases.some((entry) => entry.case === "host-protocol-parity")).toBe(true);
+                                                                               ^
+error: expect(received).toBe(expected)
+
+Expected: true
+Received: false
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:228:74)
+(fail) 🔍️ discovery and contract > discovery finds the committed cases and never returns a compose path [63767.50ms]
+  ^ this test timed out after 5000ms.
+(fail) 🔍️ discovery and contract > discovery is idempotent [130691.03ms]
+  ^ this test timed out after 30000ms.
+245 |   // ⏱️ Repo-wide: also runs the legacy-test survey and the oracle-purity scan over every
+246 |   // non-excluded path, so it needs the quick-level budget rather than bun's 5 s default.
+247 |   test(
+248 |     "every committed case satisfies the frozen contract",
+249 |     () => {
+250 |       expect(validateAllContracts(repoRoot).map((breach) => `${breach.kind}:${breach.scope}:${breach.summary}`)).toEqual([]);
+                                                                                                                       ^
+error: expect(received).toEqual(expected)
+
+- []
++ [
++   "testing/taxonomy:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-DR80rZ/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🧪️tests/🧪️mutate-energy-model-1:Test case directory "🧪️mutate-energy-model-1" is not kebab-case",
++   "testing/fixture:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-DR80rZ/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🧪️tests/🧪️mutate-energy-model-1/🥒️.feature:Fixture asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio does not resolve",
++   "testing/taxonomy:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-gneIJr/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🧪️tests/🧪️mutate-energy-model-1:Test case directory "🧪️mutate-energy-model-1" is not kebab-case",
++   "testing/fixture:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-gneIJr/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🧪️tests/🧪️mutate-energy-model-1/🥒️.feature:Fixture asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio does not resolve",
++   "testing/taxonomy:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-JgYrZT/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🧪️tests/🧪️mutate-energy-model-1:Test case directory "🧪️mutate-energy-model-1" is not kebab-case",
++   "testing/fixture:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-JgYrZT/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🧪️tests/🧪️mutate-energy-model-1/🥒️.feature:Fixture asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio does not resolve",
++   "testing/taxonomy:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-ukwLF0/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🧪️tests/🧪️mutate-energy-model-1:Test case directory "🧪️mutate-energy-model-1" is not kebab-case",
++   "testing/fixture:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-ukwLF0/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🧪️tests/🧪️mutate-energy-model-1/🥒️.feature:Fixture asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio does not resolve",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-reachability-Yjiawc/semantic-type-alias/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-reachability-Yjiawc/escaping-child-mount/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-reachability-Yjiawc/wrong-type/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-reachability-Yjiawc/foreign-alias/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-reachability-Yjiawc/nested-aggregate/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-reachability-Yjiawc/orphan-variant/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-reachability-Yjiawc/duplicate-child-mount/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-reachability-Yjiawc/restricted-child-alias/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-reachability-Yjiawc/private-aggregate/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-reachability-Yjiawc/restricted-root-alias/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-reachability-Yjiawc/private-mount/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-reachability-Yjiawc/duplicate-mount/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-reachability-Yjiawc/primitive-alias/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-reachability-Yjiawc/public-canonical/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-reachability-Yjiawc/child-facet-reexport/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-reachability-Yjiawc/wrong-target/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-reachability-Yjiawc/comment-decoy/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-reachability-Yjiawc/duplicate-variant/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-reachability-Yjiawc/nested-mount-decoy/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/unsafe-child-backslash/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/unsafe-child-colon/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/conflicting-root-aliases/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/unsafe-child-nfd/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/conditional-ancestor-inline-enum/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/renamed-public-alias/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/grouped-child-reexport/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/cfg-attr-conditional-mount/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/escaping-child-source/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/semantic-public-alias/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/inline-public-child-reexport/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/shadowed-root-alias/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/public-child-reexport/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/unsafe-child-control/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/symlinked-repository-ancestor/source/workspace/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/private-mount/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/unsafe-child-compose-casefold/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/conditional-aggregate-cfg-attr/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/conditional-declaration/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/root-inner-cfg/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/conditional-mount/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/conditional-variant-cfg-attr/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/ambiguous-wrapper/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/grouped-public-alias/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/symlinked-repository-base/source/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/inner-conditional-mount/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/disabled-variant-cfg/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/direct-declaration/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/symlinked-child-source/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/unbound-wrapper/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-native-registered-artifacts/semio-mutation-type-origin-mdV7v7/disabled-aggregate-cfg/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-reachability-6L6y1o/semantic-type-alias/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-reachability-6L6y1o/escaping-child-mount/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-reachability-6L6y1o/wrong-type/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-reachability-6L6y1o/foreign-alias/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-reachability-6L6y1o/nested-aggregate/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-reachability-6L6y1o/orphan-variant/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-reachability-6L6y1o/duplicate-child-mount/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-reachability-6L6y1o/restricted-child-alias/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-reachability-6L6y1o/private-aggregate/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-reachability-6L6y1o/restricted-root-alias/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-reachability-6L6y1o/private-mount/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-reachability-6L6y1o/duplicate-mount/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-reachability-6L6y1o/primitive-alias/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-reachability-6L6y1o/public-canonical/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-reachability-6L6y1o/child-facet-reexport/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-reachability-6L6y1o/wrong-target/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-reachability-6L6y1o/comment-decoy/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-reachability-6L6y1o/duplicate-variant/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-reachability-6L6y1o/nested-mount-decoy/✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️artifact/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/unsafe-child-backslash/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/unsafe-child-colon/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/conflicting-root-aliases/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/unsafe-child-nfd/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/conditional-ancestor-inline-enum/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/renamed-public-alias/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/grouped-child-reexport/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/cfg-attr-conditional-mount/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/escaping-child-source/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/semantic-public-alias/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/inline-public-child-reexport/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/shadowed-root-alias/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/public-child-reexport/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/unsafe-child-control/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/private-mount/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/unsafe-child-compose-casefold/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/conditional-aggregate-cfg-attr/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/conditional-declaration/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/root-inner-cfg/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/conditional-mount/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/conditional-variant-cfg-attr/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/ambiguous-wrapper/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/grouped-public-alias/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/inner-conditional-mount/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/disabled-variant-cfg/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/direct-declaration/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/symlinked-child-source/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/unbound-wrapper/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin-final-artifacts/semio-mutation-type-origin-QUE1iC/disabled-aggregate-cfg/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/unsafe-child-backslash/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/unsafe-child-colon/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/conflicting-root-aliases/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/unsafe-child-nfd/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/conditional-ancestor-inline-enum/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/renamed-public-alias/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/grouped-child-reexport/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/cfg-attr-conditional-mount/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/escaping-child-source/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/semantic-public-alias/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/inline-public-child-reexport/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/shadowed-root-alias/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/public-child-reexport/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/unsafe-child-control/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/private-mount/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/unsafe-child-compose-casefold/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/conditional-aggregate-cfg-attr/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/conditional-declaration/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/root-inner-cfg/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/conditional-mount/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/conditional-variant-cfg-attr/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/ambiguous-wrapper/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/grouped-public-alias/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/inner-conditional-mount/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/disabled-variant-cfg/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/direct-declaration/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/symlinked-child-source/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/unbound-wrapper/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/🧪registered/semio-mutation-type-origin-BJjPO0/disabled-aggregate-cfg/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/unsafe-child-backslash/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/unsafe-child-colon/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/conflicting-root-aliases/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/unsafe-child-nfd/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/conditional-ancestor-inline-enum/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/renamed-public-alias/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/grouped-child-reexport/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/cfg-attr-conditional-mount/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/escaping-child-source/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/semantic-public-alias/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/inline-public-child-reexport/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/shadowed-root-alias/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/public-child-reexport/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/unsafe-child-control/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/private-mount/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/unsafe-child-compose-casefold/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/conditional-aggregate-cfg-attr/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/conditional-declaration/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/root-inner-cfg/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/conditional-mount/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/conditional-variant-cfg-attr/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/ambiguous-wrapper/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/grouped-public-alias/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/inner-conditional-mount/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/disabled-variant-cfg/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/direct-declaration/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/symlinked-child-source/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/unbound-wrapper/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️wrapped-type-origin/semio-mutation-type-origin-II9eR4/disabled-aggregate-cfg/✏️s/🔌️plugins/🧪️probe/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-VaGLrB/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-sraHg4/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-SgUxVb/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-5hBUe9/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-HOW90P/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-ZoqOXx/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-ZoqOXx/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-FQAAWN/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-CJoYLa/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-FgsCOH/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-FgsCOH/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-0thbVO/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-QcGd51/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-YAkEfI/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-3BQUz4/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-BXuzTJ/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-JuaZuc/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-1GHZ5T/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-vPnpQf/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-57FoVX/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-BboLQu/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-X2vaoR/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-xcEt2k/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-p1uuuO/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-JdA2Me/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-7ZRb85/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-7ZRb85/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-mpCNIl/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-hSdMJK/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-X8MVuD/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-X8MVuD/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-VPi3Na/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-eQOhK9/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-eQOhK9/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-UpaK15/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-mXGso0/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-qvSJ4H/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️artifact-support-iUj7Z5/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-nfNDNJ/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-Jl113i/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-qe8cRr/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-ve8v1u/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-aUgvUN/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-ciEMHh/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-y3Di1U/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-y3Di1U/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-S3iWli/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-GgX7eu/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-VlyjCj/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-krCoys/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-JSc69w/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-JSc69w/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-ud21Kd/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-8sDEiv/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-CxQ0Ju/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-ZUPBgn/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-HTz58h/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-hB6h8w/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-8zqvf4/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-Z3S4em/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-CYlRqO/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-owXHGM/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-rwqq21/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-1jVl8l/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-iD5WQd/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-iD5WQd/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-DWSFe7/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-gS8w7m/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-he6kYm/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-he6kYm/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-QrlQ8j/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-777xzO/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-QMDLoe/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-BBFlAc/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-mZnjd0/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-jeQviO/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-GhIPsc/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️incoming-mutation-debug-QkmE0f/✏️s/🔌️plugins/🅰️alpha/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️incoming-mutation-debug-QkmE0f/🧰️framework/🔨️modules/🅱️beta/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-e2P1iG/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-fcniPB/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-fcniPB/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-bXnXK3/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️component-authoring-bXnXK3/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-RCXoma/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-rRE4eU/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-aiYuNS/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-fCCZ9T/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-GcuHon/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️energy-support-current-DH9vAR/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/contract:🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations:A mutation vocabulary is declared here but no catalog registers it",
++   "testing/discovery:.🧬semio:569 executable test file(s) outside the canonical owner-root test tree, baseline allows 0",
++   "testing/discovery:🧰️framework:55 executable test file(s) outside the canonical owner-root test tree, baseline allows 35",
++   "testing/discovery:✏️s:7 executable test file(s) outside the canonical owner-root test tree, baseline allows 1",
++ ]
+
+- Expected  - 1
++ Received  + 416
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:250:114)
+(fail) 🔍️ discovery and contract > every committed case satisfies the frozen contract [666615.58ms]
+  ^ this test timed out after 30000ms.
+255 |   test(
+256 |     "the migration backlog is a shrink-only ratchet, never a growing allowlist",
+257 |     () => {
+258 |       const baseline = loadMigrationBaseline(repoRoot);
+259 |       const live = surveyUnmanagedTests(repoRoot).reduce((map, entry) => map.set(entry.area, (map.get(entry.area) ?? 0) + 1), new Map<string, number>());
+260 |       for (const [area, count] of live) expect(count).toBeLessThanOrEqual(baseline.unmanagedTests.byArea[area] ?? 0);
+                                                            ^
+error: expect(received).toBeLessThanOrEqual(expected)
+
+Expected: <= 0
+Received: 569
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:260:55)
+(fail) 🔍️ discovery and contract > the migration backlog is a shrink-only ratchet, never a growing allowlist [178498.42ms]
+  ^ this test timed out after 30000ms.
+300 |     for (const row of report.removals) {
+301 |       expect(row.path.startsWith(".🧬semio/🦑️repo/⚡️cache/tests/")).toBe(true);
+302 |       for (const area of exemptAreas()) expect(row.path.includes(`${area}/`), `clean candidate inside the exempt area ${area}`).toBe(false);
+303 |     }
+304 |     expect(readFileSync(sentinelFixture, "utf8")).toBe(before);
+305 |     expect(existsSync(join(repoRoot, "compose"))).toBe(true);
+                                                        ^
+error: expect(received).toBe(expected)
+
+Expected: true
+Received: false
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:305:51)
+(fail) 🧹️ clean safety > no tracked fixture, source file or compose path is ever a clean candidate [18.36ms]
+(fail) 🚫️ oracle purity > no production source imports a registered oracle [258660.70ms]
+  ^ this test timed out after 60000ms.
+(fail) 🚫️ oracle purity > narrowing a run to one case must not make other cases' adapters look like production source [830724.60ms]
+  ^ this test timed out after 60000ms.
+453 |     const owners = new Set(discoverTestCases(repoRoot).map((entry) => entry.owner));
+454 |     const selected = [...owners].flatMap((owner) => (["rust", "typescript", "python", "go", "dotnet"] as const).flatMap((implementation) => oracleHostPackagesFor(registry, owner, implementation).map((entry) => entry.implementation)));
+455 |     // 🧩️Every implementation an owner declared must be reachable through the selector; a value that
+456 |     // parses, merges and is then discarded is a manifest field that silently does nothing.
+457 |     for (const declared of registry.contributions.flatMap((entry) => entry.oracleHostPackages)) expect(selected, `no owner reaches the declared ${declared.implementation} host package ${declared.package}`).toContain(declared.implementation);
+458 |     expect(new Set(selected).size).toBeGreaterThan(1);
+                                         ^
+error: expect(received).toBeGreaterThan(expected)
+
+Expected: > 1
+Received: 0
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:458:36)
+(fail) 🧩️ cross-language oracle hosts > a contributed host package is selected for whichever implementation declares it, not for Rust alone [82849.98ms]
+  ^ this test timed out after 60000ms.
+(fail) 🔒️ recorded production debt > only the recorded paths are excused — any other production import is still a breach [134944.41ms]
+  ^ this test timed out after 60000ms.
+547 | });
+548 | 
+549 | describe("⚖️ artifact comparison profiles", () => {
+550 |   test("semantic-raster-v1 ignores encoder choices and keeps the decoded samples", () => {
+551 |     const oracle = { format: "png", width: 2, height: 1, samples: [1, 2, 3, 4], filter: "paeth", gamma: 45455 };
+552 |     expect(compareProjections("semantic-raster-v1", oracle, { ...oracle, filter: "sub", gamma: 22222 }, contributed()).equal).toBe(true);
+                                                                                                                                    ^
+error: expect(received).toBe(expected)
+
+Expected: true
+Received: false
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:552:127)
+(fail) ⚖️ artifact comparison profiles > semantic-raster-v1 ignores encoder choices and keeps the decoded samples [1.13ms]
+554 |   });
+555 | 
+556 |   test("semantic-archive-v1 compares members as a set and ignores writer metadata", () => {
+557 |     const a = { entries: [{ name: "a", size: 1, contentDigest: "x" }, { name: "b", size: 2, contentDigest: "y" }] };
+558 |     const b = { entries: [{ name: "b", size: 2, contentDigest: "y", modified: "2020" }, { name: "a", size: 1, contentDigest: "x", compressedSize: 9 }] };
+559 |     expect(compareProjections("semantic-archive-v1", a, b, contributed()).equal).toBe(true);
+                                                                                       ^
+error: expect(received).toBe(expected)
+
+Expected: true
+Received: false
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:559:82)
+(fail) ⚖️ artifact comparison profiles > semantic-archive-v1 compares members as a set and ignores writer metadata [0.54ms]
+560 |     expect(compareProjections("semantic-archive-v1", a, { entries: [a.entries[0]] }, contributed()).equal).toBe(false);
+561 |   });
+562 | 
+563 |   test("semantic-audio-v1 keeps the format block and every sample", () => {
+564 |     const oracle = { channels: 2, sampleRate: 44100, bitsPerSample: 16, samples: [1, -1], byteLength: 100 };
+565 |     expect(compareProjections("semantic-audio-v1", oracle, { ...oracle, byteLength: 108 }, contributed()).equal).toBe(true);
+                                                                                                                       ^
+error: expect(received).toBe(expected)
+
+Expected: true
+Received: false
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:565:114)
+(fail) ⚖️ artifact comparison profiles > semantic-audio-v1 keeps the format block and every sample [0.10ms]
+569 | 
+570 | 
+571 | describe("🧩️ open/closed", () => {
+572 |   test("the framework's own registry names no plugin, product or file format", () => {
+573 |     const taxonomy = testTaxonomy(repoRoot);
+574 |     const core = JSON.parse(readFileSync(join(repoRoot, testLocationPath(taxonomy, taxonomy.testOracleRegistryLocation)), "utf8")) as { oracles?: unknown[]; comparisonProfiles?: unknown[]; oracleHostPackages?: unknown[] };
+                                  ^
+error: ENOENT: no such file or directory, open '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📇️registry/🔣️.json'
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:574:29)
+(fail) 🧩️ open/closed > the framework's own registry names no plugin, product or file format [0.43ms]
+711 |   });
+712 | 
+713 |   test("all governed catalogs register the physical tree exactly once", () => {
+714 |     const registry = loadOracleRegistry(repoRoot);
+715 |     const vectors = registry.mutationCatalogs.flatMap((entry) => entry.vectors);
+716 |     expect(registry.mutationCatalogs).toHaveLength(144);
+                                            ^
+error: expect(received).toHaveLength(expected)
+
+Expected length: 144
+Received length: 4
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:716:39)
+(fail) 🧬️ physical mutation vector registry > all governed catalogs register the physical tree exactly once [0.70ms]
+
+ 57 pass
+ 18 fail
+ 405 expect() calls
+Ran 75 tests across 1 file. [2478.46s]
+exit=1

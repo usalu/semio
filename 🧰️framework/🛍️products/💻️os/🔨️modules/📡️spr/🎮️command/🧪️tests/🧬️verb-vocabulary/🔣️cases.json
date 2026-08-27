@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    { "verb": "commit", "record": "Committed" },
+    { "verb": "switch", "record": "Switched" },
+    { "verb": "restore", "record": "Restored" },
+    { "verb": "modify", "record": null },
+    { "verb": "set-snapshot", "record": null }
+  ]
+}

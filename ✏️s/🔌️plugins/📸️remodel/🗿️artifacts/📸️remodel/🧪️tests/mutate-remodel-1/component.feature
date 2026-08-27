@@ -8,7 +8,7 @@ Feature: Apply every typed remodel-scene mutation to its committed specification
   under, and the engine-owned results — not a point cloud or a mesh file. A reader of COLMAP, LAS or
   PLY output would therefore be judging a different artifact, and nothing reads `.dsl.semio`. That is
   recorded as the `remodel-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, whose substitutes are the
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, whose substitutes are the
   committed per-kind specification vectors plus the inverse law. This case re-exercises those SAME
   committed bytes through `apply_remodel_mutation_json`/`undo_remodel_mutation_json`.
 

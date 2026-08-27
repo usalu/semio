@@ -1,0 +1,7 @@
+{
+  "mutation": "remove-tag",
+  "payload": {
+    "ifdIndex": 0,
+    "tag": 305
+  }
+}

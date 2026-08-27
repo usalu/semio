@@ -1,0 +1,217 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host",
+  "case": "ticket-local",
+  "featurePath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/mutate-os-config-identity/component.feature",
+  "featureHash": "ticket-local",
+  "featureName": "Apply every typed identity mutation to its committed specification vectors",
+  "capability": "os-config-identity-1-mutate",
+  "oracle": null,
+  "noOracleDecision": "os-config-identity-mutation-semantics",
+  "comparison": "ordered-json-v1",
+  "background": [],
+  "scenarios": [
+    {
+      "id": "mutate-sign-in",
+      "name": "Apply <id> to its committed before-snapshot fixture [id=sign-in, account=grace, wasAccount=ada]",
+      "level": "exhaustive",
+      "mode": "conformance",
+      "tags": [
+        "@id-mutate",
+        "@level-exhaustive",
+        "@mode-conformance"
+      ],
+      "steps": [
+        {
+          "keyword": "Given",
+          "rawKeyword": "Given",
+          "text": "the committed before-snapshot, mutation and outcome fixtures for the sign-in kind"
+        },
+        {
+          "keyword": "When",
+          "rawKeyword": "When",
+          "text": "sign-in is applied through apply_identity_config_mutation_reporting",
+          "docString": "{\"kind\": \"sign-in\", \"account\": \"grace\", \"wasAccount\": \"ada\"}"
+        },
+        {
+          "keyword": "Then",
+          "rawKeyword": "Then",
+          "text": "the resulting record matches the committed after-snapshot, holds the grace session, no longer holds ada, and reports the committed outcome"
+        }
+      ],
+      "platforms": [],
+      "requires": [],
+      "outlineOf": "mutate",
+      "line": 42
+    },
+    {
+      "id": "mutate-sign-out",
+      "name": "Apply <id> to its committed before-snapshot fixture [id=sign-out, account=none, wasAccount=ada]",
+      "level": "exhaustive",
+      "mode": "conformance",
+      "tags": [
+        "@id-mutate",
+        "@level-exhaustive",
+        "@mode-conformance"
+      ],
+      "steps": [
+        {
+          "keyword": "Given",
+          "rawKeyword": "Given",
+          "text": "the committed before-snapshot, mutation and outcome fixtures for the sign-out kind"
+        },
+        {
+          "keyword": "When",
+          "rawKeyword": "When",
+          "text": "sign-out is applied through apply_identity_config_mutation_reporting",
+          "docString": "{\"kind\": \"sign-out\", \"account\": \"none\", \"wasAccount\": \"ada\"}"
+        },
+        {
+          "keyword": "Then",
+          "rawKeyword": "Then",
+          "text": "the resulting record matches the committed after-snapshot, holds the none session, no longer holds ada, and reports the committed outcome"
+        }
+      ],
+      "platforms": [],
+      "requires": [],
+      "outlineOf": "mutate",
+      "line": 42
+    },
+    {
+      "id": "inverse-sign-in",
+      "name": "Undoing <id> restores the committed before-snapshot fixture [id=sign-in, account=grace, wasAccount=ada]",
+      "level": "exhaustive",
+      "mode": "property",
+      "tags": [
+        "@id-inverse",
+        "@level-exhaustive",
+        "@mode-property"
+      ],
+      "steps": [
+        {
+          "keyword": "Given",
+          "rawKeyword": "Given",
+          "text": "the committed before-snapshot and mutation fixtures for the sign-in kind"
+        },
+        {
+          "keyword": "When",
+          "rawKeyword": "When",
+          "text": "sign-in is applied and then its own computed inverse steps are applied",
+          "docString": "{\"kind\": \"sign-in\", \"account\": \"grace\", \"wasAccount\": \"ada\"}"
+        },
+        {
+          "keyword": "Then",
+          "rawKeyword": "Then",
+          "text": "the record equals the committed before-snapshot again and holds the ada session with its original token and issue time"
+        }
+      ],
+      "platforms": [],
+      "requires": [],
+      "outlineOf": "inverse",
+      "line": 57
+    },
+    {
+      "id": "inverse-sign-out",
+      "name": "Undoing <id> restores the committed before-snapshot fixture [id=sign-out, account=none, wasAccount=ada]",
+      "level": "exhaustive",
+      "mode": "property",
+      "tags": [
+        "@id-inverse",
+        "@level-exhaustive",
+        "@mode-property"
+      ],
+      "steps": [
+        {
+          "keyword": "Given",
+          "rawKeyword": "Given",
+          "text": "the committed before-snapshot and mutation fixtures for the sign-out kind"
+        },
+        {
+          "keyword": "When",
+          "rawKeyword": "When",
+          "text": "sign-out is applied and then its own computed inverse steps are applied",
+          "docString": "{\"kind\": \"sign-out\", \"account\": \"none\", \"wasAccount\": \"ada\"}"
+        },
+        {
+          "keyword": "Then",
+          "rawKeyword": "Then",
+          "text": "the record equals the committed before-snapshot again and holds the ada session with its original token and issue time"
+        }
+      ],
+      "platforms": [],
+      "requires": [],
+      "outlineOf": "inverse",
+      "line": 57
+    },
+    {
+      "id": "signed-out-inverse-is-empty",
+      "name": "Signing out of a record that already holds no session has no undo step to offer",
+      "level": "exhaustive",
+      "mode": "property",
+      "tags": [
+        "@id-signed-out-inverse-is-empty",
+        "@level-exhaustive",
+        "@mode-property"
+      ],
+      "steps": [
+        {
+          "keyword": "Given",
+          "rawKeyword": "Given",
+          "text": "the committed after-snapshot of the sign-out vector, which holds no session"
+        },
+        {
+          "keyword": "When",
+          "rawKeyword": "When",
+          "text": "sign-out is applied to it and its own inverse steps are computed from that same record"
+        },
+        {
+          "keyword": "Then",
+          "rawKeyword": "Then",
+          "text": "the record stays signed out and the inverse is empty rather than a sign-in carrying a fabricated session"
+        }
+      ],
+      "platforms": [],
+      "requires": [],
+      "line": 72
+    },
+    {
+      "id": "identity-round-trip",
+      "name": "Decode and re-encode the committed signed-in record without passing bytes through",
+      "level": "long",
+      "mode": "round-trip",
+      "tags": [
+        "@id-identity-round-trip",
+        "@level-long",
+        "@mode-round-trip"
+      ],
+      "steps": [
+        {
+          "keyword": "Given",
+          "rawKeyword": "Given",
+          "text": "the committed before-snapshot of the sign-in vector"
+        },
+        {
+          "keyword": "When",
+          "rawKeyword": "When",
+          "text": "the record is decoded into IdentitySetting and re-encoded from the typed value alone"
+        },
+        {
+          "keyword": "Then",
+          "rawKeyword": "Then",
+          "text": "the re-encoded projection is the committed one, field for field, and the decode is proven real by reading the account and its token back off the typed value rather than off the text"
+        }
+      ],
+      "platforms": [],
+      "requires": [],
+      "line": 80
+    }
+  ],
+  "adapters": {},
+  "fixtures": [],
+  "role": "subject",
+  "implementation": "rust",
+  "level": "exhaustive",
+  "workDir": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w18-mutation-fixture-completeness/🏃️run-identity/work",
+  "outputDir": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w18-mutation-fixture-completeness/🏃️run-identity/out",
+  "resultsPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w18-mutation-fixture-completeness/🏃️run-identity/out/📤️results.jsonl"
+}

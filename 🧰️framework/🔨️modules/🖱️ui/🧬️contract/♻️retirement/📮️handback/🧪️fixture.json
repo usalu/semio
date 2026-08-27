@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "slots": 256,
+  "start": 63,
+  "obligations": [{"slot": 63, "kind": "release"}, {"slot": 64, "kind": "release"}, {"slot": 64, "kind": "release"}, {"slot": 255, "kind": "returnClaim"}, {"slot": 0, "kind": "release"}],
+  "expectedOrder": [63, 64, 255, 0, 64],
+  "producers": 4,
+  "returnsPerProducer": 64,
+  "emptyReadyBitConsumesNewOwner": false,
+  "rejectedObligationRetained": true
+}

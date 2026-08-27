@@ -221,7 +221,7 @@ fn borrowed_map_checkpoint_replays_fresh_root_and_live_owner_moves_workers() {
 #[test]
 fn borrowed_map_rebound_root_and_depth_overflow_fail_before_references_escape() {
     let mut indexed = ArtifactCanonicalJsonCursor { maximum_depth: 2, ..ArtifactCanonicalJsonCursor::default() };
-    assert_eq!(indexed.encode_chunk(&IndexedDepth(2), &mut [0; 256]).unwrap_err(), "canonical-edit.depth-limit");
+    assert_eq!(indexed.encode_chunk(&IndexedDepth(2), &mut [0; 256]).unwrap_err(), ArtifactCanonicalJsonEncodeError { written_bytes: 2, reason: "canonical-edit.depth-limit".into() });
     let (mut owner, _, lifetime) = owner();
     for _ in 0..100 { owner.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 7 }).unwrap(); }
     let (replacement, _, _) = fixture();

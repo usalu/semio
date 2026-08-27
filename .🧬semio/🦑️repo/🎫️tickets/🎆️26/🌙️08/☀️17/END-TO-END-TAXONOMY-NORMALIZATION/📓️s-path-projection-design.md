@@ -332,7 +332,7 @@ A direct old-hierarchy token census found **196 files**:
 | artifact aggregate Rust adapters under `🧪️tests/mutate-*` | 48 |
 | artifact Gherkin features under `🧪️tests/mutate-*` | 53 |
 | artifact Python adapters under `🧪️tests/mutate-*` | 9 |
-| subset `🧪️oracle/🔣️component.json` manifests | 23 |
+| subset `🧪️oracle/🔣️.json` manifests | 23 |
 | subset snapshot Rust owners | 30 |
 | case-local JSON fixtures containing literal paths | 3 |
 
@@ -346,7 +346,7 @@ Representative exact owners:
 - `…/📗️din16798/🧪️tests/mutate-din16798-1/🦀️component.rs` — aggregate `include_str!` table;
 - `…/📗️din16798/🧪️tests/mutate-din16798-1/component.feature` — templated `asset://` vectors;
 - `…/📗️din16798/🧪️tests/mutate-din16798-1/🐍️component.py` — `VECTORS` scenario registry;
-- `…/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json` — catalog and oracle rationale;
+- `…/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json` — catalog and oracle rationale;
 - `✏️s/🔌️plugins/📕️norm/🧪️oracle/📦️packages/🐍️python/semio_norm_vocabulary.py` lines 85–87 and 775–780 — shared `VECTOR_ROOT` plus constructed vector stem;
 - every matching plugin `📦️packages/🦀️rust/📦️glue.rs` — crate-level test reachability.
 

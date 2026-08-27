@@ -1,0 +1,18 @@
+# 🤖️ Ticket-local one-shot converter: decomposes the pre-contract flat mutation fixtures into the
+# canonical 13-node bundle, computing 🔺️diff and 🎯️outcome by RUNNING production dispatch.
+[workspace]
+
+[package]
+name = "semio-ticket-vector-converter"
+version = "0.0.0"
+edition = "2021"
+
+[[bin]]
+name = "convert"
+path = "src/main.rs"
+
+[dependencies]
+semio-s-plugin-stdio = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", default-features = false }
+semio-framework-os-kernel = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

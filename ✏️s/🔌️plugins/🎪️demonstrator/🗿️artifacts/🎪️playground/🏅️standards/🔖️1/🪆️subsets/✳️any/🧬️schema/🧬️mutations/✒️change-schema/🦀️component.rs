@@ -140,7 +140,7 @@ mod tests {
     fn kinds_match_the_language_neutral_catalog() {
         let descriptors = PlaygroundMutation::kinds();
         assert_eq!(KINDS.len(), descriptors.len());
-        let manifest = include_str!("../../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../../🧪️oracle/🔣️.json");
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind);
             assert!(manifest.contains(&format!("\"{kind}\"")));

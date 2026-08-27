@@ -65,16 +65,21 @@ impl<T> ReaderState<T> {
 }
 
 impl<T: ArtifactCanonicalJson + Send + 'static> ReaderState<T> {
-    fn encode_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<usize, String> {
+    fn encode_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<usize, ArtifactCanonicalJsonEncodeError> {
         if !grant.permits_one() || self.cancelled || self.failed || self.closing || output.is_empty() { return Ok(0); }
         let maximum = grant.maximum_bytes.min(output.len()).min(ARTIFACT_CANONICAL_JSON_CHUNK_BYTES);
-        let root = self.root.as_ref().ok_or_else(|| "canonical-reader.root-missing".to_string())?;
-        let count = match self.encoder.encode_chunk(root.as_ref(), &mut output[..maximum]) {
-            Ok(count) => count,
-            Err(error) => { self.failed = true; return Err(error); }
+        let root = self.root.as_ref().ok_or_else(|| ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason: "canonical-reader.root-missing".into() })?;
+        let result = self.encoder.encode_chunk(root.as_ref(), &mut output[..maximum]);
+        let count = match &result {
+            Ok(count) => *count,
+            Err(error) => { self.failed = true; error.written_bytes }
         };
-        self.completed_bytes = self.completed_bytes.checked_add(count as u64).ok_or_else(|| "canonical-reader.work-overflow".to_string())?;
-        Ok(count)
+        let Some(completed) = self.completed_bytes.checked_add(count as u64) else {
+            self.failed = true;
+            return Err(ArtifactCanonicalJsonEncodeError { written_bytes: count, reason: "canonical-reader.work-overflow".into() });
+        };
+        self.completed_bytes = completed;
+        result
     }
 }
 
@@ -90,7 +95,7 @@ impl<T> ArtifactCanonicalJsonReader<T> {
 }
 
 impl<T: ArtifactCanonicalJson + Send + 'static> ArtifactCanonicalJsonReader<T> {
-    pub fn encode_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<usize, String> { self.owned.encode_chunk(grant, output) }
+    pub fn encode_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<usize, ArtifactCanonicalJsonEncodeError> { self.owned.encode_chunk(grant, output) }
 }
 
 impl<T> Drop for ArtifactCanonicalJsonReader<T> {

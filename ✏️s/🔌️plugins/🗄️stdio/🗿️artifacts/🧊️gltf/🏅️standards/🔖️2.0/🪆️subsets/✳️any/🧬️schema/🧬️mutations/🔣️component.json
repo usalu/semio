@@ -415,7 +415,7 @@
           "const": "change-node-name"
         },
         "payload": {
-          "$ref": "✏️🔘️change-node-name/🔣️payload.schema.json"
+          "$ref": "✏️🔘️change-node-name/🧬️schema/🔣️.json"
         }
       }
     },

@@ -1,0 +1,19 @@
+{
+  "mutation": "insert-unknown-chunk",
+  "payload": {
+    "chunk": {
+      "data": [
+        1,
+        2,
+        3
+      ],
+      "kind": [
+        119,
+        97,
+        86,
+        101
+      ]
+    },
+    "index": 0
+  }
+}

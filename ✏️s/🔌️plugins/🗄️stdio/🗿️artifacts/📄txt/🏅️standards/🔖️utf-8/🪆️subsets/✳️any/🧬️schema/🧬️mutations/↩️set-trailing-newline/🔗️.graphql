@@ -1,0 +1,2 @@
+# 🧬 canonical set-trailing-newline/SetTrailingNewline
+input SetTrailingNewlinePayload { value: Boolean! }

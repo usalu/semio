@@ -50,6 +50,32 @@ import {
   oracleLinkedPackages,
   profileTable,
   markOutputDir,
+  type ComparisonPipeline,
+  type CoverageRow,
+  type FixtureManifest,
+  type MutationManifest,
+  type ProbeEntry,
+  type RetentionClass,
+  type RuntimeMutationInventory,
+  buildCoverageMatrix,
+  collectGarbage,
+  compareInventories,
+  contentDigestOf,
+  engineFamilyId,
+  enforceReleaseGates,
+  fixtureManifestProblems,
+  formatCoverageQuestions,
+  formatGcReport,
+  installFixtureFile,
+  isQualifiedProbe,
+  isWildcardSubset,
+  measureCoverage,
+  owningSubsetOf,
+  publishFixtureManifest,
+  readRuntimeInventory,
+  subsetCoordinate,
+  verifyFixture,
+  writeRuntimeInventory,
   markRunComplete,
   planExecution,
   pythonRuntimeImports,
@@ -205,6 +231,109 @@ function selectImplementations(discovered: DiscoveredCase, segments: readonly st
   const requested = index === -1 ? null : segments[index + 1];
   const claimed = Object.keys(discovered.adapters) as Implementation[];
   return requested ? claimed.filter((impl) => impl === requested) : claimed;
+}
+
+/**
+ * 🎛️ The full v2 selector set. Every phase accepts every selector, so a CI shard is expressible at
+ * the exact coordinate a report row is keyed by — never merely at artifact level.
+ */
+type Selectors = Readonly<{
+  artifact: string | null;
+  standard: string | null;
+  subset: string | null;
+  mutation: string | null;
+  outcome: string | null;
+  case: string | null;
+  fixtureClass: string | null;
+  fixtureFamily: string | null;
+  oracle: string | null;
+  probe: string | null;
+  implementation: string | null;
+  platform: string | null;
+  agent: string | null;
+  run: string | null;
+  status: string | null;
+}>;
+
+function readSelectors(segments: readonly string[]): Selectors {
+  const value = (flag: string): string | null => {
+    const index = segments.indexOf(flag);
+    return index === -1 ? null : (segments[index + 1] ?? null);
+  };
+  return {
+    artifact: value("--artifact"),
+    standard: value("--standard"),
+    subset: value("--subset"),
+    mutation: value("--mutation"),
+    outcome: value("--outcome"),
+    case: value("--case"),
+    fixtureClass: value("--fixture-class"),
+    fixtureFamily: value("--fixture-family"),
+    oracle: value("--oracle"),
+    probe: value("--probe"),
+    implementation: value("--implementation"),
+    platform: value("--platform"),
+    agent: value("--agent"),
+    run: value("--run"),
+    status: value("--status"),
+  };
+}
+
+function matchesTarget(manifest: MutationManifest, selectors: Selectors): boolean {
+  return (
+    (selectors.artifact === null || manifest.artifact === selectors.artifact || manifest.artifact.endsWith(`.${selectors.artifact}`)) &&
+    (selectors.standard === null || manifest.standard === selectors.standard) &&
+    (selectors.subset === null || manifest.subset === selectors.subset || manifest.mutations.some((mutation) => mutation.subset === selectors.subset)) &&
+    (selectors.mutation === null || manifest.mutations.some((mutation) => mutation.id === selectors.mutation))
+  );
+}
+
+function matchesFixture(fixture: FixtureManifest, selectors: Selectors): boolean {
+  return (
+    (selectors.artifact === null || fixture.target.artifact === selectors.artifact || fixture.target.artifact.endsWith(`.${selectors.artifact}`)) &&
+    (selectors.standard === null || fixture.target.standard === selectors.standard) &&
+    (selectors.subset === null || fixture.target.subset === selectors.subset) &&
+    (selectors.mutation === null || fixture.mutation === selectors.mutation) &&
+    (selectors.outcome === null || fixture.outcome === selectors.outcome) &&
+    (selectors.fixtureClass === null || fixture.class === selectors.fixtureClass) &&
+    (selectors.fixtureFamily === null || fixture.family === selectors.fixtureFamily)
+  );
+}
+
+function matchesRow(row: CoverageRow, selectors: Selectors): boolean {
+  return (
+    (selectors.artifact === null || row.artifact === selectors.artifact || row.artifact.endsWith(`.${selectors.artifact}`)) &&
+    (selectors.standard === null || row.standard === selectors.standard) &&
+    (selectors.subset === null || row.subset === selectors.subset) &&
+    (selectors.mutation === null || row.mutation === selectors.mutation) &&
+    (selectors.outcome === null || row.outcome === selectors.outcome) &&
+    (selectors.oracle === null || row.oracle === selectors.oracle) &&
+    (selectors.implementation === null || row.implementation === selectors.implementation) &&
+    (selectors.platform === null || row.platform === selectors.platform) &&
+    (selectors.fixtureClass === null || row.fixtureClass === selectors.fixtureClass) &&
+    (selectors.status === null || row.status === selectors.status)
+  );
+}
+
+/**
+ * 🏭️ The language-neutral production mutation bridge an owner exposes. It is a plain executable
+ * beside the owner that answers `listMutations(artifact, standard, subset)` on stdout. Keeping it a
+ * process rather than a linked entry point is what lets one gate cover Rust, TypeScript and every
+ * other implementation without the framework knowing which language an artifact is written in.
+ */
+const MUTATION_BRIDGE_REL = "🏭️bridge/📜️script.ts";
+
+function mutationBridgeFor(repoRoot: string, owner: string, manifest: MutationManifest): { command: string; args: string[] } | null {
+  // 🧭️The bridge is looked up at the owner and then at each ancestor, so a subset inherits the one its
+  // artifact publishes instead of every subset needing its own copy.
+  let candidate = owner;
+  for (;;) {
+    const abs = join(repoRoot, candidate, MUTATION_BRIDGE_REL);
+    if (existsSync(abs)) return { command: "bun", args: [abs, "list-mutations", manifest.artifact, manifest.standard, manifest.subset] };
+    const parent = candidate.split("/").slice(0, -1).join("/");
+    if (parent === "" || parent === candidate) return null;
+    candidate = parent;
+  }
 }
 //#endregion 🎛️Selection
 
@@ -839,6 +968,245 @@ class DoctorScript extends Script {
     if (missing > 0) process.exit(1);
   }
 }
+
+/**
+ * 🏭️ The runtime mutation inventory phase. Runs each owner's PRODUCTION dispatch bridge and records
+ * what it actually offers, so completeness becomes a measurement rather than a claim. This is the
+ * phase v1 had no equivalent of: its mutation audit compared a catalog with checked-in evidence and
+ * never consulted dispatch, so a mutation reachable in production and missing from the catalog left
+ * no trace anywhere.
+ */
+class InventoryScript extends Script {
+  run(segments: string[]): void {
+    const registry = loadOracleRegistry(this.repoRoot);
+    const selectors = readSelectors(segments);
+    const manifests = registry.contributions.flatMap((contribution) => contribution.mutationManifests.map((manifest) => ({ contribution, manifest }))).filter(({ manifest }) => matchesTarget(manifest, selectors));
+    if (manifests.length === 0) {
+      console.error("[inventory] no mutation manifest matches the selection — declare one in the owner's 🧪️oracle contribution");
+      process.exit(1);
+    }
+    let failed = 0;
+    for (const { contribution, manifest } of manifests) {
+      const coordinate = subsetCoordinate({ artifact: manifest.artifact, standard: manifest.standard, subset: manifest.subset });
+      const bridge = mutationBridgeFor(this.repoRoot, contribution.owner, manifest);
+      if (bridge === null) {
+        console.error(`[inventory] ${coordinate}: no production mutation bridge — expected an executable at ${MUTATION_BRIDGE_REL} beside the owner`);
+        failed += 1;
+        continue;
+      }
+      const probe = runProbe(bridge.command, bridge.args, { cwd: this.repoRoot, budgetMs: testLevelBudgetMs("long"), env: { ...process.env, SEMIO_MUTATION_ARTIFACT: manifest.artifact, SEMIO_MUTATION_STANDARD: manifest.standard, SEMIO_MUTATION_SUBSET: manifest.subset } });
+      if ((probe.status ?? 1) !== 0) {
+        console.error(`[inventory] ${coordinate}: bridge exited ${probe.status} — ${probe.stderr.trim().split("\n").slice(-3).join(" | ")}`);
+        failed += 1;
+        continue;
+      }
+      let inventory: RuntimeMutationInventory;
+      try {
+        inventory = JSON.parse(probe.stdout) as RuntimeMutationInventory;
+      } catch (error) {
+        console.error(`[inventory] ${coordinate}: bridge did not emit a runtime inventory (${(error as Error).message})`);
+        failed += 1;
+        continue;
+      }
+      if (inventory.schema !== "semio.repository-test.runtime-inventory/v2") {
+        console.error(`[inventory] ${coordinate}: bridge emitted schema ${JSON.stringify(inventory.schema)}`);
+        failed += 1;
+        continue;
+      }
+      const path = writeRuntimeInventory(this.repoRoot, inventory);
+      const equality = compareInventories(manifest, inventory, []);
+      const drift = equality.runtimeOnly.length + equality.manifestOnly.length + equality.outcomeMismatches.length + equality.variantMismatches.length;
+      console.log(`[inventory] ${coordinate}: ${inventory.mutations.length} runtime mutation(s), ${manifest.mutations.length} declared, ${drift} difference(s) → ${relative(this.repoRoot, path).split(sep).join("/")}`);
+      for (const id of equality.runtimeOnly) console.error(`[inventory] ${coordinate}: runtime-only ${id}`);
+      for (const id of equality.manifestOnly) console.error(`[inventory] ${coordinate}: manifest-only ${id}`);
+      if (drift > 0) failed += 1;
+    }
+    if (failed > 0) process.exit(1);
+  }
+}
+
+/** 🧫️ Fixture generation, reproduction, verification and audit — the four halves of provenance. */
+class FixtureScript extends Script {
+  run(segments: string[]): void {
+    const [subcommand = "verify"] = segments;
+    const registry = loadOracleRegistry(this.repoRoot);
+    const selectors = readSelectors(segments);
+    const fixtures = registry.contributions.flatMap((contribution) => contribution.fixtureManifests).filter((fixture) => matchesFixture(fixture, selectors));
+    switch (subcommand) {
+      case "verify": {
+        let bad = 0;
+        for (const fixture of fixtures) {
+          for (const verification of verifyFixture(this.repoRoot, fixture)) {
+            if (verification.ok) continue;
+            bad += 1;
+            console.error(`[fixture verify] ${fixture.id}/${verification.role}: ${verification.missing ? "missing" : `${verification.actual} ≠ ${verification.expected}`} (${verification.path})`);
+          }
+        }
+        console.log(`[fixture verify] ${fixtures.length} fixture(s), ${bad} file problem(s)`);
+        if (bad > 0) process.exit(1);
+        return;
+      }
+      case "audit": {
+        const rows = fixtures.map((fixture) => ({
+          id: fixture.id,
+          class: fixture.class,
+          target: subsetCoordinate(fixture.target),
+          mutation: fixture.mutation ?? "",
+          outcome: fixture.outcome ?? "",
+          license: fixture.provenance.license,
+          reproducible: fixture.reproducible,
+          generator: fixture.generator?.oracle ?? "",
+          engine: fixture.generator?.engineFamily ?? "",
+          problems: fixtureManifestProblems(fixture),
+        }));
+        if (segments.includes("--json")) {
+          console.log(JSON.stringify(rows, null, 2));
+          return;
+        }
+        for (const row of rows) console.log(`[fixture audit] ${row.class.padEnd(24)} ${row.target} ${row.mutation}/${row.outcome} licence=${row.license} reproducible=${row.reproducible} generator=${row.generator}(${row.engine})${row.problems.length > 0 ? ` PROBLEMS: ${row.problems.join("; ")}` : ""}`);
+        const bad = rows.filter((row) => row.problems.length > 0).length;
+        console.log(`[fixture audit] ${rows.length} fixture(s), ${bad} with contract problems`);
+        if (bad > 0) process.exit(1);
+        return;
+      }
+      case "reproduce": {
+        // 🏭️Reproduction re-runs the RECORDED generator command and compares the bytes it produces with
+        // the committed ones. It never writes into the committed fixture: a "reproduce" that overwrote
+        // its own expectation would pass unconditionally, which is the whole failure mode it guards.
+        let failed = 0;
+        for (const fixture of fixtures.filter((entry) => entry.class === "third-party-generated")) {
+          if (fixture.generator === undefined) {
+            console.error(`[fixture reproduce] ${fixture.id}: no generator record`);
+            failed += 1;
+            continue;
+          }
+          const outDir = join(testCacheDir(this.repoRoot, "work"), "🧫️reproduce", fixture.id);
+          rmSync(outDir, { recursive: true, force: true });
+          mkdirSync(outDir, { recursive: true });
+          const [command = "", ...args] = fixture.generator.command.split(/\s+/);
+          const probe = runProbe(command, args, { cwd: this.repoRoot, budgetMs: testLevelBudgetMs("long"), env: { ...process.env, SEMIO_FIXTURE_OUT: outDir, SEMIO_FIXTURE_SEED: String(fixture.generator.seed ?? "") } });
+          if ((probe.status ?? 1) !== 0) {
+            console.error(`[fixture reproduce] ${fixture.id}: generator exited ${probe.status}`);
+            failed += 1;
+            continue;
+          }
+          for (const file of fixture.files) {
+            const produced = join(outDir, basename(file.path));
+            if (!existsSync(produced)) {
+              console.error(`[fixture reproduce] ${fixture.id}/${file.role}: generator produced no ${basename(file.path)}`);
+              failed += 1;
+              continue;
+            }
+            const actual = contentDigestOf(produced);
+            if (actual !== file.sha256) {
+              console.error(`[fixture reproduce] ${fixture.id}/${file.role}: ${actual} ≠ ${file.sha256}`);
+              failed += 1;
+            }
+          }
+        }
+        console.log(`[fixture reproduce] ${fixtures.filter((entry) => entry.class === "third-party-generated").length} generated fixture(s), ${failed} problem(s)`);
+        if (failed > 0) process.exit(1);
+        return;
+      }
+      case "generate": {
+        // 🏭️Generation and execution are separate operations on purpose: a normal test run must never
+        // be able to rewrite the expectation it is being measured against.
+        let generated = 0;
+        for (const fixture of fixtures.filter((entry) => entry.class === "third-party-generated" && entry.generator !== undefined)) {
+          const outDir = join(testCacheDir(this.repoRoot, "work"), "🧫️generate", fixture.id);
+          mkdirSync(outDir, { recursive: true });
+          const [command = "", ...args] = fixture.generator!.command.split(/\s+/);
+          const probe = runProbe(command, args, { cwd: this.repoRoot, budgetMs: testLevelBudgetMs("long"), env: { ...process.env, SEMIO_FIXTURE_OUT: outDir, SEMIO_FIXTURE_SEED: String(fixture.generator!.seed ?? "") } });
+          if ((probe.status ?? 1) !== 0) {
+            console.error(`[fixture generate] ${fixture.id}: generator exited ${probe.status} — ${probe.stderr.trim().split("\n").slice(-3).join(" | ")}`);
+            continue;
+          }
+          for (const file of fixture.files) {
+            const produced = join(outDir, basename(file.path));
+            if (!existsSync(produced)) continue;
+            installFixtureFile(this.repoRoot, produced);
+          }
+          publishFixtureManifest(this.repoRoot, fixture);
+          generated += 1;
+          console.log(`[fixture generate] ${fixture.id}: ${fixture.files.length} file(s) into the content-addressed store`);
+        }
+        console.log(`[fixture generate] ${generated} fixture bundle(s) generated — commit review is a separate, human step`);
+        return;
+      }
+      default:
+        console.error(`[fixture] unknown subcommand ${JSON.stringify(subcommand)} — expected generate | reproduce | verify | audit`);
+        process.exit(1);
+    }
+  }
+}
+
+/** 🔬️ Lists and qualifies the external measurement probes the comparison pipeline invokes. */
+class ProbeScript extends Script {
+  run(segments: string[]): void {
+    const registry = loadOracleRegistry(this.repoRoot);
+    const selectors = readSelectors(segments);
+    const probes = registry.probes.filter((probe) => selectors.probe === null || probe.id === selectors.probe);
+    if (segments.includes("--json")) {
+      console.log(JSON.stringify(probes, null, 2));
+      return;
+    }
+    for (const probe of probes) {
+      const status = probe.qualification?.status ?? "unqualified";
+      console.log(`[probe] ${probe.id.padEnd(28)} ${probe.kind.padEnd(17)} engine=${engineFamilyId(probe.engine)}@${probe.engine?.version ?? "*"} deterministic=${probe.deterministic} qualification=${status}`);
+      for (const criterion of probe.qualification?.criteria ?? []) console.log(`[probe]   ${criterion.met ? "✔" : "✘"} ${criterion.id}${criterion.detail === undefined ? "" : ` — ${criterion.detail}`}`);
+    }
+    const unqualified = probes.filter((probe) => !isQualifiedProbe(probe));
+    console.log(`[probe] ${probes.length} probe(s), ${unqualified.length} not yet qualified`);
+    for (const probe of unqualified) console.log(`[probe] ${probe.id}: RUNS and REPORTS; no release gate may claim its strongest guarantee until the qualification spike passes`);
+  }
+}
+
+/** 📊️ The full subset-scoped coverage matrix and its release gates. Never an artifact-level aggregate. */
+class MatrixScript extends Script {
+  run(segments: string[]): void {
+    const registry = loadOracleRegistry(this.repoRoot);
+    const selectors = readSelectors(segments);
+    const { results } = readResults(join(reportsDir(this.repoRoot), "📤️results.jsonl"));
+    const baselineSha = process.env.SEMIO_BASELINE_SHA ?? "";
+    const rows = buildCoverageMatrix(this.repoRoot, registry, results, baselineSha).filter((row) => matchesRow(row, selectors));
+    const inventories = registry.mutationManifests.map((manifest) => readRuntimeInventory(this.repoRoot, manifest)).filter((inventory): inventory is RuntimeMutationInventory => inventory !== null);
+    const measurements = measureCoverage(registry, rows, results, inventories);
+    if (segments.includes("--json")) {
+      console.log(JSON.stringify({ baselineSha, rows, measurements }, null, 2));
+      return;
+    }
+    for (const measurement of measurements) console.log(`[matrix] ${measurement.dimension.padEnd(32)} ${(measurement.ratio * 100).toFixed(2).padStart(6)}%  ${measurement.covered}/${measurement.total}`);
+    console.log(formatCoverageQuestions(registry, rows, measurements));
+    if (!segments.includes("--enforce")) return;
+    const wildcardOwners = registry.mutationManifests.flatMap((manifest) => manifest.mutations.filter((mutation) => isWildcardSubset(owningSubsetOf(manifest, mutation)))).length;
+    const deferred = registry.mutationCatalogs.reduce((total, catalog) => total + (catalog.deferredKinds ?? []).length, 0);
+    const unregistered = measurements.find((measurement) => measurement.dimension === "runtimeMutationCoverage")?.missing.length ?? 0;
+    const failures = enforceReleaseGates(measurements, { deferredMutations: deferred, skipped: 0, wildcardOwners, unregisteredRuntimeMutations: unregistered });
+    for (const failure of failures) console.error(`[matrix] ${failure}`);
+    if (failures.length > 0) process.exit(1);
+  }
+}
+
+/** 🧹️ Mark-and-sweep over the fixture store and the run directories. Dry by default, everywhere. */
+class GcScript extends Script {
+  run(segments: string[]): void {
+    const registry = loadOracleRegistry(this.repoRoot);
+    const value = (flag: string): string | null => {
+      const index = segments.indexOf(flag);
+      return index === -1 ? null : (segments[index + 1] ?? null);
+    };
+    const olderThan = value("--older-than");
+    const overSize = value("--over-size");
+    const report = collectGarbage(this.repoRoot, registry, {
+      dry: !segments.includes("--apply"),
+      olderThanMs: olderThan === null ? undefined : Number(olderThan) * 1000,
+      overBytes: overSize === null ? undefined : Number(overSize),
+      agent: value("--agent") ?? undefined,
+      retention: value("--retention") === null ? undefined : [value("--retention") as RetentionClass],
+    });
+    console.log(formatGcReport(report));
+  }
+}
 //#endregion 🧭️Commands
 
 //#region 🧹️Policy
@@ -873,7 +1241,12 @@ const router = new ScriptRouter(import.meta.dir)
   .register("dependency", DependencyScript)
   .register("metrics", MetricsScript)
   .register("nx", NxScript)
-  .register("doctor", DoctorScript);
+  .register("doctor", DoctorScript)
+  .register("inventory", InventoryScript)
+  .register("fixture", FixtureScript)
+  .register("probe", ProbeScript)
+  .register("matrix", MatrixScript)
+  .register("gc", GcScript);
 
 await runBundleScriptMain(router, import.meta.url);
 //#endregion 🚪️Entry

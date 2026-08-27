@@ -500,7 +500,7 @@ pub fn round_trip_remodel_dsl(text: &str) -> Result<String, String> {
 
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every `RemodelMutation` variant, in declaration order — the vocabulary
-/// the `remodel-1-any` catalog (`../../🧪️oracle/🔣️component.json`) declares and the
+/// the `remodel-1-any` catalog (`../../🧪️oracle/🔣️.json`) declares and the
 /// `mutate-remodel-1` exhaustive case measures itself against. The order groups the three families:
 /// id-keyed create/delete/change over the five referential pools, then the eight `update-*-params`
 /// whole-record replacements, then the engine-owned `replace-*` results, and finally the atomic
@@ -562,7 +562,7 @@ mod kinds_catalog_tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed remodel-1-any catalog");
         }

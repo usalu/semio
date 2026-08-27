@@ -14,7 +14,7 @@
 //! `PptxDiff::xml_parts`, which the diff type carries as a whole-collection replacement rather than
 //! a keyed triple) and touches `opc` only for `[Content_Types].xml` and the relationship table.
 //!
-//! @see ../../🧪️oracle/🔣️component.json — the mutation catalog `KINDS` is measured against.
+//! @see ../../🧪️oracle/🔣️.json — the mutation catalog `KINDS` is measured against.
 //! @see ../🦀️component.rs — this subset's conformance check, one axis per variant below.
 
 use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::diff::{NamedModified, NamedTripleDiff, PptxDiff, PptxOpcContentTypesDiff, PptxOpcCtEntriesDiff, PptxOpcDiff, PptxOpcRelDiff, PptxOpcRelListDiff, PptxOpcRelationshipsDiff};
@@ -82,7 +82,7 @@ pub enum PptxTransitionalMutation {
 }
 
 /// 🧾️ Kebab-case spelling of every `PptxTransitionalMutation` variant, in declaration order — the exhaustive
-/// mutation catalog `pptx-ecma-376-transitional` (`../../🧪️oracle/🔣️component.json`) is measured against
+/// mutation catalog `pptx-ecma-376-transitional` (`../../🧪️oracle/🔣️.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-main-namespace", "set-drawing-namespace", "set-relationship-base", "set-conformance-attribute", "remove-conformance-attribute"];
 //#endregion 🔖️Mutations
@@ -351,7 +351,7 @@ mod tests {
         let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
         assert_eq!(from_enum, KINDS, "KINDS must list every PptxTransitionalMutation variant, in declaration order");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         let needle = "\"kinds\": [";
         let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
         let end = start + manifest[start..].find(']').expect("kinds array is closed");

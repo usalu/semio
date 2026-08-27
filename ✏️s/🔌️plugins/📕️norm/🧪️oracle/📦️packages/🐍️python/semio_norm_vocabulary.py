@@ -47,7 +47,7 @@ cannot describe, and this module REFUSES them rather than guessing; that refusal
 finding about the specification, not a defect to be tuned away.
 
 🔗 Reached by the fifteen adapters through the `oracleHostPackage` this plugin's
-`🧪️oracle/🔣️component.json` declares, which puts this directory on the generated host's import path.
+`🧪️oracle/🔣️.json` declares, which puts this directory on the generated host's import path.
 """
 
 

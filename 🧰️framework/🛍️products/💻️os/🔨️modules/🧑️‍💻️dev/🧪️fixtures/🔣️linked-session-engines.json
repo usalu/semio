@@ -1,0 +1,8 @@
+{
+  "valid": [
+    { "declarations": [], "engines": [] },
+    { "declarations": [{ "module": "@owner/board", "engine": "./owner/🧩️board" }], "engines": ["./owner/🧩️board"] },
+    { "declarations": [{ "module": "@owner/editor", "engine": "./owner/board" }, { "module": "@owner/viewer", "engine": "./owner/board" }], "engines": ["./owner/board"] }
+  ],
+  "invalid": [null, {}, [{ "module": "@owner/board", "engine": "../outside" }], [{ "module": "@owner/board", "engine": "./owner/../outside" }], [{ "module": "@owner/board", "engine": "/root" }], [{ "module": "@owner/board", "engine": "./owner", "fallback": true }]]
+}

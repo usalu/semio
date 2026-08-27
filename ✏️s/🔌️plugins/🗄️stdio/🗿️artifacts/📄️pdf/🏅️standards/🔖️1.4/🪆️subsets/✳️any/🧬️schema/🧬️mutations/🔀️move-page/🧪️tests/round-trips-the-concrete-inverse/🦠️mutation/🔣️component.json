@@ -1,0 +1,7 @@
+{
+  "mutation": "move-page",
+  "payload": {
+    "from": 0,
+    "to": 1
+  }
+}

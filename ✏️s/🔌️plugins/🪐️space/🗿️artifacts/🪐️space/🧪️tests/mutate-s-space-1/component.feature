@@ -6,7 +6,7 @@ Feature: Apply every typed s.space.space index mutation to its committed specifi
 
   `s.space.space` is a semio-NATIVE artifact — no third party reads `.sspace.dsl.semio` — so no
   reference library is registered, recorded as the `s-space-index-mutation-semantics` no-oracle
-  decision in `🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, which also records why
+  decision in `🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, which also records why
   generic table readers and content-addressed store crates were surveyed and DECLINED rather than
   merely absent.
 

@@ -78,7 +78,7 @@ The existing taxonomy contracts provide every identity needed for deterministic 
 | `standard-subset-v1` | Forward-only profile renderer `🪆️{standardVersion}-{subsetId}`. |
 | `mutation-catalog-vectors-v1` | Required physical source mutation name, canonical mutation name, and canonical scenario identity. |
 | `mutation-scenario-bundle-v1` | Exact 13-node descendant shape and 42-byte longest canonical descendant reserve. |
-| 144 `🧪️oracle/🔣️component.json` catalogs | Owner-local source/canonical identities for all 1,555 physical bundles. |
+| 144 `🧪️oracle/🔣️.json` catalogs | Owner-local source/canonical identities for all 1,555 physical bundles. |
 
 The existing strict catalog audit reports:
 

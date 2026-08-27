@@ -115,7 +115,7 @@ impl Default for SemioValueMutation {
 }
 
 /// 🏷️ Kebab-case spelling of every `SemioValueMutation` variant, in declaration order — the
-/// vocabulary the `semio-v1-value` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// vocabulary the `semio-v1-value` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and
 /// `mutate-semio-value`'s exhaustive test case measures itself against. This enum is hand-rolled
 /// (no `#[derive(dsl::Mutations)]`, so there is no generated `kinds()` to read), which is why
 /// `kinds_match_the_enum_and_the_catalog` below pins the list with a WILDCARD-FREE match: adding a
@@ -813,7 +813,7 @@ mod tests {
         for (kind, mutation) in KINDS.iter().zip(one_per_variant.iter()) {
             assert_eq!(*kind, kind_of(mutation), "KINDS must follow the enum's own declaration order and kebab-case spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

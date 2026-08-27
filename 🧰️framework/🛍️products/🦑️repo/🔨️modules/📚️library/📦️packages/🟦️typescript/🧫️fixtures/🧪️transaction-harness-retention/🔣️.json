@@ -1,16 +1,31 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "launcherPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
   "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️transaction-v2/🟦️.test.ts",
   "absoluteBundleExpression": "bundle",
   "runIdExpression": "runId",
   "runIdEntropyCall": "crypto.randomUUID()",
+  "bundleRootFunction": "transactionV2BundleRoot",
+  "runOwnerPath": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️transaction-v2-current-readiness/🧾️runs",
+  "runRootPrefix": "🔖️",
+  "bundleDirectory": "📦️bundle",
+  "runRootEnvironment": "SEMIO_TRANSACTION_V2_RUN_ROOT",
+  "runRootValidator": "assertFixtureRunRoot",
+  "runIdPattern": "^[1-9][0-9]*-([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$",
+  "invalidRunIds": ["", "0-00000000-0000-4000-8000-000000000000", "1-../escape", "1-00000000-0000-1000-8000-000000000000", "1-00000000-0000-4000-C000-000000000000"],
+  "rejections": ["invalid-id", "relative-root", "cross-run-root", "root-symlink", "ancestor-symlink", "root-file", "occupied-run", "fixture-cross-run", "fixture-symlink"],
+  "shards": [
+    { "filter": "process-tree-killed|language-neutral|incomplete plans|rolls back after-regenerations|rejects stale generator|parent-killed transaction-attempt-canonical-published$", "tests": 6, "boundaries": 6 },
+    { "filter": "rolls back after-(?:staging|embedded-root-staging|moves|relocations|symlink-retargeting|edits)|rolls back before-verify|parent-killed transaction-(?:attempt-preparation-(?:mkdir|children)|initial)", "tests": 18, "boundaries": 29 },
+    { "filter": "parent-killed transaction-(?:journal|wal|backup|edit)|rejects forged|rejects unreachable", "tests": 19, "boundaries": 34 },
+    { "filter": "parent-killed transaction-(?:restore|lease)|keeps double-plan|recovers caught|committed and rolled-back|elects exactly|restores a quarantined|rejects stale (?!generator)|rejects ordinal", "tests": 19, "boundaries": 29 }
+  ],
   "retentionFunction": "retainFixture",
-  "fixturePrefix": "🧪️s-transaction-v2-",
+  "fixturePrefix": "🧪️",
   "cases": [
-    { "name": "🧪️s-transaction-v2-retained", "parent": "ticket", "accepted": true },
-    { "name": "unowned", "parent": "ticket", "accepted": false },
-    { "name": "🧪️s-transaction-v2-outside", "parent": "outside", "accepted": false },
-    { "name": "🧪️s-transaction-v2-nested", "parent": "nested", "accepted": false }
+    { "name": "🧪️retained", "parent": "run", "accepted": true },
+    { "name": "unowned", "parent": "run", "accepted": false },
+    { "name": "🧪️outside", "parent": "ticket", "accepted": false },
+    { "name": "🧪️nested", "parent": "nested", "accepted": false }
   ]
 }

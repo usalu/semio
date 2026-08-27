@@ -44,21 +44,37 @@ type Scenario struct {
 	Steps []Step `json:"steps"`
 }
 
+// SubsetTarget is the smallest owning subset a case is scoped to. A case with no target is
+// UNSCOPED, and Protocol v2 reports that rather than letting a host widen itself to the artifact.
+type SubsetTarget struct {
+	Artifact string `json:"artifact"`
+	Standard string `json:"standard"`
+	Subset   string `json:"subset"`
+}
+
 // Plan is the owned execution plan one host receives.
 type Plan struct {
-	Owner          string     `json:"owner"`
-	Case           string     `json:"case"`
-	Capability     string     `json:"capability"`
-	Comparison     string     `json:"comparison"`
-	FeatureHash    string     `json:"featureHash"`
-	Level          string     `json:"level"`
-	Role           string     `json:"role"`
-	Implementation string     `json:"implementation"`
-	WorkDir        string     `json:"workDir"`
-	OutputDir      string     `json:"outputDir"`
-	ResultsPath    string     `json:"resultsPath"`
-	Fixtures       []Fixture  `json:"fixtures"`
-	Scenarios      []Scenario `json:"scenarios"`
+	SchemaVersion         int           `json:"schemaVersion"`
+	BaselineSha           string        `json:"baselineSha"`
+	Owner                 string        `json:"owner"`
+	Case                  string        `json:"case"`
+	Capability            string        `json:"capability"`
+	Comparison            string        `json:"comparison"`
+	ComparisonPipeline    string        `json:"comparisonPipeline"`
+	ToleranceProfile      string        `json:"toleranceProfile"`
+	Target                *SubsetTarget `json:"target"`
+	MutationManifestDiges string        `json:"mutationManifestDigest"`
+	FeatureHash           string        `json:"featureHash"`
+	Level                 string        `json:"level"`
+	Role                  string        `json:"role"`
+	Implementation        string        `json:"implementation"`
+	Platform              string        `json:"platform"`
+	WorkDir               string        `json:"workDir"`
+	OutputDir             string        `json:"outputDir"`
+	ArtifactDir           string        `json:"artifactDir"`
+	ResultsPath           string        `json:"resultsPath"`
+	Fixtures              []Fixture     `json:"fixtures"`
+	Scenarios             []Scenario    `json:"scenarios"`
 }
 
 // Diagnostic is one message attached to a result.
@@ -77,21 +93,44 @@ type Output struct {
 	Projection     any    `json:"projection"`
 }
 
+// ResultArtifact is one file a host produced, addressed by ROLE so no comparison stage names a path.
+type ResultArtifact struct {
+	Role      string `json:"role"`
+	Path      string `json:"path"`
+	MediaType string `json:"mediaType"`
+	Sha256    string `json:"sha256"`
+	Bytes     int64  `json:"bytes"`
+}
+
+// ProductionDispatch is proof a SUBJECT handler reached production dispatch. Its ABSENCE is how a
+// vector-replay adapter is detected — a replayed expectation and a computed one are otherwise
+// indistinguishable on the wire.
+type ProductionDispatch struct {
+	Invoked       bool   `json:"invoked"`
+	Operation     string `json:"operation"`
+	BridgeVersion int    `json:"bridgeVersion"`
+}
+
 // Result is the single record shape every native host emits, one per (scenario, implementation, role).
 type Result struct {
-	TestID         string       `json:"testId"`
-	Owner          string       `json:"owner"`
-	Case           string       `json:"case"`
-	Scenario       string       `json:"scenario"`
-	Implementation string       `json:"implementation"`
-	Role           string       `json:"role"`
-	Level          string       `json:"level"`
-	Status         string       `json:"status"`
-	DurationMs     float64      `json:"durationMs"`
-	Seed           string       `json:"seed,omitempty"`
-	FeatureHash    string       `json:"featureHash,omitempty"`
-	Output         Output       `json:"output"`
-	Diagnostics    []Diagnostic `json:"diagnostics"`
+	SchemaVersion      int                 `json:"schemaVersion"`
+	TestID             string              `json:"testId"`
+	BaselineSha        string              `json:"baselineSha,omitempty"`
+	Owner              string              `json:"owner"`
+	Case               string              `json:"case"`
+	Scenario           string              `json:"scenario"`
+	Implementation     string              `json:"implementation"`
+	Role               string              `json:"role"`
+	Level              string              `json:"level"`
+	Platform           string              `json:"platform,omitempty"`
+	Status             string              `json:"status"`
+	DurationMs         float64             `json:"durationMs"`
+	Seed               string              `json:"seed,omitempty"`
+	FeatureHash        string              `json:"featureHash,omitempty"`
+	Artifacts          []ResultArtifact    `json:"artifacts"`
+	ProductionDispatch *ProductionDispatch `json:"productionDispatch,omitempty"`
+	Output             Output              `json:"output"`
+	Diagnostics        []Diagnostic        `json:"diagnostics"`
 }
 
 //#endregion 🔖️Protocol
@@ -104,17 +143,47 @@ func Digest(input []byte) string {
 	return hex.EncodeToString(sum[:])[:32]
 }
 
+// ContentDigest is the FULL "sha256:<64 hex>" content address of a produced file. Protocol v2
+// addresses fixture blobs and result artifacts by content, and a truncated digest is not a content
+// address — the store's whole safety argument is that a blob's name IS its content.
+func ContentDigest(path string) (string, int64, error) {
+	bytes, err := os.ReadFile(path)
+	if err != nil {
+		return "", 0, err
+	}
+	sum := sha256.Sum256(bytes)
+	return "sha256:" + hex.EncodeToString(sum[:]), int64(len(bytes)), nil
+}
+
 //#endregion 🔖️Digest
 
 //#region 🔖️Adapter
 
 // Context is everything one scenario handler is given.
 type Context struct {
-	Plan     *Plan
-	Scenario *Scenario
-	Role     string
-	RepoRoot string
-	WorkDir  string
+	Plan        *Plan
+	Scenario    *Scenario
+	Role        string
+	RepoRoot    string
+	WorkDir     string
+	ArtifactDir string
+}
+
+// Artifact is the absolute path this handler writes one named result artifact to, creating parents.
+func (c *Context) Artifact(role string, filename string) (string, error) {
+	dir := filepath.Join(c.ArtifactDir, role)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, filename), nil
+}
+
+// Target is the smallest owning subset this case is scoped to; a handler must not invent one.
+func (c *Context) Target() (*SubsetTarget, error) {
+	if c.Plan.Target == nil {
+		return nil, fmt.Errorf("case %s declares no subset target — Protocol v2 scopes every mutation case to its smallest owning subset", c.Plan.Case)
+	}
+	return c.Plan.Target, nil
 }
 
 // Fixture resolves a declared fixture URI to an absolute path; an undeclared URI is an error.
@@ -159,11 +228,25 @@ func (c *Context) Seed() int64 {
 	return value
 }
 
-// Outcome is what a scenario handler returns: the raw artifact and the compared projection.
+// Outcome is what a scenario handler returns: an artifact BUNDLE plus the compared projection.
 type Outcome struct {
-	Raw         []byte
-	Projection  any
-	Diagnostics []Diagnostic
+	Raw                []byte
+	Projection         any
+	Artifacts          []ResultArtifact
+	ProductionDispatch *ProductionDispatch
+	Diagnostics        []Diagnostic
+}
+
+// Artifact adds one produced file to the bundle under its role.
+func (o Outcome) Artifact(role string, path string, mediaType string) Outcome {
+	o.Artifacts = append(o.Artifacts, ResultArtifact{Role: role, Path: path, MediaType: mediaType})
+	return o
+}
+
+// Dispatched records that this outcome came out of PRODUCTION dispatch, not a committed vector.
+func (o Outcome) Dispatched(operation string, bridgeVersion int) Outcome {
+	o.ProductionDispatch = &ProductionDispatch{Invoked: true, Operation: operation, BridgeVersion: bridgeVersion}
+	return o
 }
 
 // Handler runs one scenario in one role.
@@ -253,15 +336,19 @@ func RunMain(adapter *Adapter) {
 		scenario := &plan.Scenarios[index]
 		started := time.Now()
 		result := Result{
+			SchemaVersion:  2,
 			TestID:         fmt.Sprintf("%s::%s::%s::%s::%s", plan.Owner, plan.Case, scenario.ID, plan.Implementation, plan.Role),
+			BaselineSha:    plan.BaselineSha,
 			Owner:          plan.Owner,
 			Case:           plan.Case,
 			Scenario:       scenario.ID,
 			Implementation: plan.Implementation,
 			Role:           plan.Role,
 			Level:          scenario.Level,
+			Platform:       plan.Platform,
 			Seed:           scenario.Seed,
 			FeatureHash:    plan.FeatureHash,
+			Artifacts:      []ResultArtifact{},
 			Diagnostics:    []Diagnostic{},
 		}
 		handler, registered := adapter.handlers[scenario.ID+"::"+plan.Role]
@@ -271,7 +358,12 @@ func RunMain(adapter *Adapter) {
 			result.Output = Output{RawHash: Digest(nil), ProjectionHash: Digest(nil)}
 			result.Diagnostics = append(result.Diagnostics, Diagnostic{Severity: "error", Message: fmt.Sprintf("adapter has no %s registration for scenario %s", plan.Role, scenario.ID)})
 		} else {
-			outcome, runErr := handler(&Context{Plan: &plan, Scenario: scenario, Role: plan.Role, RepoRoot: repoRoot, WorkDir: plan.WorkDir})
+			artifactDir := plan.ArtifactDir
+			if artifactDir == "" {
+				artifactDir = filepath.Join(plan.WorkDir, "📦️artifacts")
+			}
+			_ = os.MkdirAll(artifactDir, 0o755)
+			outcome, runErr := handler(&Context{Plan: &plan, Scenario: scenario, Role: plan.Role, RepoRoot: repoRoot, WorkDir: plan.WorkDir, ArtifactDir: artifactDir})
 			if runErr != nil {
 				failed = true
 				result.Status = "failed"
@@ -289,6 +381,21 @@ func RunMain(adapter *Adapter) {
 				projectionPath := filepath.Join(plan.OutputDir, scenario.ID+"."+plan.Role+".projection.json")
 				_ = os.WriteFile(projectionPath, projectionBytes, 0o644)
 				result.Output.ProjectionPath = projectionPath
+				// 📦️Every produced file is re-hashed HERE rather than trusted from the handler: the
+				// digest a comparison stage keys on must describe the bytes that reached disk.
+				for _, artifact := range outcome.Artifacts {
+					sum, size, hashErr := ContentDigest(artifact.Path)
+					if hashErr != nil {
+						failed = true
+						result.Status = "errored"
+						result.Diagnostics = append(result.Diagnostics, Diagnostic{Severity: "error", Message: fmt.Sprintf("artifact %s (%s) cannot be read back: %v", artifact.Role, artifact.Path, hashErr)})
+						continue
+					}
+					artifact.Sha256 = sum
+					artifact.Bytes = size
+					result.Artifacts = append(result.Artifacts, artifact)
+				}
+				result.ProductionDispatch = outcome.ProductionDispatch
 				if outcome.Diagnostics != nil {
 					result.Diagnostics = outcome.Diagnostics
 				}

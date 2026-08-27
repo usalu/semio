@@ -1,10 +1,35 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/repo-lib` router: `bun ./📜️script.ts <lint|test [level]|workspaces <--write|--check>>`. */
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { spawn, spawnSync } from "node:child_process";
-import { join, relative } from "node:path";
+import { dirname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
 import { tmpdir } from "node:os";
 import { BundleScript, ScriptRouter, computeWorkspaces, runBundleScriptMain, runBunx, resolveTestLevel, runTestBudgeted } from "./📦️index.ts";
+
+/** 🧫️ Allocates one exclusive no-follow semantic run owner and its bundle directory. */
+export function transactionV2BundleRoot(repoRoot: string, runId: string): string {
+  const identity = /^[1-9][0-9]*-([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/u.exec(runId);
+  if (!identity || !isAbsolute(repoRoot) || resolve(repoRoot) !== repoRoot) throw new Error("Invalid transaction run allocation identity");
+  const ticket = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
+  const report = join(ticket, "📓️transaction-v2-current-readiness"), owner = join(report, "🧾️runs");
+  let path = parse(owner).root;
+  for (const part of relative(path, owner).split(sep)) {
+    path = join(path, part);
+    let stat;
+    try { stat = lstatSync(path); }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT" || path !== report && path !== owner) throw error;
+      mkdirSync(path);
+      stat = lstatSync(path);
+    }
+    if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error("Transaction run ancestor must be a no-follow directory: " + path);
+  }
+  const root = join(owner, "🔖️" + identity[1]);
+  mkdirSync(root);
+  const bundle = join(root, "📦️bundle");
+  mkdirSync(bundle);
+  return bundle;
+}
 
 class LintScript extends BundleScript {
   run(): void {
@@ -14,12 +39,81 @@ class LintScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "artifact-support") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️artifact-support-leaf-authority/🟦️.test.ts");
+      const { rest } = resolveTestLevel(segments.slice(1));
+      await runTestBudgeted(process.execPath, ["test", source, ...rest], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "historical-package-owner-identity") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️historical-package-owner-identity/🟦️.test.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "cargo-provider-binding-trace") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️cargo-provider-binding/🟦️.test.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "metadata-source-provider") {
+      const { rest } = resolveTestLevel(segments.slice(1));
+      await runTestBudgeted(process.execPath, ["test", "./🧪️index.test.ts", "-t", "mutation metadata source provider", ...rest], { cwd: this.root });
+      return;
+    }
+    if (segments[0] === "rust-physical-reference-context") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-physical-reference-context/🟦️.test.ts");
+      const { rest } = resolveTestLevel(segments.slice(1));
+      await runTestBudgeted(process.execPath, ["test", source, ...rest], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "taxonomy-cli-cancellation") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️taxonomy-cli-cancellation/🟦️.test.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "inventory-artifact-shards") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️inventory-artifact-shards/🟦️.test.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "root-script-compiler") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️root-script-compiler/🟦️.test.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "json-reference-owner-lookup") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️json-reference-owner-lookup/🟦️.test.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "cargo-discovery-exclusions") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️cargo-discovery-exclusions/🟦️.test.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "nested-cargo-collision-authority") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️nested-cargo-collision-authority/🟦️.test.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "registry-import-language") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️registry-import-language/🟦️.test.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
     if (segments[0] === "transaction-v2") {
+      const invocationStartedAt = performance.now(), startedAt = new Date().toISOString();
       const runId = `${process.pid}-${crypto.randomUUID()}`;
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️transaction-v2/🟦️.test.ts");
-      const bundleRoot = join(this.repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️transaction-v2-bundle");
+      const bundleRoot = transactionV2BundleRoot(this.repoRoot, runId), runRoot = dirname(bundleRoot);
+      console.error(`[DEBUG] Transaction v2 run owner ${runRoot}`);
       const bundle = join(bundleRoot, "🟦️.test.js");
       const normalizationSource = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts");
+      const identityPaths = { router: join(this.root, "📜️script.ts"), test: source, normalization: normalizationSource, discovery: join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts"), schema: join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), golden: join(this.root, "🧫️fixtures/🧪️transaction-dispositions/🔣️.json"), harness: join(this.root, "🧫️fixtures/🧪️transaction-harness-retention/🔣️.json") };
+      const identities = () => Object.fromEntries(Object.entries(identityPaths).map(([key, path]) => { const bytes = readFileSync(path); return [key, { path, bytes: bytes.length, sha256: new Bun.CryptoHasher("sha256").update(bytes).digest("hex") }]; }));
+      const retainRecord = (kind: string, value: unknown): void => { const root = join(runRoot, kind); mkdirSync(root); writeFileSync(join(root, "🔣️.json"), `${JSON.stringify(value, null, 2)}\n`, { flag: "wx" }); };
+      const beforeIdentities = identities();
+      retainRecord("📷️before", { schemaVersion: 1, runId, runRoot, startedAt, inputs: beforeIdentities });
       const normalizationBundleRoot = join(bundleRoot, "🧹️normalization"), normalizationBundle = join(normalizationBundleRoot, "🟦️.js");
       const schemaSnapshot = join(bundleRoot, "🔣️.json");
       mkdirSync(bundleRoot, { recursive: true });
@@ -30,8 +124,8 @@ class TestScript extends BundleScript {
       const normalizationBuilt = await Bun.build({ entrypoints: [normalizationSource], outdir: normalizationBundleRoot, naming: "🟦️.js", target: "bun", packages: "external" });
       if (!normalizationBuilt.success) throw new AggregateError(normalizationBuilt.logs, "Transaction v2 normalization child bundle failed");
       const defaultFilterWaves = [[
-        "process-tree-killed|language-neutral|incomplete plans|rolls back after-regenerations|rejects stale generator",
-        "rolls back after-(?:staging|embedded-root-staging|moves|relocations|symlink-retargeting|edits)|rolls back before-verify|parent-killed transaction-(?:attempt|initial)",
+        "process-tree-killed|language-neutral|incomplete plans|rolls back after-regenerations|rejects stale generator|parent-killed transaction-attempt-canonical-published$",
+        "rolls back after-(?:staging|embedded-root-staging|moves|relocations|symlink-retargeting|edits)|rolls back before-verify|parent-killed transaction-(?:attempt-preparation-(?:mkdir|children)|initial)",
         "parent-killed transaction-(?:journal|wal|backup|edit)|rejects forged|rejects unreachable",
         "parent-killed transaction-(?:restore|lease)|keeps double-plan|recovers caught|committed and rolled-back|elects exactly|restores a quarantined|rejects stale (?!generator)|rejects ordinal",
       ]];
@@ -47,6 +141,7 @@ class TestScript extends BundleScript {
       writeFileSync(boundaryRegistry, "");
       const children: ReturnType<typeof spawn>[] = [];
       const childOutcomes = new Map<ReturnType<typeof spawn>, Promise<void>>();
+      const closedStreams: Promise<void>[] = [], shardOutcomes: { ordinal: number; filter: string; concurrency: number; milliseconds: number; code: number | null; signal: NodeJS.Signals | null }[] = [];
       const killTree = (pid: number): void => {
         if (process.platform === "win32") { spawnSync("taskkill", ["/pid", String(pid), "/t", "/f"], { stdio: "ignore" }); return; }
         try { process.kill(-pid, "SIGKILL"); }
@@ -61,13 +156,20 @@ class TestScript extends BundleScript {
         for (const child of children) if (child.pid && child.exitCode === null && child.signalCode === null) killTree(child.pid);
         for (const pid of registeredPids()) killTree(pid);
       };
+      process.stdout.on("error", stop);
+      process.stderr.on("error", stop);
       const spawnFilter = (filter: string): ReturnType<typeof spawn> => {
         const concurrency = filter.includes("process-tree-killed") ? 5 : 6;
-        const startedAt = performance.now(), child = spawn(process.execPath, ["test", `--max-concurrency=${concurrency}`, bundle, "-t", filter], { cwd: this.repoRoot, detached: process.platform !== "win32", env: { ...process.env, NX_DAEMON: "false", SEMIO_TRANSACTION_V2_BOUNDARY_REGISTRY: boundaryRegistry, SEMIO_TRANSACTION_V2_MODULE: normalizationBundle, SEMIO_TRANSACTION_V2_SCHEMA: schemaSnapshot, SEMIO_TRANSACTION_V2_PID_REGISTRY: registry, SEMIO_TRANSACTION_V2_RUN_ID: runId }, stdio: "inherit" });
+        const outputRoot = join(runRoot, "📓️shards", `🔢️${children.length + 1}`);
+        const streams = ["stdout", "stderr"].map((kind) => { const root = join(outputRoot, kind); mkdirSync(root, { recursive: true }); const path = join(root, "🔤️.txt"); writeFileSync(path, "", { flag: "wx" }); return path; });
+        const startedAt = performance.now(), child = spawn(process.execPath, ["test", `--max-concurrency=${concurrency}`, bundle, "-t", filter], { cwd: this.repoRoot, detached: process.platform !== "win32", env: { ...process.env, NX_DAEMON: "false", SEMIO_TRANSACTION_V2_BOUNDARY_REGISTRY: boundaryRegistry, SEMIO_TRANSACTION_V2_MODULE: normalizationBundle, SEMIO_TRANSACTION_V2_SCHEMA: schemaSnapshot, SEMIO_TRANSACTION_V2_PID_REGISTRY: registry, SEMIO_TRANSACTION_V2_RUN_ID: runId, SEMIO_TRANSACTION_V2_RUN_ROOT: runRoot }, stdio: ["ignore", "pipe", "pipe"] });
+        child.stdout!.on("data", (bytes) => { try { appendFileSync(streams[0]!, bytes); process.stdout.write(bytes); } catch (error) { stop(error instanceof Error ? error : new Error(String(error))); } });
+        child.stderr!.on("data", (bytes) => { try { appendFileSync(streams[1]!, bytes); process.stderr.write(bytes); } catch (error) { stop(error instanceof Error ? error : new Error(String(error))); } });
+        closedStreams.push(new Promise((resolveClose) => child.once("close", () => resolveClose())));
         const ordinal = children.push(child);
         childOutcomes.set(child, new Promise<void>((resolveExit) => {
           child.once("error", (error) => { stop(error); resolveExit(); });
-          child.once("exit", (code, signal) => { console.error(`[DEBUG] Transaction v2 shard ${ordinal} finished in ${((performance.now() - startedAt) / 1_000).toFixed(2)}s`); if (code !== 0 || signal) stop(new Error(`Transaction v2 shard ${ordinal} failed with ${signal ?? code}`)); resolveExit(); });
+          child.once("exit", (code, signal) => { const milliseconds = performance.now() - startedAt; shardOutcomes.push({ ordinal, filter, concurrency, milliseconds, code, signal }); console.error(`[DEBUG] Transaction v2 shard ${ordinal} finished in ${(milliseconds / 1_000).toFixed(2)}s`); if (code !== 0 || signal) stop(new Error(`Transaction v2 shard ${ordinal} failed with ${signal ?? code}`)); resolveExit(); });
         }));
         return child;
       };
@@ -84,16 +186,20 @@ class TestScript extends BundleScript {
           if (stopped) break;
         }
       } finally { clearTimeout(timer); }
+      await Promise.all(closedStreams);
+      process.stdout.off("error", stop);
+      process.stderr.off("error", stop);
       for (const pid of registeredPids()) {
         try { process.kill(pid, 0); killTree(pid); failure ??= new Error(`Transaction v2 aggregate left child ${pid} alive`); }
         catch (error) { if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error; }
       }
+      const golden = JSON.parse(readFileSync(identityPaths.golden, "utf8")) as { boundaries: Record<string, unknown> };
+      const expected = Object.keys(golden.boundaries).sort(), actual = readFileSync(boundaryRegistry, "utf8").split("\n").filter(Boolean).sort();
+      if (!failure && segments.length === 1 && JSON.stringify(actual) !== JSON.stringify(expected)) failure = new Error(`Transaction v2 boundary coverage is not exact: ${actual.length}/${expected.length}`);
+      const afterIdentities = identities();
+      retainRecord("📷️after", { schemaVersion: 1, runId, inputs: afterIdentities });
+      retainRecord("📊️outcome", { schemaVersion: 1, runId, runRoot, startedAt, finishedAt: new Date().toISOString(), milliseconds: performance.now() - invocationStartedAt, unfiltered: segments.length === 1, unchangedInputs: JSON.stringify(beforeIdentities) === JSON.stringify(afterIdentities), failure: failure?.message ?? null, shards: shardOutcomes.sort((left, right) => left.ordinal - right.ordinal), expectedBoundaryCount: expected.length, actualBoundaryCount: actual.length, missingBoundaries: expected.filter((key) => !actual.includes(key)), extraBoundaries: actual.filter((key) => !expected.includes(key)), duplicateBoundaries: actual.filter((key, index) => index > 0 && actual[index - 1] === key) });
       if (failure) throw failure;
-      if (segments.length === 1) {
-        const golden = JSON.parse(readFileSync(join(this.root, "🧫️fixtures/🧪️transaction-dispositions/🔣️.json"), "utf8")) as { boundaries: Record<string, unknown> };
-        const expected = Object.keys(golden.boundaries).sort(), actual = readFileSync(boundaryRegistry, "utf8").split("\n").filter(Boolean).sort();
-        if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error(`Transaction v2 boundary coverage is not exact: ${actual.length}/${expected.length}`);
-      }
       return;
     }
     const { rest } = resolveTestLevel(segments);

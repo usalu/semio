@@ -11,6 +11,8 @@ import actionSemanticsSchema from "../../../../../../../../../../🧰️framewor
 import actionSemanticsFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🔣️action-semantics.json";
 import tutorialDocumentFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🔣️tutorial-document-track.json";
 import tutorialDocumentSchema from "../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🔣️tutorial-document-track.schema.json";
+import boardSessionFixture from "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️fixtures/🔣️session-factory.json";
+import boardSessionSchema from "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️fixtures/🔣️session-factory.schema.json";
 import { tutorialSlice, validateTutorial } from "@semio-tech/ui-react";
 import type { TutorialDefinition } from "@semio-tech/framework";
 import presenceOverlayFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️fixtures/🔣️presence-overlay.json";
@@ -42,6 +44,172 @@ describe("tutorial document wire contract", () => {
   });
 });
 //#endregion 🎞️TutorialDocumentTrack
+
+//#region 🧩️AppOwnedSurfaceSession
+function boardTestSession(): flowSessionLoader.Board2dWasmSession {
+  return {
+    attach_canvas: vi.fn(async () => {}), setSize: vi.fn(), renderFrame: vi.fn(), parseFixtureJson: () => true,
+    syncDescriptorJson: vi.fn(), setKindCatalogsJson: vi.fn(), setCamera: vi.fn(), setSelectionIdsJson: vi.fn(), setCanvasThemeJson: vi.fn(),
+    pointerDownScreen: vi.fn(), pointerMoveScreen: vi.fn(), pointerUpScreen: vi.fn(), wheelScreen: vi.fn(),
+    drainEventsJson: vi.fn(() => "[]"), cameraJson: () => '{"x":0,"y":0,"zoom":1}', gpuReady: () => true, free: vi.fn(),
+    setSelectionIdsJsonSilent: vi.fn(), setFixtureDropPreviewJson: vi.fn(),
+  };
+}
+
+function boardTestHost(factory: flowSessionLoader.ScopedBoardSessionFactory, surfaceId: string): ReactElement {
+  return createElement(flowSessionLoader.BoardSessionFactoryContext.Provider, { value: factory }, createElement(Board2dHost, {
+    node: { type: "componentScene", surfaceId, controllerId: boardSessionFixture.isolation.controllerId, componentKind: "board-2d", board2d: {
+      fixtureJson: '{"nodes":[],"edges":[]}', cameraJson: '{"x":0,"y":0,"zoom":1}', glyphCatalogsJson: "{}", selectionJson: "[]", interactive: true,
+      selectionMethod: "rectangle", gridSnapEnabled: false, gridFactor: 1, suggestionOffset: 0, brushWeightsJson: "{}", placementCompatibilityJson: "[]", lodMode: "automatic",
+    } }, onAction: vi.fn(),
+  }));
+}
+
+describe("app-owned surface session factories", () => {
+  it.each(boardSessionFixture.retryFailures)("deduplicates module loads and retries an exact failed $0 attempt", async (failure) => {
+    const first = Promise.withResolvers<object>();
+    const second = Promise.withResolvers<object>();
+    const load = vi.fn().mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
+    const cached = flowSessionLoader.createWasmModuleLoader<object>(load);
+    const a = cached();
+    const b = cached();
+    expect(a).toBe(b);
+    const failed = Promise.allSettled([a, b]);
+    first.reject(new Error(failure));
+    expect((await failed).map((result) => result.status)).toEqual(["rejected", "rejected"]);
+    const retry = cached();
+    expect(retry).not.toBe(a);
+    expect(cached()).toBe(retry);
+    const module = {};
+    second.resolve(module);
+    expect(await retry).toBe(module);
+    expect(await cached()).toBe(module);
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps identical Board controller/surface keys isolated across mounted shell scopes", async () => {
+    const a = flowSessionLoader.createBoardPeerScope();
+    const b = flowSessionLoader.createBoardPeerScope();
+    const sessions = [boardTestSession(), boardTestSession(), boardTestSession(), boardTestSession()];
+    const createA = vi.fn().mockResolvedValueOnce(sessions[0]).mockResolvedValueOnce(sessions[1]);
+    const createB = vi.fn().mockResolvedValueOnce(sessions[2]).mockResolvedValueOnce(sessions[3]);
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
+    const content = (scope: flowSessionLoader.BoardPeerScope, create: () => Promise<flowSessionLoader.Board2dWasmSession>, id: string) => boardTestHost({ pluginId: "puzzle", appId: "s.puzzle2d@1/*#editor", instanceId: 1, scope, create }, id);
+    const views = [render(content(a, createA, "pane.a")), render(content(a, createA, "pane.b")), render(content(b, createB, "pane.a")), render(content(b, createB, "pane.b"))];
+    try {
+      await waitFor(() => sessions.forEach((session) => expect(session.attach_canvas).toHaveBeenCalledOnce()));
+      sessions.forEach((session) => vi.mocked(session.setSelectionIdsJsonSilent!).mockClear());
+      vi.mocked(sessions[0]!.drainEventsJson).mockReturnValueOnce(JSON.stringify([{ name: "select", payload: { ids: boardSessionFixture.isolation.selection } }]));
+      const canvas = views[0]!.container.querySelector("canvas")!;
+      fireEvent.pointerMove(canvas, { clientX: 2, clientY: 3 });
+      expect(sessions[1]!.setSelectionIdsJsonSilent).toHaveBeenCalledWith(JSON.stringify(boardSessionFixture.isolation.selection));
+      expect(sessions[2]!.setSelectionIdsJsonSilent).not.toHaveBeenCalled();
+      expect(sessions[3]!.setSelectionIdsJsonSilent).not.toHaveBeenCalled();
+      fireEvent.pointerDown(canvas, { clientX: 2, clientY: 3, button: 0 });
+      expect(puzzle2dPeerOwnsGesture(a, "board", "pane.b")).toBe(true);
+      expect(puzzle2dPeerOwnsGesture(b, "board", "pane.b")).toBe(false);
+      views[0]!.unmount();
+      expect(a.peers.get("board")?.has("pane.a")).toBe(false);
+      expect(b.peers.get("board")?.has("pane.a")).toBe(true);
+    } finally {
+      views.forEach((view) => view.unmount());
+      bounds.mockRestore();
+    }
+    sessions.forEach((session) => expect(session.free).toHaveBeenCalledOnce());
+    expect(a.peers.size + a.gestures.size + b.peers.size + b.gestures.size).toBe(0);
+  });
+
+  it("keeps a remounted peer and gesture registered after the old attachment rejects", async () => {
+    const scope = flowSessionLoader.createBoardPeerScope();
+    const oldSession = boardTestSession();
+    const newSession = boardTestSession();
+    const pending = Promise.withResolvers<void>();
+    vi.mocked(oldSession.attach_canvas).mockReturnValue(pending.promise);
+    const factory = { pluginId: "puzzle", appId: "s.puzzle2d@1/*#editor", instanceId: 1, scope, create: vi.fn().mockResolvedValueOnce(oldSession).mockResolvedValueOnce(newSession) };
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
+    const first = render(boardTestHost(factory, "pane.a"));
+    await waitFor(() => expect(oldSession.attach_canvas).toHaveBeenCalledOnce());
+    const oldPeer = scope.peers.get("board")!.get("pane.a")!;
+    first.unmount();
+    const next = render(boardTestHost(factory, "pane.a"));
+    try {
+      await waitFor(() => expect(newSession.attach_canvas).toHaveBeenCalledOnce());
+      const successor = scope.peers.get("board")!.get("pane.a")!;
+      beginPuzzle2dPeerGesture(scope, "board", "pane.a", successor);
+      unregisterBoard2dPeer(scope, "board", "pane.a", oldPeer);
+      endPuzzle2dPeerGesture(scope, "board", "pane.a", oldPeer);
+      await reactAct(async () => { pending.reject(new Error("old attachment")); await pending.promise.catch(() => {}); });
+      expect(scope.peers.get("board")!.get("pane.a")).toBe(successor);
+      expect(scope.gestures.get("board")?.peer).toBe(successor);
+      expect(oldSession.free).toHaveBeenCalledOnce();
+      expect(newSession.free).not.toHaveBeenCalled();
+    } finally { next.unmount(); bounds.mockRestore(); }
+    expect(newSession.free).toHaveBeenCalledOnce();
+    expect(scope.peers.size + scope.gestures.size).toBe(0);
+  });
+
+  it.each(boardSessionFixture.cancellation)("retires the exact mounted Board session once after $phase cancellation", async (vector) => {
+    const constructed = Promise.withResolvers<flowSessionLoader.Board2dWasmSession>();
+    const attached = Promise.withResolvers<void>();
+    const session: flowSessionLoader.Board2dWasmSession = {
+      attach_canvas: vi.fn(() => attached.promise), setSize: vi.fn(), renderFrame: vi.fn(), parseFixtureJson: () => true,
+      syncDescriptorJson: vi.fn(), setKindCatalogsJson: vi.fn(), setCamera: vi.fn(), setSelectionIdsJson: vi.fn(), setCanvasThemeJson: vi.fn(),
+      pointerDownScreen: vi.fn(), pointerMoveScreen: vi.fn(), pointerUpScreen: vi.fn(), wheelScreen: vi.fn(),
+      drainEventsJson: () => "[]", cameraJson: () => '{"x":0,"y":0,"zoom":1}', gpuReady: () => true, free: vi.fn(),
+    };
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
+    const view = render(createElement(flowSessionLoader.BoardSessionFactoryContext.Provider, { value: { pluginId: "puzzle", appId: "s.puzzle2d@1/*#editor", instanceId: 1, create: () => constructed.promise, scope: flowSessionLoader.createBoardPeerScope() } }, createElement(Board2dHost, {
+      node: { type: "componentScene", surfaceId: "board.lifecycle", controllerId: "board", componentKind: "board-2d", board2d: {
+        fixtureJson: '{"nodes":[],"edges":[]}', cameraJson: '{"x":0,"y":0,"zoom":1}', glyphCatalogsJson: "{}", selectionJson: "[]", interactive: false,
+        selectionMethod: "rectangle", gridSnapEnabled: false, gridFactor: 1, suggestionOffset: 0, brushWeightsJson: "{}", placementCompatibilityJson: "[]", lodMode: "automatic",
+      } }, onAction: noopAction,
+    })));
+    try {
+      if (vector.phase !== "constructing") {
+        await reactAct(async () => { constructed.resolve(session); await constructed.promise; });
+        expect(session.attach_canvas).toHaveBeenCalledOnce();
+      }
+      if (vector.phase === "ready") await reactAct(async () => { attached.resolve(); await attached.promise; });
+      view.unmount();
+      expect(session.free).toHaveBeenCalledTimes(vector.freeBeforeSettle);
+      await reactAct(async () => { constructed.resolve(session); attached.resolve(); await constructed.promise; await attached.promise; });
+      expect(session.attach_canvas).toHaveBeenCalledTimes(vector.attachCalls);
+      expect(session.free).toHaveBeenCalledTimes(vector.freeAfterSettle);
+    } finally {
+      view.unmount();
+      constructed.resolve(session);
+      attached.resolve();
+      bounds.mockRestore();
+    }
+  });
+
+  it("joins exact plugin and app ownership while keeping instance scopes distinct", () => {
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(boardSessionSchema);
+    expect(validate(boardSessionFixture)).toBe(true);
+    expect(validate({ ...boardSessionFixture, globalFactory: true })).toBe(false);
+    const create = vi.fn(async (): Promise<flowSessionLoader.Board2dWasmSession> => { throw new Error("A lookup must not construct a session"); });
+    const registrations = boardSessionFixture.appIds.map((appId) => ({ kind: "board-2d" as const, pluginId: boardSessionFixture.pluginId, appId, create }));
+    for (const scope of boardSessionFixture.scopes) {
+      const resolved = flowSessionLoader.resolveAppSurfaceSessionFactory(registrations, scope);
+      expect(resolved !== null).toBe(scope.matches);
+      if (resolved) {
+        expect(resolved.pluginId).toBe(scope.pluginId);
+        expect(resolved.appId).toBe(scope.appId);
+        expect(resolved.instanceId).toBe(scope.instanceId);
+        expect(resolved.create).toBe(create);
+      }
+    }
+    const scope = boardSessionFixture.scopes[0]!;
+    const first = flowSessionLoader.resolveAppSurfaceSessionFactory(registrations, scope);
+    const second = flowSessionLoader.resolveAppSurfaceSessionFactory(registrations, { ...scope, instanceId: 4294967295 });
+    expect(first?.instanceId).not.toBe(second?.instanceId);
+    expect(first).not.toBe(second);
+    expect(() => flowSessionLoader.resolveAppSurfaceSessionFactory([...registrations, registrations[0]!], scope)).toThrow();
+    expect(flowSessionLoader.resolveAppSurfaceSessionFactory(registrations, null)).toBeNull();
+    expect(create).not.toHaveBeenCalled();
+  });
+});
+//#endregion 🧩️AppOwnedSurfaceSession
 import graphSliderFixture from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧪️fixtures/🔣️slider-overlay.json";
 import graphSliderSchema from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧬️schema/🔣️slider-overlay.schema.json";
 import graphParameterFixture from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter/🧪️fixtures/🔣️graph-parameter.json";
@@ -1602,7 +1770,7 @@ describe("framework plugin runtime", () => {
       ...exchangeStyleChannel((_instanceId, frames) => {
         const [command] = frames.map(decodeAppCommand);
         sentCommands.push(command);
-        if (command && typeof command === "object" && "setMergePolicy" in command) return [];
+        if (command && typeof command === "object" && "setMergePolicy" in command) return [encodeAppFrame({ Done: { in_reply_to: command.setMergePolicy.seq } })];
         if (command && typeof command === "object" && "resolveConflict" in command) {
           const seq = command.resolveConflict.seq;
           return [
@@ -1657,11 +1825,12 @@ describe("framework plugin runtime", () => {
         if (!command || typeof command !== "object" || !("ApplyEnvelopes" in command)) throw new Error(`unexpected command ${JSON.stringify(command)}`);
         const seq = command.ApplyEnvelopes.seq;
         return [
+          encodeAppFrame({ Done: { in_reply_to: seq } }),
           // ⚖️ Unsolicited: the command was ApplyEnvelopes, not ReadConflicts/ResolveConflict — this
           // is exactly the "pushed unsolicited after every ingest" reply shape contract freeze §C8
           // describes, alongside whatever `DocumentChanged`/effect frames a real ingest would also carry.
-          encodeAppFrame({ MergeReport: { in_reply_to: seq, report: Array.from(encodePackValue({ policy: "Normal", accepted: false, insertionIndex: 0, replayed: [], worst: "error", conflict: remoteConflict.id })) } }),
-          encodeAppFrame({ Conflicts: { in_reply_to: seq, conflicts: Array.from(encodePackValue([remoteConflict])) } }),
+          encodeAppFrame({ MergeReport: { in_reply_to: null, report: Array.from(encodePackValue({ policy: "Normal", accepted: false, insertionIndex: 0, replayed: [], worst: "error", conflict: remoteConflict.id })) } }),
+          encodeAppFrame({ Conflicts: { in_reply_to: null, conflicts: Array.from(encodePackValue([remoteConflict])) } }),
         ];
       }),
       dispose: () => {},
@@ -2629,34 +2798,38 @@ describe("framework renderer hosts", () => {
   });
 
   it("peer registry: registers/unregisters, excludes own surfaceId and other controllerIds", () => {
+    const scope = flowSessionLoader.createBoardPeerScope();
     const peerA = { session: {} as never, onPeerGestureEnded: () => {} };
     const peerB = { session: {} as never, onPeerGestureEnded: () => {} };
     const peerOther = { session: {} as never, onPeerGestureEnded: () => {} };
-    registerBoard2dPeer("puzzle2d-play", "pane.a", peerA);
-    registerBoard2dPeer("puzzle2d-play", "pane.b", peerB);
-    registerBoard2dPeer("other-controller", "pane.a", peerOther);
+    registerBoard2dPeer(scope, "puzzle2d-play", "pane.a", peerA);
+    registerBoard2dPeer(scope, "puzzle2d-play", "pane.b", peerB);
+    registerBoard2dPeer(scope, "other-controller", "pane.a", peerOther);
 
-    expect(board2dPeers("puzzle2d-play", "pane.a")).toEqual([peerB]);
-    expect(board2dPeers("puzzle2d-play", "pane.b")).toEqual([peerA]);
-    expect(board2dPeers("other-controller", "pane.z")).toEqual([peerOther]);
+    expect(board2dPeers(scope, "puzzle2d-play", "pane.a")).toEqual([peerB]);
+    expect(board2dPeers(scope, "puzzle2d-play", "pane.b")).toEqual([peerA]);
+    expect(board2dPeers(scope, "other-controller", "pane.z")).toEqual([peerOther]);
 
-    unregisterBoard2dPeer("puzzle2d-play", "pane.b");
-    expect(board2dPeers("puzzle2d-play", "pane.a")).toEqual([]);
+    unregisterBoard2dPeer(scope, "puzzle2d-play", "pane.b", scope.peers.get("puzzle2d-play")?.get("pane.b") ?? null);
+    expect(board2dPeers(scope, "puzzle2d-play", "pane.a")).toEqual([]);
 
-    unregisterBoard2dPeer("puzzle2d-play", "pane.a");
-    unregisterBoard2dPeer("other-controller", "pane.a");
+    unregisterBoard2dPeer(scope, "puzzle2d-play", "pane.a", scope.peers.get("puzzle2d-play")?.get("pane.a") ?? null);
+    unregisterBoard2dPeer(scope, "other-controller", "pane.a", scope.peers.get("other-controller")?.get("pane.a") ?? null);
   });
 
   it("peer gesture ownership: begin/end tracks the owning surfaceId; a pane never defers against its own gesture", () => {
-    expect(puzzle2dPeerOwnsGesture("puzzle2d-play", "pane.a")).toBe(false);
-    beginPuzzle2dPeerGesture("puzzle2d-play", "pane.a");
-    expect(puzzle2dPeerOwnsGesture("puzzle2d-play", "pane.a")).toBe(false);
-    expect(puzzle2dPeerOwnsGesture("puzzle2d-play", "pane.b")).toBe(true);
-    endPuzzle2dPeerGesture("puzzle2d-play", "pane.a");
-    expect(puzzle2dPeerOwnsGesture("puzzle2d-play", "pane.b")).toBe(false);
+    const scope = flowSessionLoader.createBoardPeerScope();
+    registerBoard2dPeer(scope, "puzzle2d-play", "pane.a", { session: boardTestSession(), onPeerGestureEnded: () => {} });
+    expect(puzzle2dPeerOwnsGesture(scope, "puzzle2d-play", "pane.a")).toBe(false);
+    beginPuzzle2dPeerGesture(scope, "puzzle2d-play", "pane.a", scope.peers.get("puzzle2d-play")?.get("pane.a") ?? null);
+    expect(puzzle2dPeerOwnsGesture(scope, "puzzle2d-play", "pane.a")).toBe(false);
+    expect(puzzle2dPeerOwnsGesture(scope, "puzzle2d-play", "pane.b")).toBe(true);
+    endPuzzle2dPeerGesture(scope, "puzzle2d-play", "pane.a", scope.peers.get("puzzle2d-play")?.get("pane.a") ?? null);
+    expect(puzzle2dPeerOwnsGesture(scope, "puzzle2d-play", "pane.b")).toBe(false);
   });
 
   it("pushes live mirror mutations into peer sessions, skipping the source pane", () => {
+    const scope = flowSessionLoader.createBoardPeerScope();
     const calls: { pane: string; method: string; arg: string }[] = [];
     const makePeer = (pane: string) => ({
       session: {
@@ -2666,10 +2839,10 @@ describe("framework renderer hosts", () => {
       } as never,
       onPeerGestureEnded: () => {},
     });
-    registerBoard2dPeer("mirror-test", "pane.source", makePeer("pane.source"));
-    registerBoard2dPeer("mirror-test", "pane.sibling", makePeer("pane.sibling"));
+    registerBoard2dPeer(scope, "mirror-test", "pane.source", makePeer("pane.source"));
+    registerBoard2dPeer(scope, "mirror-test", "pane.sibling", makePeer("pane.sibling"));
 
-    pushPuzzle2dLiveMirrorMutations("mirror-test", "pane.source", {
+    pushPuzzle2dLiveMirrorMutations(scope, "mirror-test", "pane.source", {
       positions: [{ id: "alpha", x: 1, y: 2 }],
       selectionIds: ["alpha"],
       preselect: null,
@@ -2681,20 +2854,21 @@ describe("framework renderer hosts", () => {
       { pane: "pane.sibling", method: "setSelectionIdsJsonSilent", arg: JSON.stringify(["alpha"]) },
     ]);
 
-    unregisterBoard2dPeer("mirror-test", "pane.source");
-    unregisterBoard2dPeer("mirror-test", "pane.sibling");
+    unregisterBoard2dPeer(scope, "mirror-test", "pane.source", scope.peers.get("mirror-test")?.get("pane.source") ?? null);
+    unregisterBoard2dPeer(scope, "mirror-test", "pane.sibling", scope.peers.get("mirror-test")?.get("pane.sibling") ?? null);
   });
 
   it("notifies peers when a gesture ends, skipping the source pane, passing whether it flushed", () => {
+    const scope = flowSessionLoader.createBoardPeerScope();
     const ended: { pane: string; flushed: boolean }[] = [];
-    registerBoard2dPeer("notify-test", "pane.source", { session: {} as never, onPeerGestureEnded: (flushed) => ended.push({ pane: "pane.source", flushed }) });
-    registerBoard2dPeer("notify-test", "pane.sibling", { session: {} as never, onPeerGestureEnded: (flushed) => ended.push({ pane: "pane.sibling", flushed }) });
+    registerBoard2dPeer(scope, "notify-test", "pane.source", { session: {} as never, onPeerGestureEnded: (flushed) => ended.push({ pane: "pane.source", flushed }) });
+    registerBoard2dPeer(scope, "notify-test", "pane.sibling", { session: {} as never, onPeerGestureEnded: (flushed) => ended.push({ pane: "pane.sibling", flushed }) });
 
-    notifyPuzzle2dPeersGestureEnded("notify-test", "pane.source", true);
+    notifyPuzzle2dPeersGestureEnded(scope, "notify-test", "pane.source", true);
     expect(ended).toEqual([{ pane: "pane.sibling", flushed: true }]);
 
-    unregisterBoard2dPeer("notify-test", "pane.source");
-    unregisterBoard2dPeer("notify-test", "pane.sibling");
+    unregisterBoard2dPeer(scope, "notify-test", "pane.source", scope.peers.get("notify-test")?.get("pane.source") ?? null);
+    unregisterBoard2dPeer(scope, "notify-test", "pane.sibling", scope.peers.get("notify-test")?.get("pane.sibling") ?? null);
   });
 
   it("maps context menu specs onto UI items with icons, colors, hover, and select handlers", () => {
@@ -2917,6 +3091,7 @@ describe("framework renderer hosts", () => {
   });
 
   it("pushes fixture-drop previews to every board2d peer on the same controller", () => {
+    const scope = flowSessionLoader.createBoardPeerScope();
     const calls: { pane: string; method: string; arg: string }[] = [];
     const makePeer = (pane: string) => ({
       session: {
@@ -2926,12 +3101,12 @@ describe("framework renderer hosts", () => {
       } as never,
       onPeerGestureEnded: () => {},
     });
-    registerBoard2dPeer("fixture-preview", "pane.source", makePeer("pane.source"));
-    registerBoard2dPeer("fixture-preview", "pane.sibling", makePeer("pane.sibling"));
+    registerBoard2dPeer(scope, "fixture-preview", "pane.source", makePeer("pane.source"));
+    registerBoard2dPeer(scope, "fixture-preview", "pane.sibling", makePeer("pane.sibling"));
 
     const preview = puzzle2dFixtureDropPreviewJson({ kindId: "seed", catalogSlice: "nodes", shape: "circle", radius: 24 }, 10, 20);
-    pushPuzzle2dFixtureDropPreview("fixture-preview", preview);
-    pushPuzzle2dFixtureDropPreview("fixture-preview", null);
+    pushPuzzle2dFixtureDropPreview(scope, "fixture-preview", preview);
+    pushPuzzle2dFixtureDropPreview(scope, "fixture-preview", null);
 
     expect(calls).toEqual([
       { pane: "pane.source", method: "setFixtureDropPreviewJson", arg: preview },
@@ -2944,8 +3119,8 @@ describe("framework renderer hosts", () => {
       { pane: "pane.sibling", method: "renderFrame", arg: "" },
     ]);
 
-    unregisterBoard2dPeer("fixture-preview", "pane.source");
-    unregisterBoard2dPeer("fixture-preview", "pane.sibling");
+    unregisterBoard2dPeer(scope, "fixture-preview", "pane.source", scope.peers.get("fixture-preview")?.get("pane.source") ?? null);
+    unregisterBoard2dPeer(scope, "fixture-preview", "pane.sibling", scope.peers.get("fixture-preview")?.get("pane.sibling") ?? null);
   });
 
   it("inverts the canonical screen-to-world transform for a fixture drop", () => {

@@ -414,7 +414,7 @@ pub fn round_trip_raster_dsl(text: &str) -> Result<String, String> {
 
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every `RasterMutation` variant, in declaration order — the vocabulary
-/// the `raster-1-any` catalog (`../../🧪️oracle/🔣️component.json`) declares and the
+/// the `raster-1-any` catalog (`../../🧪️oracle/🔣️.json`) declares and the
 /// `mutate-raster-1` exhaustive case measures itself against. Ten address the recursive layer tree;
 /// the last two join that tree to the document's root `assets` pool by id.
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against the enum,
@@ -452,7 +452,7 @@ mod kinds_catalog_tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed raster-1-any catalog");
         }

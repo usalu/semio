@@ -1,6 +1,6 @@
 //! 🦀️ Wires exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-REFACTOR.
 //! Recorded no-oracle decision `wires-1-argument-board-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`): `s.reasoning.wires` is a
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): `s.reasoning.wires` is a
 //! semio-NATIVE argument board with no third-party reader or writer, so `oracle` here reads the
 //! committed, independently handcrafted per-kind specification fixtures
 //! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`)

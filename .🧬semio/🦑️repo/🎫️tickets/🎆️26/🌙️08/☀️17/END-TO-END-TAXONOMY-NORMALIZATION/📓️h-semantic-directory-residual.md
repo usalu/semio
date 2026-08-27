@@ -245,7 +245,7 @@ Representative commands used:
 ```text
 git ls-files --cached --others --exclude-standard -z -- . ':(exclude)compose' ':(exclude)compose/**' ':(exclude)temp/compose' ':(exclude)temp/compose/**'
 bun -e '<derive every ancestor lexically; resolve global/member/fixed kinds in parent context; reject opaque prefixes>'
-bun -e '<read admitted 🧪️oracle/🔣️component.json paths; bind exact vector/scenario source and canonical names>'
+bun -e '<read admitted 🧪️oracle/🔣️.json paths; bind exact vector/scenario source and canonical names>'
 bun -e '<project known directory decisions; compare byte/NFC/case/VS16 destinations and 240-byte budget>'
 shasum -a 256 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json
 ```

@@ -3,7 +3,7 @@
 //!
 //! **This file no longer serves the oracle role.** The reference for `semio-v1-mesh-mutate` is the
 //! registered oracle `semio-mesh-typescript-three-independent` (`../../🏅️standards/🔖️v1/🪆️subsets/
-//! ✳️mesh/🧪️oracle/🔣️component.json`) — three.js for the geometry it genuinely speaks, plus an
+//! ✳️mesh/🧪️oracle/🔣️.json`) — three.js for the geometry it genuinely speaks, plus an
 //! independent TypeScript implementation of the semio-native carrier and the seventeen verbs, living
 //! beside this file as `🟦️component.ts`. The runner dispatches the oracle role there and the subject
 //! role here, and compares the two projections under `@comparison-ordered-json-v1`. Registering

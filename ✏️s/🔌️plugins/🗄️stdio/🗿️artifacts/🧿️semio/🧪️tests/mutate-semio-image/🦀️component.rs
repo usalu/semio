@@ -3,7 +3,7 @@
 //!
 //! **This file no longer serves the oracle role.** The reference for `semio-v1-image-mutate` is the
 //! registered oracle `semio-image-python-pillow-independent` (`../../🏅️standards/🔖️v1/🪆️subsets/
-//! ✳️image/🧪️oracle/🔣️component.json`) — Pillow for the raster payload it genuinely speaks, plus an
+//! ✳️image/🧪️oracle/🔣️.json`) — Pillow for the raster payload it genuinely speaks, plus an
 //! independent Python implementation of the semio-native carrier and the thirteen verbs, living
 //! beside this file as `🐍️component.py`. The runner dispatches the oracle role there and the subject
 //! role here, and compares the two projections under `@comparison-ordered-json-v1`. Registering

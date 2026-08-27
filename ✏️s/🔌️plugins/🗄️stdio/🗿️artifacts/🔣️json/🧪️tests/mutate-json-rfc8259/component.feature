@@ -27,7 +27,7 @@ Feature: Apply every typed RFC 8259 JSON mutation to a real-world document
 
   Two RFC 8259 conformance points this case's comparison deliberately narrows rather than silently
   normalizes, both real and both documented in `../../🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/
-  🧪️oracle/🔣️component.json`'s oracle rationale and in that oracle module's own doc comment: object
+  🧪️oracle/🔣️.json`'s oracle rationale and in that oracle module's own doc comment: object
   member order is unordered per §4 — this subset's own codec preserves insertion order, while
   `json::object::Object` stores entries in a hash-ordered binary tree keyed by an FNV-1a hash of each
   key (not insertion order, and not alphabetical either — it does not preserve order at all), so the

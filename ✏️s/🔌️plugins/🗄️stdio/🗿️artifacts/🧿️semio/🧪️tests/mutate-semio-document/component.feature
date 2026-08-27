@@ -14,7 +14,7 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, a
   `.../🧬️mutations/🟦️component.ts` for the three `DocBlockPath` segment tags, and the semio
   envelope in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`), importing nothing
   from and transliterating nothing of the Rust it judges. It is registered as the oracle
-  `semio-document-python-independent` in `.../✳️document/🧪️oracle/🔣️component.json`; the recorded
+  `semio-document-python-independent` in `.../✳️document/🧪️oracle/🔣️.json`; the recorded
   no-oracle decision it replaces is gone, because there is now a reference to compare against.
 
   The CommonMark route the replaced decision surveyed stays rejected and nothing here revives it:

@@ -13,7 +13,7 @@
 //! metadata; this subset's own codec documents the same simplification), so `flate2` is used purely
 //! for the part that IS hard to get right: the DEFLATE entropy coding and the real Adler-32 trailer.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself.
 
 use semio_repo_test_host::{digest, Json};

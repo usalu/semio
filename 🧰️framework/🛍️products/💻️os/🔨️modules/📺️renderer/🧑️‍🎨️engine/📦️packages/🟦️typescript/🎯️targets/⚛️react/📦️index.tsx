@@ -844,7 +844,10 @@ import {
   type TerrainWasmSession,
   createTerrainSession,
   type Board2dWasmSession,
-  createBoard2dSession,
+  type AppSurfaceSessionFactory,
+  BoardSessionFactoryContext,
+  createWasmModuleLoader,
+  resolveAppSurfaceSessionFactory,
   isFlowGraphScene,
 } from "../../../../🧱️elements/WasmSessionLoader/🟦️component.tsx";
 export {
@@ -861,7 +864,10 @@ export {
   type TerrainWasmSession,
   createTerrainSession,
   type Board2dWasmSession,
-  createBoard2dSession,
+  type AppSurfaceSessionFactory,
+  BoardSessionFactoryContext,
+  createWasmModuleLoader,
+  resolveAppSurfaceSessionFactory,
   isFlowGraphScene,
 };
 //#endregion 🔖️wasm-session-loader

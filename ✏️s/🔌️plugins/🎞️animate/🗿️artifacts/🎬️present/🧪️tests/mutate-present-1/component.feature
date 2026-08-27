@@ -6,7 +6,7 @@ Feature: Apply every typed animate PRESENT mutation to the real committed figure
   `s.animate.present` is a semio-NATIVE artifact — the `animate.present.dsl` envelope is defined by
   this repository alone and no package in any ecosystem reads it — so this case carries a recorded
   no-oracle decision (`present-figure-deck-mutation-semantics`, in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`) rather than a registered
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`) rather than a registered
   reference library.
 
   ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party

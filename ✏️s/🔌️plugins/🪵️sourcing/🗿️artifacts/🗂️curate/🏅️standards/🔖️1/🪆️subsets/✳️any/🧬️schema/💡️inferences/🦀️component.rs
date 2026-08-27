@@ -119,7 +119,7 @@ mod tests {
     use crate::artifacts::curate::CuratedItem;
     use protocol::Inference;
 
-    async fn picked_snapshot() -> CurateSnapshot {
+    fn picked_snapshot() -> CurateSnapshot {
         CurateSnapshot { curated: vec![CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 4 }, CuratedItem { object_id: "window-fixed-150x150".into(), count: 6 }], ..CurateSnapshot::default() }
     }
 
@@ -142,7 +142,7 @@ mod tests {
     }
 
     //#region 🧪️PuzzleCatalogFragment
-    async fn sample_document() -> CurateSnapshot {
+    fn sample_document() -> CurateSnapshot {
         crate::artifacts::curate::curate_snapshot_from_stock(crate::artifacts::curate::schema::demo_stock(), Vec::new())
     }
 

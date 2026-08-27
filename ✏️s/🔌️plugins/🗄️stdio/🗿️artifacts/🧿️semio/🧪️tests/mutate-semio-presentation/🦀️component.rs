@@ -3,7 +3,7 @@
 //!
 //! **This file no longer serves the oracle role.** The reference for `semio-v1-presentation-mutate`
 //! is the registered oracle `semio-presentation-python-independent` (`../../🏅️standards/🔖️v1/
-//! 🪆️subsets/✳️presentation/🧪️oracle/🔣️component.json`) — an independent Python implementation of the
+//! 🪆️subsets/✳️presentation/🧪️oracle/🔣️.json`) — an independent Python implementation of the
 //! semio presentation carrier, document's own recursive `DocBlock` grammar and all fifteen verbs,
 //! written from the committed grammar and protocol documents and living beside this file as
 //! `🐍️component.py`. The runner dispatches the oracle role there and the subject role here, and

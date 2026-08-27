@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.framework.job.microsecond-binding.v1",
+  "type": "object", "additionalProperties": false, "required": ["$schema", "cases"],
+  "properties": {
+    "$schema": { "const": "./🧬️schema/🔣️binding.json" },
+    "cases": { "type": "array", "minItems": 9, "items": {
+      "type": "object", "additionalProperties": false, "required": ["mutation", "admitted"],
+      "properties": {
+        "mutation": { "enum": ["none", "wrong-helper", "divided-grant", "rounded-grant", "coarse-clock", "overflow-fallback", "expired-entry", "synthetic-clock", "missing-output-limit"] },
+        "admitted": { "type": "boolean" }
+      }
+    } }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "nativeBounds": {"textBytes":512,"collectionItems":256,"grantBytes":4096},
+  "vectors": [
+    {"name":"zero","hex":"00010111050000000000000000","expected":0},
+    {"name":"negative","hex":"0001011105000000000000f0bf","expected":-1},
+    {"name":"empty-symbol","hex":"01000101110600","expected":""},
+    {"name":"list","hex":"000101110c0305000000000000f03f050000000000000040050000000000000840","expected":[1,2,3]},
+    {"name":"nested","hex":"01046c6561660101111001070161100107016210010701630c0305000000000000f03f05000000000000004010010701640600","expected":{"a":{"b":{"c":[1,2,{"d":"leaf"}]}}}}
+  ],
+  "hostile": [
+    {"name":"empty","hex":""},
+    {"name":"truncated-float","hex":"000101110500"},
+    {"name":"noncanonical-varint","hex":"800001011112"},
+    {"name":"wrong-field","hex":"0001021112"},
+    {"name":"trailing-value","hex":"000101111212"},
+    {"name":"invalid-utf8","hex":"0101ff0101110600"},
+    {"name":"missing-symbol","hex":"000101110600"},
+    {"name":"duplicate-key","hex":"0001011110020701611207016112"},
+    {"name":"collection-overflow","hex":"000101110c8102"},
+    {"name":"nonfinite","hex":"0001011105000000000000f07f"}
+  ],
+  "large": {"rows":128,"text":"😀ä\"\\","repeat":48}
+}

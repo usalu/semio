@@ -83,7 +83,7 @@ position with its original args restores the pristine projection exactly.
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs` — full
   oracle dispatcher, from-scratch Part-21 writer, apostrophe-escape workaround, semantic projection,
   9 `#[cfg(test)]` unit tests against the real fixture.
-- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧪️oracle/🔣️component.json` —
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧪️oracle/🔣️.json` —
   new: oracle registration (`ruststep-ifc-4-any-mutate`), mutation catalog (`ifc-4-any`, 11 kinds),
   `semantic-ifc-v1` comparison profile.
 - `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧫️fixtures/🏗️nakagin-capsule-tower.ifc` — new: real 2.5 MB

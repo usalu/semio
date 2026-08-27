@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "diagnosticOnly": true,
+  "snapshotDate": "2026-08-27",
+  "retainedFixture": "🧪️wgpu-generated-retirement-XDLdXS",
+  "reason": "Exact external browser input bytes from the committed six-output WGPU fixture, before the independently edited retained-UI graph added an undeclared module.",
+  "inputs": [
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/package.json",
+      "hash": "1c4e08f2fd1da87ca23696f2f6fe7bfe9b6a612e3f4d1f591d7f94ea984cdea1",
+      "size": 620
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts",
+      "hash": "39913f12c450dd64db55f7e5b9cf9e42baee1390319c86fd27b4e40610240536",
+      "size": 82172
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️component.ts",
+      "hash": "a55c8d8cfea2b8310630fcec9ae573a906cdc616114a0da1a64cedf123b66cfd",
+      "size": 29474
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts",
+      "hash": "2f0c1f8693e59a5451483e0dcda7f673407b08e41c42049aa738e779a92f69a4",
+      "size": 196152
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📬️mailbox.ts",
+      "hash": "115d3ca312e424de2ae3fd6c8573f37e5baf056500c279a1d662bd01ed6f68e4",
+      "size": 7928
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts",
+      "hash": "d6ac0522f6cd125440212d0636d3dd7dbac752eb8bf316ac146e2172d321fdc6",
+      "size": 10327
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts",
+      "hash": "ab413cb94d5fe238e4271a61f079367629862ec2e9da3ee29a6bfcbb514c26d1",
+      "size": 109791
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-runtime.ts",
+      "hash": "a6f2816ed04cdb3eb83ed15e67dc86079b93797089a27f8c98846a6ca795cd9e",
+      "size": 5925
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler.ts",
+      "hash": "a5b6b7d300351971f3c0fa505f62131b4d6931bfbf4ee876c6eb93a1c4cd9097",
+      "size": 18147
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️component.ts",
+      "hash": "20392134842570e65ff6dc9152acf3f9b9afba734e1303f6e75e5a65d1ee7183",
+      "size": 17406
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎯️action-bus/🟦️component.ts",
+      "hash": "e3ab0e4ef72494f28c794f0d34a6ff70bae451bd6a2201ee002abe851dba9207",
+      "size": 5500
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️component.ts",
+      "hash": "d930a2df0dd1e924bf35cbe959977830ffa90b89a32e6ec3544d83d9a58db52a",
+      "size": 7449
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️component.ts",
+      "hash": "2467d16665faefbdf3aa301bb7d38e41dfa92d59c98fd0b66644b21005069497",
+      "size": 3676
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
+      "hash": "61a375bd2d074f9d757f5e407ecb468bc87304335c00246f70ad55bd9456d9de",
+      "size": 817
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️glue.ts",
+      "hash": "e22e856425531528438bd1140acbf712ca3980ca61eae02a74a476eb3d1983f0",
+      "size": 136
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🟦️component.ts",
+      "hash": "c435a50d67d9cbf2a600c8bc6cdce873f0a6b08ceef207cc78bbff76d307549f",
+      "size": 55279
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔄️machine/🟦️component.ts",
+      "hash": "abd17c966974b4f98de4024bcb4303a232af4dafed44dc60bf9d996940cf264d",
+      "size": 50584
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts",
+      "hash": "95d31be64c5cec56cf71d763a5c1b65b1e2fcaff638d134ac50232225132f246",
+      "size": 26204
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖥️platform/🟦️component.ts",
+      "hash": "83612c95506cf2126e3f4bf512bfca227cd7966351d55fc8c9268a486fdb8e93",
+      "size": 27376
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️component.ts",
+      "hash": "0a1d622fc15df477fb2a772065bd1bb22fda1be643b0f3498f8865a37737b5d7",
+      "size": 34288
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Diagram/🟦️layout.ts",
+      "hash": "b0f45a9bcfe3c3760aff1cc433a2f2beef106dda6034ef017d748082630f15af",
+      "size": 63867
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️interactive-job.ts",
+      "hash": "cfd575d921f01dbcb722d05013c6d42a4b1355d9a63817293d251b73fcf63e94",
+      "size": 4644
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts",
+      "hash": "0c53289933fa4da3891afea84e2eb2eff34af6d68205736a0e563b7daf9fd353",
+      "size": 66707
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️ui-axes.ts",
+      "hash": "9ef816cdee04bce3f36c2a0ddb8ac016b544d3c9725d649b76fbd26fa9a9ee01",
+      "size": 1017
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🟦️component.ts",
+      "hash": "bae1e6bc00a7a6ccb5589301d14a53042a290d0cba213f4a2c0f9b2179a42e11",
+      "size": 6322
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧮️action-argument-resolution/🟦️component.ts",
+      "hash": "a27df4619483cc78d24fafff1d7fb4e385db1871367362b126d3cde48437a82f",
+      "size": 1779
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
+      "hash": "ef85578e38407c31c68e494a4fc565e3244ac6c2505954c78878315f330f532f",
+      "size": 1121
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts",
+      "hash": "e0cb550139d56cfc87cbd916073a8dc83b106df9c5bcfd44d70597bdde8fa97c",
+      "size": 127
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️component.ts",
+      "hash": "3ec28b657441ce9f5351d252fbd61112d17bf3896d182d97bef509a77ccc2a3d",
+      "size": 6863
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️catalog.ts",
+      "hash": "8995eb145bf12ac6a07ec65f627d0713fdcf04e30a3b761425e4aceb340529e1",
+      "size": 2496
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts",
+      "hash": "4a277d757e7fd428306492cb373b30df3705ca870893f61d7ecd015a7db2fafe",
+      "size": 19279
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts",
+      "hash": "080a668da057347f0a45e47a559c170250a9c1f25a0e9a02581edce4983f4ca7",
+      "size": 33032
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🟦️component.ts",
+      "hash": "c2b2dfd9aaf33df31bdeea69496d02103f4ebc237a6e82527a961fe0b1017d83",
+      "size": 236069
+    }
+  ]
+}

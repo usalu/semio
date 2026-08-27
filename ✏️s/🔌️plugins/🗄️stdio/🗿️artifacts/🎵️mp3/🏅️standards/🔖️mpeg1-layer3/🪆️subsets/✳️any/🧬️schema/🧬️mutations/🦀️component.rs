@@ -64,7 +64,7 @@ pub fn apply_mp3_mutation(snapshot: &mut Mp3Snapshot, mutation: &Mp3Mutation) ->
 
 //#region 🔖️Kinds
 impl Mp3Mutation {
-    /// 🏷️ Kebab-case kind spelling — the exact vocabulary `../../🧪️oracle/🔣️component.json`'s
+    /// 🏷️ Kebab-case kind spelling — the exact vocabulary `../../🧪️oracle/🔣️.json`'s
     /// `mutationCatalogs[].kinds` declares and `mutate-mp3-mpeg1-layer3`'s Scenario Outline row ids
     /// equal. Hand-matched rather than derived, so [`KINDS`] is checked against something with its
     /// own reason to be right; and exhaustive, so a variant added to the enum is a COMPILE error
@@ -159,7 +159,7 @@ mod tests {
         let from_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
         assert_eq!(from_variants, from_kinds, "KINDS must equal every Mp3Mutation variant's kind()");
         assert_eq!(KINDS.len(), 5, "KINDS must list exactly the declared 5 kinds");
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "the oracle catalog manifest must declare kind {kind:?}");
         }

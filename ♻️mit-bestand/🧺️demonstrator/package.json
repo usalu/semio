@@ -5,6 +5,12 @@
   "description": "Entwerfen mit Bestand · Demonstrator landing and static site assembly",
   "type": "module",
   "private": true,
+  "semio": {
+    "browserSessionFactories": [
+      { "module": "@semio-tech/puzzle-js/board-session", "engine": "./✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust" }
+    ]
+  },
+  "dependencies": { "@semio-tech/puzzle-js": "workspace:*" },
   "scripts": {
     "dev": "bun nx run @semio-tech/mit-bestand-demonstrator:dev",
     "build": "bun nx run @semio-tech/mit-bestand-demonstrator:build",

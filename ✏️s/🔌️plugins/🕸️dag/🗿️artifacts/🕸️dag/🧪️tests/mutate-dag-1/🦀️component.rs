@@ -1,6 +1,6 @@
 //! 🦀️ DAG exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-REFACTOR.
 //! Recorded no-oracle decision `dag-1-port-directed-graph-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`): `dag.dag` is a semio-NATIVE
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): `dag.dag` is a semio-NATIVE
 //! port-directed computation graph with no third-party reader or writer, so `oracle` here reads the
 //! committed, independently handcrafted per-kind specification fixtures
 //! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`)

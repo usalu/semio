@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    "const path = 'a.ts';",
+    "const pathPart = 'a.ts';",
+    "const localPathPart = 'a.ts';",
+    "const unrelated = 'a.ts'; const output = 'b.ts';",
+    "const unrelated = \"const localPath = 'a.ts';\";",
+    "const path = \"const localPath = 'a.ts';\";",
+    "const $path = 'a.ts'; const word$path = 'b.ts';",
+    "const Path$other = 'a.ts'; const Path$root = 'b.ts';",
+    "const ſource = 'a.ts'; const KPath = 'b.ts';",
+    "config\n:\n'a.ts'; target\t=\t\"b.ts\";",
+    "root = ''; schema = \"\"; filename = 'b.ts\";",
+    "const filePath = 'a.ts'; const inputPath: string = 'b.ts';",
+    "// const path = 'a.ts';\n/* filename: 'b.ts' */",
+    "let x1Path22 = 'a.ts'; let 1Path = 'b.ts';",
+    "let path= 'a\nb.ts'; let source = 'x\\'y';",
+    "const RootPath = `a.ts`; const Input = 'b.ts';"
+  ]
+}

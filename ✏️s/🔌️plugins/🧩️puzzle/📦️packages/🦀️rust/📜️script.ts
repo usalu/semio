@@ -2,8 +2,19 @@
 /** 🧩️ `@semio-tech/puzzle-plugin` router: `bun ./📜️script.ts test`. */
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/📜️script.ts";
+
+//#region 🌉️BoardSessionPackage
+class WasmScript extends BundleScript {
+  run(): void {
+    runWasmPackWebBuild({
+      rsDir: this.root, skipEnvVar: "PUZZLE_BOARD_SKIP_WASM_BUILD", logPrefix: "puzzle/board", wasmBaseName: "semio_puzzle", shipProfile: "wasm-release", noDefaultFeatures: true,
+      pkg: { name: "@semio-tech/puzzle-wasm", files: ["semio_puzzle_bg.wasm", "semio_puzzle.js", "semio_puzzle.d.ts", "semio_puzzle_bg.wasm.d.ts"], main: "semio_puzzle.js", module: "semio_puzzle.js", types: "semio_puzzle.d.ts" },
+    });
+  }
+}
+//#endregion 🌉️BoardSessionPackage
 
 class TestScript extends BundleScript {
   run(_segments: string[]): void {
@@ -268,6 +279,7 @@ class FixturesScript extends BundleScript {
 //#endregion 🔖️FixtureLint
 
 const router = new ScriptRouter(import.meta.dir)
+  .register("wasm", WasmScript)
   .register("test", TestScript)
   .register("describe", DescribeScript)
   .register("fixtures", FixturesScript);

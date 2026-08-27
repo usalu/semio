@@ -1,6 +1,6 @@
 //! 🧹️ Exact nested-value retirement and explicitly synchronous construction owners.
 
-use super::{Atom, ChannelSpec, Dictionary, EvalChannels, NeuronSnapshot, OperatorInfo, TreeSnapshot, Value};
+use super::{Atom, ChannelSpec, Dictionary, EvalChannels, FieldSpec, NeuronSnapshot, OperatorInfo, Schema, TreeSnapshot, Value, ValueType};
 use protocol::value::ordered::{Grant, OrderedMap, Retirement, RetirementStep};
 use std::collections::{BTreeMap, LinkedList};
 use std::mem::ManuallyDrop;
@@ -10,7 +10,7 @@ use std::sync::Arc;
 enum Owner {
     Map(Retirement<Value>), Value(Value), Shared(Arc<Value>), Bytes(Vec<u8>), Strings(Vec<String>),
     Dictionaries(BTreeMap<String, Dictionary>), Snapshot(TreeSnapshot), Neurons(BTreeMap<String, NeuronSnapshot>), Seeds(BTreeMap<String, u64>),
-    Operator(OperatorInfo), Channels(Vec<ChannelSpec>),
+    Operator(OperatorInfo), Channels(Vec<ChannelSpec>), Schema(Schema), Fields(Vec<FieldSpec>), Type(ValueType),
 }
 /// 🎟️ Exact released payload bytes and one retained structural ownership operation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -31,6 +31,8 @@ impl ValueRetirement {
     pub fn push_channels(&mut self, channels: EvalChannels) { self.push_dictionaries(channels.outputs); self.push_dictionaries(channels.inputs); }
     pub fn push_snapshot(&mut self, snapshot: TreeSnapshot) { self.owners.push_back(Owner::Snapshot(snapshot)); }
     pub fn push_operator(&mut self, operator: OperatorInfo) { self.owners.push_back(Owner::Operator(operator)); }
+    pub fn push_schema(&mut self, schema: Schema) { self.owners.push_back(Owner::Schema(schema)); }
+    pub fn push_strings(&mut self, strings: Vec<String>) { self.owners.push_back(Owner::Strings(strings)); }
     pub fn terminal_is_empty(&self) -> bool { self.owners.is_empty() }
     pub(crate) fn push_map(&mut self, map: OrderedMap<Value>) { let retirement = map.retire(); if !retirement.is_empty() { self.owners.push_back(Owner::Map(retirement)); } }
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> ValueRetirementStep {
@@ -84,6 +86,22 @@ impl ValueRetirement {
                 }
                 if !values.is_empty() { self.owners.push_front(Owner::Channels(values)); }
             }
+            Owner::Schema(value) => {
+                self.text(value.id); self.text(value.module); self.text(value.name); self.text(value.icon); self.text(value.summary);
+                self.owners.push_back(Owner::Fields(value.fields));
+            }
+            Owner::Fields(mut values) => {
+                if let Some(value) = values.pop() {
+                    self.text(value.key);
+                    if let Some(label) = value.label { self.text(label); }
+                    if let Some(default) = value.default { self.push_value(default); }
+                    self.owners.push_back(Owner::Type(value.value));
+                }
+                if !values.is_empty() { self.owners.push_front(Owner::Fields(values)); }
+            }
+            Owner::Type(ValueType::Schema(id)) => self.text(id),
+            Owner::Type(ValueType::List(inner)) => self.owners.push_front(Owner::Type(*inner)),
+            Owner::Type(_) => {}
             Owner::Bytes(mut bytes) => {
                 released_bytes = maximum_bytes.min(bytes.len()); bytes.truncate(bytes.len() - released_bytes);
                 if !bytes.is_empty() { self.owners.push_front(Owner::Bytes(bytes)); }

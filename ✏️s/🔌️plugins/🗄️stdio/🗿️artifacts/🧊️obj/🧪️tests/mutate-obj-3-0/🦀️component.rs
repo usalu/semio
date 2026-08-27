@@ -70,7 +70,7 @@ fn json_spec(kind: &str, params: Json) -> Json {
 
 //#region 🔖️Profile
 /// 📏️ `semantic-obj-3-0-v1`'s own declared tolerances (`../../🏅️standards/🔖️3.0/🪆️subsets/✳️any/
-/// 🧪️oracle/🔣️component.json`), mirrored here so an in-handler law check is exactly as strict as the
+/// 🧪️oracle/🔣️.json`), mirrored here so an in-handler law check is exactly as strict as the
 /// profile the case is measured by — never stricter, which would invent a failure the comparison
 /// itself would forgive.
 const OBJ_WRITER_FREEDOM: &[&str] = &["byteLength", "fileSize", "precision"];

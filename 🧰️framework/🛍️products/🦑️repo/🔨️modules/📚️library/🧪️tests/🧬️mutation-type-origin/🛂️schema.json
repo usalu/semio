@@ -1,0 +1,36 @@
+{
+  "type": "object",
+  "required": ["schemaVersion", "mutationRoot", "leaf", "rustFilename", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "mutationRoot": { "type": "string", "minLength": 1 },
+    "leaf": { "type": "string", "minLength": 1 },
+    "rustFilename": { "const": "🦀️.rs" },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+          "required": ["id", "rootSource", "leafSource", "compileAccepted", "expected"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "mutationRoot": { "type": "string", "minLength": 1 },
+          "leaf": { "type": "string", "minLength": 1 },
+          "rustFilename": { "type": "string", "minLength": 1 },
+          "virtualFilesystem": { "const": true },
+          "repoRoot": { "type": "string", "minLength": 1 },
+          "repositoryRootSymlink": { "const": true },
+          "repositoryAncestorSymlink": { "const": true },
+          "rootSource": { "type": "string" },
+          "leafSource": { "type": "string" },
+          "extraFiles": { "type": "array", "items": { "type": "object", "required": ["path", "source"], "additionalProperties": false, "properties": { "path": { "type": "string", "minLength": 1 }, "source": { "type": "string" } } } },
+          "links": { "type": "array", "items": { "type": "object", "required": ["path", "target"], "additionalProperties": false, "properties": { "path": { "type": "string", "minLength": 1 }, "target": { "type": "string", "minLength": 1 } } } },
+          "compileAccepted": { "type": "boolean" },
+          "expected": { "type": ["object", "null"] }
+        }
+      }
+    }
+  }
+}

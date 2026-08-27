@@ -20,7 +20,7 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-format", "insert-co
 
 //#region 🔖️Profile
 /// 📏️ `semantic-ply-v1`'s own declared tolerance (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/
-/// 🧪️oracle/🔣️component.json`), mirrored here so an in-handler law check is exactly as strict as
+/// 🧪️oracle/🔣️.json`), mirrored here so an in-handler law check is exactly as strict as
 /// the profile the case is measured by — never stricter.
 const PLY_TOLERANCE: f64 = 1e-5;
 //#endregion 🔖️Profile

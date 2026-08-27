@@ -1702,7 +1702,7 @@ mod tests {
                 semio_framework_job::Generation(1),
                 semio_framework_job::StepBudget::new(3, u64::MAX),
                 cancel.clone(),
-                semio_framework_job::default_now_ms,
+                semio_framework_job::default_now_us,
                 &mut preview_sequence,
             );
             let field = match pending.take() {
@@ -1767,7 +1767,7 @@ mod tests {
         let cancel = semio_framework_job::root_cancel_token();
         let mut preview_sequence = 0;
         for _ in 0..10_000 {
-            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(4_096, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(4_096, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
             let outcome = semio_framework_plugin::ArtifactStoreInitializationAuthority::step(authority, &mut context);
             if outcome.is_terminal() {
                 return outcome;

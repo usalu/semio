@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "required": ["schemaVersion", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "cases": { "type": "array", "minItems": 4, "items": { "$ref": "#/$defs/case" } }
+  },
+  "$defs": {
+    "case": {
+      "type": "object",
+      "required": ["id", "derive", "contract", "facadeSource", "manualImpl", "accepted"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "derive": { "type": "string", "minLength": 1 },
+        "contract": { "type": "string", "minLength": 1 },
+        "facadeSource": { "type": "string" },
+        "manualImpl": { "type": "string" },
+        "binding": { "enum": ["direct", "inherited"] },
+        "consumerPrefix": { "type": "string" },
+        "consumerSuffix": { "type": "string" },
+        "originModulePath": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "accepted": { "type": "boolean" }
+      }
+    }
+  }
+}

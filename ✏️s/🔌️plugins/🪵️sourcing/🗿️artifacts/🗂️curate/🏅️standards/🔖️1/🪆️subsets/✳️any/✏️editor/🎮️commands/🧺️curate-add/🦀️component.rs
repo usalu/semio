@@ -63,37 +63,37 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn curate_add_and_remove_round_trip_through_operations() {
-        let mut app = new_app();
+        let mut app = new_app().await;
         let document = app.snapshot().expect("snapshot");
         // stock[2] isn't part of the fixture's pre-curated set, so a single add lands on count 1.
         let object_id = document.stock_extra[2].id.clone();
-        dispatch(&mut app, SourcingCurateCommand::CurateAdd(CurateAdd { object_id: object_id.clone() }));
+        dispatch(&mut app, SourcingCurateCommand::CurateAdd(CurateAdd { object_id: object_id.clone() })).await;
         assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 1);
 
-        dispatch(&mut app, SourcingCurateCommand::CurateRemove(curate_remove::CurateRemove { object_id: object_id.clone() }));
+        dispatch(&mut app, SourcingCurateCommand::CurateRemove(curate_remove::CurateRemove { object_id: object_id.clone() })).await;
         assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 0);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn curate_set_count_supports_both_delta_and_absolute_value() {
-        let mut app = new_app();
+        let mut app = new_app().await;
         let object_id = app.snapshot().expect("snapshot").stock_extra[2].id.clone();
-        dispatch(&mut app, SourcingCurateCommand::CurateSetCount(curate_set_count::CurateSetCount { object_id: object_id.clone(), delta: Some(3.0), value: None }));
+        dispatch(&mut app, SourcingCurateCommand::CurateSetCount(curate_set_count::CurateSetCount { object_id: object_id.clone(), delta: Some(3.0), value: None })).await;
         assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 3);
-        dispatch(&mut app, SourcingCurateCommand::CurateSetCount(curate_set_count::CurateSetCount { object_id: object_id.clone(), delta: None, value: Some(2.0) }));
+        dispatch(&mut app, SourcingCurateCommand::CurateSetCount(curate_set_count::CurateSetCount { object_id: object_id.clone(), delta: None, value: Some(2.0) })).await;
         assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 2);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn drop_on_curated_and_drop_on_pool_mirror_add_and_remove() {
-        let mut app = new_app();
+        let mut app = new_app().await;
         let document = app.snapshot().expect("snapshot");
         // stock[2] isn't part of the fixture's pre-curated set, so a single drop lands on count 1.
         let object_id = document.stock_extra[2].id.clone();
-        dispatch(&mut app, SourcingCurateCommand::DropOnCurated(drop_on_curated::DropOnCurated { object_id: object_id.clone() }));
+        dispatch(&mut app, SourcingCurateCommand::DropOnCurated(drop_on_curated::DropOnCurated { object_id: object_id.clone() })).await;
         assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 1);
 
-        dispatch(&mut app, SourcingCurateCommand::DropOnPool(drop_on_pool::DropOnPool { object_id: object_id.clone() }));
+        dispatch(&mut app, SourcingCurateCommand::DropOnPool(drop_on_pool::DropOnPool { object_id: object_id.clone() })).await;
         assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 0);
     }
 
@@ -101,10 +101,10 @@ mod tests {
     /// `SourcingMutation` has no whole-snapshot no-op sentinel to fall back on any more.
     #[semio_framework_async_macros::async_test]
     async fn curate_remove_on_an_uncurated_object_emits_no_mutation() {
-        let mut app = new_app();
+        let mut app = new_app().await;
         let object_id = app.snapshot().expect("snapshot").stock_extra[2].id.clone();
         assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 0);
-        let result = dispatch(&mut app, SourcingCurateCommand::CurateRemove(curate_remove::CurateRemove { object_id }));
+        let result = dispatch(&mut app, SourcingCurateCommand::CurateRemove(curate_remove::CurateRemove { object_id })).await;
         assert!(result.mutations.is_empty(), "removing an already-uncurated object is a no-op");
     }
 }

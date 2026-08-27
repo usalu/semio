@@ -1,0 +1,21 @@
+{
+  "run": {
+    "command": "nx run @fixture/wgpu-current-source-lifecycle:test-boundary --skip-nx-cache",
+    "startTime": "2026-08-27T14:45:21.471Z",
+    "endTime": "2026-08-27T14:45:22.442Z",
+    "inner": false
+  },
+  "tasks": [
+    {
+      "taskId": "@fixture/wgpu-current-source-lifecycle:test-boundary",
+      "target": "test-boundary",
+      "projectName": "@fixture/wgpu-current-source-lifecycle",
+      "hash": "2007538888905930578",
+      "startTime": "2026-08-27T14:45:21.530Z",
+      "endTime": "2026-08-27T14:45:22.441Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 1
+    }
+  ]
+}

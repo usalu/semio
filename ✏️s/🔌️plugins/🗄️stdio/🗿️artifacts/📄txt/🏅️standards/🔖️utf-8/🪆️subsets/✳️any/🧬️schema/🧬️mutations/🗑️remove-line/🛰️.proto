@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.txt.mutation;
+// canonical remove-line/RemoveLine
+message RemoveLinePayload { optional uint32 index = 1; }

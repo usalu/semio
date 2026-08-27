@@ -1,6 +1,83 @@
 {
   "schemaVersion": 1,
   "contract": "rust-physical-reference-context-v1",
+  "tokenNarrowing": {
+    "functions": ["inspectRustManifestPathReferences", "inspectRustJoinArgumentSpans"],
+    "cases": [
+      { "token": null, "expected": null },
+      { "token": { "kind": "identifier", "text": "surface" }, "expected": "surface" },
+      { "token": { "kind": "string", "text": "\"payload.json\"" }, "expected": "literal" },
+      { "token": { "kind": "string", "text": "r#\"payload.json\"#" }, "expected": null },
+      { "token": { "kind": "number", "text": "42" }, "expected": null },
+      { "token": { "kind": "punctuation", "text": "." }, "expected": null }
+    ]
+  },
+  "execution": {
+    "target": "test-rust-physical-reference-context",
+    "command": "bun ./📜️script.ts test rust-physical-reference-context long",
+    "launchName": "🧹clean🧩️taxonomy🧪️rust-physical-reference-context",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-rust-physical-reference-context --skip-nx-cache",
+    "launchGroup": "4_gate",
+    "launchOrder": 410.08
+  },
+  "oracle": {
+    "manifestInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️rust-physical-reference-context/🧪️oracle/⚙️.toml",
+    "sourceInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-physical-reference-context/🦀️.rs"
+  },
+  "transaction": {
+    "scope": "🧪️tests/🧪️target",
+    "source": "🦀️component.rs",
+    "destination": "🦀️.rs",
+    "bytes": "pub const VALUE: &str = \"right\";\n",
+    "manifest": "pkg/Cargo.toml",
+    "consumer": "pkg/entry.rs",
+    "lookalike": "pkg/🦀️component.rs",
+    "runtimeOutput": "READ:pub const VALUE: &str = \"right\";"
+  },
+  "referenceUniverse": {
+    "ownership": "no-follow-regular-manifests-and-exact-mounted-source-chains",
+    "admission": "affected-consumer-or-possible-affected-physical-target",
+    "unsafeUnrelatedManifest": "unrelated/Cargo.toml",
+    "independentRoot": "🧪️transaction/🧪️independent",
+    "cases": [
+      { "id": "independent-local", "base": "../🧪️tests/🧪️target", "physicalTarget": "🧪️transaction/🧪️independent/🧪️tests/🧪️target/🦀️component.rs", "affectsParent": false },
+      { "id": "independent-parent-escape", "base": "../../../🧪️tests/🧪️target", "physicalTarget": "🧪️tests/🧪️target/🦀️component.rs", "affectsParent": true }
+    ]
+  },
+  "manifestPaths": {
+    "root": "std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\"))",
+    "binding": "immutable-lexical-local-only",
+    "literal": "unescaped-normal-string-only",
+    "loop": "literal-array-variable-used-only-as-one-proven-join-argument",
+    "cases": [
+      { "id": "direct", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../artifacts\"); std::fs::read_to_string(root.join(\"payload.json\")); }", "expected": [{ "value": "../../artifacts", "base": [] }, { "value": "payload.json", "base": ["../../artifacts"] }] },
+      { "id": "nested-owner-loop", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../artifacts\"); let owner = root.join(\"replace-model\"); for surface in [\"code.rs\", \"text/code.rs\"] { let source = std::fs::read_to_string(owner.join(surface)); } }", "expected": [{ "value": "../../artifacts", "base": [] }, { "value": "replace-model", "base": ["../../artifacts"] }, { "value": "code.rs", "base": ["../../artifacts", "replace-model"] }, { "value": "text/code.rs", "base": ["../../artifacts", "replace-model"] }] },
+      { "id": "shadowed", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); let root = other(); root.join(\"payload.json\"); }", "expected": [] },
+      { "id": "destructured-shadow", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); let (root, _) = other(); root.join(\"payload.json\"); }", "expected": [] },
+      { "id": "closure-shadow", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); let reader = |root| root.join(\"payload.json\"); }", "expected": [] },
+      { "id": "if-let-shadow", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); if let Some(root) = other() { root.join(\"wrong.json\"); } root.join(\"right.json\"); }", "expected": [{ "value": "right.json", "base": [] }] },
+      { "id": "match-shadow", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); match other() { Some(root) => { root.join(\"wrong.json\"); }, None => { root.join(\"right.json\"); } } }", "expected": [{ "value": "right.json", "base": [] }] },
+      { "id": "mutable", "source": "fn check() { let mut root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); root.push(\"other\"); root.join(\"payload.json\"); }", "expected": [] },
+      { "id": "scope", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); { let root = other(); root.join(\"wrong.json\"); } root.join(\"right.json\"); }", "expected": [{ "value": "right.json", "base": [] }] },
+      { "id": "unknown-constructor", "source": "fn check() { let root = Path::new(env!(\"CARGO_MANIFEST_DIR\")); root.join(\"payload.json\"); }", "expected": [] },
+      { "id": "wrong-environment", "source": "fn check() { let root = std::path::Path::new(env!(\"OTHER_ROOT\")); root.join(\"payload.json\"); }", "expected": [] },
+      { "id": "loop-label-use", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); for path in [\"payload.json\"] { print!(\"{}\", path); root.join(path); } }", "expected": [] },
+      { "id": "loop-two-bases", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); let other = root.join(\"nested\"); for path in [\"payload.json\"] { root.join(path); other.join(path); } }", "expected": [{ "value": "nested", "base": [] }] },
+      { "id": "loop-computed-array", "source": "fn check() { let root = std::path::Path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); for path in paths() { root.join(path); } }", "expected": [] },
+      { "id": "comment", "source": "fn check() {} /* let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); root.join(\"payload.json\"); */", "expected": [] },
+      { "id": "macro-payload", "source": "fn check() { quote! { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); root.join(\"payload.json\"); } }", "expected": [] },
+      { "id": "escaped", "source": "fn check() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); root.join(\"payload\\u{2e}json\"); }", "expected": [] },
+      { "id": "cross-function", "source": "fn first() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")); } fn second() { root.join(\"payload.json\"); }", "expected": [] }
+    ],
+    "moduleGraphCases": [
+      { "id": "mounted", "target": "artifacts/code.rs", "files": { "pkg/Cargo.toml": "[package]\nname = \"example\"\n[lib]\npath = \"glue.rs\"\n", "pkg/glue.rs": "#[path = \".\"] mod artifact { #[path = \"../artifacts/code.rs\"] mod component; }", "artifacts/code.rs": "pub fn inspect() {}" }, "expectedManifests": ["pkg/Cargo.toml"] },
+      { "id": "unmounted-lookalike", "target": "artifacts/code.rs", "files": { "pkg/Cargo.toml": "[package]\nname = \"example\"\n[lib]\npath = \"glue.rs\"\n", "pkg/glue.rs": "const TEXT: &str = r#\"#[path = \"../artifacts/code.rs\"] mod component;\"#;", "artifacts/code.rs": "pub fn inspect() {}" }, "expectedManifests": [] },
+      { "id": "ambiguous", "target": "artifacts/code.rs", "files": { "one/Cargo.toml": "[package]\nname = \"one\"\n[lib]\npath = \"glue.rs\"\n", "one/glue.rs": "#[path = \"../artifacts/code.rs\"] mod component;", "two/Cargo.toml": "[package]\nname = \"two\"\n[lib]\npath = \"glue.rs\"\n", "two/glue.rs": "#[path = \"../artifacts/code.rs\"] mod component;", "artifacts/code.rs": "pub fn inspect() {}" }, "expectedManifests": ["one/Cargo.toml", "two/Cargo.toml"] },
+      { "id": "conventional-not-manifest", "target": "src/lib.rs", "files": { "src/lib.rs": "pub fn inspect() {}" }, "expectedManifests": [] },
+      { "id": "absolute-mount-is-not-relative", "target": "pkg/absolute/code.rs", "files": { "pkg/Cargo.toml": "[package]\nname = \"example\"\n[lib]\npath = \"glue.rs\"\n", "pkg/glue.rs": "#[path = \"/absolute/code.rs\"] mod component;", "pkg/absolute/code.rs": "pub fn inspect() {}" }, "expectedManifests": [] },
+      { "id": "malformed-manifest", "target": "pkg/glue.rs", "files": { "pkg/Cargo.toml": "[package]\nname = \"one\"\nname = \"two\"\n[lib]\npath = \"glue.rs\"\n", "pkg/glue.rs": "pub fn inspect() {}" }, "expectedManifests": [] }
+    ]
+  },
   "assertionMessages": {
     "macros": { "assert": 1, "assert_eq": 2, "assert_ne": 2, "debug_assert": 1, "debug_assert_eq": 2, "debug_assert_ne": 2 },
     "literal": "unescaped-normal-string-only",

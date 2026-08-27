@@ -747,7 +747,7 @@ pub fn demo_stock() -> Vec<ObjectKind> {
 /// never inline content, in the persisted DSL text itself.
 pub fn default_document() -> CurateSnapshot {
     crate::artifacts::curate::validate_catalog_payload(&demo_stock());
-    <CurateSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::curate::dsl::DEMO_STOCK_TEXT).unwrap_or_default()
+    <CurateSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::curate::dsl::DEMO_STOCK_TEXT).expect("authored demo stock must match the curate schema")
 }
 
 /// 📄️ The empty-curation example, parsed once from
@@ -755,7 +755,7 @@ pub fn default_document() -> CurateSnapshot {
 /// same content-addressed empty-catalog handle `CurateSnapshot::default()` mints.
 pub fn empty_document() -> CurateSnapshot {
     crate::artifacts::curate::validate_catalog_payload(&[]);
-    <CurateSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::curate::dsl::EMPTY_CURATION_TEXT).unwrap_or_default()
+    <CurateSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::curate::dsl::EMPTY_CURATION_TEXT).expect("authored empty curation must match the curate schema")
 }
 //#endregion 🔖️Fixtures
 

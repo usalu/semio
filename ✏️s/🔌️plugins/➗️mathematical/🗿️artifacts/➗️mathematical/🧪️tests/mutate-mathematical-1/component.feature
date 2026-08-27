@@ -6,7 +6,7 @@ Feature: Apply every typed s.mathematical.mathematical mutation to its committed
 
   `s.mathematical.mathematical` is a semio-NATIVE artifact and no third party reads `.dsl.semio`.
   That is recorded as the `mathematical-mutation-semantics` no-oracle decision in
-  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, which also records why `petgraph` and
+  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`, which also records why `petgraph` and
   the external CAS candidates were surveyed and DECLINED.
 
   ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party

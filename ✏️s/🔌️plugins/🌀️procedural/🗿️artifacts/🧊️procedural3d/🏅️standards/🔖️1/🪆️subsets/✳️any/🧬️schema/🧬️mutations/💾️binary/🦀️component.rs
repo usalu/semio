@@ -3619,10 +3619,10 @@ mod retained_authority_laws {
         let mut authority = initializer(operation, generation);
         let cancel = semio_framework_job::CancelToken::root_now();
         let mut sequence = 0;
-        let mut zero_fuel = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(0, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut sequence);
+        let mut zero_fuel = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(0, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut sequence);
         assert!(matches!(authority.step(&mut zero_fuel), semio_framework_job::StepOutcome::Yield));
         assert!(matches!(authority.phase, Procedural3dStoreInitializationPhase::ValidateEnvelope));
-        let mut expired = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, 0), cancel, semio_framework_job::default_now_ms, &mut sequence);
+        let mut expired = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, 0), cancel, semio_framework_job::default_now_us, &mut sequence);
         assert!(matches!(authority.step(&mut expired), semio_framework_job::StepOutcome::Yield));
         assert!(matches!(authority.phase, Procedural3dStoreInitializationPhase::ValidateEnvelope));
         close_initializer(&mut authority);
@@ -3640,7 +3640,7 @@ mod retained_authority_laws {
         let cancelled_token = semio_framework_job::CancelToken::root_now();
         let mut cancelled_outcome = None;
         for _ in 0..100_000 {
-            let mut context = semio_framework_job::StepContext::new(cancelled_operation, cancelled_generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancelled_token.clone(), semio_framework_job::default_now_ms, &mut cancelled_sequence);
+            let mut context = semio_framework_job::StepContext::new(cancelled_operation, cancelled_generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancelled_token.clone(), semio_framework_job::default_now_us, &mut cancelled_sequence);
             let outcome = cancelled.step(&mut context);
             if !matches!(outcome, semio_framework_job::StepOutcome::Yield) {
                 cancelled_outcome = Some(outcome);
@@ -3664,7 +3664,7 @@ mod retained_authority_laws {
                 semio_framework_job::Generation(stale_generation.0 + 1),
                 semio_framework_job::StepBudget::new(1, u64::MAX),
                 stale_token.clone(),
-                semio_framework_job::default_now_ms,
+                semio_framework_job::default_now_us,
                 &mut stale_sequence,
             );
             let outcome = stale.step(&mut context);

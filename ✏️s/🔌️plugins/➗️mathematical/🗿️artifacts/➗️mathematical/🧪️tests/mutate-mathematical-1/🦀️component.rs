@@ -1,6 +1,6 @@
 //! ➗️ `s.mathematical.mathematical` exhaustive mutation case — Rust adapter. Ticket
 //! 26/08/23/END-TO-END-TESTING-REFACTOR. Recorded no-oracle decision
-//! `mathematical-mutation-semantics` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`,
+//! `mathematical-mutation-semantics` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`,
 //! which also records why `petgraph` and the external CAS candidates were surveyed and DECLINED).
 //!
 //! This subset's snapshot no longer holds the collections its vocabulary addresses. Ticket

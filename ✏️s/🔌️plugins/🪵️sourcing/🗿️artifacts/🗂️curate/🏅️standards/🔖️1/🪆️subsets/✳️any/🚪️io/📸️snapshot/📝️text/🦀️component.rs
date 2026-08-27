@@ -49,6 +49,16 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
+    async fn demo_stock_example_preserves_authored_content_against_json_oracle() {
+        let expected: Vec<crate::artifacts::curate::ObjectKind> = serde_json::from_str(include_str!("../../../📚️examples/🎬️demo/🧪️expected-stock.json")).unwrap();
+        let document = parse_dsl(DEMO_STOCK_TEXT).expect("authored stock must parse without an empty fallback");
+        assert_eq!(crate::artifacts::curate::stock_of(&document), expected);
+        assert_eq!(crate::artifacts::curate::stock_of(&crate::artifacts::curate::schema::default_document()), expected);
+        assert_eq!(crate::artifacts::curate::schema::demo_stock(), expected);
+        assert_eq!(document.catalog, crate::artifacts::curate::catalog_child_handle(&expected));
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn empty_curation_example_dsl_round_trips() {
         let document = parse_dsl(EMPTY_CURATION_TEXT).expect("parse empty-curation example");
         store::os_store::test_support::assert_dsl_round_trip(&document);

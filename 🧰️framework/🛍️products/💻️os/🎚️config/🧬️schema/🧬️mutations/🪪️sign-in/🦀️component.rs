@@ -105,7 +105,55 @@ impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignIn {
 }
 //#endregion 🔖️Mutation
 
+//#region 🌉️MutationCodecBridge
+/// 🧮️ Applies one identity mutation through its whole-record diff.
+pub fn apply_identity_config_mutation(snapshot: &mut IdentitySetting, mutation: &IdentityConfigMutation) -> protocol::MutationApplyResult<()> {
+    use protocol::{Mutation as _, MutationDiff as _};
+    *snapshot = mutation.diff(snapshot).diff().apply(snapshot)?;
+    Ok(())
+}
+
+/// ↩️ Computes the mutation's inverse steps from the pre-mutation session.
+pub fn inverse_identity_config_mutation(snapshot: &IdentitySetting, mutation: &IdentityConfigMutation) -> Vec<IdentityConfigMutation> {
+    use protocol::Mutation as _;
+    mutation.inverse(snapshot)
+}
+
+/// 📥️ Decodes the internally tagged identity mutation JSON projection.
+pub fn decode_identity_config_mutation_json(text: &str) -> Result<IdentityConfigMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📤️ Encodes the identity setting to its canonical camel-case JSON projection — a bare
+/// session object, or the bare literal `null` when signed out.
+pub fn encode_identity_setting_json(snapshot: &IdentitySetting) -> String {
+    serde_json::to_string(snapshot).expect("IdentitySetting serialization is infallible")
+}
+
+/// 📥️ Decodes the canonical identity setting JSON projection.
+pub fn decode_identity_setting_json(text: &str) -> Result<IdentitySetting, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// ▶️ Applies a mutation and returns its diagnostic `(code, severity)` pairs.
+pub fn apply_identity_config_mutation_reporting(snapshot: &mut IdentitySetting, mutation: &IdentityConfigMutation) -> Vec<(String, String)> {
+    use protocol::Mutation as _;
+    let outcome = mutation.diff(snapshot).apply_to(snapshot);
+    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
+}
+
+/// ↩️ Returns the mutation's own inverse steps for an external fixture adapter.
+pub fn inverse_identity_config_mutation_steps(mutation: &IdentityConfigMutation, base: &IdentitySetting) -> Vec<IdentityConfigMutation> {
+    use protocol::Mutation as _;
+    mutation.inverse(base)
+}
+//#endregion 🌉️MutationCodecBridge
+
 //#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/replaces-the-active-session-with-a-second-account/🦀️component.rs"]
+mod tests_replaces_the_active_session_with_a_second_account;
+
 #[cfg(test)]
 mod tests {
     use super::*;

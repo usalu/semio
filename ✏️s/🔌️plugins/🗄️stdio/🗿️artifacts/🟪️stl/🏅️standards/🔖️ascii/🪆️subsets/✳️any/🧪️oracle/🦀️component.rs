@@ -22,7 +22,7 @@
 //! oracle follows for a format whose Rust reference is a reader. Nothing here touches the subject's
 //! own codec, so it stays a genuine second producer rather than a self-comparison.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself.
 
 use semio_repo_test_host::Json;

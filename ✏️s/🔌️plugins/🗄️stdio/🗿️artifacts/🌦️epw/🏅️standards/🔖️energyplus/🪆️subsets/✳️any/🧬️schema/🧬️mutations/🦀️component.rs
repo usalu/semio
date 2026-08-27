@@ -74,7 +74,7 @@ pub enum EpwMutation {
 }
 
 /// 🧾️ Kebab-case spelling of every `EpwMutation` variant, in declaration order — the exhaustive
-/// mutation catalog `epw-energyplus-any` (`../../🧪️oracle/🔣️component.json`) is measured against
+/// mutation catalog `epw-energyplus-any` (`../../🧪️oracle/🔣️.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
 pub const KINDS: &[&str] = &[
     "no-mutation",
@@ -608,7 +608,7 @@ mod tests {
         let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
         assert_eq!(from_enum, KINDS, "KINDS must list every EpwMutation variant, in declaration order");
 
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         let needle = "\"kinds\": [";
         let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
         let end = start + manifest[start..].find(']').expect("kinds array is closed");

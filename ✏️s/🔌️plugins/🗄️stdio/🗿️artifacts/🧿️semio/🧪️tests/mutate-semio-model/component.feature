@@ -14,7 +14,7 @@ Feature: Apply every typed semio MODEL mutation to the Nakagin Capsule Tower, ag
   the committed `(before, mutation, after)` vectors in this case's own `🧫️fixtures/`, and the semio
   envelope region of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`), importing nothing
   from and transliterating nothing of the Rust it judges. It is registered as the oracle
-  `semio-model-python-independent` in `…/✳️model/🧪️oracle/🔣️component.json`; the recorded no-oracle
+  `semio-model-python-independent` in `…/✳️model/🧪️oracle/🔣️.json`; the recorded no-oracle
   decision it replaces is gone, because there is now a reference to compare against.
 
   🏗️ **The model under test is a real building.** The richest `stdio.semio.model` document committed

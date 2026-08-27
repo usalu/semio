@@ -5,7 +5,7 @@
 //! beside it — an independent Python implementation of both committed carriers and all sixteen
 //! verbs, written from the committed grammars and the committed binary protocol, registered as the
 //! oracle `semio-cad-python-independent` in
-//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧪️oracle/🔣️component.json`. Registering oracle handlers
+//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧪️oracle/🔣️.json`. Registering oracle handlers
 //! here as well would put this repository's own answer on both sides of the comparison, which is
 //! the one failure the platform exists to prevent, so the registrations this file used to carry are
 //! gone rather than merely unused.

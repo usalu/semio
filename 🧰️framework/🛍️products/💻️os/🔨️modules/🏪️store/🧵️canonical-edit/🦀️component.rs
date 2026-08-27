@@ -19,6 +19,13 @@ pub const ARTIFACT_CANONICAL_JSON_CHUNK_BYTES: usize = 256;
 const CANONICAL_EDIT_MAXIMUM_BYTES: u64 = 16 * ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES as u64;
 const CANONICAL_EDIT_MAXIMUM_OVERHEAD_BYTES: u64 = b"semio.artifact.cursor.v2".len() as u64 + 3 * 8 + b"edit".len() as u64 + 4 * ARTIFACT_STORE_ONE_ITEM_ID_BYTES as u64;
 
+/// ⚠️ Exact initialized output prefix retained even when typed canonical traversal fails.
+#[derive(Debug, PartialEq, Eq)]
+pub struct ArtifactCanonicalJsonEncodeError {
+    pub written_bytes: usize,
+    pub reason: String,
+}
+
 /// 🧬️ A borrowed typed JSON node; callers cannot supply encoded bytes or a digest.
 #[derive(Clone, Copy, Debug)]
 pub enum ArtifactCanonicalJsonNode<'a> {
@@ -353,10 +360,10 @@ impl ArtifactCanonicalJsonCursor {
         }
     }
 
-    pub fn encode_chunk(&mut self, source: &(impl ArtifactCanonicalJson + ?Sized), output: &mut [u8]) -> Result<usize, String> {
+    pub fn encode_chunk(&mut self, source: &(impl ArtifactCanonicalJson + ?Sized), output: &mut [u8]) -> Result<usize, ArtifactCanonicalJsonEncodeError> {
         let mut written = 0;
         while written < output.len().min(ARTIFACT_CANONICAL_JSON_CHUNK_BYTES) {
-            let Some(byte) = self.next_byte(source)? else { break };
+            let Some(byte) = self.next_byte(source).map_err(|reason| ArtifactCanonicalJsonEncodeError { written_bytes: written, reason })? else { break };
             output[written] = byte;
             written += 1;
         }
@@ -537,6 +544,7 @@ impl<P: Send + Sync + 'static, M: ArtifactCanonicalJson + Send + 'static> Artifa
             return Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.progress()));
         }
         let mut maximum = grant.maximum_bytes.min(ARTIFACT_CANONICAL_JSON_CHUNK_BYTES);
+        let mut encoding_error = None;
         if let Some(target) = self.replay {
             if target.completed_bytes > self.completed_bytes { maximum = maximum.min((target.completed_bytes - self.completed_bytes) as usize); }
         }
@@ -548,7 +556,10 @@ impl<P: Send + Sync + 'static, M: ArtifactCanonicalJson + Send + 'static> Artifa
             }
             1 | 3 => {
                 let edit = self.edit.as_ref().ok_or_else(|| "canonical-edit.owner-missing".to_string())?;
-                self.last_length = self.encoder.encode_chunk(edit.as_ref(), &mut self.last_chunk[..maximum])?;
+                self.last_length = match self.encoder.encode_chunk(edit.as_ref(), &mut self.last_chunk[..maximum]) {
+                    Ok(written) => written,
+                    Err(error) => { self.cancelled = true; encoding_error = Some(error.reason); error.written_bytes }
+                };
                 self.last_canonical = true;
                 if self.phase == 1 {
                     self.canonical_bytes = self.canonical_bytes.checked_add(self.last_length as u64).filter(|bytes| *bytes <= CANONICAL_EDIT_MAXIMUM_BYTES).ok_or_else(|| "canonical-edit.byte-limit".to_string())?;
@@ -590,6 +601,7 @@ impl<P: Send + Sync + 'static, M: ArtifactCanonicalJson + Send + 'static> Artifa
         self.transcript.update(&self.last_chunk[..self.last_length]);
         self.completed_bytes = self.completed_bytes.checked_add(self.last_length as u64).ok_or_else(|| "canonical-edit.work-overflow".to_string())?;
         self.turns = self.turns.checked_add(1).ok_or_else(|| "canonical-edit.turn-overflow".to_string())?;
+        if let Some(error) = encoding_error { return Err(error); }
         self.verify_replay()?;
         if self.phase == 6 {
             let authority = self.authority.as_ref().ok_or_else(|| "canonical-edit.authority-missing".to_string())?;

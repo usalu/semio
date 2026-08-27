@@ -1952,7 +1952,7 @@
       ],
       "users": [
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
-        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json"
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json"
       ],
       "productionReachable": false,
       "oracleIds": [
@@ -2055,7 +2055,7 @@
       ],
       "users": [
         "✏️s/🔌️plugins/🗄️stdio/🧪️oracle",
-        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json"
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json"
       ],
       "productionReachable": false,
       "oracleIds": [

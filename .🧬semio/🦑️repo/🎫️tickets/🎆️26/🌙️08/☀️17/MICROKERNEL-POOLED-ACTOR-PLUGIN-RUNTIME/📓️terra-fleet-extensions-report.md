@@ -247,9 +247,9 @@ and the `plugin_exports!` sibling identically.
 - `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/🦀️component.rs`
 - `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/🦀️component.rs`
 - `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/🦀️component.rs`
-- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/🦀️component.rs`
-- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/🦀️component.rs`
-- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/Cargo.toml`
+- [historical FSM component source (catalog mapping 9)](../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️cad-draw-path-projection/🔣️.json#/projections/1/mappings/9/sourcePath)
+- [historical macros component source (catalog mapping 4)](../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️cad-draw-path-projection/🔣️.json#/projections/1/mappings/4/sourcePath)
+- [historical FSM Cargo manifest source (catalog mapping 5)](../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️cad-draw-path-projection/🔣️.json#/projections/1/mappings/5/sourcePath)
 - This report: `📓️terra-fleet-extensions-report.md`
 
 Not touched: anything under `🖱️ui/**`, `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**`,

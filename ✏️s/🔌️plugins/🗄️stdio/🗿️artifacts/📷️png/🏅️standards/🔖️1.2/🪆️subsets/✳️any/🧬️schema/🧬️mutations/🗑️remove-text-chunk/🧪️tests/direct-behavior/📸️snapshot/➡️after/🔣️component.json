@@ -1,0 +1,42 @@
+{
+  "bitDepth": 8,
+  "bkgd": null,
+  "chrm": null,
+  "chunkOrder": [
+    {
+      "chunk": "ihdr"
+    },
+    {
+      "chunk": "gama"
+    },
+    {
+      "chunk": "idat"
+    },
+    {
+      "chunk": "iend"
+    }
+  ],
+  "colorType": "rgba",
+  "gama": 100000,
+  "height": 1,
+  "interlace": false,
+  "phys": null,
+  "pixels": [
+    255,
+    0,
+    0,
+    255,
+    0,
+    0,
+    255,
+    255
+  ],
+  "plte": null,
+  "schema": "stdio.png",
+  "srgb": null,
+  "textChunks": [],
+  "time": null,
+  "trns": null,
+  "unknownChunks": [],
+  "width": 2
+}

@@ -67,7 +67,7 @@ The physical registry validator deliberately never consults `kinds`.
 
 ### Governed catalogs
 
-Updated every non-Compose plugin-artifact `🧪️oracle/🔣️component.json` containing `mutationCatalogs`:
+Updated every non-Compose plugin-artifact `🧪️oracle/🔣️.json` containing `mutationCatalogs`:
 
 - 144 manifests updated;
 - profile fields captured from their exact `🏅️standards/<standard>/🪆️subsets/<subset>` owner;
@@ -158,7 +158,7 @@ Received length: 0
 0 pass, 73 filtered, 1 fail, 75.60s
 ```
 
-Taxonomy v7 discovery resolves the test-contribution JSON kind to `🧪️oracle/🔣️.json`, while this lane was expressly limited to the existing governed `🧪️oracle/🔣️component.json` files and forbidden from moving production trees. The failing regression is intentionally precise: transactional physical-leaf apply must move the manifests before the strict whole-repository loader can observe the 144 catalogs. No alternate filename, alias, or legacy fallback was added.
+Taxonomy v7 discovery resolves the test-contribution JSON kind to `🧪️oracle/🔣️.json`, while this lane was expressly limited to the existing governed `🧪️oracle/🔣️.json` files and forbidden from moving production trees. The failing regression is intentionally precise: transactional physical-leaf apply must move the manifests before the strict whole-repository loader can observe the 144 catalogs. No alternate filename, alias, or legacy fallback was added.
 
 2. The precise normalization projection test initially reached the engine but failed before planning at `normalization/🟦️.ts:1638` because `OLD_MUTATION_STRUCTURE_SOURCE` produced an invalid Unicode regular expression. The engine owner reported that regex corrected after the run; root then requested immediate finalization, so this packet does not claim an unperformed rerun. Projection behavior remains owned by the in-flight engine lane.
 

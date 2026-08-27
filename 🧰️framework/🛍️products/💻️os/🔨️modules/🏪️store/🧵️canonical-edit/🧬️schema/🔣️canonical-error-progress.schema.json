@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "text", "modes", "grants", "sentinel", "expectedPrefix", "expectedBytes", "expectedError", "expectedComplete", "expectedRootRetirements", "expectedSnapshotBytes"],
+  "properties": {
+    "version": { "const": 1 },
+    "text": { "const": "aä🧵" },
+    "modes": { "const": ["indexed", "borrowed"] },
+    "grants": { "const": [0, 1, 7, 256, 4096] },
+    "sentinel": { "const": 165 },
+    "expectedPrefix": { "const": "[\"aä🧵\"," },
+    "expectedBytes": { "const": 11 },
+    "expectedError": { "const": "canonical-reader.fixture-child" },
+    "expectedComplete": { "const": false },
+    "expectedRootRetirements": { "const": 1 },
+    "expectedSnapshotBytes": { "const": 7 }
+  }
+}

@@ -1,1 +1,0 @@
-{"oracle":"ajv-2020","valid":true,"cases":4,"maximumCases":4}

@@ -19,8 +19,8 @@ mod tests {
 
     static DEADLINE_CLOCK: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
-    fn deadline_now_ms() -> u64 {
-        DEADLINE_CLOCK.fetch_add(8, std::sync::atomic::Ordering::AcqRel)
+    fn deadline_now_us() -> Option<u64> {
+        Some(DEADLINE_CLOCK.fetch_add(8_000, std::sync::atomic::Ordering::AcqRel))
     }
 
     #[derive(Debug, PartialEq)]
@@ -124,8 +124,8 @@ mod tests {
             operation: operation.operation,
             generation: operation.generation,
             cancel,
-            config: BatchDriveConfig { site: "puzzle2d.fill.test", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: 7 },
-            now_ms: semio_framework_job::default_now_ms,
+            config: BatchDriveConfig { site: "puzzle2d.fill.test", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+            now_us: semio_framework_job::default_now_us,
         };
         let mut session = mount_fill_session(job, params);
         let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, worker_count));
@@ -138,6 +138,7 @@ mod tests {
                     std::thread::yield_now();
                 }
                 WorkerJobPoll::Outcome | WorkerJobPoll::Terminal => {
+                    assert!(!session.callback_verdict().is_some_and(|verdict| verdict.is_fault()), "exact fill session callback exceeded its clock authority");
                     let mut outcome = session.take_checked_out_outcome().expect("checked-out fill outcome");
                     match &outcome {
                         StepOutcome::PreviewReady(_) => {
@@ -211,8 +212,8 @@ mod tests {
             operation: operation.operation,
             generation: operation.generation,
             cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { site: "puzzle2d.fill.checkpoint", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: 7 },
-            now_ms: semio_framework_job::default_now_ms,
+            config: BatchDriveConfig { site: "puzzle2d.fill.checkpoint", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+            now_us: semio_framework_job::default_now_us,
         };
         let mut session = mount_fill_session(job, params);
         let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
@@ -520,7 +521,6 @@ mod tests {
         assert!(!first.is_empty(), "expected at least one fill placement");
         assert!(first.len() <= 3);
         assert!(first_previews.windows(2).all(|pair| pair[0] < pair[1]), "preview sequences must increase monotonically");
-        assert_eq!(semio_framework_job::watchdog_step_overrun_us(first_operation.operation, first_operation.generation), None);
         let many_operation = Operation::new(semio_framework_job::OperationId(99), semio_framework_job::RevisionId(9), semio_framework_job::Generation(1), 99);
         let (many, _, _) = run_fill_job(&h, 1000, many_operation, 1);
         assert!(many.len() < 1000, "collision should cap fill before 1000 on a tight scene");
@@ -585,8 +585,8 @@ mod tests {
             operation: operation.operation,
             generation: operation.generation,
             cancel,
-            config: BatchDriveConfig { site: "puzzle2d.fill.cancel", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: 7 },
-            now_ms: semio_framework_job::default_now_ms,
+            config: BatchDriveConfig { site: "puzzle2d.fill.cancel", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+            now_us: semio_framework_job::default_now_us,
         };
         let mut session = mount_fill_session(job, params);
         let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
@@ -614,8 +614,8 @@ mod tests {
             operation: stale_operation.operation,
             generation: semio_framework_job::Generation(5),
             cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { site: "puzzle2d.fill.stale", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: 7 },
-            now_ms: semio_framework_job::default_now_ms,
+            config: BatchDriveConfig { site: "puzzle2d.fill.stale", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+            now_us: semio_framework_job::default_now_us,
         };
         let mut stale = mount_fill_session(stale_job, stale_params);
         let stale_pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
@@ -651,8 +651,8 @@ mod tests {
             operation: operation.operation,
             generation: operation.generation,
             cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { site: "puzzle2d.fill.deadline", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: 7 },
-            now_ms: deadline_now_ms,
+            config: BatchDriveConfig { site: "puzzle2d.fill.deadline", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+            now_us: deadline_now_us,
         };
         let mut session = mount_fill_session(job, params);
         let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
@@ -683,8 +683,8 @@ mod tests {
             operation: refused_operation.operation,
             generation: refused_operation.generation,
             cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { site: "puzzle2d.fill.refusal", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: 7 },
-            now_ms: semio_framework_job::default_now_ms,
+            config: BatchDriveConfig { site: "puzzle2d.fill.refusal", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+            now_us: semio_framework_job::default_now_us,
         };
         let refused_job = BoardFillJob::with_operation(capture_fill_snapshot(&host), 4, refused_operation);
         let mut refused = mount_fill_session(refused_job, refused_params);
@@ -698,8 +698,8 @@ mod tests {
             operation: complete_operation.operation,
             generation: complete_operation.generation,
             cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { site: "puzzle2d.fill.unclaimed-complete", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: 7 },
-            now_ms: semio_framework_job::default_now_ms,
+            config: BatchDriveConfig { site: "puzzle2d.fill.unclaimed-complete", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+            now_us: semio_framework_job::default_now_us,
         };
         let complete_job = BoardFillJob::with_operation(capture_fill_snapshot(&host), 0, complete_operation);
         let mut complete = mount_fill_session(complete_job, complete_params);
@@ -762,8 +762,8 @@ mod tests {
             operation: operation.operation,
             generation: operation.generation,
             cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { site: "puzzle2d.fill.saturation", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: 7 },
-            now_ms: semio_framework_job::default_now_ms,
+            config: BatchDriveConfig { site: "puzzle2d.fill.saturation", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+            now_us: semio_framework_job::default_now_us,
         };
         let mut session = mount_fill_session(BoardFillJob::with_operation(capture_fill_snapshot(&host), 4, operation), params);
         let saturated = matches!(
@@ -838,7 +838,6 @@ mod tests {
         let operation = Operation::new(semio_framework_job::OperationId(123), semio_framework_job::RevisionId(31), semio_framework_job::Generation(1), 123);
         let (_, previews, _) = run_fill_job(&host, 2, operation, 1);
         assert!(previews.len() > 2_000, "large host did not expose cursor progress");
-        assert_eq!(semio_framework_job::watchdog_step_overrun_us(operation.operation, operation.generation), None);
     }
 
     #[test]
@@ -882,8 +881,8 @@ mod tests {
             operation: operation.operation,
             generation: operation.generation,
             cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { site: "puzzle2d.fill.field-cursors", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: 7 },
-            now_ms: semio_framework_job::default_now_ms,
+            config: BatchDriveConfig { site: "puzzle2d.fill.field-cursors", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+            now_us: semio_framework_job::default_now_us,
         };
         let mut session = mount_fill_session(BoardFillJob::with_operation(capture_fill_snapshot(&host), 1, operation), params);
         let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));

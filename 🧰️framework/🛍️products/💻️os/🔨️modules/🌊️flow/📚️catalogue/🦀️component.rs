@@ -152,27 +152,13 @@ pub(crate) fn titleize_module(module: &str) -> String {
 
 /// 📚️ Serializes module-grouped operator catalogue sections for host catalogue seeding.
 pub fn flow_operator_catalogue_json() -> String {
-    use std::collections::BTreeMap;
-    let operators = flow_extension_registry().operator_catalogue();
-    let mut by_module: BTreeMap<String, Vec<OperatorInfo>> = BTreeMap::new();
-    for info in operators {
-        by_module.entry(info.extension.clone()).or_default().push(info);
-    }
-    let sections: Vec<CatalogueSection> = by_module
-        .into_iter()
-        .map(|(module, items)| CatalogueSection {
-            id: module.clone(),
-            title: titleize_module(&module),
-            groups: vec![],
-            items: items.into_iter().map(|info| CatalogueItem { kind: "neuron".into(), neuron_kind: Some(info.id), action: None, format: None, name: info.name, abbreviation: info.abbreviation, icon: info.icon, summary: info.summary }).collect(),
-        })
-        .collect();
-    serde_json::to_string(&sections).unwrap_or_else(|_| "[]".into())
+    serde_json::to_string(&crate::registry::flow_catalogue_sections()).unwrap_or_else(|_| "[]".into())
 }
 
 /// 🧠️ Serializes operator catalogue entries for neuron port layout seeding.
 pub fn flow_neuron_kind_infos_json() -> String {
-    serde_json::to_string(&flow_extension_registry().operator_catalogue()).unwrap_or_else(|_| "[]".into())
+    let registry = flow_extension_registry();
+    serde_json::to_string(&registry.operator_infos().collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into())
 }
 
 /// 🌊️ Default LOD mode id for automatic camera-driven detail.
@@ -230,7 +216,7 @@ fn operator_info_to_node_graph_record(info: &OperatorInfo) -> ui_wgpu::wgpu::Nod
 
 /// 🌊️ Typed operator catalogue (module-grouped) for `NodeGraphScene.operators` seeding.
 pub fn flow_operator_catalogue_records() -> Vec<ui_wgpu::wgpu::NodeGraphOperatorRecord> {
-    flow_extension_registry().operator_catalogue().iter().map(operator_info_to_node_graph_record).collect()
+    flow_extension_registry().operator_infos().map(operator_info_to_node_graph_record).collect()
 }
 
 /// 🌊️ Inverse of `variadic_spec_to_node_graph_record`.

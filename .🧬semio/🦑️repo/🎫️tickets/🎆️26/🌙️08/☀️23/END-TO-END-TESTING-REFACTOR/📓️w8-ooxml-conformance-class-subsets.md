@@ -153,7 +153,7 @@ Per subset (`<artifact>/🏅️standards/🔖️ecma-376/🪆️subsets/✳️<c
 * `🧬️schema/🦀️component.rs` — mounts the above with `#[path]` (deliberately not through the
   contended shared `📦️glue.rs`)
 * `🧪️oracle/🦀️component.rs` — dispatcher, projection, bridge, five `#[test]`s on the real fixture
-* `🧪️oracle/🔣️component.json` — oracle, catalog and comparison profile
+* `🧪️oracle/🔣️.json` — oracle, catalog and comparison profile
 
 Per case (`<artifact>/🧪️tests/mutate-<fmt>-ecma-376-<class>/`):
 * `component.feature`, `🦀️component.rs`

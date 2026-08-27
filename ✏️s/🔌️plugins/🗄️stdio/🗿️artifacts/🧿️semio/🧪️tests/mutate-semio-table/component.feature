@@ -13,7 +13,7 @@ Feature: Apply every typed semio TABLE mutation to a real 50-row survey table, a
   `…/🧬️mutations/🔣️component.json` and the semio envelope region of
   `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`), importing nothing from and
   transliterating nothing of the Rust it judges. It is registered as the oracle
-  `semio-table-python-independent` in `…/✳️table/🧪️oracle/🔣️component.json`; the recorded no-oracle
+  `semio-table-python-independent` in `…/✳️table/🧪️oracle/🔣️.json`; the recorded no-oracle
   decision it replaces is gone, because there is now a reference to compare against.
 
   🧫️ **The document under test is a real one.** The richest `s.stdio.semio.table` document committed

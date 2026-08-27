@@ -13,7 +13,7 @@
 //! fixture's own shape (see `../../../../🧫️fixtures/…` derivation note in this artifact's mutation
 //! case feature file), not a narrowing this oracle imposes.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`KINDS`).
 
 use semio_repo_test_host::Json;

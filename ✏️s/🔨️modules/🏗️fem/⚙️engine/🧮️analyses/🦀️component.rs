@@ -2516,7 +2516,7 @@ fn assemble_system(model: &AnalysisModel) -> Result<AssembledSystem, FemError> {
     let mut job = AssemblyJob::new(model, operation, 1)?;
     let mut preview_sequence = 0;
     loop {
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(4_096, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut preview_sequence);
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(4_096, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut preview_sequence);
         match job.step(&mut context) {
             StepOutcome::Complete(_) => break,
             StepOutcome::Fault(_) | StepOutcome::Cancelled => return Err(FemError::Singular),
@@ -3052,7 +3052,7 @@ mod tests {
         let mut job = construction.take_complete().expect("mounted assembly job");
         let mut sequence = 0;
         fn step_once(job: &mut AssemblyJob<'static>, operation: Operation, sequence: &mut u64) -> StepOutcome {
-            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), sequence);
             job.step(&mut context)
         }
         assert!(matches!(step_once(&mut job, operation, &mut sequence), StepOutcome::Yield));
@@ -3102,7 +3102,7 @@ mod tests {
         let mut previews = Vec::new();
         let mut max_step_micros = 0;
         loop {
-            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(fuel, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(fuel, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             let started = std::time::Instant::now();
             let outcome = job.step(&mut context);
             max_step_micros = max_step_micros.max(started.elapsed().as_micros());
@@ -3137,7 +3137,7 @@ mod tests {
         let mut job = AssemblyJob::new(&model, operation, 4).expect("assembly prepares");
         let mut sequence = 0;
         let checkpoint = loop {
-            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(4, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(4, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
                 break checkpoint.state;
             }
@@ -3192,20 +3192,20 @@ mod tests {
                 let before = job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match, build.indices_new.len(), build.positions.len(), build.stiffness.len()));
                 if let Some((stage, ..)) = before.filter(|(stage, ..)| required.contains(stage)) {
                     seen.insert(stage);
-                    let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                    let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
                     assert_eq!(job.step(&mut deadline), StepOutcome::Yield);
                     assert_eq!(job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match, build.indices_new.len(), build.positions.len(), build.stiffness.len())), before);
-                    let mut stale = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                    let mut stale = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
                     assert!(matches!(job.step(&mut stale), StepOutcome::Fault(_)));
                     assert_eq!(job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match, build.indices_new.len(), build.positions.len(), build.stiffness.len())), before);
                     let token = semio_framework_job::root_cancel_token();
                     semio_framework_async::block_on(token.cancel());
-                    let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), token, || 0, &mut sequence);
+                    let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), token, || Some(0), &mut sequence);
                     assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
                     assert_eq!(job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match, build.indices_new.len(), build.positions.len(), build.stiffness.len())), before);
                 }
                 let started = std::time::Instant::now();
-                let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
                 assert!(matches!(job.step(&mut context), StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_)));
                 maximum_micros = maximum_micros.max(started.elapsed().as_micros());
                 if job.state.pending.is_some() {
@@ -3291,7 +3291,7 @@ mod tests {
                         job.state.free_merge_cursors.clone(),
                         job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match)),
                     );
-                    let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                    let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
                     assert_eq!(job.step(&mut deadline), StepOutcome::Yield);
                     assert_eq!(
                         (
@@ -3304,15 +3304,15 @@ mod tests {
                         ),
                         before
                     );
-                    let mut stale = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                    let mut stale = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
                     assert!(matches!(job.step(&mut stale), StepOutcome::Fault(_)));
                     let token = semio_framework_job::root_cancel_token();
                     semio_framework_async::block_on(token.cancel());
-                    let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), token, || 0, &mut sequence);
+                    let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), token, || Some(0), &mut sequence);
                     assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
                 }
                 let started = std::time::Instant::now();
-                let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
                 if matches!(job.step(&mut context), StepOutcome::Complete(_)) {
                     maximum_micros = maximum_micros.max(started.elapsed().as_micros());
                     let system = job.finish().expect("owned assembly completes");
@@ -3747,7 +3747,7 @@ mod tests {
         let mut graph = FemJobGraph::new(operation, graph_plan(), 2);
         let mut sequence = 0;
         let checkpoint = loop {
-            let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(2, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(2, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             if let StepOutcome::CheckpointReady(checkpoint) = graph.step(&mut context) {
                 break checkpoint.state;
             }
@@ -3761,7 +3761,7 @@ mod tests {
                     seen.push(stage);
                 }
             }
-            let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(3, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(3, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             if matches!(resumed.step(&mut context), StepOutcome::Complete(_)) {
                 break;
             }
@@ -3777,13 +3777,13 @@ mod tests {
         let before = graph.checkpoint_bytes();
         let mut sequence = 0;
         let mut stale =
-            semio_framework_job::StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(2, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            semio_framework_job::StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(2, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
         assert!(matches!(graph.step(&mut stale), StepOutcome::Fault(_)));
         assert_eq!(graph.checkpoint_bytes(), before);
 
         let token = semio_framework_job::root_cancel_token();
         semio_framework_async::block_on(token.cancel());
-        let mut cancelled = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(2, u64::MAX), token, || 0, &mut sequence);
+        let mut cancelled = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(2, u64::MAX), token, || Some(0), &mut sequence);
         assert_eq!(graph.step(&mut cancelled), StepOutcome::Cancelled);
         assert_eq!(graph.checkpoint_bytes(), before);
     }

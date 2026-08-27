@@ -43,7 +43,7 @@
 //! `blocked_snapshot_violation` below is held against the subset's own checker by
 //! `gate_agrees_with_the_subset_conformance_checker`, so the gate and the diagnostic cannot drift.
 //!
-//! @see ../../🧪️oracle/🔣️component.json — the catalog `KINDS` below must match exactly.
+//! @see ../../🧪️oracle/🔣️.json — the catalog `KINDS` below must match exactly.
 //! @see ../../../../../../🧪️tests/mutate-xml-1-0-valid/component.feature — the case that exercises it.
 
 use crate::artifacts::xml::schema::diff::{diff_at_path, diff_set_snapshot, XmlDiff, XmlElementDiff, XmlNodeDiff};
@@ -113,7 +113,7 @@ pub enum XmlValidMutation {
 }
 
 /// 📇️ Kebab-case spelling of every `XmlValidMutation` variant, in declaration order — the exact
-/// `kinds` list `../../🧪️oracle/🔣️component.json`'s `mutationCatalogs` entry declares. The framework
+/// `kinds` list `../../🧪️oracle/🔣️.json`'s `mutationCatalogs` entry declares. The framework
 /// never parses this enum; `kinds_matches_enum_variants_in_declaration_order` below is what keeps
 /// the two declarations honest against each other.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "declare-doctype", "rename-document-element", "set-external-subset", "set-standalone", "declare-entity", "set-internal-subset", "set-text"];

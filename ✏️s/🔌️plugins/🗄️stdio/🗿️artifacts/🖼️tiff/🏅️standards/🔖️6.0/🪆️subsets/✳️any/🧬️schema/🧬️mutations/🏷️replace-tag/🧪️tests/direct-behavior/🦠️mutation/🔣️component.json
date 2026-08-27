@@ -1,0 +1,12 @@
+{
+  "mutation": "replace-tag",
+  "payload": {
+    "ifdIndex": 0,
+    "kind": "ascii",
+    "tag": 305,
+    "values": {
+      "kind": "ascii",
+      "value": "Direct Owner"
+    }
+  }
+}

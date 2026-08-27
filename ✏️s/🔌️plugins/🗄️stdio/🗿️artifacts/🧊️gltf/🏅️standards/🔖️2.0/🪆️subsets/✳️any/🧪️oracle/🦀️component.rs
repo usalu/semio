@@ -34,7 +34,7 @@
 //! `../🧬️schema/🧬️mutations/*/🧬️operation/🦀️component.rs`, operating on a hand-parsed GLB container
 //! and a plain `json::JsonValue` document tree rather than this subset's own `GltfSnapshot`.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — `GLTF_MUTATION_LEAF_DESCRIPTORS`, the real vocabulary.
 
 use semio_repo_test_host::Json;

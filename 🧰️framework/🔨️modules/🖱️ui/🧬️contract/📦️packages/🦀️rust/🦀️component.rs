@@ -472,6 +472,23 @@ impl Component {
 mod tests {
     use super::*;
 
+    #[test]
+    fn typed_wire_neutral_component_defaults_match_serde() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧵️retained/📦️wire/🧪️fixtures/🔣️typed.json")).expect("typed fixture");
+        let rows = fixture["components"].as_array().expect("component vectors");
+        assert_eq!(rows.len(), 18);
+        for row in rows {
+            let sparse: Component = serde_json::from_value(row["wire"].clone()).expect("native sparse component");
+            let normalized: Component = serde_json::from_value(row["expected"].clone()).expect("native normalized component");
+            assert_eq!(sparse, normalized);
+            assert_eq!(serde_json::to_value(sparse).expect("native sparse wire"), serde_json::to_value(normalized).expect("native normalized wire"));
+        }
+        let style: crate::StyleSpec = serde_json::from_value(fixture["defaults"]["style"].clone()).expect("normalized style");
+        let accessibility: crate::AccessibilitySpec = serde_json::from_value(fixture["defaults"]["accessibility"].clone()).expect("normalized accessibility");
+        assert_eq!(style, crate::StyleSpec::default());
+        assert_eq!(accessibility, crate::AccessibilitySpec::default());
+    }
+
     fn ui_text(value: &str) -> crate::UiText {
         crate::UiText::try_from_str(value).expect("bounded fixture text")
     }

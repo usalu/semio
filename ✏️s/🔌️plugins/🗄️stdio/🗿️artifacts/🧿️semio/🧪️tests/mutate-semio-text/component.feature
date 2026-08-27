@@ -11,7 +11,7 @@ Feature: Apply every typed semio TEXT mutation to a real published article, agai
   `…/📸️snapshot/💾️binary/📡️component.protocol.semio`, `…/🧬️mutations/📝️text/📖️component.grammar.semio`
   and the semio envelope in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`), importing
   nothing from and transliterating nothing of the Rust it judges. It is registered as the oracle
-  `semio-text-python-independent` in `…/✳️text/🧪️oracle/🔣️component.json`; the recorded no-oracle
+  `semio-text-python-independent` in `…/✳️text/🧪️oracle/🔣️.json`; the recorded no-oracle
   decision it replaces is gone, because there is now a reference to compare against.
 
   📰️ **The document under test is a real published article.** The richest `s.stdio.semio.text`

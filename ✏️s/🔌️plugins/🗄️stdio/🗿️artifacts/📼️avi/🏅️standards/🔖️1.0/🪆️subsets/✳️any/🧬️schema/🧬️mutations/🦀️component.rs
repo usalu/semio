@@ -61,7 +61,7 @@ pub enum AviMutation {
 }
 
 /// 📇️ Kebab-case spelling of every `AviMutation` variant, in declaration order -- the exhaustive
-/// mutation catalog `../../🧪️oracle/🔣️component.json`'s `kinds` array is required to match verbatim
+/// mutation catalog `../../🧪️oracle/🔣️.json`'s `kinds` array is required to match verbatim
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself).
 pub const KINDS: &[&str] = &[

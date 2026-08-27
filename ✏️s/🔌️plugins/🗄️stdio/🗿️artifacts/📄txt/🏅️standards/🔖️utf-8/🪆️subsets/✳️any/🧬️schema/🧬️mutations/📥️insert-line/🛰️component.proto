@@ -1,4 +1,0 @@
-syntax = "proto3";
-package stdio.txt.mutation;
-// insert-line/InsertLine
-message InsertLinePayload { uint64 index = 1; string text = 2; }

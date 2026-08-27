@@ -14,7 +14,7 @@ Feature: Apply every typed semio GRAPH mutation to the Nakagin Capsule Tower's p
   `SemioValue` member names, and the semio envelope in
   `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`), importing nothing from and
   transliterating nothing of the Rust it judges. It is registered as the oracle
-  `semio-graph-python-independent` in `…/✳️graph/🧪️oracle/🔣️component.json`; the recorded no-oracle
+  `semio-graph-python-independent` in `…/✳️graph/🧪️oracle/🔣️.json`; the recorded no-oracle
   decision it replaces is gone, because there is now a reference to compare against.
 
   🏗️ **The graph under test is a real building's wiring.** The richest `s.stdio.semio.graph` document

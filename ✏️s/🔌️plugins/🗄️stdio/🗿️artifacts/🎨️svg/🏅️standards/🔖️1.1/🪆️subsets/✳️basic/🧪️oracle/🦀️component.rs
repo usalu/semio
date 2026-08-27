@@ -17,7 +17,7 @@
 //! independently of this repository's own `check_svg_basic_conformance`; both encode the same
 //! normative list, neither is derived from the other.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the vocabulary itself (`SvgBasicMutation::KINDS`).
 
 use semio_repo_test_host::Json;

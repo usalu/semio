@@ -116,7 +116,7 @@ pub enum BcfMutation {
 }
 
 /// 📇️ Kebab-case spelling of every `BcfMutation` variant, in declaration order -- the exhaustive
-/// mutation catalog `../../🧪️oracle/🔣️component.json`'s `kinds` array is required to match verbatim
+/// mutation catalog `../../🧪️oracle/🔣️.json`'s `kinds` array is required to match verbatim
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself). Mirrors `print_bcf_mutation`'s own keyword match
 /// entry-for-entry, so `KINDS[i]` is exactly what `print_op()` emits for the enum's `i`-th variant.
@@ -640,7 +640,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<BcfMutation> {
 /// `print_bcf_mutation` keyword, in the SAME declaration order `OpBinary`'s own tag match uses,
 /// must equal `KINDS` entry-for-entry -- the framework never parses Rust to check this itself (see
 /// `KINDS`'s own doc comment), so this test is the one thing that does. `KINDS` is also kept
-/// textually identical, by hand, to `../../🧪️oracle/🔣️component.json`'s own `kinds` array.
+/// textually identical, by hand, to `../../🧪️oracle/🔣️.json`'s own `kinds` array.
 #[cfg(test)]
 mod kinds_tests {
     use super::*;

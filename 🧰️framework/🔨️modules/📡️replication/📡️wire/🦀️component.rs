@@ -1421,7 +1421,7 @@ pub struct InteractionTarget {
 /// 🖱️ One domain's current selection: the active granularity, the selected ids, and the anchor id
 /// range selection pivots from.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DomainSelection {
     pub granularity: String,
     pub ids: Vec<String>,

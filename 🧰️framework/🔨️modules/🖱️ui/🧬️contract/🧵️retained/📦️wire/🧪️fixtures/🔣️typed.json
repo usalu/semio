@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "grant": { "maxItems": 1, "maxBytes": 4096 },
+  "components": [
+    { "wire": { "type": "container" }, "expected": { "type": "container", "role": "plain", "label": null, "description": null, "required": null, "error": null, "defaultOpen": null, "dropOverlay": null } },
+    { "wire": { "type": "text", "value": "Größe 😀" }, "expected": { "type": "text", "value": "Größe 😀", "emphasize": null, "dataAttributes": null } },
+    { "wire": { "type": "button", "icon": "add", "label": "Add" }, "expected": { "type": "button", "icon": "add", "label": "Add" } },
+    { "wire": { "type": "separator" }, "expected": { "type": "separator" } },
+    { "wire": { "type": "input", "value": "Text" }, "expected": { "type": "input", "kind": "text", "value": "Text", "placeholder": null, "commit": null, "min": null, "max": null, "step": null, "accept": null } },
+    { "wire": { "type": "select", "value": "de", "items": [{ "value": "de", "label": "Deutsch" }] }, "expected": { "type": "select", "value": "de", "items": [{ "value": "de", "label": "Deutsch" }], "placeholder": null } },
+    { "wire": { "type": "toggle", "on": true, "icon": "eye" }, "expected": { "type": "toggle", "on": true, "icon": "eye", "text": null } },
+    { "wire": { "type": "keyValueList", "entries": [{ "label": "Name", "value": "A" }] }, "expected": { "type": "keyValueList", "entries": [{ "label": "Name", "value": "A" }] } },
+    { "wire": { "type": "slider", "value": 2, "min": 0, "max": 10, "step": 0.5 }, "expected": { "type": "slider", "value": 2, "min": 0, "max": 10, "step": 0.5, "unit": null } },
+    { "wire": { "type": "numberStepper", "value": 2, "step": 1, "uniform": false }, "expected": { "type": "numberStepper", "value": 2, "step": 1, "uniform": false } },
+    { "wire": { "type": "ring", "orbId": "a", "t": 0.75 }, "expected": { "type": "ring", "orbId": "a", "t": 0.75 } },
+    { "wire": { "type": "iconSelect", "value": "cube", "uniform": true, "classifierKind": "shape" }, "expected": { "type": "iconSelect", "value": "cube", "uniform": true, "classifierKind": "shape" } },
+    { "wire": { "type": "tree" }, "expected": { "type": "tree", "interactionDomain": null } },
+    { "wire": { "type": "treeSection" }, "expected": { "type": "treeSection", "label": null, "defaultOpen": null } },
+    { "wire": { "type": "treeItem", "label": "Item" }, "expected": { "type": "treeItem", "label": "Item", "description": null, "icon": null, "defaultOpen": null, "draggable": null, "dragData": null, "dimmed": null, "rowActions": [] } },
+    { "wire": { "type": "image", "src": "image.png" }, "expected": { "type": "image", "src": "image.png", "alt": null } },
+    { "wire": { "type": "surface", "kind": "node-graph", "docSchema": "node-graph@1", "doc": { "bytes": [0, 127, 255] } }, "expected": { "type": "surface", "kind": "node-graph", "docSchema": "node-graph@1", "doc": { "bytes": [0, 127, 255] }, "bindings": [] } },
+    { "wire": { "type": "extension", "extension": "example", "props": { "nested": [null, true, "Ü"] } }, "expected": { "type": "extension", "extension": "example", "props": { "nested": [null, true, "Ü"] } } }
+  ],
+  "defaults": {
+    "style": { "variant": "solid", "size": "md", "density": "standard", "tone": "neutral", "emphasis": "regular" },
+    "accessibility": { "label": null, "description": null, "live": "off", "shortcut": null, "hidden": false }
+  },
+  "hostile": [
+    { "type": "container", "role": "unknown" },
+    { "type": "text" },
+    { "type": "toggle", "on": "true", "icon": "eye" },
+    { "type": "input", "value": "", "kind": "textarea" },
+    { "type": "separator", "documentJson": "{}" },
+    { "type": "slider", "value": 2, "min": 0, "max": 10 },
+    { "type": "surface", "kind": "nodeGraph", "docSchema": "node-graph@1", "doc": { "bytes": [] } },
+    { "type": "surface", "kind": "node-graph", "docSchema": "node-graph@1", "doc": { "bytes": [] }, "bindings": null },
+    { "type": "extension", "extension": "example" },
+    { "type": "treeItem", "label": "A", "rowActions": [{ "icon": "x", "action": { "trigger": "activate", "action": { "scope": "a", "name": "b", "version": 65536 } } }] }
+  ],
+  "lifecycle": ["cancel-before-decode", "cancel-during-value", "cancel-during-normalization", "cancel-after-byte-capture", "decoder-close-before-publication", "two-snapshot-readers", "older-reader-closes-last", "zero-grant-close"]
+}

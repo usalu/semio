@@ -116,7 +116,7 @@ impl OpBinary for DwgMutation {
 //#region 🔖️Kinds
 impl DwgMutation {
     /// 🏷️ Kebab-case kind spelling — the exact vocabulary BOTH DWG catalogs declare
-    /// (`../../🧪️oracle/🔣️component.json` and `../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/
+    /// (`../../🧪️oracle/🔣️.json` and `../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/
     /// 🔣️component.json`), and the row ids of both cases' Scenario Outlines. Hand-matched rather
     /// than derived, so [`KINDS`] is checked against something with its own reason to be right; and
     /// exhaustive, so a variant added to the enum is a COMPILE error here rather than a silently
@@ -160,7 +160,7 @@ mod tests {
         let from_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
         assert_eq!(from_variants, from_kinds, "KINDS must equal every DwgMutation variant's kind()");
         assert_eq!(KINDS.len(), 3, "KINDS must list exactly the declared 3 kinds");
-        for manifest in [include_str!("../../🧪️oracle/🔣️component.json"), include_str!("../../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🔣️component.json")] {
+        for manifest in [include_str!("../../🧪️oracle/🔣️.json"), include_str!("../../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🔣️.json")] {
             for kind in KINDS {
                 assert!(manifest.contains(&format!("\"{kind}\"")), "a committed DWG catalog is missing kind {kind:?}");
             }

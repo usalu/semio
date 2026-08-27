@@ -107,7 +107,7 @@ async function buildDemonstratorPlugins(): Promise<void> {
   }
   if (primaryVariant) await ensurePluginRegistry(primaryVariant);
   for (const pane of DEMONSTRATOR_PANES) {
-    await buildEngineWasm(pane.variant, "react");
+    await buildEngineWasm(pane.variant, "react", join(demonstratorRoot, "package.json"));
   }
 }
 //#endregion 🎪️DemonstratorPluginBuild

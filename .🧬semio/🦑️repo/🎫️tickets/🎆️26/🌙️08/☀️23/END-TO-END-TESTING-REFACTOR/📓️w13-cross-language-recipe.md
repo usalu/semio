@@ -16,7 +16,7 @@ subject under a comparison profile — all of it runs today with no framework ch
 | Piece | Where it goes | Notes |
 |---|---|---|
 | The independent implementation + its adapter | `<case>/🐍️component.py` (or `🟦️component.ts`) | ONE file. The taxonomy rejects any other filename in a case directory. |
-| Oracle registration | `<subset>/🧪️oracle/🔣️component.json` → `oracles[]` | `"ecosystem": "python"` \| `"javascript"` \| `"rust"` \| `"go"` \| `"dotnet"`. |
+| Oracle registration | `<subset>/🧪️oracle/🔣️.json` → `oracles[]` | `"ecosystem": "python"` \| `"javascript"` \| `"rust"` \| `"go"` \| `"dotnet"`. |
 | Removal of the old decision | same file → delete the `noOracleDecisions` entry | Leaving it is a lie: it says no reference exists. |
 | Feature tag | `@oracle-<id>` replacing `@no-oracle-<id>` | Exactly one of the two. |
 | Scenario modes | `@mode-differential` where a second PRODUCER now exists | Keep `@mode-round-trip` for identity/carrier scenarios. |
@@ -31,7 +31,7 @@ subject under a comparison profile — all of it runs today with no framework ch
 `oracleDecision` in `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:515`:
 
 1. reads the feature's `@oracle-<id>`;
-2. finds that id in the MERGED registry (every `<owner>/🧪️oracle/🔣️component.json` in the repo, so the
+2. finds that id in the MERGED registry (every `<owner>/🧪️oracle/🔣️.json` in the repo, so the
    entry can live in your subset — nothing central is edited);
 3. maps `entry.ecosystem` → implementation, with `"javascript"` → `"typescript"` the only rename;
 4. **requires the case to carry that implementation's adapter file**, else
@@ -89,7 +89,7 @@ feature on for `role == "subject"`.
 
 ## 2. How the host resolves the language's packages
 
-`oracleHostPackages[]` in a `🧪️oracle/🔣️component.json`, `path` present or absent:
+`oracleHostPackages[]` in a `🧪️oracle/🔣️.json`, `path` present or absent:
 
 * **`path` present** → local in-repo source. Rust links the crate by path; Python puts the directory
   on `PYTHONPATH`.
@@ -102,8 +102,8 @@ feature on for `role == "subject"`.
 **Owner scoping is the trap.** `oracleHostPackagesFor` only collects contributions whose `owner` is
 the case's owner or an ANCESTOR of it. A case owner is the directory containing `🧪️tests`. For
 `mutate-semio-text` that is `…/🗿️artifacts/🧿️semio` — so an `oracleHostPackages` entry in the
-`…/🪆️subsets/✳️text/🧪️oracle/🔣️component.json` (a DESCENDANT) would be **silently ignored**, while
-the plugin-level `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json` entries DO apply.
+`…/🪆️subsets/✳️text/🧪️oracle/🔣️.json` (a DESCENDANT) would be **silently ignored**, while
+the plugin-level `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json` entries DO apply.
 `oracles[]`, `noOracleDecisions[]`, `mutationCatalogs[]` and `comparisonProfiles[]` are merged
 repo-wide and are NOT owner-scoped — only `oracleHostPackages` is.
 
@@ -353,7 +353,7 @@ after-snapshot assertion caught it first. The edit was reverted and the run retu
 | `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-text/🐍️component.py` | **new** — 498 lines: the independent implementation and its oracle adapter |
 | `…/🧪️tests/mutate-semio-text/component.feature` | rewritten — `@oracle-…`, 22 scenarios, real artifact + parameters + specification-vector paths |
 | `…/🧪️tests/mutate-semio-text/🦀️component.rs` | rewritten — subject only, reads its inputs from the plan, drops its oracle registrations |
-| `…/🏅️standards/🔖️v1/🪆️subsets/✳️text/🧪️oracle/🔣️component.json` | `noOracleDecisions` removed, `oracles[]` gains `semio-text-python-independent` |
+| `…/🏅️standards/🔖️v1/🪆️subsets/✳️text/🧪️oracle/🔣️.json` | `noOracleDecisions` removed, `oracles[]` gains `semio-text-python-independent` |
 
 Nothing else was edited: no framework file, no shared manifest, no `Cargo.toml`, no `🔒️dependencies.json`,
 no fixture, no comparison profile, no `ignoreKeys`.

@@ -140,103 +140,106 @@ impl<'de> Deserialize<'de> for UiText {
     }
 }
 
+//#region 📋️FixedListOwnership
 #[derive(Debug, PartialEq)]
 pub struct UiFixedList<T, const N: usize = UI_FIXED_LIST_ITEMS> {
-    items: Option<Box<[Option<T>]>>,
-    len: usize,
+    items: Option<Vec<T>>,
 }
 
 impl<T: Eq, const N: usize> Eq for UiFixedList<T, N> {}
 
 impl<T, const N: usize> Default for UiFixedList<T, N> {
     fn default() -> Self {
-        Self { items: None, len: 0 }
+        Self { items: None }
     }
 }
 
+/// 🧊️ Cold cloning allocates and copies every initialized payload; retained owners use explicit cursors.
 impl<T: Clone, const N: usize> Clone for UiFixedList<T, N> {
     fn clone(&self) -> Self {
-        if self.items.is_none() {
-            return Self::default();
-        }
+        let Some(source) = self.items.as_ref() else { return Self::default() };
         let mut items = Vec::with_capacity(N);
-        items.resize_with(N, || None);
-        for (index, value) in self.iter().enumerate() {
-            items[index] = Some(value.clone());
-        }
-        Self { items: Some(items.into_boxed_slice()), len: self.len }
+        items.extend(source.iter().cloned());
+        Self { items: Some(items) }
     }
 }
 
 impl<T, const N: usize> UiFixedList<T, N> {
-    pub fn try_push(&mut self, value: T) -> Result<(), T> {
-        let index = self.len;
-        if index == N {
-            return Err(value);
-        }
-        if self.items.is_none() {
-            let mut items = Vec::with_capacity(N);
-            items.resize_with(N, || None);
-            self.items = Some(items.into_boxed_slice());
-        }
-        let Some(len) = self.len.checked_add(1) else { return Err(value) };
+    /// 🎟️ Admits the fixed backing separately from initialized payload writes.
+    pub fn try_reserve(&mut self) -> Result<bool, &'static str> {
+        if self.items.is_some() || N == 0 { return Ok(false); }
+        let mut items = Vec::new();
+        items.try_reserve_exact(N).map_err(|_| "UI fixed-list allocation admission failed")?;
+        self.items = Some(items);
+        Ok(true)
+    }
+
+    /// 📥️ Moves one payload into previously admitted storage without allocation or capacity growth.
+    pub fn try_push_reserved(&mut self, value: T) -> Result<(), T> {
+        if self.len() == N { return Err(value); }
         let Some(items) = self.items.as_mut() else { return Err(value) };
-        items[index] = Some(value);
-        self.len = len;
+        items.push(value);
         Ok(())
     }
 
+    /// 🧊️ Cold convenience combining allocation admission and one write; retained builders split them.
+    pub fn try_push(&mut self, value: T) -> Result<(), T> {
+        if self.len() == N || self.try_reserve().is_err() { return Err(value); }
+        self.try_push_reserved(value)
+    }
+
+    /// 📤️ Transfers the last initialized payload without destroying it or releasing its backing.
     pub fn pop(&mut self) -> Option<T> {
-        let index = self.len.checked_sub(1)?;
-        self.len = index;
-        self.items.as_mut()?.get_mut(index)?.take()
+        self.items.as_mut()?.pop()
+    }
+
+    /// 🧾️ Releases only empty backing; a live payload rejects the operation without mutation.
+    pub fn release_empty_allocation(&mut self) -> Result<bool, &'static str> {
+        if !self.is_empty() { return Err("UI fixed-list payloads must be transferred before backing release"); }
+        Ok(self.items.take().is_some())
+    }
+
+    /// 🔒️ A retained list is terminal only after both payloads and its backing owner are gone.
+    pub fn terminal_is_empty(&self) -> bool {
+        self.items.is_none()
     }
 
     pub fn get(&self, index: usize) -> Option<&T> {
-        (index < self.len).then(|| self.items.as_ref()?.get(index)?.as_ref()).flatten()
+        self.items.as_ref()?.get(index)
     }
 
     pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
-        (index < self.len).then(|| self.items.as_mut()?.get_mut(index)?.as_mut()).flatten()
+        self.items.as_mut()?.get_mut(index)
     }
 
     pub fn last_mut(&mut self) -> Option<&mut T> {
-        self.len.checked_sub(1).and_then(|index| self.items.as_mut()?.get_mut(index)?.as_mut())
+        self.items.as_mut()?.last_mut()
     }
 
     pub fn swap_remove(&mut self, index: usize) -> Option<T> {
-        if index >= self.len {
-            return None;
-        }
-        let last = self.len.checked_sub(1)?;
-        self.len = last;
         let items = self.items.as_mut()?;
-        let removed = items[index].take();
-        if index != last {
-            items[index] = items[last].take();
-        }
-        removed
+        if index >= items.len() { return None; }
+        Some(items.swap_remove(index))
     }
 
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
-        let len = self.len;
-        self.items.as_deref_mut().map_or([].as_mut_slice(), |items| &mut items[..len]).iter_mut().filter_map(Option::as_mut)
+        self.items.as_deref_mut().unwrap_or(&mut []).iter_mut()
     }
 
     pub fn iter(&self) -> impl DoubleEndedIterator<Item = &T> {
-        self.items.as_deref().map_or([].as_slice(), |items| &items[..self.len]).iter().filter_map(Option::as_ref)
+        self.items.as_deref().unwrap_or(&[]).iter()
     }
 
     pub fn len(&self) -> usize {
-        self.len
+        self.items.as_ref().map_or(0, Vec::len)
     }
 
     pub fn capacity(&self) -> usize {
-        self.items.as_ref().map_or(0, |items| items.len())
+        if self.items.is_some() { N } else { 0 }
     }
 
     pub fn is_empty(&self) -> bool {
-        self.len == 0
+        self.len() == 0
     }
 }
 
@@ -256,32 +259,27 @@ impl<T, const N: usize> std::ops::IndexMut<usize> for UiFixedList<T, N> {
 
 impl<'a, T, const N: usize> IntoIterator for &'a UiFixedList<T, N> {
     type Item = &'a T;
-    type IntoIter = std::iter::FilterMap<std::slice::Iter<'a, Option<T>>, fn(&Option<T>) -> Option<&T>>;
+    type IntoIter = std::slice::Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
-        fn present<T>(value: &Option<T>) -> Option<&T> {
-            value.as_ref()
-        }
-        self.items.as_deref().map_or([].as_slice(), |items| &items[..self.len]).iter().filter_map(present::<T>)
+        self.items.as_deref().unwrap_or(&[]).iter()
     }
 }
 
+/// 📚️ Cold owned iteration transfers the initialized sequence; retained owners use pop and explicit backing release.
 impl<T, const N: usize> IntoIterator for UiFixedList<T, N> {
     type Item = T;
-    type IntoIter = std::iter::FilterMap<std::vec::IntoIter<Option<T>>, fn(Option<T>) -> Option<T>>;
+    type IntoIter = std::vec::IntoIter<T>;
 
     fn into_iter(self) -> Self::IntoIter {
-        fn present<T>(value: Option<T>) -> Option<T> {
-            value
-        }
-        self.items.map_or_else(Vec::new, |items| items.into_vec()).into_iter().filter_map(present::<T>)
+        self.items.unwrap_or_default().into_iter()
     }
 }
 
 impl<T: Serialize, const N: usize> Serialize for UiFixedList<T, N> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeSeq;
-        let mut sequence = serializer.serialize_seq(Some(self.len))?;
+        let mut sequence = serializer.serialize_seq(Some(self.len()))?;
         for value in self {
             sequence.serialize_element(value)?;
         }
@@ -313,6 +311,8 @@ impl<'de, T: Deserialize<'de>, const N: usize> Deserialize<'de> for UiFixedList<
         deserializer.deserialize_seq(FixedListVisitor::<T, N>(std::marker::PhantomData))
     }
 }
+
+//#endregion 📋️FixedListOwnership
 
 #[derive(Debug, PartialEq)]
 pub struct UiFixedMap<V> {
@@ -525,6 +525,12 @@ struct UiCollectionSlot {
     bytes: usize,
     occupied: bool,
     retiring: bool,
+    retirement_parent: Option<UiCollectionHandle>,
+    retirement_cursor: Option<UiCollectionHandle>,
+    retirement_previous: usize,
+    retirement_next: usize,
+    retirement_queued: bool,
+    retirement_claimed: bool,
 }
 
 pub const UI_VALUE_AGGREGATE_BYTES: usize = UI_VALUE_AGGREGATE_ITEMS * size_of::<UiPageSlot>() + UI_VALUE_ADMISSION_SLOTS * size_of::<UiCollectionSlot>();
@@ -541,6 +547,12 @@ impl Default for UiCollectionSlot {
             bytes: 0,
             occupied: false,
             retiring: false,
+            retirement_parent: None,
+            retirement_cursor: None,
+            retirement_previous: UI_VALUE_NONE,
+            retirement_next: UI_VALUE_NONE,
+            retirement_queued: false,
+            retirement_claimed: false,
         }
     }
 }
@@ -552,9 +564,10 @@ struct UiValueArena {
     free_page_count: usize,
     free_collections: Box<[usize]>,
     free_collection_count: usize,
-    retirement: Box<[usize]>,
     retirement_head: usize,
+    retirement_tail: usize,
     retirement_len: usize,
+    handback_cursor: usize,
     items: usize,
     bytes: usize,
 }
@@ -572,9 +585,10 @@ impl Default for UiValueArena {
             free_page_count: UI_VALUE_AGGREGATE_ITEMS,
             free_collections: (0..UI_VALUE_ADMISSION_SLOTS).rev().collect::<Vec<_>>().into_boxed_slice(),
             free_collection_count: UI_VALUE_ADMISSION_SLOTS,
-            retirement: vec![UI_VALUE_NONE; UI_VALUE_ADMISSION_SLOTS].into_boxed_slice(),
-            retirement_head: 0,
+            retirement_head: UI_VALUE_NONE,
+            retirement_tail: UI_VALUE_NONE,
             retirement_len: 0,
+            handback_cursor: 0,
             items: 0,
             bytes: 0,
         }
@@ -608,6 +622,7 @@ impl UiValueArena {
             bytes,
             occupied: true,
             retiring: false,
+            ..UiCollectionSlot::default()
         };
         self.free_collection_count = free_collection_count;
         self.bytes = next_bytes;
@@ -662,104 +677,6 @@ impl UiValueArena {
         Some(handle)
     }
 
-    fn release_handle(&mut self, handle: UiCollectionHandle) {
-        let retirement_full = self.retirement_len == UI_VALUE_ADMISSION_SLOTS;
-        let should_retire = {
-            let Some(collection) = self.collection_mut(handle) else { return };
-            if collection.aliases == 0 || collection.retiring {
-                return;
-            }
-            if collection.aliases == 1 && retirement_full {
-                return;
-            }
-            collection.aliases = match collection.aliases.checked_sub(1) {
-                Some(aliases) => aliases,
-                None => return,
-            };
-            collection.aliases == 0
-        };
-        if should_retire {
-            if !self.enqueue_retirement(handle.slot) {
-                if let Some(collection) = self.collection_mut(handle) {
-                    collection.aliases = 1;
-                }
-            }
-        }
-    }
-
-    fn enqueue_retirement(&mut self, slot: usize) -> bool {
-        if self.retirement_len == UI_VALUE_ADMISSION_SLOTS {
-            return false;
-        }
-        let Some(collection) = self.collections.get_mut(slot) else { return false };
-        if collection.retiring || !collection.occupied {
-            return false;
-        }
-        let Some(retirement_len) = self.retirement_len.checked_add(1) else { return false };
-        collection.retiring = true;
-        let tail = (self.retirement_head + self.retirement_len) % UI_VALUE_ADMISSION_SLOTS;
-        self.retirement[tail] = slot;
-        self.retirement_len = retirement_len;
-        true
-    }
-
-    fn pop_retirement(&mut self) -> Option<usize> {
-        if self.retirement_len == 0 {
-            return None;
-        }
-        let slot = self.retirement[self.retirement_head];
-        self.retirement[self.retirement_head] = UI_VALUE_NONE;
-        self.retirement_head = (self.retirement_head + 1) % UI_VALUE_ADMISSION_SLOTS;
-        self.retirement_len = self.retirement_len.checked_sub(1)?;
-        Some(slot)
-    }
-
-    fn retire_one(&mut self) -> Option<UiPageValue> {
-        let slot = self.pop_retirement()?;
-        let head = self.collections.get(slot).filter(|collection| collection.occupied && collection.retiring)?.head;
-        if head == UI_VALUE_NONE {
-            if !self.release_collection(slot) {
-                self.requeue_retirement(slot);
-            }
-            return None;
-        }
-        let page = &mut self.pages[head];
-        let next = page.next;
-        let Some(free_page_count) = self.free_page_count.checked_add(1).filter(|count| *count <= UI_VALUE_AGGREGATE_ITEMS) else {
-            self.requeue_retirement(slot);
-            return None;
-        };
-        let value = page.value.take();
-        page.next = UI_VALUE_NONE;
-        self.free_pages[self.free_page_count] = head;
-        self.free_page_count = free_page_count;
-        if let Some(collection) = self.collections.get_mut(slot) {
-            collection.head = next;
-            if next == UI_VALUE_NONE {
-                collection.tail = UI_VALUE_NONE;
-            }
-        }
-        if next == UI_VALUE_NONE {
-            if !self.release_collection(slot) {
-                self.requeue_retirement(slot);
-            }
-        } else {
-            self.requeue_retirement(slot);
-        }
-        value
-    }
-
-    fn requeue_retirement(&mut self, slot: usize) {
-        if self.retirement_len == UI_VALUE_ADMISSION_SLOTS {
-            return;
-        }
-        let tail = (self.retirement_head + self.retirement_len) % UI_VALUE_ADMISSION_SLOTS;
-        self.retirement[tail] = slot;
-        if let Some(retirement_len) = self.retirement_len.checked_add(1) {
-            self.retirement_len = retirement_len;
-        }
-    }
-
     fn release_collection(&mut self, slot: usize) -> bool {
         let (collection_items, collection_bytes, epoch) = {
             let Some(collection) = self.collections.get(slot) else { return false };
@@ -776,6 +693,7 @@ impl UiValueArena {
         }
         self.items = items;
         self.bytes = bytes;
+        self.unlink_retiring_root(slot);
         self.collections[slot] = UiCollectionSlot { epoch, ..UiCollectionSlot::default() };
         self.free_collections[self.free_collection_count] = slot;
         self.free_collection_count = free_collection_count;
@@ -810,10 +728,13 @@ impl UiValueArena {
 }
 
 pub fn close_ui_value_page_one() -> bool {
-    let retired = with_ui_value_arena(UiValueArena::retire_one);
-    drop(retired);
-    with_ui_value_arena(|arena| arena.retirement_len == 0)
+    close_ui_value_page_with_grant(1, 4096).expect("exact UI value retirement queue remains valid").complete
 }
+
+#[path = "../../♻️retirement/🦀️component.rs"]
+mod retirement;
+pub use retirement::{close_ui_value_page_with_grant, UiValueRetirement, UiValueRetirementStep};
+pub(crate) use retirement::{UiArenaHandback, UiArenaHandbacks, UiTypedRetire, UiTypedRetirementCursor};
 
 #[derive(Debug)]
 pub struct UiList {
@@ -888,7 +809,7 @@ impl PartialEq for UiList {
 impl Drop for UiList {
     fn drop(&mut self) {
         if let Some(handle) = self.handle.take() {
-            with_ui_value_arena(|arena| arena.release_handle(handle));
+            retirement::hand_back_value(handle);
         }
     }
 }
@@ -915,7 +836,7 @@ impl Iterator for UiListCursor {
 impl Drop for UiListCursor {
     fn drop(&mut self) {
         if let Some(handle) = self.handle.take() {
-            with_ui_value_arena(|arena| arena.release_handle(handle));
+            retirement::hand_back_value(handle);
         }
     }
 }
@@ -946,7 +867,7 @@ impl UiListBuilder {
         let handle = self.handle.take();
         if self.len == 0 {
             if let Some(handle) = handle {
-                with_ui_value_arena(|arena| arena.release_handle(handle));
+                retirement::hand_back_value(handle);
             }
             UiList::default()
         } else {
@@ -958,7 +879,7 @@ impl UiListBuilder {
 impl Drop for UiListBuilder {
     fn drop(&mut self) {
         if let Some(handle) = self.handle.take() {
-            with_ui_value_arena(|arena| arena.release_handle(handle));
+            retirement::hand_back_value(handle);
         }
     }
 }
@@ -1073,7 +994,7 @@ impl PartialEq for UiMap {
 impl Drop for UiMap {
     fn drop(&mut self) {
         if let Some(handle) = self.handle.take() {
-            with_ui_value_arena(|arena| arena.release_handle(handle));
+            retirement::hand_back_value(handle);
         }
     }
 }
@@ -1118,7 +1039,7 @@ impl Drop for UiMapCursor {
     fn drop(&mut self) {
         drop(self.current.take());
         if let Some(handle) = self.handle.take() {
-            with_ui_value_arena(|arena| arena.release_handle(handle));
+            retirement::hand_back_value(handle);
         }
     }
 }
@@ -1158,7 +1079,7 @@ impl UiMapBuilder {
         let handle = self.handle.take();
         if self.len == 0 {
             if let Some(handle) = handle {
-                with_ui_value_arena(|arena| arena.release_handle(handle));
+                retirement::hand_back_value(handle);
             }
             UiMap::default()
         } else {
@@ -1170,7 +1091,7 @@ impl UiMapBuilder {
 impl Drop for UiMapBuilder {
     fn drop(&mut self) {
         if let Some(handle) = self.handle.take() {
-            with_ui_value_arena(|arena| arena.release_handle(handle));
+            retirement::hand_back_value(handle);
         }
     }
 }
@@ -1531,11 +1452,13 @@ mod tests {
     #[test]
     fn credited_alias_keeps_pages_live_after_original_handle_is_lost() {
         let original = ui_list([UiValue::Text(ui_text("retained"))]);
+        let handle = original.handle.unwrap();
         let alias = original.credited_clone().expect("credited alias slot");
         drop(original);
         assert_eq!(alias.cursor().next(), Some(UiValue::Text(ui_text("retained"))));
         drop(alias);
-        assert!(close_ui_value_page_one());
+        while !close_ui_value_page_one() {}
+        assert!(with_ui_value_arena(|arena| arena.collection(handle).is_none()));
     }
 
     #[test]

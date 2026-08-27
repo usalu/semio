@@ -36,7 +36,7 @@
 //! subset's own parser does, so the two stay aligned rather than one silently gaining GFM support
 //! the other lacks.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`MdMutation`).
 //! @see ../🧬️schema/📸️snapshot/🦀️component.rs — the `MdBlock`/`MdInline` shape this module's JSON
 //! mirrors field-for-field (same `kind`-tagged, camelCase shape `serde` derives for both enums).

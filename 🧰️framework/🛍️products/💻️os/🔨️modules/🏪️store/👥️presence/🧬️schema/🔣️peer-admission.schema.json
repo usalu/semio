@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Exact Peer Actor Admission And Retirement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["maximumItems", "maximumBytes", "cases", "expectedRejectedOwnerPreserved", "expectedSnapshotRetirements", "factoryBinding", "requiresCapacitySizedByteGrant"],
+  "properties": {
+    "maximumItems": { "const": 1 },
+    "maximumBytes": { "const": 4096 },
+    "cases": {
+      "type": "array", "minItems": 7,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "actor", "state", "accepted", "expectedActorBytes"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "actor": {
+            "type": "object", "additionalProperties": false,
+            "required": ["unit", "repeat", "minimumCapacity"],
+            "properties": { "unit": { "type": "string" }, "repeat": { "type": "integer", "minimum": 0, "maximum": 65 }, "minimumCapacity": { "const": 65536 } }
+          },
+          "state": { "enum": ["ready", "pruning", "full", "created-full", "transferred"] },
+          "accepted": { "type": "boolean" },
+          "expectedActorBytes": { "type": "integer", "minimum": 0, "maximum": 260 }
+        }
+      }
+    },
+    "expectedRejectedOwnerPreserved": { "const": true },
+    "expectedSnapshotRetirements": { "const": 1 },
+    "factoryBinding": { "const": { "samePresenceType": true, "sourceClosedBeforeRetirement": true, "expectedOriginalRetirements": 1, "expectedForeignRetirements": 0 } },
+    "requiresCapacitySizedByteGrant": { "const": false }
+  }
+}

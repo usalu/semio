@@ -1,0 +1,5 @@
+[package]
+name = 'consumer'
+
+[dependencies]
+upstream-package = { path = '../provider' }

@@ -1,0 +1,9 @@
+[package]
+name = 'semio-framework-os-kernel'
+
+[lib]
+name = 'semio_framework_os_kernel'
+path = '📦️glue.rs'
+
+[dependencies]
+lower = { package = 'semio-framework-replication', path = '../../../../🔨️modules/📡️replication/📦️packages/🦀️rust' }

@@ -17,6 +17,6 @@
 //! the DATA this vocabulary mutates, never a precondition for reading the file.
 //!
 //! @see ../../../🔖️ac1024/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs — the implementation itself.
-//! @see ../🧪️oracle/🔣️component.json — this subset's own catalog and no-oracle decision.
+//! @see ../🧪️oracle/🔣️.json — this subset's own catalog and no-oracle decision.
 
 pub use crate::artifacts::dwg::standards::v_ac1024::subsets::any::*;

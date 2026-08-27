@@ -1,0 +1,16 @@
+{
+  "instances": [7, 511, 1023],
+  "roundRobin": [7, 511, 1023, 7, 511, 1023],
+  "command": { "target": "beam", "value": 42, "maximumTurns": 100000 },
+  "effects": { "loadDocument": { "pack": [1, 2, 3], "spr": [4, 5] }, "download": ["beam.json", "application/json", "identity", 12] },
+  "wire": {
+    "receiver": 7,
+    "operation": "18446744073709551615",
+    "generation": "18446744073709551614",
+    "sequence": 4294967295,
+    "attempt": 2,
+    "lanes": [1, 10],
+    "payload": "accepted",
+    "fault": "fixture publication failure"
+  }
+}

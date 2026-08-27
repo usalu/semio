@@ -279,6 +279,13 @@ const SHA256_K: [u32; 64] = [
 /// #⃣ Owned SHA-256, truncated to 32 hex characters — byte-identical to the coordinator's `digest()`
 /// so a Rust host's `projectionHash` is directly comparable with a TypeScript host's.
 pub fn digest(input: &[u8]) -> String {
+    sha256_hex(input)[..32].to_string()
+}
+
+/// #⃣ The FULL 64-character SHA-256 hex. Protocol v2 addresses fixture blobs and result artifacts by
+/// content, and a truncated digest is not a content address — the store's whole safety argument is
+/// that a blob's name IS its content.
+pub fn sha256_hex(input: &[u8]) -> String {
     let mut state: [u32; 8] = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
     let mut message = input.to_vec();
     let bit_len = (input.len() as u64) * 8;
@@ -319,7 +326,7 @@ pub fn digest(input: &[u8]) -> String {
             *slot = slot.wrapping_add(value);
         }
     }
-    state.iter().map(|word| format!("{:08x}", word)).collect::<String>()[..32].to_string()
+    state.iter().map(|word| format!("{:08x}", word)).collect::<String>()
 }
 //#endregion 🔖️Digest
 
@@ -350,19 +357,40 @@ pub struct Scenario {
     pub data_tables: Vec<Vec<Vec<String>>>,
 }
 
+/// 🪆️ The smallest owning subset a case is scoped to. A case with no target is UNSCOPED, and Protocol
+/// v2 reports that rather than letting a host widen itself to the whole artifact.
+#[derive(Debug, Clone, Default)]
+pub struct SubsetTarget {
+    pub artifact: String,
+    pub standard: String,
+    pub subset: String,
+}
+
 /// 📋️ The owned execution plan. A host never parses a feature file — it executes exactly this.
 #[derive(Debug, Clone)]
 pub struct Plan {
+    pub schema_version: u32,
+    pub baseline_sha: String,
     pub owner: String,
     pub case: String,
     pub capability: String,
     pub comparison: String,
+    /// ⚖️ The multi-artifact, externally-probed pipeline this case compares under; empty for a
+    /// projection-only case.
+    pub comparison_pipeline: String,
+    pub tolerance_profile: String,
+    pub target: Option<SubsetTarget>,
+    pub mutation_manifest_digest: String,
     pub feature_hash: String,
     pub level: String,
     pub role: String,
     pub implementation: String,
+    pub platform: String,
     pub work_dir: String,
     pub output_dir: String,
+    /// 📦️ Where this host writes its produced artifact bundle — separate from `work_dir`, so a
+    /// mutable scratch copy is never mistaken for a result.
+    pub artifact_dir: String,
     pub results_path: String,
     pub fixtures: Vec<Fixture>,
     pub scenarios: Vec<Scenario>,
@@ -413,17 +441,29 @@ impl Plan {
                     .collect(),
             })
             .collect();
+        let target = value.get("target").and_then(|entry| match entry {
+            Json::Object(_) => Some(SubsetTarget { artifact: entry.str("artifact"), standard: entry.str("standard"), subset: entry.str("subset") }),
+            _ => None,
+        });
         Plan {
+            schema_version: 2,
+            baseline_sha: value.str("baselineSha"),
             owner: value.str("owner"),
             case: value.str("case"),
             capability: value.str("capability"),
             comparison: value.str("comparison"),
+            comparison_pipeline: value.str("comparisonPipeline"),
+            tolerance_profile: value.str("toleranceProfile"),
+            target,
+            mutation_manifest_digest: value.str("mutationManifestDigest"),
             feature_hash: value.str("featureHash"),
             level: value.str("level"),
             role: value.str("role"),
             implementation: value.str("implementation"),
+            platform: value.str("platform"),
             work_dir: value.str("workDir"),
             output_dir: value.str("outputDir"),
+            artifact_dir: value.str("artifactDir"),
             results_path: value.str("resultsPath"),
             fixtures,
             scenarios,
@@ -435,26 +475,63 @@ impl Plan {
         let fixture = self.fixtures.iter().find(|entry| entry.uri == uri).ok_or_else(|| format!("fixture {} is not part of this plan — declare it in the feature file", uri))?;
         Ok(std::path::PathBuf::from(&fixture.path))
     }
+
+    /// 📦️ Absolute path this host writes one named result artifact to, creating parent directories.
+    pub fn artifact(&self, role: &str, filename: &str) -> Result<std::path::PathBuf, String> {
+        let dir = std::path::PathBuf::from(if self.artifact_dir.is_empty() { self.work_dir.clone() } else { self.artifact_dir.clone() }).join(role);
+        std::fs::create_dir_all(&dir).map_err(|error| format!("cannot create artifact directory {}: {error}", dir.display()))?;
+        Ok(dir.join(filename))
+    }
 }
 //#endregion 🔖️Plan
 
 //#region 🔖️Outcome
-/// 🎯️ What one scenario handler produces: the raw artifact and the projection the profile compares.
+/// 📦️ One file this handler produced, addressed by ROLE so no comparison stage ever names a path.
+#[derive(Debug, Clone)]
+pub struct ResultArtifact {
+    pub role: String,
+    pub path: String,
+    pub media_type: String,
+}
+
+/// 🏭️ Proof a SUBJECT handler reached production dispatch. Its ABSENCE is how a vector-replay adapter
+/// is detected — a replayed expectation and a computed one are otherwise indistinguishable on the wire.
+#[derive(Debug, Clone)]
+pub struct ProductionDispatch {
+    pub operation: String,
+    pub bridge_version: u32,
+}
+
+/// 🎯️ What one scenario handler produces: an artifact BUNDLE plus the projection the profile compares.
 pub struct Outcome {
     pub raw: Option<Vec<u8>>,
     pub projection: Json,
+    pub artifacts: Vec<ResultArtifact>,
+    pub production_dispatch: Option<ProductionDispatch>,
     pub diagnostics: Vec<(String, String)>,
 }
 
 impl Outcome {
     /// 🎯️ Projection-only outcome, for behaviours with no serialized artifact.
     pub fn projection(projection: Json) -> Outcome {
-        Outcome { raw: None, projection, diagnostics: Vec::new() }
+        Outcome { raw: None, projection, artifacts: Vec::new(), production_dispatch: None, diagnostics: Vec::new() }
     }
 
     /// 🎯️ Outcome carrying both the produced bytes and their semantic projection.
     pub fn with_raw(raw: Vec<u8>, projection: Json) -> Outcome {
-        Outcome { raw: Some(raw), projection, diagnostics: Vec::new() }
+        Outcome { raw: Some(raw), projection, artifacts: Vec::new(), production_dispatch: None, diagnostics: Vec::new() }
+    }
+
+    /// 📦️ Adds one produced file to the bundle under its role.
+    pub fn artifact(mut self, role: &str, path: &std::path::Path, media_type: &str) -> Outcome {
+        self.artifacts.push(ResultArtifact { role: role.to_string(), path: path.display().to_string(), media_type: media_type.to_string() });
+        self
+    }
+
+    /// 🏭️ Records that this outcome came out of PRODUCTION dispatch rather than a committed vector.
+    pub fn dispatched(mut self, operation: &str, bridge_version: u32) -> Outcome {
+        self.production_dispatch = Some(ProductionDispatch { operation: operation.to_string(), bridge_version });
+        self
     }
 }
 //#endregion 🔖️Outcome

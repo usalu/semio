@@ -1,5 +1,5 @@
 /** 🔒 Pure mechanics private to executable document-level glTF leaves. */
-import type { GltfSnapshot } from '../../📸️snapshot/🟦️component.ts';
+import type { GltfSnapshot } from '../../../🧬️schema/📸️snapshot/🟦️component.ts';
 export interface GltfMutationRejection { code: string; path: string; detail: string }
 export type GltfLeafResult = { accepted: true; snapshot: GltfSnapshot } | { accepted: false; rejection: GltfMutationRejection };
 export const reject = (code: string, path: string, detail: string): GltfMutationRejection => ({ code, path, detail });

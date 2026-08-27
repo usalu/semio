@@ -15,9 +15,9 @@ const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 
 //#region 🔖️test
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runCargoTestBudgeted([], packageRoot, ["--all-features", ...rest]);
+    await runCargoTestBudgeted([], packageRoot, ["--all-features", ...rest]);
   }
 }
 //#endregion 🔖️test
@@ -29,9 +29,9 @@ class TestScript extends BundleScript {
  * `test`, filtered to the `conformance::` module path so iterating on the corpus does not pay for the
  * whole crate's suite. */
 class ConformanceScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runCargoTestBudgeted([], packageRoot, ["--all-features", ...rest, "--", "conformance::"]);
+    await runCargoTestBudgeted([], packageRoot, ["--all-features", ...rest, "--", "conformance::"]);
   }
 }
 //#endregion 🔖️conformance

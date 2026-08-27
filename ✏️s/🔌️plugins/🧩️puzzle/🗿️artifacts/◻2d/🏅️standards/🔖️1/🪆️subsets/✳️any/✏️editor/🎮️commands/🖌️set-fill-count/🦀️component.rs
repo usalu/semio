@@ -1533,8 +1533,8 @@ pub fn reconcile_snapshot_read(doc: &semio_framework_plugin::ArtifactView<'_, Pu
         operation: node.operation.operation,
         generation: node.operation.generation,
         cancel: node.cancel.clone(),
-        config: semio_framework_job::BatchDriveConfig { site: "puzzle2d.fill", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: 7 },
-        now_ms: semio_framework_job::default_now_ms,
+        config: semio_framework_job::BatchDriveConfig { site: "puzzle2d.fill", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+        now_us: semio_framework_job::default_now_us,
     };
     match semio_framework_job::MountedWorkerJobSession::try_new(job, params) {
         Ok(session) => node.work = FillWork::Session(session),

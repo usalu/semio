@@ -367,18 +367,19 @@ impl FrameTransaction {
     /// ⏭️ Advances bounded work until fuel or wall-clock deadline is reached, cancellation is
     /// observed, or a consistent snapshot is published.
     pub fn step<S: crate::CommandSink, D: crate::ProjectionDelta>(&mut self, runtime: &mut UiRuntime<S, D>, cx: &mut semio_framework_job::StepContext<'_>) -> FrameTransactionStep {
-        if !self.started {
-            self.started = true;
-            self.now_ms = cx.now_ms();
-            self.observed_input_epoch = runtime.input_epoch;
-        } else if runtime.input_epoch != self.observed_input_epoch {
-            self.supersede(runtime, cx.now_ms());
-        }
         if cx.is_cancelled() {
             return self.cancel();
         }
         if cx.should_yield() {
             return FrameTransactionStep::Yield { stage: self.stage, usage: self.usage };
+        }
+        let Some(now_us) = cx.now_us() else { return FrameTransactionStep::Yield { stage: self.stage, usage: self.usage } };
+        if !self.started {
+            self.started = true;
+            self.now_ms = now_us / 1_000;
+            self.observed_input_epoch = runtime.input_epoch;
+        } else if runtime.input_epoch != self.observed_input_epoch {
+            self.supersede(runtime, now_us / 1_000);
         }
 
         loop {
@@ -665,8 +666,8 @@ impl FrameTransaction {
 #[cfg(test)]
 impl<S: crate::CommandSink, D: crate::ProjectionDelta> UiRuntime<S, D> {
     fn transact(&mut self, now_ms: u64) -> Transacted {
-        fn clock() -> u64 {
-            0
+        fn clock() -> Option<u64> {
+            Some(0)
         }
         let mut transaction = FrameTransaction::new(FrameTransactionLimits::default());
         transaction.now_ms = now_ms;
@@ -810,8 +811,8 @@ mod tests {
     }
 
     fn step_once<S: crate::CommandSink, D: crate::ProjectionDelta>(transaction: &mut FrameTransaction, runtime: &mut UiRuntime<S, D>, fuel: u64) -> FrameTransactionStep {
-        fn clock() -> u64 {
-            0
+        fn clock() -> Option<u64> {
+            Some(0)
         }
         let mut preview_sequence = 0;
         let mut cx = semio_framework_job::StepContext::new(
@@ -1072,8 +1073,8 @@ mod tests {
 
     #[test]
     fn cancellation_discards_an_active_node_cursor_without_advancing_the_surface_revision() {
-        fn clock() -> u64 {
-            0
+        fn clock() -> Option<u64> {
+            Some(0)
         }
         let mut runtime = test_runtime();
         let surface = surface("s");
@@ -1117,8 +1118,8 @@ mod tests {
 
     #[test]
     fn an_expired_wall_clock_budget_returns_before_consuming_input() {
-        fn clock() -> u64 {
-            10
+        fn clock() -> Option<u64> {
+            Some(10)
         }
         let mut runtime = test_runtime();
         let target = runtime.store_mut().insert(Model { value: 0 });

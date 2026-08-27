@@ -1,9 +1,13 @@
 import { FLOW_MAX_REQUEST_BYTES, FlowOperation, attachFlowSurface, createFlowFeatures, createFlowHost, decodeFlowMessage } from "../🟨️flow-host.js";
 import { createFlowBrowserFeatures } from "../🟨️flow-browser.js";
-import initFlowCore, * as flowCore from "../../../../🫀️core/pkg/flow_core.js";
 import { readFile } from "node:fs/promises";
+import Ajv from "ajv";
 
 const equal = (actual, expected, law) => { if (actual !== expected) throw new Error(`${law}: ${actual} !== ${expected}`); };
+const startup = JSON.parse(await readFile(new URL("../../../🧪️fixtures/⏱️browser-startup.json", import.meta.url), "utf8"));
+const startupSchema = JSON.parse(await readFile(new URL("../../../🧪️fixtures/⏱️browser-startup.schema.json", import.meta.url), "utf8"));
+equal(new Ajv({ strict: true }).compile(startupSchema)(startup), true, "startup-schema");
+for (const law of startup.cases) equal(law.source === "exports" || law.initializer === "custom" || law.imports === "empty", law.accepted, "startup-independent-admission-oracle");
 const encoder = new TextEncoder();
 const memory = new WebAssembly.Memory({ initial: 400 });
 const bridge = new MockFlowBridge(memory);
@@ -22,13 +26,24 @@ const browser = await createFlowBrowserFeatures({
 equal(browserInstantiationAttempted, false, "preinitialized-browser-exports");
 await browser.features.lifetime.close();
 
-await initFlowCore({ module_or_path: await readFile(new URL("../../../../🫀️core/pkg/flow_core_bg.wasm", import.meta.url)) });
-const integrated = await createFlowBrowserFeatures({ source: flowCore.__wasm });
+let foreignRejected = false;
+try { await createFlowBrowserFeatures({ source: new Uint8Array(), imports: { foreign: {} } }); } catch (error) { foreignRejected = error.message === "custom Flow imports require their exact embedding initializer"; }
+equal(foreignRejected, true, "generated-loader-rejects-foreign-imports");
+const customBridge = new MockFlowBridge(memory);
+const foreignImports = { foreign: { identity: 7 } };
+const custom = await createFlowBrowserFeatures({ source: new Uint8Array(), imports: foreignImports, instantiate: async (_bytes, imports) => {
+  equal(imports, foreignImports, "custom-loader-exact-import-owner");
+  return { instance: { exports: customBridge.exports } };
+} });
+await custom.features.lifetime.close();
+
+const integrated = await createFlowBrowserFeatures({ source: await readFile(new URL("../../../../🫀️core/pkg/flow_core_bg.wasm", import.meta.url)) });
 const integratedCatalogue = await integrated.features.document.catalogueJson({}).result;
 equal(integratedCatalogue !== undefined, true, "compiled-flow-bridge");
 const integratedBurst = await Promise.all(Array.from({ length: 32 }, () => integrated.features.document.catalogueJson({}).result));
 equal(integratedBurst.every((catalogue) => catalogue !== undefined), true, "compiled-flow-bridge-burst");
 await integrated.features.lifetime.close();
+console.log("[DEBUG] Flow browser startup preserved four exact initializer/import ownership cases against the compiled module");
 
 const fixtureTask = features.document.catalogueJson({});
 const events = [];

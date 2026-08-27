@@ -1,8 +1,0 @@
-syntax = "proto3";
-package stdio.txt.mutation;
-import "✏️set-trailing-newline/🛰️component.proto";
-import "✏️set-line-ending/🛰️component.proto";
-import "📥️insert-line/🛰️component.proto";
-import "🗑️remove-line/🛰️component.proto";
-import "✏️set-line/🛰️component.proto";
-message TxtMutation { oneof mutation { SetTrailingNewlinePayload set_trailing_newline = 1; SetLineEndingPayload set_line_ending = 2; InsertLinePayload insert_line = 3; RemoveLinePayload remove_line = 4; SetLinePayload set_line = 5; } }

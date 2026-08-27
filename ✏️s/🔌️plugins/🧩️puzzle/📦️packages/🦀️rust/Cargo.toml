@@ -29,7 +29,7 @@ variant = "puzzle2d"
 app = "s.puzzle2d@1/*#editor"
 aliases = ["2d", "puzzle 2d"]
 ports = { react = 6012, wgpu = 6112 }
-engines = ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"]
+engines = ["./✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust"]
 
 [[package.metadata.semio.playground]]
 variant = "puzzle3d"

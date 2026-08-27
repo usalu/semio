@@ -1,0 +1,290 @@
+{
+  "schemaVersion": 1,
+  "accepted": [
+    {
+      "id": "direct-local-library-binding",
+      "consumerManifest": "consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\n\n[dependencies]\nupstream-package = { path = '../provider' }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "dependencyKey": "upstream-package",
+      "workspaceSource": "[workspace]\n",
+      "expected": { "externName": "actual_library", "packageName": "upstream-package", "libraryName": "actual_library", "workspaceInherited": false }
+    },
+    {
+      "id": "explicit-same-name-package-override-binding",
+      "consumerManifest": "consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\n\n[dependencies]\nupstream-package = { package = 'upstream-package', path = '../provider' }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "dependencyKey": "upstream-package",
+      "workspaceSource": "[workspace]\n",
+      "expected": { "externName": "upstream_package", "packageName": "upstream-package", "libraryName": "actual_library", "workspaceInherited": false }
+    },
+    {
+      "id": "renamed-hyphen-package-override-binding",
+      "consumerManifest": "consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\n\n[dependencies]\nprovider-alias = { package = 'upstream-package', path = '../provider' }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "dependencyKey": "provider-alias",
+      "workspaceSource": "[workspace]\n",
+      "expected": { "externName": "provider_alias", "packageName": "upstream-package", "libraryName": "actual_library", "workspaceInherited": false }
+    },
+    {
+      "id": "workspace-inherited-package-override-binding",
+      "consumerManifest": "consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\n\n[dependencies]\nprovider-alias = { workspace = true }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "dependencyKey": "provider-alias",
+      "workspaceSource": "[workspace]\n\n[workspace.dependencies]\nprovider-alias = { package = 'upstream-package', path = 'provider' }\n",
+      "expected": { "externName": "provider_alias", "packageName": "upstream-package", "libraryName": "actual_library", "workspaceInherited": true }
+    },
+    {
+      "id": "consumer-workspace-directory-binding",
+      "consumerManifest": "consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\nworkspace = '..'\n\n[dependencies]\nupstream-package = { path = '../provider' }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "dependencyKey": "upstream-package",
+      "workspaceSource": "[workspace]\n",
+      "expected": { "externName": "actual_library", "packageName": "upstream-package", "libraryName": "actual_library", "workspaceInherited": false }
+    },
+    {
+      "id": "provider-workspace-directory-binding",
+      "consumerManifest": "consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\n\n[dependencies]\nupstream-package = { path = '../provider' }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\nworkspace = '..'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "dependencyKey": "upstream-package",
+      "workspaceSource": "[workspace]\n",
+      "expected": { "externName": "actual_library", "packageName": "upstream-package", "libraryName": "actual_library", "workspaceInherited": false }
+    }
+  ],
+  "rejected": [
+    {
+      "id": "implicit-library-source-is-never-inferred",
+      "consumerManifest": "consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\n\n[dependencies]\nupstream-package = { path = '../provider' }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "dependencyKey": "upstream-package",
+      "workspaceSource": "[workspace]\n",
+      "expected": null
+    },
+    {
+      "id": "optional-selected-edge-is-rejected",
+      "consumerManifest": "consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\n\n[dependencies]\nupstream-package = { path = '../provider', optional = true }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "dependencyKey": "upstream-package",
+      "workspaceSource": "[workspace]\n",
+      "expected": null
+    },
+    {
+      "id": "target-conditional-selected-edge-is-rejected",
+      "consumerManifest": "consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\n\n[target.'cfg(unix)'.dependencies]\nupstream-package = { path = '../provider' }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "dependencyKey": "upstream-package",
+      "workspaceSource": "[workspace]\n",
+      "expected": null
+    },
+    {
+      "id": "dev-only-selected-edge-is-rejected",
+      "consumerManifest": "consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\n\n[dev-dependencies]\nupstream-package = { path = '../provider' }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "dependencyKey": "upstream-package",
+      "workspaceSource": "[workspace]\n",
+      "expected": null
+    },
+    {
+      "id": "version-only-selected-edge-is-rejected",
+      "consumerManifest": "consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\n\n[dependencies]\nupstream-package = '1.0.0'\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "dependencyKey": "upstream-package",
+      "workspaceSource": "[workspace]\n",
+      "expected": null
+    },
+    {
+      "id": "wrong-provider-package-is-rejected",
+      "consumerManifest": "consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\n\n[dependencies]\nupstream-package = { path = '../provider' }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'wrong-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "dependencyKey": "upstream-package",
+      "workspaceSource": "[workspace]\n",
+      "expected": null
+    },
+    {
+      "id": "nested-workspace-disagreement-is-rejected",
+      "consumerManifest": "nested/consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\n\n[dependencies]\nupstream-package = { path = '../../provider' }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "dependencyKey": "upstream-package",
+      "workspaceSource": "[workspace]\n",
+      "extraFiles": [{ "path": "nested/Cargo.toml", "source": "[workspace]\n" }],
+      "expected": null
+    },
+    {
+      "id": "missing-explicit-library-source-is-rejected",
+      "consumerManifest": "consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\n\n[dependencies]\nupstream-package = { path = '../provider' }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "omitLibrarySource": true,
+      "dependencyKey": "upstream-package",
+      "workspaceSource": "[workspace]\n",
+      "expected": null
+    },
+    {
+      "id": "symlinked-provider-manifest-is-rejected",
+      "consumerManifest": "consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\n\n[dependencies]\nupstream-package = { path = '../provider' }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "omitProviderManifest": true,
+      "extraFiles": [{ "path": "provider/real.toml", "source": "[package]\nname = 'upstream-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n" }],
+      "links": [{ "path": "provider/Cargo.toml", "target": "real.toml" }],
+      "dependencyKey": "upstream-package",
+      "workspaceSource": "[workspace]\n",
+      "expected": null
+    },
+    {
+      "id": "symlinked-provider-library-source-is-rejected",
+      "consumerManifest": "consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\n\n[dependencies]\nupstream-package = { path = '../provider' }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "omitLibrarySource": true,
+      "extraFiles": [{ "path": "provider/src/real.rs", "source": "pub fn marker() {}\n" }],
+      "links": [{ "path": "provider/src/lib.rs", "target": "real.rs" }],
+      "dependencyKey": "upstream-package",
+      "workspaceSource": "[workspace]\n",
+      "expected": null
+    },
+    {
+      "id": "workspace-manifest-file-spelling-is-rejected",
+      "consumerManifest": "consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\nworkspace = '../Cargo.toml'\n\n[dependencies]\nupstream-package = { path = '../provider' }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "dependencyKey": "upstream-package",
+      "workspaceSource": "[workspace]\n",
+      "expected": null
+    },
+    {
+      "id": "unsafe-workspace-root-is-rejected-before-materialization",
+      "workspaceRoot": "/__semio-cargo-binding/COMPOSE/workspace",
+      "virtualFilesystem": true,
+      "consumerManifest": "consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\n\n[dependencies]\nupstream-package = { path = '../provider' }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "dependencyKey": "upstream-package",
+      "workspaceSource": "[workspace]\n",
+      "expected": null
+    },
+    {
+      "id": "unsafe-consumer-locator-is-rejected-before-materialization",
+      "virtualFilesystem": true,
+      "consumerManifest": "compose/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\n\n[dependencies]\nupstream-package = { path = '../provider' }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "dependencyKey": "upstream-package",
+      "workspaceSource": "[workspace]\n",
+      "expected": null
+    },
+    {
+      "id": "symlinked-workspace-root-is-rejected",
+      "workspaceRootSymlink": true,
+      "consumerManifest": "consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\n\n[dependencies]\nupstream-package = { path = '../provider' }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "dependencyKey": "upstream-package",
+      "workspaceSource": "[workspace]\n",
+      "expected": null
+    },
+    {
+      "id": "symlinked-workspace-ancestor-is-rejected",
+      "workspaceAncestorSymlink": true,
+      "consumerManifest": "consumer/Cargo.toml",
+      "consumerSource": "[package]\nname = 'consumer'\n\n[dependencies]\nupstream-package = { path = '../provider' }\n",
+      "providerManifest": "provider/Cargo.toml",
+      "providerSource": "[package]\nname = 'upstream-package'\n\n[lib]\nname = 'actual_library'\npath = 'src/lib.rs'\n",
+      "librarySource": "pub fn marker() {}\n",
+      "dependencyKey": "upstream-package",
+      "workspaceSource": "[workspace]\n",
+      "expected": null
+    }
+  ],
+  "traces": [
+    {
+      "id": "unsafe-workspace-root-has-no-filesystem-access",
+      "workspaceRootSegments": ["semio-cargo-binding-trace", "compose", "workspace"],
+      "consumerManifest": "consumer/Cargo.toml",
+      "dependencyKey": "upstream-package",
+      "expectedLstatSegments": []
+    },
+    {
+      "id": "unsafe-consumer-locator-has-no-filesystem-access",
+      "workspaceRootSegments": ["semio-cargo-binding-trace", "unsafe-consumer"],
+      "consumerManifest": "compose/Cargo.toml",
+      "dependencyKey": "upstream-package",
+      "expectedLstatSegments": []
+    },
+    {
+      "id": "empty-dependency-key-has-no-filesystem-access",
+      "workspaceRootSegments": ["semio-cargo-binding-trace", "empty-key"],
+      "consumerManifest": "consumer/Cargo.toml",
+      "dependencyKey": "",
+      "expectedLstatSegments": []
+    },
+    {
+      "id": "workspace-root-symlink-stops-before-reading-a-manifest",
+      "workspaceRootSegments": ["semio-cargo-binding-trace", "root-symlink"],
+      "consumerManifest": "consumer/Cargo.toml",
+      "dependencyKey": "upstream-package",
+      "symlinkSegments": ["semio-cargo-binding-trace", "root-symlink"],
+      "expectedLstatSegments": [[], ["semio-cargo-binding-trace"], ["semio-cargo-binding-trace", "root-symlink"]]
+    },
+    {
+      "id": "workspace-ancestor-symlink-stops-before-reading-a-manifest",
+      "workspaceRootSegments": ["semio-cargo-binding-trace", "ancestor-symlink", "workspace"],
+      "consumerManifest": "consumer/Cargo.toml",
+      "dependencyKey": "upstream-package",
+      "symlinkSegments": ["semio-cargo-binding-trace", "ancestor-symlink"],
+      "expectedLstatSegments": [[], ["semio-cargo-binding-trace"], ["semio-cargo-binding-trace", "ancestor-symlink"]]
+    }
+  ]
+}

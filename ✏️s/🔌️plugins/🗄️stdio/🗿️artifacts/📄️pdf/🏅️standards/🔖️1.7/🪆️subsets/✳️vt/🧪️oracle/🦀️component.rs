@@ -22,7 +22,7 @@
 //! [`KINDS`] below, and a kind this subset does not declare is refused here even when the engine
 //! could perform it.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself.
 //! @see ../🧬️schema/🦀️component.rs — `check_vt_conformance`, the one axis list everything here derives from.
 

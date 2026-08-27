@@ -6,16 +6,21 @@ import { FlowFeatureGroups, FlowOperation, FlowOperationFields, attachFlowSurfac
 
 let defaultHost;
 
-export async function createFlowBrowserFeatures({ source, imports = {}, instantiate = WebAssembly.instantiate, ...hostOptions } = {}) {
+export async function createFlowBrowserFeatures({ source, imports = {}, instantiate, ...hostOptions } = {}) {
   if (source === undefined) throw new Error("Flow Wasm source is required");
   let exports = source?.exports ?? source;
   if (typeof exports?.flow_bridge_allocate !== "function") {
-    let bytes = source?.module_or_path ?? source;
-    if (typeof bytes === "string" || bytes instanceof URL) bytes = await fetch(bytes);
-    if (bytes instanceof Response) bytes = await bytes.arrayBuffer();
-    const instantiated = await instantiate(bytes, imports);
-    const instance = instantiated?.instance ?? instantiated;
-    exports = instance?.exports;
+    if (instantiate) {
+      let bytes = source?.module_or_path ?? source;
+      if (typeof bytes === "string" || bytes instanceof URL) bytes = await fetch(bytes);
+      if (bytes instanceof Response) bytes = await bytes.arrayBuffer();
+      const instantiated = await instantiate(bytes, imports);
+      exports = (instantiated?.instance ?? instantiated)?.exports;
+    } else {
+      if (Reflect.ownKeys(imports).length !== 0) throw new Error("custom Flow imports require their exact embedding initializer");
+      const { default: initialize } = await import("../../../🫀️core/pkg/flow_core.js");
+      exports = await initialize({ module_or_path: source?.module_or_path ?? source });
+    }
   }
   const memory = exports?.memory;
   if (!exports || !(memory instanceof WebAssembly.Memory)) throw new Error("Flow Wasm instance must export memory");

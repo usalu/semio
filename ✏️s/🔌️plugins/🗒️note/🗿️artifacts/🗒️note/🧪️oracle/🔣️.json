@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ Host wiring for this artifact's cases. The (non-)oracle registration and the mutation catalogue belong to the SUBSET that owns the vocabulary and live in 🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json; this file exists only because a case sits at the artifact root and the generated Rust host resolves its contributed crates from the CASE OWNER. The single crate named here is linked for its domain-neutral `law` module alone — `⚖️law/🦀️component.rs` is dependency-free and format-neutral by its own doc comment, and the `oracles` feature that would pull in the third-party reference libraries is deliberately NOT enabled, so nothing outside this repository is linked into this artifact's test host.",
+  "oracles": [],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [],
+  "oracleHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-plugin-stdio-test-oracle",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ]
+}

@@ -11,7 +11,7 @@ Feature: Apply every typed semio VIDEO mutation to a real recording, against an 
   `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` and the semio envelope in
   `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`), importing nothing from and
   transliterating nothing of the Rust it judges. It is registered as the oracle
-  `semio-video-python-independent` in `…/✳️video/🧪️oracle/🔣️component.json`; the recorded no-oracle
+  `semio-video-python-independent` in `…/✳️video/🧪️oracle/🔣️.json`; the recorded no-oracle
   decision it replaces is gone, because there is now a reference to compare against.
 
   The container libraries the replaced decision surveyed were rejected on the same merits as before

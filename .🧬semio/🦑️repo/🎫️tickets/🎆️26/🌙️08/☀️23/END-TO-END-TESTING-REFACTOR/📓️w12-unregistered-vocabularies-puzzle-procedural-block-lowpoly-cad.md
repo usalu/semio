@@ -20,7 +20,7 @@ Date 2026-08-24. Ticket `26/08/23/END-TO-END-TESTING-REFACTOR`. Scope: the eleve
 | `📐️cad/📐️cad` | 20 | `cad-1-any` | `mutate-cad-1` |
 
 Each subset got `pub const KINDS` + `kinds_match_the_enum_and_the_catalog` (plain `#[test]`) beside
-its enum, a `🧪️oracle/🔣️component.json` recording a `noOracleDecision`, and a case whose feature
+its enum, a `🧪️oracle/🔣️.json` recording a `noOracleDecision`, and a case whose feature
 names the committed specification vector for EVERY kind by full path.
 
 ## Why no oracle, in every one of the eleven

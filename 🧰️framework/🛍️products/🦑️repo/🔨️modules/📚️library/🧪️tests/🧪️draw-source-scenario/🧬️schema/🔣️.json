@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Authored Draw Source Scenario",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contractId", "owner", "members", "consumers", "oracle", "retention", "registryImplementation", "cargoModuleRoot"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contractId": { "const": "draw-source-scenario-input-v1" },
+    "registryImplementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "content"],
+      "properties": {
+        "format": { "const": "typescript" },
+        "content": { "const": "export {};\n" }
+      }
+    },
+    "cargoModuleRoot": {
+      "allOf": [
+        { "$ref": "#/definitions/input" },
+        {
+          "type": "object",
+          "required": ["path", "format", "content"],
+          "properties": {
+            "path": { "const": "📚️library/🦀️.rs" },
+            "format": { "const": "rust" },
+            "content": { "const": "#[path = \"../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️component.rs\"]\nmod cad_interaction_spec;\n" }
+          }
+        }
+      ]
+    },
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactId", "standardVersion", "subsetId", "commandDirectoryName"],
+      "properties": {
+        "artifactId": { "const": "🖍️draw" },
+        "standardVersion": { "const": "1" },
+        "subsetId": { "const": "any" },
+        "commandDirectoryName": { "const": "🖱️canvas-pointer-down" }
+      }
+    },
+    "members": {
+      "type": "array",
+      "minItems": 11,
+      "maxItems": 11,
+      "uniqueItems": true,
+      "allOf": [
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml" }, "format": { "const": "toml" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/✨️macros/📦️packages/🦀️rust/📋️project.json" }, "format": { "const": "json" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/✨️macros/📦️packages/🦀️rust/📜️script.ts" }, "format": { "const": "typescript" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/✨️macros/📦️packages/🦀️rust/📦️glue.rs" }, "format": { "const": "rust" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/✨️macros/🦀️component.rs" }, "format": { "const": "rust" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/📦️packages/🦀️rust/Cargo.toml" }, "format": { "const": "toml" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/📦️packages/🦀️rust/📋️project.json" }, "format": { "const": "json" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/📦️packages/🦀️rust/📜️script.ts" }, "format": { "const": "typescript" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/📦️packages/🦀️rust/📦️glue.rs" }, "format": { "const": "rust" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔄️fsm/🦀️component.rs" }, "format": { "const": "rust" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🦀️component.rs" }, "format": { "const": "rust" } } } }
+      ],
+      "items": { "$ref": "#/definitions/input" }
+    },
+    "consumers": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "allOf": [
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "Cargo.toml" }, "format": { "const": "toml" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🔣️.json" }, "format": { "const": "json" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "📦️packages/🦀️rust/Cargo.toml" }, "format": { "const": "toml" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "🧪️tests/🧪️reference/🦀️.rs" }, "format": { "const": "rust" } } } },
+        { "contains": { "type": "object", "required": ["path", "format"], "properties": { "path": { "const": "📜️script.ts" }, "format": { "const": "typescript" } } } }
+      ],
+      "items": { "$ref": "#/definitions/input" }
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["parentSegments", "recordFilename", "disposition", "cases"],
+      "properties": {
+        "parentSegments": { "const": ["📓️draw-source-scenarios", "🧪️runs"] },
+        "recordFilename": { "const": "📝️.md" },
+        "disposition": { "const": "retain-all-until-reviewed" },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "allowed", "creates"],
+            "properties": {
+              "kind": { "enum": ["directory", "symlink", "file", "missing", "unreadable"] },
+              "allowed": { "type": "boolean" },
+              "creates": { "enum": [0, 1] }
+            }
+          }
+        }
+      }
+    },
+    "oracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceDirectoryCount", "destinationDirectoryCount", "destinationNodeCount", "configuration", "workspaceMemberCount", "dependencyUserCount", "projectCwdCount", "workspaceGlobCount", "rootCollectionCount", "externalModuleCount", "pluginRegistryRegenerationCount", "cargoModuleMount"],
+      "properties": {
+        "sourceDirectoryCount": { "const": 7 },
+        "destinationDirectoryCount": { "const": 9 },
+        "destinationNodeCount": { "const": 20 },
+        "configuration": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "sourceEntry", "destinationEntry"],
+            "properties": {
+              "path": { "type": "string", "minLength": 1 },
+              "sourceEntry": { "const": "📦️glue.rs" },
+              "destinationEntry": { "const": "📚️library/🦀️.rs" }
+            }
+          }
+        },
+        "workspaceMemberCount": { "const": 2 },
+        "dependencyUserCount": { "const": 8 },
+        "projectCwdCount": { "const": 8 },
+        "workspaceGlobCount": { "const": 2 },
+        "rootCollectionCount": { "const": 1 },
+        "externalModuleCount": { "const": 1 },
+        "pluginRegistryRegenerationCount": { "const": 0 },
+        "cargoModuleMount": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["manifestPath", "packageName", "libraryEntry", "moduleName", "moduleTarget"],
+          "properties": {
+            "manifestPath": { "const": "📦️packages/🦀️rust/Cargo.toml" },
+            "packageName": { "const": "draw-source-consumer" },
+            "libraryEntry": { "const": "../../📚️library/🦀️.rs" },
+            "moduleName": { "const": "cad_interaction_spec" },
+            "moduleTarget": { "const": "../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️component.rs" }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "format", "content"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$" },
+        "format": { "enum": ["json", "toml", "typescript", "rust"] },
+        "content": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -24,9 +24,9 @@
 //! different mutations, and a subset that shares an implementation with another reaches it through
 //! the shared family modules rather than by copying it.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog and no-oracle decision this module is
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog and no-oracle decision this module is
 //! measured against.
-//! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`TxtMutation`,
+//! @see ../🧬️schema/🧬️mutations/🦀️.rs — the mutation vocabulary itself (`TxtMutation`,
 //! `KINDS`).
 
 use semio_repo_test_host::Json;

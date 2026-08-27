@@ -3,7 +3,7 @@
 //!
 //! **This file no longer serves the oracle role.** The reference for `semio-v1-table-mutate` is the
 //! registered oracle `semio-table-python-independent` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️table/
-//! 🧪️oracle/🔣️component.json`) — an independent Python implementation of the semio table carrier,
+//! 🧪️oracle/🔣️.json`) — an independent Python implementation of the semio table carrier,
 //! its `SemioValue` cell grammar and its eight verbs, written from the committed grammar, protocol
 //! and JSON-schema documents, living beside this file as `🐍️component.py`. The runner dispatches the
 //! oracle role to that adapter and the subject role here, and compares the two projections under

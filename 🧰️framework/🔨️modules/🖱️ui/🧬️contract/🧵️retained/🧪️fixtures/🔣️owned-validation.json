@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "cases": [
+    { "name": "valid-safe53", "root": 7, "maxNodes": 128, "maxDepth": 16, "nodes": [{ "id": 7, "key": "root", "children": [9007199254740991] }, { "id": 9007199254740991, "key": "Übersicht", "children": [] }], "expected": [] },
+    { "name": "duplicate-key", "root": 7, "maxNodes": 128, "maxDepth": 16, "nodes": [{ "id": 7, "key": "root", "children": [1,2] }, { "id": 1, "key": "🔑️", "children": [] }, { "id": 2, "key": "🔑️", "children": [] }], "expected": ["duplicateSiblingKey"] },
+    { "name": "orphan", "root": 7, "maxNodes": 128, "maxDepth": 16, "nodes": [{ "id": 7, "key": "root", "children": [9] }], "expected": ["orphanChild"] },
+    { "name": "cycle", "root": 7, "maxNodes": 128, "maxDepth": 16, "nodes": [{ "id": 7, "key": "root", "children": [1] }, { "id": 1, "key": "loop", "children": [7] }], "expected": ["cycle"] },
+    { "name": "depth", "root": 7, "maxNodes": 128, "maxDepth": 0, "nodes": [{ "id": 7, "key": "root", "children": [1] }, { "id": 1, "key": "deep", "children": [] }], "expected": ["depthQuota"] },
+    { "name": "missing-root", "root": 9, "maxNodes": 128, "maxDepth": 16, "nodes": [{ "id": 7, "key": "first", "children": [] }, { "id": 1, "key": "second", "children": [] }], "expected": ["danglingRoot", "danglingRoot"] },
+    { "name": "node-quota", "root": 7, "maxNodes": 0, "maxDepth": 16, "nodes": [{ "id": 7, "key": "root", "children": [] }], "expected": ["nodeQuota"] },
+    { "name": "empty", "root": null, "maxNodes": 128, "maxDepth": 16, "nodes": [], "expected": [] }
+  ],
+  "laws": ["exact-old-index-capture", "byte-owner-survives-source-close", "all-phase-cancel", "zero-grant-no-progress", "violation-order-parity", "no-publication-token-from-validation"]
+}

@@ -1151,11 +1151,11 @@ impl MountedState {
         if budget.fuel == 0 || budget.deadline_ms == 0 {
             return JobStep::Running(None);
         }
-        let now = semio_framework_job::default_now_ms();
+        let Some(now) = semio_framework_job::default_now_us() else { return JobStep::Running(None) };
         let deadline = now.saturating_add(u64::from(budget.deadline_ms).min(8));
         let mut preview_sequence = self.preview_sequence;
         let result = (|| {
-            let mut cx = StepContext::new(self.identity.operation, self.identity.generation, StepBudget::new(budget.fuel.max(1), deadline), self.cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+            let mut cx = StepContext::new(self.identity.operation, self.identity.generation, StepBudget::new(budget.fuel.max(1), deadline), self.cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
             if cx.should_yield() {
                 return JobStep::Running(None);
             }

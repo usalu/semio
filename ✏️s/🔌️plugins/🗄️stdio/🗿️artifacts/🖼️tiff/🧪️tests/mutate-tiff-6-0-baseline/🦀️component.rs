@@ -1,7 +1,7 @@
 //! 🦀️ TIFF 6.0 ✳️baseline conformance-class mutation case — Rust adapter. Ticket
 //! 26/08/23/END-TO-END-TESTING-REFACTOR. Recorded no-oracle decision
 //! `tiff-6-0-baseline-conformance-class-semantics`
-//! (`../../🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🧪️oracle/🔣️component.json`).
+//! (`../../🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🧪️oracle/🔣️.json`).
 //!
 //! **Why there is no oracle here when the sibling subset has one.** `image` 0.25 is registered by
 //! `✳️any` and is the right reference for a TIFF raster, but its TIFF surface decodes pixels and

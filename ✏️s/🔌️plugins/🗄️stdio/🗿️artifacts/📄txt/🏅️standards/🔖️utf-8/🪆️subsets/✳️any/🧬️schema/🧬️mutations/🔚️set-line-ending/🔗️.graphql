@@ -1,0 +1,3 @@
+# 🧬 canonical set-line-ending/SetLineEnding
+enum TxtLineEndingV1 { LF CR_LF }
+input SetLineEndingPayload { value: TxtLineEndingV1! }

@@ -270,7 +270,7 @@ Per subset `<A>` of the fifteen under `✏️s/🔌️plugins/📕️norm/🗿�
 | `🧪️tests/mutate-<slug>-1/🐍️component.py` | **new** — the independent Python implementation and its oracle adapter |
 | `🧪️tests/mutate-<slug>-1/component.feature` | rewritten — `@oracle-<slug>-1-python-independent`, `@mode-differential`, every input a declared `asset://` fixture |
 | `🧪️tests/mutate-<slug>-1/🦀️component.rs` | subject only; oracle registrations dropped, `inverse-` projects `{mutated, restored}`, `identity-round-trip` projects the carrier |
-| `🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json` | `noOracleDecisions` emptied, `oracles[]` gains the entry |
+| `🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json` | `noOracleDecisions` emptied, `oracles[]` gains the entry |
 
 Nothing else was edited: no framework file, no shared manifest, no `Cargo.toml`, no
 `🔒️dependencies.json`, no fixture, no comparison profile, no `ignoreKeys`, no production Rust.

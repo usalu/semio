@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "ids": [5, 9007199254740991, 0],
+  "removed": 5,
+  "expectedReinsertedOrder": [9007199254740991, 0, 5],
+  "oldBytes": [3, 7, 11],
+  "grants": [{ "maxItems": 0, "maxBytes": 4096 }, { "maxItems": 1, "maxBytes": 4095 }, { "maxItems": 1, "maxBytes": 4096 }],
+  "laws": ["index-entry-owns-exact-node", "reader-captures-node-before-entry-retirement", "old-snapshot-retains-replaced-surface", "final-node-reader-releases-bytes", "cancel-at-every-edit-phase", "zero-grant-does-not-close", "deleted-reinserted-id-gets-new-ordinal", "safe-53-bit-id-preserved", "closed-index-rejects-before-input-capture"]
+}

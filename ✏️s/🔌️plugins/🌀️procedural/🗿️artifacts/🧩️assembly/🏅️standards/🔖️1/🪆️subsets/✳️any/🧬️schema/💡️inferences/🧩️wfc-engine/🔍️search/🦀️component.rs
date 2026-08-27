@@ -515,7 +515,7 @@ fn drive_batch_job<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, 
         if config.budget.max_observations.is_some_and(|limit| observations >= limit) || config.budget.max_backtracks.is_some_and(|limit| backtracks >= limit) || config.budget.max_millis.is_some_and(|limit| metrics.elapsed_millis >= limit) {
             return SolveOutcome::BudgetExceeded { partial: partial_from_job(&job), report: run_report(Event::BudgetExceeded, job.observed()) };
         }
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(4_096, u64::MAX), root_cancel_token(), || 0, &mut sequence);
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(4_096, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
         match job.step(&mut context) {
             semio_framework_job::StepOutcome::Complete(candidate) => {
                 let commit: crate::wfc_engine::job::WfcCommit = serde_json::from_slice(&candidate.output).expect("completed WFC batch job has a valid commit");

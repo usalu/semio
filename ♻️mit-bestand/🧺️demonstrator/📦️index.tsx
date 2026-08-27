@@ -26,6 +26,7 @@ import {
 import { createBrowserStoragePort, resolvePlaygroundBoot } from "@semio-tech/framework";
 import { PLUGIN_CATALOG } from "@semio-tech/plugin-registry/catalog";
 import { FrameworkOsShell, resolveShellLocks, resolveShellDefaults } from "@semio-tech/framework-renderer-react";
+import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-js/board-session";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "./⚛️footer.tsx";
 import { DEMONSTRATOR_LOCALE, DEMONSTRATOR_PANES, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, ENTWERFEN_MIT_BESTAND_LOGO_SVG, demonstratorPaneBootVariants, scheduleDemonstratorIdle, type DemonstratorPaneSpec } from "./🟦️brand.ts";
 import "./🎨️globals.css";
@@ -411,6 +412,7 @@ function DemonstratorPane({
           <FrameworkOsShell
             pluginFilter={bootVariants.runtime}
             plugins={runtimeBoot.plugins}
+            surfaceSessionFactories={PUZZLE_BOARD_SESSION_FACTORIES}
             appId={manifestBoot.defaultAppId}
             locks={locks}
             defaults={defaults}

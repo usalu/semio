@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This plugin's contribution to the repository test platform, discovered by convention (`testContributionDirName` in 🔣️taxonomy.json). It carries NO oracle and NO catalog: every mutation vocabulary this plugin owns belongs to ONE subset of ONE standard of ONE artifact, so each subset registers its own (non-)oracle decision and catalog in its own 🧪️oracle/🔣️.json. What lives here is the single thing a subset manifest cannot express — the crate this plugin's test adapters link — because `oracleHostPackagesFor` resolves host packages from the nearest contributor AT OR ABOVE the case owner, and a case owner is an artifact root, never a subset.",
+  "oracles": [],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [],
+  "oracleHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-plugin-stdio-test-oracle",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ]
+}

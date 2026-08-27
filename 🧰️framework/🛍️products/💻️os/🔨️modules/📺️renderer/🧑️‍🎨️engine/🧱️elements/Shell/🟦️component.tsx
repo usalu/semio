@@ -167,6 +167,7 @@ export type SpacePanelState = {
 };
 
 export type FrameworkOsBootOptions = {
+  readonly surfaceSessionFactories?: readonly import("../WasmSessionLoader/🟦️component.tsx").AppSurfaceSessionFactory[];
   readonly rootId?: string;
   readonly plugin?: string;
   readonly plugins?: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
@@ -1114,7 +1115,7 @@ export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}): Pro
   // 🐢️ No hardcoded fallback app — an omitted `plugins` list boots the shell with an explicit
   // "no plugins available" state rather than silently picking one app.
   const appRole = resolveBootAppRole(options.appRole);
-  createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? []} appId={options.appId} appRole={appRole} locks={locks} defaults={defaults} brand={options.brand} ownsPage />);
+  createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? []} surfaceSessionFactories={options.surfaceSessionFactories} appId={options.appId} appRole={appRole} locks={locks} defaults={defaults} brand={options.brand} ownsPage />);
 }
 //#endregion Boot
 

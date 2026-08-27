@@ -38,7 +38,7 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 
 //#region 🔖️Lossy
 /// 📏️ The absolute per-number slack `semantic-jpg-mutate-v1` itself declares
-/// (`../../🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`), mirrored here so an
+/// (`../../🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧪️oracle/🔣️.json`), mirrored here so an
 /// in-handler law is exactly as strict as the profile the case is measured by and never stricter.
 /// It exists because JPEG is lossy and every step of these round trips re-quantizes: measured on
 /// this fixture (2275x2560 = 5 824 000 pixels), one reference decode → re-encode at quality 90

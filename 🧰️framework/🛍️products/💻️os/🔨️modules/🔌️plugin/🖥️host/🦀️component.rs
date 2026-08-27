@@ -1450,6 +1450,16 @@ fn cancel_owned_operation(state: &mut OwnedInstanceState) -> Result<(), TurnFaul
     Ok(())
 }
 
+fn owned_wasi_nanoseconds(duration: std::time::Duration) -> Result<u64, PluginHostError> {
+    u64::try_from(duration.as_nanos()).map_err(|_| PluginHostError::Plugin("owned WASI monotonic clock exhausted its unsigned nanosecond range".to_string()))
+}
+
+fn owned_wasi_monotonic_clock() -> Result<Value, PluginHostError> {
+    static ORIGIN: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+    let nanoseconds = owned_wasi_nanoseconds(ORIGIN.get_or_init(std::time::Instant::now).elapsed())?;
+    Ok(Value::I64(i64::from_ne_bytes(nanoseconds.to_ne_bytes())))
+}
+
 fn reply_owned_host(state: &mut OwnedInstanceState, call: &HostCall) -> Result<Vec<Value>, PluginHostError> {
     let values = match (call.module.as_str(), call.name.as_str()) {
         ("semio:framework/pure@1.0.0", "now-ms") => vec![Value::I64(std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as i64))],
@@ -1479,7 +1489,7 @@ fn reply_owned_host(state: &mut OwnedInstanceState, call: &HostCall) -> Result<V
         | ("wasi:io/poll@0.2.0", "[resource-drop]pollable")
         | ("wasi:io/streams@0.2.0", "[resource-drop]input-stream")
         | ("wasi:io/streams@0.2.0", "[resource-drop]output-stream") => Vec::new(),
-        ("wasi:clocks/monotonic-clock@0.2.0", "now") => vec![Value::I64(0)],
+        ("wasi:clocks/monotonic-clock@0.2.0", "now") => vec![owned_wasi_monotonic_clock()?],
         ("wasi:random/insecure-seed@0.2.9", "insecure-seed") => {
             write_owned_zeroes(&mut state.actor, owned_argument_i32(call, 0)?, 16)?;
             Vec::new()
@@ -2764,7 +2774,7 @@ mod wasmtime_runtime_tests {
 //#region 🔀️PostTurnRelay
 /// ⛽️ Every cold relay turn stays inside the user-visible interactive slice. The guest job owns its
 /// persistent state; the host grants one `step-job` call per shared-pool closure.
-const RELAY_JOB_BUDGET: JobBudget = JobBudget { fuel: semio_framework_job::USER_VISIBLE_LANE_FUEL, deadline_ms: semio_framework_job::USER_VISIBLE_LANE_WALL_MS as u32 };
+const RELAY_JOB_BUDGET: JobBudget = JobBudget { fuel: semio_framework_job::USER_VISIBLE_LANE_FUEL, deadline_ms: (semio_framework_job::USER_VISIBLE_LANE_WALL_US / 1_000) as u32 };
 
 /// 🔁️ One retained-waker future polled once per finite shared-pool turn.
 struct GuestRelayPoolFuture {
@@ -4038,9 +4048,9 @@ impl PluginInstanceHandle {
                 site: "plugin-host.cold-relay",
                 stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
                 fuel_per_step: semio_framework_job::USER_VISIBLE_LANE_FUEL,
-                step_budget_ms: semio_framework_job::USER_VISIBLE_LANE_WALL_MS,
+                step_budget_us: semio_framework_job::USER_VISIBLE_LANE_WALL_US,
             },
-            now_ms: semio_framework_job::default_now_ms,
+            now_us: semio_framework_job::default_now_us,
         };
         let relay = GuestColdRelayJob::new(Arc::clone(&self.runtime), Arc::clone(&self.instance), Arc::clone(&self.instance_gate), pool.clone(), cancel, job, kind.to_string(), input);
         let (index, mounted_generation) = self.relay_registry.reserve().ok_or_else(|| PluginHostError::Plugin(format!("{kind} mounted relay registry is full")))?;
@@ -4269,9 +4279,9 @@ mod guest_cold_relay_tests {
                 site: "test.plugin-host.guest-cold-relay",
                 stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
                 fuel_per_step: semio_framework_job::USER_VISIBLE_LANE_FUEL,
-                step_budget_ms: semio_framework_job::USER_VISIBLE_LANE_WALL_MS,
+                step_budget_us: semio_framework_job::USER_VISIBLE_LANE_WALL_US,
             },
-            now_ms: semio_framework_job::default_now_ms,
+            now_us: semio_framework_job::default_now_us,
         };
         (admit_test_relay(relay, params), gate, instance)
     }
@@ -4310,9 +4320,9 @@ mod guest_cold_relay_tests {
                 site: "test.plugin-host.guest-cold-relay.mounted",
                 stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
                 fuel_per_step: semio_framework_job::USER_VISIBLE_LANE_FUEL,
-                step_budget_ms: semio_framework_job::USER_VISIBLE_LANE_WALL_MS,
+                step_budget_us: semio_framework_job::USER_VISIBLE_LANE_WALL_US,
             },
-            now_ms: semio_framework_job::default_now_ms,
+            now_us: semio_framework_job::default_now_us,
         };
         (admit_test_relay(relay, params), gate)
     }
@@ -6804,6 +6814,34 @@ impl std::error::Error for TransactionError {
 impl From<PluginHostError> for TransactionError {
     fn from(error: PluginHostError) -> Self {
         Self::Host(error)
+    }
+}
+
+#[cfg(test)]
+mod microsecond_clock_tests {
+    use super::*;
+
+    #[test]
+    fn microsecond_owned_wasi_clock_is_real_nanoseconds_with_checked_unsigned_range() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔨️modules/🧵️job/⏱️budget/🧪️clock.json")).unwrap();
+        for law in fixture["wasi"].as_array().unwrap() {
+            let nanoseconds = law["nanoseconds"].as_str().unwrap().parse::<u128>().unwrap();
+            let duration = std::time::Duration::new((nanoseconds / 1_000_000_000) as u64, (nanoseconds % 1_000_000_000) as u32);
+            let result = owned_wasi_nanoseconds(duration);
+            assert_eq!(result.is_ok(), law["accepted"].as_bool().unwrap());
+            if let Ok(actual) = result { assert_eq!(u128::from(actual), nanoseconds); }
+        }
+        let read = || match owned_wasi_monotonic_clock().unwrap() { Value::I64(value) => u64::from_ne_bytes(value.to_ne_bytes()), _ => panic!("WASI clock primitive") };
+        let start = read();
+        let mut last = start;
+        for _ in 0..10_000 {
+            let next = read();
+            assert!(next >= last);
+            last = next;
+            if last > start { break; }
+        }
+        assert!(last > start, "owned WASI host must not return a frozen zero clock");
+        eprintln!("[DEBUG] owned WASI real monotonic nanoseconds start={start} last={last}");
     }
 }
 

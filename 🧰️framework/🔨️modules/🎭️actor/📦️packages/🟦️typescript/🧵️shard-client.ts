@@ -19,6 +19,7 @@
 /** ⚖️ `Lane`/`CoalesceKey` taken from the owned-schema mirror — real wire types, same reasoning
  * `📬️mailbox.ts`'s own header doc already gives for importing rather than redeclaring them. */
 import type { Lane, CoalesceKey } from "../../🤖️generated/🟦️actor.ts";
+import { actorInstanceCloseReceiptMatches, decodeActorInstanceClose, encodeActorInstanceClose, type ActorInstanceCloseReceipt, type ActorInstanceCloseRequest, type ActorInstanceLifetime } from "../../🚪️lifetime/🟦️component.ts";
 //#endregion 🔌️WireTypes
 
 //#region 🧬️Types
@@ -362,7 +363,8 @@ const MAX_SEGMENTED_DOWNLOAD_OPERATION_ID = (1n << 64n) - 1n;
 
 //#region 📨️WireMessages
 type OutboundMessage =
-  | { readonly kind: "activate"; readonly requestId: string; readonly actorId: string; readonly moduleUrl: string; readonly caps: readonly ShardCapabilityGrant[]; readonly budget: ShardBudget; readonly assets: readonly ShardAsset[] }
+  | { readonly kind: "activate"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly moduleUrl: string; readonly caps: readonly ShardCapabilityGrant[]; readonly budget: ShardBudget; readonly assets: readonly ShardAsset[] }
+  | { readonly kind: "closeInstance"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly wire: Uint8Array }
   | { readonly kind: "turn"; readonly requestId: string; readonly actorId: string; readonly events: readonly ShardEventEnvelope[]; readonly commandPage?: ShardCommandIngressPage; readonly budget: ShardBudget }
   | { readonly kind: "startJob"; readonly requestId: string; readonly actorId: string; readonly job: number; readonly jobKind: string; readonly input: Uint8Array }
   | { readonly kind: "stepJob"; readonly requestId: string; readonly actorId: string; readonly job: number; readonly budget: ShardJobBudget }
@@ -370,7 +372,7 @@ type OutboundMessage =
   | { readonly kind: "takeSegmentedDownloadChunk"; readonly requestId: string; readonly actorId: string; readonly instanceId: number; readonly operationId: bigint }
   | { readonly kind: "checkpoint"; readonly requestId: string; readonly actorId: string }
   | { readonly kind: "restore"; readonly requestId: string; readonly actorId: string; readonly state: Uint8Array }
-  | { readonly kind: "dispose"; readonly actorId: string }
+  | { readonly kind: "dispose"; readonly actorId: string; readonly activationGeneration: bigint }
   /** 📨️ terra-web-shardframe: the ONE new wire message every {@link ShardFrame} variant travels over —
    * additive alongside `"activate"`/`"turn"`/etc above, none of which this message kind replaces or
    * changes. `actorId` is carried alongside `frame` (rather than requiring every handler to destructure
@@ -379,6 +381,7 @@ type OutboundMessage =
   | { readonly kind: "frame"; readonly requestId: string; readonly actorId: string; readonly frame: ShardFrame };
 
 type InboundMessage =
+  | { readonly kind: "instanceCloseReceipt"; readonly requestId: string; readonly wire: Uint8Array }
   | { readonly kind: "result"; readonly requestId: string; readonly ok: true; readonly value: unknown }
   | { readonly kind: "result"; readonly requestId: string; readonly ok: false; readonly error: string; readonly stack?: string; readonly type?: string; readonly framesBytes?: number }
   | { readonly kind: "heartbeat"; readonly turnSeq: number }
@@ -438,6 +441,16 @@ type ShardSlot = {
   readonly actorIds: Set<string>;
 };
 
+/** 🚪️ Captures one worker activation; its promise witnesses native retirement only, not host UI retirement. */
+export interface ShardInstanceCloseLease {
+  readonly lifetime: ActorInstanceLifetime;
+  beginClose(): Promise<ActorInstanceCloseReceipt>;
+  progress(): { readonly kind: "not-started" | "waiting" | "accepted" | "retired" | "blocked"; readonly failure: "transport-refused" | "worker-refused" | "worker-lost" | null };
+}
+
+type ShardActivation = { readonly slot: ShardSlot; readonly actorId: string; readonly generation: bigint; available: boolean; activated: boolean; close: ShardCloseRequest | null };
+type ShardCloseRequest = { readonly requestId: string; readonly request: ActorInstanceCloseRequest; readonly activation: ShardActivation; readonly promise: Promise<ActorInstanceCloseReceipt>; readonly resolve: (receipt: ActorInstanceCloseReceipt) => void; accepted: ActorInstanceCloseReceipt | null; terminal: boolean; posted: boolean; failure: "transport-refused" | "worker-refused" | "worker-lost" | null };
+
 export interface ShardClientOptions {
   /** Fixed pool size — design-runtime.md §1 `ShardTable`: web `min(hardwareConcurrency-1, 4)`. Caller
    * computes the number; this class only ever spawns exactly this many workers. */
@@ -482,6 +495,8 @@ export interface ShardClientOptions {
 export class ShardClient {
   private readonly shards: ShardSlot[] = [];
   private readonly actorShard = new Map<string, number>();
+  private readonly actorActivations = new Map<string, ShardActivation>();
+  private readonly instanceCloses = new Map<string, ShardCloseRequest>();
   private readonly pending = new Map<string, PendingEntry>();
   private readonly exclusiveIndices: ReadonlySet<number>;
   private readonly heartbeatSabView: Int32Array | null;
@@ -500,6 +515,7 @@ export class ShardClient {
   private effectReplySeq = 0;
   private nextRoundRobin = 0;
   private requestSeq = 0;
+  private activationGeneration = 0n;
   private watchdogHandle: ReturnType<typeof setInterval> | null = null;
 
   constructor(options: ShardClientOptions) {
@@ -539,6 +555,10 @@ export class ShardClient {
    * never an answer this class is waiting on, so falling through to the generic path would look up a
    * `requestId` nothing ever registered and silently no-op, masking a real effect-request. */
   private handleMessage(slot: ShardSlot, message: InboundMessage): void {
+    if (message.kind === "instanceCloseReceipt") {
+      this.receiveInstanceClose(slot, message.requestId, message.wire);
+      return;
+    }
     if (message.kind === "heartbeat") {
       this.recordHeartbeat(slot, message.turnSeq, this.now());
       return;
@@ -549,6 +569,11 @@ export class ShardClient {
     }
     if (message.kind === "frame") {
       this.handleInboundFrame(slot, message.actorId, message.frame);
+      return;
+    }
+    const closing = this.instanceCloses.get(message.requestId);
+    if (closing) {
+      if (closing.activation.slot === slot && this.shards[slot.index] === slot && !message.ok) { closing.posted = false; closing.failure = "worker-refused"; }
       return;
     }
     const entry = this.pending.get(message.requestId);
@@ -590,6 +615,11 @@ export class ShardClient {
     slot.heartbeat.oldestPendingStartedAtMs = null;
     for (const actorId of slot.actorIds) {
       this.abortOutstandingEffects(actorId);
+      const activation = this.actorActivations.get(actorId);
+      if (activation?.slot === slot) {
+        activation.available = false;
+        if (activation.close) { activation.close.posted = false; activation.close.failure = "worker-lost"; }
+      }
       this.actorShard.delete(actorId);
     }
     slot.actorIds.clear();
@@ -656,6 +686,7 @@ export class ShardClient {
 
   //#region 📮️Requests
   private nextRequestId(): string {
+    if (this.requestSeq >= Number.MAX_SAFE_INTEGER) throw new Error("shard-request.sequence-exhausted");
     this.requestSeq += 1;
     return `r${this.requestSeq}`;
   }
@@ -675,10 +706,80 @@ export class ShardClient {
   }
 
   async activate(actorId: string, moduleUrl: string, caps: readonly ShardCapabilityGrant[], budget: ShardBudget, assets: readonly ShardAsset[] = []): Promise<void> {
-    const slot = this.assignShard(actorId);
+    if (this.actorActivations.get(actorId)?.available) throw new Error("actor-close.activation-already-owned");
+    if (this.activationGeneration >= 0xffffffffffffffffn) throw new Error("actor-close.activation-generation-exhausted");
     const requestId = this.nextRequestId();
-    await this.send<void>(slot, { kind: "activate", requestId, actorId, moduleUrl, caps, budget, assets }, requestId);
+    const generation = this.activationGeneration + 1n;
+    const slot = this.assignShard(actorId);
+    const activation: ShardActivation = { slot, actorId, generation, available: true, activated: false, close: null };
+    this.activationGeneration = generation;
+    this.actorActivations.set(actorId, activation);
+    await this.send<void>(slot, { kind: "activate", requestId, actorId, activationGeneration: generation, moduleUrl, caps, budget, assets }, requestId);
+    activation.activated = true;
   }
+
+  //#region 🚪️ExactInstanceClose
+  /** 🪪️ Captures route identity once; later close never resolves an actor name to a replacement worker. */
+  captureInstanceClose(actorId: string, instanceId: number): ShardInstanceCloseLease {
+    if (!Number.isInteger(instanceId) || instanceId < 0 || instanceId > 0xffffffff) throw new Error("actor-close.invalid-instance");
+    const activation = this.actorActivations.get(actorId);
+    if (!activation?.available || !activation.activated) throw new Error("actor-close.activation-not-ready");
+    const lifetime = Object.freeze({ activationGeneration: activation.generation, instanceId });
+    return Object.freeze({ lifetime, beginClose: () => this.beginInstanceClose(activation, lifetime), progress: (): ReturnType<ShardInstanceCloseLease["progress"]> => {
+      const close = activation.close;
+      return { kind: close === null ? "not-started" : close.terminal ? "retired" : close.failure !== null ? "blocked" : close.accepted !== null ? "accepted" : "waiting", failure: close?.failure ?? null };
+    } });
+  }
+
+  private beginInstanceClose(activation: ShardActivation, lifetime: ActorInstanceLifetime): Promise<ActorInstanceCloseReceipt> {
+    if (activation.close) {
+      if (activation.close.request.lifetime.instanceId !== lifetime.instanceId) return Promise.reject(new Error("actor-close.instance-owner-mismatch"));
+      if (!activation.close.terminal && !activation.close.posted) this.postInstanceClose(activation.close);
+      return activation.close.promise;
+    }
+    if (!activation.available || activation.slot !== this.shards[activation.slot.index]) return Promise.reject(new Error("actor-close.stale-activation"));
+    let requestId: string;
+    try { requestId = this.nextRequestId(); } catch (error) { return Promise.reject(error); }
+    const request: ActorInstanceCloseRequest = { kind: "close", lifetime, requestSequence: this.requestSeq };
+    let resolve!: (receipt: ActorInstanceCloseReceipt) => void;
+    const promise = new Promise<ActorInstanceCloseReceipt>((done) => { resolve = done; });
+    const close: ShardCloseRequest = { requestId, request, activation, promise, resolve, accepted: null, terminal: false, posted: false, failure: null };
+    activation.close = close;
+    this.instanceCloses.set(requestId, close);
+    this.postInstanceClose(close);
+    return promise;
+  }
+
+  private postInstanceClose(close: ShardCloseRequest): void {
+    const activation = close.activation;
+    if (!activation.available || this.shards[activation.slot.index] !== activation.slot) { close.failure = "worker-lost"; return; }
+    close.posted = true;
+    close.failure = null;
+    try {
+      activation.slot.worker.postMessage({ kind: "closeInstance", requestId: close.requestId, actorId: activation.actorId, activationGeneration: activation.generation, wire: encodeActorInstanceClose(close.request) } satisfies OutboundMessage);
+    } catch {
+      close.posted = false;
+      close.failure = "transport-refused";
+    }
+  }
+
+  private receiveInstanceClose(slot: ShardSlot, requestId: string, wire: Uint8Array): void {
+    const close = this.instanceCloses.get(requestId);
+    if (!close || close.terminal || close.activation.slot !== slot || this.shards[slot.index] !== slot) return;
+    let receipt;
+    try { receipt = decodeActorInstanceClose(wire); } catch { return; }
+    if (receipt.kind === "close" || !actorInstanceCloseReceiptMatches(close.request, close.accepted, receipt)) return;
+    close.posted = true;
+    close.failure = null;
+    if (receipt.kind === "accepted") {
+      close.accepted ??= receipt;
+      return;
+    }
+    close.terminal = true;
+    this.instanceCloses.delete(requestId);
+    close.resolve(receipt);
+  }
+  //#endregion 🚪️ExactInstanceClose
 
   /** ▶️ One turn (`reactor::poll`), never more than one in flight per `actorId` at a time — a second
    * `turn()` call for the same actor before the first resolves is a caller bug (the scheduler's own
@@ -765,12 +866,16 @@ export class ShardClient {
   dispose(actorId: string): void {
     const shardIndex = this.actorShard.get(actorId);
     if (shardIndex === undefined) return;
+    const activation = this.actorActivations.get(actorId);
+    if (activation?.close && !activation.close.terminal) throw new Error("actor-close.native-retirement-pending");
     this.abortOutstandingEffects(actorId);
     const slot = this.shards[shardIndex]!;
     this.rejectActorPending(slot, actorId, new Error(`ShardClient actor disposed: ${actorId}`));
-    slot.worker.postMessage({ kind: "dispose", actorId } satisfies OutboundMessage);
+    if (activation) slot.worker.postMessage({ kind: "dispose", actorId, activationGeneration: activation.generation } satisfies OutboundMessage);
     slot.actorIds.delete(actorId);
     this.actorShard.delete(actorId);
+    if (activation) activation.available = false;
+    this.actorActivations.delete(actorId);
   }
 
   private requireShard(actorId: string): ShardSlot {
@@ -1045,6 +1150,102 @@ if (import.meta.vitest) {
   }
 
   const BUDGET: ShardBudget = { fuel: 1000, wallMs: 4, memoryBytes: 1 << 20, uiNodes: 100, mailboxLen: 16, maxEffects: 8, maxPatchBytes: 1 << 16 };
+
+  describe("ShardClient exact instance close transport", () => {
+    it("retains and retries the same close request after transport refusal without settling cleanup", async () => {
+      const { readFileSync } = await import("node:fs");
+      const fixture = JSON.parse(readFileSync(new URL("../../🚪️lifetime/🧪️fixture.json", import.meta.url), "utf8"));
+      for (const failure of fixture.leaseFailures) {
+        const { client, workers } = harness(1);
+        const worker = workers[0]!;
+        const activation = client.activate("retry", "https://x/retry.js", [], BUDGET);
+        const activated = worker.sent[0] as { requestId: string };
+        worker.deliver({ kind: "result", requestId: activated.requestId, ok: true, value: undefined });
+        await activation;
+        const lease = client.captureInstanceClose("retry", 7);
+        const send = worker.postMessage.bind(worker);
+        let refused: unknown;
+        worker.postMessage = (message) => {
+          if (failure === "postMessage-throw" && !refused) { refused = message; throw new Error("fixture transport refusal"); }
+          send(message);
+        };
+        let settled = false;
+        let rejected = false;
+        const closing = lease.beginClose().then(() => { settled = true; }, () => { rejected = true; });
+        const original = (refused ?? worker.sent.at(-1)) as { requestId: string; wire: Uint8Array };
+        if (failure === "worker-error") worker.deliver({ kind: "result", requestId: original.requestId, ok: false, error: "fixture worker refusal" });
+        await Promise.resolve();
+        expect(settled).toBe(false);
+        expect(rejected).toBe(false);
+        expect(lease.progress()).toEqual({ kind: "blocked", failure: failure === "postMessage-throw" ? "transport-refused" : "worker-refused" });
+        expect(() => client.dispose("retry")).toThrow("actor-close.native-retirement-pending");
+        lease.beginClose();
+        const retried = worker.sent.at(-1) as { requestId: string; wire: Uint8Array };
+        expect(retried.requestId).toBe(original.requestId);
+        expect(retried.wire).toEqual(original.wire);
+        const request = decodeActorInstanceClose(retried.wire) as ActorInstanceCloseRequest;
+        const accepted: ActorInstanceCloseReceipt = { kind: "accepted", lifetime: lease.lifetime, requestSequence: request.requestSequence, closeGeneration: 23n };
+        worker.deliver({ kind: "instanceCloseReceipt", requestId: retried.requestId, wire: encodeActorInstanceClose(accepted) });
+        worker.deliver({ kind: "instanceCloseReceipt", requestId: retried.requestId, wire: encodeActorInstanceClose({ ...accepted, kind: "retired" }) });
+        await closing;
+        expect(settled).toBe(true);
+        expect(rejected).toBe(false);
+        expect(lease.progress()).toEqual({ kind: "retired", failure: null });
+        client.dispose("retry");
+      }
+    });
+
+    it("waits for the captured worker's exact accepted and retired receipts", async () => {
+      const { readFileSync } = await import("node:fs");
+      const fixture = JSON.parse(readFileSync(new URL("../../🚪️lifetime/🧪️fixture.json", import.meta.url), "utf8"));
+      for (const row of fixture.leaseReceipts) {
+        const { client, workers } = harness(2);
+        const activation = client.activate("close-owner", "https://x/close.js", [], BUDGET);
+        const activate = workers[0]!.sent[0] as { requestId: string };
+        workers[0]!.deliver({ kind: "result", requestId: activate.requestId, ok: true, value: undefined });
+        await activation;
+        const lease = client.captureInstanceClose("close-owner", 7);
+        let settled = false;
+        const close = lease.beginClose().then((receipt) => { settled = true; return receipt; });
+        const message = workers[0]!.sent[1] as { requestId: string; wire: Uint8Array };
+        const request = decodeActorInstanceClose(message.wire) as ActorInstanceCloseRequest;
+        const accepted: ActorInstanceCloseReceipt = { kind: "accepted", lifetime: lease.lifetime, requestSequence: request.requestSequence, closeGeneration: 17n };
+        workers[0]!.deliver({ kind: "result", requestId: message.requestId, ok: true, value: undefined });
+        for (const event of row.events) {
+          const receipt: ActorInstanceCloseReceipt = { ...accepted, kind: event.endsWith("retired") ? "retired" : "accepted", ...(event === "old-activation-accepted" ? { lifetime: { ...lease.lifetime, activationGeneration: lease.lifetime.activationGeneration + 1n } } : {}), ...(event === "wrong-request-accepted" ? { requestSequence: request.requestSequence + 1 } : {}), ...(event === "wrong-generation-retired" ? { closeGeneration: 16n } : {}) };
+          workers[event === "foreign-worker-accepted" ? 1 : 0]!.deliver({ kind: "instanceCloseReceipt", requestId: message.requestId, wire: encodeActorInstanceClose(receipt) });
+        }
+        await Promise.resolve();
+        await Promise.resolve();
+        expect(settled, row.name).toBe(row.settled);
+        expect(client.shardIndexFor("close-owner")).toBe(0);
+        workers[0]!.deliver({ kind: "instanceCloseReceipt", requestId: message.requestId, wire: encodeActorInstanceClose(accepted) });
+        workers[0]!.deliver({ kind: "instanceCloseReceipt", requestId: message.requestId, wire: encodeActorInstanceClose({ ...accepted, kind: "retired" }) });
+        expect((await close).kind).toBe("retired");
+        expect(lease.beginClose()).toBe(lease.beginClose());
+        client.dispose("close-owner");
+      }
+    });
+
+    it("rejects a captured old activation after the actor name is reused without posting close", async () => {
+      const { client, workers } = harness(1);
+      const activate = async () => {
+        const pending = client.activate("reused", "https://x/close.js", [], BUDGET);
+        const message = workers[0]!.sent.at(-1) as { requestId: string };
+        workers[0]!.deliver({ kind: "result", requestId: message.requestId, ok: true, value: undefined });
+        await pending;
+        return client.captureInstanceClose("reused", 7);
+      };
+      const old = await activate();
+      client.dispose("reused");
+      const fresh = await activate();
+      const before = workers[0]!.sent.length;
+      await expect(old.beginClose()).rejects.toThrow("actor-close.stale-activation");
+      expect(workers[0]!.sent.length).toBe(before);
+      expect(fresh.lifetime.activationGeneration).toBe(old.lifetime.activationGeneration + 1n);
+      client.dispose("reused");
+    });
+  });
 
   describe("ShardClient activation + turn round-trip", () => {
     it("routes activate then turn to the same shard, resolving the reply by requestId", async () => {

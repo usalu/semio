@@ -8,7 +8,7 @@ Feature: Apply every typed wires mutation to its committed vector and to a real-
   value tree — `wiresFixture` holding `identities`, `relationships` and a nested `board` — edited one
   scalar key at a time through this facet's own `set_node_field`. No reference library is registered
   — recorded as the `wires-1-argument-board-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`.
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`.
 
   ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party
   LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever

@@ -9,7 +9,7 @@
 //! (`SetSnapshot`), neither of which the shared module's `ArchiveSpec` projects, so this file reads
 //! and writes the reference `zip` crate directly rather than routing through it.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself.
 
 use semio_repo_test_host::Json;
@@ -75,7 +75,7 @@ mod live {
 
     /// 👁️ Projects an archive onto the owned `semantic-archive-mutate-v1` shape: members compared as
     /// a SET by name/size/digest, plus the comment as a normative field (this profile does not
-    /// ignore it — see `../🧪️oracle/🔣️component.json`).
+    /// ignore it — see `../🧪️oracle/🔣️.json`).
     pub fn projection(archive: &MutationArchive) -> Json {
         Json::Object(vec![
             ("format".to_string(), Json::String("zip".to_string())),

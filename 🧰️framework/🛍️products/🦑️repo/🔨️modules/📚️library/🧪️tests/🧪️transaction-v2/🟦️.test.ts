@@ -7,7 +7,7 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { appendFileSync, chmodSync, constants, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
 import { getWorkspaceRoot } from "../../📦️packages/🟦️typescript/📦️index.ts";
 import { applyTaxonomyPlan, canonicalJson, inventoryTaxonomy, noFollowTreeDigest, parseTaxonomyPlan, planTaxonomy, taxonomyPlanDigest, type TaxonomyInventoryOptions, type TaxonomyPlan } from "../../🧹️normalization/🟦️.ts";
 import { ownedFilePaths, ownedFilesystemEntries, ownedPathByteSort } from "../🔍️filesystem/🟦️component.ts";
@@ -59,8 +59,29 @@ function registerChild(childProcess: ChildProcess): ChildProcess {
 //#endregion 📜️Contracts
 
 //#region 🧪️Fixture
+/** 🔐️ Validates the exact propagated run identity before any fixture access. */
+function assertFixtureRunRoot(repoRoot: string, runId: string, runRoot: string): string {
+  const identity = /^[1-9][0-9]*-([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/u.exec(runId);
+  if (!identity || !isAbsolute(repoRoot) || resolve(repoRoot) !== repoRoot || !isAbsolute(runRoot) || resolve(runRoot) !== runRoot) throw new Error("Invalid transaction fixture run identity");
+  const expected = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION", "📓️transaction-v2-current-readiness", "🧾️runs", "🔖️" + identity[1]);
+  if (runRoot !== expected) throw new Error("Transaction fixture belongs to a different run");
+  let path = parse(runRoot).root;
+  for (const part of relative(path, runRoot).split(sep)) {
+    path = join(path, part);
+    const stat = lstatSync(path);
+    if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error("Transaction fixture run ancestor must be a no-follow directory: " + path);
+  }
+  return runRoot;
+}
+
+function fixtureRunRoot(): string {
+  return assertFixtureRunRoot(getWorkspaceRoot(), FIXTURE_RUN_ID, process.env.SEMIO_TRANSACTION_V2_RUN_ROOT ?? "");
+}
+
 function retainFixture(root: string): void {
-  if (dirname(root) !== resolve(getWorkspaceRoot(), TICKET_REL) || !basename(root).startsWith("🧪️s-transaction-v2-")) throw new Error("Unexpected transaction fixture root");
+  if (dirname(root) !== fixtureRunRoot() || !basename(root).startsWith("🧪️")) throw new Error("Unexpected transaction fixture root");
+  const stat = lstatSync(root);
+  if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error("Transaction fixture must be a no-follow directory");
 }
 
 function git(root: string, args: readonly string[]): string {
@@ -79,14 +100,13 @@ function writeFiles(root: string, files: Readonly<Record<string, string>>): void
 }
 
 function fixture(name: string, files: Readonly<Record<string, string>>, configure?: (row: Fixture) => void): Fixture {
-  const owner = resolve(getWorkspaceRoot(), TICKET_REL);
-  mkdirSync(owner, { recursive: true });
+  const owner = fixtureRunRoot();
   const templateKey = `${canonicalJson(files)}\0${configure?.toString() ?? ""}`;
   let template = fixtureTemplates.get(templateKey);
   if (!template) {
     const shared = process.env.SEMIO_TRANSACTION_V2_RUN_ID !== undefined;
     const digest = new Bun.CryptoHasher("sha256").update(templateKey).digest("hex");
-    const root = shared ? join(owner, `🧪️s-transaction-v2-${FIXTURE_RUN_ID}-shared-template-${digest}`) : mkdtempSync(join(owner, `🧪️s-transaction-v2-${FIXTURE_RUN_ID}-template-${process.pid}-`));
+    const root = shared ? join(owner, `🧪️template-${digest}`) : mkdtempSync(join(owner, "🧪️template-"));
     let buildRoot = root, ownsBuild = !shared;
     if (shared && !existsSync(root)) {
       buildRoot = `${root}-preparing`;
@@ -117,11 +137,13 @@ function fixture(name: string, files: Readonly<Record<string, string>>, configur
       git(buildRoot, ["commit", "--quiet", "-m", "transaction fixture"]);
       if (shared) renameSync(buildRoot, root);
     }
+    retainFixture(root);
     const head = readFileSync(join(root, ".git", "HEAD"), "utf8").trim();
     template = { baselineCommit: head.startsWith("ref: ") ? readFileSync(join(root, ".git", head.slice(5)), "utf8").trim() : head, processOwned: !shared, root };
     fixtureTemplates.set(templateKey, template);
   }
-  const root = mkdtempSync(join(owner, `🧪️s-transaction-v2-${FIXTURE_RUN_ID}-${name}-`));
+  retainFixture(template.root);
+  const root = mkdtempSync(join(owner, `🧪️${name}-`));
   cpSync(template.root, root, { recursive: true, mode: constants.COPYFILE_FICLONE });
   const rebaseSymlinks = (path: string): void => {
     for (const name of readdirSync(path)) {
@@ -188,7 +210,8 @@ function referenceFixture(name: string): Fixture {
 }
 
 function cloneFixture(source: Fixture, name: string): Fixture {
-  const owner = resolve(getWorkspaceRoot(), TICKET_REL), root = mkdtempSync(join(owner, `🧪️s-transaction-v2-${FIXTURE_RUN_ID}-${name}-`));
+  const owner = fixtureRunRoot(), root = mkdtempSync(join(owner, `🧪️${name}-`));
+  retainFixture(source.root);
   cpSync(source.root, root, { recursive: true, mode: constants.COPYFILE_FICLONE });
   const ticketDir = join(root, "🧪️tests"), workspace = join(ticketDir, "🧪️fixture"), scope = relative(root, workspace).replaceAll("\\", "/");
   return { baselineCommit: source.baselineCommit, options: { ...source.options, repoRoot: root, scope, ticketDir }, planCacheKey: source.planCacheKey, repoRoot: root, root, scope, ticketDir, workspace };
@@ -196,8 +219,9 @@ function cloneFixture(source: Fixture, name: string): Fixture {
 
 async function activeReferenceFixture(name: string): Promise<Fixture> {
   activeReferenceTemplatePromise ??= (async () => {
-    const sharedRoot = process.env.SEMIO_TRANSACTION_V2_RUN_ID ? join(resolve(getWorkspaceRoot(), TICKET_REL), `🧪️s-transaction-v2-${FIXTURE_RUN_ID}-shared-active-reference`) : undefined;
+    const sharedRoot = process.env.SEMIO_TRANSACTION_V2_RUN_ID ? join(fixtureRunRoot(), "🧪️active-reference") : undefined;
     if (sharedRoot && existsSync(sharedRoot)) {
+      retainFixture(sharedRoot);
       const head = readFileSync(join(sharedRoot, ".git", "HEAD"), "utf8").trim(), baselineCommit = head.startsWith("ref: ") ? readFileSync(join(sharedRoot, ".git", head.slice(5)), "utf8").trim() : head;
       const ticketDir = join(sharedRoot, "🧪️tests"), workspace = join(ticketDir, "🧪️fixture"), scope = relative(sharedRoot, workspace).replaceAll("\\", "/");
       activeReferenceTemplateProcessOwned = false;
@@ -215,6 +239,7 @@ async function activeReferenceFixture(name: string): Promise<Fixture> {
           if (Date.now() >= deadline) throw new Error("Timed out waiting for the shared active reference fixture");
           await Bun.sleep(2);
         }
+        retainFixture(sharedRoot!);
         const head = readFileSync(join(sharedRoot!, ".git", "HEAD"), "utf8").trim(), baselineCommit = head.startsWith("ref: ") ? readFileSync(join(sharedRoot!, ".git", head.slice(5)), "utf8").trim() : head;
         const ticketDir = join(sharedRoot!, "🧪️tests"), workspace = join(ticketDir, "🧪️fixture"), scope = relative(sharedRoot!, workspace).replaceAll("\\", "/");
         activeReferenceTemplateProcessOwned = false;
@@ -384,7 +409,7 @@ async function waitForExit(pid: number): Promise<void> {
 }
 
 async function killedMixedGenerator(row: Fixture, value: TaxonomyPlan): Promise<Readonly<{ journal: string; transaction: Snapshot; workspace: Snapshot }>> {
-  const markerRoot = mkdtempSync(join(resolve(getWorkspaceRoot(), TICKET_REL), `🧪️s-transaction-v2-${FIXTURE_RUN_ID}-mixed-generator-marker-`)), marker = join(markerRoot, "ready");
+  const markerRoot = mkdtempSync(join(fixtureRunRoot(), "🧪️mixed-generator-marker-")), marker = join(markerRoot, "ready");
   const planPath = writePlan(row, value), childProcess = registerChild(spawn(process.execPath, ["-e", `const [m,p,r,t,b]=process.argv.slice(1);const {applyTaxonomyPlan}=await import(m);applyTaxonomyPlan(JSON.parse(await Bun.file(p).text()),{repoRoot:r,ticketDir:t,expectedBaselineCommit:b});`, NORMALIZATION_MODULE, planPath, row.repoRoot, row.ticketDir, row.baselineCommit], { detached: process.platform !== "win32", env: { ...process.env, MIXED_GENERATOR_MARKER: marker }, stdio: ["ignore", "pipe", "pipe"] }));
   try {
     const generatorPid = await waitForGeneratorPid(marker, childProcess);
@@ -546,7 +571,124 @@ function expectEmptyPlan(row: Fixture): void {
 
 //#region 🧾️TransactionV2
 describe("transaction plan journal v2 aggregate", () => {
-  test("keeps the language-neutral golden aligned with owned no-follow enumeration", () => {
+  test("keeps the language-neutral golden aligned with owned no-follow enumeration", async () => {
+    const harness = JSON.parse(readFileSync(join(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️transaction-harness-retention/🔣️.json"), "utf8"));
+    const ts = await import("typescript");
+    const launcher = ts.createSourceFile(harness.launcherPath, readFileSync(join(getWorkspaceRoot(), harness.launcherPath), "utf8"), ts.ScriptTarget.Latest, true);
+    const testSource = ts.createSourceFile(harness.testPath, readFileSync(join(getWorkspaceRoot(), harness.testPath), "utf8"), ts.ScriptTarget.Latest, true);
+    const runValidator = testSource.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === harness.runRootValidator);
+    expect(runValidator).toBeDefined();
+    const filterWaves: string[][][] = [], staticTitles: string[] = [];
+    const visitLauncher = (node: import("typescript").Node): void => {
+      if (ts.isVariableDeclaration(node) && node.name.getText(launcher) === "defaultFilterWaves" && node.initializer && ts.isArrayLiteralExpression(node.initializer)) filterWaves.push(node.initializer.elements.map((wave) => {
+        if (!ts.isArrayLiteralExpression(wave) || wave.elements.some((entry) => !ts.isStringLiteral(entry))) throw new Error("Transaction shard filters must be closed literal strings");
+        return wave.elements.map((entry) => (entry as import("typescript").StringLiteral).text);
+      }));
+      ts.forEachChild(node, visitLauncher);
+    };
+    const visitTests = (node: import("typescript").Node): void => {
+      if (ts.isCallExpression(node) && ["test", "test.concurrent"].includes(node.expression.getText(testSource)) && node.arguments[0] && ts.isStringLiteral(node.arguments[0])) staticTitles.push(node.arguments[0].text);
+      ts.forEachChild(node, visitTests);
+    };
+    visitLauncher(launcher);
+    visitTests(testSource);
+    expect(filterWaves).toEqual([[harness.shards.map((entry: { filter: string }) => entry.filter)]]);
+    expect(staticTitles).toHaveLength(14);
+    const stages = FAILURE_STAGES.map((stage) => ({ title: `rolls back ${stage} with non-empty phase authority`, boundaries: [`rolledback:${stage}`] }));
+    const phases = [...KILL_PHASES, ...RESTORE_PHASES, ...LEASE_PHASES].map((phase) => ({ title: `recovers parent-killed ${phase}`, boundaries: [`killed:${phase}`, `recovered:${phase}`] }));
+    const terminal = ["committed", "rolled-back"].flatMap((state) => [`killed:transaction-terminal-${state}-stage-removed`, `recovered:transaction-terminal-${state}-stage-removed`]);
+    const staticBoundaries: Record<string, string[]> = {
+      "recovers parent-killed committed and rolled-back backup-only terminal cleanup": terminal,
+      "rolls back a process-tree-killed mixed generator and commits ordinal two": ["killed:process-tree-mixed-generator", "recovered:process-tree-mixed-generator", "committed:process-tree-mixed-generator"],
+      "keeps double-plan bytes stable, cancellation exact, and committed second apply immutable": ["rolledback:cancellation"],
+      "recovers caught allocation and journal previous-image callback failures": ["rolledback:caught-attempt-canonical-published", "rolledback:caught-journal-previous-exchanged"],
+    };
+    const cases = [...staticTitles.map((title) => ({ title, boundaries: staticBoundaries[title] ?? [] })), ...stages, ...phases];
+    expect(cases).toHaveLength(62);
+    expect(new Set(cases.map((entry) => entry.title)).size).toBe(62);
+    expect(cases.flatMap((entry) => entry.boundaries).sort()).toEqual(EXACT_BOUNDARY_KEYS);
+    const filters = filterWaves[0][0].map((filter) => new RegExp(filter, "u"));
+    for (const entry of cases) {
+      expect(filters.filter((filter) => filter.test(entry.title))).toHaveLength(1);
+      expect(filters.filter((filter) => filter.test(`transaction plan journal v2 aggregate ${entry.title}`))).toHaveLength(1);
+    }
+    expect(filters.map((filter) => cases.filter((entry) => filter.test(entry.title)).length)).toEqual(harness.shards.map((entry: { tests: number }) => entry.tests));
+    expect(filters.map((filter) => cases.filter((entry) => filter.test(entry.title)).flatMap((entry) => entry.boundaries).length)).toEqual(harness.shards.map((entry: { boundaries: number }) => entry.boundaries));
+    const allocation = launcher.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === harness.bundleRootFunction);
+    expect(allocation).toBeDefined();
+    const retention = testSource.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === harness.retentionFunction);
+    expect(retention).toBeDefined();
+    const propagation: string[] = [];
+    const inspectPropagation = (node: import("typescript").Node): void => {
+      if (ts.isPropertyAssignment(node) && node.name.getText(launcher) === harness.runRootEnvironment) propagation.push(node.initializer.getText(launcher));
+      ts.forEachChild(node, inspectPropagation);
+    };
+    inspectPropagation(launcher);
+    expect(propagation).toEqual(["runRoot"]);
+    const functionSource = [allocation!.getText(launcher).replace(/^export\s+/u, ""), runValidator!.getText(testSource), retention!.getText(testSource)].join("\n");
+    const compiled = [new Bun.Transpiler({ loader: "ts" }).transformSync(functionSource), ts.transpileModule(functionSource, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText];
+    const roots: string[] = [];
+    const allocationRepo = mkdtempSync(join(fixtureRunRoot(), "🧪️allocation-"));
+    mkdirSync(join(allocationRepo, TICKET_REL), { recursive: true });
+    for (const code of compiled) {
+      let currentRoot = "";
+      const helpers = new Function("mkdirSync", "lstatSync", "join", "resolve", "isAbsolute", "parse", "relative", "sep", "dirname", "basename", "fixtureRunRoot", `${code}\nreturn { allocate: ${harness.bundleRootFunction}, validate: ${harness.runRootValidator}, retain: ${harness.retentionFunction} };`)(mkdirSync, lstatSync, join, resolve, isAbsolute, parse, relative, sep, dirname, basename, () => currentRoot) as { allocate: (repoRoot: string, runId: string) => string; validate: (repoRoot: string, runId: string, runRoot: string) => string; retain: (root: string) => void };
+      const ids = [0, 1].map(() => `${process.pid}-${crypto.randomUUID()}`), pair: string[] = [];
+      for (const id of ids) {
+        const bundle = helpers.allocate(allocationRepo, id), root = dirname(bundle);
+        pair.push(root);
+        roots.push(root);
+        expect(dirname(root)).toBe(join(allocationRepo, harness.runOwnerPath));
+        expect(basename(root)).toBe(harness.runRootPrefix + id.slice(id.indexOf("-") + 1));
+        expect(basename(bundle)).toBe(harness.bundleDirectory);
+        expect(lstatSync(root).isDirectory()).toBe(true);
+        expect(lstatSync(root).isSymbolicLink()).toBe(false);
+        expect(helpers.validate(allocationRepo, id, root)).toBe(root);
+        writeFileSync(join(bundle, "🔤️.txt"), "retained allocation input\n");
+        expect(() => helpers.allocate(allocationRepo, id)).toThrow();
+      }
+      currentRoot = pair[0]!;
+      const namesBefore = readdirSync(dirname(currentRoot)).sort();
+      for (const id of harness.invalidRunIds) {
+        expect(() => helpers.allocate(allocationRepo, id)).toThrow();
+        expect(() => helpers.validate(allocationRepo, id, currentRoot)).toThrow();
+      }
+      expect(() => helpers.allocate("relative-root", ids[0]!)).toThrow();
+      expect(() => helpers.validate(allocationRepo, ids[0]!, relative(allocationRepo, currentRoot))).toThrow();
+      expect(() => helpers.validate(allocationRepo, ids[1]!, currentRoot)).toThrow();
+      expect(readdirSync(dirname(currentRoot)).sort()).toEqual(namesBefore);
+      const proofRepo = join(currentRoot, "🧪️ownership"), proofOwner = join(proofRepo, harness.runOwnerPath);
+      mkdirSync(proofOwner, { recursive: true });
+      const proofId = `${process.pid}-${crypto.randomUUID()}`, proofRoot = join(proofOwner, harness.runRootPrefix + proofId.slice(proofId.indexOf("-") + 1));
+      symlinkSync(currentRoot, proofRoot, process.platform === "win32" ? "junction" : "dir");
+      expect(() => helpers.allocate(proofRepo, proofId)).toThrow();
+      expect(() => helpers.validate(proofRepo, proofId, proofRoot)).toThrow();
+      expect(lstatSync(proofRoot).isSymbolicLink()).toBe(true);
+      const aliasRepo = join(currentRoot, "🧪️alias");
+      symlinkSync(proofRepo, aliasRepo, process.platform === "win32" ? "junction" : "dir");
+      expect(() => helpers.allocate(aliasRepo, `${process.pid}-${crypto.randomUUID()}`)).toThrow();
+      expect(() => helpers.validate(aliasRepo, proofId, join(aliasRepo, harness.runOwnerPath, basename(proofRoot)))).toThrow();
+      const fileId = `${process.pid}-${crypto.randomUUID()}`, fileRoot = join(proofOwner, harness.runRootPrefix + fileId.slice(fileId.indexOf("-") + 1));
+      writeFileSync(fileRoot, "not a directory\n");
+      expect(() => helpers.allocate(proofRepo, fileId)).toThrow();
+      expect(() => helpers.validate(proofRepo, fileId, fileRoot)).toThrow();
+      expect(readFileSync(fileRoot, "utf8")).toBe("not a directory\n");
+      for (const row of harness.cases) {
+        const parent = row.parent === "run" ? currentRoot : row.parent === "ticket" ? join(getWorkspaceRoot(), TICKET_REL) : join(currentRoot, "🧪️nested");
+        const root = join(parent, row.name);
+        if (row.accepted) mkdirSync(root);
+        if (row.accepted) expect(() => helpers.retain(root)).not.toThrow();
+        else expect(() => helpers.retain(root)).toThrow();
+      }
+      const foreign = join(pair[1]!, "🧪️foreign"), fixtureLink = join(currentRoot, "🧪️link");
+      mkdirSync(foreign);
+      symlinkSync(foreign, fixtureLink, process.platform === "win32" ? "junction" : "dir");
+      expect(() => helpers.retain(foreign)).toThrow();
+      expect(() => helpers.retain(fixtureLink)).toThrow();
+      expect(lstatSync(fixtureLink).isSymbolicLink()).toBe(true);
+      for (const root of pair) expect(readFileSync(join(root, harness.bundleDirectory, "🔤️.txt"), "utf8")).toBe("retained allocation input\n");
+    }
+    expect(new Set(roots).size).toBe(4);
     const golden = JSON.parse(readFileSync(TRANSACTION_GOLDEN, "utf8")) as BoundaryGolden & { failureStages: string[]; journalStates: string[]; virtualPreimageNodes: { path: string; state: string }[] };
     expect(golden.failureStages).toEqual(FAILURE_STAGES);
     expect(golden.journalStates).toHaveLength(11);
@@ -570,7 +712,7 @@ describe("transaction plan journal v2 aggregate", () => {
       expect(golden.transactionLedgers?.[reference.transaction]).toBeDefined();
       expect(golden.workspaceLedgers?.[reference.workspace]).toBeDefined();
     }
-    const root = mkdtempSync(join(resolve(getWorkspaceRoot(), TICKET_REL), "🧪️s-transaction-v2-parity-"));
+    const root = mkdtempSync(join(fixtureRunRoot(), "🧪️parity-"));
     try {
       mkdirSync(join(root, "evidence", "directory"), { recursive: true });
       writeFileSync(join(root, "evidence", "file.txt"), "sentinel\n");

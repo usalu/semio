@@ -87,7 +87,7 @@ The language-neutral golden records source and canonical identities for the chan
 
 - `🔣️taxonomy.json`: strict source/canonical catalog contract, 125 canonical mutation members, and `💾️binary`.
 - `🔍️discovery/🟦️component.ts`: strict types plus fail-closed catalog validation, membership, uniqueness, collision, and path-budget checks.
-- 144 `✏️s/🔌️plugins/**/🧪️oracle/🔣️component.json` files: all 1,555 vectors populated with the required source identity and affected canonical names/scenarios.
+- 144 `✏️s/🔌️plugins/**/🧪️oracle/🔣️.json` files: all 1,555 vectors populated with the required source identity and affected canonical names/scenarios.
 - Test-domain JSON schema and TypeScript validator: required source identity with no default, exact-key enforcement, and source-tree coverage.
 - Repo-library and test-domain permanent tests: strict negatives, source/canonical bijection, native recursive-walk versus `fast-glob` parity, and exact 13-node bundle behavior.
 - Language-neutral golden `🧫️fixtures/🧪️mutation-path-projection/🔣️.json`: exact corpus counts and representative source/destination projections.
@@ -169,4 +169,4 @@ ff5721e386bdade4dc0dcaff2942581dc79c5dba82a221c0a5848a35ce8fd126  taxonomy.json
 - Physical fixture trees remain the pre-transaction source of truth until that transaction runs; manually moving them independently would invalidate the source registry.
 - Any new catalog row must close exact schema membership, source and canonical tuple uniqueness, physical 13-node coverage, VS16/case-fold destination uniqueness, and the 240-byte budget before it is admissible.
 
-One broader test-domain discovery path remains outside this lane: the v7 contribution file kind resolves `🧪️oracle/🔣️.json` while some live contributions still occupy `🧪️oracle/🔣️component.json`. Direct catalog census, strict discovery validation, permanent focused tests, and physical coverage are green; the separate atomic location migration must close that full-suite loader path without adding an alias.
+One broader test-domain discovery path remains outside this lane: the v7 contribution file kind resolves `🧪️oracle/🔣️.json` while some live contributions still occupy `🧪️oracle/🔣️.json`. Direct catalog census, strict discovery validation, permanent focused tests, and physical coverage are green; the separate atomic location migration must close that full-suite loader path without adding an alias.

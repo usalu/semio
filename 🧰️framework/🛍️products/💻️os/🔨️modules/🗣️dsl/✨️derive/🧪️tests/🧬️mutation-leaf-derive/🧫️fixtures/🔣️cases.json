@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "attributes": [
+    { "name": "absolute-lower-contract", "attribute": "#[mutation_leaf(contract = ::protocol)]", "accepted": true },
+    { "name": "absolute-facade-contract", "attribute": "#[mutation_leaf(contract = ::semio_framework_os_kernel)]", "accepted": true },
+    { "name": "missing-contract", "attribute": "#[mutation_leaf]", "accepted": false, "diagnostic": "requires mutation_leaf contract" },
+    { "name": "duplicate-contract", "attribute": "#[mutation_leaf(contract = ::protocol, contract = ::protocol)]", "accepted": false, "diagnostic": "duplicate mutation_leaf contract" },
+    { "name": "duplicate-attribute", "attribute": "#[mutation_leaf(contract = ::protocol)] #[mutation_leaf(contract = ::protocol)]", "accepted": false, "diagnostic": "duplicate mutation_leaf attribute" },
+    { "name": "relative-contract", "attribute": "#[mutation_leaf(contract = protocol)]", "accepted": false, "diagnostic": "absolute non-generic" },
+    { "name": "crate-contract", "attribute": "#[mutation_leaf(contract = ::crate)]", "accepted": false, "diagnostic": "without self, super, or crate" },
+    { "name": "self-contract", "attribute": "#[mutation_leaf(contract = ::self)]", "accepted": false, "diagnostic": "without self, super, or crate" },
+    { "name": "super-contract", "attribute": "#[mutation_leaf(contract = ::super)]", "accepted": false, "diagnostic": "without self, super, or crate" },
+    { "name": "nested-crate-contract", "attribute": "#[mutation_leaf(contract = ::protocol::crate)]", "accepted": false, "diagnostic": "without self, super, or crate" },
+    { "name": "generic-contract", "attribute": "#[mutation_leaf(contract = ::protocol::<u8>)]", "accepted": false, "diagnostic": "absolute non-generic" },
+    { "name": "owner-override", "attribute": "#[mutation_leaf(contract = ::protocol, owner = \"forged\")]", "accepted": false, "diagnostic": "unsupported mutation_leaf attribute" },
+    { "name": "unknown-argument", "attribute": "#[mutation_leaf(contract = ::protocol, behavior = \"default\")]", "accepted": false, "diagnostic": "unsupported mutation_leaf attribute" }
+  ],
+  "compilerCases": [
+    { "name": "direct-lower", "accepted": true },
+    { "name": "enum-lower", "accepted": true },
+    { "name": "borrowed-generic", "accepted": true },
+    { "name": "invalid-owner", "accepted": false, "diagnostic": "descriptor owner does not exactly match" },
+    { "name": "invalid-descriptor", "accepted": false, "diagnostic": "schemaVersion must equal 1" },
+    { "name": "invalid-source", "accepted": false, "diagnostic": "source is not the taxonomy canonical mutation primary" },
+    { "name": "missing-contract", "accepted": false, "diagnostic": "requires mutation_leaf contract" },
+    { "name": "duplicate-contract", "accepted": false, "diagnostic": "duplicate mutation_leaf contract" },
+    { "name": "relative-contract", "accepted": false, "diagnostic": "absolute non-generic" },
+    { "name": "generic-contract", "accepted": false, "diagnostic": "absolute non-generic" },
+    { "name": "unknown-argument", "accepted": false, "diagnostic": "unsupported mutation_leaf attribute" },
+    { "name": "union", "accepted": false, "diagnostic": "does not support unions" }
+  ]
+}

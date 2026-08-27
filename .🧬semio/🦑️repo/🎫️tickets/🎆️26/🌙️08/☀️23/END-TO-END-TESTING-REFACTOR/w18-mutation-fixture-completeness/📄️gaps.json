@@ -1,0 +1,4630 @@
+[
+ {
+  "owner": "🧰️framework/🛍️products/💻️os/🎚️config",
+  "catalog": "os-config-opening-1-any",
+  "kind": "set-default-app",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "🧰️framework/🛍️products/💻️os/🎚️config",
+  "catalog": "os-config-opening-1-any",
+  "kind": "clear-default-app",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "🧰️framework/🛍️products/💻️os/🎚️config",
+  "catalog": "os-config-merge-policy-1-any",
+  "kind": "change-merge-policy",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "🧰️framework/🛍️products/💻️os/🎚️config",
+  "catalog": "os-config-identity-1-any",
+  "kind": "sign-in",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "🧰️framework/🛍️products/💻️os/🎚️config",
+  "catalog": "os-config-identity-1-any",
+  "kind": "sign-out",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "catalog": "remodel-1-any",
+  "kind": "commit-reconstruction",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "catalog": "din16798-1-any",
+  "kind": "change-humidification-required-kg-h",
+  "reason": "incomplete-bundle",
+  "dir": "🌾change-humidification-required-kg-h",
+  "scen": [
+   "required-humidification-becomes-3-point-5-kg-per-hour"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "catalog": "din16798-1-any",
+  "kind": "change-humidification-provided-kg-h",
+  "reason": "incomplete-bundle",
+  "dir": "🍀change-humidification-provided-kg-h",
+  "scen": [
+   "provided-humidification-becomes-1-point-25-kg-per-hour"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "catalog": "din16798-1-any",
+  "kind": "change-infiltration-allowance-m3-h",
+  "reason": "incomplete-bundle",
+  "dir": "🌴change-infiltration-allowance-m3-h",
+  "scen": [
+   "raises-infiltration-allowance-to-52-point-5-m3-per-hour"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "catalog": "en1992-1-any",
+  "kind": "change-annex",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "catalog": "en1990-1-any",
+  "kind": "change-annex",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "catalog": "block-5d-1-any",
+  "kind": "update-part2d",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "catalog": "block-5d-1-any",
+  "kind": "update-part3d",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "catalog": "block-5d-1-any",
+  "kind": "move-grip2d",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "catalog": "block-5d-1-any",
+  "kind": "move-grip3d",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "catalog": "block-5d-1-any",
+  "kind": "resize-grip3d",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any",
+  "catalog": "bcf-2-1-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any",
+  "catalog": "bcf-2-1-any",
+  "kind": "set-version",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any",
+  "catalog": "bcf-2-1-any",
+  "kind": "insert-topic",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any",
+  "catalog": "bcf-2-1-any",
+  "kind": "remove-topic",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any",
+  "catalog": "bcf-2-1-any",
+  "kind": "set-topic-markup",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any",
+  "catalog": "bcf-2-1-any",
+  "kind": "insert-comment",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any",
+  "catalog": "bcf-2-1-any",
+  "kind": "remove-comment",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any",
+  "catalog": "bcf-2-1-any",
+  "kind": "set-comment",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any",
+  "catalog": "bcf-2-1-any",
+  "kind": "insert-viewpoint",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any",
+  "catalog": "bcf-2-1-any",
+  "kind": "remove-viewpoint",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any",
+  "catalog": "bcf-2-1-any",
+  "kind": "set-viewpoint-camera",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any",
+  "catalog": "bcf-2-1-any",
+  "kind": "set-viewpoint-components",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any",
+  "catalog": "bcf-2-1-any",
+  "kind": "set-viewpoint-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any",
+  "catalog": "json-rfc8259-any",
+  "kind": "set-member",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any",
+  "catalog": "json-rfc8259-any",
+  "kind": "remove-member",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any",
+  "catalog": "json-rfc8259-any",
+  "kind": "insert-array-element",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any",
+  "catalog": "json-rfc8259-any",
+  "kind": "remove-array-element",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any",
+  "catalog": "json-rfc8259-any",
+  "kind": "set-scalar",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json",
+  "catalog": "json-rfc8259-i-json",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json",
+  "catalog": "json-rfc8259-i-json",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json",
+  "catalog": "json-rfc8259-i-json",
+  "kind": "set-top-level",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json",
+  "catalog": "json-rfc8259-i-json",
+  "kind": "upsert-member",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json",
+  "catalog": "json-rfc8259-i-json",
+  "kind": "remove-member",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json",
+  "catalog": "json-rfc8259-i-json",
+  "kind": "rename-member",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json",
+  "catalog": "json-rfc8259-i-json",
+  "kind": "set-safe-number",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json",
+  "catalog": "json-rfc8259-i-json",
+  "kind": "set-string",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json",
+  "catalog": "json-rfc8259-i-json",
+  "kind": "insert-array-element",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json",
+  "catalog": "json-rfc8259-i-json",
+  "kind": "remove-array-element",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any",
+  "catalog": "mp4-isobmff-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any",
+  "catalog": "mp4-isobmff-any",
+  "kind": "set-ftyp",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any",
+  "catalog": "mp4-isobmff-any",
+  "kind": "insert-track",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any",
+  "catalog": "mp4-isobmff-any",
+  "kind": "remove-track",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any",
+  "catalog": "mp4-isobmff-any",
+  "kind": "set-track-dimensions",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any",
+  "catalog": "mp4-isobmff-any",
+  "kind": "set-track-codec",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any",
+  "catalog": "mp4-isobmff-any",
+  "kind": "insert-sample",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any",
+  "catalog": "mp4-isobmff-any",
+  "kind": "remove-sample",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any",
+  "catalog": "mp4-isobmff-any",
+  "kind": "set-sample-sync",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "avi-1-0-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "avi-1-0-any",
+  "kind": "set-main-header",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "avi-1-0-any",
+  "kind": "set-idx1-present",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "avi-1-0-any",
+  "kind": "insert-stream",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "avi-1-0-any",
+  "kind": "remove-stream",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "avi-1-0-any",
+  "kind": "set-stream-header",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "avi-1-0-any",
+  "kind": "set-stream-format",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "avi-1-0-any",
+  "kind": "insert-chunk",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "avi-1-0-any",
+  "kind": "remove-chunk",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "avi-1-0-any",
+  "kind": "set-chunk-keyframe",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "avi-1-0-any",
+  "kind": "add-unknown-chunk",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "avi-1-0-any",
+  "kind": "remove-unknown-chunk",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any",
+  "catalog": "dxf-r12-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any",
+  "catalog": "dxf-r12-any",
+  "kind": "set-header-var",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any",
+  "catalog": "dxf-r12-any",
+  "kind": "remove-header-var",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any",
+  "catalog": "dxf-r12-any",
+  "kind": "insert-layer",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any",
+  "catalog": "dxf-r12-any",
+  "kind": "remove-layer",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any",
+  "catalog": "dxf-r12-any",
+  "kind": "set-layer",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any",
+  "catalog": "dxf-r12-any",
+  "kind": "insert-style",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any",
+  "catalog": "dxf-r12-any",
+  "kind": "remove-style",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any",
+  "catalog": "dxf-r12-any",
+  "kind": "set-style",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any",
+  "catalog": "dxf-r12-any",
+  "kind": "insert-linetype",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any",
+  "catalog": "dxf-r12-any",
+  "kind": "remove-linetype",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any",
+  "catalog": "dxf-r12-any",
+  "kind": "set-linetype",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any",
+  "catalog": "dxf-r12-any",
+  "kind": "insert-entity",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any",
+  "catalog": "dxf-r12-any",
+  "kind": "remove-entity",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any",
+  "catalog": "dxf-r12-any",
+  "kind": "set-entity",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any",
+  "catalog": "dxf-r12-any",
+  "kind": "insert-block",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any",
+  "catalog": "dxf-r12-any",
+  "kind": "remove-block",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any",
+  "catalog": "dxf-r12-any",
+  "kind": "set-block",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any",
+  "catalog": "ifc-2x3-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any",
+  "catalog": "ifc-2x3-any",
+  "kind": "upsert-instance",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any",
+  "catalog": "ifc-2x3-any",
+  "kind": "remove-instance",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any",
+  "catalog": "ifc-2x3-any",
+  "kind": "set-header",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20",
+  "catalog": "ifc-2x3-cv20",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20",
+  "catalog": "ifc-2x3-cv20",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20",
+  "catalog": "ifc-2x3-cv20",
+  "kind": "set-view-definition",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20",
+  "catalog": "ifc-2x3-cv20",
+  "kind": "set-structural-entity",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20",
+  "catalog": "ifc-2x3-cv20",
+  "kind": "set-project-units",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20",
+  "catalog": "ifc-2x3-cv20",
+  "kind": "set-product-placement",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav",
+  "catalog": "ifc-2x3-sav",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav",
+  "catalog": "ifc-2x3-sav",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav",
+  "catalog": "ifc-2x3-sav",
+  "kind": "set-view-definition",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav",
+  "catalog": "ifc-2x3-sav",
+  "kind": "set-analysis-model",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav",
+  "catalog": "ifc-2x3-sav",
+  "kind": "set-load-group",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav",
+  "catalog": "ifc-2x3-sav",
+  "kind": "set-group-assignment",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie",
+  "catalog": "ifc-2x3-cobie",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie",
+  "catalog": "ifc-2x3-cobie",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie",
+  "catalog": "ifc-2x3-cobie",
+  "kind": "set-view-definition",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie",
+  "catalog": "ifc-2x3-cobie",
+  "kind": "set-facility-name",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie",
+  "catalog": "ifc-2x3-cobie",
+  "kind": "set-floor-elevation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie",
+  "catalog": "ifc-2x3-cobie",
+  "kind": "set-space",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie",
+  "catalog": "ifc-2x3-cobie",
+  "kind": "set-type-assignment",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any",
+  "catalog": "ifc-4-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any",
+  "catalog": "ifc-4-any",
+  "kind": "set-file-description",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any",
+  "catalog": "ifc-4-any",
+  "kind": "set-file-name",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any",
+  "catalog": "ifc-4-any",
+  "kind": "set-file-schema",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any",
+  "catalog": "ifc-4-any",
+  "kind": "insert-entity",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any",
+  "catalog": "ifc-4-any",
+  "kind": "remove-entity",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any",
+  "catalog": "ifc-4-any",
+  "kind": "set-entity-name",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any",
+  "catalog": "ifc-4-any",
+  "kind": "set-entity-arg",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any",
+  "catalog": "ifc-4-any",
+  "kind": "insert-entity-arg",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any",
+  "catalog": "ifc-4-any",
+  "kind": "remove-entity-arg",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any",
+  "catalog": "epw-energyplus-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any",
+  "catalog": "epw-energyplus-any",
+  "kind": "set-location",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any",
+  "catalog": "epw-energyplus-any",
+  "kind": "set-design-conditions",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any",
+  "catalog": "epw-energyplus-any",
+  "kind": "set-typical-extreme-periods",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any",
+  "catalog": "epw-energyplus-any",
+  "kind": "set-ground-temperatures",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any",
+  "catalog": "epw-energyplus-any",
+  "kind": "set-holidays-dst",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any",
+  "catalog": "epw-energyplus-any",
+  "kind": "set-comments-1",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any",
+  "catalog": "epw-energyplus-any",
+  "kind": "set-comments-2",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any",
+  "catalog": "epw-energyplus-any",
+  "kind": "set-data-periods",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any",
+  "catalog": "epw-energyplus-any",
+  "kind": "insert-record",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any",
+  "catalog": "epw-energyplus-any",
+  "kind": "remove-record",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any",
+  "catalog": "epw-energyplus-any",
+  "kind": "set-record-field",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any",
+  "catalog": "wav-riff-pcm-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any",
+  "catalog": "wav-riff-pcm-any",
+  "kind": "set-fmt",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any",
+  "catalog": "wav-riff-pcm-any",
+  "kind": "set-data",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any",
+  "catalog": "wav-riff-pcm-any",
+  "kind": "set-other-chunks",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any",
+  "catalog": "bmp-3-any",
+  "kind": "change-header-fields",
+  "reason": "incomplete-bundle",
+  "dir": "📐️change-header-fields",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any",
+  "catalog": "bmp-3-any",
+  "kind": "insert-palette-entry",
+  "reason": "incomplete-bundle",
+  "dir": "📥️insert-palette-entry",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any",
+  "catalog": "bmp-3-any",
+  "kind": "remove-palette-entry",
+  "reason": "incomplete-bundle",
+  "dir": "📤️remove-palette-entry",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any",
+  "catalog": "bmp-3-any",
+  "kind": "replace-palette-entry",
+  "reason": "incomplete-bundle",
+  "dir": "🎨️replace-palette-entry",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any",
+  "catalog": "bmp-3-any",
+  "kind": "replace-pixel-data",
+  "reason": "incomplete-bundle",
+  "dir": "🟪️replace-pixel-data",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any",
+  "catalog": "mp3-mpeg1-layer3-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any",
+  "catalog": "mp3-mpeg1-layer3-any",
+  "kind": "set-id3v2",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any",
+  "catalog": "mp3-mpeg1-layer3-any",
+  "kind": "set-frames",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any",
+  "catalog": "mp3-mpeg1-layer3-any",
+  "kind": "set-id3v1",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "ply-1-0-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "ply-1-0-any",
+  "kind": "set-format",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "ply-1-0-any",
+  "kind": "insert-comment",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "ply-1-0-any",
+  "kind": "remove-comment",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "ply-1-0-any",
+  "kind": "add-element",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "ply-1-0-any",
+  "kind": "remove-element",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "ply-1-0-any",
+  "kind": "insert-row",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "ply-1-0-any",
+  "kind": "remove-row",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "ply-1-0-any",
+  "kind": "set-row-property",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any",
+  "catalog": "svg-1-1-any",
+  "kind": "set-declaration",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any",
+  "catalog": "svg-1-1-any",
+  "kind": "set-doctype",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any",
+  "catalog": "svg-1-1-any",
+  "kind": "insert-element",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any",
+  "catalog": "svg-1-1-any",
+  "kind": "remove-element",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any",
+  "catalog": "svg-1-1-any",
+  "kind": "set-element-name",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any",
+  "catalog": "svg-1-1-any",
+  "kind": "set-attribute",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any",
+  "catalog": "svg-1-1-any",
+  "kind": "set-text",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any",
+  "catalog": "svg-1-1-any",
+  "kind": "set-view-box",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any",
+  "catalog": "svg-1-1-any",
+  "kind": "set-transform",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic",
+  "catalog": "svg-1-1-basic",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic",
+  "catalog": "svg-1-1-basic",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic",
+  "catalog": "svg-1-1-basic",
+  "kind": "stamp-base-profile",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic",
+  "catalog": "svg-1-1-basic",
+  "kind": "insert-basic-element",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic",
+  "catalog": "svg-1-1-basic",
+  "kind": "remove-element",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic",
+  "catalog": "svg-1-1-basic",
+  "kind": "set-basic-attribute",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic",
+  "catalog": "svg-1-1-basic",
+  "kind": "set-clip-path-reference",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic",
+  "catalog": "svg-1-1-basic",
+  "kind": "insert-clip-path-shape",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic",
+  "catalog": "svg-1-1-basic",
+  "kind": "set-text",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic",
+  "catalog": "svg-1-1-basic",
+  "kind": "set-view-box",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic",
+  "catalog": "svg-1-1-basic",
+  "kind": "set-transform",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny",
+  "catalog": "svg-1-1-tiny",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny",
+  "catalog": "svg-1-1-tiny",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny",
+  "catalog": "svg-1-1-tiny",
+  "kind": "stamp-base-profile",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny",
+  "catalog": "svg-1-1-tiny",
+  "kind": "insert-tiny-element",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny",
+  "catalog": "svg-1-1-tiny",
+  "kind": "remove-element",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny",
+  "catalog": "svg-1-1-tiny",
+  "kind": "set-tiny-attribute",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny",
+  "catalog": "svg-1-1-tiny",
+  "kind": "set-text",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny",
+  "catalog": "svg-1-1-tiny",
+  "kind": "set-view-box",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny",
+  "catalog": "svg-1-1-tiny",
+  "kind": "set-transform",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny",
+  "catalog": "svg-1-1-tiny",
+  "kind": "strip-non-tiny",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad",
+  "catalog": "semio-v1-cad",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad",
+  "catalog": "semio-v1-cad",
+  "kind": "add-layer",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad",
+  "catalog": "semio-v1-cad",
+  "kind": "remove-layer",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad",
+  "catalog": "semio-v1-cad",
+  "kind": "set-layer",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad",
+  "catalog": "semio-v1-cad",
+  "kind": "add-block",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad",
+  "catalog": "semio-v1-cad",
+  "kind": "remove-block",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad",
+  "catalog": "semio-v1-cad",
+  "kind": "set-block-base-point",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad",
+  "catalog": "semio-v1-cad",
+  "kind": "add-entity",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad",
+  "catalog": "semio-v1-cad",
+  "kind": "remove-entity",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad",
+  "catalog": "semio-v1-cad",
+  "kind": "set-entity-layer",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad",
+  "catalog": "semio-v1-cad",
+  "kind": "set-entity-geometry",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad",
+  "catalog": "semio-v1-cad",
+  "kind": "add-block-entity",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad",
+  "catalog": "semio-v1-cad",
+  "kind": "remove-block-entity",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad",
+  "catalog": "semio-v1-cad",
+  "kind": "set-block-entity-layer",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad",
+  "catalog": "semio-v1-cad",
+  "kind": "set-block-entity-geometry",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any",
+  "catalog": "semio-v1-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any",
+  "catalog": "semio-v1-any",
+  "kind": "brep",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any",
+  "catalog": "semio-v1-any",
+  "kind": "mesh",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any",
+  "catalog": "semio-v1-any",
+  "kind": "model",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any",
+  "catalog": "semio-v1-any",
+  "kind": "value",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any",
+  "catalog": "semio-v1-any",
+  "kind": "document",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any",
+  "catalog": "semio-v1-any",
+  "kind": "cad",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any",
+  "catalog": "semio-v1-any",
+  "kind": "drawing",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any",
+  "catalog": "semio-v1-any",
+  "kind": "image",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any",
+  "catalog": "semio-v1-any",
+  "kind": "video",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any",
+  "catalog": "semio-v1-any",
+  "kind": "audio",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any",
+  "catalog": "semio-v1-any",
+  "kind": "animation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any",
+  "catalog": "semio-v1-any",
+  "kind": "presentation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any",
+  "catalog": "semio-v1-any",
+  "kind": "flow",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any",
+  "catalog": "semio-v1-any",
+  "kind": "text",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any",
+  "catalog": "semio-v1-any",
+  "kind": "table",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any",
+  "catalog": "semio-v1-any",
+  "kind": "graph",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any",
+  "catalog": "semio-v1-any",
+  "kind": "object",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any",
+  "catalog": "semio-v1-any",
+  "kind": "kit",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model",
+  "catalog": "semio-v1-model",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model",
+  "catalog": "semio-v1-model",
+  "kind": "insert-spatial-node",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model",
+  "catalog": "semio-v1-model",
+  "kind": "remove-spatial-node",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model",
+  "catalog": "semio-v1-model",
+  "kind": "set-spatial-node",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model",
+  "catalog": "semio-v1-model",
+  "kind": "insert-element",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model",
+  "catalog": "semio-v1-model",
+  "kind": "remove-element",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model",
+  "catalog": "semio-v1-model",
+  "kind": "set-element",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model",
+  "catalog": "semio-v1-model",
+  "kind": "insert-relation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model",
+  "catalog": "semio-v1-model",
+  "kind": "remove-relation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model",
+  "catalog": "semio-v1-model",
+  "kind": "set-relation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio",
+  "catalog": "semio-v1-audio",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio",
+  "catalog": "semio-v1-audio",
+  "kind": "set-sample-rate",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio",
+  "catalog": "semio-v1-audio",
+  "kind": "set-format",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio",
+  "catalog": "semio-v1-audio",
+  "kind": "insert-channel",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio",
+  "catalog": "semio-v1-audio",
+  "kind": "remove-channel",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio",
+  "catalog": "semio-v1-audio",
+  "kind": "set-channel-samples",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio",
+  "catalog": "semio-v1-audio",
+  "kind": "insert-tag",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio",
+  "catalog": "semio-v1-audio",
+  "kind": "remove-tag",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio",
+  "catalog": "semio-v1-audio",
+  "kind": "set-tag-value",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation",
+  "catalog": "semio-v1-presentation",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation",
+  "catalog": "semio-v1-presentation",
+  "kind": "insert-slide",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation",
+  "catalog": "semio-v1-presentation",
+  "kind": "remove-slide",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation",
+  "catalog": "semio-v1-presentation",
+  "kind": "set-slide-layout",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation",
+  "catalog": "semio-v1-presentation",
+  "kind": "set-slide-notes",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation",
+  "catalog": "semio-v1-presentation",
+  "kind": "insert-shape",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation",
+  "catalog": "semio-v1-presentation",
+  "kind": "remove-shape",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation",
+  "catalog": "semio-v1-presentation",
+  "kind": "set-shape-frame",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation",
+  "catalog": "semio-v1-presentation",
+  "kind": "set-textbox-blocks",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation",
+  "catalog": "semio-v1-presentation",
+  "kind": "insert-master",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation",
+  "catalog": "semio-v1-presentation",
+  "kind": "remove-master",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation",
+  "catalog": "semio-v1-presentation",
+  "kind": "insert-layout",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation",
+  "catalog": "semio-v1-presentation",
+  "kind": "remove-layout",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation",
+  "catalog": "semio-v1-presentation",
+  "kind": "set-layout-master",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document",
+  "catalog": "semio-v1-document",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document",
+  "catalog": "semio-v1-document",
+  "kind": "insert-block",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document",
+  "catalog": "semio-v1-document",
+  "kind": "remove-block",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document",
+  "catalog": "semio-v1-document",
+  "kind": "set-block-content",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document",
+  "catalog": "semio-v1-document",
+  "kind": "set-paragraph-style",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document",
+  "catalog": "semio-v1-document",
+  "kind": "set-heading-level",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document",
+  "catalog": "semio-v1-document",
+  "kind": "set-list-ordered",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document",
+  "catalog": "semio-v1-document",
+  "kind": "set-run-text",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document",
+  "catalog": "semio-v1-document",
+  "kind": "set-run-style",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document",
+  "catalog": "semio-v1-document",
+  "kind": "set-image-block",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document",
+  "catalog": "semio-v1-document",
+  "kind": "insert-style",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document",
+  "catalog": "semio-v1-document",
+  "kind": "remove-style",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document",
+  "catalog": "semio-v1-document",
+  "kind": "set-style-name",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document",
+  "catalog": "semio-v1-document",
+  "kind": "set-style-based-on",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document",
+  "catalog": "semio-v1-document",
+  "kind": "insert-image",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document",
+  "catalog": "semio-v1-document",
+  "kind": "remove-image",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document",
+  "catalog": "semio-v1-document",
+  "kind": "set-image-bytes",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation",
+  "catalog": "semio-v1-animation",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation",
+  "catalog": "semio-v1-animation",
+  "kind": "insert-timeline",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation",
+  "catalog": "semio-v1-animation",
+  "kind": "remove-timeline",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation",
+  "catalog": "semio-v1-animation",
+  "kind": "set-timeline-name",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation",
+  "catalog": "semio-v1-animation",
+  "kind": "insert-channel",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation",
+  "catalog": "semio-v1-animation",
+  "kind": "remove-channel",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation",
+  "catalog": "semio-v1-animation",
+  "kind": "set-channel-target",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation",
+  "catalog": "semio-v1-animation",
+  "kind": "set-channel-interpolation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation",
+  "catalog": "semio-v1-animation",
+  "kind": "insert-keyframe",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation",
+  "catalog": "semio-v1-animation",
+  "kind": "remove-keyframe",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation",
+  "catalog": "semio-v1-animation",
+  "kind": "set-keyframe-time",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation",
+  "catalog": "semio-v1-animation",
+  "kind": "set-keyframe-value",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image",
+  "catalog": "semio-v1-image",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value",
+  "catalog": "semio-v1-value",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value",
+  "catalog": "semio-v1-value",
+  "kind": "set-value",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value",
+  "catalog": "semio-v1-value",
+  "kind": "set-map-entry",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value",
+  "catalog": "semio-v1-value",
+  "kind": "remove-map-entry",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value",
+  "catalog": "semio-v1-value",
+  "kind": "insert-list-item",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value",
+  "catalog": "semio-v1-value",
+  "kind": "remove-list-item",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value",
+  "catalog": "semio-v1-value",
+  "kind": "set-node",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value",
+  "catalog": "semio-v1-value",
+  "kind": "remove-node",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow",
+  "catalog": "semio-v1-flow",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow",
+  "catalog": "semio-v1-flow",
+  "kind": "insert-node",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow",
+  "catalog": "semio-v1-flow",
+  "kind": "remove-node",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow",
+  "catalog": "semio-v1-flow",
+  "kind": "set-node-kind",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow",
+  "catalog": "semio-v1-flow",
+  "kind": "set-node-label",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow",
+  "catalog": "semio-v1-flow",
+  "kind": "set-node-position",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow",
+  "catalog": "semio-v1-flow",
+  "kind": "set-node-param",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow",
+  "catalog": "semio-v1-flow",
+  "kind": "remove-node-param",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow",
+  "catalog": "semio-v1-flow",
+  "kind": "insert-edge",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow",
+  "catalog": "semio-v1-flow",
+  "kind": "remove-edge",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow",
+  "catalog": "semio-v1-flow",
+  "kind": "set-edge-endpoints",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow",
+  "catalog": "semio-v1-flow",
+  "kind": "set-edge-kind",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video",
+  "catalog": "semio-v1-video",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video",
+  "catalog": "semio-v1-video",
+  "kind": "insert-stream",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video",
+  "catalog": "semio-v1-video",
+  "kind": "remove-stream",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video",
+  "catalog": "semio-v1-video",
+  "kind": "set-stream-meta",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video",
+  "catalog": "semio-v1-video",
+  "kind": "insert-sample",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video",
+  "catalog": "semio-v1-video",
+  "kind": "remove-sample",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video",
+  "catalog": "semio-v1-video",
+  "kind": "set-sample-data",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video",
+  "catalog": "semio-v1-video",
+  "kind": "set-sample-flags",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any",
+  "catalog": "html-5-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any",
+  "catalog": "html-5-any",
+  "kind": "set-doctype",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any",
+  "catalog": "html-5-any",
+  "kind": "insert-node",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any",
+  "catalog": "html-5-any",
+  "kind": "remove-node",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any",
+  "catalog": "html-5-any",
+  "kind": "set-element-name",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any",
+  "catalog": "html-5-any",
+  "kind": "set-attribute",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any",
+  "catalog": "html-5-any",
+  "kind": "set-text",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any",
+  "catalog": "html-5-any",
+  "kind": "set-comment",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any",
+  "catalog": "html-5-any",
+  "kind": "set-raw-text",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "insert-vertex",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "remove-vertex",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "set-vertex",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "insert-texcoord",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "remove-texcoord",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "set-texcoord",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "insert-normal",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "remove-normal",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "set-normal",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "insert-face",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "remove-face",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "set-face",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "set-group",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "remove-group",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "set-object",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "remove-object",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "set-mtllib",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "set-usemtl",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "set-smoothing-groups",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any",
+  "catalog": "obj-3-0-any",
+  "kind": "set-unknown-statements",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any",
+  "catalog": "deflate-rfc1950-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any",
+  "catalog": "deflate-rfc1950-any",
+  "kind": "set-compression-params",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any",
+  "catalog": "deflate-rfc1950-any",
+  "kind": "set-preset-dictionary",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any",
+  "catalog": "deflate-rfc1950-any",
+  "kind": "set-payload",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any",
+  "catalog": "zip-2-0-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any",
+  "catalog": "zip-2-0-any",
+  "kind": "set-archive-comment",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any",
+  "catalog": "zip-2-0-any",
+  "kind": "add-entry",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any",
+  "catalog": "zip-2-0-any",
+  "kind": "remove-entry",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any",
+  "catalog": "zip-2-0-any",
+  "kind": "rename-entry",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any",
+  "catalog": "zip-2-0-any",
+  "kind": "set-entry-data",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320",
+  "catalog": "zip-2-0-iso21320",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320",
+  "catalog": "zip-2-0-iso21320",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320",
+  "catalog": "zip-2-0-iso21320",
+  "kind": "set-archive-comment",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320",
+  "catalog": "zip-2-0-iso21320",
+  "kind": "add-stored-entry",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320",
+  "catalog": "zip-2-0-iso21320",
+  "kind": "add-deflated-entry",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320",
+  "catalog": "zip-2-0-iso21320",
+  "kind": "remove-entry",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320",
+  "catalog": "zip-2-0-iso21320",
+  "kind": "rename-entry",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320",
+  "catalog": "zip-2-0-iso21320",
+  "kind": "set-entry-data",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any",
+  "catalog": "step-ap214-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any",
+  "catalog": "step-ap214-any",
+  "kind": "set-file-description",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any",
+  "catalog": "step-ap214-any",
+  "kind": "set-file-name",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any",
+  "catalog": "step-ap214-any",
+  "kind": "set-file-schema",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any",
+  "catalog": "step-ap214-any",
+  "kind": "insert-entity",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any",
+  "catalog": "step-ap214-any",
+  "kind": "remove-entity",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any",
+  "catalog": "step-ap214-any",
+  "kind": "set-entity-name",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any",
+  "catalog": "step-ap214-any",
+  "kind": "set-entity-arg",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any",
+  "catalog": "step-ap214-any",
+  "kind": "insert-entity-arg",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any",
+  "catalog": "step-ap214-any",
+  "kind": "remove-entity-arg",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1",
+  "catalog": "step-ap214-cc1",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1",
+  "catalog": "step-ap214-cc1",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1",
+  "catalog": "step-ap214-cc1",
+  "kind": "set-file-schema",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1",
+  "catalog": "step-ap214-cc1",
+  "kind": "set-product-identity",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1",
+  "catalog": "step-ap214-cc1",
+  "kind": "remove-shape-representation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6",
+  "catalog": "step-ap214-cc6",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6",
+  "catalog": "step-ap214-cc6",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6",
+  "catalog": "step-ap214-cc6",
+  "kind": "set-file-schema",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6",
+  "catalog": "step-ap214-cc6",
+  "kind": "set-product-identity",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6",
+  "catalog": "step-ap214-cc6",
+  "kind": "set-shape-representation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3",
+  "catalog": "step-ap214-cc3",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3",
+  "catalog": "step-ap214-cc3",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3",
+  "catalog": "step-ap214-cc3",
+  "kind": "set-file-schema",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3",
+  "catalog": "step-ap214-cc3",
+  "kind": "set-product-identity",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3",
+  "catalog": "step-ap214-cc3",
+  "kind": "set-shape-representation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3",
+  "catalog": "step-ap214-cc3",
+  "kind": "demote-shape-representation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4",
+  "catalog": "step-ap214-cc4",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4",
+  "catalog": "step-ap214-cc4",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4",
+  "catalog": "step-ap214-cc4",
+  "kind": "set-file-schema",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4",
+  "catalog": "step-ap214-cc4",
+  "kind": "set-product-identity",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4",
+  "catalog": "step-ap214-cc4",
+  "kind": "set-shape-representation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4",
+  "catalog": "step-ap214-cc4",
+  "kind": "demote-shape-representation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5",
+  "catalog": "step-ap214-cc5",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5",
+  "catalog": "step-ap214-cc5",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5",
+  "catalog": "step-ap214-cc5",
+  "kind": "set-file-schema",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5",
+  "catalog": "step-ap214-cc5",
+  "kind": "set-product-identity",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5",
+  "catalog": "step-ap214-cc5",
+  "kind": "set-shape-representation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5",
+  "catalog": "step-ap214-cc5",
+  "kind": "demote-shape-representation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2",
+  "catalog": "step-ap214-cc2",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2",
+  "catalog": "step-ap214-cc2",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2",
+  "catalog": "step-ap214-cc2",
+  "kind": "set-file-schema",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2",
+  "catalog": "step-ap214-cc2",
+  "kind": "set-product-identity",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2",
+  "catalog": "step-ap214-cc2",
+  "kind": "set-shape-representation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2",
+  "catalog": "step-ap214-cc2",
+  "kind": "demote-shape-representation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any",
+  "catalog": "txt-utf-8-any",
+  "kind": "set-trailing-newline",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any",
+  "catalog": "txt-utf-8-any",
+  "kind": "set-line-ending",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any",
+  "catalog": "txt-utf-8-any",
+  "kind": "insert-line",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any",
+  "catalog": "txt-utf-8-any",
+  "kind": "remove-line",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any",
+  "catalog": "txt-utf-8-any",
+  "kind": "set-line",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any",
+  "catalog": "md-commonmark-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any",
+  "catalog": "md-commonmark-any",
+  "kind": "insert-block",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any",
+  "catalog": "md-commonmark-any",
+  "kind": "remove-block",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any",
+  "catalog": "md-commonmark-any",
+  "kind": "replace-block",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any",
+  "catalog": "md-commonmark-any",
+  "kind": "set-inlines",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any",
+  "catalog": "tiff-6-0-any",
+  "kind": "change-byte-order",
+  "reason": "incomplete-bundle",
+  "dir": "🧭️change-byte-order",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any",
+  "catalog": "tiff-6-0-any",
+  "kind": "insert-ifd",
+  "reason": "incomplete-bundle",
+  "dir": "📥️insert-ifd",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any",
+  "catalog": "tiff-6-0-any",
+  "kind": "remove-ifd",
+  "reason": "incomplete-bundle",
+  "dir": "📤️remove-ifd",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any",
+  "catalog": "tiff-6-0-any",
+  "kind": "replace-tag",
+  "reason": "incomplete-bundle",
+  "dir": "🏷️replace-tag",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any",
+  "catalog": "tiff-6-0-any",
+  "kind": "remove-tag",
+  "reason": "incomplete-bundle",
+  "dir": "🗑️remove-tag",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any",
+  "catalog": "tiff-6-0-any",
+  "kind": "replace-pixels",
+  "reason": "incomplete-bundle",
+  "dir": "🟪️replace-pixels",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline",
+  "catalog": "tiff-6-0-baseline",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline",
+  "catalog": "tiff-6-0-baseline",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline",
+  "catalog": "tiff-6-0-baseline",
+  "kind": "set-compression",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline",
+  "catalog": "tiff-6-0-baseline",
+  "kind": "set-photometric-interpretation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline",
+  "catalog": "tiff-6-0-baseline",
+  "kind": "set-bits-per-sample",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline",
+  "catalog": "tiff-6-0-baseline",
+  "kind": "insert-tile-tags",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline",
+  "catalog": "tiff-6-0-baseline",
+  "kind": "remove-tile-tags",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline",
+  "catalog": "tiff-6-0-baseline",
+  "kind": "set-strip-offsets",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline",
+  "catalog": "tiff-6-0-baseline",
+  "kind": "remove-strip-offsets",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "xml-1-0-any",
+  "kind": "set-declaration",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "xml-1-0-any",
+  "kind": "set-doctype",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "xml-1-0-any",
+  "kind": "insert-element",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "xml-1-0-any",
+  "kind": "remove-element",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "xml-1-0-any",
+  "kind": "set-attribute",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "xml-1-0-any",
+  "kind": "set-text",
+  "reason": "no-scenario"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid",
+  "catalog": "xml-1-0-valid",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid",
+  "catalog": "xml-1-0-valid",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid",
+  "catalog": "xml-1-0-valid",
+  "kind": "declare-doctype",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid",
+  "catalog": "xml-1-0-valid",
+  "kind": "rename-document-element",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid",
+  "catalog": "xml-1-0-valid",
+  "kind": "set-external-subset",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid",
+  "catalog": "xml-1-0-valid",
+  "kind": "set-standalone",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid",
+  "catalog": "xml-1-0-valid",
+  "kind": "declare-entity",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid",
+  "catalog": "xml-1-0-valid",
+  "kind": "set-internal-subset",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid",
+  "catalog": "xml-1-0-valid",
+  "kind": "set-text",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any",
+  "catalog": "binary-raw-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any",
+  "catalog": "binary-raw-any",
+  "kind": "splice",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any",
+  "catalog": "binary-raw-any",
+  "kind": "append-bytes",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any",
+  "catalog": "binary-raw-any",
+  "kind": "truncate-at",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any",
+  "catalog": "jpg-jfif-1-01-any",
+  "kind": "change-jfif-header",
+  "reason": "incomplete-bundle",
+  "dir": "📐️change-jfif-header",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any",
+  "catalog": "jpg-jfif-1-01-any",
+  "kind": "replace-quant-table",
+  "reason": "incomplete-bundle",
+  "dir": "📊️replace-quant-table",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any",
+  "catalog": "jpg-jfif-1-01-any",
+  "kind": "remove-quant-table",
+  "reason": "incomplete-bundle",
+  "dir": "📤️remove-quant-table",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any",
+  "catalog": "jpg-jfif-1-01-any",
+  "kind": "replace-huffman-table",
+  "reason": "incomplete-bundle",
+  "dir": "🌳️replace-huffman-table",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any",
+  "catalog": "jpg-jfif-1-01-any",
+  "kind": "remove-huffman-table",
+  "reason": "incomplete-bundle",
+  "dir": "🪓️remove-huffman-table",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any",
+  "catalog": "jpg-jfif-1-01-any",
+  "kind": "change-restart-interval",
+  "reason": "incomplete-bundle",
+  "dir": "🔁️change-restart-interval",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any",
+  "catalog": "jpg-jfif-1-01-any",
+  "kind": "insert-other-segment",
+  "reason": "incomplete-bundle",
+  "dir": "📥️insert-other-segment",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any",
+  "catalog": "jpg-jfif-1-01-any",
+  "kind": "remove-other-segment",
+  "reason": "incomplete-bundle",
+  "dir": "🗑️remove-other-segment",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any",
+  "catalog": "jpg-jfif-1-01-any",
+  "kind": "replace-pixels",
+  "reason": "incomplete-bundle",
+  "dir": "🟪️replace-pixels",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any",
+  "catalog": "jpg-jfif-1-01-any",
+  "kind": "change-re-encode-quality",
+  "reason": "incomplete-bundle",
+  "dir": "🎚️change-re-encode-quality",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline",
+  "catalog": "jpg-jfif-1-01-baseline",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline",
+  "catalog": "jpg-jfif-1-01-baseline",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline",
+  "catalog": "jpg-jfif-1-01-baseline",
+  "kind": "set-sof-marker",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline",
+  "catalog": "jpg-jfif-1-01-baseline",
+  "kind": "set-sample-precision",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline",
+  "catalog": "jpg-jfif-1-01-baseline",
+  "kind": "set-arithmetic",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline",
+  "catalog": "jpg-jfif-1-01-baseline",
+  "kind": "insert-huffman-table",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline",
+  "catalog": "jpg-jfif-1-01-baseline",
+  "kind": "remove-huffman-table",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline",
+  "catalog": "jpg-jfif-1-01-baseline",
+  "kind": "insert-frame-component",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline",
+  "catalog": "jpg-jfif-1-01-baseline",
+  "kind": "remove-frame-component",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline",
+  "catalog": "jpg-jfif-1-01-baseline",
+  "kind": "set-component-sampling",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
+  "catalog": "png-1-2-any",
+  "kind": "change-header",
+  "reason": "incomplete-bundle",
+  "dir": "📐️change-header",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
+  "catalog": "png-1-2-any",
+  "kind": "replace-palette",
+  "reason": "incomplete-bundle",
+  "dir": "🎨️replace-palette",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
+  "catalog": "png-1-2-any",
+  "kind": "change-transparency",
+  "reason": "incomplete-bundle",
+  "dir": "👁️change-transparency",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
+  "catalog": "png-1-2-any",
+  "kind": "change-gamma",
+  "reason": "incomplete-bundle",
+  "dir": "🌗️change-gamma",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
+  "catalog": "png-1-2-any",
+  "kind": "change-chromaticities",
+  "reason": "incomplete-bundle",
+  "dir": "🌈️change-chromaticities",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
+  "catalog": "png-1-2-any",
+  "kind": "change-srgb-intent",
+  "reason": "incomplete-bundle",
+  "dir": "🖌️change-srgb-intent",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
+  "catalog": "png-1-2-any",
+  "kind": "change-physical-dims",
+  "reason": "incomplete-bundle",
+  "dir": "📏️change-physical-dims",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
+  "catalog": "png-1-2-any",
+  "kind": "change-timestamp",
+  "reason": "incomplete-bundle",
+  "dir": "🕰️change-timestamp",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
+  "catalog": "png-1-2-any",
+  "kind": "change-background",
+  "reason": "incomplete-bundle",
+  "dir": "🖼️change-background",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
+  "catalog": "png-1-2-any",
+  "kind": "insert-text-chunk",
+  "reason": "incomplete-bundle",
+  "dir": "📥️insert-text-chunk",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
+  "catalog": "png-1-2-any",
+  "kind": "remove-text-chunk",
+  "reason": "incomplete-bundle",
+  "dir": "🗑️remove-text-chunk",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
+  "catalog": "png-1-2-any",
+  "kind": "replace-text-chunk",
+  "reason": "incomplete-bundle",
+  "dir": "✏️replace-text-chunk",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
+  "catalog": "png-1-2-any",
+  "kind": "replace-pixels",
+  "reason": "incomplete-bundle",
+  "dir": "🟪️replace-pixels",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
+  "catalog": "png-1-2-any",
+  "kind": "insert-unknown-chunk",
+  "reason": "incomplete-bundle",
+  "dir": "📦️insert-unknown-chunk",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
+  "catalog": "png-1-2-any",
+  "kind": "remove-unknown-chunk",
+  "reason": "incomplete-bundle",
+  "dir": "📤️remove-unknown-chunk",
+  "scen": [
+   "direct-behavior"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any",
+  "catalog": "dwg-ac1018-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any",
+  "catalog": "dwg-ac1018-any",
+  "kind": "set-version-info",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any",
+  "catalog": "dwg-ac1024-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any",
+  "catalog": "dwg-ac1024-any",
+  "kind": "set-version-info",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a",
+  "catalog": "pdf-1-4-a",
+  "kind": "set-page-text",
+  "reason": "incomplete-bundle",
+  "dir": "📝️set-page-text",
+  "scen": [
+   "round-trips-the-concrete-inverse"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a",
+  "catalog": "pdf-1-4-a",
+  "kind": "clear-page-text",
+  "reason": "incomplete-bundle",
+  "dir": "🧹️clear-page-text",
+  "scen": [
+   "round-trips-the-concrete-inverse"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any",
+  "catalog": "pdf-1-4-any",
+  "kind": "insert-page",
+  "reason": "incomplete-bundle",
+  "dir": "📥️insert-page",
+  "scen": [
+   "round-trips-the-concrete-inverse"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any",
+  "catalog": "pdf-1-4-any",
+  "kind": "remove-page",
+  "reason": "incomplete-bundle",
+  "dir": "🗑️remove-page",
+  "scen": [
+   "round-trips-the-concrete-inverse"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any",
+  "catalog": "pdf-1-4-any",
+  "kind": "move-page",
+  "reason": "incomplete-bundle",
+  "dir": "🔀️move-page",
+  "scen": [
+   "round-trips-the-concrete-inverse"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any",
+  "catalog": "pdf-1-4-any",
+  "kind": "resize-page",
+  "reason": "incomplete-bundle",
+  "dir": "📐️resize-page",
+  "scen": [
+   "round-trips-the-concrete-inverse"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any",
+  "catalog": "pdf-1-4-any",
+  "kind": "replace-page-text",
+  "reason": "incomplete-bundle",
+  "dir": "📝️replace-page-text",
+  "scen": [
+   "round-trips-the-concrete-inverse"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x",
+  "catalog": "pdf-1-4-x",
+  "kind": "set-page-size",
+  "reason": "incomplete-bundle",
+  "dir": "📐️set-page-size",
+  "scen": [
+   "round-trips-the-concrete-inverse"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x",
+  "catalog": "pdf-1-4-x",
+  "kind": "collapse-page-size",
+  "reason": "incomplete-bundle",
+  "dir": "📉️collapse-page-size",
+  "scen": [
+   "round-trips-the-concrete-inverse"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h",
+  "catalog": "pdf-1-7-h",
+  "kind": "set-info-title",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h",
+  "catalog": "pdf-1-7-h",
+  "kind": "set-info-author",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h",
+  "catalog": "pdf-1-7-h",
+  "kind": "insert-javascript-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h",
+  "catalog": "pdf-1-7-h",
+  "kind": "remove-javascript-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h",
+  "catalog": "pdf-1-7-h",
+  "kind": "insert-launch-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h",
+  "catalog": "pdf-1-7-h",
+  "kind": "remove-launch-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h",
+  "catalog": "pdf-1-7-h",
+  "kind": "insert-signature-field",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h",
+  "catalog": "pdf-1-7-h",
+  "kind": "remove-signature-field",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h",
+  "catalog": "pdf-1-7-h",
+  "kind": "embed-font-file",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h",
+  "catalog": "pdf-1-7-h",
+  "kind": "remove-font-file",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a",
+  "catalog": "pdf-1-7-a",
+  "kind": "insert-encryption-dictionary",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a",
+  "catalog": "pdf-1-7-a",
+  "kind": "remove-encryption-dictionary",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a",
+  "catalog": "pdf-1-7-a",
+  "kind": "insert-javascript-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a",
+  "catalog": "pdf-1-7-a",
+  "kind": "remove-javascript-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a",
+  "catalog": "pdf-1-7-a",
+  "kind": "insert-launch-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a",
+  "catalog": "pdf-1-7-a",
+  "kind": "remove-launch-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a",
+  "catalog": "pdf-1-7-a",
+  "kind": "insert-embedded-file",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a",
+  "catalog": "pdf-1-7-a",
+  "kind": "remove-embedded-file",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a",
+  "catalog": "pdf-1-7-a",
+  "kind": "set-af-relationship",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a",
+  "catalog": "pdf-1-7-a",
+  "kind": "remove-af-relationship",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a",
+  "catalog": "pdf-1-7-a",
+  "kind": "set-output-intent",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a",
+  "catalog": "pdf-1-7-a",
+  "kind": "remove-output-intent",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a",
+  "catalog": "pdf-1-7-a",
+  "kind": "embed-font-file",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a",
+  "catalog": "pdf-1-7-a",
+  "kind": "remove-font-file",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any",
+  "catalog": "pdf-1-7-any",
+  "kind": "insert-page",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any",
+  "catalog": "pdf-1-7-any",
+  "kind": "remove-page",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any",
+  "catalog": "pdf-1-7-any",
+  "kind": "set-page-media-box",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any",
+  "catalog": "pdf-1-7-any",
+  "kind": "set-page-crop-box",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any",
+  "catalog": "pdf-1-7-any",
+  "kind": "append-page-content",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any",
+  "catalog": "pdf-1-7-any",
+  "kind": "set-info",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any",
+  "catalog": "pdf-1-7-any",
+  "kind": "insert-object",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any",
+  "catalog": "pdf-1-7-any",
+  "kind": "remove-object",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any",
+  "catalog": "pdf-1-7-any",
+  "kind": "set-object-value",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any",
+  "catalog": "pdf-1-7-any",
+  "kind": "set-dict-entry",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any",
+  "catalog": "pdf-1-7-any",
+  "kind": "remove-dict-entry",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any",
+  "catalog": "pdf-1-7-any",
+  "kind": "set-trailer-entry",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any",
+  "catalog": "pdf-1-7-any",
+  "kind": "remove-trailer-entry",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any",
+  "catalog": "pdf-1-7-any",
+  "kind": "move-page",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any",
+  "catalog": "pdf-1-7-any",
+  "kind": "set-page-content",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any",
+  "catalog": "pdf-1-7-any",
+  "kind": "set-page-rotation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt",
+  "catalog": "pdf-1-7-vt",
+  "kind": "insert-encryption-dictionary",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt",
+  "catalog": "pdf-1-7-vt",
+  "kind": "remove-encryption-dictionary",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt",
+  "catalog": "pdf-1-7-vt",
+  "kind": "set-output-intent",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt",
+  "catalog": "pdf-1-7-vt",
+  "kind": "remove-output-intent",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt",
+  "catalog": "pdf-1-7-vt",
+  "kind": "set-trim-box",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt",
+  "catalog": "pdf-1-7-vt",
+  "kind": "remove-trim-box",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt",
+  "catalog": "pdf-1-7-vt",
+  "kind": "embed-font-file",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt",
+  "catalog": "pdf-1-7-vt",
+  "kind": "remove-font-file",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt",
+  "catalog": "pdf-1-7-vt",
+  "kind": "insert-javascript-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt",
+  "catalog": "pdf-1-7-vt",
+  "kind": "remove-javascript-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt",
+  "catalog": "pdf-1-7-vt",
+  "kind": "insert-launch-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt",
+  "catalog": "pdf-1-7-vt",
+  "kind": "remove-launch-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt",
+  "catalog": "pdf-1-7-vt",
+  "kind": "insert-media-annotation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt",
+  "catalog": "pdf-1-7-vt",
+  "kind": "remove-media-annotation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt",
+  "catalog": "pdf-1-7-vt",
+  "kind": "set-dpart-root",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt",
+  "catalog": "pdf-1-7-vt",
+  "kind": "remove-dpart-root",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt",
+  "catalog": "pdf-1-7-vt",
+  "kind": "set-dpart-metadata",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt",
+  "catalog": "pdf-1-7-vt",
+  "kind": "remove-dpart-metadata",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua",
+  "catalog": "pdf-1-7-ua",
+  "kind": "set-mark-info",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua",
+  "catalog": "pdf-1-7-ua",
+  "kind": "remove-mark-info",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua",
+  "catalog": "pdf-1-7-ua",
+  "kind": "set-struct-tree-root",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua",
+  "catalog": "pdf-1-7-ua",
+  "kind": "remove-struct-tree-root",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua",
+  "catalog": "pdf-1-7-ua",
+  "kind": "set-lang",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua",
+  "catalog": "pdf-1-7-ua",
+  "kind": "remove-lang",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua",
+  "catalog": "pdf-1-7-ua",
+  "kind": "set-display-doc-title",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua",
+  "catalog": "pdf-1-7-ua",
+  "kind": "remove-display-doc-title",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua",
+  "catalog": "pdf-1-7-ua",
+  "kind": "set-info-title",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua",
+  "catalog": "pdf-1-7-ua",
+  "kind": "embed-font-file",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua",
+  "catalog": "pdf-1-7-ua",
+  "kind": "remove-font-file",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e",
+  "catalog": "pdf-1-7-e",
+  "kind": "insert-encryption-dictionary",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e",
+  "catalog": "pdf-1-7-e",
+  "kind": "remove-encryption-dictionary",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e",
+  "catalog": "pdf-1-7-e",
+  "kind": "insert-javascript-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e",
+  "catalog": "pdf-1-7-e",
+  "kind": "remove-javascript-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e",
+  "catalog": "pdf-1-7-e",
+  "kind": "insert-launch-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e",
+  "catalog": "pdf-1-7-e",
+  "kind": "remove-launch-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e",
+  "catalog": "pdf-1-7-e",
+  "kind": "insert-media-annotation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e",
+  "catalog": "pdf-1-7-e",
+  "kind": "remove-media-annotation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e",
+  "catalog": "pdf-1-7-e",
+  "kind": "set-output-intent",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e",
+  "catalog": "pdf-1-7-e",
+  "kind": "remove-output-intent",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e",
+  "catalog": "pdf-1-7-e",
+  "kind": "embed-font-file",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e",
+  "catalog": "pdf-1-7-e",
+  "kind": "remove-font-file",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x",
+  "catalog": "pdf-1-7-x",
+  "kind": "insert-encryption-dictionary",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x",
+  "catalog": "pdf-1-7-x",
+  "kind": "remove-encryption-dictionary",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x",
+  "catalog": "pdf-1-7-x",
+  "kind": "set-output-intent",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x",
+  "catalog": "pdf-1-7-x",
+  "kind": "remove-output-intent",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x",
+  "catalog": "pdf-1-7-x",
+  "kind": "set-trim-box",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x",
+  "catalog": "pdf-1-7-x",
+  "kind": "remove-trim-box",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x",
+  "catalog": "pdf-1-7-x",
+  "kind": "embed-font-file",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x",
+  "catalog": "pdf-1-7-x",
+  "kind": "remove-font-file",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x",
+  "catalog": "pdf-1-7-x",
+  "kind": "insert-javascript-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x",
+  "catalog": "pdf-1-7-x",
+  "kind": "remove-javascript-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x",
+  "catalog": "pdf-1-7-x",
+  "kind": "insert-launch-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x",
+  "catalog": "pdf-1-7-x",
+  "kind": "remove-launch-action",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x",
+  "catalog": "pdf-1-7-x",
+  "kind": "insert-media-annotation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x",
+  "catalog": "pdf-1-7-x",
+  "kind": "remove-media-annotation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "xlsx-ecma-376-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "xlsx-ecma-376-any",
+  "kind": "insert-sheet",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "xlsx-ecma-376-any",
+  "kind": "remove-sheet",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "xlsx-ecma-376-any",
+  "kind": "rename-sheet",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "xlsx-ecma-376-any",
+  "kind": "set-cell",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "xlsx-ecma-376-any",
+  "kind": "remove-cell",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "xlsx-ecma-376-any",
+  "kind": "insert-shared-string",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "xlsx-ecma-376-any",
+  "kind": "remove-shared-string",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "xlsx-ecma-376-any",
+  "kind": "set-shared-string",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "xlsx-ecma-376-strict",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "xlsx-ecma-376-strict",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "xlsx-ecma-376-strict",
+  "kind": "set-main-namespace",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "xlsx-ecma-376-strict",
+  "kind": "set-relationships-namespace",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "xlsx-ecma-376-strict",
+  "kind": "set-conformance-attribute",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "xlsx-ecma-376-strict",
+  "kind": "remove-conformance-attribute",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "xlsx-ecma-376-strict",
+  "kind": "insert-vml-part",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "xlsx-ecma-376-strict",
+  "kind": "remove-vml-part",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "xlsx-ecma-376-strict",
+  "kind": "set-worksheet-content-type",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "xlsx-ecma-376-transitional",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "xlsx-ecma-376-transitional",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "xlsx-ecma-376-transitional",
+  "kind": "set-main-namespace",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "xlsx-ecma-376-transitional",
+  "kind": "set-relationships-namespace",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "xlsx-ecma-376-transitional",
+  "kind": "set-conformance-attribute",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "xlsx-ecma-376-transitional",
+  "kind": "remove-conformance-attribute",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "xlsx-ecma-376-transitional",
+  "kind": "set-worksheet-content-type",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "docx-ecma-376-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "docx-ecma-376-any",
+  "kind": "insert-block",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "docx-ecma-376-any",
+  "kind": "remove-block",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "docx-ecma-376-any",
+  "kind": "set-block-content",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "docx-ecma-376-any",
+  "kind": "set-run-text",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "docx-ecma-376-any",
+  "kind": "set-run-formatting",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "docx-ecma-376-any",
+  "kind": "insert-style",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "docx-ecma-376-any",
+  "kind": "remove-style",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "docx-ecma-376-any",
+  "kind": "set-style-name",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "docx-ecma-376-any",
+  "kind": "set-style-based-on",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "docx-ecma-376-any",
+  "kind": "set-part",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "docx-ecma-376-any",
+  "kind": "remove-part",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "docx-ecma-376-strict",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "docx-ecma-376-strict",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "docx-ecma-376-strict",
+  "kind": "set-main-namespace",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "docx-ecma-376-strict",
+  "kind": "set-relationship-base",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "docx-ecma-376-strict",
+  "kind": "set-conformance-attribute",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "docx-ecma-376-strict",
+  "kind": "remove-conformance-attribute",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "docx-ecma-376-strict",
+  "kind": "insert-vml-part",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "docx-ecma-376-strict",
+  "kind": "remove-vml-part",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "docx-ecma-376-strict",
+  "kind": "insert-alternate-content",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "docx-ecma-376-strict",
+  "kind": "remove-alternate-content",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "docx-ecma-376-transitional",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "docx-ecma-376-transitional",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "docx-ecma-376-transitional",
+  "kind": "set-main-namespace",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "docx-ecma-376-transitional",
+  "kind": "set-relationship-base",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "docx-ecma-376-transitional",
+  "kind": "set-conformance-attribute",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "docx-ecma-376-transitional",
+  "kind": "remove-conformance-attribute",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "las-1-0-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "las-1-0-any",
+  "kind": "set-version",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "las-1-0-any",
+  "kind": "set-system-identifier",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "las-1-0-any",
+  "kind": "set-software-info",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "las-1-0-any",
+  "kind": "set-creation-date",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "las-1-0-any",
+  "kind": "set-scale-and-offset",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "las-1-0-any",
+  "kind": "set-bounds",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "las-1-0-any",
+  "kind": "set-points-by-return",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "las-1-0-any",
+  "kind": "insert-vlr",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "las-1-0-any",
+  "kind": "remove-vlr",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "las-1-0-any",
+  "kind": "set-vlr-data",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "las-1-0-any",
+  "kind": "insert-point",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "las-1-0-any",
+  "kind": "remove-point",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+  "catalog": "las-1-0-any",
+  "kind": "set-point",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "pptx-ecma-376-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "pptx-ecma-376-any",
+  "kind": "insert-slide",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "pptx-ecma-376-any",
+  "kind": "remove-slide",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "pptx-ecma-376-any",
+  "kind": "move-slide",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "pptx-ecma-376-any",
+  "kind": "insert-shape",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "pptx-ecma-376-any",
+  "kind": "remove-shape",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "pptx-ecma-376-any",
+  "kind": "set-shape-text",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any",
+  "catalog": "pptx-ecma-376-any",
+  "kind": "set-shape-position",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "pptx-ecma-376-strict",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "pptx-ecma-376-strict",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "pptx-ecma-376-strict",
+  "kind": "set-main-namespace",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "pptx-ecma-376-strict",
+  "kind": "set-drawing-namespace",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "pptx-ecma-376-strict",
+  "kind": "set-relationship-base",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "pptx-ecma-376-strict",
+  "kind": "set-conformance-attribute",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "pptx-ecma-376-strict",
+  "kind": "remove-conformance-attribute",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "pptx-ecma-376-strict",
+  "kind": "insert-vml-part",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "pptx-ecma-376-strict",
+  "kind": "remove-vml-part",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "pptx-ecma-376-strict",
+  "kind": "insert-alternate-content",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict",
+  "catalog": "pptx-ecma-376-strict",
+  "kind": "remove-alternate-content",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "pptx-ecma-376-transitional",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "pptx-ecma-376-transitional",
+  "kind": "set-snapshot",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "pptx-ecma-376-transitional",
+  "kind": "set-main-namespace",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "pptx-ecma-376-transitional",
+  "kind": "set-drawing-namespace",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "pptx-ecma-376-transitional",
+  "kind": "set-relationship-base",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "pptx-ecma-376-transitional",
+  "kind": "set-conformance-attribute",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional",
+  "catalog": "pptx-ecma-376-transitional",
+  "kind": "remove-conformance-attribute",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "set-screen-size",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "set-global-color-table",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "set-background-color-index",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "set-pixel-aspect-ratio",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "set-loop-count",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "insert-frame",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "remove-frame",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "move-frame",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "set-frame-geometry",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "set-frame-pixels",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "set-frame-interlace",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "set-frame-delay",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "set-frame-disposal",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "set-frame-transparency",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "set-frame-user-input",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "insert-comment",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "remove-comment",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "add-app-extension",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any",
+  "catalog": "gif-89a-any",
+  "kind": "remove-app-extension",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any",
+  "catalog": "gif-87a-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any",
+  "catalog": "gif-87a-any",
+  "kind": "set-screen-size",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any",
+  "catalog": "gif-87a-any",
+  "kind": "set-global-color-table",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any",
+  "catalog": "gif-87a-any",
+  "kind": "set-background-color-index",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any",
+  "catalog": "gif-87a-any",
+  "kind": "set-pixel-aspect-ratio",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any",
+  "catalog": "gif-87a-any",
+  "kind": "insert-image",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any",
+  "catalog": "gif-87a-any",
+  "kind": "remove-image",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any",
+  "catalog": "gif-87a-any",
+  "kind": "move-image",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any",
+  "catalog": "gif-87a-any",
+  "kind": "set-image-geometry",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any",
+  "catalog": "gif-87a-any",
+  "kind": "set-image-pixels",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any",
+  "catalog": "gif-87a-any",
+  "kind": "set-image-interlace",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any",
+  "catalog": "gltf-2-0-any",
+  "kind": "bind-node-child",
+  "reason": "incomplete-bundle",
+  "dir": "🔗️🔘️bind-node-child",
+  "scen": [
+   "adopts-the-child-node-under-the-parent-node"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any",
+  "catalog": "gltf-2-0-any",
+  "kind": "bind-scene-root-node",
+  "reason": "incomplete-bundle",
+  "dir": "🔗️🎬️bind-scene-root-node",
+  "scen": [
+   "promotes-the-root-node-into-the-main-scene"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any",
+  "catalog": "gltf-2-0-any",
+  "kind": "change-material-alpha-mode",
+  "reason": "incomplete-bundle",
+  "dir": "✏️💎️change-material-alpha-mode",
+  "scen": [
+   "switches-the-default-material-from-opaque-to-mask"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any",
+  "catalog": "gltf-2-0-any",
+  "kind": "change-material-double-sided",
+  "reason": "incomplete-bundle",
+  "dir": "✏️💎️change-material-double-sided",
+  "scen": [
+   "makes-the-default-material-double-sided"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any",
+  "catalog": "gltf-2-0-any",
+  "kind": "create-scene",
+  "reason": "incomplete-bundle",
+  "dir": "🌱️🎬️create-scene",
+  "scen": [
+   "inserts-an-empty-scene-ahead-of-the-default-scene"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any",
+  "catalog": "gltf-2-0-any",
+  "kind": "unbind-node-child",
+  "reason": "incomplete-bundle",
+  "dir": "✂️🔘️unbind-node-child",
+  "scen": [
+   "releases-the-child-node-from-the-parent-node"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any",
+  "catalog": "gltf-2-0-any",
+  "kind": "unbind-scene-root-node",
+  "reason": "incomplete-bundle",
+  "dir": "✂️🎬️unbind-scene-root-node",
+  "scen": [
+   "demotes-the-root-node-out-of-the-main-scene"
+  ]
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any",
+  "catalog": "csv-rfc4180-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any",
+  "catalog": "csv-rfc4180-any",
+  "kind": "set-has-header",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any",
+  "catalog": "csv-rfc4180-any",
+  "kind": "insert-record",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any",
+  "catalog": "csv-rfc4180-any",
+  "kind": "remove-record",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any",
+  "catalog": "csv-rfc4180-any",
+  "kind": "set-field",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any",
+  "catalog": "tsv-iana-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any",
+  "catalog": "tsv-iana-any",
+  "kind": "set-trailing-newline",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any",
+  "catalog": "tsv-iana-any",
+  "kind": "set-line-ending",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any",
+  "catalog": "tsv-iana-any",
+  "kind": "insert-row",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any",
+  "catalog": "tsv-iana-any",
+  "kind": "remove-row",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any",
+  "catalog": "tsv-iana-any",
+  "kind": "set-cell",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any",
+  "catalog": "stl-ascii-any",
+  "kind": "no-mutation",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any",
+  "catalog": "stl-ascii-any",
+  "kind": "set-solid-name",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any",
+  "catalog": "stl-ascii-any",
+  "kind": "insert-triangle",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any",
+  "catalog": "stl-ascii-any",
+  "kind": "remove-triangle",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any",
+  "catalog": "stl-ascii-any",
+  "kind": "set-triangle-normal",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any",
+  "catalog": "stl-ascii-any",
+  "kind": "set-triangle-vertices",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "catalog": "procedural-2d-1-any",
+  "kind": "update-camera",
+  "reason": "no-vector"
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any",
+  "catalog": "procedural-2d-1-any",
+  "kind": "delete-generation",
+  "reason": "incomplete-bundle",
+  "dir": "➖delete-generation",
+  "scen": [
+   "removes-generation-2-and-selects-generation-1"
+  ]
+ }
+]

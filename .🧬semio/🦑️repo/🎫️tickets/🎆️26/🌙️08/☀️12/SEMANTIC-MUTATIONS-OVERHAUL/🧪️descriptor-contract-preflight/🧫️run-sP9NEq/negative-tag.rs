@@ -1,1 +1,0 @@
-struct Descriptor { binary_tag: Option<u32> } const VALUE: Descriptor = Descriptor { binary_tag: Some(-1) };

@@ -330,7 +330,7 @@ Three plugins additionally cannot produce a Rust subject at all right now — se
 ## 6. Files
 
 Converted cases (`component.feature` + `🐍️component.py` + `🦀️component.rs` + the subset's
-`🧪️oracle/🔣️component.json`):
+`🧪️oracle/🔣️.json`):
 
 - `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/mutate-gismap-1/` (+ `🧫️fixtures/🗺️liege-with-derived-regions.dsl.semio`)
 - `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🧪️tests/mutate-gisterrain-1/` (+ `🧫️fixtures/🏔️liege-terrain.snapshot.json`)

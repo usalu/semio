@@ -4,7 +4,7 @@
 //! This file is the subject half only. The oracle is `🐍️component.py` beside it: an independent
 //! Python implementation of the same carrier and the same thirteen-verb vocabulary, written from the
 //! committed grammar, protocol and JSON schema, registered as `semio-brep-python-independent` in
-//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧪️oracle/🔣️component.json`. Registering oracle handlers
+//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧪️oracle/🔣️.json`. Registering oracle handlers
 //! here as well would put this repository's answer on both sides of the comparison, which is the
 //! exact failure the platform exists to prevent — so it registers none.
 //!

@@ -400,7 +400,7 @@ own, never read through a pipe.
 All four features carried `@no-oracle-semio-<subset>-mutation-semantics` and no `@oracle-` tag, so
 the runner dispatched NOTHING for them in the oracle phase — they were four of the 85
 `not-exercised` cases `📓️w12-final-audit.md` §2 counted. The four `noOracleDecisions` entries are
-recoverable from git (`git show HEAD:…/✳️<subset>/🧪️oracle/🔣️component.json`); each claimed its
+recoverable from git (`git show HEAD:…/✳️<subset>/🧪️oracle/🔣️.json`); each claimed its
 evidence was "discharged by the subject phase". They are gone.
 
 ### `contract` — exit 1, and zero breaches name these four cases
@@ -512,19 +512,19 @@ codec fix §4 found. No framework file, no shared manifest, no `Cargo.toml`, no
 | `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-object/🐍️component.py` | **new** — independent implementation + oracle adapter |
 | `…/mutate-semio-object/component.feature` | rewritten — `@oracle-…`, 28 scenarios |
 | `…/mutate-semio-object/🦀️component.rs` | rewritten — subject only, reads its inputs from the plan |
-| `…/✳️object/🧪️oracle/🔣️component.json` | `noOracleDecisions` removed, `oracles[]` gains the entry |
+| `…/✳️object/🧪️oracle/🔣️.json` | `noOracleDecisions` removed, `oracles[]` gains the entry |
 | `…/mutate-semio-graph/🐍️component.py` | **new** |
 | `…/mutate-semio-graph/component.feature` | rewritten — 34 scenarios |
 | `…/mutate-semio-graph/🦀️component.rs` | rewritten — subject only |
-| `…/✳️graph/🧪️oracle/🔣️component.json` | decision removed, oracle registered |
+| `…/✳️graph/🧪️oracle/🔣️.json` | decision removed, oracle registered |
 | `…/mutate-semio-kit/🐍️component.py` | **new** |
 | `…/mutate-semio-kit/component.feature` | rewritten — 46 scenarios |
 | `…/mutate-semio-kit/🦀️component.rs` | rewritten — subject only |
-| `…/✳️kit/🧪️oracle/🔣️component.json` | decision removed, oracle registered |
+| `…/✳️kit/🧪️oracle/🔣️.json` | decision removed, oracle registered |
 | `…/mutate-semio-brep/🐍️component.py` | **new** |
 | `…/mutate-semio-brep/component.feature` | rewritten — 40 scenarios |
 | `…/mutate-semio-brep/🦀️component.rs` | rewritten — subject only |
-| `…/✳️brep/🧪️oracle/🔣️component.json` | decision removed, oracle registered |
+| `…/✳️brep/🧪️oracle/🔣️.json` | decision removed, oracle registered |
 | `…/✳️brep/🧬️schema/📸️snapshot/🦀️component.rs` | **codec fix** — `rename_all_fields = "camelCase"` on `BrepCurve` and `BrepSurface`, with a docstring on each saying why it is not redundant beside `rename_all` |
 | `…/✳️brep/🧬️schema/🧬️mutations/➰replace-curve/🧪️tests/…/🦀️component.rs` | docstring corrected — it recorded the snake_case fields as intended |
 | `…/✳️brep/🧬️schema/🧬️mutations/🗺️replace-surface/🧪️tests/…/🦀️component.rs` | docstring corrected — same |

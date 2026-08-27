@@ -26,7 +26,7 @@
 //! since only that one binary write path is wrong. Not hidden by loosening the projection: the
 //! `set-format` scenario genuinely converts this real document to `binaryLittleEndian` and back.
 //!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
+//! @see ../🧪️oracle/🔣️.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`PlyMutation::KINDS`).
 
 use semio_repo_test_host::Json;

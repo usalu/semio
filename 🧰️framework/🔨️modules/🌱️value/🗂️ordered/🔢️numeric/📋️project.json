@@ -1,0 +1,4 @@
+{
+  "name": "@semio-tech/value-numeric-index",
+  "targets": { "test": { "executor": "nx:run-commands", "options": { "command": "bun ./📜️script.ts test", "forwardAllArgs": true } } }
+}

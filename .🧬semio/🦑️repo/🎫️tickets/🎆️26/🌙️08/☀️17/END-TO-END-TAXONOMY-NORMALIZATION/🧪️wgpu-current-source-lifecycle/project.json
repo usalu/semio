@@ -1,0 +1,7 @@
+{
+  "name": "@fixture/wgpu-current-source-lifecycle",
+  "targets": {
+    "inspect": { "executor": "nx:run-commands", "cache": false, "options": { "cwd": ".", "command": "bun ./📜️script.ts inspect" } },
+    "test-boundary": { "executor": "nx:run-commands", "cache": false, "options": { "cwd": ".", "command": "bun ./📜️script.ts test-boundary" } }
+  }
+}

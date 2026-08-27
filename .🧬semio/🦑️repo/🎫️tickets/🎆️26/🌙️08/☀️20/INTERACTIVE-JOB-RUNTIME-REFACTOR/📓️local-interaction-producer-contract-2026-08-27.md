@@ -23,6 +23,8 @@ One `ReadLocalInteraction` request creates a bounded query owner. It emits order
 
 Restore uses paged typed ingress and a retained builder/validation cursor. It validates declared domains, permitted granularities/modes, selection ids and anchor membership against an exact captured topology revision. Invalid or stale data rejects explicitly, without truncating selections to the current mode. One Interaction-lane Store publication adopts the prepared root only after all pages and validation complete; cancellation before that point changes nothing.
 
+Anchor membership means membership in the declared domain/topology, not membership in the current selected-id vector. The existing subtractive/invertive selection machine can retain a valid anchor that is no longer selected; exact restoration must preserve that state. A dedicated language-neutral anchor-outside-selection case now pins this distinction.
+
 Publication authority also binds the captured topology/document revision. A graph change during validation must reject the restore even if the interaction generation and revision are unchanged. The topology source must be an existing immutable index or itself be constructed incrementally; calling the whole application topology callback inside initialization does not satisfy this contract. ACK and retry preserve tutorial sequence while obtaining a fresh current authority identity; they never reuse a historical capture identity.
 
 ## Necessary Native Work

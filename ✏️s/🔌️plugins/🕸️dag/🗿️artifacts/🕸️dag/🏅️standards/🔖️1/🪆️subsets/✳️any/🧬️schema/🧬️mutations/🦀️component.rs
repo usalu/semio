@@ -60,7 +60,7 @@ pub use super::replace_node_properties::mutation::{replace_node_properties, Repl
 pub use super::resize_node::mutation::{resize_node, ResizeNode};
 
 /// 🏷️ Kebab-case spelling of every [`DagMutation`] variant, in declaration order — the vocabulary
-/// the `dag-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and `mutate-dag-1`'s
+/// the `dag-1-any` mutation catalog (`../../🧪️oracle/🔣️.json`) declares and `mutate-dag-1`'s
 /// exhaustive case measures itself against. There is deliberately no `no-mutation` and no
 /// `set-snapshot`: whole-collection and whole-document replacement are banned vocabulary here (see
 /// the enum's own docstring) and reach the store through `ArtifactStore::reset` instead.
@@ -223,7 +223,7 @@ mod tests {
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest = include_str!("../../🧪️oracle/🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
         }

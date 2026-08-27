@@ -198,7 +198,7 @@ impl AssemblyInferenceJob {
         preview[16..24].copy_from_slice(&(total as u64).to_le_bytes());
         preview[24] = self.stage as u8;
         self.preview_units = 0;
-        self.last_preview_ms = Some(context.now_ms());
+        self.last_preview_ms = context.now_us().map(|now_us| now_us / 1_000);
         let payload = context.payload_from_bytes(semio_framework_job::JobPayloadStream::Preview, &preview).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview));
         semio_framework_job::StepOutcome::PreviewReady(payload)
     }
@@ -475,7 +475,7 @@ impl semio_framework_job::InteractiveJob for AssemblyInferenceJob {
             if context.is_cancelled() {
                 return StepOutcome::Cancelled;
             }
-            if self.preview_due(context.now_ms()) {
+            if context.now_us().is_some_and(|now_us| self.preview_due(now_us / 1_000)) {
                 return self.emit_preview(context);
             }
             if context.should_yield() {
@@ -612,8 +612,8 @@ fn solve_with_job(snapshot: &AssemblySnapshot) -> Result<AssemblyInferenceCommit
         operation: operation.operation,
         generation: operation.generation,
         cancel: semio_framework_job::root_cancel_token(),
-        config: semio_framework_job::BatchDriveConfig { site: "assembly.wfc.inference.headless", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 2 },
-        now_ms: semio_framework_job::default_now_ms,
+        config: semio_framework_job::BatchDriveConfig { site: "assembly.wfc.inference.headless", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 2000 },
+        now_us: semio_framework_job::default_now_us,
     };
     let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) {
         Ok(session) => session,
@@ -900,7 +900,7 @@ mod tests {
 
     fn step_job(job: &mut AssemblyInferenceJob, token: semio_framework_job::CancelToken, sequence: &mut u64) -> StepOutcome {
         let operation = job.operation();
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || 0, sequence);
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || Some(0), sequence);
         job.step(&mut context)
     }
 
@@ -1107,7 +1107,7 @@ mod tests {
         assert_eq!(dispatch.spec.operation.generation, Generation(7));
         let mut sequence = 0;
         let candidate = loop {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || 0, &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
             match dispatch.job.step(&mut context) {
                 StepOutcome::Complete(candidate) => break candidate,
                 StepOutcome::Fault(fault) => panic!("registered inference fault: {}", String::from_utf8_lossy(&fault.detail)),
@@ -1129,7 +1129,7 @@ mod tests {
             semio_framework::ToolOperationSpec::new(ASSEMBLY_INFERENCE_JOB_KIND, ASSEMBLY_INFERENCE_TOOL_ID, ASSEMBLY_INFERENCE_PAYLOAD_SCHEMA, AssemblyInferenceRequest { snapshot: two_slot_two_module_snapshot(), checkpoint: None }, operation);
         let mut dispatch = bus.dispatch(spec).expect("registered inference lookup");
         let mut sequence = 0;
-        let mut context = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX), root_cancel_token(), || 0, &mut sequence);
+        let mut context = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
         assert!(matches!(dispatch.job.step(&mut context), StepOutcome::Fault(_)));
     }
 
@@ -1267,8 +1267,8 @@ mod tests {
                 operation: operation.operation,
                 generation: operation.generation,
                 cancel: root_cancel_token(),
-                config: semio_framework_job::BatchDriveConfig { site: "assembly.wfc.worker-count", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 2 },
-                now_ms: semio_framework_job::default_now_ms,
+                config: semio_framework_job::BatchDriveConfig { site: "assembly.wfc.worker-count", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 2000 },
+                now_us: semio_framework_job::default_now_us,
             },
         );
         for _ in 0..200_000 {

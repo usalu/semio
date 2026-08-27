@@ -3,7 +3,7 @@
 //!
 //! This crate exists so the FRAMEWORK test platform never has to know that PDF, PNG, GIF, ZIP,
 //! zlib, WAVE or CSV exist. It is contributed to the platform by
-//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json`, which the platform discovers by convention;
+//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json`, which the platform discovers by convention;
 //! adding a new artifact family here requires no framework edit at all.
 //!
 //! Every third-party reference library is linked ONLY here, behind an owned interface — no external

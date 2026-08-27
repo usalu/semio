@@ -1,0 +1,10 @@
+{
+  "name": "@fixture/wgpu-current-source-authority",
+  "targets": {
+    "check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "cwd": ".", "command": "bun ./📜️script.ts check" }
+    }
+  }
+}

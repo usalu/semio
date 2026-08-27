@@ -25,7 +25,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<FlowSnapshot, FlowMutation> f
             base: Some(request.base), mutation: Some(Arc::new(request.mutation)), description: request.description, authority: Some(request.authority),
             scene: None, scene_root: None, inverse: None, post: None, hash: None, mutation_reader: None, recipe: None, text: None,
             texts: Default::default(), source_digest: None, digest: None, sealer: None, external_retirement: None,
-            retirement: Retirement::default(), phase: 0, phase_bytes: 0, checkpoint: Default::default(), cancelled: false, closing: false,
+            retirement: Retirement::default(), phase: 0, phase_bytes: 0, checkpoint: Default::default(), cancelled: false, closing: false, failed: false,
         }) }))
     }
 }
@@ -39,7 +39,7 @@ struct PreparationState {
     mutation_reader: Option<store::ArtifactCanonicalJsonReader<FlowMutation>>, recipe: Option<Recipe>, text: Option<TextCopy>, texts: [Option<String>; 10],
     source_digest: Option<[u8; 32]>, digest: Option<[u8; 32]>, sealer: Option<store::ArtifactStoreOneItemSealer<FlowSnapshot, FlowMutation>>,
     external_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>, retirement: Retirement,
-    phase: u8, phase_bytes: usize, checkpoint: store::ArtifactStoreOneItemCheckpoint, cancelled: bool, closing: bool,
+    phase: u8, phase_bytes: usize, checkpoint: store::ArtifactStoreOneItemCheckpoint, cancelled: bool, closing: bool, failed: bool,
 }
 
 struct Preparation { state: ManuallyDrop<PreparationState> }
@@ -52,6 +52,7 @@ fn progress(state: &mut PreparationState, bytes: usize) -> Advance {
 impl store::ArtifactStoreOneItemPreparation<FlowSnapshot, FlowMutation> for Preparation {
     fn advance(&mut self, grant: Grant) -> Result<Advance, String> {
         let state = &mut *self.state;
+        if state.failed { return Err("Flow canonical mutation encoding failed".into()); }
         if !grant.permits_one() || state.closing || state.cancelled { return Ok(Advance::Blocked); }
         if let Some(sealer) = state.sealer.as_mut() {
             let before = sealer.checkpoint().completed_bytes; let step = sealer.advance(grant)?; let bytes = (sealer.checkpoint().completed_bytes - before) as usize;
@@ -87,7 +88,17 @@ impl store::ArtifactStoreOneItemPreparation<FlowSnapshot, FlowMutation> for Prep
                 state.phase_bytes = 0; state.phase = 4;
             }
             4 => {
-                let reader = state.mutation_reader.as_mut().unwrap(); let mut chunk = [0; 256]; let bytes = reader.encode_chunk(grant, &mut chunk)?; state.phase_bytes += bytes;
+                let reader = state.mutation_reader.as_mut().unwrap(); let mut chunk = [0; 256];
+                let bytes = match reader.encode_chunk(grant, &mut chunk) {
+                    Ok(bytes) => bytes,
+                    Err(error) => {
+                        reader.cancel(); reader.begin_close(); state.failed = true;
+                        state.phase_bytes += error.written_bytes;
+                        state.retirement.push(Owner::Bytes(error.reason.into_bytes()));
+                        return Ok(progress(state, error.written_bytes));
+                    }
+                };
+                state.phase_bytes += bytes;
                 if state.phase_bytes > FLOW_STORE_MAX_TEXT_BYTES { return Err("Flow artifact mutation exceeds admitted canonical byte envelope".into()); }
                 if reader.is_complete() { reader.begin_close(); state.phase = 5; }
                 return Ok(progress(state, bytes));

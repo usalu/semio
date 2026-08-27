@@ -36,7 +36,7 @@ pub enum Ifc2x3Mutation {
 }
 
 /// 📇️ Kebab-case spelling of every `Ifc2x3Mutation` variant, in declaration order -- the
-/// exhaustive mutation catalog `../../🧪️oracle/🔣️component.json`'s `kinds` array is required to
+/// exhaustive mutation catalog `../../🧪️oracle/🔣️.json`'s `kinds` array is required to
 /// match verbatim (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps
 /// that honest; the framework never parses Rust to check it itself).
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "upsert-instance", "remove-instance", "set-header"];
@@ -522,7 +522,7 @@ mod tests {
     //#region 🔖️KindsGate
     /// 🧪️ Wave gate: `KINDS` must match the enum's own variants, in declaration order, and its
     /// spellings must match `print_op`'s own keyword for each -- the mutation catalog
-    /// (`../../🧪️oracle/🔣️component.json`) and the feature file are checked against never drift
+    /// (`../../🧪️oracle/🔣️.json`) and the feature file are checked against never drift
     /// apart from the enum itself.
     #[semio_framework_async_macros::async_test]
     async fn kinds_const_matches_enum_variants_in_declaration_order() {

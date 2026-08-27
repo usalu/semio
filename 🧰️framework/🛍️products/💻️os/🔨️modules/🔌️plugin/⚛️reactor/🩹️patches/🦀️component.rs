@@ -453,7 +453,7 @@ impl PatchTracker {
         let Some(mut slot) = state.slots[index].take() else { return has_work(&state) };
         if let Some(mut producer) = slot.producer.take() {
             let mut preview_sequence = slot.preview_sequence;
-            let mut context = StepContext::new(slot.operation, Generation(slot.generation), StepBudget::new(1, u64::MAX), slot.cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+            let mut context = StepContext::new(slot.operation, Generation(slot.generation), StepBudget::new(1, u64::MAX), slot.cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
             let outcome = producer.authority.step(slot.generation, context.is_cancelled(), context.deadline_exceeded());
             context.consume_fuel(1);
             slot.preview_sequence = preview_sequence;
@@ -522,7 +522,7 @@ impl PatchTracker {
             return true;
         }
         let mut preview_sequence = slot.preview_sequence;
-        let mut context = StepContext::new(slot.operation, Generation(slot.generation), StepBudget::new(1, u64::MAX), slot.cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+        let mut context = StepContext::new(slot.operation, Generation(slot.generation), StepBudget::new(1, u64::MAX), slot.cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
         let outcome = job.drive_one(&mut context);
         slot.preview_sequence = preview_sequence;
         match outcome {

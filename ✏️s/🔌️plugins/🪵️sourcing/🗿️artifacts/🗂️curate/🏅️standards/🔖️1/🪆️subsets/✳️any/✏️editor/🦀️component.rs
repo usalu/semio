@@ -11,7 +11,7 @@ use crate::artifacts::curate::{CurateSnapshot, SOURCING_CURATE_SCHEMA};
 use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
 use crate::editor::sourcing::modes::edit;
 use crate::editor::sourcing::modes::edit::windows::{curated, grid, pool, preview};
-use crate::editor::sourcing::presence::{SourcingCuratePresence, SourcingCuratePresenceMutation};
+use crate::editor::sourcing::presence::{self, SourcingCuratePresence, SourcingCuratePresenceMutation};
 use crate::editor::sourcing::terminology::sourcing_curate_labels;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
@@ -217,10 +217,9 @@ fn sourcing_curate_command_from_action(action: &str, args: Option<&serde_json::V
 pub struct SourcingCurateApp;
 
 //#region 🧵️RetainedCommands
-const SOURCING_CURATE_BOUNDED_TOOL_IDS: &[&str] = &["setFilterQuery", "setFilterTypology", "setFilterMinAvailability", "sortTable", "setContributions"];
+const SOURCING_CURATE_BOUNDED_TOOL_IDS: &[&str] = &["setActiveExample", "setFilterQuery", "setFilterTypology", "setFilterMinAvailability", "sortTable", "setContributions"];
 const SOURCING_CURATE_BATCH_ONLY_TOOL_IDS: &[&str] = &[
     "setDocument",
-    "setActiveExample",
     "stockFromCatalogue",
     "curateAdd",
     "curateSetCount",
@@ -309,6 +308,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SourcingCurateBound
     const TOOL_IDS: &'static [&'static str] = SOURCING_CURATE_BOUNDED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATE_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
+        ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "setFilterQuery", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setFilterTypology", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setFilterMinAvailability", lanes: &[ArtifactToolPublicationLane::Config] },
@@ -516,6 +516,27 @@ impl store::ArtifactStoreOneItemPreparation<SourcingCurateConfig, SourcingCurate
 }
 //#endregion 📬️ConfigStorePreparation
 
+//#region 🧹️EmptyLaneRetirement
+struct SourcingNoTransientStoreDisposer;
+
+impl semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation>> for SourcingNoTransientStoreDisposer {
+    fn close_step(
+        &mut self,
+        _owner: &mut store::TransientStore<semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation>,
+        maximum_items: usize,
+        _maximum_bytes: usize,
+    ) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        if maximum_items == 0 { return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+        assert_eq!(std::mem::size_of::<semio_framework_plugin::NoTransient>(), 0);
+        Ok(semio_framework_plugin::PluginCloseStep::Complete)
+    }
+
+    fn terminal_is_empty(&self, _owner: &store::TransientStore<semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation>) -> bool {
+        std::mem::size_of::<semio_framework_plugin::NoTransient>() == 0
+    }
+}
+//#endregion 🧹️EmptyLaneRetirement
+
 impl ArtifactEditor for SourcingCurateApp {
     type Snapshot = CurateSnapshot;
     type Mutation = SourcingMutation;
@@ -538,12 +559,37 @@ impl ArtifactEditor for SourcingCurateApp {
         Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
     }
 
+    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+        assert_eq!(std::mem::size_of::<NoDraft>(), 0);
+        Some(semio_framework_plugin::bounded_document_store_owners::<NoDraft, NoDraftMutation>())
+    }
+
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<NoDraft, NoDraftMutation>())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(presence::SourcingPresenceRetirementFactory))
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(presence::SourcingPresenceRetirementFactory))
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(presence::SourcingPresenceStoreDisposer::new()))
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(Box::new(SourcingNoTransientStoreDisposer))
     }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
@@ -561,6 +607,7 @@ impl ArtifactEditor for SourcingCurateApp {
         factory: "SourcingCurateBoundedCommandJobFactory",
         factory_type: SourcingCurateBoundedCommandJobFactory,
         tools: {
+            "setActiveExample" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "setFilterQuery" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "setFilterTypology" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "setFilterMinAvailability" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
@@ -718,8 +765,7 @@ impl ArtifactEditor for SourcingCurateApp {
 /// fresh, edit-free op-log for `document` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(document: &CurateSnapshot) -> semio_framework::kernel::Effect {
     let pack = <CurateSnapshot as ArtifactPack>::encode_pack(document);
-    let envelope = store::create_document_envelope::<CurateSnapshot, SourcingMutation>(SOURCING_CURATE_SCHEMA, "curate", document.clone(), None);
-    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("curate document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("curate", SOURCING_CURATE_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
@@ -851,7 +897,7 @@ pub fn create_sourcing_curate_app() -> AppDefinition {
             // when the registry actually declares a command's id).
             .io(sourcing_curate_io())
             .action_interactive_job("setDocument", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("stockFromCatalogue", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("curateAdd", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("curateSetCount", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
@@ -887,21 +933,21 @@ pub(crate) mod testkit {
     }
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn new_app() -> SourcingApp {
-        new_app_impl::<EditorApp<SourcingCurateApp>>()
+    pub async fn new_app() -> SourcingApp {
+        new_app_impl::<EditorApp<SourcingCurateApp>>().await
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn new_app_with_registry() -> SourcingApp {
-        new_app_with_registry_impl::<EditorApp<SourcingCurateApp>>(sourcing_manifest_for_testkit)
+    pub async fn new_app_with_registry() -> SourcingApp {
+        new_app_with_registry_impl::<EditorApp<SourcingCurateApp>>(sourcing_manifest_for_testkit).await
     }
 
-    pub fn dispatch(app: &mut SourcingApp, command: SourcingCurateCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+    pub async fn dispatch(app: &mut SourcingApp, command: SourcingCurateCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
-    pub fn render(app: &mut SourcingApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+    pub async fn render(app: &mut SourcingApp, body_key: &str) -> String {
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render").root).expect("render json")
     }
 }
 //#endregion 🧪️Testkit
@@ -910,8 +956,53 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use semio_framework_plugin::plugin_app_close_prelude::TypedOperationResultLane;
 
     //#region 🧪️RetainedConfigOracle
+    #[semio_framework_async_macros::async_test]
+    async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners() {
+        let oracle: Vec<crate::artifacts::curate::ObjectKind> = serde_json::from_str(include_str!("../📚️examples/🎬️demo/🧪️expected-stock.json")).unwrap();
+        for example_id in [DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID] {
+            let mut app = new_app_with_registry().await;
+            app.bind_instance_id(7).await;
+            app.dispatch_typed(SourcingCurateCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7 }).await.unwrap();
+            let mut document = None;
+            let mut terminal = false;
+            for _ in 0..100_000 {
+                app.maintenance_step(1, 4_096).unwrap();
+                app.advance_typed_operation_publication().await.unwrap();
+                if let Some(page) = app.take_typed_operation_result_page(7) {
+                    assert_ne!(page.lane, TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
+                    terminal |= page.lane == TypedOperationResultLane::Terminal;
+                    assert!(app.acknowledge_typed_operation_result(page.token).unwrap());
+                }
+                if let Some(effect) = app.take_typed_operation_effect() {
+                    let semio_framework::kernel::Effect::LoadDocument { pack, spr } = effect else { panic!("example must publish a document load") };
+                    let history = protocol::os_spr::decode_history(&spr, &protocol::os_spr::DecodeOptions::default()).await.unwrap();
+                    assert_eq!(history.doc_id, "curate");
+                    assert_eq!(history.schema, SOURCING_CURATE_SCHEMA);
+                    assert!(history.edits.is_empty());
+                    document = Some(CurateSnapshot::decode_pack(&pack).unwrap());
+                }
+                app.take_typed_operation_event();
+                app.take_typed_operation_ui_scope();
+                if !app.has_pending_typed_operations() { break; }
+                std::thread::yield_now();
+            }
+            assert!(terminal);
+            let document = document.expect("retained example document effect");
+            let stock = crate::artifacts::curate::stock_of(&document);
+            if example_id == DEMO_STOCK_EXAMPLE_ID { assert_eq!(stock, oracle); } else { assert!(stock.is_empty()); }
+            for _ in 0..100_000 {
+                if app.close_terminal_is_empty() { break; }
+                app.close_step(1, 4_096).unwrap();
+                std::thread::yield_now();
+            }
+            assert!(app.close_terminal_is_empty());
+            eprintln!("[DEBUG] retained example {example_id} published {} authored rows and retired", stock.len());
+        }
+    }
+
     #[test]
     fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_one() {
         let base = SourcingCurateConfig::default();
@@ -933,8 +1024,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn view_kind_config_only_commands_pass_kind_discipline() {
         // 🧬️ A registry-backed wrapper so the View-kind declarations actually get enforced.
-        let mut app = new_app_with_registry();
-        let result = app.dispatch_typed(SourcingCurateCommand::SetFilterQuery(set_filter_query::SetFilterQuery { value: "glulam".into() }), &testkit::meta("local")).expect("filter query");
+        let mut app = new_app_with_registry().await;
+        let result = app.dispatch_typed(SourcingCurateCommand::SetFilterQuery(set_filter_query::SetFilterQuery { value: "glulam".into() }), &testkit::meta("local")).await.expect("filter query");
         assert!(result.mutations.is_empty(), "setFilterQuery is config-only, no document operations");
     }
 
@@ -974,7 +1065,7 @@ mod tests {
     /// backs.
     #[semio_framework_async_macros::async_test]
     async fn every_rendered_action_bridges_through_the_framework_harness() {
-        testkit::assert_declared_actions_bridge_to_commands::<EditorApp<SourcingCurateApp>>(sourcing_manifest_for_testkit);
+        testkit::assert_declared_actions_bridge_to_commands::<EditorApp<SourcingCurateApp>>(sourcing_manifest_for_testkit).await;
     }
 
     /// ⚖️ LAW: the bridge reads the manifest's OWN arg names — `setActiveExample` declares a select
@@ -1007,7 +1098,7 @@ mod tests {
     /// keyword at all and no longer parses).
     #[semio_framework_async_macros::async_test]
     async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
-        async fn expected_wire_key(id: &str) -> &'static str {
+        fn expected_wire_key(id: &str) -> &'static str {
             match id {
                 "setDocument" => "document-json",
                 "setActiveExample" => "active-example",
@@ -1061,7 +1152,7 @@ mod tests {
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order — mirrors the
     /// pre-migration wire baseline captured into this ticket's `wire-baseline-before.txt`.
-    async fn every_command() -> Vec<SourcingCurateCommand> {
+    fn every_command() -> Vec<SourcingCurateCommand> {
         vec![
             SourcingCurateCommand::SetArtifactJson(set_artifact_json::SetArtifactJson { json: "{}".into() }),
             SourcingCurateCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo-stock".into() }),
@@ -1107,8 +1198,9 @@ mod tests {
     fn retained_factories_declare_every_publication_lane() {
         let bounded = <SourcingCurateBoundedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
         assert_eq!(bounded.iter().map(|contract| contract.tool_id).collect::<Vec<_>>(), SOURCING_CURATE_BOUNDED_TOOL_IDS);
-        assert!(bounded.iter().all(|contract| contract.lanes == [ArtifactToolPublicationLane::Config]));
-        assert_eq!(SOURCING_CURATE_BATCH_ONLY_TOOL_IDS.len(), 9);
+        assert_eq!(bounded[0].lanes, [ArtifactToolPublicationLane::HostOnly]);
+        assert!(bounded[1..].iter().all(|contract| contract.lanes == [ArtifactToolPublicationLane::Config]));
+        assert_eq!(SOURCING_CURATE_BATCH_ONLY_TOOL_IDS.len(), 8);
         assert!(SOURCING_CURATE_BATCH_ONLY_TOOL_IDS.contains(&"setFilterModule"));
     }
 
@@ -1116,7 +1208,7 @@ mod tests {
     async fn sourcing_curate_io_declares_the_catalog_out_port_alongside_the_implicit_document_ports() {
         let io = sourcing_curate_io();
         assert_eq!(io.document_schema, SOURCING_CURATE_SCHEMA);
-        let ports = io.all_ports();
+        let ports = io.all_ports().await;
         assert_eq!(ports.len(), 3, "document:in, document:out, catalog:out");
         let catalog_out = ports.iter().find(|port| port.id == "catalog:out").expect("catalog:out port declared");
         assert_eq!(catalog_out.kind_id.as_deref(), Some("kit.catalog"));
@@ -1126,7 +1218,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn sourcing_curate_io_and_catalog_export_round_trip() {
-        let mut app = crate::editor::sourcing::testkit::new_app();
+        let mut app = crate::editor::sourcing::testkit::new_app().await;
         let media = semio_framework_plugin::resolve_ready(app.export_media("catalog:out")).expect("catalog export");
         assert_eq!(media.media_type.class, MediaClass::Kit);
         assert_eq!(media.media_type.form, MediaForm::Type);

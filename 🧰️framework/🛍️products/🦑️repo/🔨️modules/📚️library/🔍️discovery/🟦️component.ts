@@ -5,9 +5,10 @@
 
 //#region 🔌️Adapters
 import { ephemeralMap, ephemeralBox } from "@semio-tech/framework";
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
-import { basename, dirname, extname, join, posix, relative, resolve } from "node:path";
+import { basename, dirname, extname, isAbsolute, join, posix, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 //#endregion 🔌️Adapters
 
@@ -389,6 +390,7 @@ export interface SemanticPackageProjectionContract {
   readonly derivedLeafCount: 1;
   readonly joinedPathBindingCounts: readonly [1, 0];
   readonly generatedSourceRetirementCounts: readonly [1, 0];
+  readonly authoredFragmentCounts: readonly [31, 0];
   readonly rationaleRule: "nested-cargo-package-projection-v1";
 }
 
@@ -542,9 +544,16 @@ export interface RegistryCatalogInputDiscovery {
 export interface GeneratorProjectionActivation {
   readonly kind: "canonical-or-planned-package";
   readonly projectionContractId: "nested-cargo-packages-v1";
-  readonly packageId: "jcoprobe-guest";
+  readonly packageId: "jcoprobe-guest" | "wgpu-renderer";
   readonly sourceManifestPath: string;
   readonly destinationManifestPath: string;
+}
+
+/** 🏗️ Exact package artifacts and bounded projected inputs share one producer authority. */
+export interface SemanticPackageGeneration {
+  readonly kind: "wgpu-package-artifacts";
+  readonly previewInput: { readonly protocol: "package-projected-inputs-v1"; readonly maxBytes: 67108864; readonly maxOperations: 200000 };
+  readonly browserProfile: SemanticPackageBrowserProfile;
 }
 
 /** ⚙️ Schema-owned generator identity; runnable commands derive only from exact Nx targets. */
@@ -556,6 +565,7 @@ export interface GeneratorContract {
   readonly checkTarget?: string;
   readonly inputPatterns: readonly string[];
   readonly inputDiscovery?: RegistryCatalogInputDiscovery;
+  readonly packageGeneration?: SemanticPackageGeneration;
   readonly projectionActivation?: GeneratorProjectionActivation;
   readonly outputRoots: readonly GeneratorOutputRoot[];
   readonly reason: string;
@@ -592,7 +602,7 @@ export interface FrozenCoordinateEvidenceContract {
   readonly path: string;
   readonly sha256: string;
   readonly schemaVersion: number | null;
-  readonly coordinates: readonly (Readonly<{ pointer: string; kind: "source" | "destination" }> | Readonly<{ pointer: string; kind: "source" | "destination"; representation: "recorded-repository-absolute"; recordedRepositoryRoot: string }>)[];
+  readonly coordinates: readonly (Readonly<{ pointer: string; kind: "source" | "destination" }> | Readonly<{ pointer: string; kind: "source" | "destination"; representation: "recorded-repository-absolute"; recordedRepositoryRoot: string }> | Readonly<{ pointer: string; kind: "source"; representation: "recorded-package-owner-identity"; identityPrefix: "unmarked:" }>)[];
 }
 
 /** 🧾️ Validates explicit evidence authority without discovering or reading any document. */
@@ -615,8 +625,11 @@ export function validateFrozenCoordinateEvidenceContracts(value: unknown): strin
     for (const [index, coordinate] of row.coordinates.entries()) {
       if (!object(coordinate)) { problems.push(`${label}.coordinates[${index}] must be an object.`); continue; }
       const recorded = Object.hasOwn(coordinate, "representation");
-      if (Object.keys(coordinate).sort().join("\0") !== (recorded ? "kind\0pointer\0recordedRepositoryRoot\0representation" : "kind\0pointer")) { problems.push(`${label}.coordinates[${index}] must contain pointer and kind, plus exact representation and recordedRepositoryRoot for recorded absolute facts.`); continue; }
-      if (recorded) {
+      const ownerIdentity = coordinate.representation === "recorded-package-owner-identity";
+      if (Object.keys(coordinate).sort().join("\0") !== (ownerIdentity ? "identityPrefix\0kind\0pointer\0representation" : recorded ? "kind\0pointer\0recordedRepositoryRoot\0representation" : "kind\0pointer")) { problems.push(`${label}.coordinates[${index}] must contain only the fields of its exact coordinate representation.`); continue; }
+      if (ownerIdentity) {
+        if (coordinate.identityPrefix !== "unmarked:" || coordinate.kind !== "source") problems.push(`${label}.coordinates[${index}] requires the exact unmarked: source-owner identity prefix.`);
+      } else if (recorded) {
         const root = coordinate.recordedRepositoryRoot;
         if (coordinate.representation !== "recorded-repository-absolute" || typeof root !== "string" || !/^(?:\/(?!\/)|[A-Za-z]:\/).+/u.test(root) || /[\\*?"<>|\u0000-\u001f]/u.test(root) || root.replace(/^[A-Za-z]:/u, "").slice(1).split("/").some((part) => !part || part === "." || part === ".." || part.includes(":"))) problems.push(`${label}.coordinates[${index}] requires one exact lexical POSIX or drive-qualified recorded repository root.`);
       }
@@ -909,7 +922,8 @@ function noFollowNodeKind(path: string): "missing" | "file" | "directory" | "sym
   }
 }
 
-function workspaceAuthorityPath(path: string, subject: string): string {
+/** 🧭️ Lexically verifies one workspace authority path before resolution. */
+export function workspaceAuthorityPath(path: string, subject: string): string {
   const segments = path.split(/[\\/]/u);
   if (path.includes("\0")) throw new Error(`Workspace taxonomy ${subject} contains a NUL path character at ${JSON.stringify(path)}.`);
   if (/^[A-Za-z]:(?:$|[^\\/])/u.test(path)) throw new Error(`Workspace taxonomy ${subject} contains a drive-relative path at ${JSON.stringify(path)}.`);
@@ -918,7 +932,8 @@ function workspaceAuthorityPath(path: string, subject: string): string {
   return resolve(path);
 }
 
-function noFollowDirectoryAncestry(path: string, subject: string): void {
+/** 🛡️ Requires each directory from the filesystem root to be real and no-follow. */
+export function noFollowDirectoryAncestry(path: string, subject: string): void {
   const ancestry: string[] = [];
   for (let candidate = path; ; candidate = dirname(candidate)) {
     ancestry.push(candidate);
@@ -2827,8 +2842,8 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   if (record(taxonomy.semanticPackageProjectionContracts, "semanticPackageProjectionContracts")) {
     if (Object.keys(taxonomy.semanticPackageProjectionContracts).join("\0") !== "nested-cargo-packages-v1") problems.push("semanticPackageProjectionContracts requires the exact nested Cargo contract.");
     for (const [id, contract] of Object.entries(taxonomy.semanticPackageProjectionContracts)) {
-      exactKeys(contract, ["contractKind", "authorityCatalogPath", "authorityCatalogSha256", "packageIds", "sourceLeafCounts", "purityCount", "adapterCount", "derivedLeafCount", "joinedPathBindingCounts", "generatedSourceRetirementCounts", "rationaleRule"], `semanticPackageProjectionContracts.${id}`);
-      if (contract.contractKind !== "exact-nested-cargo-package-catalog" || !exactOwnerPath(contract.authorityCatalogPath) || !/^[0-9a-f]{64}$/u.test(contract.authorityCatalogSha256) || JSON.stringify(contract.packageIds) !== JSON.stringify(["wgpu-renderer", "jcoprobe-guest"]) || JSON.stringify(contract.sourceLeafCounts) !== JSON.stringify([32, 4]) || contract.purityCount !== 27 || contract.adapterCount !== 5 || contract.derivedLeafCount !== 1 || JSON.stringify(contract.joinedPathBindingCounts) !== JSON.stringify([1, 0]) || JSON.stringify(contract.generatedSourceRetirementCounts) !== JSON.stringify([1, 0]) || contract.rationaleRule !== "nested-cargo-package-projection-v1") problems.push(`semanticPackageProjectionContracts.${id} has invalid exact authority.`);
+      exactKeys(contract, ["contractKind", "authorityCatalogPath", "authorityCatalogSha256", "packageIds", "sourceLeafCounts", "purityCount", "adapterCount", "derivedLeafCount", "joinedPathBindingCounts", "generatedSourceRetirementCounts", "authoredFragmentCounts", "rationaleRule"], `semanticPackageProjectionContracts.${id}`);
+      if (contract.contractKind !== "exact-nested-cargo-package-catalog" || !exactOwnerPath(contract.authorityCatalogPath) || !/^[0-9a-f]{64}$/u.test(contract.authorityCatalogSha256) || JSON.stringify(contract.packageIds) !== JSON.stringify(["wgpu-renderer", "jcoprobe-guest"]) || JSON.stringify(contract.sourceLeafCounts) !== JSON.stringify([32, 4]) || contract.purityCount !== 27 || contract.adapterCount !== 5 || contract.derivedLeafCount !== 1 || JSON.stringify(contract.joinedPathBindingCounts) !== JSON.stringify([1, 0]) || JSON.stringify(contract.generatedSourceRetirementCounts) !== JSON.stringify([1, 0]) || JSON.stringify(contract.authoredFragmentCounts) !== JSON.stringify([31, 0]) || contract.rationaleRule !== "nested-cargo-package-projection-v1") problems.push(`semanticPackageProjectionContracts.${id} has invalid exact authority.`);
     }
   }
 
@@ -3167,7 +3182,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     const targets = new Map<string, string>();
     for (const [id, contract] of Object.entries(taxonomy.generatorContracts)) {
       if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(id)) problems.push(`generatorContracts id ${JSON.stringify(id)} must be kebab-case.`);
-      const allowedKeys = new Set(["ownership", "ownerPath", "target", "previewTarget", "checkTarget", "inputPatterns", "inputDiscovery", "projectionActivation", "outputRoots", "reason"]);
+      const allowedKeys = new Set(["ownership", "ownerPath", "target", "previewTarget", "checkTarget", "inputPatterns", "inputDiscovery", "packageGeneration", "projectionActivation", "outputRoots", "reason"]);
       for (const key of Object.keys(contract)) if (!allowedKeys.has(key)) problems.push(`generatorContracts[${JSON.stringify(id)}].${key} is forbidden.`);
       const ownership = contract.ownership as string;
       if (!["owned", "external"].includes(ownership)) problems.push(`generatorContracts[${JSON.stringify(id)}].ownership must be owned or external.`);
@@ -3196,11 +3211,19 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
         if (!targetKnown || !nxTarget(contract.checkTarget, `generatorContracts[${JSON.stringify(id)}].checkTarget`)) problems.push(`generatorContracts[${JSON.stringify(id)}].checkTarget requires a known target.`);
         else if (typeof contract.target === "string" && contract.checkTarget.slice(0, contract.checkTarget.lastIndexOf(":")) !== contract.target.slice(0, contract.target.lastIndexOf(":"))) problems.push(`generatorContracts[${JSON.stringify(id)}].checkTarget must belong to the target project.`);
       }
-      if (id === "jco-package-adapter" && contract.projectionActivation === undefined) problems.push("generatorContracts.jco-package-adapter requires explicit package projection activation.");
+      if (["jco-package-adapter", "wgpu-frame-worker"].includes(id) && contract.projectionActivation === undefined) problems.push(`generatorContracts.${id} requires explicit package projection activation.`);
+      if (id === "wgpu-frame-worker" && contract.packageGeneration === undefined) problems.push(`generatorContracts.${id} requires explicit package generation authority.`);
       if (contract.projectionActivation !== undefined) {
         const activation = contract.projectionActivation;
         exactKeys(activation, ["kind", "projectionContractId", "packageId", "sourceManifestPath", "destinationManifestPath"], `generatorContracts.${id}.projectionActivation`);
-        if (!runnable || id !== "jco-package-adapter" || activation.kind !== "canonical-or-planned-package" || activation.projectionContractId !== "nested-cargo-packages-v1" || activation.packageId !== "jcoprobe-guest" || !exactOwnerPath(activation.sourceManifestPath) || !exactOwnerPath(activation.destinationManifestPath) || activation.sourceManifestPath === activation.destinationManifestPath) problems.push(`generatorContracts.${id}.projectionActivation has no exact package authority.`);
+        if (!runnable || !["jco-package-adapter", "wgpu-frame-worker"].includes(id) || activation.kind !== "canonical-or-planned-package" || activation.projectionContractId !== "nested-cargo-packages-v1" || activation.packageId !== (id === "jco-package-adapter" ? "jcoprobe-guest" : "wgpu-renderer") || !exactOwnerPath(activation.sourceManifestPath) || !exactOwnerPath(activation.destinationManifestPath) || activation.sourceManifestPath === activation.destinationManifestPath) problems.push(`generatorContracts.${id}.projectionActivation has no exact package authority.`);
+      }
+      if (contract.packageGeneration !== undefined) {
+        const generation = contract.packageGeneration;
+        exactKeys(generation, ["kind", "previewInput", "browserProfile"], `generatorContracts.${id}.packageGeneration`);
+        const protocol = generation.previewInput;
+        if (!runnable || id !== "wgpu-frame-worker" || contract.inputDiscovery || generation.kind !== "wgpu-package-artifacts" || !protocol || Object.keys(protocol).sort().join("\0") !== "maxBytes\0maxOperations\0protocol" || protocol.protocol !== "package-projected-inputs-v1" || protocol.maxBytes !== 67108864 || protocol.maxOperations !== 200000) problems.push(`generatorContracts.${id}.packageGeneration requires its exact bounded package protocol.`);
+        try { parseSemanticPackageBrowserProfile(generation.browserProfile); } catch (error) { problems.push(`generatorContracts.${id}.packageGeneration: ${error instanceof Error ? error.message : String(error)}`); }
       }
       if (contract.inputDiscovery !== undefined) {
         const input = contract.inputDiscovery;
@@ -3467,6 +3490,42 @@ export interface SemanticPackageGeneratedSourceRetirement {
   readonly sourceMode: 420;
 }
 
+/** 🧷️ Reviewed authored fragment, bound to its complete package source preimage. */
+export interface SemanticPackageAuthoredSourceFragment {
+  readonly id: string;
+  readonly kind: "reference-path" | "cargo-runtime-coordinate" | "tool-producer";
+  readonly sourcePath: string;
+  readonly oldValue: string;
+  readonly newValue: string;
+}
+
+/** 🌐️ Closed browser compiler profile with exact module and workspace import authority. */
+export interface SemanticPackageBrowserProfile {
+  readonly schemaVersion: 1;
+  readonly kind: "wgpu-browser-esm-v1";
+  readonly inlineTestDefine: "undefined";
+  readonly entries: readonly Readonly<{ id: "frame-worker" | "browser-boot"; sourceRelativePath: string; inclusion: "tracked" | "ignored" }>[];
+  readonly workspaceImports: Readonly<Record<string, Readonly<{ manifestPath: string; entryPath: string }>>>;
+  readonly sourceModulePaths: readonly string[];
+}
+
+/** 📏️ Validates explicit browser input authority without discovering or reading unrelated modules. */
+export function parseSemanticPackageBrowserProfile(input: unknown, owner?: SemanticPackageProjectionCase): SemanticPackageBrowserProfile {
+  const exact = (value: unknown, keys: readonly string[]): value is Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).sort().join("\0") === [...keys].sort().join("\0");
+  if (!exact(input, ["schemaVersion", "kind", "inlineTestDefine", "entries", "workspaceImports", "sourceModulePaths"]) || input.schemaVersion !== 1 || input.kind !== "wgpu-browser-esm-v1" || input.inlineTestDefine !== "undefined" || owner && owner.id !== "wgpu-renderer") throw new Error("Invalid WGPU browser profile");
+  const expected = [{ id: "frame-worker", sourceRelativePath: "🟦️typescript/🧵️frame-worker.ts", inclusion: "tracked" }, { id: "browser-boot", sourceRelativePath: "🟦️typescript/🟦️boot.ts", inclusion: "ignored" }];
+  if (!Array.isArray(input.entries) || input.entries.length !== expected.length || input.entries.some((entry, index) => !exact(entry, ["id", "sourceRelativePath", "inclusion"]) || entry.id !== expected[index]!.id || entry.sourceRelativePath !== expected[index]!.sourceRelativePath || entry.inclusion !== expected[index]!.inclusion)) throw new Error("WGPU browser entry authority drift");
+  if (!Array.isArray(input.sourceModulePaths) || input.sourceModulePaths.length < expected.length || input.sourceModulePaths.some((path, index, paths) => !exactOwnerPath(path) || !/\.(?:tsx?|m?js|json)$/u.test(path) || index > 0 && projectionByteCompare(paths[index - 1], path) >= 0)) throw new Error("WGPU browser module paths must be exact, nonopaque, unique and byte ordered");
+  if (owner) for (const entry of expected) {
+    const sourcePath = owner.sourceRoot + "/" + entry.sourceRelativePath, mapping = owner.mappings.find((mapping) => mapping.sourcePath === sourcePath);
+    if (!mapping || mapping.disposition !== "implementation" || mapping.destinationPath !== owner.semanticOwnerRoot + "/🧵️" + entry.id + "/🟦️.ts" || !input.sourceModulePaths.includes(sourcePath)) throw new Error("WGPU browser entry is not selected by the exact package catalog");
+  }
+  if (!exact(input.workspaceImports, ["@semio-tech/framework", "@semio-tech/framework-os", "@semio-tech/framework-replication"])) throw new Error("WGPU browser workspace import identities drifted");
+  for (const binding of Object.values(input.workspaceImports)) if (!exact(binding, ["manifestPath", "entryPath"]) || !exactOwnerPath(binding.manifestPath) || basename(binding.manifestPath) !== "package.json" || !exactOwnerPath(binding.entryPath) || !input.sourceModulePaths.includes(binding.entryPath)) throw new Error("WGPU browser workspace import binding drifted");
+  if (owner) for (const path of input.sourceModulePaths) if (path.startsWith(owner.sourceRoot + "/") && !owner.mappings.some((mapping) => mapping.sourcePath === path && mapping.disposition === "implementation")) throw new Error("WGPU browser module is not an authored package implementation: " + path);
+  return input as unknown as SemanticPackageBrowserProfile;
+}
+
 /** 🏠️ One exact Cargo identity; standalone fixtures are not inferred from directory basenames. */
 export interface SemanticPackageProjectionCase {
   readonly id: "wgpu-renderer" | "jcoprobe-guest";
@@ -3483,6 +3542,40 @@ export interface SemanticPackageProjectionCase {
   readonly derivedLeaves: readonly SemanticPackageDerivedLeaf[];
   readonly joinedPathBindings: readonly SemanticPackageJoinedPathBinding[];
   readonly generatedSourceRetirements: readonly SemanticPackageGeneratedSourceRetirement[];
+  readonly authoredSourceFragments: readonly SemanticPackageAuthoredSourceFragment[];
+}
+
+function semanticPackageAuthoredFragmentProblem(owner: SemanticPackageProjectionCase): string | null {
+  const fragments = owner.authoredSourceFragments;
+  if (!Array.isArray(fragments) || fragments.length > 64 || new Set(fragments.map((fragment) => fragment.id)).size !== fragments.length) return "invalid or duplicated declaration";
+  for (const fragment of fragments) {
+    const mapping = owner.mappings.find((mapping) => mapping.sourcePath === fragment.sourcePath);
+    if (Object.keys(fragment).sort().join("\0") !== "id\0kind\0newValue\0oldValue\0sourcePath" || !/^[a-z][a-z0-9-]*$/u.test(fragment.id) || !["reference-path", "cargo-runtime-coordinate", "tool-producer"].includes(fragment.kind) || !exactOwnerPath(fragment.sourcePath) || !mapping || mapping.disposition === "generated" || typeof fragment.oldValue !== "string" || !fragment.oldValue || typeof fragment.newValue !== "string" || !fragment.newValue || Buffer.byteLength(fragment.oldValue) > 262144 || Buffer.byteLength(fragment.newValue) > 262144 || fragment.kind === "cargo-runtime-coordinate" && !fragment.sourcePath.endsWith(".rs")) return "unowned or malformed declaration";
+  }
+  return null;
+}
+
+/** 🔐️ Projects only exact reviewed source spans; all other program bytes remain authored. */
+export function semanticPackageAuthoredFragmentReferences(
+  facts: Readonly<{ path: string; content: string; layout: "source" | "destination" }>,
+  owner: SemanticPackageProjectionCase,
+): Readonly<{ references: readonly SemanticPackageJoinedPathReference[]; problems: readonly string[] }> {
+  const reject = (message: string) => ({ references: [], problems: ["Nested Cargo authored fragment: " + message] });
+  const malformed = semanticPackageAuthoredFragmentProblem(owner);
+  if (malformed) return reject(malformed);
+  const fragments = owner.authoredSourceFragments;
+  const mapping = owner.mappings.find((mapping) => facts.path === (facts.layout === "source" ? mapping.sourcePath : mapping.destinationPath));
+  if (!mapping || !["source", "destination"].includes(facts.layout)) return reject("unknown source or canonical owner");
+  if (facts.layout === "source" && (createHash("sha256").update(facts.content).digest("hex") !== mapping.sourceHash || Buffer.byteLength(facts.content) !== mapping.sourceSize)) return reject("complete source preimage changed");
+  const references: SemanticPackageJoinedPathReference[] = [];
+  for (const fragment of fragments.filter((fragment) => fragment.sourcePath === mapping.sourcePath)) {
+    const value = facts.layout === "source" ? fragment.oldValue : fragment.newValue, start = facts.content.indexOf(value);
+    if (start < 0 || facts.content.indexOf(value, start + value.length) >= 0) return reject("missing or repeated span " + fragment.id);
+    references.push({ start, end: start + value.length, oldValue: value, newValue: fragment.newValue, targetSourcePath: mapping.sourcePath });
+  }
+  references.sort((left, right) => left.start - right.start || left.end - right.end);
+  if (references.some((reference, index) => index > 0 && reference.start < references[index - 1]!.end)) return reject("overlapping spans");
+  return { references: facts.layout === "source" ? references : [], problems: [] };
 }
 
 //#region 🧵️Source-Owned Joined Paths
@@ -3584,6 +3677,7 @@ export function semanticPackageProjectionCatalog(repoRoot: string, taxonomy: Tax
     }
     if (!Array.isArray(row.joinedPathBindings) || row.joinedPathBindings.length !== contract.joinedPathBindingCounts[index] || new Set(row.joinedPathBindings.map((binding) => binding.id)).size !== row.joinedPathBindings.length) throw new Error("Nested Cargo joined-path binding census drift");
     for (const binding of row.joinedPathBindings) semanticPackageJoinedPathBindingRecords(binding, row);
+    if (row.authoredSourceFragments?.length !== contract.authoredFragmentCounts[index] || semanticPackageAuthoredFragmentProblem(row)) throw new Error("Nested Cargo authored fragment census or ownership drift");
     if (!Array.isArray(row.generatedSourceRetirements) || row.generatedSourceRetirements.length !== contract.generatedSourceRetirementCounts[index] || new Set(row.generatedSourceRetirements.map((retirement) => retirement.sourcePath)).size !== row.generatedSourceRetirements.length || row.mappings.filter((mapping) => mapping.disposition === "generated").length !== row.generatedSourceRetirements.length) throw new Error("Nested Cargo generated source retirement census drift");
     for (const retirement of row.generatedSourceRetirements) {
       const mapping = row.mappings.find((mapping) => mapping.sourcePath === retirement.sourcePath);
@@ -3625,6 +3719,17 @@ function nestedCargoField(content: string, section: string, key: string): unknow
   try { return JSON.parse(values[0]![1]!.replace(/,\s*\]/gu, "]")); } catch { return undefined; }
 }
 
+/** 🪺️ Derives optional ignored leaves only from exact package entry and generator output authority. */
+export function semanticPackageIgnoredGeneratedOutputPaths(row: SemanticPackageProjectionCase, taxonomy: Taxonomy): readonly string[] {
+  const generator = taxonomy.generatorContracts["wgpu-frame-worker"];
+  if (row.id !== "wgpu-renderer" || generator?.packageGeneration?.kind !== "wgpu-package-artifacts" || generator.projectionActivation?.packageId !== row.id || generator.projectionActivation.sourceManifestPath !== row.sourceRoot + "/Cargo.toml" || generator.projectionActivation.destinationManifestPath !== row.destinationRoot + "/Cargo.toml") return [];
+  return parseSemanticPackageBrowserProfile(generator.packageGeneration.browserProfile, row).entries.filter((entry) => entry.inclusion === "ignored").flatMap((entry) => {
+    const mapping = row.mappings.find((mapping) => mapping.sourcePath === row.sourceRoot + "/" + entry.sourceRelativePath)!;
+    const path = dirname(mapping.destinationPath).replaceAll("\\", "/") + "/🤖️generated/🟨️.js";
+    return generator.outputRoots.some((root) => root.path === path && root.inclusion === "ignored") ? [path] : [];
+  });
+}
+
 /** 🧭️ Validates complete source or canonical package facts; no physical reads occur here. */
 export function semanticPackageProjectionAuthority(
   facts: Readonly<{ packageId: string; nodes: readonly SemanticProjectionAuthorityNode[]; layout?: "source" | "destination"; occupiedPaths?: readonly string[]; cargoWorkspaceContent?: string; nodeWorkspaceContent?: string }>,
@@ -3650,11 +3755,15 @@ export function semanticPackageProjectionAuthority(
   const adapters = new Map(row.adapters.map((adapter) => [adapter.path, adapter]));
   const derived = new Map(row.derivedLeaves.map((leaf) => [leaf.path, leaf]));
   const expectedPaths = new Set([...expected.keys(), ...(destination ? [...adapters.keys(), ...derived.keys()] : [])]);
+  const ignoredOutputs = new Set<string>();
+  if (destination) try { for (const path of semanticPackageIgnoredGeneratedOutputPaths(row, taxonomy)) ignoredOutputs.add(path); }
+  catch (error) { problems.push(error instanceof Error ? error.message : String(error)); }
+  const admittedPaths = new Set([...expectedPaths, ...ignoredOutputs]);
   const allowedDirectories = new Set<string>();
-  for (const path of expectedPaths) for (let parent = dirname(path); parent !== "."; parent = dirname(parent)) allowedDirectories.add(parent);
+  for (const path of admittedPaths) for (let parent = dirname(path); parent !== "."; parent = dirname(parent)) allowedDirectories.add(parent);
   const nodes = new Map<string, SemanticProjectionAuthorityNode>();
   for (const node of facts.nodes) {
-    if (!exactOwnerPath(node.path) || nodes.has(node.path) || !["file", "directory"].includes(node.nodeKind) || node.nodeKind === "directory" && !allowedDirectories.has(node.path) || node.nodeKind === "file" && !expectedPaths.has(node.path)) { problems.push("Unadmitted or duplicate nested Cargo node: " + node.path); continue; }
+    if (!exactOwnerPath(node.path) || nodes.has(node.path) || !["file", "directory"].includes(node.nodeKind) || node.nodeKind === "directory" && !allowedDirectories.has(node.path) || node.nodeKind === "file" && (!admittedPaths.has(node.path) || ignoredOutputs.has(node.path) && typeof node.content !== "string")) { problems.push("Unadmitted or duplicate nested Cargo node: " + node.path); continue; }
     nodes.set(node.path, node);
   }
   for (const path of expectedPaths) {
@@ -3668,6 +3777,10 @@ export function semanticPackageProjectionAuthority(
     const content = nodes.get(destination ? splice.destinationPath : splice.sourcePath)?.content ?? "", value = destination ? splice.newValue : splice.oldValue;
     if (!content.startsWith(value) || content.split(value).length - 1 !== 1) problems.push("Nested Cargo registration or adapter splice drift: " + splice.id);
   }
+  for (const sourcePath of new Set(row.authoredSourceFragments.map((fragment) => fragment.sourcePath))) {
+    const mapping = row.mappings.find((mapping) => mapping.sourcePath === sourcePath)!, path = destination ? mapping.destinationPath : sourcePath;
+    problems.push(...semanticPackageAuthoredFragmentReferences({ path, content: nodes.get(path)?.content ?? "", layout: destination ? "destination" : "source" }, row).problems);
+  }
   if (problems.length === 0) for (const binding of row.joinedPathBindings) {
     const mapping = row.mappings.find((entry) => entry.sourcePath === row.sourceRoot + "/" + binding.consumerRelativePath)!;
     const path = destination ? mapping.destinationPath : mapping.sourcePath;
@@ -3676,7 +3789,11 @@ export function semanticPackageProjectionAuthority(
   if (!destination) {
     const fold = (path: string): string => path.normalize("NFC").toLocaleLowerCase("und").replaceAll("\ufe0f", "");
     const outputPaths = new Set([...row.mappings.map((mapping) => mapping.destinationPath), ...adapters.keys(), ...derived.keys()]);
-    for (const path of facts.occupiedPaths ?? []) if ([...outputPaths].some((output) => fold(path) === fold(output) || fold(output).startsWith(fold(path) + "/")) && !allowedDirectories.has(path)) problems.push("Nested Cargo destination collision: " + path);
+    const foldedOutputPaths = [...outputPaths].map(fold);
+    for (const path of facts.occupiedPaths ?? []) {
+      const foldedPath = fold(path);
+      if (foldedOutputPaths.some((output) => foldedPath === output || output.startsWith(foldedPath + "/")) && !allowedDirectories.has(path)) problems.push("Nested Cargo destination collision: " + path);
+    }
   }
   const activeRoot = destination ? row.destinationRoot : row.sourceRoot;
   const manifest = nodes.get(activeRoot + "/Cargo.toml")?.content ?? "";
@@ -3747,9 +3864,35 @@ export function semanticPackageAdapterPreview(repoRoot: string, packageId: "jcop
 export function semanticPackageGeneratedLeafPreview(repoRoot: string, packageId: SemanticPackageProjectionCase["id"], taxonomy: Taxonomy = loadTaxonomy()): readonly Readonly<{ path: string; content: string }>[] {
   return semanticPackageGenerationAuthority(repoRoot, packageId, taxonomy).generated.map(({ path, content }) => ({ path, content })).sort((left, right) => projectionByteCompare(left.path, right.path));
 }
-function nestedCargoGeneratedPrestate(repoRoot: string, path: string, generatorId: string, taxonomy: Taxonomy): boolean {
-  if (!["jco-package-adapter", "external-cargo-locks"].includes(generatorId)) return false;
+/** 🌗️ Recognizes pending source-layout outputs without conferring source-content mutation authority. */
+export function semanticPackageSourceOutputPhase(repoRoot: string, generatorId: string, taxonomy: Taxonomy): readonly string[] {
+  if (generatorId !== "wgpu-frame-worker") return [];
   try {
+    const contract = taxonomy.generatorContracts[generatorId], row = semanticPackageProjectionCatalog(repoRoot, taxonomy)?.packages.find((entry) => entry.id === "wgpu-renderer");
+    if (!row || contract?.packageGeneration?.kind !== "wgpu-package-artifacts" || contract.projectionActivation?.packageId !== row.id) return [];
+    const root = resolve(repoRoot), gitOptions = { cwd: root, encoding: "utf8" as const, timeout: 5_000, maxBuffer: 1_048_576, stdio: ["ignore", "pipe", "pipe"] as ["ignore", "pipe", "pipe"] };
+    if (resolve(execFileSync("git", ["rev-parse", "--show-toplevel"], gitOptions).trim()) !== root) return [];
+    const admitted = execFileSync("git", ["--literal-pathspecs", "ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", row.sourceRoot], gitOptions).split("\0").filter(Boolean).sort(projectionByteCompare);
+    const expected = row.mappings.map((mapping) => mapping.sourcePath).sort(projectionByteCompare);
+    if (JSON.stringify(admitted) !== JSON.stringify(expected) || admitted.some((path) => exactOwnerRegularFile(root, path) !== "file")) return [];
+    const view = registryCatalogInputView(root, taxonomy);
+    const destinations = new Set([...row.mappings.map((mapping) => mapping.destinationPath), ...row.adapters.map((adapter) => adapter.path), ...row.derivedLeaves.map((leaf) => leaf.path), ...contract.outputRoots.map((output) => output.path)]);
+    if ([...destinations].some((path) => view.kind(path) !== null)) return [];
+    for (const name of ["Cargo.toml", "package.json", "📋️project.json"]) {
+      const mapping = row.mappings.find((mapping) => mapping.sourcePath === row.sourceRoot + "/" + name), bytes = mapping ? readFileSync(join(root, mapping.sourcePath)) : undefined;
+      if (!mapping || !bytes || bytes.length !== mapping.sourceSize || createHash("sha256").update(bytes).digest("hex") !== mapping.sourceHash) return [];
+    }
+    if (exactOwnerRegularFile(root, "Cargo.toml") !== "file" || exactOwnerRegularFile(root, "package.json") !== "file") return [];
+    const cargo = readFileSync(join(root, "Cargo.toml"), "utf8"), node = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+    if (!(nestedCargoField(cargo, "workspace", "members") as unknown[] | undefined)?.includes(row.sourceRoot) || !Array.isArray(node.workspaces) || !node.workspaces.includes(row.sourceRoot)) return [];
+    return contract.outputRoots.map((output) => output.path);
+  } catch { return []; }
+}
+
+function nestedCargoGeneratedPrestate(repoRoot: string, path: string, generatorId: string, taxonomy: Taxonomy): boolean {
+  if (!["jco-package-adapter", "external-cargo-locks", "wgpu-frame-worker"].includes(generatorId)) return false;
+  try {
+    if (generatorId === "wgpu-frame-worker") return semanticPackageSourceOutputPhase(repoRoot, generatorId, taxonomy).includes(path);
     if (generatorId === "jco-package-adapter") return semanticPackageAdapterPreview(repoRoot, "jcoprobe-guest", taxonomy).some((adapter) => adapter.path === path);
     const row = semanticPackageProjectionCatalog(repoRoot, taxonomy)?.packages.find((entry) => entry.id === "jcoprobe-guest");
     const mapping = row?.mappings.find((entry) => entry.destinationPath === path && basename(entry.sourcePath) === "Cargo.lock");
@@ -3984,6 +4127,7 @@ export interface RustModuleGraphFact {
   readonly visibility: RustStructuralVisibility;
   readonly inline: boolean;
   readonly pathTarget: string | null;
+  readonly conditional?: true;
 }
 
 export interface RustModuleUseFact {
@@ -3991,6 +4135,7 @@ export interface RustModuleUseFact {
   readonly specifier: string;
   readonly relation: "import" | "reexport";
   readonly visibility: RustStructuralVisibility;
+  readonly conditional?: true;
 }
 
 export interface RustEnumVariantFact {
@@ -3998,12 +4143,14 @@ export interface RustEnumVariantFact {
   readonly fieldStyle: RustStructuralFieldStyle;
   readonly fieldTypes: readonly string[];
   readonly wrappedTupleLeafType: string | null;
+  readonly conditional?: true;
 }
 
 export interface RustEnumFact {
   readonly name: string;
   readonly visibility: RustStructuralVisibility;
   readonly variants: readonly RustEnumVariantFact[];
+  readonly conditional?: true;
 }
 
 export interface RustPayloadFieldFact {
@@ -4185,6 +4332,16 @@ function rustTokens(source: string): RustToken[] {
       tokens.push({ kind: "string", text: source.slice(start, index), start, end: index });
       continue;
     }
+    if (source.startsWith("r#", index) && source[index + 2] && rustIdentifierPart(source[index + 2]!) && !/[0-9]/u.test(source[index + 2]!)) {
+      index += 2;
+      while (index < source.length) {
+        const next = String.fromCodePoint(source.codePointAt(index)!);
+        if (!rustIdentifierPart(next)) break;
+        index += next.length;
+      }
+      tokens.push({ kind: "identifier", text: source.slice(start, index), start, end: index });
+      continue;
+    }
     if (rustIdentifierPart(character) && !/[0-9]/u.test(character)) {
       index += character.length;
       while (index < source.length) {
@@ -4253,6 +4410,224 @@ function rustTokenSegments(tokens: readonly RustToken[], pairs: ReadonlyMap<numb
   }
   if (segmentStart < end) segments.push([segmentStart, end]);
   return segments;
+}
+
+/** 🗨️ Exact unescaped message argument owned by a standard Rust assertion macro. */
+export interface RustAssertionMessageSpan {
+  readonly macroName: string;
+  readonly start: number;
+  readonly end: number;
+  readonly value: string;
+}
+
+/** 🧭️ Resolves assertion messages through Rust tokens and balanced macro arguments, never textual lookalikes. */
+export function inspectRustAssertionMessageSpans(source: string): readonly RustAssertionMessageSpan[] {
+  if (!/\b(?:debug_)?assert(?:_eq|_ne)?\s*!/u.test(source)) return [];
+  const tokens = rustTokens(source), pairs = rustTokenPairs(tokens), rows: RustAssertionMessageSpan[] = [];
+  const argumentsByMacro: Readonly<Record<string, number>> = { assert: 1, assert_eq: 2, assert_ne: 2, debug_assert: 1, debug_assert_eq: 2, debug_assert_ne: 2 };
+  if (tokens.some((token, index) => /^[()[\]{}]$/u.test(token.text) && !pairs.has(index))) return rows;
+  for (let index = 0; index < tokens.length; index++) {
+    const macroName = tokens[index]!.text, argumentIndex = argumentsByMacro[macroName];
+    if (argumentIndex === undefined || tokens[index + 1]?.text !== "!" || tokens[index + 2]?.text !== "(") continue;
+    const close = pairs.get(index + 2);
+    if (close === undefined) continue;
+    const argument = rustTokenSegments(tokens, pairs, index + 3, close, ",")[argumentIndex];
+    if (!argument || argument[1] !== argument[0] + 1) continue;
+    const token = tokens[argument[0]]!;
+    if (token.kind !== "string" || !token.text.startsWith('"') || !token.text.endsWith('"') || token.text.includes("\\")) continue;
+    rows.push({ macroName, start: token.start + 1, end: token.end - 1, value: token.text.slice(1, -1) });
+  }
+  return rows;
+}
+
+/** 🧭️ One path component and the immutable manifest-relative components preceding it. */
+export interface RustManifestPathReference {
+  readonly start: number;
+  readonly end: number;
+  readonly value: string;
+  readonly base: readonly string[];
+}
+
+/** 🔗️ Proves local Path.join literals and single-use literal-array loop arguments from Rust syntax. */
+export function inspectRustManifestPathReferences(source: string): readonly RustManifestPathReference[] {
+  if (!source.includes("CARGO_MANIFEST_DIR") || !/\.\s*join\s*\(/u.test(source)) return [];
+  const tokens = rustTokens(source), pairs = rustTokenPairs(tokens);
+  if (tokens.some((token, index) => /^[()[\]{}]$/u.test(token.text) && !pairs.has(index))) return [];
+  if (tokens.some((token, index) => token.text === "std" && ["mod", "as", "let"].includes(tokens[index - 1]?.text ?? ""))) return [];
+  type Loop = { readonly values: readonly RustToken[]; readonly uses: Set<number>; valid: boolean };
+  type Binding = { readonly kind: "path"; readonly base: readonly string[] } | { readonly kind: "loop"; readonly loop: Loop };
+  type Candidate = RustManifestPathReference & { readonly loop?: Loop };
+  const rows: Candidate[] = [];
+  const literal = (token: RustToken | undefined): token is RustToken & { readonly kind: "string" } => token?.kind === "string" && token.text.startsWith('"') && token.text.endsWith('"') && !token.text.includes("\\");
+  const macros = new Set(["assert", "assert_eq", "assert_ne", "debug_assert", "debug_assert_eq", "debug_assert_ne"]);
+  const path = (start: number, end: number, bindings: ReadonlyMap<string, Binding>, emit: boolean): { readonly end: number; readonly base: readonly string[] | null } | null => {
+    let cursor = start, base: readonly string[] | null = null;
+    const binding = bindings.get(tokens[cursor]?.text ?? "");
+    if (binding?.kind === "path") { base = binding.base; cursor++; }
+    else if (tokens[cursor]?.text === "(") {
+      const close = pairs.get(cursor), nested = close === undefined ? null : path(cursor + 1, close, bindings, emit);
+      if (!nested || nested.end !== close || nested.base === null) return null;
+      base = nested.base; cursor = close! + 1;
+    } else {
+      if (tokens[cursor]?.text === "::") cursor++;
+      const prefix = ["std", "::", "path", "::", "Path", "::", "new", "("];
+      if (!prefix.every((text, offset) => tokens[cursor + offset]?.text === text)) return null;
+      const open = cursor + prefix.length - 1, close = pairs.get(open), environment = ["env", "!", "(", '"CARGO_MANIFEST_DIR"', ")"];
+      if (close !== open + environment.length + 1 || !environment.every((text, offset) => tokens[open + offset + 1]?.text === text)) return null;
+      base = []; cursor = close + 1;
+    }
+    while (cursor + 2 < end && tokens[cursor]?.text === "." && tokens[cursor + 1]?.text === "join" && tokens[cursor + 2]?.text === "(") {
+      const close = pairs.get(cursor + 2);
+      if (close === undefined || close >= end || base === null) break;
+      const arguments_ = rustTokenSegments(tokens, pairs, cursor + 3, close, ",");
+      const argument = arguments_.length === 1 ? arguments_[0] : undefined;
+      if (!argument || argument[1] !== argument[0] + 1) break;
+      const token = tokens[argument[0]]!, loop = token.kind === "identifier" ? bindings.get(token.text) : undefined;
+      if (literal(token)) {
+        const value = token.text.slice(1, -1);
+        if (emit) rows.push({ start: token.start + 1, end: token.end - 1, value, base });
+        base = [...base, value];
+      } else if (loop?.kind === "loop") {
+        if (emit) {
+          loop.loop.uses.add(argument[0]);
+          for (const value of loop.loop.values) rows.push({ start: value.start + 1, end: value.end - 1, value: value.text.slice(1, -1), base, loop: loop.loop });
+        }
+        base = null;
+      } else break;
+      cursor = close + 1;
+    }
+    return { end: cursor, base };
+  };
+  const visit = (start: number, end: number, bindings: Map<string, Binding>): void => {
+    for (let index = start; index < end;) {
+      const token = tokens[index]!;
+      if (tokens[index + 1]?.text === "!" && ["(", "[", "{"].includes(tokens[index + 2]?.text ?? "") && !macros.has(token.text)) {
+        index = (pairs.get(index + 2) ?? end - 1) + 1;
+        continue;
+      }
+      if (token.text === "fn") {
+        const open = rustFindTopLevel(tokens, pairs, index + 1, end, new Set(["{", ";"])), close = pairs.get(open);
+        if (open >= 0 && tokens[open]?.text === "{" && close !== undefined) visit(open + 1, close, new Map());
+        index = open < 0 ? end : (close ?? open) + 1;
+        continue;
+      }
+      if (token.text === "|" && [undefined, "=", "(", ",", "move"].includes(tokens[index - 1]?.text)) {
+        const close = tokens.findIndex((candidate, offset) => offset > index && offset < end && candidate.text === "|");
+        if (close < 0) return;
+        const child = new Map(bindings), boundary = rustFindTopLevel(tokens, pairs, close + 1, end, new Set([","]));
+        for (const parameter of tokens.slice(index + 1, close)) if (parameter.kind === "identifier") child.delete(parameter.text);
+        visit(close + 1, boundary < 0 ? end : boundary, child);
+        index = boundary < 0 ? end : boundary + 1;
+        continue;
+      }
+      if (["if", "while"].includes(token.text) && tokens[index + 1]?.text === "let") {
+        const open = rustFindTopLevel(tokens, pairs, index + 2, end, new Set(["{"])), close = pairs.get(open), equal = rustFindTopLevel(tokens, pairs, index + 2, open, new Set(["="]));
+        if (open < 0 || close === undefined || equal < 0) return;
+        const child = new Map(bindings);
+        visit(equal + 1, open, bindings);
+        for (const parameter of tokens.slice(index + 2, equal)) if (parameter.kind === "identifier") child.delete(parameter.text);
+        visit(open + 1, close, child);
+        index = close + 1;
+        continue;
+      }
+      if (token.text === "match") {
+        const open = rustFindTopLevel(tokens, pairs, index + 1, end, new Set(["{"])), close = pairs.get(open);
+        if (open < 0 || close === undefined) return;
+        visit(index + 1, open, bindings);
+        for (const [first, last] of rustTokenSegments(tokens, pairs, open + 1, close, ",")) {
+          const arrow = rustFindTopLevel(tokens, pairs, first, last, new Set(["=>"]));
+          if (arrow < 0) continue;
+          const child = new Map(bindings);
+          for (const parameter of tokens.slice(first, arrow)) if (parameter.kind === "identifier") child.delete(parameter.text);
+          visit(arrow + 1, last, child);
+        }
+        index = close + 1;
+        continue;
+      }
+      if (token.text === "for") {
+        const open = rustFindTopLevel(tokens, pairs, index + 1, end, new Set(["{"])), close = pairs.get(open);
+        if (open < 0 || close === undefined) return;
+        const name = tokens[index + 1], array = index + 3, arrayEnd = pairs.get(array), child = new Map(bindings);
+        if (name?.kind === "identifier") child.delete(name.text);
+        if (name?.kind === "identifier" && tokens[index + 2]?.text === "in" && tokens[array]?.text === "[" && arrayEnd === open - 1) {
+          const elements = rustTokenSegments(tokens, pairs, array + 1, arrayEnd, ",");
+          if (elements.length > 0 && elements.every(([first, last]) => first + 1 === last && literal(tokens[first]))) {
+            const loop: Loop = { values: elements.map(([first]) => tokens[first]!), uses: new Set(), valid: false };
+            child.set(name.text, { kind: "loop", loop });
+            visit(open + 1, close, child);
+            const uses = tokens.slice(open + 1, close).filter((candidate) => candidate.kind === "identifier" && candidate.text === name.text).length;
+            loop.valid = uses === 1 && loop.uses.size === 1;
+            index = close + 1;
+            continue;
+          }
+        }
+        visit(open + 1, close, child);
+        index = close + 1;
+        continue;
+      }
+      if (token.text === "let") {
+        const boundary = rustFindTopLevel(tokens, pairs, index + 1, end, new Set([";"]));
+        if (boundary < 0) return;
+        const equal = rustFindTopLevel(tokens, pairs, index + 1, boundary, new Set(["="])), name = tokens[index + 1]?.text === "mut" ? tokens[index + 2] : tokens[index + 1];
+        if (equal >= 0) visit(equal + 1, boundary, bindings);
+        const value = equal >= 0 ? path(equal + 1, boundary, bindings, false) : null;
+        for (const parameter of tokens.slice(index + 1, equal < 0 ? boundary : equal)) if (parameter.kind === "identifier") bindings.delete(parameter.text);
+        if (name?.kind === "identifier") {
+          bindings.delete(name.text);
+          if (equal === index + 2 && value?.end === boundary && value.base !== null) bindings.set(name.text, { kind: "path", base: value.base });
+        }
+        index = boundary + 1;
+        continue;
+      }
+      if (token.kind === "identifier" && tokens[index + 1]?.text === "=") bindings.delete(token.text);
+      const value = path(index, end, bindings, true);
+      if (value) { index = value.end; continue; }
+      const close = pairs.get(index);
+      if (close !== undefined && close > index) {
+        visit(index + 1, close, token.text === "{" ? new Map(bindings) : bindings);
+        index = close + 1;
+      } else index++;
+    }
+  };
+  visit(0, tokens.length, new Map());
+  const grouped = new Map<number, Candidate[]>();
+  for (const row of rows.filter((row) => row.loop === undefined || row.loop.valid)) grouped.set(row.start, [...(grouped.get(row.start) ?? []), row]);
+  return [...grouped.values()].filter((values) => new Set(values.map((row) => JSON.stringify(row.base))).size === 1).map(([row]) => ({ start: row!.start, end: row!.end, value: row!.value, base: row!.base })).sort((left, right) => left.start - right.start);
+}
+
+/** 🚧️ Identifies literal join arguments without granting any receiver or target ownership. */
+export function inspectRustJoinArgumentSpans(source: string): readonly Pick<RustManifestPathReference, "start" | "end" | "value">[] {
+  if (!/\.\s*join\s*\(/u.test(source)) return [];
+  const tokens = rustTokens(source), pairs = rustTokenPairs(tokens), rows = new Map<number, Pick<RustManifestPathReference, "start" | "end" | "value">>();
+  const macros = new Set(["assert", "assert_eq", "assert_ne", "debug_assert", "debug_assert_eq", "debug_assert_ne", "print", "println", "eprint", "eprintln", "format", "write", "writeln", "panic"]);
+  const literal = (token: RustToken | undefined): token is RustToken & { readonly kind: "string" } => token?.kind === "string" && token.text.startsWith('"') && token.text.endsWith('"');
+  const add = (token: RustToken): void => { rows.set(token.start + 1, { start: token.start + 1, end: token.end - 1, value: token.text.slice(1, -1) }); };
+  const visit = (start: number, end: number, loops: ReadonlyMap<string, readonly RustToken[]>): void => {
+    for (let index = start; index < end; index++) {
+      const token = tokens[index]!;
+      if (tokens[index + 1]?.text === "!" && ["(", "[", "{"].includes(tokens[index + 2]?.text ?? "") && !macros.has(token.text)) { index = pairs.get(index + 2) ?? end; continue; }
+      if (token.text === "for" && tokens[index + 1]?.kind === "identifier" && tokens[index + 2]?.text === "in" && tokens[index + 3]?.text === "[") {
+        const arrayEnd = pairs.get(index + 3), open = arrayEnd === undefined ? undefined : arrayEnd + 1, close = open === undefined ? undefined : pairs.get(open);
+        if (arrayEnd !== undefined && open !== undefined && tokens[open]?.text === "{" && close !== undefined) {
+          const parts = rustTokenSegments(tokens, pairs, index + 4, arrayEnd, ","), child = new Map(loops);
+          child.delete(tokens[index + 1]!.text);
+          if (parts.every(([first, last]) => first + 1 === last && literal(tokens[first]))) child.set(tokens[index + 1]!.text, parts.map(([first]) => tokens[first]!));
+          visit(open + 1, close, child); index = close; continue;
+        }
+      }
+      if (token.text === "." && tokens[index + 1]?.text === "join" && tokens[index + 2]?.text === "(") {
+        const close = pairs.get(index + 2), argument = tokens[index + 3];
+        if (close === index + 4) {
+          if (literal(argument)) add(argument);
+          else if (argument?.kind === "identifier") for (const value of loops.get(argument.text) ?? []) add(value);
+        }
+      }
+      const close = pairs.get(index);
+      if (close !== undefined && close > index) { visit(index + 1, close, loops); index = close; }
+    }
+  };
+  visit(0, tokens.length, new Map());
+  return [...rows.values()].sort((left, right) => left.start - right.start);
 }
 
 /** 🏷️ Reads consecutive outer attributes attached to one Rust item. */
@@ -4509,14 +4884,21 @@ class RustStructureParser {
     this.parseScope(0, this.tokens.length);
   }
 
-  private parseScope(start: number, end: number): void {
-    let index = start;
+  private parseScope(start: number, end: number, inheritedConditional = false): void {
+    let index = start, scopeConditional = inheritedConditional;
+    while (index + 2 < end && this.tokens[index]?.text === "#" && this.tokens[index + 1]?.text === "!" && this.tokens[index + 2]?.text === "[") {
+      const close = this.pairs.get(index + 2);
+      if (close === undefined || close >= end) return;
+      scopeConditional ||= rustMetadataAttributes(this.tokens, this.pairs, { ranges: [[index + 3, close]], next: close + 1 }).conditional;
+      index = close + 1;
+    }
     while (index < end) {
       const attributes = rustAttributes(this.tokens, this.pairs, index, end);
       const visibility = rustVisibility(this.tokens, this.pairs, attributes.next);
       const keyword = this.tokens[visibility.next]?.text;
-      if (keyword === "mod") index = this.parseModule(attributes, visibility, end);
-      else if (keyword === "enum") index = this.parseEnum(visibility, end);
+      const conditional = scopeConditional || rustMetadataAttributes(this.tokens, this.pairs, attributes).conditional;
+      if (keyword === "mod") index = this.parseModule(attributes, visibility, end, conditional);
+      else if (keyword === "enum") index = this.parseEnum(attributes, visibility, end, conditional);
       else if (keyword === "struct") index = this.parseStruct(visibility, end);
       else if (keyword === "impl") index = this.parseImpl(visibility.next, end);
       else if (keyword === "const" && this.tokens[visibility.next + 1]?.text !== "fn") index = this.parseConst(visibility.next, end, null);
@@ -4532,7 +4914,7 @@ class RustStructureParser {
     return close === undefined ? end : close + 1;
   }
 
-  private parseModule(attributes: RustAttributes, visibility: RustVisibility, end: number): number {
+  private parseModule(attributes: RustAttributes, visibility: RustVisibility, end: number, conditional: boolean): number {
     const keyword = visibility.next;
     const name = this.tokens[keyword + 1]?.text ?? "";
     const boundary = rustFindTopLevel(this.tokens, this.pairs, keyword + 2, end, new Set([";", "{"]));
@@ -4542,11 +4924,11 @@ class RustStructureParser {
     if (!inline) return boundary < 0 ? end : boundary + 1;
     const close = this.pairs.get(boundary);
     if (close === undefined) return end;
-    this.parseScope(boundary + 1, close);
+    this.parseScope(boundary + 1, close, conditional);
     return close + 1;
   }
 
-  private parseEnum(visibility: RustVisibility, end: number): number {
+  private parseEnum(attributes: RustAttributes, visibility: RustVisibility, end: number, conditional: boolean): number {
     const keyword = visibility.next;
     const name = this.tokens[keyword + 1]?.text ?? "";
     const open = rustFindTopLevel(this.tokens, this.pairs, keyword + 2, end, new Set(["{"]));
@@ -4559,10 +4941,11 @@ class RustStructureParser {
       const variant = this.tokens[variantStart];
       if (variant?.kind !== "identifier") continue;
       const shape = this.tokens[variantStart + 1]?.text;
+      const variantConditional = conditional || rustMetadataAttributes(this.tokens, this.pairs, attributes).conditional;
       if (shape === "(") {
         const fieldClose = this.pairs.get(variantStart + 1) ?? variantStart + 1;
         const fieldTypes = rustTokenSegments(this.tokens, this.pairs, variantStart + 2, fieldClose, ",").map(([fieldStart, fieldEnd]) => rustTokenText(this.tokens, fieldStart, fieldEnd));
-        variants.push({ name: variant.text, fieldStyle: "tuple", fieldTypes, wrappedTupleLeafType: fieldTypes.length === 1 ? fieldTypes[0]! : null });
+        variants.push({ name: variant.text, fieldStyle: "tuple", fieldTypes, wrappedTupleLeafType: fieldTypes.length === 1 ? fieldTypes[0]! : null, ...(variantConditional ? { conditional: true as const } : {}) });
       } else if (shape === "{") {
         const fieldClose = this.pairs.get(variantStart + 1) ?? variantStart + 1;
         const fieldTypes = rustTokenSegments(this.tokens, this.pairs, variantStart + 2, fieldClose, ",").map(([fieldStart, fieldEnd]) => {
@@ -4571,10 +4954,10 @@ class RustStructureParser {
           const colon = rustFindTopLevel(this.tokens, this.pairs, fieldVisibility.next, fieldEnd, new Set([":"]));
           return colon < 0 ? "" : rustTokenText(this.tokens, colon + 1, fieldEnd);
         }).filter(Boolean);
-        variants.push({ name: variant.text, fieldStyle: "struct", fieldTypes, wrappedTupleLeafType: null });
-      } else variants.push({ name: variant.text, fieldStyle: "unit", fieldTypes: [], wrappedTupleLeafType: null });
+        variants.push({ name: variant.text, fieldStyle: "struct", fieldTypes, wrappedTupleLeafType: null, ...(variantConditional ? { conditional: true as const } : {}) });
+      } else variants.push({ name: variant.text, fieldStyle: "unit", fieldTypes: [], wrappedTupleLeafType: null, ...(variantConditional ? { conditional: true as const } : {}) });
     }
-    this.enums.push({ name, visibility: visibility.value, variants });
+    this.enums.push({ name, visibility: visibility.value, variants, ...(conditional ? { conditional: true as const } : {}) });
     return close + 1;
   }
 
@@ -4717,6 +5100,315 @@ export function inspectRustStructure(source: string): RustStructuralFacts {
   };
 }
 
+//#region 🧬️MutationMetadataFacts
+export interface RustMutationMetadataDeclarationFact { readonly name: string; readonly kind: "struct" | "enum" | "union"; readonly visibility: RustStructuralVisibility; readonly modulePath: readonly string[]; readonly derives: readonly string[]; readonly conditional?: true; readonly mutationLeaf: { readonly state: "absent" | "valid" | "malformed" | "ambiguous" | "conditional"; readonly contracts: readonly string[]; readonly detail: string | null }; }
+export interface RustCrateAliasFact { readonly kind: "extern" | "self" | "use" | "reexport"; readonly source: string; readonly alias: string; readonly modulePath: readonly string[]; readonly conditional: boolean; readonly restricted?: true; }
+export interface RustMutationMetadataFacts { readonly schemaVersion: 1; readonly declarations: readonly RustMutationMetadataDeclarationFact[]; readonly crateAliases: readonly RustCrateAliasFact[]; readonly manualMutationLeafImpls: readonly RustImplFact[]; }
+
+interface RustMetadataAttributeFact { readonly name: string; readonly start: number; readonly end: number; readonly conditional: boolean; }
+
+/** 🧭️ Parses one exact nongeneric Rust path from already-tokenized source. */
+function rustMetadataPath(tokens: readonly RustToken[], start: number, end: number, absolute: boolean): string | null {
+  let index = start, prefix = "";
+  if (tokens[index]?.text === "::") { prefix = "::"; index += 1; }
+  else if (absolute) return null;
+  const parts: string[] = [];
+  while (tokens[index]?.kind === "identifier") {
+    parts.push(tokens[index]!.text);
+    index += 1;
+    if (tokens[index]?.text !== "::") break;
+    index += 1;
+    if (tokens[index]?.kind !== "identifier") return null;
+  }
+  return parts.length > 0 && index === end ? `${prefix}${parts.join("::")}` : null;
+}
+
+/** 🧭️ Reads one attribute name and its optional parenthesized argument range. */
+function rustMetadataAttributeHead(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number): { readonly name: string; readonly arguments: readonly [number, number] | null } | null {
+  const name = rustMetadataPath(tokens, start, end, false);
+  if (name) return { name, arguments: null };
+  let index = start;
+  const parts: string[] = [];
+  while (tokens[index]?.kind === "identifier") {
+    parts.push(tokens[index]!.text);
+    index += 1;
+    if (tokens[index]?.text !== "::") break;
+    index += 1;
+  }
+  if (parts.length === 0 || tokens[index]?.text !== "(") return null;
+  const close = pairs.get(index);
+  if (close === undefined || close !== end - 1) return null;
+  return { name: parts.join("::"), arguments: [index + 1, close] };
+}
+
+/** 🧭️ Flattens direct and `cfg_attr` metadata while retaining conditional evidence. */
+function rustMetadataAttributes(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, attributes: RustAttributes): { readonly items: readonly RustMetadataAttributeFact[]; readonly conditional: boolean } {
+  const items: RustMetadataAttributeFact[] = [];
+  let conditional = false;
+  const add = (start: number, end: number, inheritedConditional: boolean): void => {
+    const head = rustMetadataAttributeHead(tokens, pairs, start, end);
+    if (!head) return;
+    const name = head.name;
+    if (name === "cfg") { conditional = true; return; }
+    if (name === "cfg_attr") {
+      conditional = true;
+      if (!head.arguments) return;
+      const segments = rustTokenSegments(tokens, pairs, head.arguments[0], head.arguments[1], ",");
+      for (const [attributeStart, attributeEnd] of segments.slice(1)) add(attributeStart, attributeEnd, true);
+      return;
+    }
+    items.push({ name, start, end, conditional: inheritedConditional });
+  };
+  for (const [start, end] of attributes.ranges) add(start, end, false);
+  return { items, conditional };
+}
+
+/** 🧭️ Extracts exact derive paths only from a complete `derive(...)` metadata item. */
+function rustMetadataDerives(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, attributes: readonly RustMetadataAttributeFact[]): readonly string[] {
+  const derives: string[] = [];
+  for (const attribute of attributes.filter((item) => item.name === "derive")) {
+    const head = rustMetadataAttributeHead(tokens, pairs, attribute.start, attribute.end);
+    if (!head?.arguments) continue;
+    const paths = rustTokenSegments(tokens, pairs, head.arguments[0], head.arguments[1], ",").map(([start, end]) => rustMetadataPath(tokens, start, end, false));
+    if (paths.length > 0 && paths.every((path): path is string => path !== null)) derives.push(...paths);
+  }
+  return derives;
+}
+
+/** 🧭️ Produces fail-closed `mutation_leaf` evidence from exact attribute tokens. */
+function rustMutationLeafEvidence(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, attributes: readonly RustMetadataAttributeFact[], inheritedConditional: boolean): RustMutationMetadataDeclarationFact["mutationLeaf"] {
+  const metadata = attributes.filter((item) => item.name === "mutation_leaf");
+  if (metadata.length === 0) return { state: "absent", contracts: [], detail: null };
+  const contracts: string[] = [];
+  let malformed = false;
+  for (const attribute of metadata) {
+    const head = rustMetadataAttributeHead(tokens, pairs, attribute.start, attribute.end);
+    if (!head?.arguments) { malformed = true; continue; }
+    const entries = rustTokenSegments(tokens, pairs, head.arguments[0], head.arguments[1], ",");
+    let contractCount = 0;
+    for (const [start, end] of entries) {
+      const equals = rustFindTopLevel(tokens, pairs, start, end, new Set(["="]));
+      if (tokens[start]?.text !== "contract" || equals !== start + 1) { malformed = true; continue; }
+      contractCount += 1;
+      const contract = rustMetadataPath(tokens, equals + 1, end, true);
+      if (contract === null || contract.split("::").some((segment) => ["crate", "self", "super"].includes(segment))) malformed = true;
+      else contracts.push(contract);
+    }
+    if (contractCount !== 1 || entries.length !== 1) malformed = true;
+  }
+  const conditional = inheritedConditional || metadata.some((item) => item.conditional);
+  if (metadata.length > 1 || contracts.length > 1) return { state: "ambiguous", contracts, detail: "duplicate or conflicting mutation_leaf attributes" };
+  if (conditional) return { state: "conditional", contracts, detail: "conditional mutation_leaf metadata" };
+  if (malformed || contracts.length !== 1) return { state: "malformed", contracts, detail: "invalid mutation_leaf syntax" };
+  return { state: "valid", contracts, detail: null };
+}
+
+/** 🧭️ Expands one tokenized Rust use tree into exact imported aliases. */
+function rustUseAliases(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number): readonly { readonly source: string; readonly alias: string }[] {
+  const aliases: { source: string; alias: string }[] = [];
+  const parse = (segmentStart: number, segmentEnd: number, prefix: readonly string[], absolute: boolean): void => {
+    let index = segmentStart;
+    if (tokens[index]?.text === "{") {
+      const close = pairs.get(index);
+      if (close === undefined || close !== segmentEnd - 1) return;
+      for (const [childStart, childEnd] of rustTokenSegments(tokens, pairs, index + 1, close, ",")) parse(childStart, childEnd, prefix, absolute);
+      return;
+    }
+    if (tokens[index]?.text === "::") { if (prefix.length > 0) return; absolute = true; index += 1; }
+    const parts: string[] = [];
+    while (tokens[index]?.kind === "identifier") {
+      parts.push(tokens[index]!.text);
+      index += 1;
+      if (tokens[index]?.text !== "::") break;
+      index += 1;
+      if (tokens[index]?.text === "{") {
+        const close = pairs.get(index);
+        if (close === undefined || close !== segmentEnd - 1) return;
+        for (const [childStart, childEnd] of rustTokenSegments(tokens, pairs, index + 1, close, ",")) parse(childStart, childEnd, [...prefix, ...parts], absolute);
+        return;
+      }
+      if (tokens[index]?.text === "*" && index + 1 === segmentEnd && parts.length > 0) {
+        const source = `${absolute ? "::" : ""}${[...prefix, ...parts].join("::")}`;
+        aliases.push({ source, alias: "*" });
+        return;
+      }
+      if (tokens[index]?.kind !== "identifier") return;
+    }
+    if (parts.length === 0) return;
+    let alias: string;
+    if (tokens[index]?.text === "as" && tokens[index + 1]?.kind === "identifier" && index + 2 === segmentEnd) alias = tokens[index + 1]!.text;
+    else if (index === segmentEnd) alias = parts.at(-1) === "self" ? prefix.at(-1) ?? "self" : parts.at(-1)!;
+    else return;
+    const sourceParts = parts.at(-1) === "self" ? prefix : [...prefix, ...parts];
+    const source = `${absolute ? "::" : ""}${sourceParts.join("::")}`;
+    if (sourceParts.length > 0 && alias !== "_" && !["::crate", "::self", "::super"].some((root) => source === root || source.startsWith(`${root}::`))) aliases.push({ source, alias });
+  };
+  parse(start, end, [], false);
+  return aliases;
+}
+
+/** 🧬️ Returns token-derived declaration and alias evidence; it deliberately does not resolve crates. */
+export function inspectRustMutationMetadataFacts(source: string): RustMutationMetadataFacts {
+  const tokens = rustTokens(source), pairs = rustTokenPairs(tokens), declarations: RustMutationMetadataDeclarationFact[] = [], crateAliases: RustCrateAliasFact[] = [];
+  const scope = (start: number, end: number, modulePath: readonly string[], inheritedConditional: boolean): void => {
+    let index = start, scopeConditional = inheritedConditional;
+    while (index + 2 < end && tokens[index]?.text === "#" && tokens[index + 1]?.text === "!" && tokens[index + 2]?.text === "[") {
+      const close = pairs.get(index + 2);
+      if (close === undefined || close >= end) return;
+      scopeConditional ||= rustMetadataAttributes(tokens, pairs, { ranges: [[index + 3, close]], next: close + 1 }).conditional;
+      index = close + 1;
+    }
+    for (; index < end;) {
+      const rawAttributes = rustAttributes(tokens, pairs, index, end), metadataAttributes = rustMetadataAttributes(tokens, pairs, rawAttributes), visibility = rustVisibility(tokens, pairs, rawAttributes.next), keyword = tokens[visibility.next]?.text, conditional = scopeConditional || metadataAttributes.conditional;
+      if (keyword === "mod" && tokens[visibility.next + 1]?.kind === "identifier") {
+        const boundary = rustFindTopLevel(tokens, pairs, visibility.next + 2, end, new Set([";", "{"]));
+        if (boundary < 0) return;
+        if (tokens[boundary]?.text === "{") {
+          const close = pairs.get(boundary);
+          if (close !== undefined) scope(boundary + 1, close, [...modulePath, tokens[visibility.next + 1]!.text], conditional);
+          index = (close ?? boundary) + 1;
+          continue;
+        }
+        index = boundary + 1;
+        continue;
+      }
+      if (keyword === "extern" && tokens[visibility.next + 1]?.text === "crate") {
+        const boundary = rustFindTopLevel(tokens, pairs, visibility.next + 2, end, new Set([";"]));
+        const sourceToken = tokens[visibility.next + 2], aliasToken = tokens[visibility.next + 3]?.text === "as" ? tokens[visibility.next + 4] : sourceToken;
+        if (boundary >= 0 && sourceToken?.kind === "identifier" && aliasToken?.kind === "identifier" && (aliasToken === sourceToken ? visibility.next + 3 === boundary : visibility.next + 5 === boundary)) crateAliases.push({ kind: sourceToken.text === "self" ? "self" : "extern", source: sourceToken.text, alias: aliasToken.text, modulePath, conditional, ...(visibility.value === "pub" ? {} : { restricted: true as const }) });
+        index = boundary < 0 ? end : boundary + 1;
+        continue;
+      }
+      if (keyword === "use") {
+        const boundary = rustFindTopLevel(tokens, pairs, visibility.next + 1, end, new Set([";"]));
+        if (boundary < 0) return;
+        for (const { source: aliasSource, alias } of rustUseAliases(tokens, pairs, visibility.next + 1, boundary)) crateAliases.push({ kind: visibility.value === "private" ? "use" : "reexport", source: aliasSource, alias, modulePath, conditional, ...(visibility.value === "pub" ? {} : { restricted: true as const }) });
+        index = boundary + 1;
+        continue;
+      }
+      if (["struct", "enum", "union"].includes(keyword ?? "") && tokens[visibility.next + 1]?.kind === "identifier") declarations.push({ name: tokens[visibility.next + 1]!.text, kind: keyword as "struct" | "enum" | "union", visibility: visibility.value, modulePath, derives: rustMetadataDerives(tokens, pairs, metadataAttributes.items), ...(conditional ? { conditional: true as const } : {}), mutationLeaf: rustMutationLeafEvidence(tokens, pairs, metadataAttributes.items, conditional) });
+      const boundary = rustFindTopLevel(tokens, pairs, rawAttributes.next, end, new Set([";", "{"]));
+      index = boundary < 0 ? end : tokens[boundary]?.text === "{" ? (pairs.get(boundary) ?? boundary) + 1 : boundary + 1;
+    }
+  };
+  scope(0, tokens.length, [], false);
+  const structural = inspectRustStructure(source);
+  return { schemaVersion: 1, declarations, crateAliases, manualMutationLeafImpls: structural.impls.filter((item) => item.traitPath?.split("::").at(-1) === "MutationLeaf") };
+}
+//#endregion 🧬️MutationMetadataFacts
+
+/** 📦️ Cargo entry-point facts shared by module consumers and physical path authority. */
+export interface RustCargoManifestFacts {
+  readonly crateName: string | null;
+  readonly libPath: string | null;
+  readonly dependencies: readonly string[];
+  readonly valid: boolean;
+}
+
+/** 📋️ Reads the exact package/lib tables, rejecting ambiguous ownership declarations. */
+export function inspectRustCargoManifest(source: string, strict = false): RustCargoManifestFacts {
+  if (strict) {
+    try {
+      const parsed = cargoProviderTomlParser.parse(source) as { package?: { name?: unknown }; lib?: { name?: unknown; path?: unknown }; dependencies?: Record<string, unknown> };
+      const packageName = typeof parsed.package?.name === "string" && /^[A-Za-z0-9_-]+$/u.test(parsed.package.name) ? parsed.package.name : null;
+      const libName = parsed.lib?.name === undefined ? null : typeof parsed.lib.name === "string" && /^[A-Za-z0-9_-]+$/u.test(parsed.lib.name) ? parsed.lib.name : undefined;
+      const libPath = parsed.lib?.path === undefined ? null : typeof parsed.lib.path === "string" ? parsed.lib.path : undefined;
+      const valid = packageName !== null && libName !== undefined && libPath !== undefined && (libPath === null || !posix.isAbsolute(libPath) && !/^[A-Za-z]:/u.test(libPath) && !libPath.includes("\\"));
+      return { crateName: libName ?? packageName, libPath: libPath ?? null, dependencies: Object.keys(parsed.dependencies ?? {}).map((name) => name.replaceAll("-", "_")).sort(), valid };
+    } catch { return { crateName: null, libPath: null, dependencies: [], valid: false }; }
+  }
+  let valid = true;
+  const section = (name: string): string | null => {
+    const matches = [...source.matchAll(new RegExp(`^\\s*\\[${name}\\]\\s*$`, "gmu"))];
+    if (matches.length > 1) valid = false;
+    const start = matches[0];
+    if (!start || start.index === undefined) return null;
+    const remainder = source.slice(start.index + start[0].length), end = /^\s*\[[^\]]+\]\s*$/mu.exec(remainder);
+    return end?.index === undefined ? remainder : remainder.slice(0, end.index);
+  };
+  const value = (body: string | null, key: string, pattern: string): string | null => {
+    if (body === null) return null;
+    const candidates = [...body.matchAll(new RegExp(`^\\s*${key}\\s*=`, "gmu"))], values = [...body.matchAll(new RegExp(`^\\s*${key}\\s*=\\s*"(${pattern})"\\s*$`, "gmu"))];
+    if (candidates.length > 1 || candidates.length !== values.length) valid = false;
+    return values[0]?.[1] ?? null;
+  };
+  const packageSection = section("package"), libSection = section("lib"), dependencySection = section("dependencies");
+  const packageName = value(packageSection, "name", "[A-Za-z0-9_-]+"), libName = value(libSection, "name", "[A-Za-z0-9_-]+"), libPath = value(libSection, "path", "[^\"\\\\]+"), crateName = libName ?? packageName;
+  if (!packageName || libPath !== null && (posix.isAbsolute(libPath) || /^[A-Za-z]:/u.test(libPath))) valid = false;
+  const dependencies = [...(dependencySection ?? "").matchAll(/^\s*([A-Za-z0-9_-]+)\s*=/gmu)].map((match) => match[1]!.replaceAll("-", "_")).sort();
+  return { crateName, libPath, dependencies, valid };
+}
+
+/** 🧬️ One proven lexical module context and its Cargo ownership, if declared. */
+export interface RustModuleContext {
+  readonly crateRoot: string;
+  readonly manifestPath: string | null;
+  readonly modulePath: readonly string[];
+  readonly sourceScope: readonly string[];
+  readonly moduleBase: string;
+  readonly sourceChain: readonly string[];
+}
+
+/** 🕸️ Mounted Rust sources and dependency names, with explicit manifest provenance. */
+export interface RustModuleGraph {
+  readonly targets: ReadonlyMap<string, string>;
+  readonly contexts: ReadonlyMap<string, readonly RustModuleContext[]>;
+  readonly namedCrates: ReadonlyMap<string, readonly string[]>;
+  readonly dependencies: ReadonlyMap<string, readonly string[]>;
+  readonly invalidManifests: ReadonlySet<string>;
+}
+
+/** 🦀️ Builds only file-membership-proven module edges; conventional roots never confer manifest authority. */
+export function inspectRustModuleGraph(files: readonly string[], readSource: (path: string) => string | undefined, options: Readonly<{ conventionalRoots?: boolean; strictManifests?: boolean; checkCancellation?: () => void }> = {}): RustModuleGraph {
+  const compare = (left: string, right: string): number => Buffer.from(left).compare(Buffer.from(right));
+  const sourceFiles = new Set(files.filter((path) => path.endsWith(".rs"))), factsBySource = new Map<string, ReturnType<typeof inspectRustModuleGraphFacts>>();
+  const targets = new Map<string, string>(), contexts = new Map<string, RustModuleContext[]>(), namedCrates = new Map<string, string[]>(), dependencies = new Map<string, readonly string[]>(), invalidManifests = new Set<string>();
+  const manifestRoots = files.filter((path) => path === "Cargo.toml" || path.endsWith("/Cargo.toml")).sort(compare).flatMap((manifest) => {
+    options.checkCancellation?.();
+    const facts = inspectRustCargoManifest(readSource(manifest) ?? "", options.strictManifests === true);
+    if (!facts.valid) invalidManifests.add(manifest);
+    if (options.strictManifests && !facts.valid) return [];
+    const entry = posix.normalize(posix.join(posix.dirname(manifest), facts.libPath ?? "src/lib.rs"));
+    return sourceFiles.has(entry) ? [{ path: entry, manifestPath: manifest, crateName: facts.crateName, dependencies: facts.dependencies }] : [];
+  });
+  const conventionalRoots = options.conventionalRoots ? [...sourceFiles].filter((path) => /(?:^|\/)(?:lib|main)\.rs$/u.test(path) && !manifestRoots.some((root) => root.path === path)).map((path) => ({ path, manifestPath: null, crateName: null, dependencies: [] as string[] })) : [];
+  const addContext = (path: string, context: RustModuleContext): boolean => {
+    const existing = contexts.get(path) ?? [];
+    if (existing.some((value) => value.crateRoot === context.crateRoot && value.manifestPath === context.manifestPath && value.modulePath.join("::") === context.modulePath.join("::") && value.sourceScope.join("::") === context.sourceScope.join("::") && value.moduleBase === context.moduleBase)) return false;
+    contexts.set(path, [...existing, context]);
+    return true;
+  };
+  for (const root of [...manifestRoots, ...conventionalRoots].sort((left, right) => compare(left.path, right.path))) {
+    const crateRoot = root.path;
+    if (root.crateName) namedCrates.set(root.crateName.replaceAll("-", "_"), [...(namedCrates.get(root.crateName.replaceAll("-", "_")) ?? []), crateRoot]);
+    dependencies.set(crateRoot, root.dependencies);
+    const pending: { readonly sourcePath: string; readonly context: RustModuleContext }[] = [{ sourcePath: crateRoot, context: { crateRoot, manifestPath: root.manifestPath, modulePath: [], sourceScope: [], moduleBase: posix.dirname(crateRoot), sourceChain: [crateRoot] } }];
+    addContext(crateRoot, pending[0]!.context);
+    for (let index = 0; index < pending.length; index++) {
+      options.checkCancellation?.();
+      const { sourcePath, context } = pending[index]!;
+      if (!factsBySource.has(sourcePath)) factsBySource.set(sourcePath, inspectRustModuleGraphFacts(readSource(sourcePath) ?? ""));
+      for (const module of factsBySource.get(sourcePath)!.modules.filter((fact) => fact.modulePath.length === context.sourceScope.length + 1 && fact.modulePath.slice(0, -1).join("::") === context.sourceScope.join("::"))) {
+        if (options.strictManifests && module.pathTarget !== null && (posix.isAbsolute(module.pathTarget) || /^[A-Za-z]:/u.test(module.pathTarget) || module.pathTarget.includes("\\"))) { if (root.manifestPath) invalidManifests.add(root.manifestPath); continue; }
+        const base = module.pathTarget !== null && context.sourceScope.length === 0 ? posix.dirname(sourcePath) : context.moduleBase;
+        const candidates = module.inline ? [sourcePath] : module.pathTarget === null ? [posix.join(base, `${module.name}.rs`), posix.join(base, module.name, "mod.rs")] : [posix.normalize(posix.join(base, module.pathTarget))];
+        const matching = candidates.filter((candidate) => !candidate.startsWith("../") && sourceFiles.has(candidate)), target = matching.length === 1 ? matching[0] : undefined;
+        if (!target) continue;
+        if (!module.inline && context.sourceChain.includes(target)) { if (root.manifestPath) invalidManifests.add(root.manifestPath); continue; }
+        const moduleBase = module.inline ? posix.normalize(posix.join(context.moduleBase, module.pathTarget ?? module.name)) : module.pathTarget === null && target.endsWith(`/${module.name}.rs`) ? posix.join(posix.dirname(target), module.name) : posix.dirname(target);
+        const child: RustModuleContext = { crateRoot, manifestPath: root.manifestPath, modulePath: [...context.modulePath, module.name], sourceScope: module.inline ? module.modulePath : [], moduleBase, sourceChain: module.inline ? context.sourceChain : [...context.sourceChain, target] };
+        const key = `${crateRoot}\0${child.modulePath.join("::")}`, prior = targets.get(key);
+        if (prior && prior !== target) continue;
+        targets.set(key, target);
+        if (addContext(target, child)) pending.push({ sourcePath: target, context: child });
+      }
+    }
+  }
+  for (const [name, roots] of namedCrates) namedCrates.set(name, roots.sort(compare));
+  if (options.strictManifests) for (const [path, rows] of contexts) contexts.set(path, rows.filter((row) => row.manifestPath !== null && !invalidManifests.has(row.manifestPath)));
+  return { targets, contexts, namedCrates, dependencies, invalidManifests };
+}
+
 /** 🕸️ Extracts mounted modules and use items with lexical Rust scope, excluding decoys. */
 export function inspectRustModuleGraphFacts(source: string): { readonly modules: readonly RustModuleGraphFact[]; readonly uses: readonly RustModuleUseFact[] } {
   const tokens = rustTokens(source);
@@ -4729,15 +5421,22 @@ export function inspectRustModuleGraphFacts(source: string): { readonly modules:
     if (tokens[boundary]!.text === ";") return boundary + 1;
     return (pairs.get(boundary) ?? end - 1) + 1;
   };
-  const parseScope = (start: number, end: number, modulePath: readonly string[]): void => {
-    for (let index = start; index < end;) {
-      const attributes = rustAttributes(tokens, pairs, index, end);
+  const parseScope = (start: number, end: number, modulePath: readonly string[], inheritedConditional = false): void => {
+    let index = start, scopeConditional = inheritedConditional;
+    while (index + 2 < end && tokens[index]?.text === "#" && tokens[index + 1]?.text === "!" && tokens[index + 2]?.text === "[") {
+      const close = pairs.get(index + 2);
+      if (close === undefined || close >= end) return;
+      scopeConditional ||= rustMetadataAttributes(tokens, pairs, { ranges: [[index + 3, close]], next: close + 1 }).conditional;
+      index = close + 1;
+    }
+    for (; index < end;) {
+      const attributes = rustAttributes(tokens, pairs, index, end), conditional = scopeConditional || rustMetadataAttributes(tokens, pairs, attributes).conditional;
       const visibility = rustVisibility(tokens, pairs, attributes.next);
       const keyword = tokens[visibility.next]?.text;
       if (keyword === "use") {
         const boundary = rustFindTopLevel(tokens, pairs, visibility.next + 1, end, new Set([";"]));
         if (boundary < 0) return;
-        uses.push({ modulePath, specifier: rustTokenText(tokens, visibility.next + 1, boundary), relation: visibility.value === "private" ? "import" : "reexport", visibility: visibility.value });
+        uses.push({ modulePath, specifier: rustTokenText(tokens, visibility.next + 1, boundary), relation: visibility.value === "private" ? "import" : "reexport", visibility: visibility.value, ...(conditional ? { conditional: true as const } : {}) });
         index = boundary + 1;
         continue;
       }
@@ -4750,14 +5449,14 @@ export function inspectRustModuleGraphFacts(source: string): { readonly modules:
       if (!name || name.kind !== "identifier" || boundary < 0) return;
       const inline = tokens[boundary]!.text === "{";
       const childPath = [...modulePath, name.text];
-      modules.push({ name: name.text, modulePath: childPath, visibility: visibility.value, inline, pathTarget: rustPathAttribute(tokens, attributes) });
+      modules.push({ name: name.text, modulePath: childPath, visibility: visibility.value, inline, pathTarget: rustPathAttribute(tokens, attributes), ...(conditional ? { conditional: true as const } : {}) });
       if (!inline) {
         index = boundary + 1;
         continue;
       }
       const close = pairs.get(boundary);
       if (close === undefined) return;
-      parseScope(boundary + 1, close, childPath);
+      parseScope(boundary + 1, close, childPath, conditional);
       index = close + 1;
     }
   };
@@ -5404,23 +6103,32 @@ export interface RegistryCatalogInputView {
   readText(path: string): string;
 }
 
-/** 🔮️ Read-only post-operation inputs for the exact registry preview owner. */
-export interface RegistryCatalogProjection {
-  readonly contractId: "plugin-registry";
+/** 🔮️ Read-only post-operation inputs for one explicitly registered preview owner. */
+export interface GeneratorInputProjection<ContractId extends "plugin-registry" | "wgpu-frame-worker" = "plugin-registry" | "wgpu-frame-worker"> {
+  readonly contractId: ContractId;
   readonly schemaVersion: 1;
   readonly moves: readonly { readonly sourcePath: string; readonly destinationPath: string; readonly nodeKind: "file" | "symlink" }[];
   readonly edits: readonly { readonly path: string; readonly bytesBase64: string }[];
   readonly removals: readonly string[];
 }
 
+/** 📇️ Registry projection keeps its exact producer identity on the shared input grammar. */
+export type RegistryCatalogProjection = GeneratorInputProjection<"plugin-registry">;
+
 /** 🔐️ Validates bounded stdin data before any projected path can reach the filesystem. */
 export function parseRegistryCatalogProjection(content: string, taxonomy: Taxonomy): RegistryCatalogProjection {
-  const authority = taxonomy.generatorContracts["plugin-registry"]?.inputDiscovery?.previewInput;
-  if (!authority || authority.protocol !== "registry-projected-inputs-v1" || Buffer.byteLength(content) > authority.maxBytes) throw new Error("Registry projected input payload exceeds its declared authority.");
-  const value = JSON.parse(content) as RegistryCatalogProjection;
+  return parseGeneratorInputProjection(content, taxonomy, "plugin-registry");
+}
+
+/** 🛂️ Validates exact producer identity and bounded leaf operations before any filesystem read. */
+export function parseGeneratorInputProjection<ContractId extends GeneratorInputProjection["contractId"]>(content: string, taxonomy: Taxonomy, contractId: ContractId): GeneratorInputProjection<ContractId> {
+  const authority = contractId === "plugin-registry" ? taxonomy.generatorContracts[contractId]?.inputDiscovery?.previewInput : contractId === "wgpu-frame-worker" ? taxonomy.generatorContracts[contractId]?.packageGeneration?.previewInput : undefined;
+  const protocol = contractId === "plugin-registry" ? "registry-projected-inputs-v1" : "package-projected-inputs-v1";
+  if (!authority || authority.protocol !== protocol || Buffer.byteLength(content) > authority.maxBytes) throw new Error("Generator projected input payload exceeds its declared authority.");
+  const value = JSON.parse(content) as GeneratorInputProjection<ContractId>;
   const keys = (row: unknown, expected: readonly string[]): boolean => Boolean(row && typeof row === "object" && !Array.isArray(row) && Object.keys(row).sort().join("\0") === [...expected].sort().join("\0"));
   const path = (value: unknown): value is string => typeof value === "string" && value.length > 0 && value === value.normalize("NFC") && !value.includes("\\") && !value.includes("\0") && !value.startsWith("/") && !/^[A-Za-z]:/u.test(value) && value.split("/").every((part) => part && part !== "." && part !== "..") && !Object.values(taxonomy.pathExclusions).some((entry) => { const prefix = entry.path.replace(/\/+$/u, ""); return value === prefix || value.startsWith(prefix + "/"); });
-  if (!keys(value, ["contractId", "schemaVersion", "moves", "edits", "removals"]) || value.contractId !== "plugin-registry" || value.schemaVersion !== 1 || !Array.isArray(value.moves) || !Array.isArray(value.edits) || !Array.isArray(value.removals) || value.moves.length + value.edits.length + value.removals.length > authority.maxOperations) throw new Error("Registry projected input payload has unsupported shape or operation count.");
+  if (!keys(value, ["contractId", "schemaVersion", "moves", "edits", "removals"]) || value.contractId !== contractId || value.schemaVersion !== 1 || !Array.isArray(value.moves) || !Array.isArray(value.edits) || !Array.isArray(value.removals) || value.moves.length + value.edits.length + value.removals.length > authority.maxOperations) throw new Error("Generator projected input payload has unsupported shape or operation count.");
   const sources = new Set<string>(), destinations = new Set<string>(), edits = new Set<string>(), removals = new Set<string>();
   for (const move of value.moves) {
     if (!keys(move, ["sourcePath", "destinationPath", "nodeKind"]) || !path(move.sourcePath) || !path(move.destinationPath) || move.sourcePath === move.destinationPath || !["file", "symlink"].includes(move.nodeKind) || sources.has(move.sourcePath) || destinations.has(move.destinationPath)) throw new Error("Registry projected move is invalid or duplicated.");
@@ -5439,7 +6147,12 @@ export function parseRegistryCatalogProjection(content: string, taxonomy: Taxono
 
 /** 🌳️ Applies only authorized leaf operations and their required ancestor membership in memory. */
 export function registryCatalogProjectedInputView(repoRoot: string, taxonomy: Taxonomy, projection: RegistryCatalogProjection, base: RegistryCatalogInputView = registryCatalogInputView(repoRoot, taxonomy)): RegistryCatalogInputView {
-  const checked = parseRegistryCatalogProjection(JSON.stringify(projection), taxonomy);
+  return generatorProjectedInputView(repoRoot, taxonomy, parseRegistryCatalogProjection(JSON.stringify(projection), taxonomy), base);
+}
+
+/** 🌲️ Shares no-follow source mapping and projected parent membership across exact preview producers. */
+export function generatorProjectedInputView(repoRoot: string, taxonomy: Taxonomy, projection: GeneratorInputProjection, base: RegistryCatalogInputView = registryCatalogInputView(repoRoot, taxonomy)): RegistryCatalogInputView {
+  const checked = parseGeneratorInputProjection(JSON.stringify(projection), taxonomy, projection.contractId);
   const sources = new Set(checked.moves.map((move) => move.sourcePath));
   const removed = new Set(checked.removals);
   const moves = new Map(checked.moves.map((move) => [move.destinationPath, move]));
@@ -5528,7 +6241,11 @@ export function registryCatalogInputView(repoRoot: string, taxonomy: Taxonomy = 
       const nodeKind = kind(path);
       if (nodeKind === null) return [];
       if (nodeKind !== "directory") throw new Error(`Registry catalog directory is ${nodeKind}: ${path}`);
-      return readdirSync(absolute, { withFileTypes: true }).filter((entry) => !pathIsExcluded(repoRoot, join(absolute, entry.name), taxonomy)).map((entry) => ({ name: entry.name, nodeKind: entry.isSymbolicLink() ? "symlink" as const : entry.isDirectory() ? "directory" as const : "file" as const }));
+      return readdirSync(absolute).filter((name) => !pathIsExcluded(repoRoot, join(absolute, name), taxonomy)).map((name) => {
+        const childPath = relative(repoRoot, join(absolute, name)).replaceAll("\\", "/"), childKind = kind(childPath);
+        if (childKind === null) throw new Error(`Registry catalog enumerated input disappeared: ${childPath}`);
+        return { name, nodeKind: childKind };
+      });
     },
     readText(path) {
       if (kind(path) !== "file") throw new Error(`Registry catalog content input is missing or a symlink: ${path}`);
@@ -5583,12 +6300,15 @@ export interface RegistryCompilerImport {
   readonly kind: string;
 }
 
+export type RegistryCompilerLanguage = "ts" | "tsx" | "js" | "jsx";
+
 /** 🔎️ Validates Bun's runtime compiler capability and returns owned import records. */
-export function scanRegistryCompilerImports(source: string, platform: unknown = Reflect.get(globalThis, "Bun")): readonly RegistryCompilerImport[] {
+export function scanRegistryCompilerImports(source: string, language: RegistryCompilerLanguage, platform: unknown = Reflect.get(globalThis, "Bun")): readonly RegistryCompilerImport[] {
+  if (language !== "ts" && language !== "tsx" && language !== "js" && language !== "jsx") throw new Error("Registry import discovery requires an explicit supported compiler language.");
   if (platform === null || typeof platform !== "object" && typeof platform !== "function") throw new Error("Registry import discovery requires Bun's compiler runtime.");
   const constructor: unknown = Reflect.get(platform, "Transpiler");
   if (typeof constructor !== "function") throw new Error("Registry import discovery requires Bun.Transpiler.");
-  const compiler: unknown = Reflect.construct(constructor, [{ loader: "tsx" }]);
+  const compiler: unknown = Reflect.construct(constructor, [{ loader: language }]);
   if (compiler === null || typeof compiler !== "object") throw new Error("Bun.Transpiler returned an invalid compiler.");
   const scan: unknown = Reflect.get(compiler, "scanImports");
   if (typeof scan !== "function") throw new Error("Bun.Transpiler does not expose scanImports.");
@@ -5602,9 +6322,15 @@ export function scanRegistryCompilerImports(source: string, platform: unknown = 
   });
 }
 
-/** 🔗️ Native compiler import identities, preserving Unicode source specifiers. */
-export function registryStaticImports(source: string): readonly string[] {
-  return [...new Set(scanRegistryCompilerImports(source.replace(/^#![^\n]*(?:\n|$)/u, "\n")).filter((entry) => entry.kind === "import-statement").map((entry) => {
+/** 🔗️ Scans the physical leaf's language without fallback, preserving Unicode source specifiers. */
+export function registryStaticImports(source: string, sourcePath: string): readonly string[] {
+  const extension = extname(sourcePath);
+  const language: RegistryCompilerLanguage | undefined = extension === ".ts" || extension === ".mts" || extension === ".cts" ? "ts" : extension === ".tsx" ? "tsx" : extension === ".js" || extension === ".mjs" || extension === ".cjs" ? "js" : extension === ".jsx" ? "jsx" : undefined;
+  if (!language) throw new Error(`Registry implementation language is not supported: ${sourcePath}`);
+  let imports: readonly RegistryCompilerImport[];
+  try { imports = scanRegistryCompilerImports(source.replace(/^#![^\n]*(?:\n|$)/u, "\n"), language); }
+  catch (error) { throw new Error(`Registry compiler import scan failed for ${sourcePath}: ${error instanceof Error ? error.message : String(error)}`); }
+  return [...new Set(imports.filter((entry) => entry.kind === "import-statement").map((entry) => {
     const decoded = Buffer.from(entry.path, "latin1").toString("utf8");
     return decoded !== entry.path && !decoded.includes("\ufffd") && source.includes(decoded) ? decoded : entry.path;
   }))].sort();
@@ -5630,7 +6356,7 @@ export function registryCatalogInputPaths(repoRoot: string, taxonomy: Taxonomy =
     visited.add(path);
     const source = view.readText(path);
     inputs.add(path);
-    for (const specifier of registryStaticImports(source)) {
+    for (const specifier of registryStaticImports(source, path)) {
       if (specifier.startsWith("node:") || specifier.startsWith("bun:")) continue;
       if (specifier.startsWith(".")) {
         visit(relative(repoRoot, resolve(repoRoot, dirname(path), specifier)).replaceAll("\\", "/"));
@@ -5991,6 +6717,469 @@ export function discoverBurndown(repoRoot: string, taxonomy: Taxonomy = loadTaxo
   return scan(repoRoot, taxonomy).burndown;
 }
 //#endregion 🧭️Discovery
+
+//#region 📦️CargoProviderManifestProjection
+/** 🧾️ Repository-owned TOML boundary for pure Cargo provider manifest projections. */
+export interface CargoProviderTomlParser {
+  parse(source: string): unknown;
+}
+
+/** 🪪️ Raw provider manifest input whose locator was already established by source authority. */
+export interface CargoProviderManifestProjectionInput {
+  readonly locator: string;
+  readonly source: string;
+}
+
+/** 🧷️ One dependency declaration retained as unapproved provider evidence. */
+export interface CargoProviderDependencyProjection {
+  readonly key: string;
+  readonly packageOverride?: string;
+  readonly localPath?: string;
+  readonly workspaceInherited: boolean;
+  readonly targetCondition?: string;
+  readonly source: "version" | "table";
+  readonly version?: string;
+  readonly unsupported: Readonly<Record<string, unknown>>;
+  readonly unapprovedReasons: readonly string[];
+}
+
+/** 📚️ One explicit Cargo library target, never inferred from package or filename identity. */
+export interface CargoProviderLibraryProjection {
+  readonly name?: string;
+  readonly path?: string;
+  readonly crateTypes: readonly string[];
+  readonly procMacro: boolean;
+}
+
+/** 🧩️ Pure manifest facts for a later provider authority resolver. */
+export interface CargoProviderManifestProjection {
+  readonly locator: string;
+  readonly package?: Readonly<{ readonly name: string; readonly version?: string; readonly versionInherited?: true; readonly workspaceLocator?: string }>;
+  readonly library?: CargoProviderLibraryProjection;
+  readonly workspaceDeclared?: true;
+  readonly workspaceDependencies: readonly CargoProviderDependencyProjection[];
+  readonly dependencies: readonly CargoProviderDependencyProjection[];
+  readonly developmentDependencies: readonly CargoProviderDependencyProjection[];
+  readonly buildDependencies: readonly CargoProviderDependencyProjection[];
+}
+
+/** 🧯️ Bun's parser is hidden behind repository-owned syntax input/output types. */
+export const cargoProviderTomlParser: CargoProviderTomlParser = {
+  parse(source: string): unknown {
+    const runtime = (globalThis as { readonly Bun?: unknown }).Bun;
+    const toml = typeof runtime === "object" && runtime !== null ? (runtime as { readonly TOML?: unknown }).TOML : undefined;
+    if (typeof toml !== "object" || toml === null || typeof (toml as { readonly parse?: unknown }).parse !== "function") throw new Error("Cargo provider TOML projection requires Bun.TOML.parse.");
+    return (toml as { readonly parse: (input: string) => unknown }).parse(source);
+  },
+};
+
+function cargoProviderRecord(value: unknown, context: string): Readonly<Record<string, unknown>> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error(`${context} must be a TOML table.`);
+  return value as Readonly<Record<string, unknown>>;
+}
+
+function cargoProviderString(value: unknown, context: string): string {
+  if (typeof value !== "string") throw new Error(`${context} must be a string.`);
+  return value;
+}
+
+function cargoProviderBoolean(value: unknown, context: string): boolean {
+  if (typeof value !== "boolean") throw new Error(`${context} must be a boolean.`);
+  return value;
+}
+
+function cargoProviderTomlValue(value: unknown, context: string): unknown {
+  if (value === null || typeof value === "string" || typeof value === "boolean") return value;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (Array.isArray(value)) return value.map((entry, index) => cargoProviderTomlValue(entry, `${context}[${index}]`));
+  if (typeof value === "object") {
+    if (Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null) throw new Error(`${context} has an unsupported TOML object.`);
+    const record = cargoProviderRecord(value, context);
+    return Object.fromEntries(Object.entries(record).map(([key, entry]) => [key, cargoProviderTomlValue(entry, `${context}.${key}`)]));
+  }
+  throw new Error(`${context} has an unsupported TOML value.`);
+}
+
+function cargoProviderMultilineString(source: string): boolean {
+  let quote: "basic" | "literal" | undefined;
+  for (let index = 0; index < source.length; index++) {
+    const character = source[index]!;
+    if (quote === "basic") {
+      if (character === "\\") { index++; continue; }
+      if (character === "\"") quote = undefined;
+      continue;
+    }
+    if (quote === "literal") {
+      if (character === "'") quote = undefined;
+      continue;
+    }
+    if (character === "#") {
+      while (index < source.length && source[index] !== "\n") index++;
+      continue;
+    }
+    if (character === "\"" && source.slice(index, index + 3) === "\"\"\"") return true;
+    if (character === "'" && source.slice(index, index + 3) === "'''") return true;
+    if (character === "\"") quote = "basic";
+    if (character === "'") quote = "literal";
+  }
+  return false;
+}
+
+function cargoProviderLocator(locator: string): string {
+  if (typeof locator !== "string" || locator.length === 0 || locator.includes("\\") || /[:\u0000-\u001F\u007F\u0085\u2028\u2029]/u.test(locator)) throw new Error("Provider manifest locator must be a safe repository-relative POSIX path.");
+  const segments = locator.split("/");
+  if (segments.some((segment) => segment.length === 0 || segment === "." || segment === ".." || /^[A-Za-z]:$/u.test(segment) || segment.toLowerCase() === "compose")) throw new Error("Provider manifest locator is unsafe or excluded.");
+  if (segments.at(-1) !== "Cargo.toml") throw new Error("Provider manifest locator must name Cargo.toml.");
+  return locator;
+}
+
+function cargoProviderDependency(key: string, value: unknown, scope: string, targetCondition?: string): CargoProviderDependencyProjection {
+  const context = `${scope}.${key}`;
+  if (typeof value === "string") return { key, workspaceInherited: false, ...(targetCondition === undefined ? {} : { targetCondition }), source: "version", version: value, unsupported: {}, unapprovedReasons: ["version-only"] };
+  const record = cargoProviderRecord(value, context);
+  const packageOverride = record.package === undefined ? undefined : cargoProviderString(record.package, `${context}.package`);
+  const localPath = record.path === undefined ? undefined : cargoProviderString(record.path, `${context}.path`);
+  const workspaceInherited = record.workspace === undefined ? false : cargoProviderBoolean(record.workspace, `${context}.workspace`);
+  const version = record.version === undefined ? undefined : cargoProviderString(record.version, `${context}.version`);
+  for (const field of ["git", "registry", "branch", "tag", "rev"] as const) if (record[field] !== undefined) cargoProviderString(record[field], `${context}.${field}`);
+  if (workspaceInherited && [localPath, version, record.git, record.registry, record.branch, record.tag, record.rev].some((entry) => entry !== undefined)) throw new Error(`${context} mixes workspace inheritance with another source.`);
+  if ([localPath, record.git, record.registry].filter((entry) => entry !== undefined).length > 1) throw new Error(`${context} mixes multiple dependency sources.`);
+  const unsupported = Object.fromEntries(Object.entries(record).filter(([field]) => !["package", "path", "workspace", "version"].includes(field)).map(([field, entry]) => [field, cargoProviderTomlValue(entry, `${context}.${field}`)]));
+  const unapprovedReasons = [
+    ...(workspaceInherited ? ["workspace-inheritance"] : []),
+    ...(record.workspace === false ? ["workspace-false"] : []),
+    ...(localPath === undefined ? ["no-local-path"] : []),
+    ...(version === undefined ? [] : ["version-constraint"]),
+    ...(["git", "registry", "branch", "tag", "rev"].some((field) => record[field] !== undefined) ? ["external-source"] : []),
+    ...(Object.keys(unsupported).length === 0 ? [] : ["unsupported-fields"]),
+  ];
+  return { key, ...(packageOverride === undefined ? {} : { packageOverride }), ...(localPath === undefined ? {} : { localPath }), workspaceInherited, ...(targetCondition === undefined ? {} : { targetCondition }), source: "table", ...(version === undefined ? {} : { version }), unsupported, unapprovedReasons };
+}
+
+function cargoProviderDependencies(value: unknown, scope: string, targetCondition?: string): readonly CargoProviderDependencyProjection[] {
+  if (value === undefined) return [];
+  const record = cargoProviderRecord(value, scope);
+  return Object.entries(record).map(([key, entry]) => cargoProviderDependency(key, entry, scope, targetCondition));
+}
+
+function cargoProviderLibrary(value: unknown): CargoProviderLibraryProjection | undefined {
+  if (value === undefined) return undefined;
+  const record = cargoProviderRecord(value, "lib");
+  const crateTypesValue = record["crate-type"];
+  if (crateTypesValue !== undefined && (!Array.isArray(crateTypesValue) || crateTypesValue.some((entry) => typeof entry !== "string"))) throw new Error("lib.crate-type must be an array of strings.");
+  return {
+    ...(record.name === undefined ? {} : { name: cargoProviderString(record.name, "lib.name") }),
+    ...(record.path === undefined ? {} : { path: cargoProviderString(record.path, "lib.path") }),
+    crateTypes: crateTypesValue === undefined ? [] : [...crateTypesValue],
+    procMacro: record["proc-macro"] === undefined ? false : cargoProviderBoolean(record["proc-macro"], "lib.proc-macro"),
+  };
+}
+
+/** 🧭️ Projects one caller-supplied Cargo manifest without resolving paths, aliases, or graph authority. */
+export function projectCargoProviderManifest(input: CargoProviderManifestProjectionInput, parser: CargoProviderTomlParser = cargoProviderTomlParser): CargoProviderManifestProjection {
+  const locator = cargoProviderLocator(input.locator);
+  if (typeof input.source !== "string") throw new Error("Provider manifest source must be a string.");
+  if (cargoProviderMultilineString(input.source)) throw new Error("Provider manifest multiline strings are unsupported.");
+  let parsed: unknown;
+  try {
+    parsed = parser.parse(input.source);
+  } catch (error) {
+    throw new Error(`Provider manifest TOML is invalid: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  const root = cargoProviderRecord(parsed, "manifest");
+  const packageProjection = root.package === undefined ? undefined : (() => {
+    const table = cargoProviderRecord(root.package, "package");
+    const version = table.version;
+    const versionProjection = version === undefined ? {} : typeof version === "string"
+      ? { version }
+      : (() => {
+          const inheritance = cargoProviderRecord(version, "package.version");
+          if (Object.keys(inheritance).length !== 1 || inheritance.workspace !== true) throw new Error("package.version must be a string or exact workspace inheritance.");
+          return { versionInherited: true as const };
+        })();
+    const workspaceLocator = table.workspace === undefined ? undefined : cargoProviderString(table.workspace, "package.workspace");
+    return { name: cargoProviderString(table.name, "package.name"), ...versionProjection, ...(workspaceLocator === undefined ? {} : { workspaceLocator }) };
+  })();
+  const target = root.target === undefined ? {} : cargoProviderRecord(root.target, "target");
+  const targetTables = Object.entries(target).map(([condition, entry]) => [condition, cargoProviderRecord(entry, `target.${condition}`)] as const);
+  const targetDependencies = targetTables.flatMap(([condition, table]) => cargoProviderDependencies(table.dependencies, `target.${condition}.dependencies`, condition));
+  const targetDevelopmentDependencies = targetTables.flatMap(([condition, table]) => cargoProviderDependencies(table["dev-dependencies"], `target.${condition}.dev-dependencies`, condition));
+  const targetBuildDependencies = targetTables.flatMap(([condition, table]) => cargoProviderDependencies(table["build-dependencies"], `target.${condition}.build-dependencies`, condition));
+  const workspace = root.workspace === undefined ? {} : cargoProviderRecord(root.workspace, "workspace");
+  const library = cargoProviderLibrary(root.lib);
+  return {
+    locator,
+    ...(packageProjection === undefined ? {} : { package: packageProjection }),
+    ...(library === undefined ? {} : { library }),
+    ...(root.workspace === undefined ? {} : { workspaceDeclared: true as const }),
+    workspaceDependencies: cargoProviderDependencies(workspace.dependencies, "workspace.dependencies"),
+    dependencies: [...cargoProviderDependencies(root.dependencies, "dependencies"), ...targetDependencies],
+    developmentDependencies: [...cargoProviderDependencies(root["dev-dependencies"], "dev-dependencies"), ...targetDevelopmentDependencies],
+    buildDependencies: [...cargoProviderDependencies(root["build-dependencies"], "build-dependencies"), ...targetBuildDependencies],
+  };
+}
+
+/** 🔗️ Exact selected dependency input for a local Cargo provider binding proof. */
+export interface CargoProviderBindingInput {
+  readonly workspaceRoot: string;
+  readonly consumerManifestLocator: string;
+  readonly dependencyKey: string;
+}
+
+/** 🧷️ Bounded provider identity evidence for one selected local normal dependency. */
+export interface CargoProviderBinding {
+  readonly consumerManifestLocator: string;
+  readonly workspaceManifestLocator: string;
+  readonly providerManifestLocator: string;
+  readonly librarySourceLocator: string;
+  readonly packageName: string;
+  readonly libraryName: string;
+  readonly procMacro: boolean;
+  readonly dependencyKey: string;
+  readonly workspaceInherited: boolean;
+  readonly pathAuthority: "consumer" | "workspace";
+  readonly externName: string;
+}
+
+function cargoProviderBindingLocator(locator: string, finalName?: string): string {
+  if (typeof locator !== "string" || locator.length === 0 || locator !== locator.normalize("NFC") || locator.includes("\\") || /[:\u0000-\u001F\u007F\u0085\u2028\u2029]/u.test(locator)) throw new Error("Cargo provider binding locator is unsafe.");
+  const segments = locator.split("/");
+  if (segments.some((segment) => !segment || segment === "." || segment === ".." || segment.toLocaleLowerCase("en-US") === "compose") || finalName !== undefined && segments.at(-1) !== finalName) throw new Error("Cargo provider binding locator is excluded or malformed.");
+  return locator;
+}
+
+function cargoProviderBindingWorkspaceRoot(root: string): string {
+  if (typeof root !== "string" || root.length === 0 || root !== root.normalize("NFC") || !isAbsolute(root) || /[\u0000-\u001F\u007F\u0085\u2028\u2029]/u.test(root)) throw new Error("Cargo provider workspace root is unsafe.");
+  const windows = /^[A-Za-z]:[\\/]/u.test(root), posixRoot = root.startsWith("/");
+  if ((!windows && !posixRoot) || root.includes(":") && (!windows || root.indexOf(":") !== 1 || root.lastIndexOf(":") !== 1) || posixRoot && root.includes("\\")) throw new Error("Cargo provider workspace root is unsafe.");
+  const segments = root.split(/[\\/]/u);
+  if (segments.some((segment) => segment === "." || segment === ".." || segment.toLocaleLowerCase("en-US") === "compose")) throw new Error("Cargo provider workspace root is excluded.");
+  const authority = workspaceAuthorityPath(root, "Cargo provider workspace root");
+  noFollowDirectoryAncestry(authority, "Cargo provider workspace root ancestry");
+  return authority;
+}
+
+function cargoProviderBindingRead(root: string, locator: string): string {
+  const safe = cargoProviderBindingLocator(locator);
+  let current = root;
+  for (const [index, segment] of safe.split("/").entries()) {
+    current = join(current, segment);
+    const state = lstatSync(current);
+    if (state.isSymbolicLink() || (index + 1 === safe.split("/").length ? !state.isFile() : !state.isDirectory())) throw new Error("Cargo provider binding source is not a no-follow regular file.");
+  }
+  return readFileSync(current, "utf8");
+}
+
+function cargoProviderBindingDirectory(root: string, segments: readonly string[]): void {
+  const path = join(root, ...segments);
+  const state = lstatSync(path);
+  if (state.isSymbolicLink() || !state.isDirectory()) throw new Error("Cargo provider dependency path is not a no-follow directory.");
+}
+
+function cargoProviderBindingPath(root: string, baseLocator: string, path: string, finalName: string, pathPointsToFile = false): string {
+  if (typeof path !== "string" || path.length === 0 || path !== path.normalize("NFC") || path.includes("\\") || /[:\u0000-\u001F\u007F\u0085\u2028\u2029]/u.test(path) || path.startsWith("/")) throw new Error("Cargo provider dependency path is unsafe.");
+  const stack = baseLocator.split("/").slice(0, -1);
+  const parts = path.split("/");
+  for (const [index, segment] of parts.entries()) {
+    if (!segment || segment === "." || segment.toLocaleLowerCase("en-US") === "compose") throw new Error("Cargo provider dependency path is excluded.");
+    if (segment === "..") { if (stack.length === 0) throw new Error("Cargo provider dependency path escapes the workspace."); stack.pop(); }
+    else {
+      stack.push(segment);
+      if (!pathPointsToFile || index + 1 !== parts.length) cargoProviderBindingDirectory(root, stack);
+    }
+  }
+  return cargoProviderBindingLocator([...(pathPointsToFile ? stack : [...stack, finalName])].join("/"), finalName);
+}
+
+function cargoProviderBindingDependencySettings(dependency: CargoProviderDependencyProjection): boolean {
+  const unsupported = dependency.unsupported;
+  if (unsupported.features !== undefined && (!Array.isArray(unsupported.features) || unsupported.features.some((feature) => typeof feature !== "string"))) return false;
+  if (unsupported["default-features"] !== undefined && typeof unsupported["default-features"] !== "boolean") return false;
+  return Object.keys(unsupported).every((field) => field === "features" || field === "default-features");
+}
+
+function cargoProviderBindingNearestWorkspace(root: string, manifestLocator: string, manifest: CargoProviderManifestProjection): string {
+  if (manifest.workspaceDeclared) return manifestLocator;
+  const directory = manifestLocator.split("/").slice(0, -1);
+  for (; directory.length >= 0; directory.pop()) {
+    const locator = [...directory, "Cargo.toml"].join("/");
+    try {
+      const ancestor = projectCargoProviderManifest({ locator, source: cargoProviderBindingRead(root, locator) });
+      if (ancestor.workspaceDeclared) return locator;
+    } catch (error) {
+      if (!(error instanceof Error) || !/ENOENT/u.test(error.message)) throw error;
+    }
+    if (directory.length === 0) break;
+  }
+  throw new Error("Cargo manifest has no governing workspace on its bounded ancestor chain.");
+}
+
+/** 🧭️ Resolves one selected normal local dependency without following a Cargo graph. */
+export function resolveCargoProviderBinding(input: CargoProviderBindingInput): CargoProviderBinding {
+  const consumerManifestLocator = cargoProviderBindingLocator(input.consumerManifestLocator, "Cargo.toml");
+  if (typeof input.dependencyKey !== "string" || input.dependencyKey.length === 0) throw new Error("Cargo provider dependency key is required.");
+  const root = cargoProviderBindingWorkspaceRoot(input.workspaceRoot);
+  const workspaceManifestLocator = "Cargo.toml", workspace = projectCargoProviderManifest({ locator: workspaceManifestLocator, source: cargoProviderBindingRead(root, workspaceManifestLocator) });
+  if (!workspace.workspaceDeclared) throw new Error("Cargo provider workspace manifest must declare [workspace].");
+  const consumer = projectCargoProviderManifest({ locator: consumerManifestLocator, source: cargoProviderBindingRead(root, consumerManifestLocator) });
+  if (!consumer.package) throw new Error("Cargo consumer manifest requires [package].");
+  if (cargoProviderBindingNearestWorkspace(root, consumerManifestLocator, consumer) !== workspaceManifestLocator) throw new Error("Cargo consumer nearest workspace disagrees with the supplied workspace.");
+  if (consumer.package.workspaceLocator !== undefined && cargoProviderBindingPath(root, consumerManifestLocator, consumer.package.workspaceLocator, "Cargo.toml") !== workspaceManifestLocator) throw new Error("Cargo consumer explicit workspace locator disagrees with the supplied workspace.");
+  const selected = consumer.dependencies.filter((dependency) => dependency.key === input.dependencyKey);
+  if (selected.length !== 1 || selected[0]!.targetCondition !== undefined) throw new Error("Cargo selected dependency must occur exactly once in unconditional normal dependencies.");
+  const consumerDependency = selected[0]!;
+  if (!cargoProviderBindingDependencySettings(consumerDependency) || consumerDependency.unapprovedReasons.includes("workspace-false") || consumerDependency.workspaceInherited && consumerDependency.packageOverride !== undefined) throw new Error("Cargo selected consumer dependency settings are unsupported.");
+  const dependency = consumerDependency.workspaceInherited ? (() => {
+    const inherited = workspace.workspaceDependencies.filter((entry) => entry.key === input.dependencyKey);
+    if (inherited.length !== 1) throw new Error("Cargo workspace dependency inheritance is unresolved or ambiguous.");
+    return inherited[0]!;
+  })() : consumerDependency;
+  if (dependency.localPath === undefined || dependency.version !== undefined || !cargoProviderBindingDependencySettings(dependency) || dependency.unapprovedReasons.includes("workspace-false")) throw new Error("Cargo selected dependency is not a supported local path authority.");
+  const pathAuthority = consumerDependency.workspaceInherited ? "workspace" as const : "consumer" as const;
+  const providerManifestLocator = cargoProviderBindingPath(root, pathAuthority === "workspace" ? workspaceManifestLocator : consumerManifestLocator, dependency.localPath, "Cargo.toml");
+  const provider = projectCargoProviderManifest({ locator: providerManifestLocator, source: cargoProviderBindingRead(root, providerManifestLocator) });
+  if (cargoProviderBindingNearestWorkspace(root, providerManifestLocator, provider) !== workspaceManifestLocator) throw new Error("Cargo provider nearest workspace disagrees with the supplied workspace.");
+  if (provider.package?.workspaceLocator !== undefined && cargoProviderBindingPath(root, providerManifestLocator, provider.package.workspaceLocator, "Cargo.toml") !== workspaceManifestLocator) throw new Error("Cargo provider explicit workspace locator disagrees with the supplied workspace.");
+  const packageName = dependency.packageOverride ?? dependency.key;
+  if (provider.package?.name !== packageName) throw new Error("Cargo selected dependency package identity disagrees with the provider manifest.");
+  if (!provider.library?.name || !/^[A-Za-z_][A-Za-z0-9_]*$/u.test(provider.library.name) || !provider.library.path) throw new Error("Cargo provider requires an explicit valid library name and source path.");
+  const librarySourceLocator = cargoProviderBindingPath(root, providerManifestLocator, provider.library.path, provider.library.path.split("/").at(-1)!, true);
+  cargoProviderBindingRead(root, librarySourceLocator);
+  return { consumerManifestLocator, workspaceManifestLocator, providerManifestLocator, librarySourceLocator, packageName, libraryName: provider.library.name, procMacro: provider.library.procMacro, dependencyKey: dependency.key, workspaceInherited: consumerDependency.workspaceInherited, pathAuthority, externName: dependency.packageOverride === undefined ? provider.library.name : dependency.key.replaceAll("-", "_") };
+}
+//#region 🧬️MutationMetadataSource
+/** 🧬️ One frozen local provider identity required by metadata source proof. */
+export interface MutationMetadataProviderIdentity { readonly role: "lower-contract" | "os-facade" | "metadata-derive"; readonly manifestLocator: string; readonly packageName: string; readonly libraryName: string; readonly procMacro: boolean; }
+/** 🧬️ FND21's already-proven wrapped declaration origin without a root-script dependency. */
+export interface MutationMetadataSourceOrigin { readonly sourcePath: string; readonly declarationName: string; readonly modulePath: readonly string[]; }
+/** 🧬️ Bounded caller-owned evidence used to prove one metadata provider route. */
+export interface MutationMetadataSourceInput { readonly repositoryRoot: string; readonly consumerManifestLocator: string; readonly origin: MutationMetadataSourceOrigin; readonly files: readonly string[]; readonly readSource: (path: string) => string | undefined; readonly checkCancellation?: () => void; }
+/** 🧬️ Exact accepted/rejected metadata source evidence; this does not activate policy. */
+export interface MutationMetadataSourceProof { readonly accepted: boolean; readonly diagnostics: readonly string[]; readonly consumerContext: RustModuleContext | null; readonly deriveProvider: MutationMetadataProviderIdentity | null; readonly contractProvider: MutationMetadataProviderIdentity | null; readonly facadeProvider: MutationMetadataProviderIdentity | null; }
+
+const MUTATION_METADATA_PROVIDERS: readonly MutationMetadataProviderIdentity[] = [
+  { role: "lower-contract", manifestLocator: "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml", packageName: "semio-framework-replication", libraryName: "protocol", procMacro: false },
+  { role: "os-facade", manifestLocator: "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml", packageName: "semio-framework-os-kernel", libraryName: "semio_framework_os_kernel", procMacro: false },
+  { role: "metadata-derive", manifestLocator: "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/Cargo.toml", packageName: "semio-framework-os-kernel-dsl-derive", libraryName: "dsl_derive", procMacro: true },
+];
+
+function mutationMetadataProvider(binding: CargoProviderBinding): MutationMetadataProviderIdentity | null {
+  return MUTATION_METADATA_PROVIDERS.find((provider) => provider.manifestLocator === binding.providerManifestLocator && provider.packageName === binding.packageName && provider.libraryName === binding.libraryName && provider.procMacro === binding.procMacro) ?? null;
+}
+
+function mutationMetadataPath(path: string): readonly string[] | null {
+  const parts = (path.startsWith("::") ? path.slice(2) : path).split("::");
+  return parts.length > 0 && parts.every((part) => /^[A-Za-z_][A-Za-z0-9_]*$/u.test(part)) ? parts : null;
+}
+
+function mutationMetadataBindings(root: string, manifest: string, crate: string, cache: Map<string, readonly CargoProviderBinding[]>): readonly CargoProviderBinding[] {
+  const key = `${root}\0${manifest}\0${crate}`;
+  const cached = cache.get(key);
+  if (cached !== undefined) return cached;
+  const bindings: CargoProviderBinding[] = [];
+  for (const dependencyKey of [...new Set([crate, crate.replaceAll("_", "-")])]) try { bindings.push(resolveCargoProviderBinding({ workspaceRoot: root, consumerManifestLocator: manifest, dependencyKey })); } catch {}
+  const resolved = bindings.filter((binding, index) => bindings.findIndex((other) => other.providerManifestLocator === binding.providerManifestLocator && other.dependencyKey === binding.dependencyKey) === index);
+  cache.set(key, resolved);
+  return resolved;
+}
+
+function mutationMetadataAliasPaths(facts: RustMutationMetadataFacts, modulePath: readonly string[], path: readonly string[], publicOnly: boolean): readonly string[][] {
+  const [root, ...tail] = path, scoped = facts.crateAliases.filter((alias) => alias.modulePath.join("\0") === modulePath.join("\0") && !alias.conditional && (!publicOnly || alias.kind === "reexport"));
+  return [...scoped.filter((alias) => alias.alias === root).map((alias) => [...(mutationMetadataPath(alias.source) ?? []), ...tail]), ...scoped.filter((alias) => alias.alias === "*").map((alias) => [...(mutationMetadataPath(alias.source) ?? []), root, ...tail])].filter((candidate) => candidate.length > 0);
+}
+
+function mutationMetadataExternal(root: string, manifest: string, facts: RustMutationMetadataFacts, modulePath: readonly string[], path: string, cache: Map<string, readonly CargoProviderBinding[]>, publicOnly = false): readonly { readonly binding: CargoProviderBinding; readonly terminal: string }[] {
+  const direct = mutationMetadataPath(path);
+  if (!direct) return [];
+  const resolve = (candidate: readonly string[], scope: readonly string[], depth: number, requirePublic: boolean): readonly { readonly binding: CargoProviderBinding; readonly terminal: string }[] => {
+    if (depth > 16 || candidate.length === 0) return [];
+    let target: readonly string[] | null = null, rest = candidate;
+    if (candidate[0] === "crate") { target = []; rest = candidate.slice(1); }
+    else if (candidate[0] === "self") { target = scope; rest = candidate.slice(1); }
+    else if (candidate[0] === "super") { let index = 0, parent = [...scope]; while (candidate[index] === "super") { if (parent.length === 0) return []; parent.pop(); index += 1; } target = parent; rest = candidate.slice(index); }
+    if (target === null) {
+      const bindings = mutationMetadataBindings(root, manifest, candidate[0]!, cache);
+      if (bindings.length > 0) return bindings.map((binding) => ({ binding, terminal: candidate.at(-1)! }));
+      const aliases = mutationMetadataAliasPaths(facts, scope, candidate, requirePublic);
+      const transformed = aliases.filter((alias) => alias.join("\0") !== candidate.join("\0"));
+      if (transformed.length > 0) return transformed.flatMap((alias) => resolve(alias, scope, depth + 1, requirePublic));
+      return [];
+    }
+    if (rest.length === 0) return [];
+    const bindings = mutationMetadataBindings(root, manifest, rest[0]!, cache);
+    if (bindings.length > 0) return bindings.map((binding) => ({ binding, terminal: rest.at(-1)! }));
+    const nextScope = [...target, ...rest.slice(0, -1)], aliases = mutationMetadataAliasPaths(facts, nextScope, [rest.at(-1)!], requirePublic || nextScope.join("\0") !== scope.join("\0"));
+    return aliases.flatMap((alias) => resolve(alias, [...target, ...nextScope], depth + 1, true));
+  };
+  return resolve(direct, modulePath, 0, publicOnly);
+}
+
+function mutationMetadataFacadeRoutes(input: MutationMetadataSourceInput, graph: RustModuleGraph, binding: CargoProviderBinding, expected: MutationMetadataProviderIdentity, seen: ReadonlySet<string>, cache: Map<string, readonly CargoProviderBinding[]>): readonly ({ readonly provider: MutationMetadataProviderIdentity; readonly facade: MutationMetadataProviderIdentity | null } | null)[] {
+  const root = (graph.contexts.get(binding.librarySourceLocator) ?? []).filter((context) => context.crateRoot === binding.librarySourceLocator && context.manifestPath === binding.providerManifestLocator && context.modulePath.length === 0);
+  if (root.length !== 1) return [];
+  const walked = new Set<string>();
+  const walk = (sourcePath: string, context: RustModuleContext, path: readonly string[], depth: number): readonly ({ readonly provider: MutationMetadataProviderIdentity; readonly facade: MutationMetadataProviderIdentity | null } | null)[] => {
+    if (depth > 32 || path.length === 0) return [];
+    const key = `${sourcePath}\0${context.modulePath.join("\0")}\0${path.join("\0")}`;
+    if (walked.has(key)) return [];
+    walked.add(key);
+    const source = input.readSource(sourcePath);
+    if (source === undefined) return [null];
+    const facts = inspectRustMutationMetadataFacts(source), aliases = mutationMetadataAliasPaths(facts, context.sourceScope, path, true), localName = (candidate: readonly string[]): boolean => { const first = candidate[0], base = first === "crate" ? [] : first === "self" ? context.modulePath : context.modulePath; const rest = first === "crate" || first === "self" ? candidate.slice(1) : candidate; return rest.length > 1 && graph.targets.has(`${binding.librarySourceLocator}\0${[...base, rest[0]!].join("::")}`); }, external = [...mutationMetadataBindings(input.repositoryRoot, binding.providerManifestLocator, path[0]!, cache).map((candidate) => ({ candidate, terminal: path.at(-1)! })), ...aliases.flatMap((path) => ["crate", "self", "super"].includes(path[0] ?? "") || localName(path) ? [] : mutationMetadataBindings(input.repositoryRoot, binding.providerManifestLocator, path[0]!, cache).map((candidate) => ({ candidate, terminal: path.at(-1)! })))].map(({ candidate, terminal }) => mutationMetadataRoute(input, graph, candidate, terminal, expected, cache, seen));
+    const local = aliases.flatMap((candidate) => {
+      let base = context.modulePath, rest = candidate;
+      if (candidate[0] === "crate") { base = []; rest = candidate.slice(1); }
+      else if (candidate[0] === "self") { rest = candidate.slice(1); }
+      else if (candidate[0] === "super") { let index = 0; base = [...context.modulePath]; while (candidate[index] === "super") { if (base.length === 0) return []; base = base.slice(0, -1); index += 1; } rest = candidate.slice(index); }
+      if (rest.length < 2) return [];
+      const modulePath = [...base, rest[0]!], target = graph.targets.get(`${binding.librarySourceLocator}\0${modulePath.join("::")}`);
+      const next = target === undefined ? [] : (graph.contexts.get(target) ?? []).filter((item) => item.crateRoot === binding.librarySourceLocator && item.manifestPath === binding.providerManifestLocator && item.modulePath.join("\0") === modulePath.join("\0"));
+      return next.length === 1 ? walk(target!, next[0]!, rest.slice(1), depth + 1) : [];
+    });
+    return [...external, ...local];
+  };
+  return walk(binding.librarySourceLocator, root[0]!, ["MutationLeaf"], 0);
+}
+
+function mutationMetadataRoute(input: MutationMetadataSourceInput, graph: RustModuleGraph, binding: CargoProviderBinding, terminal: string, expected: MutationMetadataProviderIdentity, cache: Map<string, readonly CargoProviderBinding[]>, seen: ReadonlySet<string> = new Set()): { readonly provider: MutationMetadataProviderIdentity; readonly facade: MutationMetadataProviderIdentity | null } | null {
+  input.checkCancellation?.();
+  const provider = mutationMetadataProvider(binding);
+  if (provider?.role === expected.role && terminal === "MutationLeaf") return { provider, facade: null };
+  if (provider?.role !== "os-facade" || expected.role === "os-facade" || terminal !== "MutationLeaf" || seen.has(binding.providerManifestLocator)) return null;
+  const routes = mutationMetadataResolvedRoutes(mutationMetadataFacadeRoutes(input, graph, binding, expected, new Set([...seen, binding.providerManifestLocator]), cache));
+  return routes?.length === 1 ? { provider: routes[0]!.provider, facade: provider } : null;
+}
+
+function mutationMetadataResolvedRoutes(routes: readonly ({ readonly provider: MutationMetadataProviderIdentity; readonly facade: MutationMetadataProviderIdentity | null } | null)[]): readonly { readonly provider: MutationMetadataProviderIdentity; readonly facade: MutationMetadataProviderIdentity | null }[] | null {
+  if (routes.length === 0 || routes.some((route) => route === null)) return null;
+  return routes.filter((route, index): route is { readonly provider: MutationMetadataProviderIdentity; readonly facade: MutationMetadataProviderIdentity | null } => route !== null && routes.findIndex((other) => other !== null && other.provider.manifestLocator === route.provider.manifestLocator && other.facade?.manifestLocator === route.facade?.manifestLocator) === index);
+}
+
+/** 🧬️ Proves exact derive and lower-trait providers for one already-wrapped consumer declaration. */
+export function inspectMutationMetadataSource(input: MutationMetadataSourceInput): MutationMetadataSourceProof {
+  const reject = (diagnostic: string, consumerContext: RustModuleContext | null = null): MutationMetadataSourceProof => ({ accepted: false, diagnostics: [diagnostic], consumerContext, deriveProvider: null, contractProvider: null, facadeProvider: null });
+  input.checkCancellation?.();
+  const graph = inspectRustModuleGraph(input.files, input.readSource, { strictManifests: true, checkCancellation: input.checkCancellation }), bindingCache = new Map<string, readonly CargoProviderBinding[]>();
+  const contexts = (graph.contexts.get(input.origin.sourcePath) ?? []).filter((context) => context.manifestPath === input.consumerManifestLocator && context.sourceScope.join("\0") === input.origin.modulePath.join("\0"));
+  if (contexts.length !== 1) return reject("wrapped declaration has no unique consumer module context");
+  const consumerContext = contexts[0]!, source = input.readSource(input.origin.sourcePath);
+  if (source === undefined) return reject("wrapped declaration source is unavailable from the consumer inventory", consumerContext);
+  const sourceFacts = inspectRustMutationMetadataFacts(source), rootSource = input.readSource(consumerContext.crateRoot), rootAliases = rootSource === undefined || consumerContext.crateRoot === input.origin.sourcePath ? [] : inspectRustMutationMetadataFacts(rootSource).crateAliases.filter((item) => item.modulePath.length === 0 && (item.kind === "extern" || item.kind === "self")), facts: RustMutationMetadataFacts = { ...sourceFacts, crateAliases: [...sourceFacts.crateAliases, ...rootAliases] }, declaration = facts.declarations.filter((item) => item.name === input.origin.declarationName && item.modulePath.join("\0") === input.origin.modulePath.join("\0") && item.visibility === "pub" && !item.conditional);
+  if (declaration.length !== 1) return reject("wrapped declaration is absent, conditional, private, or ambiguous", consumerContext);
+  const item = declaration[0]!;
+  if (item.mutationLeaf.state !== "valid") return reject("wrapped declaration has no unconditional valid mutation_leaf contract", consumerContext);
+  const deriveRoutes = mutationMetadataResolvedRoutes(item.derives.flatMap((path) => mutationMetadataExternal(input.repositoryRoot, input.consumerManifestLocator, facts, item.modulePath, path, bindingCache).map((route) => mutationMetadataRoute(input, graph, route.binding, route.terminal, MUTATION_METADATA_PROVIDERS[2]!, bindingCache))));
+  if (deriveRoutes?.length !== 1) return reject("metadata derive route is unresolved, ambiguous, or not canonical", consumerContext);
+  const contractRoutes = mutationMetadataResolvedRoutes(item.mutationLeaf.contracts.flatMap((path) => mutationMetadataExternal(input.repositoryRoot, input.consumerManifestLocator, facts, item.modulePath, path, bindingCache).map((route) => mutationMetadataRoute(input, graph, route.binding, route.terminal, MUTATION_METADATA_PROVIDERS[0]!, bindingCache))));
+  if (contractRoutes?.length !== 1) return reject("mutation_leaf contract route is unresolved, ambiguous, or not canonical", consumerContext);
+  const manual = inspectRustStructure(source).impls.filter((impl) => impl.selfType.split("::").at(-1) === item.name && impl.traitPath !== null).flatMap((impl) => mutationMetadataExternal(input.repositoryRoot, input.consumerManifestLocator, facts, item.modulePath, impl.traitPath!, bindingCache).map((route) => mutationMetadataRoute(input, graph, route.binding, route.terminal, MUTATION_METADATA_PROVIDERS[0]!, bindingCache))).some((route) => route !== null);
+  if (manual) return reject("wrapped declaration manually implements the genuine MutationLeaf trait", consumerContext);
+  const facades = contractRoutes.map((route) => route.facade).filter((provider): provider is MutationMetadataProviderIdentity => provider !== null);
+  if (facades.length > 1) return reject("mutation_leaf contract has ambiguous facade routes", consumerContext);
+  return { accepted: true, diagnostics: [], consumerContext, deriveProvider: deriveRoutes[0]!.provider, contractProvider: contractRoutes[0]!.provider, facadeProvider: facades[0] ?? null };
+}
+//#endregion 🧬️MutationMetadataSource
+//#endregion 📦️CargoProviderManifestProjection
 
 //#region 🧩️SemanticCollections
 /** 🔗️ One resolved source dependency between repository-owned semantic components. */

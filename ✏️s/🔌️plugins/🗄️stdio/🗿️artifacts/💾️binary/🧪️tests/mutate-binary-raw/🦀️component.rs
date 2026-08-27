@@ -1,6 +1,6 @@
 //! 🦀️ Raw-binary exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-
 //! REFACTOR wave 7. Recorded no-oracle decision `raw-buffer-no-format` (`../../🏅️standards/🔖️raw/
-//! 🪆️subsets/✳️any/🧪️oracle/🔣️component.json`): a raw byte buffer has no format, so `oracle` here
+//! 🪆️subsets/✳️any/🧪️oracle/🔣️.json`): a raw byte buffer has no format, so `oracle` here
 //! drives this subset's own independently written specification-vector implementation
 //! (`../../🏅️standards/🔖️raw/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`'s `oracle_apply_mutation`,
 //! which never touches the subject's own `BinaryDiff`/`apply_binary_mutation`); `subject` drives

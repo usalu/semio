@@ -29,7 +29,7 @@ use crate::editor::puzzle3d::precompute::brush::{
 };
 use crate::editor::puzzle3d::precompute::fill::{FillBuilder, FillBuilderOwnerCensusCursor, FillBuilderOwnerCensusStep, FillBuilderRetirementCursor, FillJobStage, FillPreparationRoots, FillPreviewJsonStep, PlacedCollisionEntry};
 use crate::editor::puzzle3d::precompute::geometry::{pose_isometry, world_bounds, CollisionBody, CollisionOverlapState, CollisionStepContext, CollisionStepResult, FIXED_OWNER_SLOTS};
-use semio_framework_job::{default_now_ms, root_cancel_token, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, Operation, RevisionId, StepOutcome};
+use semio_framework_job::{default_now_us, root_cancel_token, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, Operation, RevisionId, StepOutcome};
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
 use std::future::Future;
@@ -211,8 +211,8 @@ fn mount_fill_worker(fill: SharedFillBuilder, operation: Operation, cancel: Canc
             operation: operation.operation,
             generation: operation.generation,
             cancel,
-            config: semio_framework_job::BatchDriveConfig { site: "puzzle3d.fill.mounted", stage: InteractiveStage::BackgroundStep, fuel_per_step: 1, step_budget_ms: 2 },
-            now_ms: default_now_ms,
+            config: semio_framework_job::BatchDriveConfig { site: "puzzle3d.fill.mounted", stage: InteractiveStage::BackgroundStep, fuel_per_step: 1, step_budget_us: 2000 },
+            now_us: default_now_us,
         },
     )
 }
@@ -851,30 +851,13 @@ impl Drop for FillEnvelopeTerminalHandle {
 //#endregion 💼️FillJobBridge
 
 //#region 🔖️Clock
-/// ⏱️ Monotonic-enough wall clock in milliseconds for precompute step budgeting. WASI P2 program
-/// components (`target_env = "p2"`, this artifact's real deployment target) and native (tests) share
-/// the `Instant`-based path below. Plain `wasm32-unknown-unknown` has no OS clock and this headless
-/// engine node must not depend on `js-sys`/`wasm-bindgen` to bridge to `Date.now()` — it freezes at
-/// 0.0 instead, degrading step budgeting to the step-count budget alone. The one real
-/// `wasm32-unknown-unknown` build of this crate (a Storybook DSL-text-parsing wasm bundle) never
-/// drives the precompute session, so this never actually matters at runtime.
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-fn puzzle3d_now_ms() -> f64 {
-    0.0
+/// ⏱️ Uses the same checked real clock authority as retained jobs on every target.
+fn puzzle3d_deadline(duration_us: u64) -> Option<u64> {
+    semio_framework_job::default_now_us()?.checked_add(duration_us)
 }
 
-#[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
-fn puzzle3d_now_ms() -> f64 {
-    use std::sync::OnceLock;
-    static START: OnceLock<std::time::Instant> = OnceLock::new();
-    START.get_or_init(std::time::Instant::now).elapsed().as_secs_f64() * 1000.0
-}
-
-/// 🪫️ Soft wall-clock ceiling for a single `precompute_step` call — a `FillStep` task's own collision
-/// search cost is otherwise unbounded per call, so this only caps how many *additional* tasks beyond
-/// the first are attempted once time runs out; the first task in a call always runs so a tick always
-/// makes forward progress.
-const PUZZLE3D_PRECOMPUTE_STEP_BUDGET_MS: f64 = 2.0;
+/// 🪫️ Admission deadline for one precompute turn, including its first task.
+const PUZZLE3D_PRECOMPUTE_STEP_BUDGET_US: u64 = 2_000;
 //#endregion 🔖️Clock
 
 //#region 🔖️Engine
@@ -1156,10 +1139,10 @@ impl Puzzle3dCollision {
     /// 🧊️ Recomputes and caches brush candidates for one vortex immediately (used when opening / accepting
     /// the suggestion popup so the UI does not wait on the background queue).
     pub(crate) fn refresh_brush_candidates(&mut self, vortex_full_id: &str) {
+        let Some(deadline) = puzzle3d_deadline(PUZZLE3D_PRECOMPUTE_STEP_BUDGET_US) else { return; };
         let prior = self.brush_cache.get(vortex_full_id).cloned();
         let resume_from = prior.as_ref().map_or(0, |entry| entry.resume_candidate_index);
         let prior_free = prior.map(|entry| entry.free).unwrap_or_default();
-        let deadline = puzzle3d_now_ms() + PUZZLE3D_PRECOMPUTE_STEP_BUDGET_MS;
         let result = self.compute_brush_cache_entry_partial(vortex_full_id, resume_from, prior_free, deadline);
         if result.unknown_pending && result.resume_candidate_index > 0 && !self.brush_queue.iter().any(|id| id == vortex_full_id) {
             self.brush_queue.push_front(vortex_full_id.to_string());
@@ -1167,23 +1150,23 @@ impl Puzzle3dCollision {
         self.brush_cache.insert(vortex_full_id.to_string(), result);
     }
 
-    fn preview_collides(meshes: &HashMap<String, CollisionBody>, preview: &BrushPreviewState, placed: &[PlacedCollisionEntry], overlap_budget: f64, sample_count: usize, deadline_ms: f64) -> Option<bool> {
+    fn preview_collides(meshes: &HashMap<String, CollisionBody>, preview: &BrushPreviewState, placed: &[PlacedCollisionEntry], overlap_budget: f64, sample_count: usize, deadline_us: u64) -> Option<bool> {
         struct BrushCollisionContext {
-            deadline_ms: f64,
+            deadline_us: u64,
         }
         impl CollisionStepContext for BrushCollisionContext {
             fn is_cancelled(&self) -> bool {
                 false
             }
             fn should_yield(&self) -> bool {
-                puzzle3d_now_ms() >= self.deadline_ms
+                semio_framework_job::default_now_us().is_none_or(|now| now >= self.deadline_us)
             }
             fn consume_fuel(&mut self, _units: u64) {}
         }
         let preview_body = meshes.get(&preview.mesh_url)?;
         let preview_world = pose_isometry(preview.origin, preview.orientation, &preview.scale);
         let (pmin, pmax) = world_bounds(preview_body, &preview_world);
-        let mut context = BrushCollisionContext { deadline_ms };
+        let mut context = BrushCollisionContext { deadline_us };
         for entry in placed {
             let other = meshes.get(&entry.mesh_url)?;
             let (omin, omax) = world_bounds(other, &entry.world);
@@ -1204,7 +1187,7 @@ impl Puzzle3dCollision {
         Some(false)
     }
 
-    fn brush_collision_free_until(&self, target_full_id: &str, candidates: &[BrushCompatibleCandidate], overlap_budget: f64, resume_from: usize, mut free: Vec<BrushCompatibleCandidate>, deadline_ms: f64) -> BrushCollisionFreeResult {
+    fn brush_collision_free_until(&self, target_full_id: &str, candidates: &[BrushCompatibleCandidate], overlap_budget: f64, resume_from: usize, mut free: Vec<BrushCompatibleCandidate>, deadline_us: u64) -> BrushCollisionFreeResult {
         let Some(scene) = &self.scene else {
             return BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: resume_from };
         };
@@ -1243,7 +1226,7 @@ impl Puzzle3dCollision {
             .collect();
         let mut unknown_pending = false;
         for (index, candidate) in candidates.iter().enumerate().skip(resume_from) {
-            if puzzle3d_now_ms() >= deadline_ms {
+            if semio_framework_job::default_now_us().is_none_or(|now| now >= deadline_us) {
                 return BrushCollisionFreeResult { free, unknown_pending: true, resume_candidate_index: index };
             }
             let world = TargetVortexWorld { position, direction, reference_orientation: host.orientation };
@@ -1254,7 +1237,7 @@ impl Puzzle3dCollision {
                 unknown_pending = true;
                 continue;
             }
-            match Self::preview_collides(&self.meshes, &preview, &placed, overlap_budget, 1024, deadline_ms) {
+            match Self::preview_collides(&self.meshes, &preview, &placed, overlap_budget, 1024, deadline_us) {
                 None => unknown_pending = true,
                 Some(true) => {}
                 Some(false) => free.push(candidate.clone()),
@@ -1264,7 +1247,7 @@ impl Puzzle3dCollision {
     }
 
     fn brush_collision_free(&self, target_full_id: &str, candidates: &[BrushCompatibleCandidate], overlap_budget: f64) -> BrushCollisionFreeResult {
-        let deadline = puzzle3d_now_ms() + PUZZLE3D_PRECOMPUTE_STEP_BUDGET_MS * 8.0;
+        let Some(deadline) = puzzle3d_deadline(PUZZLE3D_PRECOMPUTE_STEP_BUDGET_US * 8) else { return BrushCollisionFreeResult { free: Vec::new(), unknown_pending: true, resume_candidate_index: 0 }; };
         self.brush_collision_free_until(target_full_id, candidates, overlap_budget, 0, Vec::new(), deadline)
     }
 
@@ -1324,18 +1307,16 @@ impl Puzzle3dCollision {
     }
 
     pub(crate) fn precompute_step_lane(&mut self, lane: PrecomputeLane, budget: u32) -> bool {
-        let start = puzzle3d_now_ms();
+        let Some(deadline) = puzzle3d_deadline(PUZZLE3D_PRECOMPUTE_STEP_BUDGET_US) else { return match lane { PrecomputeLane::Brush => self.brush_lane_active(), PrecomputeLane::Fill => self.fill_lane_active() }; };
         let mut remaining = budget as usize;
-        let mut steps_done = 0usize;
         while remaining > 0 {
-            if steps_done > 0 && puzzle3d_now_ms() - start >= PUZZLE3D_PRECOMPUTE_STEP_BUDGET_MS {
+            if semio_framework_job::default_now_us().is_none_or(|now| now >= deadline) {
                 break;
             }
             match lane {
                 PrecomputeLane::Brush => {
                     if self.brush_queue_preparing {
                         self.prepare_one_brush_target();
-                        steps_done += 1;
                         remaining -= 1;
                         continue;
                     }
@@ -1345,7 +1326,6 @@ impl Puzzle3dCollision {
                     let prior = self.brush_cache.get(&full_id).cloned();
                     let resume_from = prior.as_ref().map_or(0, |entry| entry.resume_candidate_index);
                     let prior_free = prior.map(|entry| entry.free).unwrap_or_default();
-                    let deadline = puzzle3d_now_ms() + PUZZLE3D_PRECOMPUTE_STEP_BUDGET_MS;
                     let result = self.compute_brush_cache_entry_partial(&full_id, resume_from, prior_free, deadline);
                     let needs_resume = result.unknown_pending && result.resume_candidate_index > 0;
                     if needs_resume {
@@ -1395,7 +1375,6 @@ impl Puzzle3dCollision {
                     }
                 }
             }
-            steps_done += 1;
             remaining -= 1;
         }
         match lane {
@@ -1404,7 +1383,7 @@ impl Puzzle3dCollision {
         }
     }
 
-    fn compute_brush_cache_entry_partial(&self, target_full_id: &str, resume_from: usize, prior_free: Vec<BrushCompatibleCandidate>, deadline_ms: f64) -> BrushCollisionFreeResult {
+    fn compute_brush_cache_entry_partial(&self, target_full_id: &str, resume_from: usize, prior_free: Vec<BrushCompatibleCandidate>, deadline_us: u64) -> BrushCollisionFreeResult {
         let Some(scene) = &self.scene else {
             return BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: resume_from };
         };
@@ -1428,7 +1407,7 @@ impl Puzzle3dCollision {
         }
         let compatible = brush_compatible_candidates(&target_ctx, &catalogs, &scene.kind_compatibility, &scene.host_rules);
         let compatible: Vec<BrushCompatibleCandidate> = compatible.into_iter().filter(|candidate| brush_candidate_suggestion_weight(candidate, &scene.weights, &catalogs) > 0.0).collect();
-        self.brush_collision_free_until(target_full_id, &compatible, scene.overlap_budget, resume_from, prior_free, deadline_ms)
+        self.brush_collision_free_until(target_full_id, &compatible, scene.overlap_budget, resume_from, prior_free, deadline_us)
     }
 
     pub(crate) fn precompute_step(&mut self, budget: u32) -> bool {
@@ -1635,7 +1614,7 @@ impl Puzzle3dPrecomputeSession {
     /// valid page while a newer generation is still being censused or encoded.
     pub fn fill_preview_json_page(&self, color: &str, status_label: &str) -> Option<String> {
         const GRANTS_PER_FRAME: usize = 256;
-        let deadline = default_now_ms().saturating_add(2);
+        let deadline = default_now_us()?.checked_add(2_000)?;
         let cancelled = self.engine.fill_cancel.is_cancelled_now();
         self.write_fill(|fill| {
             if fill.preview.stage == "complete" {
@@ -1643,7 +1622,7 @@ impl Puzzle3dPrecomputeSession {
             }
             for _ in 0..GRANTS_PER_FRAME {
                 let mut fuel = 1;
-                let step = fill.preview_json_step(color, status_label, &mut fuel, cancelled, default_now_ms() >= deadline);
+                let step = fill.preview_json_step(color, status_label, &mut fuel, cancelled, default_now_us().is_none_or(|now_us| now_us >= deadline));
                 if matches!(step, FillPreviewJsonStep::Ready | FillPreviewJsonStep::Rejected | FillPreviewJsonStep::Cancelled | FillPreviewJsonStep::Terminal) {
                     break;
                 }

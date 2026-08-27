@@ -1,1 +1,0 @@
-fn leaf_decode(_: &[u8]) -> Result<PageMutation, ()> { unreachable!() } impl PageMutation { fn decode(bytes: &[u8]) -> Result<Self, ()> { let version: u8 = serde_json::from_slice(bytes)?; assert_eq!(version, 1); leaf_decode(bytes) } }

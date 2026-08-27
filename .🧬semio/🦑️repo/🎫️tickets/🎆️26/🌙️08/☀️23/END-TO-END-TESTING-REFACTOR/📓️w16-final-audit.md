@@ -316,7 +316,7 @@ libraries the cross-language wave started using are invisible to it.
 
 **Pillow.** `mutate-semio-image`'s reference imports it (`🐍️component.py:520`, `from PIL import
 Image`) and its rationale names *"Pillow (PIL 11.3, littleCMS)"*. Its registration
-(`🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧪️oracle/🔣️component.json`) declares
+(`🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧪️oracle/🔣️.json`) declares
 `"ecosystem": "python", "package": ""`. **Pillow is nowhere in `🔒️dependencies.json`** — 17 python
 entries, `pypdf 6.14.2` and `simplejson 4.1.1` among them, no Pillow. The runner's venv is created
 `--system-site-packages` (`📜️script.ts:381`), so:

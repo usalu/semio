@@ -1,0 +1,6 @@
+[package]
+name = 'semio-framework-replication'
+
+[lib]
+name = 'protocol'
+path = '📦️glue.rs'

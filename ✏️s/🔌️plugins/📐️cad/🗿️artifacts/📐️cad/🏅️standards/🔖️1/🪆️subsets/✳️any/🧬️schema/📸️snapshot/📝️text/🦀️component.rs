@@ -36,7 +36,7 @@ mod tests {
     /// than hand-transcribed (per `📌️important.md`'s "never hand-transcribe fixture bytes" rule).
     #[semio_framework_async_macros::async_test]
     #[ignore = "fixture predates the model/drawing composition rewrite; regenerate via print_dsl before re-enabling"]
-    fn default_example_dsl_round_trips() {
+    async fn default_example_dsl_round_trips() {
         let document = parse_dsl(CAD_DEFAULT_EXAMPLE_TEXT).expect("parse default .cad example");
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }

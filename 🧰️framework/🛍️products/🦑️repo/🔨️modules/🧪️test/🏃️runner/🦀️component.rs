@@ -1,7 +1,7 @@
 //! 🏃️ Rust native host runner. A generated cache-local crate links the committed
 //! `🦀️component.rs` adapter and calls [`run_main`]; nothing else about the Rust host is generated.
 
-use crate::protocol::{digest, parse_json, Json, Outcome, Plan, Scenario};
+use crate::protocol::{digest, parse_json, sha256_hex, Json, Outcome, Plan, Scenario};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -13,6 +13,8 @@ pub struct Context<'a> {
     pub role: &'a str,
     pub repo_root: PathBuf,
     pub work_dir: PathBuf,
+    /// 📦️ Where this handler writes its produced artifact bundle.
+    pub artifact_dir: PathBuf,
 }
 
 impl<'a> Context<'a> {
@@ -59,6 +61,19 @@ impl<'a> Context<'a> {
     /// 📊️ The scenario's first data table — header row first.
     pub fn data_table(&self) -> Result<&Vec<Vec<String>>, String> {
         self.scenario.data_tables.first().ok_or_else(|| format!("scenario {} carries no data table", self.scenario.id))
+    }
+
+    /// 📦️ Absolute path to write one named result artifact to, creating parent directories.
+    pub fn artifact(&self, role: &str, filename: &str) -> Result<PathBuf, String> {
+        let dir = self.artifact_dir.join(role);
+        std::fs::create_dir_all(&dir).map_err(|error| format!("cannot create artifact directory {}: {error}", dir.display()))?;
+        Ok(dir.join(filename))
+    }
+
+    /// 🪆️ The smallest owning subset this case is scoped to, or an error when it has none — a handler
+    /// that needs a scope must not invent one.
+    pub fn target(&self) -> Result<&crate::protocol::SubsetTarget, String> {
+        self.plan.target.as_ref().ok_or_else(|| format!("case {} declares no subset target — Protocol v2 scopes every mutation case to its smallest owning subset", self.plan.case))
     }
 
     /// 🎲️ Deterministic seed declared by the scenario's `@seed-…` tag.
@@ -133,27 +148,64 @@ fn result_json(plan: &Plan, scenario: &Scenario, status: &str, duration_ms: u128
     let projection = outcome.map(|value| value.projection.clone()).unwrap_or(Json::Null);
     let raw_hash = outcome.and_then(|value| value.raw.as_ref()).map(|bytes| digest(bytes)).unwrap_or_else(|| digest(b""));
     let mut output = vec![("rawHash".to_string(), Json::String(raw_hash)), ("projectionHash".to_string(), Json::String(digest(projection.to_string().as_bytes()))), ("projection".to_string(), projection)];
+    // 📦️Every produced file is re-hashed HERE rather than trusted from the handler: the digest a
+    // comparison stage keys on must describe the bytes that actually reached disk.
+    let artifacts: Vec<Json> = outcome
+        .map(|value| {
+            value
+                .artifacts
+                .iter()
+                .map(|artifact| {
+                    let bytes = std::fs::read(&artifact.path).unwrap_or_default();
+                    Json::Object(vec![
+                        ("role".to_string(), Json::String(artifact.role.clone())),
+                        ("path".to_string(), Json::String(artifact.path.clone())),
+                        ("mediaType".to_string(), Json::String(artifact.media_type.clone())),
+                        ("sha256".to_string(), Json::String(format!("sha256:{}", sha256_hex(&bytes)))),
+                        ("bytes".to_string(), Json::Number(bytes.len() as f64)),
+                    ])
+                })
+                .collect()
+        })
+        .unwrap_or_default();
     if let Some(path) = raw_path {
         output.push(("rawPath".to_string(), Json::String(path)));
     }
     if let Some(path) = projection_path {
         output.push(("projectionPath".to_string(), Json::String(path)));
     }
-    Json::Object(vec![
+    let mut record = vec![
+        ("schemaVersion".to_string(), Json::Number(2.0)),
         ("testId".to_string(), Json::String(format!("{}::{}::{}::{}::{}", plan.owner, plan.case, scenario.id, plan.implementation, plan.role))),
+        ("baselineSha".to_string(), Json::String(plan.baseline_sha.clone())),
         ("owner".to_string(), Json::String(plan.owner.clone())),
         ("case".to_string(), Json::String(plan.case.clone())),
         ("scenario".to_string(), Json::String(scenario.id.clone())),
         ("implementation".to_string(), Json::String(plan.implementation.clone())),
         ("role".to_string(), Json::String(plan.role.clone())),
         ("level".to_string(), Json::String(scenario.level.clone())),
+        ("platform".to_string(), Json::String(plan.platform.clone())),
         ("status".to_string(), Json::String(status.to_string())),
         ("durationMs".to_string(), Json::Number(duration_ms as f64)),
         ("seed".to_string(), Json::String(scenario.seed.clone())),
         ("featureHash".to_string(), Json::String(plan.feature_hash.clone())),
+        ("artifacts".to_string(), Json::Array(artifacts)),
         ("output".to_string(), Json::Object(output)),
         ("diagnostics".to_string(), Json::Array(diagnostics.into_iter().map(|(severity, message)| Json::Object(vec![("severity".to_string(), Json::String(severity)), ("message".to_string(), Json::String(message))])).collect())),
-    ])
+    ];
+    // 🏭️Only a handler that actually reached production dispatch gets this field. Emitting it
+    // unconditionally would make every replaying adapter look like a real subject.
+    if let Some(dispatch) = outcome.and_then(|value| value.production_dispatch.as_ref()) {
+        record.push((
+            "productionDispatch".to_string(),
+            Json::Object(vec![
+                ("invoked".to_string(), Json::Bool(true)),
+                ("operation".to_string(), Json::String(dispatch.operation.clone())),
+                ("bridgeVersion".to_string(), Json::Number(dispatch.bridge_version as f64)),
+            ]),
+        ));
+    }
+    Json::Object(record)
 }
 
 /// 🚪️ Rust host entry: load the plan, execute every planned scenario against the adapter, emit JSONL.
@@ -190,14 +242,16 @@ pub fn run_main(adapter: Adapter) -> std::process::ExitCode {
     };
     let repo_root = repo_root_from(&plan.work_dir);
     let work_dir = PathBuf::from(&plan.work_dir);
+    let artifact_dir = if plan.artifact_dir.is_empty() { work_dir.join("📦️artifacts") } else { PathBuf::from(&plan.artifact_dir) };
     let _ = std::fs::create_dir_all(&work_dir);
     let _ = std::fs::create_dir_all(&plan.output_dir);
+    let _ = std::fs::create_dir_all(&artifact_dir);
 
     let mut lines: Vec<String> = Vec::new();
     let mut failed = false;
     for scenario in &plan.scenarios {
         let started = std::time::Instant::now();
-        let context = Context { plan: &plan, scenario, role: &plan.role, repo_root: repo_root.clone(), work_dir: work_dir.clone() };
+        let context = Context { plan: &plan, scenario, role: &plan.role, repo_root: repo_root.clone(), work_dir: work_dir.clone(), artifact_dir: artifact_dir.clone() };
         match adapter.handler(&scenario.id, &plan.role) {
             None => {
                 failed = true;

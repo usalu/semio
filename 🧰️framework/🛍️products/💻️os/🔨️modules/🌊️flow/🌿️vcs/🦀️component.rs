@@ -867,13 +867,12 @@ struct FlowSnapshotRetirementFactory;
 
 impl ErasedSnapshotRetirement for FlowSnapshotRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        if self.snapshot.is_some() && maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
         if let Some(snapshot) = self.snapshot.take() {
-            match Arc::try_unwrap(snapshot) {
-                Ok(fixture) => self.fixture = Some(FlowFixtureRetirement::new(fixture)),
-                Err(snapshot) => {
-                    self.snapshot = Some(snapshot);
-                    return Ok(SnapshotRetirementStep::Blocked);
-                }
+            if let Some(fixture) = Arc::into_inner(snapshot) {
+                self.fixture = Some(FlowFixtureRetirement::new(fixture));
             }
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -3862,6 +3861,10 @@ mod flow_vcs_tests {
             std::mem::ManuallyDrop::new(FlowSnapshotRetirementFactory.retire(Arc::clone(&snapshot))),
             std::mem::ManuallyDrop::new(FlowSnapshotRetirementFactory.retire(snapshot)),
         ];
+        for reader in &mut readers {
+            assert!(matches!(reader.close_step(0, 256).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+            assert!(!reader.terminal_is_empty());
+        }
         for _ in 0..4096 {
             for reader in &mut readers {
                 if !reader.terminal_is_empty() { reader.close_step(1, 256).unwrap(); }
