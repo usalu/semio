@@ -3,7 +3,7 @@ use crate::artifacts::rewrite::mutations::{edit_lhs, RewriteRuleMutation};
 use crate::artifacts::rewrite::RewriteSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::mutation::EditLhs, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
+pub fn inverse(_payload: &super::EditLhs, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
     vec![edit_lhs(base.lhs_json.clone())]
 }
 //#endregion 🔖️Inverse

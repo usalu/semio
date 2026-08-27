@@ -22,7 +22,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::
 /// this loop registers handlers for both roles from one list. A mismatch is caught structurally: the
 /// contract phase fails with `mutation-kind-uncovered`/`mutation-kind-undeclared` if this list omits
 /// or invents a kind, and the runner fails every unregistered scenario id outright.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-info-title", "set-info-author", "insert-javascript-action", "remove-javascript-action", "insert-launch-action", "remove-launch-action", "insert-signature-field", "remove-signature-field", "embed-font-file", "remove-font-file"];
+const KINDS: &[&str] = &["set-info-title", "set-info-author", "insert-javascript-action", "remove-javascript-action", "insert-launch-action", "remove-launch-action", "insert-signature-field", "remove-signature-field", "embed-font-file", "remove-font-file"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -94,7 +94,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let base = arranged_input(ctx, &spec)?;
     let output = oracle_apply_mutation(&base, &spec)?;
     let projection = project_conformance(&output)?;
-    if spec.str("kind") != "no-mutation" && projection == project_conformance(&base)? {
+    if projection == project_conformance(&base)? {
         return Err(format!("mutate-{}: the mutation left the conformance-class projection unchanged — a mutation that is not observable proves nothing", spec.str("kind")));
     }
     Ok(Outcome::with_raw(output, projection))
@@ -142,9 +142,9 @@ mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::io::{decode_pdf, encode_pdf};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::conformance_support as support;
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::conformance_support as support;
     use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfSnapshot};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::h::schema::mutations::{apply_h_conformance_mutation, stamp_conformance, PdfHMutation};
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::h::schema::mutations::*;
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::h::{oracle_inverse_spec, project_conformance};
 
     fn decode(bytes: &[u8]) -> Result<PdfSnapshot, String> {
@@ -189,18 +189,16 @@ mod subject {
     fn mutation_from_spec(base: &PdfSnapshot, spec: &Json) -> Result<PdfHMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => PdfHMutation::NoMutation,
-            "set-snapshot" => PdfHMutation::SetSnapshot { snapshot: stamp_conformance(base.clone(), params.str("conformance") == "stamped") },
-            "set-info-title" => PdfHMutation::SetInfoTitle { title: params.str("title") },
-            "set-info-author" => PdfHMutation::SetInfoAuthor { author: params.str("author") },
-            "insert-javascript-action" => PdfHMutation::InsertJavaScriptAction { script: params.str("script") },
-            "remove-javascript-action" => PdfHMutation::RemoveJavaScriptAction { script: params.str("script") },
-            "insert-launch-action" => PdfHMutation::InsertLaunchAction { target: params.str("target") },
-            "remove-launch-action" => PdfHMutation::RemoveLaunchAction { target: params.str("target") },
-            "insert-signature-field" => PdfHMutation::InsertSignatureField { name: params.str("name") },
-            "remove-signature-field" => PdfHMutation::RemoveSignatureField { name: params.str("name") },
-            "embed-font-file" => PdfHMutation::EmbedFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize, key: params.str("key"), program: program_reference(base, &params)? },
-            "remove-font-file" => PdfHMutation::RemoveFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize },
+            "set-info-title" => PdfHMutation::SetInfoTitle(SetInfoTitle { title: params.str("title") }),
+            "set-info-author" => PdfHMutation::SetInfoAuthor(SetInfoAuthor { author: params.str("author") }),
+            "insert-javascript-action" => PdfHMutation::InsertJavascriptAction(InsertJavascriptAction { script: params.str("script") }),
+            "remove-javascript-action" => PdfHMutation::RemoveJavascriptAction(RemoveJavascriptAction { script: params.str("script") }),
+            "insert-launch-action" => PdfHMutation::InsertLaunchAction(InsertLaunchAction { target: params.str("target") }),
+            "remove-launch-action" => PdfHMutation::RemoveLaunchAction(RemoveLaunchAction { target: params.str("target") }),
+            "insert-signature-field" => PdfHMutation::InsertSignatureField(InsertSignatureField { name: params.str("name") }),
+            "remove-signature-field" => PdfHMutation::RemoveSignatureField(RemoveSignatureField { name: params.str("name") }),
+            "embed-font-file" => PdfHMutation::EmbedFontFile(EmbedFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize, key: params.str("key"), program: program_reference(base, &params)? }),
+            "remove-font-file" => PdfHMutation::RemoveFontFile(RemoveFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize }),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

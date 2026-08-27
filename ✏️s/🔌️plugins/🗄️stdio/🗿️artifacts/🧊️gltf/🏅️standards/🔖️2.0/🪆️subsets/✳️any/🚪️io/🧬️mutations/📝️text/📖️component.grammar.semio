@@ -4,9 +4,6 @@ grammar stdio.gltf.mutations
 start op
 comment none
 
-# `commandId` and typed `payload` are lower-case hex so this grammar remains independent of every
-# command-specific payload. The runtime decodes the canonical envelope before dispatching it to a
-# registered descriptor.
-op = "gltf-mutation" "commandId" "=" hex "version" "=" INT "phase" "=" phase "payload" "=" hex-opt
-phase = "mutation" | "inverse"
-hex-opt = "-" | hex
+# The payload is canonical JSON for the visible aggregate, represented as lower-case hex so the
+# grammar remains generic and every operation identity stays owned by its aggregate variant.
+op = "gltf-mutation" "payload" "=" hex

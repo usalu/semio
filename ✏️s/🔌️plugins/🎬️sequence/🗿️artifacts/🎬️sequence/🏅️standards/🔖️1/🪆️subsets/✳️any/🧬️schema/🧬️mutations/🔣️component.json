@@ -1,50 +1,31 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/sequence/sequence/mutation.json",
   "title": "SequenceMutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["schema", "steps", "edges"],
-  "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "steps": { "type": "array", "items": { "$ref": "#/$defs/SequenceStep" }, "x-semio-state": "artifact" },
-    "edges": { "type": "array", "items": { "$ref": "#/$defs/SequenceEdge" }, "x-semio-state": "artifact" }
-  },
-  "$defs": {
-    "SequenceStep": {
-      "title": "SequenceStep",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["id", "kind", "params", "x", "y", "collapsed"],
-      "properties": {
-        "id": { "type": "string" },
-        "kind": { "type": "string" },
-        "params": { "type": "object" },
-        "x": { "type": "number", "format": "double" },
-        "y": { "type": "number", "format": "double" },
-        "slot": { "$ref": "#/$defs/SlotRef" },
-        "collapsed": { "type": "boolean" }
-      }
+  "oneOf": [
+    {
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/create-step.json"
     },
-    "SequenceEdge": {
-      "title": "SequenceEdge",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["id", "from", "to"],
-      "properties": {
-        "id": { "type": "string" },
-        "from": { "type": "string" },
-        "to": { "type": "string" }
-      }
+    {
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/delete-step.json"
     },
-    "SlotRef": {
-      "title": "SlotRef",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["owner", "name"],
-      "properties": {
-        "owner": { "type": "string" },
-        "name": { "type": "string" }
-      }
+    {
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/move-step.json"
+    },
+    {
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/edit-step-params.json"
+    },
+    {
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/change-step-collapsed.json"
+    },
+    {
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/connect-steps.json"
+    },
+    {
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/disconnect-steps.json"
+    },
+    {
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/duplicate-step.json"
     }
-  }
+  ]
 }

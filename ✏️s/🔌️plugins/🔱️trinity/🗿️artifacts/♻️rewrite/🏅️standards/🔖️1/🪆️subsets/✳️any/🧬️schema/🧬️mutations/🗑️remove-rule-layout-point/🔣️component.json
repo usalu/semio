@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-rule-layout-point",
+  "semanticKind": "remove-rule-layout-point",
+  "displayName": "Remove Rule Layout Point",
+  "emoji": "🗑️",
+  "aggregateVariant": "RemoveRuleLayoutPoint",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "remove-rule-layout-point",
+  "binaryTag": 6,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

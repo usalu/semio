@@ -1,7 +1,0 @@
-# reorder-morph-targets diff facet.
-input GltfReorderMorphTargetsPayloadV1 {
-  mesh: Int!
-  primitive: Int!
-  order: [Int!]!
-}
-type GltfReorderMorphTargetsDiffV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

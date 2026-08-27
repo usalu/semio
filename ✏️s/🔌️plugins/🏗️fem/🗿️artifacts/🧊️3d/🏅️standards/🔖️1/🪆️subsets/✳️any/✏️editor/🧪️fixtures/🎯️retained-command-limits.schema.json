@@ -1,0 +1,566 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:fem3d:retained-command-limits:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "controller",
+    "documentSchema",
+    "factory",
+    "limits",
+    "routes",
+    "boundaryCases",
+    "oracle"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "const": "Fem3dPlayApp"
+    },
+    "controller": {
+      "const": "s.fem.fem3d@1/*#editor"
+    },
+    "documentSchema": {
+      "const": "fem.3d"
+    },
+    "factory": {
+      "const": "Fem3dRetainedCommandJobFactory"
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rawBytes",
+        "checkpointBytes",
+        "configValueBytes",
+        "configBaseBytes",
+        "commandStepBytes",
+        "storeStepBytes",
+        "workItems",
+        "preparationPhases"
+      ],
+      "properties": {
+        "rawBytes": {
+          "const": 8192
+        },
+        "checkpointBytes": {
+          "const": 512
+        },
+        "configValueBytes": {
+          "const": 512
+        },
+        "configBaseBytes": {
+          "const": 512
+        },
+        "commandStepBytes": {
+          "const": 65536
+        },
+        "storeStepBytes": {
+          "const": 4096
+        },
+        "workItems": {
+          "const": 1
+        },
+        "preparationPhases": {
+          "const": 3
+        }
+      }
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 18,
+      "maxItems": 18,
+      "prefixItems": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "addNode"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Fresh-ID discovery scans nodes and artifact publication clones the whole FEM model."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "addBar"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Node/material/section validation and fresh-ID discovery scan model collections before whole-root preparation."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "addFrame"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Node/material/section validation and fresh-ID discovery scan model collections before whole-root preparation."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "addMaterial"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Fresh-ID discovery scans materials and artifact publication clones the whole FEM model."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "addSection"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Fresh-ID discovery scans sections and artifact publication clones the whole FEM model."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "addSupport"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Node/support lookup scans model collections and whole-root preparation is not resumable."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "addNodalLoad"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Load-case and load lookup clone/scan collections before whole-root artifact preparation."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "addMemberUdl"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Member/load-case lookup clones or scans collections before whole-root artifact preparation."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "addAreaLoad"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Area/load-case lookup clones or scans collections before whole-root artifact preparation."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "addSolid"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Solid construction and fresh-ID discovery scan/allocate model collections before whole-root preparation."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "addLoadCase"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Fresh-ID discovery scans load cases and artifact publication clones the whole FEM model."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "addCombination"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Combination term parsing and ID discovery scan/allocate collections before whole-root preparation."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "setSelfWeight"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Load-case lookup scans the case collection and artifact publication clones the whole FEM model."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "setAnalysisSettings"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "The reducer is scalar but artifact publication clones the complete FEM model; no bounded root-scalar preparation exists."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "removeSelection"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Nested selection/model scans assemble an unbounded removal batch and whole-model inverse/root state."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "setActiveExample"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Builds and serializes an entire replacement FEM document into a host effect without a retained encoder owner."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "setCamera"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "Config"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "setResultDisplay"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "Config"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        }
+      ],
+      "items": false
+    },
+    "boundaryCases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "bytes",
+          "accepted"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 513
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "oracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "library",
+        "scope",
+        "runtimeDependency"
+      ],
+      "properties": {
+        "library": {
+          "const": "serde_json"
+        },
+        "scope": {
+          "const": "test-only-existing-dependency"
+        },
+        "runtimeDependency": {
+          "const": false
+        }
+      }
+    }
+  }
+}

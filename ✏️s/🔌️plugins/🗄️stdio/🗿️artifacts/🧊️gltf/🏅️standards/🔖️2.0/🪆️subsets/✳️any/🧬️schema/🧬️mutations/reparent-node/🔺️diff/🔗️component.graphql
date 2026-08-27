@@ -1,7 +1,0 @@
-# reparent-node diff facet.
-input GltfReparentNodePayloadV1 {
-  parent: Int!
-  child: Int!
-  position: Int!
-}
-type GltfReparentNodeDiffV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String, diff: String! }

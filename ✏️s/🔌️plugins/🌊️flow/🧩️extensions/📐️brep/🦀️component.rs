@@ -2,13 +2,14 @@
 
 use flow_extension_sdk::brep_geometry::*;
 use flow_extension_sdk::build_manifest_json;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::BrepKernel;
 use neural_engine::{channel_output, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry};
 
 macro_rules! geo_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
         struct $name;
         impl Operator for $name {
-            async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+            fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 with_kernel(|$k| {
                     let $i = input;
                     let handle = $expr.map_err(map_kernel_error)?;
@@ -26,7 +27,7 @@ macro_rules! num_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
         struct $name;
         impl Operator for $name {
-            async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+            fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 with_kernel_read(|$k| {
                     let $i = input;
                     let value = $expr.map_err(map_kernel_error)?;
@@ -41,7 +42,7 @@ macro_rules! point_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
         struct $name;
         impl Operator for $name {
-            async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+            fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 with_kernel_read(|$k| {
                     let $i = input;
                     let value = $expr.map_err(map_kernel_error)?;
@@ -56,7 +57,7 @@ macro_rules! vec_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
         struct $name;
         impl Operator for $name {
-            async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+            fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 with_kernel_read(|$k| {
                     let $i = input;
                     let value = $expr.map_err(map_kernel_error)?;
@@ -71,7 +72,7 @@ macro_rules! text_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
         struct $name;
         impl Operator for $name {
-            async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+            fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 with_kernel_read(|$k| {
                     let $i = input;
                     let value = $expr.map_err(map_kernel_error)?;
@@ -91,7 +92,7 @@ geo_operation!(TorusPrim, "solid", |k, i| k.torus_prim(read_channel_number(i, "m
 
 struct ConvexHullPrim;
 impl Operator for ConvexHullPrim {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
             let handle = kernel.convex_hull(&points).map_err(map_kernel_error)?;
@@ -109,7 +110,7 @@ geo_operation!(EllipseCurve, "curve", |k, i| k.ellipse_curve(read_xyz(i, "center
 
 struct PolylineWire;
 impl Operator for PolylineWire {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
             let handle = kernel.polyline_wire(&points).map_err(map_kernel_error)?;
@@ -123,7 +124,7 @@ geo_operation!(RegularPolygonWire, "wire", |k, i| k.regular_polygon_wire(read_ch
 
 struct InterpolateCurve;
 impl Operator for InterpolateCurve {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
             let degree = read_channel_number(input, "degree")? as usize;
@@ -135,7 +136,7 @@ impl Operator for InterpolateCurve {
 
 struct ApproximateCurve;
 impl Operator for ApproximateCurve {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
             let degree = read_channel_number(input, "degree")? as usize;
@@ -154,7 +155,7 @@ geo_operation!(PlaneSurface, "surface", |k, i| k.plane_surface(read_xyz(i, "orig
 
 struct PlanarFacePoints;
 impl Operator for PlanarFacePoints {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
             let handle = kernel.planar_face_from_points(&points).map_err(map_kernel_error)?;
@@ -167,7 +168,7 @@ geo_operation!(PlanarFaceWire, "face", |k, i| k.planar_face_from_wire(&read_geom
 
 struct NurbsGridSurface;
 impl Operator for NurbsGridSurface {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let points = read_point_list(input, "points")?;
             let rows = read_channel_number(input, "rows")? as usize;
@@ -182,7 +183,7 @@ impl Operator for NurbsGridSurface {
 
 struct CoonsPatch;
 impl Operator for CoonsPatch {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let curves = read_nested_point_lists(input, "curves")?;
             let handle = kernel.coons_patch(&curves).map_err(map_kernel_error)?;
@@ -198,7 +199,7 @@ geo_operation!(ThickenFace, "solid", |k, i| k.thicken_face(&read_geometry(i, "fa
 // #region 🔖️Sweeps
 struct ExtrudeCurve;
 impl Operator for ExtrudeCurve {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let wire = read_geometry(input, "wire")?;
             let vector = read_xyz(input, "vector")?;
@@ -210,7 +211,7 @@ impl Operator for ExtrudeCurve {
 
 struct ExtrudeFace;
 impl Operator for ExtrudeFace {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let face = read_geometry(input, "face")?;
             let vector = read_xyz(input, "vector")?;
@@ -229,7 +230,7 @@ geo_operation!(Sweep, "solid", |k, i| k.sweep(&read_geometry(i, "profile")?, &re
 
 struct Loft;
 impl Operator for Loft {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let profiles = read_geometry_list(input, "profiles")?;
             let smooth = read_channel_number(input, "smooth")? >= 0.5;
@@ -241,7 +242,7 @@ impl Operator for Loft {
 
 struct Pipe;
 impl Operator for Pipe {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let profile = read_geometry(input, "profile")?;
             let path = read_geometry(input, "path")?;
@@ -270,7 +271,7 @@ geo_operation!(Intersect, "solid", |k, i| k.intersect(&read_geometry(i, "a")?, &
 
 struct CompoundCut;
 impl Operator for CompoundCut {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let target = read_geometry(input, "target")?;
             let tools = read_geometry_list(input, "tools")?;
@@ -310,7 +311,7 @@ geo_operation!(ChamferAsymmetric, "solid", |k, i| k.chamfer_asymmetric(&read_geo
 // avoids the full-solid edge-count cost when a user selects just one or a few edges.
 struct FilletEdges;
 impl Operator for FilletEdges {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let edges = read_geometry_list(input, "edges")?;
@@ -323,7 +324,7 @@ impl Operator for FilletEdges {
 
 struct ChamferEdges;
 impl Operator for ChamferEdges {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let edges = read_geometry_list(input, "edges")?;
@@ -336,7 +337,7 @@ impl Operator for ChamferEdges {
 
 struct ShellMutation;
 impl Operator for ShellMutation {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let thickness = read_channel_number(input, "thickness")?;
@@ -349,7 +350,7 @@ impl Operator for ShellMutation {
 
 struct Draft;
 impl Operator for Draft {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let faces = read_geometry_list(input, "faces")?;
@@ -363,7 +364,7 @@ geo_operation!(OffsetSolid, "solid", |k, i| k.offset_solid(&read_geometry(i, "ge
 
 struct Defeature;
 impl Operator for Defeature {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let faces = read_geometry_list(input, "faces")?;
@@ -377,7 +378,7 @@ impl Operator for Defeature {
 // #region 🔖️Intersect
 struct Section;
 impl Operator for Section {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let faces = kernel.section(&read_geometry(input, "solid")?, read_xyz(input, "planeOrigin")?, read_xyz(input, "planeNormal")?).map_err(map_kernel_error)?;
             let handle = faces.into_iter().next().ok_or_else(|| EvalError::InvalidInput("section produced no faces".into()))?;
@@ -388,7 +389,7 @@ impl Operator for Section {
 
 struct Split;
 impl Operator for Split {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let (positive, _negative) = kernel.split(&read_geometry(input, "solid")?, read_xyz(input, "planeOrigin")?, read_xyz(input, "planeNormal")?).map_err(map_kernel_error)?;
             Ok(channel_output("solid", geometry_dict(kernel, &positive)?))
@@ -398,7 +399,7 @@ impl Operator for Split {
 
 struct CurveCurveIntersect;
 impl Operator for CurveCurveIntersect {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let points = kernel.curve_curve_intersect(&read_geometry(input, "a")?, &read_geometry(input, "b")?, read_channel_number(input, "tolerance")?).map_err(map_kernel_error)?;
             let handle = wire_from_points(kernel, &points)?;
@@ -409,7 +410,7 @@ impl Operator for CurveCurveIntersect {
 
 struct CurveSurfaceIntersect;
 impl Operator for CurveSurfaceIntersect {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let points = kernel.curve_surface_intersect(&read_geometry(input, "curve")?, &read_geometry(input, "surface")?, read_channel_number(input, "tolerance")?).map_err(map_kernel_error)?;
             let handle = wire_from_points(kernel, &points)?;
@@ -420,7 +421,7 @@ impl Operator for CurveSurfaceIntersect {
 
 struct SurfaceSurfaceIntersect;
 impl Operator for SurfaceSurfaceIntersect {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let wires = kernel.surface_surface_intersect(&read_geometry(input, "a")?, &read_geometry(input, "b")?, read_channel_number(input, "tolerance")?).map_err(map_kernel_error)?;
             let handle = wires.into_iter().next().ok_or_else(|| EvalError::InvalidInput("no intersection wire".into()))?;
@@ -436,7 +437,7 @@ vec_operation!(CurveTangent, "tangent", |k, i| k.curve_tangent(&read_geometry(i,
 
 struct CurveDomain;
 impl Operator for CurveDomain {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
             let domain = kernel.curve_domain(&read_geometry(input, "curve")?).map_err(map_kernel_error)?;
             Ok(channel_output("span", number_dictionary(domain_span(domain))))
@@ -459,7 +460,7 @@ num_operation!(Distance, "distance", |k, i| k.distance(&read_geometry(i, "a")?, 
 
 struct ClosestPoint;
 impl Operator for ClosestPoint {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
             let result = kernel.closest_point(&read_geometry(input, "geometry")?, read_xyz(input, "point")?).map_err(map_kernel_error)?;
             Ok(channel_output("point", point_dictionary(result.point)))
@@ -469,7 +470,7 @@ impl Operator for ClosestPoint {
 
 struct ClassifyPoint;
 impl Operator for ClassifyPoint {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
             let classification = kernel.classify_point(&read_geometry(input, "solid")?, read_xyz(input, "point")?).map_err(map_kernel_error)?;
             Ok(channel_output("classification", number_dictionary(classify_number(classification))))
@@ -486,7 +487,7 @@ geo_operation!(FaceFromWire, "face", |k, i| k.face_from_wire(&read_geometry(i, "
 
 struct SewFaces;
 impl Operator for SewFaces {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let faces = read_geometry_list(input, "faces")?;
             let tolerance = read_channel_number(input, "tolerance")?;
@@ -503,7 +504,7 @@ geo_operation!(ConvertToNurbs, "geometry", |k, i| k.convert_to_nurbs(&read_geome
 // #region 🔖️IO
 struct ExportStep;
 impl Operator for ExportStep {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let value = kernel.export_step(&[geometry]).map_err(map_kernel_error)?;
@@ -514,7 +515,7 @@ impl Operator for ExportStep {
 
 struct ExportStl;
 impl Operator for ExportStl {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let deflection = read_channel_number(input, "deflection")?;
@@ -526,7 +527,7 @@ impl Operator for ExportStl {
 
 struct ExportObj;
 impl Operator for ExportObj {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let deflection = read_channel_number(input, "deflection")?;
@@ -538,7 +539,7 @@ impl Operator for ExportObj {
 
 struct ImportStep;
 impl Operator for ImportStep {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let data = read_text(input, "data")?;
             let shapes = kernel.import_step(&data).map_err(map_kernel_error)?;
@@ -550,7 +551,7 @@ impl Operator for ImportStep {
 
 struct ImportStl;
 impl Operator for ImportStl {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let data = decode_base64(&read_text(input, "data")?)?;
             let tolerance = read_channel_number(input, "tolerance")?;
@@ -562,7 +563,7 @@ impl Operator for ImportStl {
 
 struct ImportObj;
 impl Operator for ImportObj {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let data = read_text(input, "data")?;
             let tolerance = read_channel_number(input, "tolerance")?;
@@ -574,7 +575,7 @@ impl Operator for ImportObj {
 
 struct ExportDwg;
 impl Operator for ExportDwg {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let deflection = read_channel_number(input, "deflection")?;
@@ -586,7 +587,7 @@ impl Operator for ExportDwg {
 
 struct ImportDwg;
 impl Operator for ImportDwg {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let data = decode_base64(&read_text(input, "data")?)?;
             let tolerance = read_channel_number(input, "tolerance")?;
@@ -1453,12 +1454,12 @@ pub async fn register(registry: &mut Registry) {
 
 /// 🛂️ Manifest JSON for host contribution install (tests + packaging metadata).
 pub async fn extension_manifest_json() -> String {
-    build_manifest_json("brep", "Brep", "0.3.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![])
+    build_manifest_json("brep", "Brep", "0.3.0", &neural_engine::ColdOwner::new(module_registry().await), vec!["onStartup".into()], vec![], vec![], vec![])
 }
 
 pub async fn module_registry() -> Registry {
     let mut registry = Registry::new();
-    register(&mut registry);
+    register(&mut registry).await;
     registry
 }
 
@@ -1693,7 +1694,7 @@ mod tests {
     async fn manifest_lists_brep_operators() {
         let _serial = test_serial();
         reset_test_kernel();
-        let json = build_manifest_json("brep", "Brep", "0.3.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
+        let json = build_manifest_json("brep", "Brep", "0.3.0", &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![], vec![]);
         assert!(json.contains("brep.prim3d.box"));
         assert!(json.contains("brep.curve.line"));
         assert!(json.contains("brep.solid.extrude"));
@@ -1827,7 +1828,7 @@ mod tests {
                     input_json: String,
                 }
                 let request: EvaluateRequest = serde_json::from_slice(req).unwrap();
-                Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
+                Ok(evaluate_json(&neural_engine::ColdOwner::new(module_registry()), &request.operator_id, &request.input_json).into_bytes())
             });
         install_extension_bundle(bundle);
         extension_activate().unwrap();
@@ -1901,7 +1902,7 @@ mod extension_guest {
             .contributes_topic("flow.extension", procedural3d_topic_payload)
             .handler("evaluate", |req| {
                 let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string()))?;
-                Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
+                Ok(evaluate_json(&neural_engine::ColdOwner::new(module_registry()), &request.operator_id, &request.input_json).into_bytes())
             })
             .handler("tessellate", |req| {
                 let request: TessellateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), err.to_string()))?;

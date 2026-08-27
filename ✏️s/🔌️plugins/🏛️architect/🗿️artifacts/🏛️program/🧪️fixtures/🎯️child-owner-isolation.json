@@ -1,0 +1,8 @@
+{
+  "benchmarksOwned": true,
+  "knowledgeOwned": true,
+  "benchmarksWireIdentityMatches": true,
+  "knowledgeWireIdentityMatches": true,
+  "benchmarksWireOwned": false,
+  "knowledgeWireOwned": false
+}

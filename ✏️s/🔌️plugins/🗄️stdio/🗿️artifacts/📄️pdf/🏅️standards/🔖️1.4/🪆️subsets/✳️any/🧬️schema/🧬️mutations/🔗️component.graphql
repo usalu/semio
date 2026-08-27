@@ -1,10 +1,13 @@
-# 🧬️ PdfMutation (1.4) union — see ../📸️snapshot/🔗️component.graphql for PageDoc/PdfSnapshot.
-type PdfMutation {
-  mutation: PdfMutationKind!
-  snapshot: PdfSnapshot
-}
-
-enum PdfMutationKind {
-  NO_MUTATION
-  SET_SNAPSHOT
-}
+# 🧬️ Assemble this schema with the five direct input definitions.
+# import InsertPageInput from "./📥️insert-page/🔗️component.graphql"
+# import RemovePageInput from "./🗑️remove-page/🔗️component.graphql"
+# import MovePageInput from "./🔀️move-page/🔗️component.graphql"
+# import ResizePageInput from "./📐️resize-page/🔗️component.graphql"
+# import ReplacePageTextInput from "./📝️replace-page-text/🔗️component.graphql"
+scalar Pdf14Index
+input PdfMutation @oneOf {
+  insertPage: InsertPageInput
+  removePage: RemovePageInput
+  movePage: MovePageInput
+  resizePage: ResizePageInput
+  replacePageText: ReplacePageTextInput

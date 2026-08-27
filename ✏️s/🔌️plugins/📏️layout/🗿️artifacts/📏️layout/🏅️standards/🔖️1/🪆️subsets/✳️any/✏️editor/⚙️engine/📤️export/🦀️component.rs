@@ -11,7 +11,7 @@ use semio_framework_job::{
 use semio_framework_plugin::app::{
     ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactOwnedToolJobFactory, ArtifactReservedToolJob, ArtifactSnapshotCloseLease, ArtifactToolCompletion,
 };
-use semio_framework_plugin::{ArtifactReservedJob, EditorApp, EphemeralEmit, Fault, MediaClass, MediaForm, MediaType, PluginCloseStep};
+use semio_framework_plugin::{ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactReservedJob, EditorApp, EphemeralEmit, Fault, MediaClass, MediaForm, MediaType, PluginCloseStep};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment};
 use serde::{Deserialize, Serialize};
@@ -2478,7 +2478,10 @@ impl InteractiveJob for LayoutExportToolJob {
             if input.terminal_is_empty() {
                 self.raw_input = None;
             }
-            return step;
+            return match step {
+                InteractiveJobCloseStep::Complete => InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                other => other,
+            };
         }
         if !self.name.is_empty() {
             if maximum_items == 0 || maximum_bytes < self.name.len() {
@@ -2606,7 +2609,7 @@ impl LayoutMediaExportJobFactory {
     }
 }
 
-impl ToolJobFactory for LayoutMediaExportJobFactory {
+impl semio_framework::ToolJobFactory for LayoutMediaExportJobFactory {
     type Payload = ArtifactReservedToolJob;
     type Job = ArtifactReservedToolJob;
 
@@ -2631,10 +2634,11 @@ impl ToolJobFactory for LayoutMediaExportJobFactory {
     }
 }
 
-impl ArtifactOwnedToolJobFactory for LayoutMediaExportJobFactory {
-    type Owner = EditorApp<LayoutPlayApp>;
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutMediaExportJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<LayoutPlayApp>;
     const TOOL_IDS: &'static [&'static str] = &[LAYOUT_MEDIA_EXPORT_TOOL_ID];
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: LAYOUT_MEDIA_EXPORT_TOOL_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] }];
 }
 
 impl LayoutExportJobFactory {
@@ -2643,7 +2647,7 @@ impl LayoutExportJobFactory {
     }
 }
 
-impl ToolJobFactory for LayoutExportJobFactory {
+impl semio_framework::ToolJobFactory for LayoutExportJobFactory {
     type Payload = LayoutExportToolPayload;
     type Job = LayoutExportToolJob;
 
@@ -2700,6 +2704,9 @@ impl ToolJobFactory for LayoutExportJobFactory {
             return Err((ToolJobFactoryError::new("layout export retained ingress does not accept an unvalidated checkpoint owner"), input, checkpoint));
         }
         let declared_bytes = input.declared_bytes();
+        if declared_bytes > MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES {
+            return Err((ToolJobFactoryError::new("layout export retained ingress exceeds its command byte envelope"), input, None));
+        }
         let kind = payload.request.kind;
         let mut job = LayoutExportToolJob {
             inner: None,
@@ -2729,10 +2736,16 @@ impl ToolJobFactory for LayoutExportJobFactory {
     }
 }
 
-impl ArtifactOwnedToolJobFactory for LayoutExportJobFactory {
-    type Owner = EditorApp<LayoutPlayApp>;
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutExportJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<LayoutPlayApp>;
     const TOOL_IDS: &'static [&'static str] = LAYOUT_EXPORT_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
+        ArtifactToolPublicationContract { tool_id: "exportPng", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "exportSvg", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "exportPdf", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "exportPackage", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ];
 }
 
 impl LayoutExportJob {

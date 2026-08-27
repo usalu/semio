@@ -1,0 +1,17 @@
+{
+  "schema": "reasoning.wires.retained-command-routes.v1",
+  "maximumRawBytes": 8192,
+  "maximumWorkItems": 1,
+  "routes": [
+    { "id": "setActiveExample", "disposition": "batch-only-pending-rewrite", "lanes": [], "reason": "whole child replacement lacks an item-bounded child publication seam" },
+    { "id": "addNode", "disposition": "batch-only-pending-rewrite", "lanes": [], "reason": "fresh-id derivation clones and scans the complete graph child" },
+    { "id": "addRelationship", "disposition": "batch-only-pending-rewrite", "lanes": [], "reason": "fresh-id derivation clones and scans the complete graph child" },
+    { "id": "deleteSelection", "disposition": "batch-only-pending-rewrite", "lanes": [], "reason": "selection resolution requires item-addressable graph child reads" },
+    { "id": "forceLayout", "disposition": "batch-only-pending-rewrite", "lanes": [], "reason": "layout clones and scans the complete graph child before publishing" },
+    { "id": "reorganize", "disposition": "batch-only-pending-rewrite", "lanes": [], "reason": "layout clones and scans the complete graph child before publishing" },
+    { "id": "canvasPointerMove", "disposition": "batch-only-pending-rewrite", "lanes": [], "reason": "drag lookup clones the complete graph child" },
+    { "id": "canvasPointerDown", "disposition": "batch-only-pending-rewrite", "lanes": [], "reason": "hit validation clones the complete graph child" },
+    { "id": "canvasPointerUp", "disposition": "migrated", "lanes": ["config"], "reason": "one bounded config mutation" },
+    { "id": "setLocale", "disposition": "migrated", "lanes": ["config"], "reason": "one byte-bounded config mutation" }
+  ]
+}

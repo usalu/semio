@@ -11,7 +11,7 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
   directory before touching it; the committed document is never written to.
 
   Three kinds address an EXISTING text or unknown chunk, and the real document carries neither, so
-  remove-text-chunk, set-text-chunk and remove-unknown-chunk are exercised on the real document
+  remove-text-chunk, replace-text-chunk and remove-unknown-chunk are exercised on the real document
   after the reference implementation has inserted their target first — the same arrange step the
   OOXML conformance cases use for their own removal kinds. Anything else would be a row whose
   parameters address nothing, which passes without testing anything.
@@ -27,12 +27,12 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
 
   ⚠️ Two of the seventeen kinds genuinely cannot reach the bytes, and the case says so rather than
   letting them pass as though they had:
-    – set-header — IHDR must describe the IDAT that follows it, and both encoders always write
+    – change-header — IHDR must describe the IDAT that follows it, and both encoders always write
       colour type 6 / bit depth 8 / interlace 0 because `PngSnapshot.pixels` is a canonical RGBA
       buffer (`encode_png`'s own 🚫️EncodeScopeNote). `SetHeader` also does not resize `pixels`, so
       changing width or height would only make the snapshot unencodable. Every field of this kind
       is model-only.
-    – set-transparency — §11.3.3 forbids tRNS alongside colour types 4 and 6, so at the colour type
+    – change-transparency — §11.3.3 forbids tRNS alongside colour types 4 and 6, so at the colour type
       both encoders write, the chunk can never appear. `encode_png` used to emit it anyway from the
       snapshot, producing a file the reference decoder rejects outright (`ColorWithBadTrns`); it now
       omits it, with the source's alpha already resolved into `pixels`.
@@ -51,21 +51,19 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                    | params                                                                                                                       |
-      | no-mutation           | {}                                                                                                                           |
-      | set-snapshot          | {"width":3,"height":2,"fill":[64,128,192,255]}                                                                              |
-      | set-header            | {"width":2334,"height":2560,"bitDepth":16,"colorType":"grayscale","interlace":true}                                         |
-      | set-palette           | {"plte":[[255,0,0],[0,255,0],[0,0,255],[255,255,0]]}                                                                        |
-      | set-transparency      | {"trns":null}                                                                                                                |
-      | set-gamma             | {"gama":45455}                                                                                                               |
-      | set-chromaticities    | {"whiteX":31270,"whiteY":32900,"redX":64000,"redY":33000,"greenX":30000,"greenY":60000,"blueX":15000,"blueY":6000}          |
-      | set-srgb-intent       | {"srgb":"perceptual"}                                                                                                        |
-      | set-physical-dims     | {"ppuX":2835,"ppuY":2835,"unitIsMeter":true}                                                                                 |
-      | set-timestamp         | {"year":2024,"month":1,"day":2,"hour":3,"minute":4,"second":5}                                                              |
-      | set-background        | {"r":255,"g":255,"b":255}                                                                                                    |
+      | change-header            | {"width":2334,"height":2560,"bitDepth":16,"colorType":"grayscale","interlace":true}                                         |
+      | replace-palette           | {"plte":[[255,0,0],[0,255,0],[0,0,255],[255,255,0]]}                                                                        |
+      | change-transparency      | {"trns":null}                                                                                                                |
+      | change-gamma             | {"gama":45455}                                                                                                               |
+      | change-chromaticities    | {"whiteX":31270,"whiteY":32900,"redX":64000,"redY":33000,"greenX":30000,"greenY":60000,"blueX":15000,"blueY":6000}          |
+      | change-srgb-intent       | {"srgb":"perceptual"}                                                                                                        |
+      | change-physical-dims     | {"ppuX":2835,"ppuY":2835,"unitIsMeter":true}                                                                                 |
+      | change-timestamp         | {"year":2024,"month":1,"day":2,"hour":3,"minute":4,"second":5}                                                              |
+      | change-background        | {"r":255,"g":255,"b":255}                                                                                                    |
       | insert-text-chunk     | {"index":0,"keyword":"Comment","value":"Wave 7 oracle probe"}                                                               |
       | remove-text-chunk     | {"index":0}                                                                                                                  |
-      | set-text-chunk        | {"index":0,"keyword":"Author","value":"replaces the arranged chunk outright"}                                               |
-      | set-pixels            | {"fill":[200,40,40,255]}                                                                                                     |
+      | replace-text-chunk        | {"index":0,"keyword":"Author","value":"replaces the arranged chunk outright"}                                               |
+      | replace-pixels            | {"fill":[200,40,40,255]}                                                                                                     |
       | insert-unknown-chunk  | {"index":0,"kind":"waVe","data":"wave7-probe"}                                                                              |
       | remove-unknown-chunk  | {"index":0}                                                                                                                  |
 
@@ -83,21 +81,19 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
     And that projection matches the untouched original document
     Examples:
       | id                    | params                                                                                                                       |
-      | no-mutation           | {}                                                                                                                           |
-      | set-snapshot          | {"width":3,"height":2,"fill":[64,128,192,255]}                                                                              |
-      | set-header            | {"width":2334,"height":2560,"bitDepth":16,"colorType":"grayscale","interlace":true}                                         |
-      | set-palette           | {"plte":[[255,0,0],[0,255,0],[0,0,255],[255,255,0]]}                                                                        |
-      | set-transparency      | {"trns":null}                                                                                                                |
-      | set-gamma             | {"gama":45455}                                                                                                               |
-      | set-chromaticities    | {"whiteX":31270,"whiteY":32900,"redX":64000,"redY":33000,"greenX":30000,"greenY":60000,"blueX":15000,"blueY":6000}          |
-      | set-srgb-intent       | {"srgb":"perceptual"}                                                                                                        |
-      | set-physical-dims     | {"ppuX":2835,"ppuY":2835,"unitIsMeter":true}                                                                                 |
-      | set-timestamp         | {"year":2024,"month":1,"day":2,"hour":3,"minute":4,"second":5}                                                              |
-      | set-background        | {"r":255,"g":255,"b":255}                                                                                                    |
+      | change-header            | {"width":2334,"height":2560,"bitDepth":16,"colorType":"grayscale","interlace":true}                                         |
+      | replace-palette           | {"plte":[[255,0,0],[0,255,0],[0,0,255],[255,255,0]]}                                                                        |
+      | change-transparency      | {"trns":null}                                                                                                                |
+      | change-gamma             | {"gama":45455}                                                                                                               |
+      | change-chromaticities    | {"whiteX":31270,"whiteY":32900,"redX":64000,"redY":33000,"greenX":30000,"greenY":60000,"blueX":15000,"blueY":6000}          |
+      | change-srgb-intent       | {"srgb":"perceptual"}                                                                                                        |
+      | change-physical-dims     | {"ppuX":2835,"ppuY":2835,"unitIsMeter":true}                                                                                 |
+      | change-timestamp         | {"year":2024,"month":1,"day":2,"hour":3,"minute":4,"second":5}                                                              |
+      | change-background        | {"r":255,"g":255,"b":255}                                                                                                    |
       | insert-text-chunk     | {"index":0,"keyword":"Comment","value":"Wave 7 oracle probe"}                                                               |
       | remove-text-chunk     | {"index":0}                                                                                                                  |
-      | set-text-chunk        | {"index":0,"keyword":"Author","value":"replaces the arranged chunk outright"}                                               |
-      | set-pixels            | {"fill":[200,40,40,255]}                                                                                                     |
+      | replace-text-chunk        | {"index":0,"keyword":"Author","value":"replaces the arranged chunk outright"}                                               |
+      | replace-pixels            | {"fill":[200,40,40,255]}                                                                                                     |
       | insert-unknown-chunk  | {"index":0,"kind":"waVe","data":"wave7-probe"}                                                                              |
       | remove-unknown-chunk  | {"index":0}                                                                                                                  |
 

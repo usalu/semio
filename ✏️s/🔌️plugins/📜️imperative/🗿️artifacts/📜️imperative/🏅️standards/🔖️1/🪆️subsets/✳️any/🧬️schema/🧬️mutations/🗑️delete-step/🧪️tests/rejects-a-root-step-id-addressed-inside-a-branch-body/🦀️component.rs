@@ -31,8 +31,8 @@ fn cached_program() -> Path {
 }
 
 fn before() -> ImperativeSnapshot {
-    let snapshot: ImperativeSnapshot = serde_json::from_str(BEFORE).expect("before imperative document decodes");
-    crate::artifacts::imperative::cache_imperative_flow(&snapshot.flow.child_id, &cached_program());
+    let mut snapshot: ImperativeSnapshot = serde_json::from_str(BEFORE).expect("before imperative document decodes");
+    crate::artifacts::imperative::materialize_imperative_flow(&mut snapshot.flow, &cached_program());
     snapshot
 }
 fn expected_after() -> ImperativeSnapshot {

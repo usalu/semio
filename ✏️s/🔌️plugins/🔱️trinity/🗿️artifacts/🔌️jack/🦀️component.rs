@@ -279,42 +279,23 @@ pub fn jack_content_child_handle(nodes: &[Node], edges: &[Edge]) -> JackContentC
 //#endregion 🔖️ContentBridge
 
 //#region 🔖️WorkingScene
-/// 🌱 Ephemeral, session-side working representation of the composed content child's live
-/// nodes/edges — NEVER persisted, NEVER a durable field on `JackSnapshot` itself (matches the
-/// `EngineRep` contract: wholly derived, droppable at any instant, rebuilt from base). Exists because
-/// no `LinkResolver`/child-dispatch seam is wired into `ArtifactApp::handle` yet (checked directly
-/// against `🔌️plugin/🦀️component.rs` — same standing gap every prior exemplar's report documents,
-/// most recently `dag-report.md`); until one exists, the only way a persisted content-addressed
-/// HANDLE can round-trip to real nodes/edges within one process is this cache, keyed by
-/// `JackContentChild::child_id` — mirrors `DagWorkingScene`/`FlowWorkingScene`/`WriterWorkingScene`.
-///
-/// ⚠️ Same documented gap as every prior exemplar: store-level undo/redo bypasses
-/// `ArtifactApp::handle` entirely, and a bare `parse_dsl`/`decode_pack` of persisted bytes recovers
-/// only the opaque handle unless the wire format ALSO carries the raw content (see
-/// `📸️snapshot/🦀️component.rs`'s own `🔖️CodecPrimitives`, which does — the same lesson `dag`'s
-/// report documents finding the hard way). `jack_working_scene`/`jack_working_scene_for_handle` fail
-/// soft (an empty scene) rather than panicking.
+/// 🌱 Ephemeral node/edge representation owned by one exact composed content child. It is
+/// never serialized or process-global and retires with that owner.
 #[derive(Clone, Debug, Default)]
 pub struct JackWorkingScene {
     pub nodes: Vec<Node>,
     pub edges: Vec<Edge>,
 }
 
-thread_local! {
-    static JACK_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, JackWorkingScene>> = std::cell::RefCell::new(std::collections::HashMap::new());
+/// 📝 Transfers decoded or test-provided content into one exact child owner.
+pub fn materialize_jack_content(handle: &mut JackContentChild, nodes: Vec<Node>, edges: Vec<Edge>) {
+    handle.set_local_owner(std::sync::Arc::new(JackWorkingScene { nodes, edges }));
 }
 
-/// 📝 Seeds the scratch cache for a handle — call whenever new nodes/edges content is about to become
-/// a document's `content` field (every mutation-diff/fixture builder in this plugin does, via
-/// [`jack_content_child_handle_and_cache`]).
-pub fn cache_jack_content(child_id: &str, nodes: Vec<Node>, edges: Vec<Edge>) {
-    JACK_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), JackWorkingScene { nodes, edges }));
-}
-
-/// 🔎 Reads the cached live scene for a content child handle — an empty scene (never a panic) when
-/// nothing has cached it yet.
+/// 🔎 Reads only the addressed child owner. A wire-only handle fails soft until host
+/// materialization.
 pub fn jack_working_scene_for_handle(handle: &JackContentChild) -> JackWorkingScene {
-    JACK_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned()).unwrap_or_default()
+    handle.local_owner::<JackWorkingScene>().map(|scene| scene.as_ref().clone()).unwrap_or_default()
 }
 
 /// 🔎 Reads the current document's live nodes/edges off its `content` child handle — the single read
@@ -324,14 +305,10 @@ pub fn jack_working_scene(snapshot: &JackSnapshot) -> JackWorkingScene {
     jack_working_scene_for_handle(&snapshot.content)
 }
 
-/// 🏗️ Mints a new content-addressed handle AND seeds the scratch cache with its scene in one call —
-/// the standard way every mutation-diff/fixture builder in this plugin creates a `content` field
-/// value; never construct a handle without also caching, or [`jack_working_scene`] will read back
-/// empty.
-pub fn jack_content_child_handle_and_cache(nodes: Vec<Node>, edges: Vec<Edge>) -> JackContentChild {
+/// 🏗️ Mints a new content-addressed handle and transfers its scene into that exact owner.
+pub fn jack_content_child_with_owner(nodes: Vec<Node>, edges: Vec<Edge>) -> JackContentChild {
     let handle = jack_content_child_handle(&nodes, &edges);
-    cache_jack_content(&handle.child_id, nodes, edges);
-    handle
+    handle.with_local_owner(std::sync::Arc::new(JackWorkingScene { nodes, edges }))
 }
 //#endregion 🔖️WorkingScene
 
@@ -461,7 +438,7 @@ impl JackSnapshot {
     /// a mechanical `JackSnapshot { .., nodes, edges, .. }` → `JackSnapshot::with_content(.., nodes,
     /// edges, ..)` rewrite instead of a hand-rolled handle mint at each site.
     pub fn with_content(schema: String, name: String, manifest_id: Option<String>, manifest: Manifest, camera: Camera, nodes: Vec<Node>, edges: Vec<Edge>, root_node_id: Option<String>) -> Self {
-        Self { schema, name, manifest_id, manifest, camera, content: jack_content_child_handle_and_cache(nodes, edges), root_node_id }
+        Self { schema, name, manifest_id, manifest, camera, content: jack_content_child_with_owner(nodes, edges), root_node_id }
     }
 
     /// 🔎 Live node list, read through the working-scene cache — replaces the old direct `.nodes`
@@ -813,6 +790,32 @@ pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclarat
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    trait JackChildOwnerOracle {
+        fn expected() -> serde_json::Value;
+    }
+
+    struct SerdeJsonJackChildOwnerOracle;
+
+    impl JackChildOwnerOracle for SerdeJsonJackChildOwnerOracle {
+        fn expected() -> serde_json::Value {
+            serde_json::from_str(include_str!("🧪️fixtures/🎯️child-owner-isolation.json")).expect("language-neutral Jack child-owner fixture")
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn working_scene_belongs_to_the_exact_content_child() {
+        let owned = jack_content_child_with_owner(Vec::new(), Vec::new());
+        let wire = serde_json::to_vec(&owned).expect("Jack child wire identity");
+        let reconstructed: JackContentChild = serde_json::from_slice(&wire).expect("Jack child wire roundtrip");
+        let observed = serde_json::json!({
+            "ownedHasScene": owned.local_owner::<JackWorkingScene>().is_some(),
+            "wireIdentityMatches": owned == reconstructed,
+            "wireHasScene": reconstructed.local_owner::<JackWorkingScene>().is_some(),
+        });
+
+        assert_eq!(observed, SerdeJsonJackChildOwnerOracle::expected());
+    }
     use crate::artifacts::jack::mutations::{create_edge, create_node};
     use crate::artifacts::jack::op::{dispatch_trinity_graph_mutations, validate_trinity_graph_operation};
     use store::ArtifactCommand;

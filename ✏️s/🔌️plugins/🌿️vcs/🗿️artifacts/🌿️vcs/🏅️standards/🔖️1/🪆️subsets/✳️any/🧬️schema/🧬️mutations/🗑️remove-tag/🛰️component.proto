@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.vcs.vcs.mutation;
+
+// 🗑️ Direct remove-tag payload.
+message RemoveTag {
+  string tag = 1;
+}

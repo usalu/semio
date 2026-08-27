@@ -22,7 +22,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::
 /// this loop registers handlers for both roles from one list. A mismatch is caught structurally: the
 /// contract phase fails with `mutation-kind-uncovered`/`mutation-kind-undeclared` if this list omits
 /// or invents a kind, and the runner fails every unregistered scenario id outright.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-encryption-dictionary", "remove-encryption-dictionary", "set-output-intent", "remove-output-intent", "set-trim-box", "remove-trim-box", "embed-font-file", "remove-font-file", "insert-javascript-action", "remove-javascript-action", "insert-launch-action", "remove-launch-action", "insert-media-annotation", "remove-media-annotation"];
+const KINDS: &[&str] = &["insert-encryption-dictionary", "remove-encryption-dictionary", "set-output-intent", "remove-output-intent", "set-trim-box", "remove-trim-box", "embed-font-file", "remove-font-file", "insert-javascript-action", "remove-javascript-action", "insert-launch-action", "remove-launch-action", "insert-media-annotation", "remove-media-annotation"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -94,7 +94,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let base = arranged_input(ctx, &spec)?;
     let output = oracle_apply_mutation(&base, &spec)?;
     let projection = project_conformance(&output)?;
-    if spec.str("kind") != "no-mutation" && projection == project_conformance(&base)? {
+    if projection == project_conformance(&base)? {
         return Err(format!("mutate-{}: the mutation left the conformance-class projection unchanged — a mutation that is not observable proves nothing", spec.str("kind")));
     }
     Ok(Outcome::with_raw(output, projection))
@@ -142,9 +142,9 @@ mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::io::{decode_pdf, encode_pdf};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::conformance_support as support;
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::conformance_support as support;
     use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfSnapshot};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::x::schema::mutations::{apply_x_conformance_mutation, stamp_conformance, PdfXMutation};
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::x::schema::mutations::{apply_x_conformance_mutation, PdfXMutation, InsertEncryptionDictionary, RemoveEncryptionDictionary, SetOutputIntent, RemoveOutputIntent, SetTrimBox, RemoveTrimBox, EmbedFontFile, RemoveFontFile, InsertJavascriptAction, RemoveJavascriptAction, InsertLaunchAction, RemoveLaunchAction, InsertMediaAnnotation, RemoveMediaAnnotation};
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::x::{oracle_inverse_spec, project_conformance};
 
     fn decode(bytes: &[u8]) -> Result<PdfSnapshot, String> {
@@ -189,22 +189,20 @@ mod subject {
     fn mutation_from_spec(base: &PdfSnapshot, spec: &Json) -> Result<PdfXMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => PdfXMutation::NoMutation,
-            "set-snapshot" => PdfXMutation::SetSnapshot { snapshot: stamp_conformance(base.clone(), params.str("conformance") == "stamped") },
-            "insert-encryption-dictionary" => PdfXMutation::InsertEncryptionDictionary { version: params.get("version").and_then(number).unwrap_or(2.0) as i64, revision: params.get("revision").and_then(number).unwrap_or(3.0) as i64 },
-            "remove-encryption-dictionary" => PdfXMutation::RemoveEncryptionDictionary { version: params.get("version").and_then(number).unwrap_or(2.0) as i64, revision: params.get("revision").and_then(number).unwrap_or(3.0) as i64 },
-            "set-output-intent" => PdfXMutation::SetOutputIntent { identifier: params.str("identifier") },
-            "remove-output-intent" => PdfXMutation::RemoveOutputIntent,
-            "set-trim-box" => PdfXMutation::SetTrimBox { page_index: params.get("pageIndex").and_then(number).unwrap_or(0.0) as usize, trim_box: four_numbers(&params, "trimBox")? },
-            "remove-trim-box" => PdfXMutation::RemoveTrimBox { page_index: params.get("pageIndex").and_then(number).unwrap_or(0.0) as usize },
-            "embed-font-file" => PdfXMutation::EmbedFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize, key: params.str("key"), program: program_reference(base, &params)? },
-            "remove-font-file" => PdfXMutation::RemoveFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize },
-            "insert-javascript-action" => PdfXMutation::InsertJavaScriptAction { script: params.str("script") },
-            "remove-javascript-action" => PdfXMutation::RemoveJavaScriptAction { script: params.str("script") },
-            "insert-launch-action" => PdfXMutation::InsertLaunchAction { target: params.str("target") },
-            "remove-launch-action" => PdfXMutation::RemoveLaunchAction { target: params.str("target") },
-            "insert-media-annotation" => PdfXMutation::InsertMediaAnnotation { subtype: params.str("subtype"), title: params.str("title") },
-            "remove-media-annotation" => PdfXMutation::RemoveMediaAnnotation { subtype: params.str("subtype"), title: params.str("title") },
+            "insert-encryption-dictionary" => PdfXMutation::InsertEncryptionDictionary(InsertEncryptionDictionary { version: params.get("version").and_then(number).unwrap_or(2.0) as i64, revision: params.get("revision").and_then(number).unwrap_or(3.0) as i64 }),
+            "remove-encryption-dictionary" => PdfXMutation::RemoveEncryptionDictionary(RemoveEncryptionDictionary { version: params.get("version").and_then(number).unwrap_or(2.0) as i64, revision: params.get("revision").and_then(number).unwrap_or(3.0) as i64 }),
+            "set-output-intent" => PdfXMutation::SetOutputIntent(SetOutputIntent { identifier: params.str("identifier") }),
+            "remove-output-intent" => PdfXMutation::RemoveOutputIntent(RemoveOutputIntent {}),
+            "set-trim-box" => PdfXMutation::SetTrimBox(SetTrimBox { page_index: params.get("pageIndex").and_then(number).unwrap_or(0.0) as usize, trim_box: four_numbers(&params, "trimBox")? }),
+            "remove-trim-box" => PdfXMutation::RemoveTrimBox(RemoveTrimBox { page_index: params.get("pageIndex").and_then(number).unwrap_or(0.0) as usize }),
+            "embed-font-file" => PdfXMutation::EmbedFontFile(EmbedFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize, key: params.str("key"), program: program_reference(base, &params)? }),
+            "remove-font-file" => PdfXMutation::RemoveFontFile(RemoveFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize }),
+            "insert-javascript-action" => PdfXMutation::InsertJavascriptAction(InsertJavascriptAction { script: params.str("script") }),
+            "remove-javascript-action" => PdfXMutation::RemoveJavascriptAction(RemoveJavascriptAction { script: params.str("script") }),
+            "insert-launch-action" => PdfXMutation::InsertLaunchAction(InsertLaunchAction { target: params.str("target") }),
+            "remove-launch-action" => PdfXMutation::RemoveLaunchAction(RemoveLaunchAction { target: params.str("target") }),
+            "insert-media-annotation" => PdfXMutation::InsertMediaAnnotation(InsertMediaAnnotation { subtype: params.str("subtype"), title: params.str("title") }),
+            "remove-media-annotation" => PdfXMutation::RemoveMediaAnnotation(RemoveMediaAnnotation { subtype: params.str("subtype"), title: params.str("title") }),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

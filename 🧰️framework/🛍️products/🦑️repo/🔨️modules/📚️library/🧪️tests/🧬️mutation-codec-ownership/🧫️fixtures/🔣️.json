@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "mutationRoot": "✏️s/🧪️probe/🧬️mutations",
+  "aggregate": "#![feature(negative_impls)]\n#![deny(deprecated)]\nmod insert_page { pub struct Mutation; pub mod text { pub const CODEC: &str = \"insert-page\"; pub fn decode(_: &[u8]) {} } }\nmod remove_page { pub struct Mutation; }\ntrait CodecAtom {}\nimpl CodecAtom for &[u8] {}\nimpl CodecAtom for u8 {}\nimpl !CodecAtom for PageMutation {}\nimpl !CodecAtom for &PageMutation {}\nmod serde_json { use super::CodecAtom; pub fn to_vec<T: CodecAtom>(_value: T) {} pub fn to_string<T: CodecAtom>(_value: T) {} pub fn to_value<T: CodecAtom>(_value: T) {} pub fn to_writer<W, T: CodecAtom>(_writer: W, _value: T) {} pub fn from_slice<T: CodecAtom>(_value: &[u8]) -> Result<T, ()> { unreachable!() } pub fn from_str<T: CodecAtom>(_value: &str) -> Result<T, ()> { unreachable!() } pub fn from_reader<T: CodecAtom, R>(_value: R) -> Result<T, ()> { unreachable!() } pub fn from_value<T: CodecAtom>(_value: u8) -> Result<T, ()> { unreachable!() } }\npub enum PageMutation { #[deprecated] InsertPage(insert_page::Mutation), #[deprecated] RemovePage(remove_page::Mutation) }\n",
+  "cases": [
+    {
+      "name": "direct-whole-self-serialization",
+      "source": "impl PageMutation { fn encode(&self) { let _ = serde_json::to_vec(self); } }\n",
+      "expected": ["whole-aggregate-serialization"]
+    },
+    {
+      "name": "aggregate-deserialization",
+      "source": "fn decode(bytes: &[u8]) { let _ = serde_json::from_slice::<PageMutation>(bytes); }\n",
+      "expected": ["whole-aggregate-deserialization"]
+    },
+    {
+      "name": "qualified-and-self-aggregate-deserialization",
+      "source": "impl PageMutation { fn decode(bytes: &[u8]) { let _ = serde_json::from_slice::<Self>(bytes); let _ = serde_json::from_slice::<crate::PageMutation>(bytes); } }\n",
+      "expected": ["whole-aggregate-deserialization", "whole-aggregate-deserialization"]
+    },
+    {
+      "name": "aggregate-type-alias-deserialization",
+      "source": "type WireMutation = crate::PageMutation; fn decode(bytes: &[u8]) { let _ = serde_json::from_slice::<WireMutation>(bytes); }\n",
+      "expected": ["whole-aggregate-deserialization"]
+    },
+    {
+      "name": "inferred-self-deserialization",
+      "source": "impl PageMutation { fn decode(bytes: &[u8]) -> Result<Self, ()> { serde_json::from_slice(bytes) } }\n",
+      "expected": ["whole-aggregate-deserialization"]
+    },
+    {
+      "name": "typed-free-function-aggregate-codec",
+      "source": "fn encode(value: PageMutation) { serde_json::to_value(&value); } fn decode(bytes: &[u8]) -> Result<PageMutation, ()> { serde_json::from_slice(bytes) }\n",
+      "expected": ["whole-aggregate-serialization", "whole-aggregate-deserialization"]
+    },
+    {
+      "name": "typed-local-aggregate-codec",
+      "source": "fn encode() { let value: PageMutation = loop {}; let _ = serde_json::to_vec(&value); } fn decode(bytes: &[u8]) { let _: Result<PageMutation, ()> = serde_json::from_slice(bytes); }\n",
+      "expected": ["whole-aggregate-serialization", "whole-aggregate-deserialization"]
+    },
+    {
+      "name": "whole-self-other-serde-writers",
+      "source": "impl PageMutation { fn encode(&self, out: &mut Vec<u8>) { let _ = serde_json::to_string(self); serde_json::to_writer(out, self); } }\n",
+      "expected": ["whole-aggregate-serialization", "whole-aggregate-serialization"]
+    },
+    {
+      "name": "aliased-path-and-self-alias",
+      "source": "use serde_json as json; impl PageMutation { fn encode(&self) { let whole = self; let _ = json::to_vec(&whole); } }\n",
+      "expected": ["whole-aggregate-serialization"]
+    },
+    {
+      "name": "root-per-kind-match",
+      "source": "impl PageMutation { fn encode(&self) { match self { PageMutation::InsertPage(_) => (), PageMutation::RemovePage(_) => () } } }\n",
+      "expected": ["aggregate-variant-match", "aggregate-variant-match"]
+    },
+    {
+      "name": "self-qualified-root-per-kind-match",
+      "source": "impl PageMutation { fn encode(&self) { match self { Self::InsertPage(_) => (), Self::RemovePage(_) => () } } }\n",
+      "expected": ["aggregate-variant-match", "aggregate-variant-match"]
+    },
+    {
+      "name": "generic-registry-framing-and-decoys",
+      "source": "pub const REGISTRY: &[&str] = &[insert_page::text::CODEC]; pub const DECODERS: &[fn(&[u8])] = &[insert_page::text::decode]; fn frame(bytes: &[u8]) { let _ = serde_json::to_vec(bytes); for decode in DECODERS { decode(bytes); } } enum Other { InsertPage } fn unrelated(value: Other) { match value { Other::InsertPage => () } } const DOC: &str = \"serde_json::to_vec(self); PageMutation::InsertPage\"; // serde_json::from_slice::<PageMutation>(bytes)\n",
+      "expected": []
+    },
+    {
+      "name": "scoped-alias-and-generic-wrapper-decoys",
+      "source": "struct Wrapper<T>(u8, std::marker::PhantomData<T>); impl PageMutation { fn own(&self) { let value = self; } } fn frame(value: &[u8]) { serde_json::to_vec(value); } impl Wrapper<PageMutation> { fn frame(&self) { serde_json::to_vec(self.0); } }\n",
+      "expected": []
+    },
+    {
+      "name": "nested-shadow-restores-aggregate-binding",
+      "source": "impl PageMutation { fn encode(&self) { let value = self; { let value: &[u8] = b\"frame\"; serde_json::to_vec(value); } serde_json::to_vec(value); } }\n",
+      "expected": ["whole-aggregate-serialization"]
+    },
+    {
+      "name": "same-method-shadowed-scalar-decoy",
+      "source": "impl PageMutation { fn encode(&self) { let value = self; let value: &[u8] = b\"frame\"; serde_json::to_vec(value); } }\n",
+      "expected": []
+    },
+    {
+      "name": "aggregate-returning-scalar-framing-before-leaf-decode",
+      "source": "fn leaf_decode(_: &[u8]) -> Result<PageMutation, ()> { unreachable!() } impl PageMutation { fn decode(bytes: &[u8]) -> Result<Self, ()> { let version: u8 = serde_json::from_slice(bytes)?; assert_eq!(version, 1); leaf_decode(bytes) } }\n",
+      "expected": []
+    }
+  ]
+}

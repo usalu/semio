@@ -14,7 +14,7 @@ const FLOW_PLAY_PREVIEW_PLACEHOLDER: &str = "(evaluate a generation to preview o
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: FLOW_PLAY_WINDOW_GENERATE_PREVIEW.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
@@ -35,7 +35,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(config: &FlowConfig) -> UiNode {
+pub fn render(config: &FlowConfig) -> UiNode {
     let generation = config.generation();
     let text = generation.preview_text.as_deref().filter(|value| !value.is_empty()).unwrap_or(FLOW_PLAY_PREVIEW_PLACEHOLDER);
     render_generation_preview_text(FLOW_PLAY_SURFACE_GENERATE_PREVIEW, FLOW_PLAY_APP_ID, text)

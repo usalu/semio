@@ -83,10 +83,11 @@ impl UiNodeIdAllocator {
 //#endregion 🆔️Ids
 
 //#region 🌳️Snapshot
-pub const UI_DOCUMENT_NODES: usize = 32;
+pub const UI_DOCUMENT_NODES: usize = 128;
+pub const UI_NODE_BINDINGS: usize = 32;
 pub const UI_DOCUMENT_PATCH_OPS: usize = UI_DOCUMENT_NODES * 9 + 1;
 pub type UiNodeChildren = crate::UiFixedList<UiNodeId, UI_DOCUMENT_NODES>;
-pub type UiNodeBindings = crate::UiFixedList<crate::ActionBinding, UI_DOCUMENT_NODES>;
+pub type UiNodeBindings = crate::UiFixedList<crate::ActionBinding, UI_NODE_BINDINGS>;
 pub type UiSnapshotNodes = crate::UiFixedList<UiNodeRecord, UI_DOCUMENT_NODES>;
 pub type UiPatchOps = crate::UiFixedList<UiPatchOp, UI_DOCUMENT_PATCH_OPS>;
 

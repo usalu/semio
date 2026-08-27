@@ -583,7 +583,7 @@ pub fn extension_manifest_json() -> String {
         "math",
         "Math",
         "0.2.0",
-        &module_registry(),
+        &neural_engine::ColdOwner::new(module_registry()),
         vec!["onStartup".into()],
         vec![],
         vec![FlowExtensionCommand { id: "math.showHelp".into(), title: "Math: Show Help".into() }],
@@ -653,7 +653,7 @@ mod tests {
             "math",
             "Math",
             "0.2.0",
-            &module_registry(),
+            &neural_engine::ColdOwner::new(module_registry()),
             vec!["onStartup".into()],
             vec![],
             vec![FlowExtensionCommand { id: "math.showHelp".into(), title: "Math: Show Help".into() }],
@@ -746,7 +746,7 @@ mod extension_guest {
         let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
         semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
             let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string()))?;
-            Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
+            Ok(evaluate_json(&neural_engine::ColdOwner::new(module_registry()), &request.operator_id, &request.input_json).into_bytes())
         }))
     }
 

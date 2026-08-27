@@ -5,7 +5,7 @@ use protocol::Identified;
 
 use super::mutation::ReorderWidgets;
 
-pub async fn inverse(payload: &ReorderWidgets, base: &FlowSnapshot) -> Vec<FlowMutation> {
+pub fn inverse(payload: &ReorderWidgets, base: &FlowSnapshot) -> Vec<FlowMutation> {
     let scene = flow_working_scene(base);
     let Some(original_index) = scene.widgets.iter().position(|widget| widget.id() == &payload.id) else {
         return Vec::new();

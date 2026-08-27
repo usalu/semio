@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RemoveMemberPayload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path",
+    "key"
+  ],
+  "properties": {
+    "path": {
+      "type": "array",
+      "items": {
+        "type": [
+          "object",
+          "integer"
+        ]
+      }
+    },
+    "key": {
+      "type": "string"
+    }
+  }
+}

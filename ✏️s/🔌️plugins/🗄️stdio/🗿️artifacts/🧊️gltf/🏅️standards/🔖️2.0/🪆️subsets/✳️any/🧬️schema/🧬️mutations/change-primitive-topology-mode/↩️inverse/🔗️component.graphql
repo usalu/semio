@@ -1,7 +1,0 @@
-# change-primitive-topology-mode inverse facet.
-input GltfChangePrimitiveTopologyModePayloadV1 {
-  mesh: Int!
-  primitive: Int!
-  mode: Int!
-}
-type GltfChangePrimitiveTopologyModeInverseV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

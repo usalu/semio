@@ -1,3 +1,0 @@
-// change-scene-extension-data diff typed facet.
-syntax = "proto3"; package stdio.gltf.mutation;
-message GltfChangeSceneExtensionDataDiffV1 { GltfChangeSceneExtensionDataPayloadV1 operation=1; bytes after=2; repeated string touched_paths=3; }

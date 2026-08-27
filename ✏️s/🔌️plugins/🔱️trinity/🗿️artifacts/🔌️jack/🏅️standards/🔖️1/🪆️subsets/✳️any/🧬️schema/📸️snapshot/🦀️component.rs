@@ -44,7 +44,7 @@ impl Default for JackSnapshot {
             manifest_id: None,
             manifest: Manifest::default(),
             camera: Camera::default(),
-            content: crate::artifacts::jack::jack_content_child_handle_and_cache(Vec::new(), Vec::new()),
+            content: crate::artifacts::jack::jack_content_child_with_owner(Vec::new(), Vec::new()),
             root_node_id: None,
         }
     }

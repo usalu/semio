@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.png.mutation;
+// 🧬️ change-transparency/ChangeTransparency; complex fields follow the direct payload schema.
+message ChangeTransparencyMutation { bytes trns = 1; }

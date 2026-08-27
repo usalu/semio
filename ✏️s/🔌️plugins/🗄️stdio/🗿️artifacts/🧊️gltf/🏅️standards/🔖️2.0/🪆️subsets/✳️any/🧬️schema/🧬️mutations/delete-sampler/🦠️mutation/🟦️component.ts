@@ -1,7 +1,0 @@
-/** 🦠️ delete-sampler executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../../📸️snapshot/🟦️component.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔒️top-level-collections-private/🟦️component.ts';
-export const GltfDeleteSamplerDescriptor = { id: 's.stdio.gltf.mutation.delete-sampler.v1', version: 1, touchedPathPattern: 'document/samplers', referencePolicy: 'all typed sampler references are remapped, repaired, or rejected' } as const;
-export interface GltfDeleteSamplerPayload { index: number }
-export const validateGltfDeleteSampler = (payload: GltfDeleteSamplerPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.samplers.length, 'document/samplers'); if (index) return index;  return undefined; };
-export const applyGltfDeleteSampler = (base: GltfSnapshot, payload: GltfDeleteSamplerPayload): GltfStructuralResult => { const rejection = validateGltfDeleteSampler(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); remove(next, 'samplers', payload.index); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/samplers', String(error)) }; } };

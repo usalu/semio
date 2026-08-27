@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "mutationRoot": "✏️s/🧪️scaffold/🧬️mutations",
+  "name": "➕️insert-page",
+  "attributedAggregate": "#[derive(Clone, Debug)]\n#[serde(tag = \"kind\")]\npub enum ProbeMutation { Existing(existing::Mutation) }\n",
+  "malformedAggregate": "pub struct ProbeMutation;\n",
+  "ambiguousAggregate": "pub enum FirstMutation {}\npub enum SecondMutation {}\n",
+  "wrongMountAggregate": "#[path = \"elsewhere/🦀️.rs\"]\npub mod insert_page;\npub enum ProbeMutation { Existing(existing::Mutation) }\n",
+  "privateMountAggregate": "#[path = \"➕️insert-page/🦀️.rs\"]\nmod insert_page;\npub enum ProbeMutation { Existing(existing::Mutation) }\n",
+  "wrongVariantAggregate": "pub enum ProbeMutation { InsertPage(other::Mutation) }\n",
+  "scopedAggregate": "/// Root aggregate documentation.\n#[derive(Clone, Debug)]\n#[serde(tag = \"kind\")]\npub enum ProbeMutation { Existing(existing::Mutation) }\n",
+  "unrelatedDocAggregate": "/// Documentation for a prior item.\npub struct Before;\n#[derive(Clone, Debug)]\npub enum ProbeMutation { Existing(existing::Mutation) }\n",
+  "nestedAggregateDecoy": "pub fn decoy() { pub enum NestedMutation {} }\npub enum Plain {}\n",
+  "nestedAggregateScopes": "pub struct Probe;\npub fn function() { pub enum FunctionMutation {} }\nimpl Probe { fn method() { enum ImplMutation {} } }\npub mod nested { pub enum ModuleMutation {} }\nmacro_rules! mutation { () => { pub enum MacroMutation {} }; }\npub enum Plain {}\n",
+  "unmatchedAggregate": "pub enum ProbeMutation { Existing(existing::Mutation)\n"
+}

@@ -1,6 +1,0 @@
-# transform-node diff facet.
-input GltfTransformNodePayloadV1 {
-  node: Int!
-  transform: GltfNodeTransformInput!
-}
-type GltfTransformNodeDiffV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String, diff: String! }

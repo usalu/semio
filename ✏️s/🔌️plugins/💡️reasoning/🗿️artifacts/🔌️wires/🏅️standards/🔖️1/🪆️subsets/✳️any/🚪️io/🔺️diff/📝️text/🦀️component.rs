@@ -144,7 +144,7 @@ pub async fn diff_set_snapshot(snapshot: &WiresSnapshot) -> WiresDiff {
     WiresDiff { artifact: Some(Box::new(WiresArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 
-/// 🔺️ Mints+caches a fresh content-addressed handle from `board`'s `nodes`/`edges` and wraps it as a
+/// 🔺️ Mints and owns a fresh content-addressed handle from `board`'s `nodes`/`edges` and wraps it as a
 /// single always-present-slot diff entry — the sole builder every board-mutating triad's `diff.rs`
 /// goes through (`create-node`/`delete-node`/`move-node`/`resize-node`/`change-node-kind`/
 /// `change-node-shape`/`edit-node-text`/`set-node-root` all call this via `board_after_*`/directly).
@@ -153,7 +153,7 @@ pub async fn diff_set_snapshot(snapshot: &WiresSnapshot) -> WiresDiff {
 pub async fn diff_board_fixture(board: DslValue) -> WiresDiff {
     let nodes = crate::artifacts::wires::schema::fixture_nodes(&board).to_vec();
     let edges = crate::artifacts::wires::schema::fixture_edges(&board).to_vec();
-    WiresDiff { content: Some(crate::artifacts::wires::wires_content_child_handle_and_cache(nodes, edges)), ..Default::default() }
+    WiresDiff { content: Some(crate::artifacts::wires::wires_content_child_with_owner(nodes, edges)), ..Default::default() }
 }
 
 pub async fn diff_wires_fixture(wires: DslValue) -> WiresDiff {

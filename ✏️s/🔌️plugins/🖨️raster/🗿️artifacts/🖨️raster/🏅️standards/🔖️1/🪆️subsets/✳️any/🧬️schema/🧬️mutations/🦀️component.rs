@@ -86,7 +86,7 @@ mod tests {
 
     /// 🖼️ Real, decodable 1x1 RGBA PNGs (not arbitrary placeholder bytes) — `add-layer-asset` now
     /// routes through the real `s.stdio.semio/v1/image` png codec bridge
-    /// (`crate::artifacts::raster::mint_and_stash_asset`), so `AddLayerAsset`'s inverse can only
+    /// (`crate::artifacts::raster::mint_raster_asset_child`), so `AddLayerAsset`'s inverse can only
     /// recover a faithful prior asset from the working-scene cache if the payload actually decodes.
     const SEED_ASSET_PNG: &[u8] = &[
         137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 218, 99, 224, 18, 145, 251, 15, 0, 1, 164, 1, 60, 76, 213, 28, 167, 0, 0, 0, 0, 73, 69,
@@ -151,7 +151,7 @@ mod tests {
             params: RasterOwnedMap::new(),
         });
         let seed_asset = RasterImageAsset { mime: "image/png".into(), data: SEED_ASSET_PNG.to_vec() };
-        base.assets.insert("asset-1".into(), crate::artifacts::raster::mint_and_stash_asset("asset-1", &seed_asset));
+        base.assets.insert("asset-1".into(), crate::artifacts::raster::mint_raster_asset_child("asset-1", &seed_asset));
         for mutation in every_mutation() {
             round_trip(&base, &mutation);
         }

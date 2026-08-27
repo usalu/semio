@@ -131,9 +131,9 @@ pub fn encode_form_snapshot_json(snapshot: &FormsSnapshot) -> String {
 /// it was read from cited there. The right long-term fix is to commit the scene beside the snapshot
 /// as a fixture file of its own; until then this is the seam that makes the vectors runnable.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
-pub fn seed_form_scene_json(snapshot: &FormsSnapshot, steps_json: &str) -> Result<Vec<crate::artifacts::forms::FormStep>, String> {
+pub fn seed_form_scene_json(snapshot: &mut FormsSnapshot, steps_json: &str) -> Result<Vec<crate::artifacts::forms::FormStep>, String> {
     let steps: Vec<crate::artifacts::forms::FormStep> = serde_json::from_str(steps_json).map_err(|error| error.to_string())?;
-    crate::artifacts::forms::cache_forms_steps(&snapshot.structure.child_id, steps.clone());
+    crate::artifacts::forms::materialize_forms_steps(&mut snapshot.structure, steps.clone());
     Ok(steps)
 }
 //#endregion 🔖️Kinds

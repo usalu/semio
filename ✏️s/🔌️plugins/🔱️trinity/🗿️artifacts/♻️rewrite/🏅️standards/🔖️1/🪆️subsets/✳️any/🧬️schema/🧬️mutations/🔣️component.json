@@ -1,60 +1,23 @@
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://semio.tech/schema/s/trinity/rewrite/mutation.json",
-  "title": "RewriteMutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "beforeFixtureJson",
-    "lhsJson",
-    "rhsJson",
-    "parameterBindings",
-    "ruleLayout"
+  "title": "RewriteRuleMutation",
+  "oneOf": [
+    { "$ref": "./🖼️edit-before-fixture/🔣️payload.schema.json" },
+    { "$ref": "./🔍️edit-lhs/🔣️payload.schema.json" },
+    { "$ref": "./🎯️edit-rhs/🔣️payload.schema.json" },
+    { "$ref": "./🔧️change-parameter-binding/🔣️payload.schema.json" },
+    { "$ref": "./🧹️remove-parameter-binding/🔣️payload.schema.json" },
+    { "$ref": "./📐️change-rule-layout-point/🔣️payload.schema.json" },
+    { "$ref": "./🗑️remove-rule-layout-point/🔣️payload.schema.json" }
   ],
-  "properties": {
-    "beforeFixtureJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "artifact"
-    },
-    "lhsJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "artifact"
-    },
-    "rhsJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "artifact"
-    },
-    "parameterBindings": {
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/$defs/PropertyValue"
-      },
-      "x-semio-state": "artifact"
-    },
-    "ruleLayout": {
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/$defs/LayoutPoint"
-      },
-      "x-semio-state": "artifact"
-    }
-  },
-  "$defs": {
-    "PropertyValue": {
-      "title": "PropertyValue",
-      "description": "JSON-equivalent property value (null, bool, number, string, array, or object)."
-    },
-    "LayoutPoint": {
-      "title": "LayoutPoint",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["x", "y"],
-      "properties": {
-        "x": { "type": "number", "format": "double" },
-        "y": { "type": "number", "format": "double" }
-      }
-    }
-  }
+  "x-semio-mutationKinds": [
+    "edit-before-fixture",
+    "edit-lhs",
+    "edit-rhs",
+    "change-parameter-binding",
+    "remove-parameter-binding",
+    "change-rule-layout-point",
+    "remove-rule-layout-point"
+  ]
 }

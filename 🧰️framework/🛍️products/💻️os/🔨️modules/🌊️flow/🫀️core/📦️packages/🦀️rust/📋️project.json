@@ -5,6 +5,18 @@
   "projectType": "library",
   "tags": ["type:rust", "scope:os", "flow", "wasm"],
   "targets": {
+    "declarations": {
+      "executor": "nx:run-commands",
+      "options": {"command":"bun ./📜️script.ts declarations", "cwd":"{projectRoot}"}
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {"command":"bun ./📜️script.ts check", "forwardAllArgs":true, "cwd":"{projectRoot}"}
+    },
+    "test-source": {
+      "executor": "nx:run-commands",
+      "options": {"command":"bun ./📜️script.ts test-source", "cwd":"{projectRoot}"}
+    },
     "wasm": {
       "executor": "nx:run-commands",
       "options": {

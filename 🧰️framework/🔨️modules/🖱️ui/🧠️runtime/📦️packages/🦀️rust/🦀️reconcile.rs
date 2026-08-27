@@ -28,7 +28,7 @@ use std::sync::{LazyLock, Mutex};
 /// exists to preserve.
 type NodeIdentity = (Option<ui_contract::UiNodeId>, ui_contract::UiText);
 
-const SURFACE_RECONCILE_FIXED_NODES: usize = 32;
+const SURFACE_RECONCILE_FIXED_NODES: usize = ui_contract::UI_DOCUMENT_NODES;
 const SURFACE_RECONCILE_FIXED_OPS: usize = SURFACE_RECONCILE_FIXED_NODES * 9 + 1;
 
 #[derive(Debug)]
@@ -489,7 +489,7 @@ pub struct SurfaceReconcileLimits {
 
 impl Default for SurfaceReconcileLimits {
     fn default() -> Self {
-        Self { max_nodes: SURFACE_RECONCILE_FIXED_NODES, max_items: 4_097, max_bytes: 2 * 1_024 * 1_024, max_identifier_bytes: 256 }
+        Self { max_nodes: SURFACE_RECONCILE_FIXED_NODES, max_items: 4_097, max_bytes: SURFACE_RECONCILE_SURFACE_BYTES, max_identifier_bytes: 256 }
     }
 }
 
@@ -616,6 +616,7 @@ enum SurfaceSemanticCensusStep {
     Fault(SurfaceReconcileFault),
 }
 
+/// 📏️ Charges complete semantic ownership in bounded pages; a node may span several pages.
 struct SurfaceSemanticCensusCursor {
     field: u8,
     container: u8,
@@ -642,9 +643,8 @@ impl SurfaceSemanticCensusCursor {
         SurfaceSemanticUsage { items: SURFACE_RECONCILE_SEMANTIC_COPIES, bytes: 0 }
     }
 
-    fn backing<T>(&self, capacity: usize) -> SurfaceSemanticUsage {
-        let bytes = capacity.checked_mul(size_of::<T>()).and_then(|bytes| bytes.checked_mul(SURFACE_RECONCILE_SEMANTIC_COPIES)).unwrap_or(usize::MAX);
-        SurfaceSemanticUsage { items: SURFACE_RECONCILE_SEMANTIC_COPIES, bytes }
+    fn backing<T>(&mut self, capacity: usize) -> SurfaceSemanticUsage {
+        self.owner(capacity.checked_mul(size_of::<T>()).unwrap_or(usize::MAX))
     }
 
     fn push_value(&mut self, value: &ui_contract::UiValue) -> Result<(), SurfaceReconcileFault> {
@@ -1027,8 +1027,9 @@ impl SurfaceSemanticCensusCursor {
 
     fn step(&mut self, node: &crate::TreeNode) -> SurfaceSemanticCensusStep {
         if self.string_byte > 0 {
-            self.string_byte -= 1;
-            return SurfaceSemanticCensusStep::Progress(SurfaceSemanticUsage { items: 0, bytes: 1 });
+            let bytes = self.string_byte.min(SURFACE_RECONCILE_PAGE_BYTES);
+            self.string_byte -= bytes;
+            return SurfaceSemanticCensusStep::Progress(SurfaceSemanticUsage { items: 0, bytes });
         }
         if let Some(step) = self.value_step() {
             return step;
@@ -1263,12 +1264,6 @@ impl SurfaceReconcileCursor {
                                 return SurfaceReconcileStep::Fault(SurfaceReconcileFault::CounterOverflow);
                             };
                             let projected = SurfaceReconcileUsage { nodes: projected_nodes, items: projected_items, bytes: projected_bytes };
-                            let page_bytes = if matches!(&node.component, ui_contract::Component::Surface(_)) { self.limits.max_bytes } else { SURFACE_RECONCILE_PAGE_BYTES };
-                            if node_page_bytes > page_bytes {
-                                let fault = SurfaceReconcileFault::PageBytes { actual: node_page_bytes, max: page_bytes };
-                                self.fault = Some(fault.clone());
-                                return SurfaceReconcileStep::Fault(fault);
-                            }
                             if !projected.fits(self.limits) {
                                 let fault = SurfaceReconcileFault::Credits { usage: projected, limits: self.limits };
                                 self.fault = Some(fault.clone());
@@ -1752,7 +1747,8 @@ impl SurfaceReconcileCursor {
 
 pub const SURFACE_RECONCILE_ADMISSION_SLOTS: usize = 64;
 pub const SURFACE_RECONCILE_PAGE_BYTES: usize = 32 * 1_024;
-pub const SURFACE_RECONCILE_AGGREGATE_BYTES: usize = 8 * 1_024 * 1_024;
+pub const SURFACE_RECONCILE_SURFACE_BYTES: usize = 8 * 1_024 * 1_024;
+pub const SURFACE_RECONCILE_AGGREGATE_BYTES: usize = SURFACE_RECONCILE_SURFACE_BYTES * 4;
 pub const SURFACE_RECONCILE_AGGREGATE_ITEMS: usize = 131_076;
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -2510,6 +2506,18 @@ impl Drop for SurfaceReconcilePublishedPatch {
 /// 🧵️ Generation-keyed by-value reconciliation job advanced once per worker grant.
 pub struct SurfaceReconcileJob {
     state: Option<Box<SurfaceReconcileRetained>>,
+}
+
+impl std::fmt::Debug for SurfaceReconcileJob {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("SurfaceReconcileJob")
+            .field("phase", &self.state.as_ref().map(|state| state.phase))
+            .field("usage", &self.state.as_ref().map(|state| state.usage))
+            .field("credit", &self.state.as_ref().and_then(|state| state.credit.as_ref()))
+            .field("fault", &self.fault())
+            .finish()
+    }
 }
 
 impl SurfaceReconcileJob {
@@ -3438,12 +3446,13 @@ mod tests {
     }
 
     #[test]
-    fn dynamic_semantic_page_plus_one_faults_before_key_or_record_clone() {
+    fn semantic_aggregate_quota_faults_before_key_or_record_clone() {
         let mut data_attributes = ui_contract::UiFixedMap::default();
         data_attributes.try_push(ui_text("semantic"), ui_text("payload")).expect("bounded fixture attribute");
         let node = crate::TreeNode::try_new("exact", ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(ui_text("value")), emphasize: None, data_attributes: Some(data_attributes) })).expect("bounded fixture node");
         let current = SurfaceReconciler::new("s");
-        let mut cursor = SurfaceReconcileCursor::new(tree(node), &current);
+        let limits = SurfaceReconcileLimits { max_bytes: SURFACE_RECONCILE_PAGE_BYTES, ..Default::default() };
+        let mut cursor = SurfaceReconcileCursor::new_with_limits(tree(node), &current, limits);
         let mut fault = None;
         for _ in 0..4_096 {
             if let SurfaceReconcileStep::Fault(found) = cursor.step(&current) {
@@ -3451,7 +3460,7 @@ mod tests {
                 break;
             }
         }
-        assert!(matches!(fault, Some(SurfaceReconcileFault::PageBytes { .. })));
+        assert!(matches!(fault, Some(SurfaceReconcileFault::Credits { .. })));
         let retained = cursor.held_node.as_ref().expect("exact unmaterialized node remains retained");
         assert_eq!(retained.1.key.as_str(), "exact");
         assert!(cursor.flat.is_empty());

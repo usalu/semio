@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.reorder-scene-root-nodes.v1.mutation",
+  "title": "GltfReorderSceneRootNodesMutation",
+  "type": "object",
+  "properties": {
+    "scene": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "order": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  },
+  "required": [
+    "scene",
+    "order"
+  ],
+  "additionalProperties": false,
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.reorder-scene-root-nodes.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "reorder",
+    "touchedPaths": [
+      "document/scenes/*/nodes"
+    ],
+    "referencePolicy": "accepts only a complete permutation of the current root-node identities"
+  },
+  "x-semio-mutation": "reorder-scene-root-nodes"
+}

@@ -4,23 +4,13 @@ version 1
 schema stdio.pdf.op
 start op
 
-# P2-FG3: `protocol::OpBinary::encode_op`/`decode_op` for `stdio.pdf` (1.4) are hand-rolled
-# (../../🦀️component.rs's `OpCodecs` region) since ticket 26/08/23/END-TO-END-TESTING-REFACTOR
-# gave this standard a real page tree — the derive path's generic `os_pack::encode_record_body`
-# wire (a varint-prefixed string-symbol table plus a self-describing per-field-id TAG stream) is
-# framework-generic and, as this dialect stands today, structurally irreducible here; a hand-rolled
-# frame is not.
-#
-# Layout, byte for byte as `encode_op` writes it: a fixed `format` byte
-# (`store::pack_rt::OP_BINARY_FORMAT`), then the variant tag as a single byte in declaration order
-# (`NoMutation`=0, `SetSnapshot`=1), then the variant's own payload. `NoMutation` has none;
-# `SetSnapshot` carries `enc_snapshot_bin` — a length-prefixed schema string, a varint page count,
-# and per page two little-endian `f64`s plus a length-prefixed text. The payload is genuinely
-# structured binary, never the text form's bytes.
-#
-# `header fixed 2` + `chain payload bytes` is the honest shape: `format` and `tag` are individually
-# walked and validated; the variant payload past them is a length-driven chain this dialect has no
-# per-variant dispatch primitive for.
+# 💾️ Header format byte then direct leaf tag. Integers are u64 little-endian;
+# geometry is finite f64 little-endian; strings are u64 byte-length plus UTF-8.
+# 0 insert-page: index=u64le page=(width:f64le,height:f64le,text:utf8-length64)
+# 1 remove-page: index=u64le
+# 2 move-page: from=u64le to=u64le
+# 3 resize-page: index=u64le width=f64le height=f64le
+# 4 replace-page-text: index=u64le text=utf8-length64
 framing record
 header fixed 2
 field format u8

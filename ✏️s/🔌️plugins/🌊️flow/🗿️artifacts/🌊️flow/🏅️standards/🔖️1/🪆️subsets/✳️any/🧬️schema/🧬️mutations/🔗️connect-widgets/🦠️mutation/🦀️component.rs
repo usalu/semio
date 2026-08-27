@@ -21,16 +21,16 @@ pub struct ConnectWidgets {
 impl MutationKind<FlowSnapshot, FlowMutation> for ConnectWidgets {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "connect", entity: "synapse", kind: "connect-widgets", record: "ConnectedWidgets" };
 
-    async fn diff(&self, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
+    fn diff(&self, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {
+    fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Connect \"{}\" to \"{}\"", self.from, self.to)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/sequence/sequence/mutation/duplicate-step/payload.json",
+  "title": "DuplicateStep",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sourceId",
+    "newId",
+    "x",
+    "y"
+  ],
+  "properties": {
+    "sourceId": {
+      "type": "string"
+    },
+    "newId": {
+      "type": "string"
+    },
+    "x": {
+      "type": "number"
+    },
+    "y": {
+      "type": "number"
+    }
+  }
+}

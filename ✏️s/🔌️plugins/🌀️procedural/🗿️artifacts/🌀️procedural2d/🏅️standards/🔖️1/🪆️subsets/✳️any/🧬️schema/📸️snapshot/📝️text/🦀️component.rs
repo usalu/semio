@@ -170,6 +170,7 @@ pub enum WidgetDsl {
     },
     InputSlider {
         id: String,
+        label: String,
         value: f64,
         min: f64,
         max: f64,
@@ -215,7 +216,7 @@ pub fn widget_to_dsl(widget: &Widget) -> WidgetDsl {
         Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, preview } => {
             WidgetDsl::Neuron { id: id.clone(), neuron_kind: neuron_kind.clone(), preview: *preview, input_ports: input_ports.clone(), output_ports: output_ports.clone(), params: dictionary_to_value_dsl_entries(params) }
         }
-        Widget::InputSlider { id, value, min, max, step } => WidgetDsl::InputSlider { id: id.clone(), value: *value, min: *min, max: *max, step: *step },
+        Widget::InputSlider { id, label, value, min, max, step } => WidgetDsl::InputSlider { id: id.clone(), label: label.clone(), value: *value, min: *min, max: *max, step: *step },
         Widget::InputNote { id, text } => WidgetDsl::InputNote { id: id.clone(), text: text.clone() },
         Widget::InputImage { id, src } => WidgetDsl::InputImage { id: id.clone(), src: src.clone() },
         Widget::Variable { id, name, schema } => WidgetDsl::Variable { id: id.clone(), name: name.clone(), schema: schema.clone() },
@@ -229,7 +230,7 @@ pub fn widget_to_dsl(widget: &Widget) -> WidgetDsl {
 pub fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, store::TextError> {
     Ok(match widget {
         WidgetDsl::Neuron { id, neuron_kind, preview, input_ports, output_ports, params } => Widget::Neuron { id, neuron_kind, params: value_dsl_entries_to_dictionary(&params), input_ports, output_ports, preview },
-        WidgetDsl::InputSlider { id, value, min, max, step } => Widget::InputSlider { id, value, min, max, step },
+        WidgetDsl::InputSlider { id, label, value, min, max, step } => Widget::InputSlider { id, label, value, min, max, step },
         WidgetDsl::InputNote { id, text } => Widget::InputNote { id, text },
         WidgetDsl::InputImage { id, src } => Widget::InputImage { id, src },
         WidgetDsl::Variable { id, name, schema } => Widget::Variable { id, name, schema },
@@ -343,7 +344,7 @@ fn procedural2d_document_from_dsl(parsed: Procedural2dSnapshotDsl) -> Result<Pro
     let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(&entry))).collect();
     Ok(Procedural2dSnapshot {
         fixture: FlowFixture { schema: parsed.schema, camera: camera_from_dsl(&parsed.camera), widgets, synapses, layout },
-        generation: GenerationPlayState { generations: parsed.generations.into_iter().map(form_generation_from_dsl).collect(), selected_generation_id: parsed.selected_generation_id, preview_text: parsed.preview_text },
+        generation: GenerationPlayState { generations: parsed.generations.into_iter().map(form_generation_from_dsl).collect(), selected_generation_id: parsed.selected_generation_id, preview_text: parsed.preview_text }.into(),
     })
 }
 
@@ -426,9 +427,9 @@ mod tests {
         // crate's mirror/conversion code — so a whole-number input like `3.0` would legitimately compare
         // unequal to its round-tripped `3` here. `3.5` has no such ambiguity.
         values.insert("count".into(), serde_json::json!(3.5));
-        projection.generation.generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
-        projection.generation.selected_generation_id = Some("generation-1".into());
-        projection.generation.preview_text = Some("42".into());
+        projection.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
+        projection.generation.cold_builder_mut().expect("unique cold generation owner").selected_generation_id = Some("generation-1".into());
+        projection.generation.cold_builder_mut().expect("unique cold generation owner").preview_text = Some("42".into());
         test_support::assert_dsl_round_trip(&projection);
         test_support::assert_dsl_pack_equivalence(&projection);
     }
@@ -437,7 +438,7 @@ mod tests {
     fn dsl_round_trip_covers_every_widget_kind() {
         let mut projection = Procedural2dSnapshot::default();
         projection.fixture.widgets = vec![
-            Widget::InputSlider { id: "slider".into(), value: 2.0, min: 0.0, max: 10.0, step: 0.5 },
+            Widget::InputSlider { id: "slider".into(), label: "Number".into(), value: 2.0, min: 0.0, max: 10.0, step: 0.5 },
             Widget::InputImage { id: "image".into(), src: "data:image/png;base64,abc".into() },
             Widget::Variable { id: "variable".into(), name: "value".into(), schema: "dictionary".into() },
             Widget::OutputAction { id: "action".into(), action: "export".into() },

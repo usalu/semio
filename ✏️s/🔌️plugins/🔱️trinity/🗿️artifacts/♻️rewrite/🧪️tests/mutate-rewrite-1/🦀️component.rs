@@ -34,7 +34,8 @@ const KINDS: &[&str] = &["edit-before-fixture", "edit-lhs", "edit-rhs", "change-
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_trinity::artifacts::rewrite::standards::v1::subsets::any::schema::mutations::{apply_rewrite_mutation_reporting, decode_rewrite_mutation_json, inverse_rewrite_mutation_steps, RewriteRuleMutation};
+    use semio_s_plugin_trinity::artifacts::rewrite::standards::v1::subsets::any::schema::mutations::text::{apply_rewrite_mutation_reporting, decode_rewrite_mutation_json, inverse_rewrite_mutation_steps};
+    use semio_s_plugin_trinity::artifacts::rewrite::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
     use semio_s_plugin_trinity::artifacts::rewrite::standards::v1::subsets::any::schema::snapshot::{decode_rewrite_snapshot_json, encode_rewrite_snapshot_json, parse_rewrite_dsl, print_rewrite_dsl, rewrite_rule_summary, RewriteSnapshot};
 
     //#region 🔖️Plan

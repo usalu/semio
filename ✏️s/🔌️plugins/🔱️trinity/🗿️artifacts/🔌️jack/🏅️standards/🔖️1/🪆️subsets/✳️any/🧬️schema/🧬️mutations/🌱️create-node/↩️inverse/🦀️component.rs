@@ -4,7 +4,7 @@ use crate::artifacts::jack::mutations::{delete_node, TrinityGraphMutation};
 use crate::artifacts::jack::JackSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::mutation::CreateNode, _base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
+pub fn inverse(payload: &super::CreateNode, _base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
     vec![delete_node(payload.node.id.clone())]
 }
 //#endregion 🔖️Inverse

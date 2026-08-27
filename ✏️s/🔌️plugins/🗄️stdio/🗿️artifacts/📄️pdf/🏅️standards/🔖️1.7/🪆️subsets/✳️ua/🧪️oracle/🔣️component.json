@@ -17,7 +17,7 @@
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/J-F-Liu/lopdf",
-      "rationale": "`lopdf` parses and re-serializes the complete COS object graph of a real PDF, which is the exact surface ISO 14289-1 (PDF/UA-1) conformance is defined on: every axis `check_ua_conformance` reads is an indirect object, a catalog key or a dictionary entry, and every one of them is reachable and writable through this crate. It is registered under its own id and capability so this subset's 13-kind conformance catalog is measured against a reference surveyed for that capability rather than borrowing the ✳️any subset's document-vocabulary entry.",
+      "rationale": "`lopdf` parses and re-serializes the complete COS object graph of a real PDF, which is the exact surface ISO 14289-1 (PDF/UA-1) conformance is defined on: every axis `check_ua_conformance` reads is an indirect object, a catalog key or a dictionary entry, and every one of them is reachable and writable through this crate. It is registered under its own id and capability so this subset's 11-kind conformance catalog is measured against a reference surveyed for that capability rather than borrowing the ✳️any subset's document-vocabulary entry.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
     }
   ],
@@ -30,8 +30,6 @@
       "subsetDirectoryName": "✳️ua",
       "vectors": [],
       "kinds": [
-        "no-mutation",
-        "set-snapshot",
         "set-mark-info",
         "remove-mark-info",
         "set-struct-tree-root",

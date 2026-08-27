@@ -1,10 +1,12 @@
 {
   "$schema": "../../node_modules/nx/schemas/technology-schema.json",
   "projectType": "application",
-  "name": "@semio-tech/repo-vscode",
+  "name": "repo-vscode",
+  "nx": {
+    "name": "@semio-tech/repo-vscode"
+  },
   "displayName": "repo",
   "description": "compose devtools for VS Code 🧑️‍💻️",
-  "icon": "🖼️compose.png",
   "version": "0.0.1",
   "publisher": "usalu",
   "engines": {
@@ -31,7 +33,7 @@
         {
           "id": "repo",
           "title": "repo",
-          "icon": "./🔣️compose_codeicon.svg"
+          "icon": "./🖼️icon/🔣️.svg"
         }
       ]
     },

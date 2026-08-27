@@ -1,5 +1,5 @@
 @capability-wav-riff-pcm-mutate
-@oracle-hound-wav-riff-pcm-mutate
+@no-oracle-frozen-hound-pcm16
 @comparison-semantic-audio-v1
 @mutations-wav-riff-pcm-any
 Feature: Apply every typed WAV RIFF-PCM mutation to a real-world recording
@@ -37,14 +37,14 @@ Feature: Apply every typed WAV RIFF-PCM mutation to a real-world recording
   and the compared projection, which is what proves a real parse happened.
 
   Every scenario copies the immutable fixture into the case work directory before touching it; the
-  committed fixture is never written to. The reference implementation (`hound`) is used only by the
-  test oracle, and both results are read back by an INDEPENDENT reader before the
+  committed fixture is never written to. The owned oracle is isolated from the subject codec, and
+  both results are read back by that INDEPENDENT reader before the
   `semantic-audio-v1` profile compares them. PCM is lossless, so exact decoded-sample comparison is
   the legitimate check here — no bucket/histogram approximation.
 
   @id-mutate
   @level-exhaustive
-  @mode-differential
+  @mode-conformance
   Scenario Outline: Apply <id> to the real recording
     Given the real input recording shared://🔊️bauen-mit-bestand-ausschnitt.wav
     When the <id> mutation is applied with its parameters

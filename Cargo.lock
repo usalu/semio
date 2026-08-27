@@ -5202,12 +5202,14 @@ dependencies = [
  "semio-framework",
  "semio-framework-2d",
  "semio-framework-3d",
+ "semio-framework-async-macros",
  "semio-framework-graph",
  "semio-framework-job",
  "semio-framework-math",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-replication",
  "semio-framework-ui",
  "semio-framework-ui-backend-webgpu",
  "semio-framework-ui-styling",
@@ -5305,6 +5307,8 @@ version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
+ "serde",
+ "serde_json",
  "syn 2.0.117",
 ]
 
@@ -5312,6 +5316,7 @@ dependencies = [
 name = "semio-framework-os-kernel-neural-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-replication",
  "serde",
  "serde_json",
 ]
@@ -5439,7 +5444,6 @@ dependencies = [
 name = "semio-framework-plugin"
 version = "0.1.0"
 dependencies = [
- "byteorder",
  "semio-framework",
  "semio-framework-async",
  "semio-framework-async-macros",
@@ -5889,6 +5893,7 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-graph",
+ "semio-framework-job",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -6010,8 +6015,11 @@ dependencies = [
 name = "semio-s-plugin-flow"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
+ "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-os-flow",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
@@ -6677,6 +6685,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
+ "semio-framework-job",
  "semio-framework-os",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",

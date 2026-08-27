@@ -1,0 +1,2 @@
+# 🗑️ Direct delete-node / DeleteNode payload.
+input DeleteNodeInput { id: String! }

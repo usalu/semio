@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "contractId": "artifact-empty-facet-primary-markdown-v1",
+  "sourceRoot": "✏️s/🔌️plugins",
+  "sourceFilename": "📌️empty.md",
+  "destinationFilename": "📝️.md",
+  "cases": [
+    { "id": "plugin-commands", "owner": "🔋️energy/🎮️commands", "form": "plugin-commands" },
+    { "id": "surface-facet", "owner": "🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config", "form": "artifact-surface" },
+    { "id": "mode-facet", "owner": "🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/👥️presence", "form": "artifact-mode" },
+    { "id": "empty-window-collection", "owner": "🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📊️report/🪟️windows", "form": "artifact-mode" },
+    { "id": "window-facet", "owner": "🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🎚️options", "form": "artifact-window" },
+    { "id": "engine-mode-facet", "owner": "🪐️space/⚙️engine/🪐️space/🎭️modes/🌐️main/🎮️commands", "form": "engine-mode" },
+    { "id": "engine-window-facet", "owner": "🪐️space/⚙️engine/🪐️space/🎭️modes/🌐️main/🪟️windows/🔄️workflow/🪛️utilities", "form": "engine-window" },
+    { "id": "extension-window-facet", "owner": "🪐️space/🧩️extensions/🪟️windows/🎬️actions", "form": "extension-window" },
+    { "id": "unknown-plugin", "owner": "🧪️unknown/🎮️commands", "form": null },
+    { "id": "wrong-parent", "owner": "🔋️energy/📚️examples/🎮️commands", "form": null },
+    { "id": "nested-lookalike", "owner": "🔋️energy/🎮️commands/🎚️config", "form": null },
+    { "id": "unknown-mode", "owner": "🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/🧪️unknown/🎚️config", "form": null },
+    { "id": "unknown-window", "owner": "🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🔄️unknown/🎚️config", "form": null },
+    { "id": "non-facet", "owner": "🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📚️examples", "form": null },
+    { "id": "other-root", "root": "🧰️framework/🔌️plugins", "owner": "🔋️energy/🎮️commands", "form": null },
+    { "id": "already-kind-only", "owner": "🔋️energy/🎮️commands", "filename": "📝️.md", "form": null },
+    { "id": "other-marker", "owner": "🔋️energy/🎮️commands", "filename": "empty.md", "form": null },
+    { "id": "wrong-kind", "owner": "🔋️energy/🎮️commands", "fileKindId": "text", "form": null },
+    { "id": "escape", "owner": "🔋️energy/../🔋️energy/🎮️commands", "form": null }
+  ]
+}

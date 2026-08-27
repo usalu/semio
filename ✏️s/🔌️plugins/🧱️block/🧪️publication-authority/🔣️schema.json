@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "owner", "source", "routes", "laws", "ui"],
+  "properties": {
+    "schema": { "const": "semio.app.publication-authority.v1" },
+    "owner": { "const": "Block5dPlayApp" },
+    "source": { "type": "string", "minLength": 1 },
+    "routes": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "lane"],
+        "properties": {
+          "id": { "enum": ["patchPartKind", "addGripKind", "removeGripKind", "addGrip", "removeGrip", "setActiveExample", "edit"] },
+          "lane": { "const": "Artifact" }
+        }
+      }
+    },
+    "laws": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bounded", "cancel", "replay", "freshness", "ack", "incrementalClose"],
+      "properties": {
+        "bounded": { "const": true },
+        "cancel": { "const": true },
+        "replay": { "const": true },
+        "freshness": { "const": true },
+        "ack": { "const": true },
+        "incrementalClose": { "const": true }
+      }
+    },
+    "ui": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["locales", "accessibleLabels", "customizableUi"],
+      "properties": {
+        "locales": { "const": ["en", "de"] },
+        "accessibleLabels": { "const": true },
+        "customizableUi": { "const": true }
+      }
+    }
+  }
+}

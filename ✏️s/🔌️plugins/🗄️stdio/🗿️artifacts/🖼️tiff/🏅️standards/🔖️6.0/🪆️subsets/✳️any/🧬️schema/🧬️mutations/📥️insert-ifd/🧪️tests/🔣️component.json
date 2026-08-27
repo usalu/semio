@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 1,
+  "semanticKind": "insert-ifd",
+  "before": {
+    "schema": "stdio.tiff",
+    "byteOrder": "littleEndian",
+    "ifds": [
+      {
+        "entries": [
+          {
+            "tag": 256,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                2
+              ]
+            }
+          },
+          {
+            "tag": 257,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                2
+              ]
+            }
+          },
+          {
+            "tag": 258,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                8,
+                8,
+                8,
+                8
+              ]
+            }
+          },
+          {
+            "tag": 259,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                1
+              ]
+            }
+          },
+          {
+            "tag": 262,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                2
+              ]
+            }
+          },
+          {
+            "tag": 305,
+            "kind": "ascii",
+            "values": {
+              "kind": "ascii",
+              "value": "semio"
+            }
+          }
+        ],
+        "pixels": []
+      }
+    ],
+    "pixels": [
+      255,
+      0,
+      0,
+      255,
+      0,
+      255,
+      0,
+      255,
+      0,
+      0,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255
+    ]
+  },
+  "mutation": {
+    "mutation": "insert-ifd",
+    "payload": {
+      "index": 1,
+      "ifd": {
+        "entries": [
+          {
+            "tag": 305,
+            "kind": "ascii",
+            "values": {
+              "kind": "ascii",
+              "value": "Direct Owner"
+            }
+          }
+        ],
+        "pixels": []
+      }
+    }
+  },
+  "after": {
+    "schema": "stdio.tiff",
+    "byteOrder": "littleEndian",
+    "ifds": [
+      {
+        "entries": [
+          {
+            "tag": 256,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                2
+              ]
+            }
+          },
+          {
+            "tag": 257,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                2
+              ]
+            }
+          },
+          {
+            "tag": 258,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                8,
+                8,
+                8,
+                8
+              ]
+            }
+          },
+          {
+            "tag": 259,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                1
+              ]
+            }
+          },
+          {
+            "tag": 262,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                2
+              ]
+            }
+          },
+          {
+            "tag": 305,
+            "kind": "ascii",
+            "values": {
+              "kind": "ascii",
+              "value": "semio"
+            }
+          }
+        ],
+        "pixels": []
+      },
+      {
+        "entries": [
+          {
+            "tag": 305,
+            "kind": "ascii",
+            "values": {
+              "kind": "ascii",
+              "value": "Direct Owner"
+            }
+          }
+        ],
+        "pixels": []
+      }
+    ],
+    "pixels": [
+      255,
+      0,
+      0,
+      255,
+      0,
+      255,
+      0,
+      255,
+      0,
+      0,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255
+    ]
+  }
+}

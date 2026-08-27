@@ -1,0 +1,5 @@
+# 🌱️ Direct create-node / CreateNode payload.
+scalar JSON
+input CreateNodePortInput { id: String!, kind: String!, direction: String!, properties: JSON! }
+input CreateNodeNodeInput { id: String!, kind: String!, name: String!, x: Float!, y: Float!, width: Float!, height: Float!, properties: JSON!, ports: [CreateNodePortInput!]! }
+input CreateNodeInput { node: CreateNodeNodeInput! }

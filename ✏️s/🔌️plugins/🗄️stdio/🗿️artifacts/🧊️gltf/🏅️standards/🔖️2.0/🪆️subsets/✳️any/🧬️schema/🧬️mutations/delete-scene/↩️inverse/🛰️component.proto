@@ -1,4 +1,0 @@
-syntax = "proto3";
-package stdio.gltf.mutation;
-message GltfDeleteSceneValueV1 { repeated uint32 nodes = 1; optional string name = 2; bytes extensions = 3; bytes extras = 4; }
-message GltfDeleteSceneInverseV1 { string id = 1; uint32 version = 2; string phase = 3; repeated string touched_paths = 4; uint32 index = 5; GltfDeleteSceneValueV1 deleted_scene = 6; optional uint32 default_scene_before = 7; optional uint32 expected_default_scene_after = 8; }

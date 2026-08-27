@@ -38,25 +38,67 @@
       "subsetDirectoryName": "✳️any",
       "vectors": [
         {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📄set-snapshot",
-          "mutationDirectoryName": "📄set-snapshot",
+          "mutationId": "change-header-fields",
+          "sourceMutationDirectoryName": "📐️change-header-fields",
+          "mutationDirectoryName": "📐️change-header-fields",
           "scenarios": [
             {
-              "id": "recolors-the-second-palette-slot-to-magenta",
-              "directoryName": "🧪️recolors-the-second-palette-slot-to-magenta"
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-palette-entry",
+          "sourceMutationDirectoryName": "📥️insert-palette-entry",
+          "mutationDirectoryName": "📥️insert-palette-entry",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-palette-entry",
+          "sourceMutationDirectoryName": "📤️remove-palette-entry",
+          "mutationDirectoryName": "📤️remove-palette-entry",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-palette-entry",
+          "sourceMutationDirectoryName": "🎨️replace-palette-entry",
+          "mutationDirectoryName": "🎨️replace-palette-entry",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-pixel-data",
+          "sourceMutationDirectoryName": "🟪️replace-pixel-data",
+          "mutationDirectoryName": "🟪️replace-pixel-data",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
             }
           ]
         }
       ],
       "kinds": [
-        "no-mutation",
-        "set-snapshot",
-        "set-header-fields",
+        "change-header-fields",
         "insert-palette-entry",
         "remove-palette-entry",
-        "set-palette-entry",
-        "set-pixel-data"
+        "replace-palette-entry",
+        "replace-pixel-data"
       ]
     }
   ]

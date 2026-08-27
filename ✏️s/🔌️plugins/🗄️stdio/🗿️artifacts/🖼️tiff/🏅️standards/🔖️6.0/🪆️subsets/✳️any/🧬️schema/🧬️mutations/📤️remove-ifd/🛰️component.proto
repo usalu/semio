@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.tiff.mutation;
+// 🧬️ remove-ifd/RemoveIfd; complex fields follow the direct payload schema.
+message RemoveIfdMutation { uint64 index = 1; }

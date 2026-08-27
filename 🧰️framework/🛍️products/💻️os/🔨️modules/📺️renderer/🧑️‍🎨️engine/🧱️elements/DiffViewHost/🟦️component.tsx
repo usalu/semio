@@ -183,7 +183,7 @@ export function DiffViewHost({ node, onAction, requestContextMenu }: ComponentSc
         const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
-            menu: { id: "diffView" },
+            menu: { id: "diffView", args: null },
             surface: { surfaceId: node.surfaceId, kind: "diffView", hits: [], selection: [] },
             windowInstanceId: windowInstanceId ?? undefined,
             point: { x: event.clientX, y: event.clientY },

@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "sourceTreeDigest", "roots", "sourceRoster", "records", "unresolved", "violations"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "kind": { "const": "mutation" },
+    "sourceTreeDigest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "roots": { "type": "array", "items": { "type": "string" } },
+    "sourceRoster": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256", "role"],
+        "properties": {
+          "path": { "type": "string" },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "role": { "enum": ["source", "assignment-ledger"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["mutationRootPath", "targetMutationDirectoryName", "structuralState", "executionState", "consumerEdges", "assignmentEvidence", "evidence"],
+        "properties": {
+          "mutationRootPath": { "type": "string" },
+          "targetMutationDirectoryName": { "type": "string" },
+          "structuralState": { "enum": ["legacy", "direct", "central-only"] },
+          "executionState": { "enum": ["unassigned", "assigned", "conflicting"] },
+          "consumerEdges": { "type": "array" },
+          "assignmentEvidence": { "type": "object" },
+          "evidence": { "type": "object" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "unresolved": { "type": "array" },
+    "violations": { "type": "array" }
+  },
+  "additionalProperties": false
+}

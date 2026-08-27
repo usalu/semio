@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.xml.mutation;
+// remove-element/RemoveElement
+message RemoveElementPayload { bytes path = 1; uint64 index = 2; }

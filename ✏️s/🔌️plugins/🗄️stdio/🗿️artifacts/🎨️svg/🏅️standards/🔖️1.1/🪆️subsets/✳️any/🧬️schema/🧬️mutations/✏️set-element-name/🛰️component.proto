@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.svg.mutation;
+// set-element-name/SetElementName
+message SetElementNamePayload { bytes path = 1; string name = 2; }

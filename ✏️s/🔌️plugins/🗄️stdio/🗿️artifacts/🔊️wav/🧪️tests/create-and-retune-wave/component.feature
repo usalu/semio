@@ -1,5 +1,5 @@
 @capability-wave-audio
-@oracle-hound
+@no-oracle-frozen-hound-pcm16
 @comparison-semantic-audio-v1
 Feature: Create and retune a RIFF/PCM WAVE file
   The reference implementation writes the input waveform; this repository decodes that artifact and
@@ -34,7 +34,7 @@ Feature: Create and retune a RIFF/PCM WAVE file
 
   @id-retuned-sample-rate
   @level-quick
-  @mode-differential
+  @mode-conformance
   Scenario: Changing the declared sample rate keeps every sample
     Given the waveform
     """

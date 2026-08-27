@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SetLinePayload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "text"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "text": {
+      "type": "string"
+    }
+  }
+}

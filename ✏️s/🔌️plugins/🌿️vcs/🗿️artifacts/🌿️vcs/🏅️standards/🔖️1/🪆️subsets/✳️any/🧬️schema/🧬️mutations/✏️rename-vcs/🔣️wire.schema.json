@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/vcs/vcs/mutation/rename-vcs.json",
+  "title": "RenameVcsMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newTitle"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "renameVcs"
+    },
+    "newTitle": {
+      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/rename-vcs/payload.json#/properties/newTitle"
+    }
+  }
+}

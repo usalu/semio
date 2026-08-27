@@ -1,0 +1,167 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.value.ordered-map",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "grants",
+    "cancelAfterSteps",
+    "cases",
+    "lookupCases",
+    "ownership"
+  ],
+  "properties": {
+    "ownership": {
+      "type": "object", "additionalProperties": false,
+      "required": ["liveOwners", "liveDrop", "finalPayload", "terminalOwners"],
+      "properties": {
+        "liveOwners": {"const": ["map", "update", "lookup", "retirement"]},
+        "liveDrop": {"const": "reject-without-payload-destruction"},
+        "finalPayload": {"const": "owned-handoff"},
+        "terminalOwners": {"const": 0}
+      }
+    },
+    "lookupCases": {
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "sourceKey", "sourceValue", "query", "expected", "expectedComparedBytes"],
+        "properties": {
+          "id": {"type": "string"},
+          "sourceKey": {"$ref": "#/definitions/key"},
+          "sourceValue": {"type": "integer"},
+          "query": {"$ref": "#/definitions/key"},
+          "expected": {"type": ["integer", "null"]},
+          "expectedComparedBytes": {"type": "integer", "minimum": 1}
+        }
+      }
+    },
+    "schema": {
+      "const": "semio.value.ordered-map"
+    },
+    "grants": {
+      "type": "array",
+      "const": [
+        1,
+        64,
+        4096
+      ]
+    },
+    "cancelAfterSteps": {
+      "type": "array",
+      "const": [
+        0,
+        1,
+        9,
+        100
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "operations",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "operations": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "op",
+                    "key",
+                    "value"
+                  ],
+                  "properties": {
+                    "op": {
+                      "const": "set"
+                    },
+                    "key": {
+                      "$ref": "#/definitions/key"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "op",
+                    "key"
+                  ],
+                  "properties": {
+                    "op": {
+                      "const": "remove"
+                    },
+                    "key": {
+                      "$ref": "#/definitions/key"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "key",
+                "value"
+              ],
+              "properties": {
+                "key": {
+                  "$ref": "#/definitions/key"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "key": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prefix",
+        "repetitions",
+        "suffix"
+      ],
+      "properties": {
+        "prefix": {
+          "type": "string"
+        },
+        "repetitions": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2048
+        },
+        "suffix": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,4 @@
+syntax = "proto3";
+package semio.s.trinity.jack.mutation.delete_edge;
+// delete-edge / DeleteEdge
+message DeleteEdge { string id = 1; }

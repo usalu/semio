@@ -65,13 +65,13 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub async fn flow_play_labels(cfg: &FlowConfig) -> &'static FlowPlayLabels {
+pub fn flow_play_labels(cfg: &FlowConfig) -> &'static FlowPlayLabels {
     semio_framework_plugin::resolve_labels_for_locale::<FlowPlayLabels>(&cfg.locale)
 }
 
 /// 🗣️ Resolves a built-in extension's display name from its stable id; unknown ids fall back to the
 /// extension's native English name as genuine runtime data (never authored UI copy).
-pub async fn flow_extension_label(id: &str, name: &'static str, labels: &FlowPlayLabels) -> Label {
+pub fn flow_extension_label(id: &str, name: &'static str, labels: &FlowPlayLabels) -> Label {
     match id {
         "auto-layout" => labels.extension_auto_layout.into(),
         "auto-evaluate" => labels.extension_auto_evaluate.into(),
@@ -81,7 +81,7 @@ pub async fn flow_extension_label(id: &str, name: &'static str, labels: &FlowPla
 
 /// 🗣️ Resolves a built-in extension action's display title from its stable action id; unknown ids fall
 /// back to the action's native English title as genuine runtime data.
-pub async fn flow_extension_action_title_label(action_id: &str, title: &'static str, labels: &FlowPlayLabels) -> Label {
+pub fn flow_extension_action_title_label(action_id: &str, title: &'static str, labels: &FlowPlayLabels) -> Label {
     match action_id {
         "flow.extension.reorganize" => labels.extension_action_reorganize_canvas.into(),
         "flow.extension.evaluate" => labels.extension_action_evaluate_fixture.into(),

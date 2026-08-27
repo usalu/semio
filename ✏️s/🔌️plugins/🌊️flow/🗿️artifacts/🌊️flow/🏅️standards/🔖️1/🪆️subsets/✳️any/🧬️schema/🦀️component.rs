@@ -17,7 +17,7 @@ pub const FLOW_DEFAULT_GRID_FACTOR: f64 = 10.0;
 //#region 🔖️Widgets
 /// 🎛️ Every `Widget` variant carries its own `id: String` as its first field — this reaches through
 /// the tag to read it generically.
-pub async fn widget_id(widget: &Widget) -> &str {
+pub fn widget_id(widget: &Widget) -> &str {
     match widget {
         Widget::Neuron { id, .. }
         | Widget::InputSlider { id, .. }
@@ -31,7 +31,7 @@ pub async fn widget_id(widget: &Widget) -> &str {
     }
 }
 
-pub async fn widget_kind_label(widget: &Widget) -> &'static str {
+pub fn widget_kind_label(widget: &Widget) -> &'static str {
     match widget {
         Widget::Neuron { .. } => "neuron",
         Widget::InputSlider { .. } => "inputSlider",
@@ -63,7 +63,7 @@ pub fn widget_with_id(widget: &Widget, id: String) -> Widget {
     copy
 }
 
-pub async fn widget_tree_label(widget: &Widget) -> String {
+pub fn widget_tree_label(widget: &Widget) -> String {
     match widget {
         Widget::Neuron { id, neuron_kind, .. } => format!("{id} ({neuron_kind})"),
         Widget::InputSlider { id, .. } => format!("{id} (slider)"),
@@ -128,12 +128,12 @@ impl Default for FlowArtifact {
 
 impl FlowArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> FlowSnapshot {
+    pub fn to_snapshot(&self) -> FlowSnapshot {
         FlowSnapshot { schema: self.schema.clone(), camera: self.camera.clone(), content: self.content.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: FlowSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: FlowSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             camera: snapshot.camera,
@@ -156,7 +156,7 @@ impl FlowArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: FlowSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: FlowSnapshot) {
         self.schema = snapshot.schema;
         self.camera = snapshot.camera;
         self.content = snapshot.content;
@@ -166,7 +166,7 @@ impl FlowArtifact {
 
 //#region 🔹Descriptor
 /// 🧬️ Descriptor for `s.flow.flow` — twenty handcrafted schema leaves.
-pub async fn flow_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn flow_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.flow.flow",
         artifact: schema::FacetLeaves {
@@ -215,19 +215,19 @@ pub mod derived_construction {
         type Snapshot = FlowSnapshot;
         type Mutation = FlowMutation;
         type Diff = FlowDiff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: FlowSnapshot::default(), diagnostics: Vec::new() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<FlowSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<FlowSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -235,12 +235,12 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <FlowDiff as protocol::MutationDiff<FlowSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -268,11 +268,11 @@ pub mod derived_analysis {
         type Parts = FlowParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.flow", standard: StandardId("1"), subset: SubsetId("*") };
 
-        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = FlowParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -321,7 +321,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn widget_id_and_kind_label_agree_across_variants() {
-        let widget = Widget::InputSlider { id: "slider".into(), value: 3.0, min: 0.0, max: 10.0, step: 0.1 };
+        let widget = Widget::InputSlider { id: "slider".into(), label: "Number".into(), value: 3.0, min: 0.0, max: 10.0, step: 0.1 };
         assert_eq!(widget_id(&widget), "slider");
         assert_eq!(widget_kind_label(&widget), "inputSlider");
         assert_eq!(widget_tree_label(&widget), "slider (slider)");

@@ -212,7 +212,7 @@ export function BlockListHost({ node, onAction, requestContextMenu }: ComponentS
         const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
-            menu: { id: "blockList" },
+            menu: { id: "blockList", args: null },
             surface: { surfaceId: node.surfaceId, kind: "blockList", hits: [], selection: [] },
             windowInstanceId: windowInstanceId ?? undefined,
             point: { x: event.clientX, y: event.clientY },

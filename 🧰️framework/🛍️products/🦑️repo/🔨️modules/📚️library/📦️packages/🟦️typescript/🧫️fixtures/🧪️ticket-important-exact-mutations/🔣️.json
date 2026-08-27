@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "nested-phase-1-5-empty-removal",
+      "disposition": "remove",
+      "sourcePath": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-5-DE-ASYNC-REPAIR-SWEEP/📌️important.md",
+      "destinationPath": null,
+      "sourcePreimage": { "nodeKind": "file", "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "mode": 420, "size": 0 }
+    },
+    {
+      "id": "nested-phase-9-empty-removal",
+      "disposition": "remove",
+      "sourcePath": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/📌️important.md",
+      "destinationPath": null,
+      "sourcePreimage": { "nodeKind": "file", "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "mode": 420, "size": 0 }
+    },
+    {
+      "id": "presence-owned-markdown-projection",
+      "disposition": "move",
+      "sourcePath": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️12/ENFORCE-WINDOW-APP-PANEL-AND-PLUGIN-CONTRACTS-AT-COMPILE-TIME/🧪️window-policy-fixture/🎛️apps/🧪️fixture/🎭️modes/🧪️mode/🪟️windows/🧪️component-window/👥️presence/📌️important.md",
+      "destinationPath": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️12/ENFORCE-WINDOW-APP-PANEL-AND-PLUGIN-CONTRACTS-AT-COMPILE-TIME/🧪️window-policy-fixture/🎛️apps/🧪️fixture/🎭️modes/🧪️mode/🪟️windows/🧪️component-window/👥️presence/📝️.md",
+      "sourcePreimage": { "nodeKind": "file", "contentHash": "70c33aee4ee34077f2c965b1c7d193e08f401631526da44bb8cac042ee555d83", "mode": 420, "size": 139 }
+    }
+  ]
+}

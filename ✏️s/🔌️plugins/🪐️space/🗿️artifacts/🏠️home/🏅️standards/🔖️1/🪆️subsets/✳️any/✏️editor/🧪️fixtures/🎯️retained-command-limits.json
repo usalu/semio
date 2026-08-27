@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "owner": "HomeApp",
+  "controller": "s-home",
+  "documentSchema": "s.home",
+  "factory": "HomeRetainedCommandJobFactory",
+  "limits": {
+    "rawBytes": 8192,
+    "checkpointBytes": 512,
+    "configValueBytes": 512,
+    "configBaseBytes": 512,
+    "commandStepBytes": 65536,
+    "storeStepBytes": 4096,
+    "workItems": 1,
+    "preparationPhases": 3
+  },
+  "routes": [
+    {
+      "id": "createStudio",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Creates and resolves studio catalog/draft/backbone owners through process-global ports without resumable external I/O."
+    },
+    {
+      "id": "bindSpaceFile",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Binds a file-backed studio through blocking file/backbone work and process-global port ownership."
+    },
+    {
+      "id": "importSpace",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Mixed request/import branches parse a whole document and publish external storage without retained decoding or cancellation."
+    },
+    {
+      "id": "openSpace",
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "navigateVirtualFileSystemNode",
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "deleteVirtualFileSystemNode",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Traverses global catalog owners and performs external deletion without an app-owned resumable cursor."
+    },
+    {
+      "id": "goHome",
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "setActivePanelTab",
+      "disposition": "Migrated",
+      "lanes": [
+        "Config"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "createSpace",
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "deleteSpace",
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "renameSpace",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "The dialog branch decodes and searches the whole directory read model; the shared command route has no bounded cursor."
+    },
+    {
+      "id": "shareSpace",
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "copyInviteLink",
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "foldDirectoryEvents",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Parses the complete event JSON array and repeatedly clones/folds/serializes the directory model in one dispatch."
+    },
+    {
+      "id": "presenceHeartbeat",
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "setClient",
+      "disposition": "Migrated",
+      "lanes": [
+        "Config"
+      ],
+      "blocker": ""
+    }
+  ],
+  "boundaryCases": [
+    {
+      "name": "empty",
+      "bytes": 0,
+      "accepted": true
+    },
+    {
+      "name": "config-value-limit",
+      "bytes": 512,
+      "accepted": true
+    },
+    {
+      "name": "config-value-overflow",
+      "bytes": 513,
+      "accepted": false
+    }
+  ],
+  "oracle": {
+    "library": "serde_json",
+    "scope": "test-only-existing-dependency",
+    "runtimeDependency": false
+  }
+}

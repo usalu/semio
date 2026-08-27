@@ -1,6 +1,3 @@
-module Stdio_jpg_mutations;
-# UTF-8 JSON encoding of JpgMutation -- see the sibling ../🔣️component.json shape.
-# `OpBinary::encode_op`/`decode_op` go through `serde_json::to_vec`/`from_slice` directly.
-type Document = unit {
-    json_payload: bytes &eod;
-};
+module Stdio_jpg_mutation;
+# Direct tags: change-jfif-header=2, replace-quant-table=3, remove-quant-table=4, replace-huffman-table=5, remove-huffman-table=6, change-restart-interval=7, insert-other-segment=8, remove-other-segment=9, replace-pixels=10, change-re-encode-quality=11
+public type Mutation = unit { format: uint8; tag: uint8; payload: bytes &eod; };

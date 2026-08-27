@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s.stdio.pdf.1.7/mutation/set-dict-entry.json",
+  "title": "SetDictEntry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "path",
+    "key",
+    "value"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setDictEntry"
+    },
+    "id": {
+      "type": "object"
+    },
+    "path": {
+      "type": "array"
+    },
+    "key": {
+      "type": "string"
+    },
+    "value": {
+      "type": "object"
+    }
+  }
+}

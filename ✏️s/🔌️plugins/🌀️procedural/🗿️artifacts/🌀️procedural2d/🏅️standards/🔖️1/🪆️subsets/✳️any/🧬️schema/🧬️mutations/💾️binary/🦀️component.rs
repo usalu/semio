@@ -572,7 +572,7 @@ pub fn procedural2d_retained_catalog_is_complete() -> bool {
 enum Procedural2dReplayDisplaced {
     Widget(flow::Widget),
     Synapse(flow::SynapseSpec),
-    Layout(flow::WidgetLayout),
+    Layout(std::sync::Arc<flow::WidgetLayout>),
     Camera(flow::CameraJson),
     Text(String),
     Generation(flow::playbook::FormGeneration),
@@ -581,20 +581,22 @@ enum Procedural2dReplayDisplaced {
 
 struct Procedural2dReplayRetirement {
     value: std::mem::ManuallyDrop<Option<Procedural2dReplayDisplaced>>,
+    domain: flow::retained::FlowRetirement,
 }
 
 impl store::ErasedSnapshotRetirement for Procedural2dReplayRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.domain.is_empty() { return self.domain.close_step(maximum_items, maximum_bytes); }
         if maximum_items == 0 || maximum_bytes < PROCEDURAL2D_OWNER_BYTES {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(value) = self.value.take() {
             match value {
-                Procedural2dReplayDisplaced::Widget(value) => drop(value),
-                Procedural2dReplayDisplaced::Synapse(value) => drop(value),
+                Procedural2dReplayDisplaced::Widget(value) => self.domain.push(flow::retained::FlowOwner::Widget(value)),
+                Procedural2dReplayDisplaced::Synapse(value) => self.domain.push(flow::retained::FlowOwner::Specs(vec![value])),
                 Procedural2dReplayDisplaced::Layout(value) => drop(value),
                 Procedural2dReplayDisplaced::Camera(value) => drop(value),
-                Procedural2dReplayDisplaced::Text(value) => drop(value),
+                Procedural2dReplayDisplaced::Text(value) => self.domain.text(value),
                 Procedural2dReplayDisplaced::Generation(value) => drop(value),
                 Procedural2dReplayDisplaced::Json(value) => drop(value),
             }
@@ -604,7 +606,7 @@ impl store::ErasedSnapshotRetirement for Procedural2dReplayRetirement {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.value.is_none()
+        self.value.is_none() && self.domain.is_empty()
     }
 }
 
@@ -615,7 +617,7 @@ impl Drop for Procedural2dReplayRetirement {
 }
 
 fn procedural2d_retire_displaced(value: Procedural2dReplayDisplaced) -> Option<Box<dyn store::ErasedSnapshotRetirement>> {
-    Some(Box::new(Procedural2dReplayRetirement { value: std::mem::ManuallyDrop::new(Some(value)) }))
+    Some(Box::new(Procedural2dReplayRetirement { value: std::mem::ManuallyDrop::new(Some(value)), domain: flow::retained::FlowRetirement::default() }))
 }
 
 /// 🔁️ Direct semantic replay table. It consumes the retained mutation and writes only the
@@ -678,13 +680,13 @@ fn procedural2d_apply_initialization_mutation(snapshot: &mut Procedural2dSnapsho
             for character in payload.generation.id.chars() {
                 selected.push(character);
             }
-            snapshot.generation.generations.push(procedural2d_copy_generation(&payload.generation)?);
-            snapshot.generation.selected_generation_id = Some(selected);
+            snapshot.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(procedural2d_copy_generation(&payload.generation)?);
+            snapshot.generation.cold_builder_mut().expect("unique cold generation owner").selected_generation_id = Some(selected);
             None
         }
         Procedural2dMutation::DeleteGeneration(payload) => {
             let index = snapshot.generation.generations.iter().position(|entry| entry.id == payload.id).ok_or("procedural2d-replay.generation-missing")?;
-            let removed = snapshot.generation.generations.remove(index);
+            let removed = snapshot.generation.cold_builder_mut()?.generations.remove(index);
             if snapshot.generation.selected_generation_id.as_deref() == Some(payload.id.as_str()) {
                 let mut selected = None;
                 if let Some(first) = snapshot.generation.generations.first() {
@@ -695,16 +697,16 @@ fn procedural2d_apply_initialization_mutation(snapshot: &mut Procedural2dSnapsho
                     }
                     selected = Some(id);
                 }
-                snapshot.generation.selected_generation_id = selected;
+                snapshot.generation.cold_builder_mut().expect("unique cold generation owner").selected_generation_id = selected;
             }
             procedural2d_retire_displaced(Procedural2dReplayDisplaced::Generation(removed))
         }
         Procedural2dMutation::RenameGeneration(payload) => {
-            let entry = snapshot.generation.generations.iter_mut().find(|entry| entry.id == payload.id).ok_or("procedural2d-replay.generation-missing")?;
+            let entry = snapshot.generation.cold_builder_mut()?.generations.iter_mut().find(|entry| entry.id == payload.id).ok_or("procedural2d-replay.generation-missing")?;
             procedural2d_retire_displaced(Procedural2dReplayDisplaced::Text(std::mem::replace(&mut entry.name, procedural2d_copy_string(&payload.name)?)))
         }
         Procedural2dMutation::ChangeGenerationValue(payload) => {
-            let entry = snapshot.generation.generations.iter_mut().find(|entry| entry.id == payload.id).ok_or("procedural2d-replay.generation-missing")?;
+            let entry = snapshot.generation.cold_builder_mut()?.generations.iter_mut().find(|entry| entry.id == payload.id).ok_or("procedural2d-replay.generation-missing")?;
             entry.values.insert(procedural2d_copy_string(&payload.question_id)?, procedural2d_copy_json(&payload.value, 0)?).map(Procedural2dReplayDisplaced::Json).and_then(procedural2d_retire_displaced)
         }
     };
@@ -717,69 +719,88 @@ const PROCEDURAL2D_ENVELOPE_SNAPSHOT_PACK_BYTES: usize = store::ARTIFACT_ENVELOP
 
 struct Procedural2dRetainedSnapshotRetirement {
     value: std::mem::ManuallyDrop<Option<Procedural2dSnapshot>>,
+    flow: flow::retained::FlowRetirement,
+    generation: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
 }
 
 impl store::ErasedSnapshotRetirement for Procedural2dRetainedSnapshotRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-        if maximum_items == 0 || maximum_bytes < PROCEDURAL2D_ENVELOPE_SNAPSHOT_PACK_BYTES {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        if maximum_items == 0 || maximum_bytes == 0 {
+            return Ok(store::SnapshotRetirementStep::Blocked);
+        }
+        if let Some(generation) = self.generation.as_mut() {
+            let step = generation.close_step(maximum_items, maximum_bytes)?;
+            if matches!(step, store::SnapshotRetirementStep::Complete) { self.generation.take(); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: match step { store::SnapshotRetirementStep::Pending { released_bytes, .. } => released_bytes, _ => 0 } });
+        }
+        if !self.flow.is_empty() {
+            return self.flow.close_step(maximum_items, maximum_bytes);
         }
         if let Some(value) = self.value.take() {
-            drop(value);
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: PROCEDURAL2D_ENVELOPE_SNAPSHOT_PACK_BYTES });
+            self.flow.push(flow::retained::FlowOwner::Fixture(value.fixture));
+            *self.generation = Some(Box::new(value.generation.into_retirement()));
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         Ok(store::SnapshotRetirementStep::Complete)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.value.is_none()
+        self.value.is_none() && self.flow.is_empty() && self.generation.is_none()
     }
 }
 
 impl Drop for Procedural2dRetainedSnapshotRetirement {
     fn drop(&mut self) {
-        assert!(self.value.is_none(), "Procedural2d fresh snapshot retirement reached Drop before its <=4096-byte admitted root was released");
+        if !std::thread::panicking() { assert!(store::ErasedSnapshotRetirement::terminal_is_empty(self), "Procedural2d snapshot reached Drop before typed retirement"); }
     }
 }
 
 struct Procedural2dRetainedSnapshotRetirementFactory;
 
+pub(crate) fn procedural2d_retire_owned_snapshot(value: Procedural2dSnapshot) -> Box<dyn store::ErasedSnapshotRetirement> {
+    Box::new(Procedural2dRetainedSnapshotRetirement { value: std::mem::ManuallyDrop::new(Some(value)), flow: Default::default(), generation: std::mem::ManuallyDrop::new(None) })
+}
+
 impl store::ArtifactOwnedValueRetirementFactory<Procedural2dSnapshot> for Procedural2dRetainedSnapshotRetirementFactory {
     fn retire_owned(&self, value: Procedural2dSnapshot) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(Procedural2dRetainedSnapshotRetirement { value: std::mem::ManuallyDrop::new(Some(value)) })
+        procedural2d_retire_owned_snapshot(value)
     }
 }
 
 struct Procedural2dRetainedSnapshotArcRetirement {
     value: std::mem::ManuallyDrop<Option<std::sync::Arc<Procedural2dSnapshot>>>,
+    owned: Procedural2dRetainedSnapshotRetirement,
 }
 
 impl store::ErasedSnapshotRetirement for Procedural2dRetainedSnapshotArcRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-        if maximum_items == 0 || maximum_bytes < PROCEDURAL2D_ENVELOPE_SNAPSHOT_PACK_BYTES {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        if maximum_items == 0 || maximum_bytes == 0 {
+            return Ok(store::SnapshotRetirementStep::Blocked);
         }
         if let Some(value) = self.value.take() {
-            drop(value);
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: PROCEDURAL2D_ENVELOPE_SNAPSHOT_PACK_BYTES });
+            *self.owned.value = std::sync::Arc::into_inner(value);
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        Ok(store::SnapshotRetirementStep::Complete)
+        self.owned.close_step(maximum_items, maximum_bytes)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.value.is_none()
+        self.value.is_none() && self.owned.terminal_is_empty()
     }
 }
 
 impl Drop for Procedural2dRetainedSnapshotArcRetirement {
     fn drop(&mut self) {
-        assert!(self.value.is_none(), "Procedural2d Arc snapshot reached Drop before retained close");
+        if !std::thread::panicking() { assert!(store::ErasedSnapshotRetirement::terminal_is_empty(self), "Procedural2d Arc snapshot reached Drop before retained close"); }
     }
 }
 
 impl store::SnapshotRetirementFactory<Procedural2dSnapshot> for Procedural2dRetainedSnapshotRetirementFactory {
     fn retire(&self, snapshot: std::sync::Arc<Procedural2dSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(Procedural2dRetainedSnapshotArcRetirement { value: std::mem::ManuallyDrop::new(Some(snapshot)) })
+        Box::new(Procedural2dRetainedSnapshotArcRetirement {
+            value: std::mem::ManuallyDrop::new(Some(snapshot)),
+            owned: Procedural2dRetainedSnapshotRetirement { value: std::mem::ManuallyDrop::new(None), flow: Default::default(), generation: std::mem::ManuallyDrop::new(None) },
+        })
     }
 }
 
@@ -1277,12 +1298,12 @@ impl Procedural2dRetainedMutationOwner {
         let [first_dynamic, second_dynamic] = owner.dynamic;
         Ok(match owner.keyword.as_str() {
             "neuron" => flow::Widget::Neuron { id, neuron_kind: second, params: first_dictionary, input_ports: first_list, output_ports: second_list, preview: owner.boolean },
-            "input-slider" => flow::Widget::InputSlider { id, value, min, max, step },
+            "input-slider" => flow::Widget::InputSlider { id, label: second, value, min, max, step },
             "input-note" => flow::Widget::InputNote { id, text: second },
             "input-image" => flow::Widget::InputImage { id, src: second },
             "variable" => flow::Widget::Variable { id, name: second, schema: third },
             "output-preview" => {
-                let mut expanded = std::collections::BTreeSet::new();
+                let mut expanded = flow::OrderedSet::new();
                 for entry in first_list {
                     expanded.insert(entry);
                 }
@@ -1461,7 +1482,7 @@ impl Procedural2dRetainedMutationOwner {
                         }
                         Some(Procedural2dMutationFrame::Widget { field, owner }) => {
                             let field = field.take().ok_or("procedural2d-mutation.widget-number")?;
-                            *owner.numbers.get_mut(field.saturating_sub(1) as usize).ok_or("procedural2d-mutation.widget-number-field")? = f64::from_bits(bits);
+                            *owner.numbers.get_mut(field.checked_sub(2).ok_or("procedural2d-mutation.widget-number-field")? as usize).ok_or("procedural2d-mutation.widget-number-field")? = f64::from_bits(bits);
                         }
                         Some(Procedural2dMutationFrame::Layout { field, value }) => match field.take() {
                             Some(0) => value.x = f64::from_bits(bits),
@@ -2436,11 +2457,11 @@ fn procedural2d_copy_tree(source: &flow::neural::Tree, depth: usize) -> Result<f
 }
 
 fn procedural2d_copy_flow_ui(source: &flow::FlowGui) -> Result<flow::FlowGui, &'static str> {
-    let mut nodes = std::collections::BTreeMap::new();
+    let mut nodes = flow::OrderedMap::new();
     for (id, node) in &source.nodes {
         let chrome = match &node.chrome {
             flow::NodeChrome::Plain { preview } => flow::NodeChrome::Plain { preview: *preview },
-            flow::NodeChrome::Slider { min, max, step, value } => flow::NodeChrome::Slider { min: *min, max: *max, step: *step, value: *value },
+            flow::NodeChrome::Slider { label, min, max, step, value } => flow::NodeChrome::Slider { label: procedural2d_copy_string(label)?, min: *min, max: *max, step: *step, value: *value },
             flow::NodeChrome::Note { text } => flow::NodeChrome::Note { text: procedural2d_copy_string(text)? },
             flow::NodeChrome::Image { src } => flow::NodeChrome::Image { src: procedural2d_copy_string(src)? },
             flow::NodeChrome::Variable { name, schema } => flow::NodeChrome::Variable { name: procedural2d_copy_string(name)?, schema: procedural2d_copy_string(schema)? },
@@ -2454,7 +2475,7 @@ fn procedural2d_copy_flow_ui(source: &flow::FlowGui) -> Result<flow::FlowGui, &'
             Some(source) => Some(flow::FlowChannelRef { neuron: procedural2d_copy_string(&source.neuron)?, channel: procedural2d_copy_string(&source.channel)? }),
             None => None,
         };
-        let mut expanded = std::collections::BTreeSet::new();
+        let mut expanded = flow::OrderedSet::new();
         for value in &preview.expanded {
             expanded.insert(procedural2d_copy_string(value)?);
         }
@@ -2485,12 +2506,12 @@ fn procedural2d_copy_widget(source: &flow::Widget) -> Result<flow::Widget, &'sta
             }
             flow::Widget::Neuron { id: procedural2d_copy_string(id)?, neuron_kind: procedural2d_copy_string(neuron_kind)?, params: procedural2d_copy_dictionary(params, 0)?, input_ports: inputs, output_ports: outputs, preview: *preview }
         }
-        flow::Widget::InputSlider { id, value, min, max, step } => flow::Widget::InputSlider { id: procedural2d_copy_string(id)?, value: *value, min: *min, max: *max, step: *step },
+        flow::Widget::InputSlider { id, label, value, min, max, step } => flow::Widget::InputSlider { id: procedural2d_copy_string(id)?, label: procedural2d_copy_string(label)?, value: *value, min: *min, max: *max, step: *step },
         flow::Widget::InputNote { id, text } => flow::Widget::InputNote { id: procedural2d_copy_string(id)?, text: procedural2d_copy_string(text)? },
         flow::Widget::InputImage { id, src } => flow::Widget::InputImage { id: procedural2d_copy_string(id)?, src: procedural2d_copy_string(src)? },
         flow::Widget::Variable { id, name, schema } => flow::Widget::Variable { id: procedural2d_copy_string(id)?, name: procedural2d_copy_string(name)?, schema: procedural2d_copy_string(schema)? },
         flow::Widget::OutputPreview { id, preview, expanded } => {
-            let mut next_expanded = std::collections::BTreeSet::new();
+            let mut next_expanded = flow::OrderedSet::new();
             for value in expanded {
                 next_expanded.insert(procedural2d_copy_string(value)?);
             }
@@ -2530,12 +2551,12 @@ struct Procedural2dSnapshotCopyCursor {
 impl Procedural2dSnapshotCopyCursor {
     fn new(source: &Procedural2dSnapshot) -> Result<Self, &'static str> {
         let mut target = Procedural2dSnapshot {
-            fixture: flow::FlowFixture { schema: String::new(), camera: flow::CameraJson::default(), widgets: Vec::new(), synapses: Vec::new(), layout: std::collections::BTreeMap::new() },
-            generation: flow::playbook::GenerationPlayState::default(),
+            fixture: flow::FlowFixture { schema: String::new(), camera: flow::CameraJson::default(), widgets: Vec::new(), synapses: Vec::new(), layout: flow::OrderedMap::new() },
+            generation: flow::playbook::GenerationPlayRoot::default(),
         };
         target.fixture.widgets.try_reserve_exact(source.fixture.widgets.len()).map_err(|_| "procedural2d-initializer.widgets-preflight")?;
         target.fixture.synapses.try_reserve_exact(source.fixture.synapses.len()).map_err(|_| "procedural2d-initializer.synapses-preflight")?;
-        target.generation.generations.try_reserve_exact(source.generation.generations.len()).map_err(|_| "procedural2d-initializer.generations-preflight")?;
+        target.generation.cold_builder_mut()?.generations.try_reserve_exact(source.generation.generations.len()).map_err(|_| "procedural2d-initializer.generations-preflight")?;
         Ok(Self { target: std::mem::ManuallyDrop::new(Some(target)), phase: 0, index: 0, handed_back: false })
     }
 
@@ -2591,19 +2612,19 @@ impl Procedural2dSnapshotCopyCursor {
                 self.index = 0;
             }
             7 if self.index < source.generation.generations.len() => {
-                target.generation.generations.push(procedural2d_copy_generation(&source.generation.generations[self.index])?);
+                target.generation.cold_builder_mut()?.generations.push(procedural2d_copy_generation(&source.generation.generations[self.index])?);
                 digest.observe(source.generation.generations[self.index].id.as_bytes());
                 self.index += 1;
             }
             7 => {
-                target.generation.selected_generation_id = match source.generation.selected_generation_id.as_deref() {
+                target.generation.cold_builder_mut()?.selected_generation_id = match source.generation.selected_generation_id.as_deref() {
                     Some(value) => Some(procedural2d_copy_string(value)?),
                     None => None,
                 };
                 self.phase = 8;
             }
             8 => {
-                target.generation.preview_text = match source.generation.preview_text.as_deref() {
+                target.generation.cold_builder_mut()?.preview_text = match source.generation.preview_text.as_deref() {
                     Some(value) => Some(procedural2d_copy_string(value)?),
                     None => None,
                 };
@@ -2718,9 +2739,10 @@ fn procedural2d_observe_widget(digest: &mut store::ArtifactStoreInitializationDi
             }
             digest.observe(&[u8::from(*preview)]);
         }
-        flow::Widget::InputSlider { id, value, min, max, step } => {
+        flow::Widget::InputSlider { id, label, value, min, max, step } => {
             digest.observe(b"input-slider");
             digest.observe(id.as_bytes());
+            digest.observe(label.as_bytes());
             for value in [value, min, max, step] {
                 digest.observe(&value.to_bits().to_be_bytes());
             }

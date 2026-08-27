@@ -22,7 +22,7 @@ pub mod mutations;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, PdfMutation};
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, InsertPage, PdfMutation, SetInfo};
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
     use crate::artifacts::pdf::standards::v1_7::subsets::ua::schema::check_ua_conformance;
     use dsl::{Diagnostic, Severity};
@@ -68,13 +68,13 @@ pub mod derived_construction {
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_page(mut self, page: PdfPage) -> Self {
             let index = self.snapshot.pages.len();
-            apply_pdf_mutation(&mut self.snapshot, &PdfMutation::InsertPage { index, page });
+            apply_pdf_mutation(&mut self.snapshot, &PdfMutation::InsertPage(InsertPage { index, page }));
             self
         }
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_info(mut self, info: PdfInfo) -> Self {
-            apply_pdf_mutation(&mut self.snapshot, &PdfMutation::SetInfo { info });
+            apply_pdf_mutation(&mut self.snapshot, &PdfMutation::SetInfo(SetInfo { info }));
             self
         }
     }
@@ -143,13 +143,13 @@ pub mod derived_construction {
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = PdfUaBuilderConstruction::new("en-US").add_page(PdfPage::new(100.0, 100.0)).build().unwrap();
             // Strip the seeded /StructTreeRoot to simulate a stripped-down document reaching the
-            // builder via the generic `SetSnapshot` escape hatch.
+            // builder through its explicit snapshot constructor.
             if let Some(catalog_obj) = snapshot.objects.iter_mut().find(|o| o.id.num == 1) {
                 if let PdfObject::Dict(d) = &mut catalog_obj.value {
                     d.retain(|e| e.key != "StructTreeRoot");
                 }
             }
-            let (mutated, _diff) = PdfUaBuilderConstruction::from_snapshot(PdfSnapshot::default()).mutate(PdfMutation::SetSnapshot { snapshot });
+            let mutated = PdfUaBuilderConstruction::from_snapshot(snapshot);
             let err = mutated.build().expect_err("a Catalog missing /StructTreeRoot must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::pdf::standards::v1_7::subsets::ua::schema::CODE_STRUCT_TREE_ROOT));
         }

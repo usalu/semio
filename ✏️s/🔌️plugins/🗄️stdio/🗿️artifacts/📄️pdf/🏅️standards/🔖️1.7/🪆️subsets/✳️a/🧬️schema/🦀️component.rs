@@ -29,7 +29,7 @@ pub mod mutations;
 pub mod derived_construction {
     use crate::artifacts::pdf::standards::v1_7::subsets::a::schema::check_pdf_a_conformance;
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, PdfMutation};
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, InsertPage, PdfMutation, SetInfo};
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
@@ -75,13 +75,13 @@ pub mod derived_construction {
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_page(mut self, page: PdfPage) -> Self {
             let index = self.snapshot.pages.len();
-            apply_pdf_mutation(&mut self.snapshot, &PdfMutation::InsertPage { index, page });
+            apply_pdf_mutation(&mut self.snapshot, &PdfMutation::InsertPage(InsertPage { index, page }));
             self
         }
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_info(mut self, info: PdfInfo) -> Self {
-            apply_pdf_mutation(&mut self.snapshot, &PdfMutation::SetInfo { info });
+            apply_pdf_mutation(&mut self.snapshot, &PdfMutation::SetInfo(SetInfo { info }));
             self
         }
     }
@@ -123,7 +123,7 @@ pub mod derived_construction {
         }
 
         /// 🛡️ The real construction gate: however `self.snapshot` got here (`new`+`add_page`,
-        /// `from_binary`, a raw `mutate(SetSnapshot { .. })`), a hard PDF/A violation fails
+        /// `from_binary`, or `from_snapshot`), a hard PDF/A violation fails
         /// `build()` -- soft/info diagnostics (missing OutputIntent, non-embedded font, the detected
         /// level) pass through as advisory `Diagnostic`s; the `Err` path is NOT taken for those, only
         /// hard ones block.
@@ -158,12 +158,11 @@ pub mod derived_construction {
         }
 
         #[semio_framework_async_macros::async_test]
-        async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
+        async fn hard_violation_injected_via_snapshot_still_fails_build() {
             let violating = PdfIndirectObject { id: ObjRef { num: 99, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: "S".into(), value: PdfObject::Name("Launch".into()) }]) };
             let mut snapshot = PdfABuilderConstruction::new("sRGB IEC61966-2.1").add_page(PdfPage::new(100.0, 100.0)).build().unwrap();
             snapshot.objects.push(violating);
-            // Even routed back in via the generic `SetSnapshot` escape hatch, `build()` still catches it.
-            let (mutated, _diff) = PdfABuilderConstruction::from_snapshot(PdfSnapshot::default()).mutate(PdfMutation::SetSnapshot { snapshot });
+            let mutated = PdfABuilderConstruction::from_snapshot(snapshot);
             let err = mutated.build().expect_err("a /Launch action must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::pdf::standards::v1_7::subsets::a::schema::CODE_LAUNCH));
         }

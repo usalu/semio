@@ -1,0 +1,2 @@
+# 🧬 set-element-name/SetElementName
+input SetElementNamePayload { path: [Int!]! name: String! }

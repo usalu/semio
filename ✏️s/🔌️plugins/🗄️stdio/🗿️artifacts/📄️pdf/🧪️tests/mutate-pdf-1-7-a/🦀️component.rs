@@ -17,12 +17,12 @@ use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::
 
 //#region 🔖️Kinds
 /// 🧾️ Test-case-local mirror of the `pdf-1-7-a` catalog. Duplicated, not imported, from
-/// `../../🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧬️schema/🧬️mutations/🦀️component.rs::KINDS` — that module
-/// lives in the SUBJECT crate, and the oracle role must not link the subject crate at all, while
+/// direct-leaf descriptor catalog — the descriptors live in the SUBJECT crate, and the oracle role
+/// must not link the subject crate at all, while
 /// this loop registers handlers for both roles from one list. A mismatch is caught structurally: the
 /// contract phase fails with `mutation-kind-uncovered`/`mutation-kind-undeclared` if this list omits
 /// or invents a kind, and the runner fails every unregistered scenario id outright.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-encryption-dictionary", "remove-encryption-dictionary", "insert-javascript-action", "remove-javascript-action", "insert-launch-action", "remove-launch-action", "insert-embedded-file", "remove-embedded-file", "set-af-relationship", "remove-af-relationship", "set-output-intent", "remove-output-intent", "embed-font-file", "remove-font-file"];
+const KINDS: &[&str] = &["insert-encryption-dictionary", "remove-encryption-dictionary", "insert-javascript-action", "remove-javascript-action", "insert-launch-action", "remove-launch-action", "insert-embedded-file", "remove-embedded-file", "set-af-relationship", "remove-af-relationship", "set-output-intent", "remove-output-intent", "embed-font-file", "remove-font-file"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -94,7 +94,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let base = arranged_input(ctx, &spec)?;
     let output = oracle_apply_mutation(&base, &spec)?;
     let projection = project_conformance(&output)?;
-    if spec.str("kind") != "no-mutation" && projection == project_conformance(&base)? {
+    if projection == project_conformance(&base)? {
         return Err(format!("mutate-{}: the mutation left the conformance-class projection unchanged — a mutation that is not observable proves nothing", spec.str("kind")));
     }
     Ok(Outcome::with_raw(output, projection))
@@ -142,9 +142,14 @@ mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::io::{decode_pdf, encode_pdf};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::conformance_support as support;
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::conformance_support as support;
     use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfSnapshot};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::a::schema::mutations::{apply_a_conformance_mutation, stamp_conformance, PdfAMutation};
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::a::schema::mutations::{
+        apply_a_conformance_mutation, EmbedFontFile, InsertEmbeddedFile, InsertEncryptionDictionary,
+        InsertJavascriptAction, InsertLaunchAction, PdfAMutation, RemoveAfRelationship,
+        RemoveEmbeddedFile, RemoveEncryptionDictionary, RemoveFontFile, RemoveJavascriptAction,
+        RemoveLaunchAction, RemoveOutputIntent, SetAfRelationship, SetOutputIntent,
+    };
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::a::{oracle_inverse_spec, project_conformance};
 
     fn decode(bytes: &[u8]) -> Result<PdfSnapshot, String> {
@@ -189,22 +194,20 @@ mod subject {
     fn mutation_from_spec(base: &PdfSnapshot, spec: &Json) -> Result<PdfAMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => PdfAMutation::NoMutation,
-            "set-snapshot" => PdfAMutation::SetSnapshot { snapshot: stamp_conformance(base.clone(), params.str("conformance") == "stamped") },
-            "insert-encryption-dictionary" => PdfAMutation::InsertEncryptionDictionary { version: params.get("version").and_then(number).unwrap_or(2.0) as i64, revision: params.get("revision").and_then(number).unwrap_or(3.0) as i64 },
-            "remove-encryption-dictionary" => PdfAMutation::RemoveEncryptionDictionary { version: params.get("version").and_then(number).unwrap_or(2.0) as i64, revision: params.get("revision").and_then(number).unwrap_or(3.0) as i64 },
-            "insert-javascript-action" => PdfAMutation::InsertJavaScriptAction { script: params.str("script") },
-            "remove-javascript-action" => PdfAMutation::RemoveJavaScriptAction { script: params.str("script") },
-            "insert-launch-action" => PdfAMutation::InsertLaunchAction { target: params.str("target") },
-            "remove-launch-action" => PdfAMutation::RemoveLaunchAction { target: params.str("target") },
-            "insert-embedded-file" => PdfAMutation::InsertEmbeddedFile { file_name: params.str("fileName") },
-            "remove-embedded-file" => PdfAMutation::RemoveEmbeddedFile { file_name: params.str("fileName") },
-            "set-af-relationship" => PdfAMutation::SetAfRelationship { file_name: params.str("fileName"), relationship: params.str("relationship") },
-            "remove-af-relationship" => PdfAMutation::RemoveAfRelationship { file_name: params.str("fileName") },
-            "set-output-intent" => PdfAMutation::SetOutputIntent { identifier: params.str("identifier") },
-            "remove-output-intent" => PdfAMutation::RemoveOutputIntent,
-            "embed-font-file" => PdfAMutation::EmbedFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize, key: params.str("key"), program: program_reference(base, &params)? },
-            "remove-font-file" => PdfAMutation::RemoveFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize },
+            "insert-encryption-dictionary" => PdfAMutation::InsertEncryptionDictionary(InsertEncryptionDictionary { version: params.get("version").and_then(number).unwrap_or(2.0) as i64, revision: params.get("revision").and_then(number).unwrap_or(3.0) as i64 }),
+            "remove-encryption-dictionary" => PdfAMutation::RemoveEncryptionDictionary(RemoveEncryptionDictionary { version: params.get("version").and_then(number).unwrap_or(2.0) as i64, revision: params.get("revision").and_then(number).unwrap_or(3.0) as i64 }),
+            "insert-javascript-action" => PdfAMutation::InsertJavascriptAction(InsertJavascriptAction { script: params.str("script") }),
+            "remove-javascript-action" => PdfAMutation::RemoveJavascriptAction(RemoveJavascriptAction { script: params.str("script") }),
+            "insert-launch-action" => PdfAMutation::InsertLaunchAction(InsertLaunchAction { target: params.str("target") }),
+            "remove-launch-action" => PdfAMutation::RemoveLaunchAction(RemoveLaunchAction { target: params.str("target") }),
+            "insert-embedded-file" => PdfAMutation::InsertEmbeddedFile(InsertEmbeddedFile { file_name: params.str("fileName") }),
+            "remove-embedded-file" => PdfAMutation::RemoveEmbeddedFile(RemoveEmbeddedFile { file_name: params.str("fileName") }),
+            "set-af-relationship" => PdfAMutation::SetAfRelationship(SetAfRelationship { file_name: params.str("fileName"), relationship: params.str("relationship") }),
+            "remove-af-relationship" => PdfAMutation::RemoveAfRelationship(RemoveAfRelationship { file_name: params.str("fileName") }),
+            "set-output-intent" => PdfAMutation::SetOutputIntent(SetOutputIntent { identifier: params.str("identifier") }),
+            "remove-output-intent" => PdfAMutation::RemoveOutputIntent(RemoveOutputIntent {}),
+            "embed-font-file" => PdfAMutation::EmbedFontFile(EmbedFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize, key: params.str("key"), program: program_reference(base, &params)? }),
+            "remove-font-file" => PdfAMutation::RemoveFontFile(RemoveFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize }),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

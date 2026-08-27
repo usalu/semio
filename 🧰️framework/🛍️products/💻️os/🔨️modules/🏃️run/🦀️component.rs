@@ -1923,8 +1923,8 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
                 format!("`{}` is not a registered {} surface for `{}`", app.app_id, role.as_str(), dialect.to_coordinate()),
             ));
         }
-        let mutation = semio_framework_plugin_host::opening_config::mutations::set_default_app::mutation::set_default_app(dialect, role, app);
-        semio_framework_plugin_host::opening_config::mutations::apply_opening_config_mutation(&mut self.opening_preferences, &mutation).map_err(|error| semio_framework::Fault::from(error.to_string()))?;
+        let mutation = semio_framework_plugin_host::opening_config::mutations::set_default_app::set_default_app(dialect, role, app);
+        semio_framework_plugin_host::opening_config::apply_opening_config_mutation(&mut self.opening_preferences, &mutation).map_err(|error| semio_framework::Fault::from(error.to_string()))?;
         Ok(())
     }
 
@@ -1935,8 +1935,8 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     pub fn clear_default_app(&mut self, artifact_kind: &str, standard: &str, subset: &str, role_wire: u8) -> Result<(), semio_framework::Fault> {
         let role = opening_role_from_wire(role_wire)?;
         let dialect = semio_framework::ArtifactDialect { artifact_kind: artifact_kind.to_string(), standard: standard.to_string(), subset: subset.to_string() };
-        let mutation = semio_framework_plugin_host::opening_config::mutations::clear_default_app::mutation::clear_default_app(dialect, role);
-        semio_framework_plugin_host::opening_config::mutations::apply_opening_config_mutation(&mut self.opening_preferences, &mutation).map_err(|error| semio_framework::Fault::from(error.to_string()))?;
+        let mutation = semio_framework_plugin_host::opening_config::mutations::clear_default_app::clear_default_app(dialect, role);
+        semio_framework_plugin_host::opening_config::apply_opening_config_mutation(&mut self.opening_preferences, &mutation).map_err(|error| semio_framework::Fault::from(error.to_string()))?;
         Ok(())
     }
     //#endregion 🔖️OpeningCommands

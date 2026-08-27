@@ -1,1 +1,0 @@
-input GltfBindSceneRootNodeDiffV1 { scene: Int!, node: Int!, position: Int!, touchedPaths: [String!]! }

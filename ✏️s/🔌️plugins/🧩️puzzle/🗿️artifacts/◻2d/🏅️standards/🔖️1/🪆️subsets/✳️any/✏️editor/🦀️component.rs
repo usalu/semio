@@ -29,9 +29,9 @@ use crate::editor::puzzle2d::terminology::{is_de_locale, puzzle2d_labels, Puzzle
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppLabels, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactPresentation, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppLabels, ArtifactEditor, ArtifactPresentation, ArtifactView, ConfigView, Dialect, DraftView,
     Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
-    MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, UiNode, WindowEngagement, WindowMeasure,
+    MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, UiNode, WindowEngagement, WindowMeasure,
     INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 // 🕹️ `InteractionView` — see puzzle3d's identical import comment (missing top-level re-export from
@@ -955,7 +955,7 @@ fn dispatch_fill_session_action(action: &str, args: Option<&Value>, ctx: &mut se
 }
 
 //#region 🧵️RetainedCommands
-pub(crate) const PUZZLE2D_RETAINED_TOOL_IDS: &[&str] = &["addNode", "forceLayout", "setActiveExample"];
+pub(crate) const PUZZLE2D_RETAINED_TOOL_IDS: &[&str] = &[];
 const PUZZLE2D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.2d.fixture.tool-command.v1";
 
 fn puzzle2d_retained_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
@@ -1595,67 +1595,6 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
     }
 }
 
-struct BoundedFirstStepCommandJobFactory {
-    keys: Vec<ToolFactoryKey>,
-}
-
-impl BoundedFirstStepCommandJobFactory {
-    fn new(controller_id: &str) -> Self {
-        Self { keys: PUZZLE2D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
-    }
-}
-
-impl ToolJobFactory for BoundedFirstStepCommandJobFactory {
-    type Payload = crate::retained_command::RetainedPuzzleCommandPayload<EditorApp<Puzzle2dPlayApp>>;
-    type Job = crate::retained_command::RetainedPuzzleCommandJob<EditorApp<Puzzle2dPlayApp>>;
-
-    fn keys(&self) -> &[ToolFactoryKey] {
-        &self.keys
-    }
-
-    fn payload_schema_id(&self) -> &str {
-        PUZZLE2D_RETAINED_PAYLOAD_SCHEMA
-    }
-
-    fn classification(&self) -> semio_framework::InteractiveJobClassification {
-        semio_framework::InteractiveJobClassification::Migrated
-    }
-
-    fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
-        crate::retained_command::puzzle_command_contract()
-    }
-
-    fn create_job(&mut self, operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(crate::retained_command::RetainedPuzzleCommandJob::new(operation, payload))
-    }
-
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > crate::retained_command::PUZZLE_COMMAND_RAW_BYTES {
-            return Err((ToolJobFactoryError::new("Puzzle 2d retained command rejects an oversized wire owner"), input, checkpoint));
-        }
-        match checkpoint {
-            Some(checkpoint) => {
-                if let Err(error) = crate::retained_command::RetainedPuzzleCommandJob::validate_wire_checkpoint(operation, &payload, &input, &checkpoint) {
-                    return Err((error, input, Some(checkpoint)));
-                }
-                Ok(crate::retained_command::RetainedPuzzleCommandJob::from_validated_wire_checkpoint(operation, payload, input, checkpoint))
-            }
-            None => Ok(crate::retained_command::RetainedPuzzleCommandJob::from_wire(operation, payload, input)),
-        }
-    }
-}
-
-impl ArtifactOwnedToolJobFactory for BoundedFirstStepCommandJobFactory {
-    type Owner = EditorApp<Puzzle2dPlayApp>;
-    const TOOL_IDS: &'static [&'static str] = PUZZLE2D_RETAINED_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_FIXTURE_SCHEMA;
-}
 //#endregion 🧵️RetainedCommands
 
 impl ArtifactEditor for Puzzle2dPlayApp {
@@ -1672,48 +1611,6 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     type Transient = semio_framework_plugin::NoTransient;
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
     type Command = Puzzle2dCommand;
-
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<Puzzle2dPlayApp>,
-        owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-        controller: "s.puzzle.puzzle2d@1/*#editor",
-        document_schema: "puzzle.2d.fixture",
-        factory: "BoundedFirstStepCommandJobFactory",
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 512, 1, 262_144, 7_500),
-        tools: ["addNode", "forceLayout", "setActiveExample"]
-    }
-
-    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
-        let controller_id = registry.controller_id().to_string();
-        registry.register(BoundedFirstStepCommandJobFactory::new(&controller_id))
-    }
-
-    fn build_tool_job(request: semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !PUZZLE2D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
-            return Ok(None);
-        }
-        if request.command.action_id() != request.tool_id {
-            return Err(Fault::from("puzzle2d-command-tool-mismatch"));
-        }
-        let tool_id = request.command.action_id();
-        let work: Box<dyn crate::retained_command::PuzzleCommandWork<EditorApp<Self>>> = match tool_id {
-            "forceLayout" => Box::new(Puzzle2dForceLayoutWork::default()),
-            "setActiveExample" => Box::new(Puzzle2dActiveExampleWork::default()),
-            "addNode" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle2d_retained_reduce, puzzle2d_retained_extent)),
-            _ => return Err(Fault::from("puzzle2d-retained-work-missing")),
-        };
-        let payload = crate::retained_command::RetainedPuzzleCommandPayload {
-            command: *request.command,
-            snapshot: request.snapshot,
-            config: request.config,
-            interaction_state: request.interaction_state,
-            interaction_hover: request.interaction_hover,
-            completion: request.completion,
-            command_id: Puzzle2dCommand::action_id,
-            work,
-        };
-        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
-    }
 
     /// 📎 Ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d: replaces the old
     /// `crate::editor::puzzle2d::config::schema::register_app_schema()` self-registering call, which
@@ -2076,9 +1973,9 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
                     ActionArgOption::new(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin Capsule Tower")),
                 ]).required().default_value(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID),
             ])
-            .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
-            .action_interactive_job("forceLayout", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addNode", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("forceLayout", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
             // 🧰️ Canvas utilities — one exclusive set, active utility host-owned (never a document
             // operation); bound to the interactive overview pane by that window's own definition.
             .utility(select_utility::definition(puzzle2d_localized(|l| l.select)))
@@ -2259,7 +2156,7 @@ pub(crate) mod testkit {
     }
 
     pub fn fixture_of(app: &Puzzle2dApp) -> Value {
-        semio_framework::io::resolve_ready(app.snapshot()).expect("projection").0
+        app.snapshot().expect("projection").0
     }
 
     pub fn first_node_id(app: &Puzzle2dApp) -> String {
@@ -2442,7 +2339,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn puzzle2d_play_projection_pack_round_trips() {
         let app = concrete_forest_app();
-        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&semio_framework::io::resolve_ready(app.snapshot()).expect("projection"));
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
     }
 
     #[semio_framework_async_macros::async_test]

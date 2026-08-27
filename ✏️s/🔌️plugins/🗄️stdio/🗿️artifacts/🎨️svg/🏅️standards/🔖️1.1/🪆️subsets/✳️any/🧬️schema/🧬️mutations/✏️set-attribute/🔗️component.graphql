@@ -1,0 +1,2 @@
+# 🧬 set-attribute/SetAttribute
+input SetAttributePayload { path: [Int!]! name: String! value: String }

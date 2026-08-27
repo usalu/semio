@@ -1,2 +1,0 @@
-# unbind-node-skin inverse typed facet.
-input GltfUnbindNodeSkinInverseV1 { operation: GltfUnbindNodeSkinPayloadV1!, before: Int, touchedPaths: [String!]! }

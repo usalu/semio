@@ -18,10 +18,13 @@ use crate::editor::gis2d::modes::edit;
 use crate::editor::gis2d::modes::edit::windows::map;
 use crate::editor::gis2d::panels::{artifact as document_panel, catalogue as catalogue_panel, inspection as inspection_panel};
 use crate::editor::gis2d::terminology::gis2d_labels;
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    tree_item, tree_item_with_action, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition,
-    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode,
+    tree_item, tree_item_with_action, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry,
+    ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition,
+    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode,
     SelectionSpec, UiNode, UiTreeItemNode, WindowMeasure, INTERACTION_SELECT_ACTION_ID,
 };
 use serde_json::{json, Value};
@@ -252,6 +255,279 @@ use view::{fit_world, focus_feature, set_camera, set_layer_stroke_scale, set_lod
 #[derive(Default)]
 pub struct Gis2dPlayApp;
 
+//#region 🧵️RetainedCommands
+const GIS2D_RETAINED_TOOL_IDS: &[&str] = &[
+    "setActiveExample",
+    "patchPositions",
+    "patchRoutes",
+    "patchRoute",
+    "toggleLayerVisibility",
+    "fitWorld",
+    "setCamera",
+    "setRenderMode",
+    "setVectorStyle",
+    "setLodMode",
+    "focusFeature",
+    "setLayerStrokeScale",
+    "openSource",
+    "setLocale",
+];
+const GIS2D_RETAINED_PAYLOAD_SCHEMA: &str = "gis.map.tool-command.v1";
+const GIS2D_RETAINED_RAW_BYTES: usize = 8_192;
+const GIS2D_RETAINED_WORK_ITEMS: usize = 64;
+
+const GIS2D_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "patchPositions", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchRoutes", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchRoute", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "toggleLayerVisibility", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "fitWorld", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setRenderMode", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setVectorStyle", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setLodMode", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "focusFeature", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setLayerStrokeScale", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "openSource", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
+];
+
+fn gis2d_retained_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(GIS2D_RETAINED_RAW_BYTES, 64, GIS2D_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
+}
+
+fn gis2d_retained_extent(command: &Gis2dCommand, _snapshot: &GisMapSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    GIS2D_RETAINED_TOOL_IDS.contains(&command.command_id()).then_some(1)
+}
+
+fn gis2d_retained_reduce(
+    command: &Gis2dCommand,
+    snapshot: &GisMapSnapshot,
+    config: &Gis2dConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, NoDraftMutation>, Fault> {
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+}
+
+struct Gis2dRetainedCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl Gis2dRetainedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: GIS2D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for Gis2dRetainedCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<Gis2dPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<Gis2dPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        GIS2D_RETAINED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        gis2d_retained_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > GIS2D_RETAINED_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("GIS map retained command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for Gis2dRetainedCommandJobFactory {
+    type Owner = EditorApp<Gis2dPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = GIS2D_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = GIS_MAP_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = GIS2D_RETAINED_PUBLICATION_CONTRACTS;
+}
+//#endregion 🧵️RetainedCommands
+
+//#region 📬️OneItemPreparation
+struct Gis2dOneItemPreparationFactory<P, M> {
+    marker: std::marker::PhantomData<fn() -> (P, M)>,
+}
+
+impl<P, M> Default for Gis2dOneItemPreparationFactory<P, M> {
+    fn default() -> Self {
+        Self { marker: std::marker::PhantomData }
+    }
+}
+
+struct Gis2dOneItemPreparation<P, M> {
+    base: Option<store::SnapshotRead<P>>,
+    mutation: Option<M>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<P, M>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn gis2d_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
+    let id = format!("gis2d-retained-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+
+impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for Gis2dOneItemPreparationFactory<P, M>
+where
+    P: Clone + Send + Sync + 'static,
+    M: protocol::Mutation<P> + Send + Sync + 'static,
+    M::Diff: protocol::MutationDiff<P>,
+{
+    fn preflight(&self, _mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("GIS map retained preparation rejected its lane or description envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(Gis2dOneItemPreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for Gis2dOneItemPreparation<P, M>
+where
+    P: Clone + Send + Sync + 'static,
+    M: protocol::Mutation<P> + Send + 'static,
+    M::Diff: protocol::MutationDiff<P>,
+{
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "GIS map retained preparation lost its exact base root".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "GIS map retained preparation lost its mutation owner".to_string())?;
+        let inverse = mutation.inverse(base.get());
+        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "GIS map retained preparation lost its Store authority".to_string())?;
+        let edit = gis2d_one_item_edit(mutation, inverse, self.description.take(), authority);
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> {
+        self.prepared.as_ref()
+    }
+
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> {
+        self.prepared.take()
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("GIS map retained preparation could not return its exact base root".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️OneItemPreparation
+
 /// 🕹️ `interactionSelect` args for a single-feature pick against the `"features"` domain's
 /// `"feature"` granularity — the generic replacement for the deleted bespoke `setFeatureSelection`
 /// action (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
@@ -310,16 +586,64 @@ impl ArtifactEditor for Gis2dPlayApp {
     const DIALECT: Dialect = crate::artifacts::gismap::GISMAP_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GIS_MAP_SCHEMA;
 
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(Gis2dOneItemPreparationFactory::<Self::Snapshot, Self::Mutation>::default()))
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(Gis2dOneItemPreparationFactory::<Self::Config, Self::ConfigMutation>::default()))
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<Gis2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
         controller: "s.gis.gismap@1/*#editor",
         document_schema: "gis.map",
-        factory: "BoundedFirstStepCommandJobFactory",
+        factory: "Gis2dRetainedCommandJobFactory",
+        factory_type: Gis2dRetainedCommandJobFactory,
         contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
         tools: [
             "setActiveExample", "patchPositions", "patchRoutes", "patchRoute", "toggleLayerVisibility", "fitWorld", "setCamera", "setRenderMode", "setVectorStyle", "setLodMode", "focusFeature", "setLayerStrokeScale", "openSource", "setLocale",
         ]
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller_id = registry.controller_id().to_string();
+        registry.register(Gis2dRetainedCommandJobFactory::new(&controller_id))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !GIS2D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id || gis2d_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
+            return Err(Fault::from("gis2d-retained-command-tool-mismatch"));
+        }
+        let tool_id = request.command.command_id();
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, gis2d_retained_reduce, gis2d_retained_extent));
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            request.context,
+            operation_context,
+            request.completion,
+            Gis2dCommand::command_id,
+            GIS2D_RETAINED_RAW_BYTES,
+            GIS2D_RETAINED_WORK_ITEMS,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
@@ -328,6 +652,10 @@ impl ArtifactEditor for Gis2dPlayApp {
 
     fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(crate::artifacts::gismap::spr::gis_map_document_store_owners())
+    }
+
+    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
     }
 
     fn build_document_store_initialization_job(
@@ -340,6 +668,10 @@ impl ArtifactEditor for Gis2dPlayApp {
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
     fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
@@ -795,6 +1127,15 @@ mod tests {
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
         assert_eq!(ids.len(), 14, "every Gis2dCommand row must be covered by every_command()");
+    }
+
+    #[test]
+    fn retained_factory_owns_every_migrated_command_and_exact_publication_lane() {
+        assert_eq!(<Gis2dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::TOOL_IDS, GIS2D_RETAINED_TOOL_IDS);
+        assert_eq!(<Gis2dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, GIS2D_RETAINED_PUBLICATION_CONTRACTS);
+        assert_eq!(GIS2D_RETAINED_PUBLICATION_CONTRACTS.iter().find(|row| row.tool_id == "setActiveExample").map(|row| row.lanes), Some(&[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config][..]));
+        assert_eq!(GIS2D_RETAINED_PUBLICATION_CONTRACTS.iter().find(|row| row.tool_id == "setCamera").map(|row| row.lanes), Some(&[ArtifactToolPublicationLane::Config][..]));
+        assert_eq!(GIS2D_RETAINED_PUBLICATION_CONTRACTS.iter().find(|row| row.tool_id == "openSource").map(|row| row.lanes), Some(&[ArtifactToolPublicationLane::HostOnly][..]));
     }
 
     #[semio_framework_async_macros::async_test]

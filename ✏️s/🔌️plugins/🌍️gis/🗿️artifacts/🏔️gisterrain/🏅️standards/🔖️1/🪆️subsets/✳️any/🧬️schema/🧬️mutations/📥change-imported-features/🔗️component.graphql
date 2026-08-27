@@ -1,0 +1,4 @@
+"""📥 Direct change-imported-features payload."""
+input ChangeImportedFeaturesInput {
+  newImportedFeaturesJson: String!
+}

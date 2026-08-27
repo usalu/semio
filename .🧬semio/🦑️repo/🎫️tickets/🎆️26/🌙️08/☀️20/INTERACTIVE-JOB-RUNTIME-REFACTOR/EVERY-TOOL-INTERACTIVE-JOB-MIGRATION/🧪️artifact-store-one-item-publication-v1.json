@@ -1,0 +1,41 @@
+{
+  "$schema": "./artifact-store-one-item-publication-v1.schema.json",
+  "version": 1,
+  "capacities": {
+    "historyItems": 64,
+    "maximumWorkItems": 65536,
+    "maximumRetainedBytes": 1048576,
+    "maximumRetries": 2,
+    "closeItemsPerTurn": 1,
+    "closeBytesPerTurn": 4096
+  },
+  "admissionCases": [
+    { "id": "empty", "workItems": 0, "retainedBytes": 0, "accepted": false, "fuelAfter": 0 },
+    { "id": "single", "workItems": 1, "retainedBytes": 1, "accepted": true, "fuelAfter": 0 },
+    { "id": "maximum", "workItems": 65536, "retainedBytes": 1048576, "accepted": true, "fuelAfter": 0 },
+    { "id": "maximum-plus-one-item", "workItems": 65537, "retainedBytes": 1048576, "accepted": false, "fuelAfter": 0 },
+    { "id": "maximum-plus-one-byte", "workItems": 65536, "retainedBytes": 1048577, "accepted": false, "fuelAfter": 0 }
+  ],
+  "authorityCases": [
+    { "id": "canonical-helper", "authorityMatches": true, "digestOwner": "store", "cursorFieldsExposed": false, "accepted": true },
+    { "id": "forged-digest", "authorityMatches": true, "digestOwner": "domain", "cursorFieldsExposed": false, "accepted": false },
+    { "id": "forged-base-history", "authorityMatches": false, "digestOwner": "domain", "cursorFieldsExposed": true, "accepted": false }
+  ],
+  "lifecycleCases": [
+    { "id": "stale-generation", "baseGeneration": 7, "liveGeneration": 8, "baseRevision": 11, "liveRevision": 11, "expected": "fault" },
+    { "id": "stale-revision", "baseGeneration": 7, "liveGeneration": 7, "baseRevision": 11, "liveRevision": 12, "expected": "fault" },
+    { "id": "cancel-before-publish", "cancelAt": 2, "preparedAt": 4, "expected": "complete-empty" },
+    { "id": "retry-then-ack", "publishAt": 5, "retryAttempts": 2, "acknowledged": true, "expected": "complete-empty" },
+    { "id": "retry-plus-one", "publishAt": 5, "retryAttempts": 3, "acknowledged": false, "expected": "retry-exhausted" },
+    { "id": "interrupted-close", "cancelAt": 3, "retainedOwners": 4, "expectedCloseTurns": 5, "expected": "complete-empty" }
+  ],
+  "publicationPhases": [
+    "preparing",
+    "preparingCursor",
+    "preflightingCommit",
+    "publishing",
+    "awaitingAck",
+    "closing",
+    "complete"
+  ]
+}

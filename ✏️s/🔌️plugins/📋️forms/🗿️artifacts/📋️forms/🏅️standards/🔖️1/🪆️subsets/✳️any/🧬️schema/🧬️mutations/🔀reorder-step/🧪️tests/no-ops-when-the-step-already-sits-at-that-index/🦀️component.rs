@@ -20,7 +20,7 @@
 //! `step-photos` is the committed payload's own id.
 
 use crate::artifacts::forms::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::artifacts::forms::{cache_forms_steps, forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::artifacts::forms::{materialize_forms_steps, forms_steps, FormStep, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -41,8 +41,8 @@ fn step(id: &str, title: &str) -> FormStep {
 /// 🌱 The committed `⬅️before`, with its composed children resolved to the three-step survey this
 /// case reorders within — `step-photos`, the committed payload's own id, sits at index 1.
 fn before() -> FormsSnapshot {
-    let snapshot: FormsSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
-    cache_forms_steps(&snapshot.structure.child_id, vec![step("step-basics", "Basics"), step("step-photos", "Photos"), step("step-summary", "Summary")]);
+    let mut snapshot: FormsSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    materialize_forms_steps(&mut snapshot.structure, vec![step("step-basics", "Basics"), step("step-photos", "Photos"), step("step-summary", "Summary")]);
     snapshot
 }
 
@@ -53,7 +53,7 @@ async fn applies_to_committed_after() {
     let base = before();
     let snapshot = apply_form_edit_mutation(&base, &mutation()).expect("an identity diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "reorder-step/no-ops-when-the-step-already-sits-at-that-index: applied state differs from committed after-snapshot");
-    assert_eq!((&snapshot.structure.child_id, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a refused reorder must not re-mint the structure/results handles");
+    assert_eq!((&mut snapshot.structure, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a refused reorder must not re-mint the structure/results handles");
     assert_eq!(forms_steps(&snapshot).iter().map(|step| step.id.clone()).collect::<Vec<_>>(), vec!["step-basics".to_string(), "step-photos".to_string(), "step-summary".to_string()], "the survey keeps its original step order");
 }
 

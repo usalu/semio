@@ -1,0 +1,4 @@
+syntax = "proto3";
+package semio.s.trinity.rewrite.mutation.remove_parameter_binding;
+// remove-parameter-binding / RemoveParameterBinding
+message RemoveParameterBinding { string key = 1; }

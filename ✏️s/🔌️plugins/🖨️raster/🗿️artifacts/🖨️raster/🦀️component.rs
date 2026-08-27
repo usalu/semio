@@ -559,8 +559,8 @@ fn mint_asset_child_handle(asset_id: &str, content_hash: u64) -> RasterAssetChil
 
 /// 🕸️ Deterministic content-addressed CHILD handle, hashed off the RAW `(mime, data)` bytes — the
 /// fallback shape used only when the bytes can't be decoded into real `SemioImageSnapshot` content
-/// (see `mint_and_stash_asset`), and by pure-codec tests that need SOME stable handle without
-/// exercising the real png bridge. Prefer `mint_and_stash_asset` at every real call site.
+/// (see `mint_raster_asset_child`), and by pure-codec tests that need SOME stable handle without
+/// exercising the real png bridge. Prefer `mint_raster_asset_child` at every real call site.
 pub fn image_asset_child_handle(asset_id: &str, asset: &RasterImageAsset) -> RasterAssetChild {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -571,7 +571,7 @@ pub fn image_asset_child_handle(asset_id: &str, asset: &RasterImageAsset) -> Ras
 
 /// 🕸️ Deterministic content-addressed CHILD handle, hashed off the composed child's own CANONICAL
 /// content (`SemioImageSnapshot`'s real pack bytes) rather than the source encoding's raw bytes —
-/// this is the handle `mint_and_stash_asset` actually persists whenever decode succeeds. Necessary
+/// this is the handle `mint_raster_asset_child` actually persists whenever decode succeeds. Necessary
 /// because two different (but pixel-identical) PNG byte streams — e.g. a hand-authored fixture vs.
 /// this plugin's own re-encode of the SAME decoded content — are NOT byte-identical in general
 /// (different encoders/compression settings), so hashing raw bytes would mint two different handles
@@ -585,63 +585,28 @@ fn image_content_child_handle(asset_id: &str, image: &SemioImageSnapshot) -> Ras
     mint_asset_child_handle(asset_id, hasher.finish())
 }
 
-thread_local! {
-    /// 🩹️ Ephemeral working-scene cache (`EngineRep` contract): no `LinkResolver`/child-dispatch seam
-    /// exists in `ArtifactApp::handle` yet (checked directly against `🔌️plugin/🦀️component.rs`, W1-owned,
-    /// read-only), so the app layer cannot resolve a `RasterAssetChild` handle back to its real decoded
-    /// `SemioImageSnapshot` content through the framework. This `thread_local!` bridges that gap — matches
-    /// `➗️mathematical`'s `MATH_SCRATCH`/`🌊️flow`'s `FLOW_SCRATCH` pattern exactly: keyed by `child_id`
-    /// (content-addressed, so identical bytes always land in the identical slot), populated at
-    /// mutation-diff-build time (`mint_and_stash_asset`, called from every `assets` diff-apply site) and at
-    /// fixture-construction time (`semio_fixture_snapshot`/`empty_raster_document`), read through the ONE
-    /// `raster_asset` accessor every render/export/inference call site funnels through. **Staleness gap,
-    /// documented honestly**: store-level undo/redo bypasses `ArtifactApp::handle` entirely, so a live
-    /// session's cache can go stale relative to a snapshot's `assets` handles across an undo/redo spanning a
-    /// process boundary; every read fails soft (`None`) on a cache miss, never panics — the same gap every
-    /// prior exemplar in this ticket (lowpoly/cad/writer/mathematical) documents rather than silently papers
-    /// over. Never a durable struct field, never derived incrementally from itself, droppable at any instant.
-    static RASTER_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, SemioImageSnapshot>> = std::cell::RefCell::new(std::collections::HashMap::new());
-}
-
-pub fn stash_raster_asset(child_id: &str, image: SemioImageSnapshot) {
-    RASTER_SCRATCH.with(|cache| {
-        cache.borrow_mut().insert(child_id.to_string(), image);
-    });
-}
-
-pub fn cached_raster_asset(child_id: &str) -> Option<SemioImageSnapshot> {
-    RASTER_SCRATCH.with(|cache| cache.borrow().get(child_id).cloned())
-}
-
 /// 🌉️ The single funnel-through "add real content" primitive: converts the real bytes into the
 /// composed child's own real content (`SemioImageSnapshot`, via the real `🚪️io` png↔semio/image
 /// bridge — never a stub), mints the CANONICAL content-addressed handle off that decoded content
-/// (`image_content_child_handle`), and stashes it into the working-scene cache. An unsupported mime
-/// OR undecodable bytes (e.g. a placeholder/malformed PNG in a test fixture) fall back to the
-/// raw-bytes handle (`image_asset_child_handle`) and honestly leave the cache slot UNPOPULATED —
-/// "no content" is the fail-soft outcome (a clean, documented `raster_asset` cache-miss), never a
-/// fabricated placeholder. Every call site that used to do `assets.insert(id, RasterImageAsset{..})`
-/// now calls this instead, and gets back only the handle.
-pub fn mint_and_stash_asset(asset_id: &str, asset: &RasterImageAsset) -> RasterAssetChild {
+/// (`image_content_child_handle`), and attaches immutable content to that exact child owner. An
+/// unsupported mime or undecodable payload falls back to a raw-bytes handle without fabricating a
+/// materialization. Every call site receives one self-contained child owner; no process-global cache
+/// can leak content between snapshots or retain abandoned payloads.
+pub fn mint_raster_asset_child(asset_id: &str, asset: &RasterImageAsset) -> RasterAssetChild {
     match crate::artifacts::raster::io::semio_image_snapshot_from_raster_asset(asset) {
         Ok(image) => {
-            let handle = image_content_child_handle(asset_id, &image);
-            stash_raster_asset(&handle.child_id, image);
-            handle
+            image_content_child_handle(asset_id, &image).with_local_owner(std::sync::Arc::new(image))
         }
         Err(_) => image_asset_child_handle(asset_id, asset),
     }
 }
 
-/// 🌉️ The single read accessor every render/export/inference call site funnels through — resolves
-/// `asset_id` (the SAME id `image_key` already addressed under the old inline-bytes shape) through the
-/// persisted handle map, then through the working-scene cache, then back through the real
-/// `SemioImageSnapshot` → `RasterImageAsset` converter. `None` on either a missing handle OR a cold
-/// cache — fails soft, documented above, never panics.
+/// 🌉️ Resolves only content owned by the exact child in this snapshot. A wire-decoded child that
+/// has not yet been materialized by the host resolver fails soft without consulting shared state.
 pub fn raster_asset(assets: &RasterOwnedMap<RasterAssetChild>, asset_id: &str) -> Option<RasterImageAsset> {
     let handle = assets.get(asset_id)?;
-    let image = cached_raster_asset(&handle.child_id)?;
-    crate::artifacts::raster::io::raster_asset_from_semio_image_snapshot(&image).ok()
+    let image = handle.local_owner::<SemioImageSnapshot>()?;
+    crate::artifacts::raster::io::raster_asset_from_semio_image_snapshot(image.as_ref()).ok()
 }
 //#endregion 🧩️Composition
 
@@ -836,9 +801,36 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 mod tests {
     use super::*;
 
+    trait RasterChildOwnerOracle {
+        fn expected() -> serde_json::Value;
+    }
+
+    struct SerdeJsonRasterChildOwnerOracle;
+
+    impl RasterChildOwnerOracle for SerdeJsonRasterChildOwnerOracle {
+        fn expected() -> serde_json::Value {
+            serde_json::from_str(include_str!("🧪️fixtures/🎯️child-owner-isolation.json")).expect("language-neutral Raster child-owner fixture")
+        }
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn artifact_kind_keeps_the_media_schema_matching_the_store_schema() {
         assert_eq!(artifact_kind().schema, RASTER_DOCUMENT_SCHEMA);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn raster_materialization_is_owned_by_the_exact_snapshot_child() {
+        let content = SemioImageSnapshot::default();
+        let owned = image_content_child_handle("isolated", &content).with_local_owner(std::sync::Arc::new(content));
+        let wire = serde_json::to_vec(&owned).expect("Raster child wire identity");
+        let reconstructed: RasterAssetChild = serde_json::from_slice(&wire).expect("Raster child wire roundtrip");
+        let observed = serde_json::json!({
+            "ownedHasMaterialization": owned.local_owner::<SemioImageSnapshot>().is_some(),
+            "wireIdentityMatches": owned == reconstructed,
+            "wireHasMaterialization": reconstructed.local_owner::<SemioImageSnapshot>().is_some(),
+        });
+
+        assert_eq!(observed, SerdeJsonRasterChildOwnerOracle::expected());
     }
 }
 //#endregion 🧪️Tests

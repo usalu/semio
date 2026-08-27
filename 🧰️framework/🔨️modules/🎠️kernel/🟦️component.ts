@@ -1269,15 +1269,6 @@ export type Effect =
    * advance staged/progressive work over several ticks without blocking the host; the response's own
    * `requestedEffects` are fed back through `applyHostEffects` recursively. */
   | { readonly dispatchAction: { readonly req: number; readonly action: string; readonly args?: unknown; readonly delayMs: number } }
-  /** @emoji 🎯️ Patches world-3d selection chrome and document-tree `selectedIds` without a composite re-render. */
-  | {
-      readonly patchWorld3dChrome: {
-        readonly selectionJson: string;
-        readonly vorticesJson?: string;
-        readonly documentSelectedIds: readonly string[];
-        readonly documentHighlightedIds?: readonly string[];
-      };
-    }
   | { readonly clipboardWrite: { readonly fragment: unknown } }
   | { readonly replayShellCommand: { readonly actionId: string; readonly args?: unknown } }
   /** @emoji 🔁️ Asks the shell to invoke an extension capability — the SDK resumes the awaiting

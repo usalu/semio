@@ -2,7 +2,7 @@
 
 use neural_engine as neural;
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use neural::{cluster_operator_info, Atom, ChannelSpec, Dictionary, EvalChannels, EvalError, Neuron, OperatorInfo, Value as NeuralValue, INPUT_KIND, OUTPUT_KIND};
 
@@ -68,11 +68,11 @@ fn output_ports_json(dict: &Dictionary) -> serde_json::Map<String, serde_json::V
     ports
 }
 
-pub(crate) fn outputs_from_channel_eval_json(json: &str) -> HashMap<String, Dictionary> {
+pub(crate) fn outputs_from_channel_eval_json(json: &str) -> BTreeMap<String, Dictionary> {
     let Ok(parsed) = serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(json) else {
-        return HashMap::new();
+        return BTreeMap::new();
     };
-    let mut outputs = HashMap::new();
+    let mut outputs = BTreeMap::new();
     for (widget_id, entry) in parsed {
         let Some(out_ports) = entry.get("out").and_then(|value| value.as_object()) else {
             continue;
@@ -90,11 +90,11 @@ pub(crate) fn outputs_from_channel_eval_json(json: &str) -> HashMap<String, Dict
     outputs
 }
 
-pub(crate) fn inputs_from_channel_eval_json(json: &str) -> HashMap<String, Dictionary> {
+pub(crate) fn inputs_from_channel_eval_json(json: &str) -> BTreeMap<String, Dictionary> {
     let Ok(parsed) = serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(json) else {
-        return HashMap::new();
+        return BTreeMap::new();
     };
-    let mut inputs = HashMap::new();
+    let mut inputs = BTreeMap::new();
     for (widget_id, entry) in parsed {
         let Some(in_ports) = entry.get("in").and_then(|value| value.as_object()) else {
             continue;
@@ -155,7 +155,7 @@ pub(crate) fn widget_operator_info(widget: &Widget, kind_infos: &HashMap<String,
 pub(crate) fn widget_to_inner_neuron(widget: &Widget) -> Option<Neuron> {
     match widget {
         Widget::Neuron { id, neuron_kind, params, .. } => Some(Neuron::with_kind(id, neuron_kind, params.clone())),
-        Widget::InputSlider { id, value, .. } => Some(Neuron::with_kind(id, "core.number", Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(*value))))),
+        Widget::InputSlider { id, label, value, .. } => Some(Neuron::with_kind(id, "core.number", Dictionary::new().insert("label", NeuralValue::Atom(Atom::String(label.clone()))).insert("value", NeuralValue::Atom(Atom::Decimal(*value))))),
         Widget::InputNote { id, text } => Some(Neuron::with_kind(id, "core.text", Dictionary::new().insert("value", NeuralValue::Atom(Atom::String(text.clone()))))),
         Widget::InputImage { id, src } => Some(Neuron::with_kind(id, "core.image", Dictionary::new().insert("dataUrl", NeuralValue::Atom(Atom::String(src.clone()))))),
         Widget::Variable { id, name, schema } => Some(Neuron::with_kind(id, "core.variable", Dictionary::new().insert("name", NeuralValue::Atom(Atom::String(name.clone()))).insert("schema", NeuralValue::Atom(Atom::String(schema.clone()))))),
@@ -212,7 +212,7 @@ fn dictionary_schema_at_port(output: &Dictionary, port: &str) -> Option<String> 
     dict.schema().map(str::to_string)
 }
 
-pub(crate) fn infer_port_schema(outputs: &HashMap<String, Dictionary>, kind_infos: &HashMap<String, OperatorInfo>, widgets: &[Widget], synapses: &[SynapseSpec], widget_id: &str, port: &str) -> String {
+pub(crate) fn infer_port_schema(outputs: &BTreeMap<String, Dictionary>, kind_infos: &HashMap<String, OperatorInfo>, widgets: &[Widget], synapses: &[SynapseSpec], widget_id: &str, port: &str) -> String {
     if let Some(schema) = outputs.get(widget_id).and_then(|out| dictionary_schema_at_port(out, port)) {
         return schema;
     }
@@ -267,7 +267,10 @@ pub(crate) fn neuron_to_exploded_widget(neuron: &Neuron) -> Widget {
         }
         kind => match CoreNeuronKind::parse(kind) {
             Some(CoreNeuronKind::Number) => {
-                Widget::InputSlider { id: neuron.id.clone(), value: neuron.params.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()).unwrap_or(3.0), min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP }
+                match neuron.params.get("label").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()) {
+                    Some(label) => Widget::InputSlider { id: neuron.id.clone(), label: label.into(), value: neuron.params.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()).unwrap_or(3.0), min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
+                    None => Widget::Neuron { id: neuron.id.clone(), neuron_kind: neuron.kind.clone(), params: neuron.params.clone(), input_ports: vec![], output_ports: vec![], preview: true },
+                }
             }
             Some(CoreNeuronKind::Text) => Widget::InputNote { id: neuron.id.clone(), text: neuron.params.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or("").into() },
             Some(CoreNeuronKind::Image) => Widget::InputImage { id: neuron.id.clone(), src: neuron.params.get("dataUrl").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or("").into() },

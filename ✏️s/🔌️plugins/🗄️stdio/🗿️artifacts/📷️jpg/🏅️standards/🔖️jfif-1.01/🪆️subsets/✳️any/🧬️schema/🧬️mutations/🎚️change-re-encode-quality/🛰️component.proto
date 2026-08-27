@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.jpg.mutation;
+// 🧬️ change-re-encode-quality/ChangeReEncodeQuality; complex fields follow the direct payload schema.
+message ChangeReEncodeQualityMutation { bytes quality = 1; }

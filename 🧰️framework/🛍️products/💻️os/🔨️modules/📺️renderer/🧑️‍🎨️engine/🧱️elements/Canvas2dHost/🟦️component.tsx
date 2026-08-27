@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent } from "react";
 import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } from "@semio-tech/infinite-canvas-react-renderer";
-import { ContextMenuController, CATALOGUE_DRAG_MIME, registerIntroductionSurfaceResolver, windowElementId, useLabel, type ContextMenuItem, type IntroductionResolvedGeometry } from "@semio-tech/ui-react";
+import { ContextMenuController, CATALOGUE_DRAG_MIME, registerIntroductionSurfaceResolver, sampleBezierSegments, windowElementId, useLabel, type ContextMenuItem, type IntroductionResolvedGeometry } from "@semio-tech/ui-react";
 import { type ComponentSceneHostProps } from "@semio-tech/framework";
 import { currentStylingAppearanceName, STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_STROKES } from "@semio-tech/ui-styling";
 import { WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
@@ -797,7 +797,7 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
         const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
-            menu: { id: "canvas2d" },
+            menu: { id: "canvas2d", args: null },
             surface: { surfaceId: node.surfaceId, kind: "canvas2d", hits: [], selection: [] },
             windowInstanceId: windowInstanceId ?? undefined,
             point: { x: event.clientX, y: event.clientY },

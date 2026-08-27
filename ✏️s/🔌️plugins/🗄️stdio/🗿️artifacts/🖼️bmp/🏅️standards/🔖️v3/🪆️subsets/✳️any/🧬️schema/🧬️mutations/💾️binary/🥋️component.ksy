@@ -1,11 +1,19 @@
 meta:
-  id: stdio_bmp_mutations
+  id: stdio_bmp_mutation
   endian: le
-doc: |
-  protocol::OpBinary raw JSON encoding of BmpMutation — no `.semio` envelope header.
 seq:
+  - id: format
+    type: u1
+    valid: 1
+  - id: tag
+    type: u1
+    enum: mutation_kind
   - id: payload
-    type: str
     size-eos: true
-    encoding: UTF-8
-    doc: UTF-8 JSON object (see sibling ../📝️text/📖️component.grammar.semio).
+enums:
+  mutation_kind:
+    2: change_header_fields
+    3: insert_palette_entry
+    4: remove_palette_entry
+    5: replace_palette_entry
+    6: replace_pixel_data

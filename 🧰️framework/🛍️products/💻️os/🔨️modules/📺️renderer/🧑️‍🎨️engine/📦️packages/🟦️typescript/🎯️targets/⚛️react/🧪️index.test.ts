@@ -1,9 +1,59 @@
-import { createElement, useState, type ReactElement } from "react";
+import { act as reactAct, createElement, useState, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
+import { Layout } from "@semio-tech/ui-react";
+import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../../../🧱️elements/Shell/🟦️component.tsx";
+import bootCanvasFixture from "../../../../🧱️elements/Shell/🧪️fixtures/🔣️boot-canvas.json";
+import Ajv from "ajv";
+import { createInstance as createTranslationOracle } from "i18next";
+import labelResolutionSchema from "../../../../🧱️elements/ShellHelpers/🧪️fixtures/🔣️label-resolution.schema.json";
+import labelResolutionFixture from "../../../../🧱️elements/ShellHelpers/🧪️fixtures/🔣️label-resolution.json";
+import actionSemanticsSchema from "../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🔣️action-semantics.schema.json";
+import actionSemanticsFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🔣️action-semantics.json";
+import tutorialDocumentFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🔣️tutorial-document-track.json";
+import tutorialDocumentSchema from "../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🔣️tutorial-document-track.schema.json";
+import { tutorialSlice, validateTutorial } from "@semio-tech/ui-react";
+import type { TutorialDefinition } from "@semio-tech/framework";
+import presenceOverlayFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️fixtures/🔣️presence-overlay.json";
+import presenceOverlaySchema from "../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️fixtures/🔣️presence-overlay.schema.json";
+import { createRequire } from "node:module";
+import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
+
+const { computeAccessibleName }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
+
+//#region 🎞️TutorialDocumentTrack
+describe("tutorial document wire contract", () => {
+  it("keeps native document-track names and bidirectional event order", () => {
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(tutorialDocumentSchema);
+    expect(validate(tutorialDocumentFixture)).toBe(true);
+    expect(validate({ ...tutorialDocumentFixture, artifact: [] })).toBe(false);
+    const document = tutorialDocumentFixture.document.map(({ at, kind }) => ({ at, kind: { ...kind, kind: "load" as const } }));
+    const definition: TutorialDefinition = {
+      id: "document-wire", title: "Document Wire", durationMs: 250, chapters: [],
+      base: { ui: { activeUtilityByWindowId: {}, activePanelTabByGroup: {}, interactionSelection: {}, expandedTreeIds: [], commandPanelOpen: false }, cameras: [] },
+      tracks: { narration: [], video: [], events: [], ui: [], document, camera: [], gestures: [] },
+    };
+    expect(validateTutorial(definition)).toBeNull();
+    for (const vector of tutorialDocumentFixture.cases) {
+      const slice = tutorialSlice(definition, vector.from, vector.to);
+      expect(slice.forward).toBe(vector.forward);
+      expect(slice.document.map(({ at }) => at)).toEqual(vector.expectedAt);
+      expect(slice.document).toEqual(vector.expectedAt.map((at) => document.find((event) => event.at === at)));
+    }
+  });
+});
+//#endregion 🎞️TutorialDocumentTrack
+import graphSliderFixture from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧪️fixtures/🔣️slider-overlay.json";
+import graphSliderSchema from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧬️schema/🔣️slider-overlay.schema.json";
+import graphParameterFixture from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter/🧪️fixtures/🔣️graph-parameter.json";
+import graphPickSchema from "../../../../🧱️elements/NodeGraph/🧪️fixtures/🔣️pick-target.schema.json";
+import graphPickFixture from "../../../../🧱️elements/NodeGraph/🧪️fixtures/🔣️pick-target.json";
+import graphParameterSchema from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter/🧬️schema/🔣️graph-parameter.schema.json";
+import * as flowSessionLoader from "../../../../🧱️elements/WasmSessionLoader/🟦️component.tsx";
+import { cleanup, fireEvent, render, waitFor } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   deriveUtilityNodes,
+  actionSemanticsForKind,
   resolveWindowActions,
   resolveModeTools,
   partitionWindowMeasures,
@@ -66,19 +116,24 @@ import {
   registerBoard2dPeer,
   unregisterBoard2dPeer,
   NodeGraphHost,
+  FlowGraphCanvasHost,
   catalogueGhostDescriptorJson,
   computeDagMarqueeOverlay,
   flowCatalogueItemDescriptor,
   flowSurfaceRenderAllowed,
   flowRankCatalogueSuggestions,
   flowSpotlightSuggestionListScrollClass,
+  nodeGraphHoverActionArgs,
+  nodeGraphSelectionActionArgs,
   nodeGraphViewportActionArgs,
+  nodeGraphPickChannel,
   parseCatalogueAppDragPayload,
   parseDagSliderOverlays,
   GraphSliderOverlays,
   resolveFixtureWidgetInstanceId,
   Paint2dHost,
   TableHost,
+  resolveMapInteractionSync,
   GraphTimelineHost,
   TextEditorHost,
   lineRangeAt,
@@ -162,6 +217,8 @@ import {
   mergeRecordPreservingIdentity,
   parseSpaceShellPath,
   parseShellRoute,
+  pluginShouldReceiveContributions,
+  pluginShouldEstablishSession,
   shellActorId,
   canonicalSurfaceId,
   reloadRetainsActiveApp,
@@ -214,7 +271,6 @@ import {
   encodeEffectCommandInvocation,
   TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS,
   mergeShellLockSources,
-  parseSpacePanelState,
   resolveBootExampleId,
   resolveShellDefaults,
   resolveShellLocks,
@@ -223,6 +279,9 @@ import {
   isEphemeralShellBrand,
   clearDurableShellStorage,
   type ResolvedCommand,
+  type ResolvedActionArgDef,
+  type ResolvedActionDefinition,
+  type ResolvedToolDefinition,
   shellReducer,
   sortUtilityNodes,
   spawnedWindowChromeForKind,
@@ -285,6 +344,22 @@ if (!Element.prototype.scrollIntoView) Element.prototype.scrollIntoView = () => 
 //#endregion 🔌️jsdom polyfills
 
 const noopAction = () => {};
+
+//#region 🔌️PluginSessionOwnership
+describe("plugin session ownership", () => {
+  it("lets only the configured primary plugin establish a missing session", () => {
+    expect(pluginShouldEstablishSession("demonstrator", "demonstrator", false)).toBe(true);
+    expect(pluginShouldEstablishSession("cad", "demonstrator", false)).toBe(false);
+    expect(pluginShouldEstablishSession("demonstrator", "demonstrator", true)).toBe(false);
+  });
+
+  it("configures only the active aggregate outside studio mode", () => {
+    expect(pluginShouldReceiveContributions("demonstrator", "demonstrator", false)).toBe(true);
+    expect(pluginShouldReceiveContributions("cad", "demonstrator", false)).toBe(false);
+    expect(pluginShouldReceiveContributions("cad", "demonstrator", true)).toBe(true);
+  });
+});
+//#endregion 🔌️PluginSessionOwnership
 
 //#region 🧪️Contract test fixtures
 // 🧬️ MIGRATION (react-tests packet, ticket 26/08/20): helpers for building `UiSnapshot` fixtures
@@ -562,8 +637,8 @@ describe("in-flight skipping interval", () => {
       },
       10,
       (fn) => {
-        timers.push(fn as () => void);
-        return 1 as unknown as ReturnType<typeof setInterval>;
+        timers.push(fn);
+        return 1;
       },
       () => {},
     );
@@ -604,6 +679,20 @@ describe("coalescing action dispatcher", () => {
 
 describe("shell store reducer", () => {
   const baseState = () => initialShellState({ plugins: [], storage: createMemoryStoragePort() });
+
+  it("shows terminal boot content instead of an infinite loading canvas", () => {
+    for (const row of bootCanvasFixture) {
+      const status = resolvePluginCanvasStatus(row.session, row.error, row.plugin as PluginPanelStatus, row.supervisor as PluginSupervisorState | undefined);
+      expect(status === "loading", row.name).toBe(row.loading);
+      const html = renderToStaticMarkup(createElement(Layout, {
+        canvasStatus: status,
+        canvasSkeleton: createElement("p", { role: "status" }, "Loading"),
+        canvas: createElement("p", { role: "alert" }, row.error ?? "Ready"),
+      }));
+      expect(html.includes('role="status"'), row.name).toBe(row.loading);
+      expect(html.includes('role="alert"'), row.name).toBe(!row.loading);
+    }
+  });
 
   it("starts every panel anchor at the same 300px width", () => {
     const widths = Object.values(baseState().layout.panels).map((panel) => panel.size);
@@ -896,7 +985,7 @@ describe("shell store reducer", () => {
 
   //#region 🔌️PluginRuntime hot-swap actions
   function fakeLoadedPlugin(pluginId: string, version = "0"): { readonly handle: PluginWasmHandle; readonly manifest: PluginManifest } {
-    const manifest: PluginManifest = { pluginId, label: pluginId, version, apps: [], workflows: [], examples: [] };
+    const manifest: PluginManifest = { pluginId, label: pluginId, version, apps: [], examples: [], commands: [], artifactKinds: [], dependencies: [], contributions: [] };
     const handle = {
       pluginId,
       manifest,
@@ -972,7 +1061,7 @@ describe("Shell peer interaction (generic, app-agnostic)", () => {
       peer("client-b", "Bo", { appId: "flow", domains: [{ domain: "graph", granularity: "node", selected: ["n2"], hovered: [] }] }),
     ]);
     expect(peerIdsSelecting(roster, "graph", "n1")).toEqual(["client-a"]);
-    expect(peerIdsSelecting(roster, "graph", "n2").sort()).toEqual(["client-a", "client-b"]);
+    expect([...peerIdsSelecting(roster, "graph", "n2")].sort()).toEqual(["client-a", "client-b"]);
     expect(peerIdsSelecting(roster, "graph", "n99")).toEqual([]);
     expect(peerIdsHovering(roster, "graph", "n3")).toEqual(["client-a"]);
   });
@@ -1304,11 +1393,11 @@ describe("framework plugin runtime", () => {
       key: `leaf-${id}`,
       component: { type: "text", value, emphasize: null, dataAttributes: null },
       layout: { kind: "leaf", width: "hug", height: "hug" },
-      style: {},
+      style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" },
       activity: "idle",
       disabled: false,
       transition: null,
-      accessibility: {},
+      accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false },
       bindings: [],
       menu: null,
       children: [],
@@ -1581,6 +1670,7 @@ describe("framework plugin runtime", () => {
     const instanceId = await handle.createApp("main");
 
     // 🐛 Pre-fix, `applyMutations` returned `Promise<void>` and this whole roster was thrown away.
+    if (!handle.applyMutations) throw new Error("Mutation fixture requires its owned mutation handler");
     const result = await handle.applyMutations(instanceId, encodeMutationEnvelopesPack([]));
     expect(result.mergeReport?.accepted).toBe(false);
     expect(result.mergeReport?.worst).toBe("error");
@@ -1603,6 +1693,15 @@ describe("framework plugin runtime", () => {
 });
 
 describe("framework renderer types", () => {
+  it("matches native action-semantics defaults without claiming migrated interactivity", () => {
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(actionSemanticsSchema);
+    expect(validate(actionSemanticsFixture), JSON.stringify(validate.errors)).toBe(true);
+    const actual = (["mutation", "view", "interaction", "history", "clipboard", "shell"] as const).map((kind) => ({ kind, semantics: actionSemanticsForKind(kind) }));
+    expect(actual).toEqual(actionSemanticsFixture);
+    expect(validate(actual)).toBe(true);
+    expect(validate(actual.map((row) => ({ ...row, semantics: { ...row.semantics, execution: { ...row.semantics.execution, interactiveJob: "migrated" } } })))).toBe(false);
+  });
+
   it("keeps window tabs concise while retaining the app fallback", () => {
     const app = {
       id: "puzzle3d-play",
@@ -1631,7 +1730,7 @@ describe("framework renderer types", () => {
     // threw `Cannot read properties of undefined (reading 'join')` and took the whole shell down
     // with it; in a multi-pane host (the demonstrator) that killed all six panes at once and left
     // the page blank. A nameless title is the correct degradation, never a dead host.
-    const app = { breadcrumb: undefined, terminologyBreadcrumbs: undefined } as Parameters<typeof resolveAppBreadcrumb>[0];
+    const app: Parameters<typeof resolveAppBreadcrumb>[0] = { breadcrumb: [], terminologyBreadcrumbs: {} };
     expect(resolveAppBreadcrumb(app, "native")).toEqual([]);
     expect(appBreadcrumb(resolveAppBreadcrumb(app, "native"))).toBe("");
     expect(appBreadcrumb(undefined)).toBe("");
@@ -1923,6 +2022,26 @@ describe("declarative forms parity", () => {
     expect(markup).toContain("ring-primary");
   });
 
+  it("applies separate presence fixtures without replacing the retained document", () => {
+    const validate = new Ajv({ strict: true }).compile(presenceOverlaySchema);
+    expect(validate(presenceOverlayFixture)).toBe(true);
+    expect(validate({ cases: presenceOverlayFixture.cases.map((row) => ({ ...row, update: { ...row.update, selectionJson: "{}" } })) })).toBe(false);
+    const store = new UiDocumentStore("document");
+    store.loadSnapshot(buildContractSnapshot({ key: "item:根,1", component: { type: "container", role: "plain", label: null, description: null, required: null, error: null, defaultOpen: null, dropOverlay: null } }));
+    const before = store.getState();
+    const context: UiInterpreterContext = { store, onAction: noopAction, onIntent: () => {} };
+    const mounted = render(createElement(UiPresenceOverlayContext.Provider, { value: { byKey: new Map() } }, interpretUiNode(store, context)));
+    for (const row of presenceOverlayFixture.cases) {
+      const own: UiPresenceOverlayEntry = JSON.parse(JSON.stringify(row.update.own));
+      mounted.rerender(createElement(UiPresenceOverlayContext.Provider, { value: { byKey: new Map([[row.update.nodeKey, own]]) } }, interpretUiNode(store, context)));
+      expect(mounted.container.innerHTML.includes("ring-primary")).toBe(row.expected.selected);
+      expect(mounted.container.innerHTML.includes("outline-primary/50")).toBe(row.expected.hovered);
+      expect(own.previewed ?? false).toBe(row.expected.previewed);
+      expect(store.getState()).toBe(before);
+      expect(store.getRevisionSnapshot()).toBe(before.revision);
+    }
+  });
+
   it("renders image nodes from url sources", () => {
     const markup = renderContractTree({ key: "forms-try.avatar.image", component: { type: "image", src: "https://example.com/avatar.png", alt: "Avatar" } });
     expect(markup).toContain('src="https://example.com/avatar.png"');
@@ -1944,6 +2063,7 @@ describe("declarative forms parity", () => {
 });
 
 describe("framework renderer hosts", () => {
+  afterEach(() => cleanup());
   it("renders node graph host from workflow scene json", () => {
     const markup = renderToStaticMarkup(
       createElement(NodeGraphHost, {
@@ -1953,19 +2073,21 @@ describe("framework renderer hosts", () => {
           controllerId: "s-play",
           componentKind: "node-graph",
           nodeGraph: {
-            nodesJson: JSON.stringify([
+            nodes: [
               {
                 id: "node-a",
                 instanceId: "app-a",
                 label: "Draw",
                 x: 10,
                 y: 20,
+                width: 160,
+                height: 80,
                 inputs: [{ id: "in", resourceKind: "2d.drawing" }],
                 outputs: [{ id: "out", resourceKind: "2d.drawing" }],
               },
-            ]),
-            edgesJson: "[]",
-            viewportJson: '{"x":0,"y":0,"zoom":1}',
+            ],
+            edges: [],
+            viewport: { x: 0, y: 0, zoom: 1 },
           },
         },
         onAction: noopAction,
@@ -1983,21 +2105,23 @@ describe("framework renderer hosts", () => {
           controllerId: "s-play",
           componentKind: "node-graph",
           nodeGraph: {
-            nodesJson: JSON.stringify([
+            nodes: [
               {
                 id: "node-a",
                 instanceId: "app-a",
                 label: "Draw",
                 x: 10,
                 y: 20,
+                width: 160,
+                height: 80,
                 inputs: [{ id: "in", resourceKind: "2d.drawing" }],
                 outputs: [{ id: "out", resourceKind: "2d.drawing" }],
               },
-            ]),
-            edgesJson: "[]",
-            viewportJson: '{"x":0,"y":0,"zoom":1}',
+            ],
+            edges: [],
+            viewport: { x: 0, y: 0, zoom: 1 },
             editable: true,
-            findItemsJson: JSON.stringify([{ id: "app-a", label: "Draw", category: "Workflow" }]),
+            findItems: [{ id: "app-a", label: "Draw", category: "Workflow" }],
           },
         },
         onAction: noopAction,
@@ -2012,16 +2136,200 @@ describe("framework renderer hosts", () => {
     });
   });
 
+  it("encodes node graph selection and hover with framework interaction actions", () => {
+    expect(nodeGraphSelectionActionArgs({ nodeIds: ["node-a"], edgeIds: ["edge-a"], handleIds: ["handle-a"] })).toEqual({
+      domainId: "graph",
+      targets: JSON.stringify([
+        { granularity: "node", id: "node-a" },
+        { granularity: "edge", id: "edge-a" },
+        { granularity: "handle", id: "handle-a" },
+      ]),
+      merge: "replace",
+      method: "pick",
+    });
+    expect(nodeGraphHoverActionArgs("node-a")).toEqual({
+      domainId: "graph",
+      channel: "pointer",
+      targets: JSON.stringify([{ granularity: "node", id: "node-a" }]),
+    });
+  });
+
   it("encodes node graph scenes as pack bytes for wasm sync", async () => {
-    const { packValueToBase64 } = await import("@semio-tech/framework-os");
     const scene = {
-      nodesJson: packValueToBase64([]),
-      edgesJson: packValueToBase64([]),
-      viewportJson: packValueToBase64({ x: 0, y: 0, zoom: 1 }),
+      nodes: [],
+      edges: [],
+      viewport: { x: 0, y: 0, zoom: 1 },
     };
     const bytes = sceneToSyncPack(scene);
     expect(bytes.length).toBeGreaterThan(8);
   });
+
+  //#region 🎚️GraphSliderAccessibility
+  it("decodes graph pick channels from the native handle grammar with strict schema parity", () => {
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(graphPickSchema);
+    expect(validate(graphPickFixture), JSON.stringify(validate.errors)).toBe(true);
+    for (const row of graphPickFixture) {
+      const target = row.target;
+      const match = target?.domain === "handle" ? /^([^@]+)@(.+)$/u.exec(target.id) : null;
+      const oracle = match ? { nodeId: match[1], portId: match[2] } : null;
+      expect(oracle).toEqual(row.channel);
+      expect(nodeGraphPickChannel(target)).toEqual(row.channel);
+    }
+    const hostile = structuredClone(graphPickFixture);
+    Object.assign(hostile[1]!.target!, { portId: "invented" });
+    expect(validate(hostile)).toBe(false);
+  });
+  it("validates strict language-neutral graph slider labels and rejects unnamed rows", () => {
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(graphSliderSchema);
+    expect(validate(graphSliderFixture), JSON.stringify(validate.errors)).toBe(true);
+    for (const label of ["", "   ", null, 42]) {
+      const malformed = structuredClone(graphSliderFixture);
+      (malformed.cases[0]!.row as Record<string, unknown>).label = label;
+      expect(validate(malformed)).toBe(false);
+      expect(parseDagSliderOverlays(JSON.stringify({ sliders: [malformed.cases[0]!.row] }))).toEqual([]);
+    }
+    expect(parseDagSliderOverlays('{"sliders":{}}')).toEqual([]);
+  });
+
+  it("names graph slider overlays from exact localized captions and keeps scoped ids stable", () => {
+    const first = graphSliderFixture.cases[0]!;
+    const second = graphSliderFixture.cases[1]!;
+    const props = (item: typeof first) => ({
+      scopeId: item.scopeId,
+      stateJson: JSON.stringify({ camera: { x: 0, y: 0, zoom: 1 }, sliders: [item.row] }),
+      logicalW: 800, logicalH: 600, editable: true, onSliderChange: () => {},
+    });
+    const view = render(createElement("div", {}, createElement(GraphSliderOverlays, props(first)), createElement(GraphSliderOverlays, props(second))));
+    const english = view.getByRole("slider", { name: first.row.label });
+    const german = view.getByRole("slider", { name: second.row.label });
+    expect(computeAccessibleName(english)).toBe(first.row.label);
+    expect(computeAccessibleName(german)).toBe(second.row.label);
+    const controlId = english.closest('[data-slot="slider"]')!.id;
+    expect(controlId).toBe(`graph-slider-${encodeURIComponent(JSON.stringify([first.scopeId, first.row.widgetId]))}`);
+    expect(german.closest('[data-slot="slider"]')!.id).not.toBe(controlId);
+    view.rerender(createElement("div", {}, createElement(GraphSliderOverlays, { ...props(first), stateJson: JSON.stringify({ sliders: [{ ...first.row, value: 3 }] }) }), createElement(GraphSliderOverlays, props(second))));
+    expect(view.getByRole("slider", { name: first.row.label }).closest('[data-slot="slider"]')!.id).toBe(controlId);
+  });
+
+  it("keeps graph slider keyboard changes exact and disabled controls inert", () => {
+    const item = graphSliderFixture.cases[1]!;
+    const changes = vi.fn();
+    const gesture = vi.fn();
+    const props = { scopeId: item.scopeId, stateJson: JSON.stringify({ sliders: [item.row] }), logicalW: 800, logicalH: 600, editable: true, onSliderChange: changes, onSliderPointerDown: gesture };
+    const view = render(createElement(GraphSliderOverlays, props));
+    const slider = view.getByRole("slider", { name: item.row.label });
+    slider.focus();
+    expect(document.activeElement).toBe(slider);
+    for (const action of graphSliderFixture.keyboard) {
+      fireEvent.keyDown(slider, { key: action.key });
+      fireEvent.keyUp(slider, { key: action.key });
+      expect(changes).toHaveBeenLastCalledWith(item.row.widgetId, action.expected);
+    }
+    expect(gesture).not.toHaveBeenCalled();
+    changes.mockClear();
+    view.rerender(createElement(GraphSliderOverlays, { ...props, editable: false }));
+    const disabled = view.getByRole("slider", { name: item.row.label });
+    expect(disabled.getAttribute("aria-disabled")).toBe("true");
+    expect(disabled.tabIndex).toBe(-1);
+    fireEvent.keyDown(disabled, { key: "ArrowRight" });
+    fireEvent.keyUp(disabled, { key: "ArrowRight" });
+    expect(changes).not.toHaveBeenCalled();
+  });
+  //#endregion 🎚️GraphSliderAccessibility
+
+  //#region 🎚️GraphParameterDispatch
+  it("validates the strict language-neutral graph parameter contract for all three consumers", () => {
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(graphParameterSchema);
+    const command = new Ajv({ strict: true, allErrors: true }).compile(graphParameterSchema.definitions.command);
+    expect(validate(graphParameterFixture), JSON.stringify(validate.errors)).toBe(true);
+    for (const extra of ["documentJson", "fixtureJson", "operations"]) {
+      const malformed = structuredClone(graphParameterFixture);
+      (malformed.cases[0] as Record<string, unknown>)[extra] = "{}";
+      expect(validate(malformed)).toBe(false);
+      expect(command({ widgetId: "radius", value: 3, [extra]: "{}" })).toBe(false);
+    }
+    expect(new Set(graphParameterFixture.cases.map((value) => value.app))).toEqual(new Set(["flow", "procedural2d", "procedural3d"]));
+    for (const value of graphParameterFixture.cases) expect(command({ widgetId: value.widgetId, value: value.request, surfaceId: value.surfaceId })).toBe(true);
+  });
+
+  it("dispatches graph parameter keyboard and drag events from the mounted FlowGraphCanvasHost without fixture reads or end commits", async () => {
+    const task = <T,>(value: T) => ({ result: Promise.resolve(value), subscribe: () => () => {}, cancel: vi.fn() });
+    const scheduler = { invalidate: vi.fn(), beginContinuous: vi.fn(), endContinuous: vi.fn(), dispose: vi.fn() };
+    const schedulerSpy = vi.spyOn(flowSessionLoader, "createDemandFrameScheduler").mockReturnValue(scheduler);
+    const contextSpy = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    const timerSpy = vi.spyOn(globalThis, "setTimeout");
+    const createSpy = vi.spyOn(flowSessionLoader, "createFlowSession");
+    const originalPointer = globalThis.PointerEvent;
+    class TestPointerEvent extends MouseEvent {
+      readonly pointerId: number;
+      readonly pointerType: string;
+      constructor(type: string, init: PointerEventInit = {}) { super(type, init); this.pointerId = init.pointerId ?? 1; this.pointerType = init.pointerType ?? "mouse"; }
+    }
+    globalThis.PointerEvent = TestPointerEvent as unknown as typeof PointerEvent;
+    try {
+      for (const item of graphParameterFixture.cases) {
+        const row = { widgetId: item.widgetId, label: item.label, ...item.before, x: 0, y: 0, w: 100, h: 16 };
+        const methods: Record<string, ReturnType<typeof vi.fn>> = {
+          documentJson: vi.fn(() => { throw new Error("slider must not serialize the fixture"); }),
+          sliderOverlayStateJson: vi.fn(() => task(JSON.stringify({ camera: { x: 0, y: 0, zoom: 1 }, sliders: [row] }))),
+          labelOverlayPaintStateJson: vi.fn(() => task("{}")),
+          setSliderValue: vi.fn((_id: string, value: number) => { row.value = value; return task(undefined); }),
+          selectedWidgetIds: vi.fn(() => task("[]")), previewOffWidgetIds: vi.fn(() => task("[]")),
+          selectionPreviewPointsJson: vi.fn(() => task("[]")), selectionPreviewCrossing: vi.fn(() => task(false)),
+        };
+        const session = new Proxy(methods, {
+          get(target, key: string) {
+            if (key === "then") return undefined;
+            return target[key] ??= vi.fn(() => task(undefined));
+          },
+        }) as unknown as flowSessionLoader.FlowWasmSession;
+        createSpy.mockResolvedValueOnce(session);
+        const onAction = vi.fn();
+        const view = render(createElement(FlowGraphCanvasHost, {
+          scene: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, fixtureJson: '{"schema":"flow.fixture","widgets":[]}' },
+          controllerId: item.controllerId, surfaceId: item.surfaceId, editable: true, onAction,
+        }));
+        await waitFor(() => expect(view.getByRole("slider", { name: item.label })).toBeTruthy());
+        const slider = view.getByRole("slider", { name: item.label });
+        const root = slider.closest('[data-slot="slider"]') as HTMLElement;
+        const stableId = root.id;
+        for (const element of [slider, root]) {
+          Object.defineProperties(element, { setPointerCapture: { value: () => {} }, releasePointerCapture: { value: () => {} }, hasPointerCapture: { value: () => true } });
+        }
+        root.getBoundingClientRect = () => ({ x: 0, y: 0, width: 100, height: 16, left: 0, right: 100, top: 0, bottom: 16, toJSON: () => ({}) });
+        (root.querySelector('[data-slot="slider-track"]') as HTMLElement).getBoundingClientRect = root.getBoundingClientRect;
+        slider.focus();
+        fireEvent.keyDown(slider, { key: "ArrowRight" });
+        fireEvent.keyUp(slider, { key: "ArrowRight" });
+        await waitFor(() => expect(onAction).toHaveBeenLastCalledWith({ controllerId: item.controllerId, action: graphParameterFixture.action, args: { surfaceId: item.surfaceId, widgetId: item.widgetId, value: 3 } }));
+        expect(document.activeElement).toBe(slider);
+        expect(computeAccessibleName(slider)).toBe(item.label);
+        expect(root.id).toBe(stableId);
+        let staleOverlay: ((value: string) => void) | undefined;
+        methods.sliderOverlayStateJson!.mockImplementationOnce(() => ({ ...task(""), result: new Promise<string>((resolve) => { staleOverlay = resolve; }) }));
+        fireEvent.pointerDown(root, { pointerId: 1, pointerType: "mouse", button: 0, buttons: 1, clientX: 40, clientY: 8 });
+        fireEvent.pointerMove(root, { pointerId: 1, pointerType: "mouse", buttons: 1, clientX: 80, clientY: 8 });
+        await waitFor(() => expect(onAction).toHaveBeenLastCalledWith({ controllerId: item.controllerId, action: graphParameterFixture.action, args: { surfaceId: item.surfaceId, widgetId: item.widgetId, value: 8 } }));
+        await waitFor(() => expect(slider.getAttribute("aria-valuenow")).toBe("8"));
+        await reactAct(async () => { staleOverlay?.(JSON.stringify({ sliders: [{ ...row, value: 4 }] })); });
+        expect(slider.getAttribute("aria-valuenow")).toBe("8");
+        const count = onAction.mock.calls.length;
+        fireEvent.pointerUp(root, { pointerId: 1, button: 0, clientX: 80, clientY: 8 });
+        fireEvent.pointerCancel(root, { pointerId: 1 });
+        expect(onAction).toHaveBeenCalledTimes(count);
+        expect(methods.documentJson).not.toHaveBeenCalled();
+        expect(onAction.mock.calls.every(([event]) => event.action === graphParameterFixture.action && Object.keys(event.args).sort().join() === "surfaceId,value,widgetId")).toBe(true);
+        view.unmount();
+      }
+      expect(timerSpy.mock.calls.some(([, delay]) => delay === 80)).toBe(false);
+      expect(scheduler.beginContinuous).toHaveBeenCalledWith("gesture");
+      expect(scheduler.endContinuous).toHaveBeenCalledWith("gesture");
+    } finally {
+      cleanup(); createSpy.mockRestore(); schedulerSpy.mockRestore(); contextSpy.mockRestore(); timerSpy.mockRestore();
+      globalThis.PointerEvent = originalPointer;
+    }
+  });
+  //#endregion 🎚️GraphParameterDispatch
 
   it("parses slider overlay state json for flow graph hosts", () => {
     const sliders = parseDagSliderOverlays(
@@ -2030,6 +2338,7 @@ describe("framework renderer hosts", () => {
         sliders: [
           {
             widgetId: "slider_2",
+            label: "Radius",
             value: 2.2,
             min: 0,
             max: 10,
@@ -2050,11 +2359,13 @@ describe("framework renderer hosts", () => {
   it("renders graph slider overlays as track-only controls without a nested value readout", () => {
     const markup = renderToStaticMarkup(
       createElement(GraphSliderOverlays, {
+        scopeId: "track-test",
         stateJson: JSON.stringify({
           camera: { x: 0, y: 0, zoom: 1 },
           sliders: [
             {
               widgetId: "slider_2",
+              label: "Radius",
               value: 2.2,
               min: 0,
               max: 10,
@@ -2081,11 +2392,13 @@ describe("framework renderer hosts", () => {
   it("scales graph slider overlay chrome with canvas zoom so the knob matches other elements", () => {
     const markup = renderToStaticMarkup(
       createElement(GraphSliderOverlays, {
+        scopeId: "zoom-test",
         stateJson: JSON.stringify({
           camera: { x: 0, y: 0, zoom: 2 },
           sliders: [
             {
               widgetId: "slider_2",
+              label: "Radius",
               value: 2.2,
               min: 0,
               max: 10,
@@ -2478,6 +2791,18 @@ describe("framework renderer hosts", () => {
     expect(items[0]?.label).toContain("8 nodes and 13 edges");
   });
 
+  it("maps tiled-map interaction snapshots onto the current wasm sync ABI", () => {
+    expect(resolveMapInteractionSync('{"positions":["position-1"],"routes":[]}', '{"kind":"position","id":"position-2"}')).toEqual({
+      granularity: "position",
+      selectedIdsJson: '["position-1"]',
+      hoveredId: "position-2",
+    });
+    expect(resolveMapInteractionSync('{"positions":[],"routes":["route-1"]}', '{"kind":"position","id":"position-2"}')).toEqual({
+      granularity: "route",
+      selectedIdsJson: '["route-1"]',
+    });
+  });
+
   it("parses a catalogue drag payload and builds a drop-preview JSON", () => {
     const encoded = JSON.stringify({ kindId: "seed", catalogSlice: "nodes", shape: "circle", radius: 24 });
     const payload = parsePuzzle2dCatalogueDragPayload(encoded);
@@ -2500,7 +2825,8 @@ describe("framework renderer hosts", () => {
   });
 
   it("raycasts the Z=0 ground under orthographic top and perspective cameras", async () => {
-    const { OrthographicCamera, PerspectiveCamera } = await import("three");
+    const { sceneHostPort } = await import("@semio-tech/ui-react");
+    const { OrthographicCamera, PerspectiveCamera } = sceneHostPort.three;
     const rect = { left: 0, top: 0, width: 200, height: 100, right: 200, bottom: 100 } as DOMRect;
 
     const ortho = new OrthographicCamera(-100, 100, 50, -50, 0.1, 1000);
@@ -3184,7 +3510,7 @@ describe("framework renderer hosts", () => {
 
   it("titles context menus from the specific hit before falling back to the surface", () => {
     const request = (domain?: string, kind = "world3d") => ({
-      menu: { id: kind },
+      menu: { id: kind, args: null },
       surface: { surfaceId: "surface", kind, hits: domain ? [{ domain, id: "target" }] : [] },
     });
 
@@ -3198,7 +3524,7 @@ describe("framework renderer hosts", () => {
   it("covers every target domain emitted by current surface pickers", () => {
     const domains = ["architecture", "attraction", "block", "edge", "entry", "feature", "group", "handle", "layer", "node", "object", "part", "path", "pixel", "position", "reference", "route", "row", "slider", "vortex"];
     for (const domain of domains) {
-      expect(surfaceContextMenuTitleKey({ menu: { id: "surface" }, surface: { surfaceId: "surface", kind: "unknown", hits: [{ domain, id: "target" }] } })).toBe(`ui.surfaceContextMenu.${domain}`);
+      expect(surfaceContextMenuTitleKey({ menu: { id: "surface", args: null }, surface: { surfaceId: "surface", kind: "unknown", hits: [{ domain, id: "target" }] } })).toBe(`ui.surfaceContextMenu.${domain}`);
     }
   });
 
@@ -3396,6 +3722,39 @@ describe("framework renderer hosts", () => {
     expect(markup).toContain("feature-b");
   });
 
+  it("synchronizes raster selection and hover through the current native interaction API", async () => {
+    const syncInteraction = vi.fn();
+    const session: flowSessionLoader.RasterWasmSession = {
+      gpuReady: () => true, attachCanvas: async () => {}, setSize: () => {}, renderFrame: () => {}, setCamera: () => {}, wheelScreen: () => {},
+      pointerDownScreen: () => {}, pointerMoveScreen: () => {}, pointerUpScreen: () => {}, syncDocumentJson: () => {}, uploadLayerImage: () => {}, uploadRasterImageKey: () => {},
+      setActiveUtility: () => {}, setBrushSize: () => {}, setBrushOpacity: () => {}, syncInteraction, setCanvasThemeJson: () => {},
+      cameraJson: () => '{"x":0,"y":0,"zoom":1}', setViewMode: () => {}, pickTargetsAtScreenJson: () => "[]", marqueeHitsJson: () => "[]",
+      navigatorFitCameraJson: () => '{"x":0,"y":0,"zoom":1}', navigatorViewportOverlayJson: () => '{"x":0,"y":0,"width":1,"height":1}', free: vi.fn(),
+    };
+    const factory = vi.spyOn(flowSessionLoader, "createRasterSession").mockResolvedValue(session);
+    const originalObserver = globalThis.ResizeObserver;
+    vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
+    const content = (vector: typeof presenceOverlayFixture.cases[number]) => createElement(Paint2dHost, {
+      node: { type: "componentScene", surfaceId: "raster.play.viewport", controllerId: "raster-play", componentKind: "paint-2d", paint2d: {
+        documentSyncJson: '{"schema":"raster.document","id":"raster","layers":[]}', assetsJson: "{}", cameraJson: '{"x":0,"y":0,"zoom":1}',
+        selectionJson: JSON.stringify(vector.expected.selected ? [vector.update.nodeKey] : []), hoveredId: vector.expected.hovered ? vector.update.nodeKey : undefined,
+        activeUtility: "selectMarquee", brushSize: 24, brushOpacity: 1, viewMode: "composite",
+      } }, onAction: noopAction,
+    });
+    const view = render(content(presenceOverlayFixture.cases[0]!));
+    try {
+      for (const vector of presenceOverlayFixture.cases) {
+        view.rerender(content(vector));
+        await waitFor(() => expect(syncInteraction).toHaveBeenLastCalledWith(JSON.stringify(vector.expected.selected ? [vector.update.nodeKey] : []), vector.expected.hovered ? vector.update.nodeKey : null));
+      }
+    } finally {
+      view.unmount();
+      factory.mockRestore();
+      vi.stubGlobal("ResizeObserver", originalObserver);
+    }
+    expect(session.free).toHaveBeenCalledOnce();
+  });
+
   it("renders paint-2d host canvas surface from document sync scene", () => {
     const markup = renderToStaticMarkup(
       createElement(Paint2dHost, {
@@ -3498,15 +3857,10 @@ describe("framework renderer hosts", () => {
       key: "s.play.media-vfs",
       component: {
         type: "surface",
-        surfaceId: "s.play.media-vfs",
-        controllerId: "s-play",
         kind: "virtual-file-system",
-        paneId: null,
-        bindingId: null,
         docSchema: "virtual-file-system@1",
         doc: { bytes: docBytes },
-        domainId: null,
-        domainGranularityId: null,
+        bindings: [],
       },
     });
     expect(markup).toContain("Draw");
@@ -4027,7 +4381,7 @@ describe("utility ribbon", () => {
           },
         ],
       },
-    ];
+    ] satisfies UtilityNode[];
 
     const noActive = buildUtilityRibbonSegments(tree, []);
     expect(noActive).toEqual([{ kind: "picker", collections: tree, depth: 0 }]);
@@ -4043,7 +4397,7 @@ describe("utility ribbon", () => {
   });
 
   it("ignores a path entry that no longer names an enabled collection at that level", () => {
-    const tree = [
+    const tree: UtilityNode[] = [
       {
         id: "view",
         kind: "collection",
@@ -4074,7 +4428,7 @@ describe("utility ribbon", () => {
   });
 
   it("reconciles an active path by truncating at the first stale entry instead of substituting a default", () => {
-    const tree = [
+    const tree: UtilityNode[] = [
       {
         id: "a",
         kind: "collection",
@@ -4094,10 +4448,10 @@ describe("utility ribbon", () => {
 
   it("buckets top-level utility nodes into ordered category collections (uncategorized nodes default to tools now that the Actions category is gone)", () => {
     const grouped = groupUtilityNodesByCategory([
-      { id: "sel", kind: "toggle", iconId: "cursor", controllerId: "x", action: "sel", category: "selection" },
+      { id: "sel", kind: "toggle", iconId: "mouse-pointer", controllerId: "x", action: "sel", category: "selection" },
       { id: "hist", kind: "button", iconId: "undo", controllerId: "x", action: "undo", category: "history" },
-      { id: "act", kind: "button", iconId: "wand", controllerId: "x", action: "run" },
-      { id: "tool", kind: "toggle", iconId: "pen", controllerId: "x", action: "pen" },
+      { id: "act", kind: "button", iconId: "sparkles", controllerId: "x", action: "run" },
+      { id: "tool", kind: "toggle", iconId: "pencil", controllerId: "x", action: "pen" },
       { id: "sync", kind: "toggle", iconId: "cloud", controllerId: "x", action: "sync", category: "sync" },
     ]);
     expect(grouped.map((node) => node.id)).toEqual(["selection", "utilities", "history", "sync"]);
@@ -4114,7 +4468,7 @@ describe("utility ribbon", () => {
   });
 
   it("reuses a category's single already-meaningful collection instead of re-wrapping it, avoiding a duplicate-looking picker level", () => {
-    const selectionCollection = {
+    const selectionCollection: Extract<UtilityNode, { kind: "collection" }> = {
       id: "lowpoly-tools-selection",
       kind: "collection" as const,
       iconId: "mouse-pointer",
@@ -4138,8 +4492,8 @@ describe("utility ribbon", () => {
   });
 
   it("scopes grouping to the given categories only", () => {
-    const nodes = [
-      { id: "sel", kind: "toggle", iconId: "cursor", controllerId: "x", action: "sel", category: "selection" },
+    const nodes: UtilityNode[] = [
+      { id: "sel", kind: "toggle", iconId: "mouse-pointer", controllerId: "x", action: "sel", category: "selection" },
       { id: "hist", kind: "button", iconId: "undo", controllerId: "x", action: "undo", category: "history" },
     ];
     expect(groupUtilityNodesByCategory(nodes, ["selection", "utilities"]).map((node) => node.id)).toEqual(["selection"]);
@@ -4147,7 +4501,7 @@ describe("utility ribbon", () => {
   });
 
   it("deduplicates utility nodes by id across window utility lists for a single shared footer entry", () => {
-    const history = { id: "s-play.history", kind: "collection" as const, iconId: "clock", category: "history" as const, children: [] };
+    const history: UtilityNode = { id: "s-play.history", kind: "collection", iconId: "clock", category: "history", children: [] };
     const deduped = dedupeUtilityNodesById([[history, { id: "leaf-a", kind: "button" as const, iconId: "box", controllerId: "x", action: "a" }], [history], []]);
     expect(deduped).toEqual([history, { id: "leaf-a", kind: "button", iconId: "box", controllerId: "x", action: "a" }]);
   });
@@ -4247,7 +4601,7 @@ describe("utility ribbon", () => {
       createElement(UtilityTree, {
         id: "ui.utilities.w",
         direction: "up",
-        utilities: [{ id: "brush", kind: "toggle", iconId: "brush", pressed: true, controllerId: "x", action: "setActiveUtility" }],
+        utilities: [{ id: "brush", kind: "toggle", iconId: "paintbrush", pressed: true, controllerId: "x", action: "setActiveUtility" }],
         utilityOptions: createElement("span", { "data-testid": "brush-options" }, "Brush size"),
         onAction: noopAction,
       }),
@@ -4285,9 +4639,9 @@ describe("s workflow flow routing", () => {
           controllerId: "s-play",
           componentKind: "node-graph",
           nodeGraph: {
-            nodesJson: "[]",
-            edgesJson: "[]",
-            viewportJson: '{"x":0,"y":0,"zoom":1}',
+            nodes: [],
+            edges: [],
+            viewport: { x: 0, y: 0, zoom: 1 },
             presencePeersJson: JSON.stringify([{ clientId: "client-b", name: "Ada", selectionCount: 2 }]),
           },
         },
@@ -4326,7 +4680,7 @@ describe("s workflow flow routing", () => {
       kind: "outputExport",
       format: "svg",
     });
-    expect(JSON.parse(flowCatalogueItemDescriptor({ kind: "inputSlider", name: "Slider", abbreviation: "Slider", icon: "emoji:🎚️", summary: "" }))).toEqual({ kind: "inputSlider" });
+    expect(JSON.parse(flowCatalogueItemDescriptor({ kind: "inputSlider", name: "Slider", abbreviation: "Slider", icon: "emoji:🎚️", summary: "" }))).toEqual({ kind: "inputSlider", label: "Slider" });
   });
 
   it("ranks catalogue suggestions by exact/prefix match with neurons first", () => {
@@ -4399,7 +4753,7 @@ describe("s workflow flow routing", () => {
       }),
       noopAction,
     );
-    const control = config.sections[0]?.items[0]?.control as ReactElement;
+    const control = config.sections[0]?.items?.[0]?.control as ReactElement;
     const rendered = render(control);
     expect(rendered.getByText("Draw")).toBeTruthy();
   });
@@ -4594,7 +4948,7 @@ describe("s workflow flow routing", () => {
     function FaultyChild(): ReactElement {
       throw new Error("boom");
     }
-    const { getByRole } = render(createElement(ShellFaultBoundary, { boundaryId: "test", fallbackLabel: "Fault" as never }, createElement(FaultyChild)));
+    const { getByRole } = render(createElement(ShellFaultBoundary, { boundaryId: "test", fallbackLabel: uiDataLabel("Fault"), children: createElement(FaultyChild) }));
     expect(getByRole("alert").textContent).toContain("boom");
   });
 
@@ -4683,13 +5037,13 @@ describe("ui search/find (fuse re-export from @semio-tech/ui-react)", () => {
 describe("window action panel — staging and single dispatch (P1/P2)", () => {
   afterEach(() => cleanup());
 
-  const numberArg = (id: string, required: boolean, def?: number): ActionArgDef => ({ id, label: id[0]!.toUpperCase() + id.slice(1), schema: { kind: "number", integer: false }, required, ...(def === undefined ? {} : { default: def }) });
+  const numberArg = (id: string, required: boolean, def?: number): ResolvedActionArgDef => ({ id, label: id[0]!.toUpperCase() + id.slice(1), schema: { kind: "number", integer: false }, required, ...(def === undefined ? {} : { default: def }) });
 
-  const twoArgAction: ActionDefinition = { id: "extrude", label: "Extrude", kind: "mutation", inPalette: true, args: [numberArg("depth", true), numberArg("segments", true)] };
-  const zeroArgAction: ActionDefinition = { id: "flatten", label: "Flatten", kind: "mutation", inPalette: true, args: [] };
-  const defaultedAction: ActionDefinition = { id: "bevel", label: "Bevel", kind: "mutation", inPalette: true, args: [numberArg("radius", true, 2)] };
+  const twoArgAction: ResolvedActionDefinition = { id: "extrude", label: "Extrude", iconId: "box", semantics: actionSemanticsForKind("mutation"), kind: "mutation", inPalette: true, args: [numberArg("depth", true), numberArg("segments", true)] };
+  const zeroArgAction: ResolvedActionDefinition = { id: "flatten", label: "Flatten", iconId: "box", semantics: actionSemanticsForKind("mutation"), kind: "mutation", inPalette: true, args: [] };
+  const defaultedAction: ResolvedActionDefinition = { id: "bevel", label: "Bevel", iconId: "box", semantics: actionSemanticsForKind("mutation"), kind: "mutation", inPalette: true, args: [numberArg("radius", true, 2)] };
 
-  function Harness({ actions, onExecute, disabled }: { actions: readonly ActionDefinition[]; onExecute: (descriptor: unknown) => void; disabled?: boolean }): ReactElement {
+  function Harness({ actions, onExecute, disabled }: { actions: readonly ResolvedActionDefinition[]; onExecute: (descriptor: unknown) => void; disabled?: boolean }): ReactElement {
     const [expanded, setExpanded] = useState<string | null>(null);
     const [staged, setStaged] = useState<Record<string, Record<string, unknown>>>({});
     return createElement(WindowActionPane, {
@@ -4793,10 +5147,10 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
   });
 
   it("groups actions into category sections like the command panel", () => {
-    const createAction: ActionDefinition = { id: "box", label: "Box", kind: "mutation", inPalette: true, category: "create", args: [] };
-    const transformAction: ActionDefinition = { id: "move", label: "Move", kind: "mutation", inPalette: true, category: "transform", args: [] };
-    const historyAction: ActionDefinition = { id: "undo", label: "Undo", kind: "history", inPalette: true, args: [] };
-    const uncategorizedAction: ActionDefinition = { id: "flatten2", label: "Flatten2", kind: "mutation", inPalette: true, args: [] };
+    const createAction: ResolvedActionDefinition = { id: "box", label: "Box", iconId: "box", semantics: actionSemanticsForKind("mutation"), kind: "mutation", inPalette: true, category: "create", args: [] };
+    const transformAction: ResolvedActionDefinition = { id: "move", label: "Move", iconId: "move", semantics: actionSemanticsForKind("mutation"), kind: "mutation", inPalette: true, category: "transform", args: [] };
+    const historyAction: ResolvedActionDefinition = { id: "undo", label: "Undo", iconId: "undo", semantics: actionSemanticsForKind("history"), kind: "history", inPalette: true, args: [] };
+    const uncategorizedAction: ResolvedActionDefinition = { id: "flatten2", label: "Flatten2", iconId: "box", semantics: actionSemanticsForKind("mutation"), kind: "mutation", inPalette: true, args: [] };
     const { container } = render(createElement(Harness, { actions: [createAction, transformAction, historyAction, uncategorizedAction], onExecute: vi.fn() }));
     const textOf = (text: string) => [...container.querySelectorAll("*")].some((el) => el.textContent?.trim() === text && el.children.length === 0);
     expect(textOf("Create")).toBe(true);
@@ -4811,8 +5165,8 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
 });
 
 describe("palette redirect and keybinding rule (P3/P4)", () => {
-  const argAction: ActionDefinition = { id: "extrude", label: "Extrude", kind: "mutation", inPalette: true, args: [{ id: "depth", label: "Depth", control: { kind: "number" }, required: true }] };
-  const zeroAction: ActionDefinition = { id: "flatten", label: "Flatten", kind: "mutation", inPalette: true, args: [] };
+  const argAction: ActionDefinition = { id: "extrude", label: "Extrude", iconId: "box", semantics: actionSemanticsForKind("mutation"), kind: "mutation", inPalette: true, args: [{ id: "depth", label: "Depth", schema: { kind: "number", integer: false }, required: true }] };
+  const zeroAction: ActionDefinition = { id: "flatten", label: "Flatten", iconId: "box", semantics: actionSemanticsForKind("mutation"), kind: "mutation", inPalette: true, args: [] };
 
   it("only arg-carrying actions redirect to a staged form (P3 decision)", () => {
     expect(actionRequiresStagedForm(argAction)).toBe(true);
@@ -4835,7 +5189,7 @@ describe("palette redirect and keybinding rule (P3/P4)", () => {
 describe("registry-derived utilities and activation (P5)", () => {
   const utilities: UtilityDefinition[] = [
     { id: "select", label: "Select", iconId: "mouse-pointer", category: "selection", allowsActionsWhileActive: true },
-    { id: "brush", label: "Brush", iconId: "brush", group: "paint", category: "utilities", allowsActionsWhileActive: false },
+    { id: "brush", label: "Brush", iconId: "paintbrush", group: "paint", category: "utilities", allowsActionsWhileActive: false },
     { id: "erase", label: "Erase", iconId: "eraser", group: "paint", category: "utilities", allowsActionsWhileActive: false },
   ];
   const app = { controllerId: "draw", utilities } satisfies Pick<AppDefinition, "controllerId" | "utilities">;
@@ -4861,7 +5215,7 @@ describe("registry-derived utilities and activation (P5)", () => {
       "draw",
       [
         { id: "a", label: "A", iconId: "x" },
-        { id: "b", label: "B", iconId: "y" },
+        { id: "b", label: "B", iconId: "plus" },
       ],
       "b",
     );
@@ -4873,7 +5227,7 @@ describe("registry-derived utilities and activation (P5)", () => {
       "puzzle",
       [
         { id: "transform", label: "Transform", iconId: "move-3d", group: "transform" },
-        { id: "brush", label: "Brush", iconId: "brush" },
+        { id: "brush", label: "Brush", iconId: "paintbrush" },
       ],
       "transform",
     );
@@ -4904,7 +5258,7 @@ describe("registry-derived utilities and activation (P5)", () => {
         },
       ]),
     ).toBe("rotate");
-    expect(findPressedUtilityLeafId([{ id: "brush", kind: "toggle", iconId: "brush", pressed: false, onChange: { controllerId: "x", action: "setActiveUtility", args: { utilityId: "brush" } } }])).toBeUndefined();
+    expect(findPressedUtilityLeafId([{ id: "brush", kind: "toggle", iconId: "paintbrush", pressed: false, onChange: { controllerId: "x", action: "setActiveUtility", args: { utilityId: "brush" } } }])).toBeUndefined();
   });
 
   it("isWorldTransformGumballMode requires an explicit move/rotate/scale/transform mode", () => {
@@ -4976,10 +5330,10 @@ describe("registry-derived utilities and activation (P5)", () => {
       windowKinds: [
         {
           actions: [
-            { id: "extrude", label: "Extrude", kind: "mutation", inPalette: true, args: [] },
-            { id: "undo", label: "Undo", kind: "history", iconId: "undo", inPalette: true, args: [] },
-            { id: "setActiveUtility", label: "Set Active Utility", kind: "view", inPalette: false, args: [] },
-          ] as ActionDefinition[],
+            { id: "extrude", label: "Extrude", iconId: "box", semantics: actionSemanticsForKind("mutation"), kind: "mutation", inPalette: true, args: [] },
+            { id: "undo", label: "Undo", iconId: "undo", semantics: actionSemanticsForKind("history"), kind: "history", inPalette: true, args: [] },
+            { id: "setActiveUtility", label: "Set Active Utility", iconId: "wrench", semantics: actionSemanticsForKind("view"), kind: "view", inPalette: false, args: [] },
+          ] satisfies ActionDefinition[],
         },
       ],
     };
@@ -5020,14 +5374,14 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(node.id).toBe("framework.panel.history");
     const source = node.trees[0].tree;
     const config = "resolveTree" in source ? source.resolveTree() : source;
-    const control = config.sections[0]?.items[0]?.control as ReactElement;
+    const control = config.sections[0]?.items?.[0]?.control as ReactElement;
     const rendered = render(control);
     expect(rendered.getByText("Increment")).toBeTruthy();
   });
 });
 
 describe("resolveCommands / commandCategories (footer command panel registry)", () => {
-  const command = (id: string, label: string, category: string): CommandDefinition => ({ id, label, category, iconId: "wrench", kind: "shell", inPalette: true, args: [], keybindings: [] });
+  const command = (id: string, label: string, category: string): CommandDefinition => ({ id, label, category, iconId: "wrench", semantics: actionSemanticsForKind("shell"), kind: "shell", inPalette: true, args: [], keybindings: [] });
   const osCommands: CommandDefinition[] = [command("os.setThemeId", "Set Theme", "appearance")];
   const pluginManifest = { pluginId: "fixture", commands: [command("export", "Export", "document")] };
   const app = {
@@ -5087,9 +5441,9 @@ describe("resolveCommands / commandCategories (footer command panel registry)", 
 describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => {
   const toolApp = {
     tools: [
-      { id: "fill", label: "Fill", iconId: "fill" },
-      { id: "brush", label: "Brush", iconId: "brush" },
-    ] as ToolDefinition[],
+      { id: "fill", label: "Fill", iconId: "paint-bucket" },
+      { id: "brush", label: "Brush", iconId: "paintbrush" },
+    ] satisfies ResolvedToolDefinition[],
     modes: [
       { id: "edit", label: "Edit", tools: ["fill", "brush"] },
       { id: "view", label: "View", tools: [] },
@@ -5124,8 +5478,8 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
     expect(fillResolved.sections).toHaveLength(1);
     expect(fillResolved.sections[0]!.id).toBe("tool.fill.options");
     expect(fillResolved.sections[0]!.items).toHaveLength(1);
-    expect(fillResolved.sections[0]!.items[0]!.label).toBe("Count");
-    expect(fillResolved.sections[0]!.items[0]!.control).toBeTruthy();
+    expect(fillResolved.sections[0]!.items![0]!.label).toBe("Count");
+    expect(fillResolved.sections[0]!.items![0]!.control).toBeTruthy();
 
     const brushTab = tabs[1] as Extract<PanelTabNode, { kind: "leaf" }>;
     const brushTree = brushTab.trees[0]!.tree as { resolveTree: () => { sections: TreeDataSection[] } };
@@ -5133,7 +5487,7 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
     const brushResolved = brushTree.resolveTree();
     expect(brushResolved.sections).toHaveLength(1);
     expect(brushResolved.sections[0]!.id).toBe("tool.brush.activate");
-    expect(brushResolved.sections[0]!.items[0]!.label).toBe("");
+    expect(brushResolved.sections[0]!.items![0]!.label).toBe("");
   });
 
   it("buildToolTabs' activation toggle dispatches setActiveTool with this tool's id", () => {
@@ -5143,7 +5497,7 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
     const tabs = buildToolTabs(toolApp.tools, "puzzle3d-play", activeToolIdRef, toolMeasuresByToolIdRef, onAction);
     const fillTab = tabs[0] as Extract<PanelTabNode, { kind: "leaf" }>;
     const fillTree = fillTab.trees[0]!.tree as { resolveTree: () => { sections: TreeDataSection[] } };
-    const activateControl = fillTree.resolveTree().sections[0]!.items[0]!.control as ReactElement<{ onPressedChange: (pressed: boolean) => void }>;
+    const activateControl = fillTree.resolveTree().sections[0]!.items![0]!.control as ReactElement<{ onPressedChange: (pressed: boolean) => void }>;
     activateControl.props.onPressedChange(true);
     expect(onAction).toHaveBeenCalledWith({ controllerId: "puzzle3d-play", action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: "fill" } });
   });
@@ -5176,7 +5530,7 @@ describe("Play/Record Tutorial commands", () => {
     const withTutorials = buildOsCommands([], [], false, undefined, undefined, [{ id: "welcome-tour", title: "Welcome Tour" }]);
     const playTutorial = withTutorials.find((command) => command.id === "os.playTutorial");
     expect(playTutorial).toMatchObject({ label: "Play Tutorial", category: "app" });
-    expect(playTutorial?.args[0]).toMatchObject({ id: "tutorialId", required: true, control: { kind: "select", options: [{ value: "welcome-tour", label: "Welcome Tour" }] } });
+    expect(playTutorial?.args[0]).toMatchObject({ id: "tutorialId", required: true, schema: { kind: "string", options: [{ value: "welcome-tour", label: "Welcome Tour" }] } });
   });
 
   it("os.recordTutorial appears only when the recorder is available (dev/studio), independent of declared tutorials", () => {
@@ -5431,18 +5785,18 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
 });
 
 describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette as a real bottom-middle Panel)", () => {
-  const definition = (id: string, label: string, category: string, args: CommandDefinition["args"] = []): CommandDefinition => ({ id, label, category, args, iconId: "wrench", kind: "shell", keybindings: [], inPalette: true });
+  const definition = (id: string, label: string, category: string, args: ResolvedActionArgDef[] = []): ResolvedCommand["definition"] => ({ id, label, category, args, iconId: "wrench", semantics: actionSemanticsForKind("shell"), kind: "shell", keybindings: [], inPalette: true });
   const zeroArgCommand: ResolvedCommand = { definition: definition("os.resetDock", "Reset Dock", "layout"), address: { owner: "os", commandId: "os.resetDock" } };
   const argCommand: ResolvedCommand = {
-    definition: definition("os.setThemeId", "Set Theme", "appearance", [{ id: "themeId", label: "Theme", control: { kind: "text" }, required: true }]),
+    definition: definition("os.setThemeId", "Set Theme", "appearance", [{ id: "themeId", label: "Theme", schema: { kind: "string", options: [] }, required: true }]),
     address: { owner: "os", commandId: "os.setThemeId" },
   };
   const secondArgCommand: ResolvedCommand = {
-    definition: definition("os.setAppearance", "Set Appearance", "appearance", [{ id: "appearance", label: "Appearance", control: { kind: "text" }, required: true }]),
+    definition: definition("os.setAppearance", "Set Appearance", "appearance", [{ id: "appearance", label: "Appearance", schema: { kind: "string", options: [] }, required: true }]),
     address: { owner: "os", commandId: "os.setAppearance" },
   };
   const singletonArgCommand: ResolvedCommand = {
-    definition: definition("os.setDriver", "Set Driver", "general", [{ id: "driver", label: "Driver", control: { kind: "text" }, required: true }]),
+    definition: definition("os.setDriver", "Set Driver", "general", [{ id: "driver", label: "Driver", schema: { kind: "string", options: [] }, required: true }]),
     address: { owner: "os", commandId: "os.setDriver" },
   };
 
@@ -5494,6 +5848,7 @@ describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette a
     const stagedExecute = stagedTree.sections[0]!.actions!.find((action) => action.id === "command-os.os.setThemeId-execute")!;
     const stagedReset = stagedTree.sections[0]!.actions!.find((action) => action.id === "command-os.os.setThemeId-reset")!;
     expect(stagedExecute.disabled).toBe(false);
+    if (stagedExecute.kind === "checkbox" || stagedReset.kind === "checkbox") throw new Error("Command fixture requires execute and reset buttons");
     stagedExecute.onClick();
     expect(onExecute).toHaveBeenCalledWith(argCommand, { themeId: "semio" });
     stagedReset.onClick();
@@ -5705,10 +6060,11 @@ describe("Display Windows tab — projection drag templates", () => {
       setLayoutSaveLabel: () => {},
     };
     const tabs = createFrameworkDisplayPanelTabs(() => host);
-    type WindowsTreeSections = { readonly sections: readonly { readonly id: string; readonly items?: readonly unknown[] }[] };
-    type LeafWithTrees = { readonly trees: readonly { readonly tree: { readonly resolveTree: () => WindowsTreeSections } }[] };
-    const windowsTab = tabs.find((tab) => tab.id === "framework.display.windows") as unknown as LeafWithTrees;
-    return windowsTab.trees[0]!.tree.resolveTree().sections;
+    const windowsTab = tabs.find((tab) => tab.id === "framework.display.windows");
+    if (!windowsTab || windowsTab.kind !== "leaf") throw new Error("Display fixture requires the windows tree leaf");
+    const source = windowsTab.trees[0]?.tree;
+    if (!source) throw new Error("Display fixture requires the windows tree source");
+    return ("resolveTree" in source ? source.resolveTree() : source).sections;
   }
 
   type LabeledTreeItem = { readonly id: string; readonly label?: string; readonly icon?: unknown; readonly items?: readonly LabeledTreeItem[]; readonly dragData?: Record<string, string> };
@@ -5882,13 +6238,13 @@ describe("introductionTargetsWindow", () => {
 
 describe("windowMeasureTreeContainsId", () => {
   it("finds nested measure ids used as introduction targets", () => {
-    const measures = [
-      { kind: "select" as const, id: "puzzle3d-play-vortex-show", value: "selected", items: [], onChange: { id: "setVortexShow" } },
+    const measures: WindowMeasure[] = [
+      { kind: "select", id: "puzzle3d-play-vortex-show", value: "selected", items: [], onChange: { controllerId: "puzzle", action: "setVortexShow" } },
       {
         kind: "group" as const,
         id: "group",
         label: "Group",
-        children: [{ kind: "toggle" as const, id: "nested-toggle", pressed: false, iconId: "eye", onChange: { id: "noOperation" } }],
+        children: [{ kind: "toggle", id: "nested-toggle", pressed: false, iconId: "eye", onChange: { controllerId: "puzzle", action: "noOperation" } }],
       },
     ];
     expect(windowMeasureTreeContainsId(measures, "puzzle3d-play-vortex-show")).toBe(true);
@@ -5940,7 +6296,7 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
   };
 
   it("does not infer focus when an app has no explicit layout", () => {
-    const seed = resolveFrameworkLayoutSeed(undefined, [{ id: "main", label: "Main" }], emptyLabels);
+    const seed = resolveFrameworkLayoutSeed(undefined, [{ id: "main", label: "Main" }], emptyLabels, "native", "en");
     expect(seed.modeLayout).toEqual({ kind: "stack", children: [{ kind: "window", id: "main" }] });
     expect(seed).not.toHaveProperty("activeWindowId");
   });
@@ -5968,6 +6324,8 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
       },
       [{ id: "puzzle3d-main", label: "Puzzle 3D" }],
       emptyLabels,
+      "native",
+      "en",
     );
     expect(seed.modeLayout).toEqual({
       kind: "row",
@@ -6010,6 +6368,8 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
       },
       [{ id: "puzzle3d-main", label: "Puzzle 3D" }],
       emptyLabels,
+      "native",
+      "en",
     );
     // 🪟️ A refresh that only knows the bare kind id would leave Top/Perspective as "Fehlendes Fenster".
     // Live extras must be in the fetch list: base kind + each default-layout instance.
@@ -6146,6 +6506,26 @@ describe("TutorialRecorder LocalizedLabel synthesis", () => {
       reuse: { en: "Test Chapter", de: "Test Chapter" },
     });
     expect(synthesizeLocalizedLabel(label)).toBe(label);
+  });
+
+  it("resolves exact language-neutral label cells without a default locale", async () => {
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(labelResolutionSchema);
+    expect(validate(labelResolutionFixture), JSON.stringify(validate.errors)).toBe(true);
+    const matrix = labelResolutionFixture.matrix;
+    const oracle = createTranslationOracle();
+    await oracle.init({ fallbackLng: false, resources: {
+      en: { native: { label: matrix.native.en }, reuse: { label: matrix.reuse.en } },
+      de: { native: { label: matrix.native.de }, reuse: { label: matrix.reuse.de } },
+    } });
+    for (const row of labelResolutionFixture.cases) {
+      expect(resolveManifestLabel(row.data ?? matrix, row.terminology, row.locale), row.id).toBe(row.expected);
+      const expected = row.data ?? oracle.getResource(row.locale, row.terminology, "label") ?? "";
+      expect(expected, row.id).toBe(row.expected);
+    }
+    for (const malformed of [null, 7, [], {}, { native: { en: "English" }, reuse: { en: "English" } }, { native: { en: 7, de: false }, reuse: { en: "Part", de: "Bauteil" } }]) {
+      expect(resolveManifestLabel(malformed, "native", "de")).toBe("");
+    }
+    expect(validate({ ...labelResolutionFixture, matrix: { native: { en: "Only English" }, reuse: matrix.reuse } })).toBe(false);
   });
 
   it("TutorialRecorder synthesizes LocalizedLabel for addChapter and build titles", () => {

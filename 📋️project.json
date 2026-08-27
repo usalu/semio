@@ -3,6 +3,11 @@
   "$schema": "node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "sourceRoot": "",
+  "metadata": {
+    "semio": {
+      "taxonomy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+    }
+  },
   "targets": {
     "scale-fixture-check": {
       "executor": "nx:run-commands",
@@ -401,6 +406,15 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts clean taxonomy verify",
+        "forwardAllArgs": true
+      }
+    },
+    "new-taxonomy-mutation": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts new mutation",
         "forwardAllArgs": true
       }
     },

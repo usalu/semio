@@ -3,7 +3,7 @@
 use crate::artifacts::procedural2d::snapshot::schema::Procedural2dSnapshot;
 use flow::dag::DagFixture;
 use flow::forms_bridge::apply_generation_values_to_fixture;
-use flow::playbook::GenerationPlayState;
+use flow::playbook::GenerationPlayRoot;
 use flow::render_scene_json;
 use flow::CameraJson;
 use flow::FlowFixture;
@@ -24,7 +24,7 @@ pub struct Procedural2dArtifact {
     #[state(artifact)]
     pub fixture: FlowFixture,
     #[state(artifact)]
-    pub generation: GenerationPlayState,
+    pub generation: GenerationPlayRoot,
     #[state(presence)]
     pub selected_ids: Vec<String>,
     #[state(config)]
@@ -44,7 +44,7 @@ impl Default for Procedural2dArtifact {
     fn default() -> Self {
         Self {
             fixture: FlowFixture::default(),
-            generation: GenerationPlayState::default(),
+            generation: GenerationPlayRoot::default(),
             selected_ids: Vec::new(),
             graph_camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             show_mode: "preview".into(),
@@ -69,7 +69,7 @@ impl Procedural2dArtifact {
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: Procedural2dSnapshot) {
         self.fixture = snapshot.fixture;
-        self.generation = snapshot.generation;
+        std::mem::replace(&mut self.generation, snapshot.generation).retire_cold();
     }
 }
 

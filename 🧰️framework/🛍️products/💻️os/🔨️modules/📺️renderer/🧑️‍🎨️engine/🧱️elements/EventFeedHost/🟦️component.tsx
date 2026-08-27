@@ -89,7 +89,7 @@ export function EventFeedHost({ node, onAction, requestContextMenu }: ComponentS
         const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
-            menu: { id: "eventFeed" },
+            menu: { id: "eventFeed", args: null },
             surface: { surfaceId: node.surfaceId, kind: "eventFeed", hits: [{ domain: "entry", id: entryId }], selection: [] },
             windowInstanceId: windowInstanceId ?? undefined,
             point: { x: event.clientX, y: event.clientY },

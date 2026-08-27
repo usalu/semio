@@ -24,7 +24,7 @@ use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observ
 /// HERE against either one is caught structurally instead — the contract phase fails with
 /// `mutation-kind-uncovered`/`mutation-kind-undeclared` if this list omits or invents a kind, and the
 /// runner fails every unregistered scenario id outright (`adapter has no {role} registration`).
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-member", "remove-member", "insert-array-element", "remove-array-element", "set-scalar"];
+const KINDS: &[&str] = &["set-member", "remove-member", "insert-array-element", "remove-array-element", "set-scalar"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -157,7 +157,10 @@ mod subject {
     use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, round_trip_preserves};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::any::schema::mutations::apply_json_mutation;
-    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::any::schema::mutations::{JsonMutation, JsonPath, JsonPathSegment};
+    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::any::schema::mutations::{
+        InsertArrayElementMutation, InsertArrayElementPayload, JsonMutation, JsonPath, JsonPathSegment, RemoveArrayElementMutation, RemoveArrayElementPayload, RemoveMemberMutation,
+        RemoveMemberPayload, SetMemberMutation, SetMemberPayload, SetScalarMutation, SetScalarPayload,
+    };
     use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::{parse_json_text, write_json_text, JsonMember, JsonSnapshot, JsonValue};
     use semio_s_plugin_stdio::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
     use semio_s_plugin_stdio_test_oracle::artifacts::json::standards::v_rfc8259::subsets::any::project_json_value;
@@ -209,13 +212,18 @@ mod subject {
         let path = || path_from_json(&params.get("path").cloned().unwrap_or(Json::Array(Vec::new())));
         let value = || value_from_json(&params.get("value").cloned().unwrap_or(Json::Null));
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => JsonMutation::NoMutation,
-            "set-snapshot" => JsonMutation::SetSnapshot { snapshot: JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: value() } },
-            "set-member" => JsonMutation::SetMember { path: path(), key: params.str("key"), value: value() },
-            "remove-member" => JsonMutation::RemoveMember { path: path(), key: params.str("key") },
-            "insert-array-element" => JsonMutation::InsertArrayElement { path: path(), index: number(&params, "index").ok_or("insert-array-element: missing `index`")? as usize, value: value() },
-            "remove-array-element" => JsonMutation::RemoveArrayElement { path: path(), index: number(&params, "index").ok_or("remove-array-element: missing `index`")? as usize },
-            "set-scalar" => JsonMutation::SetScalar { path: path(), value: value() },
+            "set-member" => JsonMutation::SetMember(SetMemberMutation::Apply(SetMemberPayload { path: path(), key: params.str("key"), value: value() })),
+            "remove-member" => JsonMutation::RemoveMember(RemoveMemberMutation::Apply(RemoveMemberPayload { path: path(), key: params.str("key") })),
+            "insert-array-element" => JsonMutation::InsertArrayElement(InsertArrayElementMutation::Apply(InsertArrayElementPayload {
+                path: path(),
+                index: number(&params, "index").ok_or("insert-array-element: missing `index`")? as usize,
+                value: value(),
+            })),
+            "remove-array-element" => JsonMutation::RemoveArrayElement(RemoveArrayElementMutation::Apply(RemoveArrayElementPayload {
+                path: path(),
+                index: number(&params, "index").ok_or("remove-array-element: missing `index`")? as usize,
+            })),
+            "set-scalar" => JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: path(), value: value() })),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

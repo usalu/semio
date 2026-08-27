@@ -1,5 +1,5 @@
 # 🔺️ PdfDiff (1.4) — an index-keyed triple over the document's page tree. No full-replace slot:
-# even SetSnapshot's diff is the sparse page-by-page between(base, next).
+# document differences stay sparse and page-addressed.
 type PdfPageDiff {
   width: Float
   height: Float

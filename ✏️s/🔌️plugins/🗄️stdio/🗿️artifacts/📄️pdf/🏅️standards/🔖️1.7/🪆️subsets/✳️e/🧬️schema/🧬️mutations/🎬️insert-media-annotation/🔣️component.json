@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🧬️schema/🧬️mutations/🎬️insert-media-annotation",
+  "semanticKind": "insert-media-annotation",
+  "displayName": "Insert Media Annotation",
+  "emoji": "🎬️",
+  "aggregateVariant": "InsertMediaAnnotation",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "insert-media-annotation",
+  "binaryTag": 6,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": ["applied"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]
+}

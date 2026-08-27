@@ -6,7 +6,7 @@ use crate::artifacts::imperative::ImperativeSnapshot;
 
 //#region 🔖️Diff
 /// 🔺️ Error `target-missing` when the id is absent from the payload's `path_ref` target list.
-pub fn diff(payload: &super::mutation::DeleteStep, base: &ImperativeSnapshot) -> protocol::MutationOutcome<ImperativeDiff> {
+pub fn diff(payload: &super::DeleteStep, base: &ImperativeSnapshot) -> protocol::MutationOutcome<ImperativeDiff> {
     let steps = crate::artifacts::imperative::mutations::resolve_steps(base, &payload.path_ref);
     if !steps.iter().any(|step| step.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Step \"{}\" does not exist.", payload.id), [payload.id.clone()]);

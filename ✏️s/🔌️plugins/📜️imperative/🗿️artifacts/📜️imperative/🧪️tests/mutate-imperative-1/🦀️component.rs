@@ -128,9 +128,9 @@ mod subject {
     /// program the feature's own row declares — the two together ARE the before-state.
     fn seeded_before(kind: &str, row: &Json) -> Result<ImperativeSnapshot, String> {
         let (before, _, _, _) = super::fixture_text(kind);
-        let snapshot = decode_imperative_snapshot_json(before).map_err(|error| format!("mutate-imperative-1: the committed before-snapshot for {kind:?} must decode: {error}"))?;
+        let mut snapshot = decode_imperative_snapshot_json(before).map_err(|error| format!("mutate-imperative-1: the committed before-snapshot for {kind:?} must decode: {error}"))?;
         let program = row.get("program").map(Json::to_string).unwrap_or_default();
-        seed_imperative_flow_json(&snapshot, &program).map_err(|error| format!("mutate-imperative-1: the feature's declared program for {kind:?} must decode: {error}"))?;
+        seed_imperative_flow_json(&mut snapshot, &program).map_err(|error| format!("mutate-imperative-1: the feature's declared program for {kind:?} must decode: {error}"))?;
         Ok(snapshot)
     }
 

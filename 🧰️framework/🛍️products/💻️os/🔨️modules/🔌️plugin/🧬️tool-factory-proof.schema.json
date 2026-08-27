@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.plugin.tool-factory-proof.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "join", "cases", "cad"],
+  "properties": {
+    "schema": {"const": "semio.plugin.tool-factory-proof.v1"},
+    "join": {"const": ["ownerType", "controller", "documentSchema", "tool", "factoryType", "factoryTypeName", "payloadSchema", "executionContract", "liveBusRegistration"]},
+    "cases": {
+      "type": "array", "minItems": 16,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "change", "accepted"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "change": {"enum": ["none", "missingType", "wrongType", "sameOwnerDifferentFactory", "wrongTypeName", "wrongFactory", "wrongOwner", "wrongController", "wrongDocumentSchema", "wrongTool", "wrongContract", "wrongPayloadSchema", "missingRegistration", "differentBus", "sentinel", "duplicate"]},
+          "accepted": {"type": "boolean"}
+        }
+      }
+    },
+    "cad": {"const": {"controller": "s.cad.cad@1/*#editor", "factory": "CadRetainedCommandJobFactory", "proofRows": 25, "injectedTool": "setActiveUtility", "closeItems": 1, "closeBytes": 4096}}
+  }
+}

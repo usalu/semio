@@ -1,6 +1,0 @@
-# change-mesh-name inverse facet.
-input GltfChangeMeshNamePayloadV1 {
-  mesh: Int!
-  value: String
-}
-type GltfChangeMeshNameInverseV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

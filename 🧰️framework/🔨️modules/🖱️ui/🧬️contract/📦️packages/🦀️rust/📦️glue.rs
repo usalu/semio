@@ -529,7 +529,7 @@ export type SelectProps = { value: string, items: Array<SelectItem>, placeholder
  * (`presence`, `menu`) now lives on the record, so this is intentionally empty — kept as its own
  * struct (rather than a unit variant) purely for structural symmetry with every other component.
  */
-export type SeparatorProps = Record<string, never>;"####,
+export type SeparatorProps = Record<never, never>;"####,
         },
         SchemaMetadata {
             name: "SizeToken",

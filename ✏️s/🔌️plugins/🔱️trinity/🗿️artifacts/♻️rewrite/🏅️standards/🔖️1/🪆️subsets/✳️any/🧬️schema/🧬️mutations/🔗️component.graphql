@@ -1,24 +1,21 @@
-# 🧬️ Rewrite mutation schema — artifact-lane fields only.
+# 🧬️ Rewrite direct mutation aggregate.
+scalar JSON
 
-type RewriteMutation {
-  beforeFixtureJson: String! @state(class: ARTIFACT)
-  lhsJson: String! @state(class: ARTIFACT)
-  rhsJson: String! @state(class: ARTIFACT)
-  parameterBindings: [PropertyValueEntry!]! @state(class: ARTIFACT)
-  ruleLayout: [LayoutPointEntry!]! @state(class: ARTIFACT)
-}
+input EditBeforeFixtureInput { newBeforeFixtureJson: String! }
+input EditLhsInput { newLhsJson: String! }
+input EditRhsInput { newRhsJson: String! }
+input ChangeParameterBindingInput { key: String!, newValue: JSON! }
+input RemoveParameterBindingInput { key: String! }
+input RewriteRuleLayoutPointInput { x: Float!, y: Float! }
+input ChangeRuleLayoutPointInput { key: String!, newPoint: RewriteRuleLayoutPointInput! }
+input RemoveRuleLayoutPointInput { key: String! }
 
-type PropertyValueEntry {
-  key: String!
-  value: String!
-}
-
-type LayoutPointEntry {
-  key: String!
-  value: LayoutPoint!
-}
-
-type LayoutPoint {
-  x: Float!
-  y: Float!
+input RewriteRuleMutationInput {
+  editBeforeFixture: EditBeforeFixtureInput
+  editLhs: EditLhsInput
+  editRhs: EditRhsInput
+  changeParameterBinding: ChangeParameterBindingInput
+  removeParameterBinding: RemoveParameterBindingInput
+  changeRuleLayoutPoint: ChangeRuleLayoutPointInput
+  removeRuleLayoutPoint: RemoveRuleLayoutPointInput
 }

@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.jpg.mutation;
+// 🧬️ remove-huffman-table/RemoveHuffmanTable; complex fields follow the direct payload schema.
+message RemoveHuffmanTableMutation { bytes key = 1; }

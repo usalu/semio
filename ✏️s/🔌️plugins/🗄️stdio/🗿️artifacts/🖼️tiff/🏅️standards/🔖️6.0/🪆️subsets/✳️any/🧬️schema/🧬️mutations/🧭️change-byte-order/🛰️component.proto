@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.tiff.mutation;
+// 🧬️ change-byte-order/ChangeByteOrder; complex fields follow the direct payload schema.
+message ChangeByteOrderMutation { bytes byte_order = 1; }

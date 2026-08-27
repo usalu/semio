@@ -392,12 +392,6 @@ interface effects {
   record set-active-tool-effect {
     tool-id: string,
   }
-  record patch-world3d-chrome-effect {
-    selection-json: string,
-    vortices-json: option<string>,
-    document-selected-ids: list<string>,
-    document-highlighted-ids: option<list<string>>,
-  }
   record replay-shell-command-effect {
     action-id: string,
     args: option<pack>,
@@ -574,7 +568,6 @@ interface effects {
     set-panel(set-panel-effect),
     set-active-utility(set-active-utility-effect),
     set-active-tool(set-active-tool-effect),
-    patch-world3d-chrome(patch-world3d-chrome-effect),
     replay-shell-command(replay-shell-command-effect),
     spawn-plugin-instance(spawn-plugin-instance-effect),
     open-plugin-instance(open-plugin-instance-effect),

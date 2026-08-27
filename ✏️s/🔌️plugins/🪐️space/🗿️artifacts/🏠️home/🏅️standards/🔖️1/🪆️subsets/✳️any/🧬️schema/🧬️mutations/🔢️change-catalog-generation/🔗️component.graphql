@@ -1,0 +1,4 @@
+"""🔢 Direct change-catalog-generation payload."""
+input ChangeCatalogGenerationInput {
+  newCatalogGeneration: Long!
+}

@@ -1,0 +1,22 @@
+{
+  "schema": "semio.flow.delete-cascade",
+  "targetId": "cut",
+  "label": {"unit": "高", "repetitions": 1600, "expectedBytes": 4800},
+  "scene": {
+    "widgets": [
+      {"kind": "inputNote", "id": "a", "text": "source"},
+      {"kind": "inputSlider", "id": "cut", "label": "Column Height", "value": 6, "min": 0, "max": 10, "step": 0.5},
+      {"kind": "inputNote", "id": "b", "text": "sink"}
+    ],
+    "synapses": [
+      {"id": "e0", "from": "a", "fromPort": "out0", "to": "b", "toPort": "in0"},
+      {"id": "e1", "from": "a", "fromPort": "out1", "to": "cut", "toPort": "in1"},
+      {"id": "e2", "from": "b", "fromPort": "out2", "to": "a", "toPort": "in2"},
+      {"id": "e3", "from": "cut", "fromPort": "out3", "to": "b", "toPort": "in3"},
+      {"id": "e4", "from": "a", "fromPort": "out4", "to": "a", "toPort": "in4"}
+    ],
+    "layout": {"cut": {"x": 12, "y": 24}}
+  },
+  "expectedForwardSynapses": ["e0", "e2", "e4"],
+  "expectedInverseIndices": [1, 3]
+}

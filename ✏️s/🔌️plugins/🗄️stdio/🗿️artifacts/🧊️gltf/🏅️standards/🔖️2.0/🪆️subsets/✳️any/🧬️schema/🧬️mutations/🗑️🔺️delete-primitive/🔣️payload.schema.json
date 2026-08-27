@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.gltf.mutation.delete-primitive.v1.mutation",
+  "title": "GltfDeletePrimitiveMutation",
+  "type": "object",
+  "properties": {
+    "mesh": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "primitive": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "mesh",
+    "primitive"
+  ],
+  "additionalProperties": false,
+  "x-semio": {
+    "id": "s.stdio.gltf.mutation.delete-primitive.v1",
+    "version": 1,
+    "phase": "mutation",
+    "kind": "delete",
+    "touchedPaths": [
+      "document/meshes/*/primitives"
+    ],
+    "referencePolicy": "removes one primitive; mesh weights stay coherent because target counts are unchanged"
+  },
+  "x-semio-mutation": "delete-primitive"
+}

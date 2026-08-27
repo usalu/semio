@@ -136,7 +136,7 @@ mod subject {
     /// same `mutation.target-missing` branch — which would make the case look green while testing
     /// one code path nine times. The cell is DATA in the feature's `Examples` table, quoted there
     /// with the leaf test it was read from, rather than a per-kind `match` hidden in this file.
-    fn seed(snapshot: &FormsSnapshot, spec: &Json) -> Result<(), String> {
+    fn seed(snapshot: &mut FormsSnapshot, spec: &Json) -> Result<(), String> {
         let scene = match spec.get("scene") {
             Some(value) => value.to_string(),
             None => return Err("the scenario doc string must carry a \"scene\" array for this subset".to_string()),
@@ -152,11 +152,11 @@ mod subject {
     /// the mutation actually moved the compared projection.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let (kind, vector, spec) = addressed(ctx)?;
-        let base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️component.json", &kind)?;
+        let mut base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️component.json", &kind)?;
         let expected = snapshot_at(ctx, &vector, "📸️snapshot/➡️after/🔣️component.json", &kind)?;
         let mutation = mutation_at(ctx, &vector, &kind)?;
         let declared = parse_json(&text_at(ctx, &vector, "🎯️outcome/🔣️component.json")?)?;
-        seed(&base, &spec)?;
+        seed(&mut base, &spec)?;
         let mut current = base.clone();
         let outcome = apply_form_mutation_outcome(&mut current, &mutation);
         let raised: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
@@ -176,9 +176,9 @@ mod subject {
     /// tolerance and no ignored key.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let (kind, vector, spec) = addressed(ctx)?;
-        let base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️component.json", &kind)?;
+        let mut base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️component.json", &kind)?;
         let mutation = mutation_at(ctx, &vector, &kind)?;
-        seed(&base, &spec)?;
+        seed(&mut base, &spec)?;
         let original = projection(&base)?;
         let mut current = base.clone();
         apply_form_mutation_outcome(&mut current, &mutation);

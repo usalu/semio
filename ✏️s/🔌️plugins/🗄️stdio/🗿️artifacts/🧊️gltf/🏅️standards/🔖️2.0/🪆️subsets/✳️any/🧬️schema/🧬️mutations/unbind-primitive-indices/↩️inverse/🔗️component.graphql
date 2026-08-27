@@ -1,6 +1,0 @@
-# unbind-primitive-indices inverse facet.
-input GltfUnbindPrimitiveIndicesPayloadV1 {
-  mesh: Int!
-  primitive: Int!
-}
-type GltfUnbindPrimitiveIndicesInverseV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

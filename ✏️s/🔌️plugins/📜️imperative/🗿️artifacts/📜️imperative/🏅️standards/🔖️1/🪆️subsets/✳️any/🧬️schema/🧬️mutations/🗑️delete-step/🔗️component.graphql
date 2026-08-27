@@ -1,0 +1,5 @@
+"""🗑️ Direct delete-step payload."""
+input DeleteStepInput {
+  pathRef: ImperativePathRefInput!
+  id: String!
+}

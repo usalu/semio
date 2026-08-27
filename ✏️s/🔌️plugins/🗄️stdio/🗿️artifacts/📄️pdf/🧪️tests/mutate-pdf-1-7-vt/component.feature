@@ -23,7 +23,7 @@ Feature: Apply every typed ISO 16612-2 (PDF/VT-1) conformance-class mutation to 
   reads every axis `check_x_conformance` reads, plus two of its own: `/Root/DPartRoot` (hard) and a `/DPM` metadata dictionary on every `/DPart` node reachable from it (soft). No ✳️any mutation moves any of those axes and no mutation here touches
   page content, so the two vocabularies are disjoint by construction.
 
-  This is the one place in this artifact where a vocabulary is a strict SUPERSET of a sibling's, and it is so by the subset's own code rather than by copying: `check_vt_conformance`'s first statement is literally `let mut out = check_x_conformance(snapshot);`, because ISO 16612-2 is defined ON TOP of ISO 15930 — a PDF/VT file is a PDF/X file with a document-part hierarchy. The sixteen inherited kinds are therefore not duplicated prose but a stated inheritance, and the four that are this subset's own — the `/DPartRoot` pair and the `/DPM` pair — are the variable-data partitioning mechanism no other conformance class in this standard has any concept of. The implementation is shared through the named `document::pdf_conformance` engine, never copied: what differs between `✳️x` and `✳️vt` is the declared axis list and the declared vocabulary, which is what a subset is.
+  This is the one place in this artifact where a vocabulary is a strict SUPERSET of a sibling's, and it is so by the subset's own code rather than by copying: `check_vt_conformance`'s first statement is literally `let mut out = check_x_conformance(snapshot);`, because ISO 16612-2 is defined ON TOP of ISO 15930 — a PDF/VT file is a PDF/X file with a document-part hierarchy. The fourteen inherited kinds are therefore not duplicated prose but a stated inheritance, and the four that are this subset's own — the `/DPartRoot` pair and the `/DPM` pair — are the variable-data partitioning mechanism no other conformance class in this standard has any concept of. The implementation is shared through the named `document::pdf_conformance` engine, never copied: what differs between `✳️x` and `✳️vt` is the declared axis list and the declared vocabulary, which is what a subset is.
 
   THE REFERENCE. `lopdf` 0.44 parses the complete COS object graph of the real document and writes a
   fresh file from that graph alone — never a patch of the input bytes — and it both performs and
@@ -78,8 +78,6 @@ Feature: Apply every typed ISO 16612-2 (PDF/VT-1) conformance-class mutation to 
     Then the oracle and the subject agree on the conformance-class projection
     Examples:
       | id                           | params                                                            |
-      | no-mutation                  | {}                                                                |
-      | set-snapshot                 | {"conformance": "stamped"}                                        |
       | insert-encryption-dictionary | {"version": 2, "revision": 3}                                     |
       | remove-encryption-dictionary | {"version": 2, "revision": 3}                                     |
       | set-output-intent            | {"identifier": "sRGB IEC61966-2.1"}                               |
@@ -112,8 +110,6 @@ Feature: Apply every typed ISO 16612-2 (PDF/VT-1) conformance-class mutation to 
     Then the conformance-class projection is the one the document started from
     Examples:
       | id                           | params                                                            |
-      | no-mutation                  | {}                                                                |
-      | set-snapshot                 | {"conformance": "stamped"}                                        |
       | insert-encryption-dictionary | {"version": 2, "revision": 3}                                     |
       | remove-encryption-dictionary | {"version": 2, "revision": 3}                                     |
       | set-output-intent            | {"identifier": "sRGB IEC61966-2.1"}                               |

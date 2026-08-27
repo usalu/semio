@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "mutationRoot": "✏️s/🧪️probe/🧬️mutations",
+  "aggregate": "pub enum ProbeMutation {}\n",
+  "acceptedSelections": [
+    "✏️s/🧪️probe/🧬️mutations",
+    "✏️s\\🧪️probe\\🧬️mutations",
+    "./✏️s/🧪️probe/🧬️mutations"
+  ],
+  "missingSelections": [
+    "✏️s/🧪️missing/🧬️mutations",
+    "✏️s/🧪️missing\\🧬️mutations"
+  ],
+  "binaryCases": [
+    { "source": "pub const BINARY_TAG: u8 = 3;\n", "accepted": true },
+    { "source": "pub const BINARY_TAG: u8 = 4;\n", "accepted": false },
+    { "source": "pub const TAG: u8 = 3; pub const BINARY_TAG: u8 = TAG;\n", "accepted": true },
+    { "source": "pub const TAG: u8 = 4; pub const BINARY_TAG: u8 = TAG;\n", "accepted": false },
+    { "source": "pub const TAG: u8 = 3; const ALIAS: u8 = TAG; pub const BINARY_TAG: u8 = ALIAS;\n", "accepted": true },
+    { "source": "const TAG: u8 = BINARY_TAG; pub const BINARY_TAG: u8 = TAG;\n", "accepted": false },
+    { "source": "pub const BINARY_TAG: u8 = MISSING;\n", "accepted": false },
+    { "source": "// Binary tag 3 for insert-page.\n", "accepted": false }
+  ],
+  "codecCases": [
+    { "source": "pub const REGISTRY: &[Entry] = &[insert_page::text::CODEC];\n", "accepted": true },
+    { "source": "pub const REGISTRY: &[Entry] = &[InsertPagePayload::CODEC];\n", "accepted": true },
+    { "source": "pub const REGISTRY: &[Entry] = &[insert_page_extra::text::CODEC];\n", "accepted": false },
+    { "source": "// insert-page InsertPage insert_page\npub const REGISTRY: &[Entry] = &[other::text::CODEC];\n", "accepted": false },
+    { "source": "pub const OPCODE: &str = \"insert-page\";\n", "accepted": true }
+  ],
+  "aggregateCases": [
+    { "source": "", "kind": "mutation/root-purity", "variantCount": 0 },
+    { "source": "pub enum ProbeMutation { InsertPage }\n", "kind": "mutation/root-purity", "variantCount": 1 },
+    { "source": "pub enum ProbeMutation { InsertPage { ordinal: usize } }\n", "kind": "mutation/root-purity", "variantCount": 1 },
+    { "source": "pub enum ProbeMutation { InsertPage(usize, usize) }\n", "kind": "mutation/root-purity", "variantCount": 1 },
+    { "source": "pub enum ProbeMutation {}\n", "kind": "mutation/folder-variant-bijection", "variantCount": 0 }
+  ],
+  "rejectedSelections": [
+    "compose/🧬️mutations",
+    "compose\\🧬️mutations",
+    "./compose/🧬️mutations",
+    "temp/compose/🧬️mutations",
+    "✏️s/../compose/🧬️mutations",
+    "../🧬️mutations",
+    "/🧬️mutations",
+    "C:\\repo\\🧬️mutations",
+    "\\\\server\\repo\\🧬️mutations",
+    "✏️s/🧪️probe",
+    ""
+  ]
+}

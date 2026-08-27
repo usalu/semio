@@ -79,11 +79,11 @@ pub fn gltf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
             proto: include_str!("🔺️diff/🛰️component.proto"),
         },
         mutations: schema::FacetLeaves {
-            rust: include_str!("../🔨️modules/🧭️mutation-dispatch/🦀️component.rs"),
-            typescript: include_str!("../🔨️modules/🧭️mutation-dispatch/🟦️component.ts"),
-            graphql: include_str!("../🔨️modules/🧭️mutation-dispatch/🔗️component.graphql"),
-            json_schema: include_str!("../🔨️modules/🧭️mutation-dispatch/🔣️component.json"),
-            proto: include_str!("../🔨️modules/🧭️mutation-dispatch/🛰️component.proto"),
+            rust: include_str!("🧬️mutations/🦀️component.rs"),
+            typescript: include_str!("🧬️mutations/🟦️component.ts"),
+            graphql: include_str!("🧬️mutations/🔗️component.graphql"),
+            json_schema: include_str!("🧬️mutations/🔣️component.json"),
+            proto: include_str!("🧬️mutations/🛰️component.proto"),
         },
     }
 }
@@ -91,9 +91,9 @@ pub fn gltf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
-    use crate::artifacts::gltf::schema::modules::mutation_dispatch::GltfMutation;
+    use crate::artifacts::gltf::schema::mutations::GltfMutation;
     use crate::artifacts::gltf::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfJson, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene};
-    use crate::artifacts::gltf::{GltfMutationDiff, GltfSnapshot};
+    use crate::artifacts::gltf::{GltfDiff, GltfSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -107,7 +107,7 @@ pub mod derived_construction {
     impl ArtifactBuilder for GltfBuilderConstruction {
         type Snapshot = GltfSnapshot;
         type Mutation = GltfMutation;
-        type Diff = GltfMutationDiff;
+        type Diff = GltfDiff;
         fn empty() -> Self {
             Self { snapshot: GltfSnapshot::default(), diagnostics: Vec::new() }
         }
@@ -125,7 +125,7 @@ pub mod derived_construction {
             if outcome.worst_level().is_some_and(|level| level >= dsl::Severity::Error) {
                 self.diagnostics.push(dsl::Diagnostic::error("stdio.gltf.mutation-rejected", dsl::TextSpan::at(1, 1), format!("{:?}", outcome.messages())));
             }
-            match outcome.diff().try_apply(&self.snapshot) {
+            match <GltfDiff as protocol::MutationDiff<GltfSnapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => {
                     self.snapshot = snapshot;
                 }
@@ -136,7 +136,7 @@ pub mod derived_construction {
             (self, outcome)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <GltfMutationDiff as protocol::MutationDiff<GltfSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <GltfDiff as protocol::MutationDiff<GltfSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {

@@ -13,7 +13,7 @@ synapses [id:TEXT wire:WIRE] {
 generations [id:TEXT name:TEXT values:VAL] {
 }
 widgets {
-  input-slider id="width" value=2 min=0.2 max=6 step=0.1
-  input-slider id="height" value=1.5 min=0.2 max=6 step=0.1
+  input-slider id="width" label="Width" value=2 min=0.2 max=6 step=0.1
+  input-slider id="height" label="Height" value=1.5 min=0.2 max=6 step=0.1
   neuron id="rect" neuron-kind=brep.curve.rectangle preview=true input-ports=[ "width" "height" ] output-ports=[ ] params=[ ]
 }

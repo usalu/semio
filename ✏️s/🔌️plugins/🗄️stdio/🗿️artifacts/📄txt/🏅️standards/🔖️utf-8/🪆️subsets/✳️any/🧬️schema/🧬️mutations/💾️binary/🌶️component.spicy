@@ -1,5 +1,6 @@
 module Stdio_txt_mutation;
 
 public type Op = unit {
-    json_body: bytes &eod;   # serde_json-encoded TxtMutation, see mutations/text/*.ebnf
+    tag: uint8;
+    payload: bytes &eod;
 };

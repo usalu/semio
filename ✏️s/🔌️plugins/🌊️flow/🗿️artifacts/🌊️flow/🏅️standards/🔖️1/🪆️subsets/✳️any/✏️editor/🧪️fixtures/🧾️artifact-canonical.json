@@ -1,0 +1,26 @@
+{
+  "schema": "semio.flow.artifact-canonical",
+  "widgets": [
+    { "kind": "neuron", "id": "n", "neuronKind": "core.number", "params": { "a": null, "b": true, "i": -3, "n": 1.25, "nested": { "🌊": "value\n" } }, "input_ports": ["in"], "output_ports": ["out"], "preview": true },
+    { "kind": "inputSlider", "id": "slider", "label": "Column Height", "value": 6, "min": 0, "max": 10, "step": 0.5 },
+    { "kind": "inputNote", "id": "note", "text": "Höhe 🌊" },
+    { "kind": "inputImage", "id": "image", "src": "data:image/png;base64," },
+    { "kind": "variable", "id": "var", "name": "input", "schema": "number" },
+    { "kind": "outputPreview", "id": "preview", "preview": { "answer": 42 }, "expanded": ["answer"] },
+    { "kind": "outputAction", "id": "action", "action": "log" },
+    { "kind": "outputExport", "id": "export", "format": "svg" },
+    { "kind": "cluster", "id": "cluster", "name": "Nested", "tree": { "neurons": [ { "id": "nested", "kind": "core.number", "params": {}, "tree": { "neurons": [], "synapses": [] } } ], "synapses": [ { "id": "edge", "from": "nested", "to": "nested", "fromPort": "a", "toPort": "b" } ] }, "flow": { "camera": { "x": 1, "y": 2, "zoom": 3 }, "nodes": { "a": { "layout": { "x": 0, "y": 1 }, "chrome": { "kind": "slider", "label": "Profile Radius", "min": 0, "max": 10, "step": 0.5, "value": 1 } }, "b": { "layout": { "x": 1, "y": 1 }, "chrome": { "kind": "note", "text": "note" } }, "c": { "layout": { "x": 2, "y": 1 }, "chrome": { "kind": "image", "src": "image" } }, "d": { "layout": { "x": 3, "y": 1 }, "chrome": { "kind": "variable", "name": "v", "schema": "number" } }, "e": { "layout": { "x": 4, "y": 1 }, "chrome": { "kind": "plain", "preview": false } } }, "previews": [ { "id": "p", "source": { "neuron": "nested", "channel": "out" }, "mode": "text", "preview": {}, "expanded": [], "layout": null }, { "id": "q", "source": null, "mode": "image", "preview": {}, "expanded": [], "layout": { "x": 1, "y": 2 } } ] } }
+  ],
+  "mutations": [
+    { "mutation": "createWidget", "index": 0, "widget": { "kind": "inputSlider", "id": "slider", "label": "Column Height", "value": 6, "min": 0, "max": 10, "step": 0.5 } },
+    { "mutation": "deleteWidget", "id": "slider" },
+    { "mutation": "reorderWidgets", "id": "slider", "toIndex": 2 },
+    { "mutation": "replaceWidget", "id": "slider", "widget": { "kind": "inputNote", "id": "slider", "text": "note" } },
+    { "mutation": "connectWidgets", "index": 0, "id": "edge", "from": "a", "fromPort": "out", "to": "b", "toPort": "in" },
+    { "mutation": "disconnectWidgets", "id": "edge" },
+    { "mutation": "reorderSynapses", "id": "edge", "toIndex": 2 },
+    { "mutation": "updateSynapseEndpoints", "id": "edge", "from": "b", "fromPort": "out", "to": "a", "toPort": "in" },
+    { "mutation": "moveWidgets", "entries": [ { "id": "a", "layout": { "x": 1, "y": 2 } }, { "id": "b", "layout": null } ] },
+    { "mutation": "duplicateWidget", "sourceId": "a", "newId": "b", "synapseId": "edge", "fromPort": "out", "toPort": "in" }
+  ]
+}

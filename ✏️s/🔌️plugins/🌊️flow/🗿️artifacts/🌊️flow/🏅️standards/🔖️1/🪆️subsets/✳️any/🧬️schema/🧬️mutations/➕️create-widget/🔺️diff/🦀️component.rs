@@ -6,7 +6,7 @@ use protocol::Identified;
 
 use super::mutation::CreateWidget;
 
-pub async fn diff(payload: &CreateWidget, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
+pub fn diff(payload: &CreateWidget, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
     let mut scene = flow_working_scene(base);
     if scene.widgets.iter().any(|widget| widget.id() == payload.widget.id()) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A widget with id \"{}\" already exists.", payload.widget.id()), [payload.widget.id().clone()]);

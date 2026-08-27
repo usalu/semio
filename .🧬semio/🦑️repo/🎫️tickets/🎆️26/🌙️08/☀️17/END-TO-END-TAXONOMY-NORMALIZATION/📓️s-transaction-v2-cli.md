@@ -77,3 +77,52 @@ bun test './.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/E
 ```
 
 These results verify schema/parser authority only. Atomic engine publication, crash recovery, and the full matrix still require independent audit sign-off.
+
+## Frozen Transaction v2 integration checkpoint
+
+The shared Transaction Plan/Journal v2 implementation is frozen for integration at these SHA-256 identities:
+
+```text
+86f90f2e954e8082e0a6f9b0f5432a1e0131f86137624312e945849a602dc76f  normalization/🟦️.ts
+22099778a38e0107cdadae4762010ba4f001bd484efb924ca350ee6c51b0539c  transaction-v2/🟦️.test.ts
+e3c9dbad890beda23b7ed8233cb027ccd9374dc77ed72beb077c55ba2fd4138d  transaction-dispositions/🔣️.json
+e5e205edf9bf00643ed29bb05b5ba3f9a92363186f31f5b21f7bebfae92fd1f4  repo-lib/📜️script.ts
+```
+
+The engine checkpoint implements the global validate/action split before transaction mutation; strict append-only attempt allocation; exact attempt/preparation collision rejection; nested schema-owned backup and edit writers; journal canonical/previous JSON exchange; lease preparation, publication, stale quarantine, and restoration; immutable source copies without mutable-source hardlinks; strict reachable recovery tuples; transaction-aware resume authority; exact plan/source/preimage/reference/regeneration validation; rollback recovery; terminal backup-only recovery; and typed committed/rolled-back terminal closure. The reusable engine requires an explicit `expectedBaselineCommit`; it does not bind a frozen plan to mutable `HEAD`.
+
+The root `clean taxonomy apply` command requires `--baseline <commit>` and passes it to the engine. Both `.vscode/🧩️launch.seed.jsonc` and `.vscode/launch.json` pass `${env:TAXONOMY_BASELINE}`. The focused command is registered as `🧹clean🧩️taxonomy🧪️transaction-v2` and routes through the Nx target `@semio-tech/repo-lib:test-transaction-v2`; no additional permanent script file was introduced.
+
+The permanent focused aggregate registers 62 tests and 98 exact boundary outcomes. Its coverage includes:
+
+- all eight injected apply failure stages;
+- parent-issued process-tree termination across attempt, initial journal/lease, journal previous/canonical exchange, WAL, backup, edit, restore, lease, terminal cleanup, and mixed-generator boundaries;
+- exact caught-callback rollback at allocation and journal previous exchange;
+- deterministic cancellation, double-plan identity, append-only ordinal retry, stale second apply, and mixed generator `[rolled-back, committed]` history;
+- live double contenders, loser cleanup, winner retry, stale lease quarantine, and terminal stale-lease backup closure;
+- stale baseline, source digest, preimage, incoming reference, regeneration, forged resume, malformed sibling, skipped/future ordinal, and unreachable backup/edit tuple rejection with no mutation;
+- exact workspace and transaction-tree evidence including directory modes, file modes and bytes, complete normalized JSON, and raw symlink targets.
+
+The language-neutral disposition golden is closed-set and human-reviewable. An independent unchanged-source audit passed:
+
+```text
+1 pass
+0 fail
+804 expect() calls
+98 boundaries = 43 killed + 43 recovered/terminal + 11 rolled-back + 1 committed mixed-generator
+63 transaction ledgers + 9 workspace ledgers
+```
+
+That audit recomputed every ledger, file-byte, and symlink-target digest; rejected extra boundary keys and orphan ledgers; and confirmed complete JSON/bytes/raw-target evidence. Stable semantic digests remain byte-exact and are not normalized as runtime nondeterminism. The current normalization module also bundles successfully as 15 modules (0.97 MB).
+
+## Outstanding timing acceptance
+
+Transaction correctness and exact evidence are structurally green, but final performance sign-off is intentionally **not claimed**. The required evidence is three unchanged, uncached executions of:
+
+```text
+bun nx run @semio-tech/repo-lib:test-transaction-v2 --skip-nx-cache
+```
+
+with every run completing in less than 15 seconds. The latest complete attempts reached the coordinated 14-second internal deadline at approximately 14.69–15.21 seconds while unrelated repository lanes were concurrently running multiple Cargo, rustc, and nextest workloads, including `rustc -Z threads=8`. At the frozen checkpoint, seven unrelated Rust processes remained active. The coordinated runner terminated and awaited every owned process group on timeout, and post-run process censuses found no surviving Transaction v2, fixture-generator, or mixed-generator child.
+
+The focused runner is already reduced to four balanced process groups, selects all 62 registered cases exactly once, enforces a hard outer budget, and cleans its run-scoped fixtures. Integration may proceed from the frozen hashes above, but the complete target and three uncached sub-15-second timings must be rerun on an unchanged checkpoint after the host becomes quiet. This report therefore records a timing blocker, not Transaction v2 acceptance.

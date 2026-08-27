@@ -1,7 +1,7 @@
 meta:
   id: stdio_pdf_1_7_mutations
   endian: le
-doc: Structured logical mutation frame. Variant payloads use varints, length-prefixed semantic bytes, recursive COS object tags, and typed stream-filter tags.
+doc: Exact mutation frame with direct-owner tag 0 through 15 and canonical aggregate JSON payload.
 seq:
   - id: format
     type: u1

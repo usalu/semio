@@ -9,13 +9,13 @@
 //! the synapse's current index, never reaching `diff_replace_content`. Because no new content handle
 //! is minted, `➡️after` equals `⬅️before` and the committed diff is `FlowDiff`'s all-`null`
 //! `Default` — the only honestly hand-authorable applied state for a flow verb, since every
-//! state-changing flow diff addresses its composed `s.stdio.semio.flow` CHILD by a `DefaultHasher`
+//! state-changing flow diff addresses its composed `s.stdio.semio.flow` CHILD by a domain-separated SHA-256
 //! digest of the child content.
 
 use crate::artifacts::flow::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, FlowMutation};
 use crate::artifacts::flow::{cache_flow_content, flow_working_scene, FlowDiff, FlowSnapshot};
 use flow::{SynapseSpec, Widget};
-use std::collections::BTreeMap;
+use flow::OrderedMap;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -40,7 +40,7 @@ fn before() -> FlowSnapshot {
         SynapseSpec { id: "synapse-1".into(), from: "note-alpha".into(), to: "note-beta".into(), from_port: "out".into(), to_port: "in".into() },
         SynapseSpec { id: "synapse-2".into(), from: "note-beta".into(), to: "note-alpha".into(), from_port: "out".into(), to_port: "in".into() },
     ];
-    cache_flow_content(&mut snapshot.content, widgets, synapses, BTreeMap::new());
+    cache_flow_content(&mut snapshot.content, widgets, synapses, OrderedMap::new());
     snapshot
 }
 

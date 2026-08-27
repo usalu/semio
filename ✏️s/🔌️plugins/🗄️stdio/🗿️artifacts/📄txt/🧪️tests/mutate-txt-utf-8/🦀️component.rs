@@ -30,12 +30,13 @@ use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, 
 /// catalog manifest; a mismatch HERE against either one is caught structurally instead — the
 /// contract phase fails with `mutation-kind-uncovered`/`mutation-kind-undeclared` if this list
 /// omits or invents a kind, and the runner fails every unregistered scenario id outright.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-trailing-newline", "set-line-ending", "insert-line", "remove-line", "set-line"];
+const KINDS: &[&str] = &["set-trailing-newline", "set-line-ending", "insert-line", "remove-line", "set-line"];
 
 /// 🧾️ The `@id-spec-vector` Examples table's row ids, in declaration order — registration only,
 /// same reasoning as `KINDS` (these ids are not catalog kinds, so the completeness gate does not
 /// check them; a missing registration is still a hard runtime error if the scenario ever runs).
-const VECTOR_IDS: &[&str] = &["pure-lf", "pure-crlf", "lf-no-trailing-terminator", "mixed-crlf-and-bare-lf", "bom-as-first-line-content", "astral-emoji-and-variation-selectors", "combining-mark-distinct-from-precomposed", "nel-ls-ps-as-ordinary-content", "empty-document"];
+const VECTOR_IDS: &[&str] =
+    &["pure-lf", "pure-crlf", "lf-no-trailing-terminator", "mixed-crlf-and-bare-lf", "bom-as-first-line-content", "astral-emoji-and-variation-selectors", "combining-mark-distinct-from-precomposed", "nel-ls-ps-as-ordinary-content", "empty-document"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -122,10 +123,10 @@ fn spec_vector_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, spec_vector_text};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::txt::standards::v_utf_8::subsets::any::schema::mutations::apply_txt_mutation;
+    use semio_s_plugin_stdio::artifacts::txt::standards::v_utf_8::subsets::any::schema::mutations::{InsertLineMutation, RemoveLineMutation, SetLineEndingMutation, SetLineMutation, SetTrailingNewlineMutation, apply_txt_mutation};
     use semio_s_plugin_stdio::artifacts::txt::standards::v_utf_8::subsets::any::schema::snapshot::LineEnding;
-    use semio_s_plugin_stdio::artifacts::txt::{TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
-    use semio_s_plugin_stdio_test_oracle::artifacts::txt::standards::v_utf_8::subsets::any::{oracle_inverse_spec, project_txt};
+    use semio_s_plugin_stdio::artifacts::txt::{STDIO_TXT_DOCUMENT_SCHEMA, TxtMutation, TxtSnapshot};
+    use semio_s_plugin_stdio_test_oracle::artifacts::txt::standards::v_utf_8::subsets::any::project_txt;
     use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
 
     fn json_usize(params: &Json, key: &str) -> Result<usize, String> {
@@ -151,11 +152,7 @@ mod subject {
     }
 
     fn line_ending_of(params: &Json, key: &str) -> LineEnding {
-        if params.str(key) == "crLf" {
-            LineEnding::CrLf
-        } else {
-            LineEnding::Lf
-        }
+        if params.str(key) == "crLf" { LineEnding::CrLf } else { LineEnding::Lf }
     }
 
     /// 🔀️ The same JSON mutation spec the oracle reads, turned into this repository's own typed
@@ -163,13 +160,11 @@ mod subject {
     fn mutation_from_spec(spec: &Json) -> Result<TxtMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => TxtMutation::NoMutation,
-            "set-snapshot" => TxtMutation::SetSnapshot { snapshot: TxtSnapshot { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: json_strings(&params, "lines"), trailing_newline: json_bool(&params, "trailingNewline"), line_ending: line_ending_of(&params, "lineEnding") } },
-            "set-trailing-newline" => TxtMutation::SetTrailingNewline { value: json_bool(&params, "value") },
-            "set-line-ending" => TxtMutation::SetLineEnding { value: line_ending_of(&params, "value") },
-            "insert-line" => TxtMutation::InsertLine { index: json_usize(&params, "index")?, text: params.str("text") },
-            "remove-line" => TxtMutation::RemoveLine { index: json_usize(&params, "index")? },
-            "set-line" => TxtMutation::SetLine { index: json_usize(&params, "index")?, text: params.str("text") },
+            "set-trailing-newline" => TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: json_bool(&params, "value") }),
+            "set-line-ending" => TxtMutation::SetLineEnding(SetLineEndingMutation { value: line_ending_of(&params, "value") }),
+            "insert-line" => TxtMutation::InsertLine(InsertLineMutation { index: json_usize(&params, "index")?, text: params.str("text") }),
+            "remove-line" => TxtMutation::RemoveLine(RemoveLineMutation { index: json_usize(&params, "index")? }),
+            "set-line" => TxtMutation::SetLine(SetLineMutation { index: json_usize(&params, "index")?, text: params.str("text") }),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }
@@ -183,7 +178,7 @@ mod subject {
     /// no-oracle decision, so the subject handler is the ONLY place any of its `mutate-<kind>` rows
     /// can be checked at all — an un-asserting handler here means 7 scenarios reporting green while
     /// proving nothing. Two outcomes are admissible and they are told apart, never merged: the
-    /// subset ACCEPTS the mutation, in which case a kind other than `no-mutation` must move the
+    /// subset ACCEPTS the mutation, in which case the named semantic operation must move the
     /// projection; or it REFUSES it with `stdio.txt.mutation-not-representable`, in which case the
     /// bytes must be exactly the input's (see the feature's 🔒️ note — `set-trailing-newline false`
     /// on a fixture whose last line is empty is the one documented refusal, and it is required to
@@ -198,7 +193,7 @@ mod subject {
         let output = snapshot.to_body().into_bytes();
         let projection = project_txt(&output)?;
         if outcome.messages().is_empty() {
-            if kind != "no-mutation" && projection == project_txt(&input)? {
+            if projection == project_txt(&input)? {
                 return Err(format!("{kind:?} was accepted and still left the semantic projection exactly as it found it -- the parameters address nothing in the real document"));
             }
         } else {
@@ -218,8 +213,12 @@ mod subject {
         let input = mutable_input(ctx)?;
         let spec = ctx.doc_json()?;
         let mut snapshot = decode(&input)?;
-        apply_txt_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
-        apply_txt_mutation(&mut snapshot, &mutation_from_spec(&oracle_inverse_spec(&input, &spec)?)?);
+        let mutation = mutation_from_spec(&spec)?;
+        let inverse = <TxtMutation as protocol::Mutation<TxtSnapshot>>::inverse(&mutation, &snapshot);
+        apply_txt_mutation(&mut snapshot, &mutation);
+        for step in inverse {
+            apply_txt_mutation(&mut snapshot, &step);
+        }
         let output = snapshot.to_body().into_bytes();
         let projection = project_txt(&output)?;
         inverse_restores(&spec.str("kind"), &projection, &project_txt(&input)?)?;

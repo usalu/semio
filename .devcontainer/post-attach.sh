@@ -4,7 +4,8 @@
 set -e
 WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VSIX_PATH="repo/vscode/repo.vsix"
+VSCODE_PACKAGE_ROOT="$REPO_ROOT/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript"
+VSIX_PATH="$VSCODE_PACKAGE_ROOT/🧩️repo.vsix"
 EXTENSION_PUBLISHER=""
 EXTENSION_NAME=""
 EXTENSION_ID=""
@@ -403,7 +404,7 @@ if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
       needs_rebuild="1"
       echo "📦️ Extension VSIX not found, rebuilding..."
     else
-      for src in repo/vscode/extension.ts repo/vscode/queries.ts repo/vscode/package.json repo/vscode/vite.config.ts; do
+      for src in "$VSCODE_PACKAGE_ROOT/🟦️extension.ts" "$VSCODE_PACKAGE_ROOT/package.json" "$VSCODE_PACKAGE_ROOT/📜️script.ts" "$VSCODE_PACKAGE_ROOT/.vscodeignore"; do
         if [ -f "$src" ] && [ "$VSIX_PATH" -ot "$src" ]; then
           needs_rebuild="1"
           echo "📦️ Extension source updated, rebuilding..."
@@ -412,8 +413,8 @@ if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
       done
     fi
     if [ -n "$needs_rebuild" ]; then
-      echo "🔨️ Building compose VSCode extension..."
-      if (bun nx run repo:build && bun nx run repo:build-vsix); then
+      echo "🔨️ Building repo VS Code extension..."
+      if (bun nx run @semio-tech/repo-vscode:build && bun nx run @semio-tech/repo-vscode:build-vsix); then
         echo "✅️ Extension build completed."
       else
         echo "⚠️  Extension build failed, continuing without extension install."
@@ -422,9 +423,9 @@ if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
         # Continue with other setup even if extension build fails
       fi
     fi
-    if [ -f "repo/vscode/package.json" ]; then
-      EXTENSION_PUBLISHER=$(bun -e "console.log(require('./repo/vscode/package.json').publisher)" 2>/dev/null || echo "")
-      EXTENSION_NAME=$(bun -e "console.log(require('./repo/vscode/package.json').name)" 2>/dev/null || echo "")
+    if [ -f "$VSCODE_PACKAGE_ROOT/package.json" ]; then
+      EXTENSION_PUBLISHER=$(bun -e "console.log(require('$VSCODE_PACKAGE_ROOT/package.json').publisher)" 2>/dev/null || echo "")
+      EXTENSION_NAME=$(bun -e "console.log(require('$VSCODE_PACKAGE_ROOT/package.json').name)" 2>/dev/null || echo "")
     fi
     if [ -n "$EXTENSION_PUBLISHER" ] && [ -n "$EXTENSION_NAME" ]; then
       EXTENSION_ID="${EXTENSION_PUBLISHER}.${EXTENSION_NAME}"

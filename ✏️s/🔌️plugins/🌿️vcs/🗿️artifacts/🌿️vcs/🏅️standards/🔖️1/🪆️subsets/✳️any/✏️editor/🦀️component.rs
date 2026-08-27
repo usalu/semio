@@ -21,7 +21,7 @@ use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolF
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ui_text, ActionDescriptor, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider,
+    ui_text, ActionDescriptor, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider,
     HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
 };
 use serde_json::Value;
@@ -152,6 +152,20 @@ const VCS_BOUNDED_WORK_ITEMS: usize = 1;
 const VCS_EDIT_MAXIMUM_TAGS: usize = 4_096;
 const VCS_EDIT_MAXIMUM_OUTPUT_BYTES: usize = 16_384;
 const VCS_EDIT_MAXIMUM_WORK_ITEMS: usize = 16_400;
+const VCS_BOUNDED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "incrementCounter", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchSnapshot", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "noMutation", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "canvasPointerMove", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "canvasPointerUp", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "canvasWheel", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+];
+const VCS_RESUMABLE_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "textEdit", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "edit", lanes: &[ArtifactToolPublicationLane::Artifact] },
+];
 
 fn vcs_bounded_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(VCS_BOUNDED_RAW_BYTES, 32, 32, 16_384, 7_500)
@@ -535,6 +549,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for VcsBoundedCommandJo
     type Owner = semio_framework_plugin::EditorApp<VcsPlayApp>;
     const TOOL_IDS: &'static [&'static str] = VCS_BOUNDED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = VCS_BOUNDED_PUBLICATION_CONTRACTS;
 }
 
 struct VcsResumableCommandJobFactory {
@@ -592,8 +607,149 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for VcsResumableCommand
     type Owner = semio_framework_plugin::EditorApp<VcsPlayApp>;
     const TOOL_IDS: &'static [&'static str] = VCS_RESUMABLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = VCS_RESUMABLE_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
+
+//#region 📬️StorePreparation
+struct VcsOneItemPreparationFactory<P, M> {
+    lane: store::HistoryLane,
+    marker: std::marker::PhantomData<fn() -> (P, M)>,
+}
+
+impl<P, M> VcsOneItemPreparationFactory<P, M> {
+    fn new(lane: store::HistoryLane) -> Self { Self { lane, marker: std::marker::PhantomData } }
+}
+
+struct VcsOneItemPreparation<P, M> {
+    base: Option<store::SnapshotRead<P>>,
+    mutation: Option<M>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<P, M>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn vcs_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
+    let id = format!("vcs-retained-{}-{}", authority.operation().0, authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![forward], inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+        }],
+        description, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+    }
+}
+
+impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for VcsOneItemPreparationFactory<P, M>
+where
+    P: Clone + Send + Sync + 'static,
+    M: protocol::Mutation<P> + Send + Sync + 'static,
+    M::Diff: protocol::MutationDiff<P>,
+{
+    fn preflight(&self, _mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != self.lane || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) { return Err("VCS one-item preparation rejected its lane or description envelope".into()); }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
+        if request.lane != self.lane || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES { return Err(request); }
+        Ok(Box::new(VcsOneItemPreparation {
+            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+        }))
+    }
+}
+
+impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for VcsOneItemPreparation<P, M>
+where
+    P: Clone + Send + Sync + 'static,
+    M: protocol::Mutation<P> + Send + 'static,
+    M::Diff: protocol::MutationDiff<P>,
+{
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        let base = self.base.as_ref().ok_or_else(|| "VCS one-item preparation lost its exact base root".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "VCS one-item preparation lost its mutation owner".to_string())?;
+        let inverse = mutation.inverse(base.get());
+        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "VCS one-item preparation lost its Store authority".to_string())?;
+        let prepared = authority.prepare_one_item(vcs_one_item_edit(mutation, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }); }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() { return Err("VCS one-item preparation could not return its exact base root".into()); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            let bytes = authority.actor().len();
+            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none() }
+}
+//#endregion 📬️StorePreparation
+
+//#region 🧾️ProofCatalogs
+struct VcsBoundedProofs;
+impl VcsBoundedProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<VcsPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.vcs.vcs@1/*#editor",
+        document_schema: "vcs.vcs",
+        factory: "VcsBoundedCommandJobFactory",
+        factory_type: VcsBoundedCommandJobFactory,
+        tools: {
+            "incrementCounter" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "patchSnapshot" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setLocale" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "noMutation" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "canvasPointerDown" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "canvasPointerMove" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "canvasPointerUp" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "canvasWheel" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+        }
+    }
+}
+
+struct VcsResumableProofs;
+impl VcsResumableProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<VcsPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.vcs.vcs@1/*#editor",
+        document_schema: "vcs.vcs",
+        factory: "VcsResumableCommandJobFactory",
+        factory_type: VcsResumableCommandJobFactory,
+        tools: {
+            "textEdit" => semio_framework::ToolExecutionContract::resumable(8_192, 16_400, 1, 16_384, 7_500, 1, 1),
+            "edit" => semio_framework::ToolExecutionContract::resumable(8_192, 16_400, 1, 16_384, 7_500, 1, 1),
+        }
+    }
+}
+//#endregion 🧾️ProofCatalogs
 
 impl ArtifactEditor for VcsPlayApp {
     type Snapshot = VcsSnapshot;
@@ -612,24 +768,16 @@ impl ArtifactEditor for VcsPlayApp {
     const DIALECT: Dialect = crate::artifacts::vcs::VCS_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<VcsPlayApp>,
-        owner_file: "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-        controller: "s.vcs.vcs@1/*#editor",
-        document_schema: "vcs.vcs",
-        factory: "BoundedFirstStepCommandJobFactory",
-        tools: {
-            "incrementCounter" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "patchSnapshot" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setLocale" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "noMutation" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "canvasPointerDown" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "canvasPointerMove" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "canvasPointerUp" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "canvasWheel" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "textEdit" => semio_framework::ToolExecutionContract::resumable(8_192, 16_400, 1, 16_384, 7_500, 1, 1),
-            "edit" => semio_framework::ToolExecutionContract::resumable(8_192, 16_400, 1, 16_384, 7_500, 1, 1),
-        }
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(VcsOneItemPreparationFactory::new(store::HistoryLane::Document)))
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(VcsOneItemPreparationFactory::new(store::HistoryLane::Document)))
+    }
+
+    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        VcsBoundedProofs::bounded_first_step_tool_proofs().into_iter().chain(VcsResumableProofs::bounded_first_step_tool_proofs()).collect()
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -1036,6 +1184,7 @@ mod tests {
 
     const RETAINED_LIMITS: &str = include_str!("🧪️fixtures/🎯️retained-command-limits.json");
     const RETAINED_EDIT_LIMITS: &str = include_str!("🧪️fixtures/🎯️retained-edit-limits.json");
+    const RETAINED_ROUTES: &str = include_str!("🧪️fixtures/retained-command-routes.json");
 
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
@@ -1119,6 +1268,36 @@ mod tests {
         let factory = VcsBoundedCommandJobFactory::new("s.vcs.vcs@1/*#editor");
         assert_eq!(factory.execution_contract(), ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500));
         assert!(VcsPlayApp::command_from_action("patchSnapshot", Some(&serde_json::json!({ "field": "f", "value": "v".repeat(maximum + additional) }))).is_err());
+    }
+
+    #[test]
+    fn retained_factories_publish_only_their_exact_declared_lanes() {
+        use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+        let fixture: Value = serde_json::from_str(RETAINED_ROUTES).expect("VCS retained route fixture decodes through serde_json");
+        let routes = fixture.get("routes").and_then(Value::as_array).expect("routes");
+        assert_eq!(routes.len(), 10);
+        assert_eq!(<VcsBoundedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, VCS_BOUNDED_PUBLICATION_CONTRACTS);
+        assert_eq!(<VcsResumableCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, VCS_RESUMABLE_PUBLICATION_CONTRACTS);
+        for route in routes {
+            let id = route.get("id").and_then(Value::as_str).expect("route id");
+            let lane = route.get("lanes").and_then(Value::as_array).and_then(|lanes| lanes.first()).and_then(Value::as_str).expect("route lane");
+            let contract = VCS_BOUNDED_PUBLICATION_CONTRACTS.iter().chain(VCS_RESUMABLE_PUBLICATION_CONTRACTS).find(|row| row.tool_id == id).expect("route contract");
+            let expected = match lane { "artifact" => ArtifactToolPublicationLane::Artifact, "config" => ArtifactToolPublicationLane::Config, "host-only" => ArtifactToolPublicationLane::HostOnly, _ => panic!("unknown fixture lane") };
+            assert_eq!(contract.lanes, &[expected]);
+        }
+        assert_eq!(VCS_BOUNDED_PUBLICATION_CONTRACTS.iter().find(|row| row.tool_id == "setLocale").map(|row| row.lanes), Some(&[ArtifactToolPublicationLane::Config][..]));
+        assert_eq!(VCS_BOUNDED_PUBLICATION_CONTRACTS.iter().find(|row| row.tool_id == "noMutation").map(|row| row.lanes), Some(&[ArtifactToolPublicationLane::HostOnly][..]));
+        assert!(VCS_RESUMABLE_PUBLICATION_CONTRACTS.iter().all(|row| row.lanes == [ArtifactToolPublicationLane::Artifact]));
+    }
+
+    #[test]
+    fn one_item_store_preparation_rejects_non_document_lanes() {
+        use store::ArtifactStoreOneItemPreparationFactory;
+        let artifact = VcsOneItemPreparationFactory::<VcsSnapshot, VcsDemoMutation>::new(store::HistoryLane::Document);
+        let config = VcsOneItemPreparationFactory::<VcsDemoConfig, VcsDemoConfigMutation>::new(store::HistoryLane::Document);
+        assert!(artifact.preflight(&crate::artifacts::vcs::mutations::change_counter(1), None, store::HistoryLane::Document).is_ok());
+        assert!(artifact.preflight(&crate::artifacts::vcs::mutations::change_counter(1), None, store::HistoryLane::Interaction).is_err());
+        assert!(config.preflight(&VcsDemoConfigMutation::SetLocale { value: "de-DE".into() }, None, store::HistoryLane::Document).is_ok());
     }
 
     #[test]

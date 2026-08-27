@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.json.mutation;
+// set-scalar/SetScalar
+message SetScalarPayload { bytes path = 1; bytes value = 2; }

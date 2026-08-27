@@ -1,6 +1,5 @@
-; abnf stdio.png mutation (binary) — protocol::OpBinary: raw UTF-8 JSON bytes of
-; PngMutation (#[serde(tag = "mutation")]), NOT wrapped in the shared `.semio` envelope
-; (contrast with ../../📸️snapshot/💾️binary/). No length prefix: the entire op body IS the
-; JSON document; the "mutation" tag selects one of 17 real variants.
-document    = json-object
-json-object = *OCTET   ; UTF-8 JSON object per sibling ../📝️text/📖️component.grammar.semio
+; Direct binary frame: version, descriptor tag, leaf-owned payload.
+; change-header=2, replace-palette=3, change-transparency=4, change-gamma=5, change-chromaticities=6, change-srgb-intent=7, change-physical-dims=8, change-timestamp=9, change-background=10, insert-text-chunk=11, remove-text-chunk=12, replace-text-chunk=13, replace-pixels=14, insert-unknown-chunk=15, remove-unknown-chunk=16
+mutation = %x01 tag *OCTET
+tag = %x02 / %x03 / %x04 / %x05 / %x06 / %x07 / %x08 / %x09 / %x0A / %x0B / %x0C / %x0D / %x0E / %x0F / %x10
+OCTET = %x00-FF

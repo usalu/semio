@@ -73,9 +73,9 @@ fn sourcing_mutation_to_dsl(mutation: &SourcingMutation) -> SourcingMutationDsl 
 
 fn sourcing_mutation_from_dsl(mutation: SourcingMutationDsl) -> SourcingMutation {
     match mutation {
-        SourcingMutationDsl::CreateCuratedItem { item } => SourcingMutation::CreateCuratedItem(create_curated_item::mutation::CreateCuratedItem { item }),
-        SourcingMutationDsl::DeleteCuratedItem { object_id } => SourcingMutation::DeleteCuratedItem(delete_curated_item::mutation::DeleteCuratedItem { object_id }),
-        SourcingMutationDsl::ChangeCuratedItemCount { object_id, new_count } => SourcingMutation::ChangeCuratedItemCount(change_curated_item_count::mutation::ChangeCuratedItemCount { object_id, new_count }),
+        SourcingMutationDsl::CreateCuratedItem { item } => SourcingMutation::CreateCuratedItem(create_curated_item::CreateCuratedItem { item }),
+        SourcingMutationDsl::DeleteCuratedItem { object_id } => SourcingMutation::DeleteCuratedItem(delete_curated_item::DeleteCuratedItem { object_id }),
+        SourcingMutationDsl::ChangeCuratedItemCount { object_id, new_count } => SourcingMutation::ChangeCuratedItemCount(change_curated_item_count::ChangeCuratedItemCount { object_id, new_count }),
     }
 }
 
@@ -109,25 +109,25 @@ mod tests {
 
     async fn every_mutation() -> Vec<SourcingMutation> {
         vec![
-            SourcingMutation::CreateCuratedItem(create_curated_item::mutation::CreateCuratedItem { item: CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 3 } }),
-            SourcingMutation::DeleteCuratedItem(delete_curated_item::mutation::DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() }),
-            SourcingMutation::ChangeCuratedItemCount(change_curated_item_count::mutation::ChangeCuratedItemCount { object_id: "beam-glulam-gl24h".into(), new_count: 5 }),
+            SourcingMutation::CreateCuratedItem(create_curated_item::CreateCuratedItem { item: CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 3 } }),
+            SourcingMutation::DeleteCuratedItem(delete_curated_item::DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() }),
+            SourcingMutation::ChangeCuratedItemCount(change_curated_item_count::ChangeCuratedItemCount { object_id: "beam-glulam-gl24h".into(), new_count: 5 }),
         ]
     }
 
     #[semio_framework_async_macros::async_test]
     async fn op_text_round_trips_create_curated_item() {
-        store::os_store::test_support::assert_op_line_round_trip(&SourcingMutation::CreateCuratedItem(create_curated_item::mutation::CreateCuratedItem { item: CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 3 } }));
+        store::os_store::test_support::assert_op_line_round_trip(&SourcingMutation::CreateCuratedItem(create_curated_item::CreateCuratedItem { item: CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 3 } }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn op_text_round_trips_delete_curated_item() {
-        store::os_store::test_support::assert_op_line_round_trip(&SourcingMutation::DeleteCuratedItem(delete_curated_item::mutation::DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SourcingMutation::DeleteCuratedItem(delete_curated_item::DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn op_text_round_trips_change_curated_item_count() {
-        store::os_store::test_support::assert_op_line_round_trip(&SourcingMutation::ChangeCuratedItemCount(change_curated_item_count::mutation::ChangeCuratedItemCount { object_id: "beam-glulam-gl24h".into(), new_count: 5 }));
+        store::os_store::test_support::assert_op_line_round_trip(&SourcingMutation::ChangeCuratedItemCount(change_curated_item_count::ChangeCuratedItemCount { object_id: "beam-glulam-gl24h".into(), new_count: 5 }));
     }
 
     /// ⚖️ Every variant, not just the three hand-picked above — full-coverage `OpText` round trip

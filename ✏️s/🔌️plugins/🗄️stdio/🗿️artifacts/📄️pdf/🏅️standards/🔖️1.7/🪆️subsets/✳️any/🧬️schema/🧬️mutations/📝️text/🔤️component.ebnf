@@ -1,18 +1,4 @@
-(* Structured logical PdfMutation text. Strings and semantic byte values are hexadecimal;
-   PDF objects and typed stream-filter pipelines use recursive tagged records. *)
-pdf mutation = no mutation | operation ;
-no mutation = "no-mutation" ;
-operation = keyword, { " ", field } ;
-keyword = "set-snapshot" | "insert-page" | "remove-page" | "set-page-media-box"
-        | "set-page-crop-box" | "append-page-content" | "set-info" | "insert-object"
-        | "remove-object" | "set-object-value" | "set-dict-entry" | "remove-dict-entry"
-        | "set-trailer-entry" | "remove-trailer-entry" ;
-field = name, "=", value ;
-name = ? lowercase ASCII name ? ;
-value = integer | hexadecimal | record | pdf object ;
-record = "[", [ value, { ",", value } ], "]" ;
-pdf object = "Z" | object tag, "[", [ value, { ",", value } ], "]" ;
-object tag = "B" | "I" | "R" | "S" | "N" | "A" | "D" | "F" | "T" ;
-integer = [ "-" ], digit, { digit } ;
+(* Canonical internally tagged PdfMutation JSON represented as lower-case hexadecimal. *)
+pdf mutation = "pdf-mutation", " ", "payload", "=", hexadecimal ;
 hexadecimal = { digit | "a" | "b" | "c" | "d" | "e" | "f" } ;
 digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;

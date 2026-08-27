@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕰️change-timestamp",
+  "semanticKind": "change-timestamp",
+  "displayName": "Change Timestamp",
+  "emoji": "🕰️",
+  "aggregateVariant": "ChangeTimestamp",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "change-timestamp",
+  "binaryTag": 9,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🧬️schema/🧬️mutations/🔒️insert-encryption-dictionary",
+  "semanticKind": "insert-encryption-dictionary",
+  "displayName": "Insert Encryption Dictionary",
+  "emoji": "🔒️",
+  "aggregateVariant": "InsertEncryptionDictionary",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "insert-encryption-dictionary",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -4,6 +4,11 @@ use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{Pdf
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
+//#region 🏅️ConformanceSupport
+#[path = "🏅️conformance-support/🦀️component.rs"]
+pub mod conformance_support;
+//#endregion 🏅️ConformanceSupport
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pdf.1.7")]
@@ -90,7 +95,7 @@ pub fn pdf_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, PdfMutation};
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, InsertPage, PdfMutation, SetInfo};
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -108,12 +113,12 @@ pub mod derived_construction {
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_page(self, page: PdfPage) -> Self {
             let index = self.snapshot.pages.len();
-            let (next, _diff) = self.mutate(PdfMutation::InsertPage { index, page });
+            let (next, _diff) = self.mutate(PdfMutation::InsertPage(InsertPage { index, page }));
             next
         }
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_info(self, info: PdfInfo) -> Self {
-            let (next, _diff) = self.mutate(PdfMutation::SetInfo { info });
+            let (next, _diff) = self.mutate(PdfMutation::SetInfo(SetInfo { info }));
             next
         }
     }

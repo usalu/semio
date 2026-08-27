@@ -245,7 +245,6 @@ import {
   type TableColumn,
   screenRectFromPoints,
   selectionMergeIds,
-  type SelectionMergeMode,
   floatingMenuSurfaceClass,
   floatingMenuItemClass,
   type IconName,
@@ -452,8 +451,6 @@ import {
   type TutorialUiSnapshot,
   type TutorialUiChange,
   type TutorialEvent,
-  type TutorialDocumentEvent,
-  type TutorialDocumentEventKind,
   type TutorialCameraState,
   type TutorialGestureCue,
   type TutorialVideoCue,
@@ -493,8 +490,6 @@ import {
   encodeBackboneMessage,
   decodeBackboneWorkerResponse,
   encodeBackboneWorkerRequest,
-  mutationEnvelopeFromWire,
-  mutationEnvelopeToWire,
   type PersistenceBinding,
   decodeFaultFromWire,
   faultDisplayMessage,
@@ -520,7 +515,6 @@ import {
   ShaderMaterial,
   TextureLoader,
   Vector3,
-  type ThreeEvent,
 } from "three";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -700,6 +694,7 @@ export { actionStageKey, type CommandPanelState, type ShellState, type ShellActi
 //#endregion 🧮️ShellStore
 
 //#region ShellHelpers
+export type { ResolvedActionArgDef, ResolvedActionDefinition, ResolvedToolDefinition } from "../../../../🧱️elements/ShellHelpers/🟦️component.tsx";
 import {
   NOTE_WORLD_NAVIGATION_ACTION_ID,
   buildNoteShellCommandAction,
@@ -716,6 +711,8 @@ import {
   type ShellRoute,
   parseShellRoute,
   parseSpaceShellPath,
+  pluginShouldReceiveContributions,
+  pluginShouldEstablishSession,
   appBreadcrumb,
   resolveAppBreadcrumb,
   resolveArtifactByAppId,
@@ -795,6 +792,8 @@ import {
   syncPillText,
 } from "../../../../🧱️elements/ShellHelpers/🟦️component.tsx";
 export { NOTE_WORLD_NAVIGATION_ACTION_ID, buildNoteShellCommandAction, encodeEffectActionInvocation, encodeEffectCommandInvocation, TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS, dispatchOpenedFiles, scheduleDispatchAction, sampleMediaFrameTimestampsMs, runTier2VideoFrames, type RequestMediaFramesArgs, runRequestMediaFrames, type SpaceShellPath, type ShellRoute, parseShellRoute, parseSpaceShellPath, appBreadcrumb, resolveAppBreadcrumb, resolveArtifactByAppId, appWindowLabel, studioPanelFocusingSpawned, viewStateWithSpacePanel, retitleWindowLayoutNode, resolveFrameworkLayoutSeed, classifyWindowLayoutChange, flattenPanelTabLeaves, panelTabDefinitionToNode, uiIntentToActionDescriptor, resolveUtilities, resolveUtilityNodes, type SelectionUtilityOptions, spawnedWindowChromeForKind, uiNodeToTreePanelConfig, synthesizeLocalizedLabel, resolveManifestLabel, shellLabel, shellTabIcon, shellTerminologyLabel, driverDisplayLabel, DEFAULT_PANEL_WIDTH_PX, createLatestAsyncDispatcher, createDirectionalAsyncDispatcher, type RevealCutoffStore, createRevealCutoffStore, worldRevealCutoffStore, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, isRevealCutoffHidden, createInFlightSkippingInterval, createCoalescingActionDispatcher, registeredPuzzle3dBrushMeshes, windowMeasureTreeContainsId, renderWindowMeasuresTree, renderStagedArgControl, actionRequiresStagedForm, isEditableEventTarget, keyboardEventMatchesChord, type KeybindingIntent, resolveKeybindingIntent, resolveUtilityActivation, actionCategoryId, actionCategories, buildActionCategoryTree, type WindowActionPaneProps, WindowActionPane, type ResolvedCommand, commandAddressKey, resolveCommands, commandCategories, buildOsCommands, dispatchOsCommand, buildCommandCategoryTree, buildCommandCategoryTabs, buildToolTabs, toolIdFromPanelTabId, preserveJsonIdentity, mergeRecordPreservingIdentity, type UiRefreshCache, introductionTargetsWindow, buildActiveUtilityByWindowId, buildUiRefreshRequest, applyUiRefreshResponseToCache, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD, AutoCheckinScheduler, canCheckIn, checkinActionText, checkinMessagePlaceholderText, checkinSubmitText, checkinCancelText, type SyncPillState, computeSyncPillState, syncPillText };
+export { pluginShouldEstablishSession };
+export { pluginShouldReceiveContributions };
 //#endregion ShellHelpers
 
 //#region Boot
@@ -1009,7 +1008,10 @@ import {
   flowSpotlightSuggestionListScrollClass,
   GraphSliderOverlays,
   NodeGraphHost,
-  nodeGraphViewportActionArgs,
+  nodeGraphHoverActionArgs,
+  nodeGraphSelectionActionArgs,
+ nodeGraphViewportActionArgs,
+  nodeGraphPickChannel,
   paintDagLabelOverlays,
   parseCatalogueAppDragPayload,
   parseDagCameraState,
@@ -1054,7 +1056,10 @@ export {
   flowSpotlightSuggestionListScrollClass,
   GraphSliderOverlays,
   NodeGraphHost,
-  nodeGraphViewportActionArgs,
+  nodeGraphHoverActionArgs,
+  nodeGraphSelectionActionArgs,
+ nodeGraphViewportActionArgs,
+  nodeGraphPickChannel,
   paintDagLabelOverlays,
   parseCatalogueAppDragPayload,
   parseDagCameraState,
@@ -1090,8 +1095,8 @@ export { base64ToBytes, Paint2dHost };
 //#endregion 🔖️Paint2dHost
 
 //#region 🔖️TiledMapHost
-import { TiledMapHost } from "../../../../🧱️elements/TiledMapHost/🟦️component.tsx";
-export { TiledMapHost };
+import { TiledMapHost, resolveMapInteractionSync } from "../../../../🧱️elements/TiledMapHost/🟦️component.tsx";
+export { TiledMapHost, resolveMapInteractionSync };
 //#endregion 🔖️TiledMapHost
 
 //#region 🔖️Board2dHost

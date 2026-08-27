@@ -1,26 +1,9 @@
-/** 🧬️ Sourcing curate document mutations — the closed semantic vocabulary derived from
- * `CurateSnapshot.curated`'s id-keyed shape. `stock` is a bulk-populated reference catalogue and is
- * not represented here (whole-catalogue population goes through a non-history document reset).
- */
-export interface CuratedItem {
-  objectId: string;
-  count: number;
-}
+/** 🗂️ Sourcing curate direct mutation aggregate. */
+import type { CreateCuratedItem } from "./🌱create-curated-item/🟦️component.ts";
+import type { DeleteCuratedItem } from "./🗑️delete-curated-item/🟦️component.ts";
+import type { ChangeCuratedItemCount } from "./🔢change-curated-item-count/🟦️component.ts";
 
-export interface CreateCuratedItem {
-  mutation: "createCuratedItem";
-  item: CuratedItem;
-}
-
-export interface DeleteCuratedItem {
-  mutation: "deleteCuratedItem";
-  objectId: string;
-}
-
-export interface ChangeCuratedItemCount {
-  mutation: "changeCuratedItemCount";
-  objectId: string;
-  newCount: number;
-}
-
-export type SourcingMutation = CreateCuratedItem | DeleteCuratedItem | ChangeCuratedItemCount;
+export type SourcingMutation =
+  | ({ mutation: "createCuratedItem" } & CreateCuratedItem)
+  | ({ mutation: "deleteCuratedItem" } & DeleteCuratedItem)
+  | ({ mutation: "changeCuratedItemCount" } & ChangeCuratedItemCount);

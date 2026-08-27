@@ -18,7 +18,7 @@ pub struct PatchFlowWidgets {
 /// clone. `value` is the typed command field verbatim (a plain `&str`, not a `serde_json::Value` —
 /// mirrors `dag_engine::node_patch_for_field`'s "typed command carries the raw UI input string
 /// directly" convention) — numeric fields parse it themselves.
-async fn patched_widgets_fixture(snapshot: &FlowSnapshot, widget_ids: &[String], field: &str, raw_value: &str) -> FlowSnapshot {
+fn patched_widgets_fixture(snapshot: &FlowSnapshot, widget_ids: &[String], field: &str, raw_value: &str) -> FlowSnapshot {
     let mut fixture = snapshot.to_fixture();
     for widget in fixture.widgets.iter_mut() {
         if !widget_ids.iter().any(|id| id == widget_id(widget)) {
@@ -37,7 +37,7 @@ async fn patched_widgets_fixture(snapshot: &FlowSnapshot, widget_ids: &[String],
     FlowSnapshot::from_fixture(fixture)
 }
 
-pub async fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     let fixture = doc.snapshot;
     let next = patched_widgets_fixture(fixture, &payload.widget_ids, &payload.field, &payload.value);
     let operations = crate::artifacts::flow::schema::mutations::snapshot_operations(fixture, &next);

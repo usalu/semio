@@ -17,7 +17,7 @@
 //! JSON's own `step` — which is precisely the collision `mutation.duplicate-id` guards against.
 
 use crate::artifacts::forms::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::artifacts::forms::{cache_forms_steps, FormsDiff, FormsSnapshot};
+use crate::artifacts::forms::{materialize_forms_steps, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -34,11 +34,11 @@ fn expected_after() -> FormsSnapshot {
 /// 🌱 The committed `⬅️before`, with its composed children resolved to a scene holding exactly the
 /// step the committed payload tries to create.
 fn before() -> FormsSnapshot {
-    let snapshot: FormsSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FormsSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let FormMutation::CreateStep(payload) = mutation() else {
         panic!("rejects-a-duplicate-step-id's committed mutation must be a create-step");
     };
-    cache_forms_steps(&snapshot.structure.child_id, vec![payload.step.clone()]);
+    materialize_forms_steps(&mut snapshot.structure, vec![payload.step.clone()]);
     snapshot
 }
 
@@ -49,7 +49,7 @@ async fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
     let snapshot = apply_form_edit_mutation(&base, &mutation()).expect("an empty diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "create-step/rejects-a-duplicate-step-id: applied state differs from committed after-snapshot");
-    assert_eq!((&snapshot.structure.child_id, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a rejected create must not mint new structure/results handles");
+    assert_eq!((&mut snapshot.structure, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a rejected create must not mint new structure/results handles");
 }
 
 /// 🚨️ A colliding step id is FATAL `mutation.duplicate-id`, not the Error-level `target-missing`

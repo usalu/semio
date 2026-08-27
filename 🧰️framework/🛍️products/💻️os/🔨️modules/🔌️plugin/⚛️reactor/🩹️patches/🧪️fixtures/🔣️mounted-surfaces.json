@@ -1,0 +1,8 @@
+[
+  { "surface": "1:main", "children": [] },
+  { "surface": "1:document", "children": ["objects", "connections"], "action": { "scope": "fixture", "name": "activate", "version": 1 } },
+  { "surface": "1:catalogue", "children": ["objects", "vortices", "cables", "attractions"], "action": { "scope": "fixture", "name": "activate", "version": 1 } },
+  { "surface": "1:inspector", "children": [] },
+  { "surface": "1:settings", "children": ["locale", "terminology", "theme"], "action": { "scope": "fixture", "name": "activate", "version": 1 } },
+  { "surface": "1:history", "children": ["artifact", "config"], "action": { "scope": "fixture", "name": "activate", "version": 1 } }
+]

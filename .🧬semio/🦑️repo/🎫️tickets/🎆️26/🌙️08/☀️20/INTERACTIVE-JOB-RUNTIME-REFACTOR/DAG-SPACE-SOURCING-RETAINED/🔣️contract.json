@@ -1,0 +1,175 @@
+{
+  "schema": "semio.interactivity.dag-space-sourcing.v1",
+  "limits": {
+    "configRootBytes": 768,
+    "configTextBytes": 96,
+    "metadataTextBytes": 64,
+    "storeGrantBytes": 4096,
+    "preparationSteps": 2,
+    "worstCaseEncodedBytes": 3840
+  },
+  "apps": [
+    {
+      "name": "dag",
+      "source": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "factory": "DagConfigCommandJobFactory",
+      "rawBytes": 8192,
+      "retained": [
+        {
+          "id": "nodeGraphViewport",
+          "lane": "Config"
+        },
+        {
+          "id": "setLocale",
+          "lane": "Config"
+        }
+      ],
+      "batch": [
+        "addNode",
+        "removeNode",
+        "deleteSelection",
+        "nodeGraphEdit",
+        "connectMediaPorts",
+        "disconnect",
+        "moveMediaNode",
+        "renameDagNode",
+        "reorganize",
+        "patchDagNodes",
+        "graphPointerDown"
+      ],
+      "forbidden": []
+    },
+    {
+      "name": "space",
+      "source": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "factory": "SpaceCommandJobFactory",
+      "rawBytes": 65536,
+      "retained": [
+        {
+          "id": "setActivePanelTab",
+          "lane": "Config"
+        },
+        {
+          "id": "nodeGraphViewport",
+          "lane": "Config"
+        },
+        {
+          "id": "presenceHeartbeat",
+          "lane": "Config"
+        },
+        {
+          "id": "workflowEngagementInput",
+          "lane": "Config"
+        },
+        {
+          "id": "compiledDagEngagementInput",
+          "lane": "Config"
+        },
+        {
+          "id": "closeFocusedInstance",
+          "lane": "Config"
+        },
+        {
+          "id": "setActiveExample",
+          "lane": "HostOnly"
+        },
+        {
+          "id": "importSpacePack",
+          "lane": "HostOnly"
+        },
+        {
+          "id": "goHome",
+          "lane": "HostOnly"
+        },
+        {
+          "id": "navigateVirtualFileSystemNode",
+          "lane": "HostOnly"
+        }
+      ],
+      "batch": [
+        "patchParameter",
+        "addParameter",
+        "removeParameter",
+        "spawnApp",
+        "moveMediaNode",
+        "connectMediaPorts",
+        "disconnectMediaEdge",
+        "removeAppInstance",
+        "deleteSelection",
+        "copyAppInstance",
+        "duplicateAppInstance",
+        "pasteAppInstance",
+        "renameAppInstance",
+        "patchMediaNodes",
+        "patchAppInstances",
+        "bindParameterField",
+        "unbindParameterField",
+        "reorganizeWorkflow",
+        "workflowEngagementSubmit",
+        "compiledDagEngagementSubmit",
+        "nodeGraphEdit",
+        "exportMedia",
+        "importMedia",
+        "importMediaPayload",
+        "exportStudioPack",
+        "exportStudioDsl",
+        "importSpacePackPayload",
+        "openSpace",
+        "openInstance",
+        "setAppRegistrations"
+      ],
+      "forbidden": []
+    },
+    {
+      "name": "sourcing",
+      "source": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "factory": "SourcingCurateBoundedCommandJobFactory",
+      "rawBytes": 8192,
+      "retained": [
+        {
+          "id": "setFilterQuery",
+          "lane": "Config"
+        },
+        {
+          "id": "setFilterTypology",
+          "lane": "Config"
+        },
+        {
+          "id": "setFilterMinAvailability",
+          "lane": "Config"
+        },
+        {
+          "id": "sortTable",
+          "lane": "Config"
+        },
+        {
+          "id": "setContributions",
+          "lane": "Config"
+        }
+      ],
+      "batch": [
+        "setDocument",
+        "setActiveExample",
+        "stockFromCatalogue",
+        "curateAdd",
+        "curateSetCount",
+        "curateRemove",
+        "dropOnPool",
+        "dropOnCurated",
+        "setFilterModule"
+      ],
+      "forbidden": [
+        "setLocale"
+      ]
+    }
+  ],
+  "laws": {
+    "exactLane": true,
+    "exactAuthority": true,
+    "boundedCopy": true,
+    "cancellation": true,
+    "resumableCleanup": true,
+    "noFakeScan": true,
+    "largeConfigUnfinished": true
+  }
+}

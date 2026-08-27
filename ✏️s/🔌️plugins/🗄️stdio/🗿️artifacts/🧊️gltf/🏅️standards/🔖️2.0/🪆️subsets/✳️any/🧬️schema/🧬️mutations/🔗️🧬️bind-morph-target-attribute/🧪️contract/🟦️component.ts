@@ -1,0 +1,6 @@
+/** 🧪️ Focused bind-morph-target-attribute mutation-law probe. */
+import type { GltfSnapshot } from '../../../📸️snapshot/🟦️component.ts';
+import { applyGltfBindMorphTargetAttribute, type GltfBindMorphTargetAttributePayload } from '../../bind-morph-target-attribute/🟦️component.ts';
+import { deriveGltfBindMorphTargetAttributeDiff } from '../../bind-morph-target-attribute/🔺️diff/🟦️component.ts';
+import { deriveGltfBindMorphTargetAttributeInverse } from '../../bind-morph-target-attribute/↩️inverse/🟦️component.ts';
+export const assertGltfBindMorphTargetAttributeLaws = (base: GltfSnapshot, payload: GltfBindMorphTargetAttributePayload) => { const applied = applyGltfBindMorphTargetAttribute(base, payload); if (!applied.accepted) return applied; const replay = applyGltfBindMorphTargetAttribute(base, payload); const direct = deriveGltfBindMorphTargetAttributeDiff(base, payload); const undo = deriveGltfBindMorphTargetAttributeInverse(base, payload); if (!replay.accepted || !direct.accepted || !undo.accepted || JSON.stringify(applied.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(applied.diff) !== JSON.stringify(replay.diff) || JSON.stringify(applied.touchedPaths) !== JSON.stringify(undo.touchedPaths)) throw new Error('bind-morph-target-attribute violates replay, direct-diff, or undo determinism'); return { applied, direct, undo }; };

@@ -62,7 +62,7 @@ pub(crate) fn apply_synapses_diff(synapses: &mut Vec<SynapseSpec>, diff: &Synaps
     }
 }
 
-fn apply_layout_diff(layout: &mut std::collections::BTreeMap<String, WidgetLayout>, diff: &LayoutDiff) {
+fn apply_layout_diff(layout: &mut flow::OrderedMap<WidgetLayout>, diff: &LayoutDiff) {
     for id in &diff.removed {
         layout.remove(id);
     }
@@ -208,7 +208,7 @@ pub fn diff_fixture_from_helpers(base: &Procedural3dSnapshot, widgets: WidgetsDi
 /// 🏗️ Generation field delta after applying ordered generation mutations.
 pub fn diff_generation_from_ops(base: &Procedural3dSnapshot, ops: Vec<GenerationMutation>) -> Procedural3dDiff {
     let generation = apply_generation_helpers(&base.generation, &ops);
-    Procedural3dDiff { generation: Some(generation), ..Procedural3dDiff::default() }
+    Procedural3dDiff { generation: Some(generation.into()), ..Procedural3dDiff::default() }
 }
 //#endregion 🔖️Constructors
 

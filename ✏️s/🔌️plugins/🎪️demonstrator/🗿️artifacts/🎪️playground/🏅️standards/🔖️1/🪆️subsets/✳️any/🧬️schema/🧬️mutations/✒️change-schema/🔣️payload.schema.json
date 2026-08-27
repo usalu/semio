@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/demonstrator/playground/mutation/change-schema.json",
+  "title": "ChangeSchema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "new_schema"
+  ],
+  "properties": {
+    "new_schema": {
+      "type": "string"
+    }
+  }
+}

@@ -416,16 +416,6 @@ pub enum Effect {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         args: Option<DslValue>,
     },
-    /// @emoji 🎯️ Patches live world-3d selection chrome and document-tree highlights without
-    /// re-rendering the composite window body or rebuilding instance geometry JSON.
-    PatchWorld3dChrome {
-        selection_json: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        vortices_json: Option<String>,
-        document_selected_ids: Vec<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        document_highlighted_ids: Option<Vec<String>>,
-    },
     /// @emoji 🔁️ Asks the shell to invoke an extension capability — the SDK resumes the awaiting
     /// future on `Event::Completed { req, .. }` instead of a `response_action` redispatch.
     InvokeExtension {

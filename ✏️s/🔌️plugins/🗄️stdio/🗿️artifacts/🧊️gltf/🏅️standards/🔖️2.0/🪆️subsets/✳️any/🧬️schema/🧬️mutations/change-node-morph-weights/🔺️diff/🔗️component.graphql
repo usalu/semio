@@ -1,2 +1,0 @@
-# change-node-morph-weights diff typed facet.
-input GltfChangeNodeMorphWeightsDiffV1 { operation: GltfChangeNodeMorphWeightsPayloadV1!, after: [Float!]!, touchedPaths: [String!]! }

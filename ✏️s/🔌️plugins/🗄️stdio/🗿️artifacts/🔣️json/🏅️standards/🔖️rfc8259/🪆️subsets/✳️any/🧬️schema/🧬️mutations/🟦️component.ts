@@ -1,29 +1,12 @@
-/** 🧬️ JsonMutation union — every variant addresses its target via a JsonPath. Restates
- *  `../📸️snapshot/🟦️component.ts`'s `JsonValue`/`JsonSnapshot` so this leaf is self-contained. */
-export interface JsonMember {
-  key: string;
-  value: JsonValue;
-}
-export type JsonValue =
-  | { kind: "null" }
-  | { kind: "bool"; value: boolean }
-  | { kind: "number"; lexeme: string }
-  | { kind: "string"; value: string }
-  | { kind: "array"; items: JsonValue[] }
-  | { kind: "object"; members: JsonMember[] };
-export interface JsonSnapshot {
-  schema: string;
-  value: JsonValue;
-}
-
-export type JsonPathSegment = { kind: "key"; value: string } | { kind: "index"; value: number };
-export type JsonPath = JsonPathSegment[];
-
+/** 🧬 Transparent JsonMutation TypeScript aggregate. */
+import type { SetMemberPayload } from './✏️set-member/🟦️component.ts';
+import type { RemoveMemberPayload } from './🗑️remove-member/🟦️component.ts';
+import type { InsertArrayElementPayload } from './📥️insert-array-element/🟦️component.ts';
+import type { RemoveArrayElementPayload } from './🗑️remove-array-element/🟦️component.ts';
+import type { SetScalarPayload } from './✏️set-scalar/🟦️component.ts';
 export type JsonMutation =
-  | { mutation: "noMutation" }
-  | { mutation: "setSnapshot"; snapshot: JsonSnapshot }
-  | { mutation: "setMember"; path: JsonPath; key: string; value: JsonValue }
-  | { mutation: "removeMember"; path: JsonPath; key: string }
-  | { mutation: "insertArrayElement"; path: JsonPath; index: number; value: JsonValue }
-  | { mutation: "removeArrayElement"; path: JsonPath; index: number }
-  | { mutation: "setScalar"; path: JsonPath; value: JsonValue };
+  | { readonly mutation: 'set-member'; readonly payload: { readonly phase: 'apply'; readonly value: SetMemberPayload } }
+  | { readonly mutation: 'remove-member'; readonly payload: { readonly phase: 'apply'; readonly value: RemoveMemberPayload } }
+  | { readonly mutation: 'insert-array-element'; readonly payload: { readonly phase: 'apply'; readonly value: InsertArrayElementPayload } }
+  | { readonly mutation: 'remove-array-element'; readonly payload: { readonly phase: 'apply'; readonly value: RemoveArrayElementPayload } }
+  | { readonly mutation: 'set-scalar'; readonly payload: { readonly phase: 'apply'; readonly value: SetScalarPayload } };

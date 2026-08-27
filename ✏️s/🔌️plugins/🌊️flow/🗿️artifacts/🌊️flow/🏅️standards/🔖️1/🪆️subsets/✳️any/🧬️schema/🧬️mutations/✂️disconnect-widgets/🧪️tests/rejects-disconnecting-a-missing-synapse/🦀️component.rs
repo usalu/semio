@@ -7,7 +7,7 @@
 //! ⚠️ Why this leaf pins a REJECTION branch: `FlowSnapshot` persists its widgets/synapses/layout in
 //! an opaque composed `s.stdio.semio.flow` CHILD (`🔖️ContentBridge`/`🔖️WorkingScene`), and every
 //! APPLIED flow diff goes through `diff_replace_content`, which mints a fresh handle whose
-//! `child_id` is a `DefaultHasher` digest of the child content. Hand-authoring such an `➡️after`
+//! `child_id` is a domain-separated SHA-256 digest of the child content. Hand-authoring such an `➡️after`
 //! would mean hand-forging a value from `std`'s deliberately unspecified default hasher.
 //! `disconnect-widgets` has no no-op guard, so its `mutation.target-missing` Error — the only branch
 //! that mints no handle — is what this case pins.
@@ -19,7 +19,7 @@
 use crate::artifacts::flow::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, FlowMutation};
 use crate::artifacts::flow::{cache_flow_content, flow_working_scene, FlowDiff, FlowSnapshot};
 use flow::Widget;
-use std::collections::BTreeMap;
+use flow::OrderedMap;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -39,7 +39,7 @@ fn expected_after() -> FlowSnapshot {
 fn before() -> FlowSnapshot {
     let mut snapshot: FlowSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let widgets = vec![Widget::InputNote { id: "note-alpha".into(), text: "Alpha".into() }, Widget::InputNote { id: "note-beta".into(), text: "Beta".into() }];
-    cache_flow_content(&mut snapshot.content, widgets, Vec::new(), BTreeMap::new());
+    cache_flow_content(&mut snapshot.content, widgets, Vec::new(), OrderedMap::new());
     snapshot
 }
 

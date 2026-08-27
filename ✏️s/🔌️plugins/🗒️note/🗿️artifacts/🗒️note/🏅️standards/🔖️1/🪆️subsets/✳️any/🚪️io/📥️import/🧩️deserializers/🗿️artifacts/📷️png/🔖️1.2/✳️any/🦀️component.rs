@@ -3,7 +3,7 @@
 //! data-uri image asset/block — real pixel content is carried but not decomposed into note
 //! structure, so this hop is `IoFidelity::Lossy`.
 
-use crate::artifacts::note::schema::{create_note_id, empty_note_snapshot};
+use crate::artifacts::note::schema::{create_note_id, empty_note_snapshot, NoteIdOwner};
 use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NoteSnapshot};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
@@ -42,9 +42,10 @@ impl Deserializer<NoteSnapshot> for PngIntoNote {
             return Err(IoError { message: "PngIntoNote: expected a binary png payload".to_string(), diagnostics: Vec::new() });
         };
         let png = decode_png(bytes).map_err(|error| IoError { message: format!("PngIntoNote: decode failed: {error}"), diagnostics: Vec::new() })?;
+        let mut ids = NoteIdOwner::new(format!("png-import:{}", bytes.len()), 0);
         let key = "png-import".to_string();
         let mut snap = empty_note_snapshot();
-        snap.id = create_note_id("png-import");
+        snap.id = create_note_id(&mut ids, "png-import");
         snap.title = Some("Imported PNG".into());
         let mut assets = BTreeMap::new();
         assets.insert(key.clone(), NoteImageAsset { mime: "image/png".into(), data: format!("data:image/png;base64,{}", b64(bytes)), width: Some(png.width as f64), height: Some(png.height as f64) });

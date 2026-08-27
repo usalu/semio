@@ -1,0 +1,331 @@
+{
+  "controller": "s-play",
+  "documentSchema": "os.workflow",
+  "factory": "SpaceCommandJobFactory",
+  "limits": {
+    "bounded": {
+      "maxRawBytes": 65536,
+      "maxDecodedItems": 64,
+      "maxWorkUnitsPerStep": 1,
+      "maxOutputBytes": 262144,
+      "maxStepMicros": 7500
+    }
+  },
+  "publicationContracts": [
+    {
+      "toolId": "setActivePanelTab",
+      "lanes": [
+        "config"
+      ]
+    },
+    {
+      "toolId": "nodeGraphViewport",
+      "lanes": [
+        "config"
+      ]
+    },
+    {
+      "toolId": "presenceHeartbeat",
+      "lanes": [
+        "config"
+      ]
+    },
+    {
+      "toolId": "workflowEngagementInput",
+      "lanes": [
+        "config"
+      ]
+    },
+    {
+      "toolId": "compiledDagEngagementInput",
+      "lanes": [
+        "config"
+      ]
+    },
+    {
+      "toolId": "closeFocusedInstance",
+      "lanes": [
+        "config"
+      ]
+    },
+    {
+      "toolId": "setActiveExample",
+      "lanes": [
+        "hostOnly"
+      ]
+    },
+    {
+      "toolId": "importSpacePack",
+      "lanes": [
+        "hostOnly"
+      ]
+    },
+    {
+      "toolId": "goHome",
+      "lanes": [
+        "hostOnly"
+      ]
+    },
+    {
+      "toolId": "navigateVirtualFileSystemNode",
+      "lanes": [
+        "hostOnly"
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "id": "patchParameter",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "parse and locate one parameter through an owned document cursor"
+    },
+    {
+      "id": "addParameter",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "publish a document mutation through an installed preparation factory"
+    },
+    {
+      "id": "removeParameter",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "publish a document mutation through an installed preparation factory"
+    },
+    {
+      "id": "spawnApp",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "resolve and clone registry app definitions through operation-owned state"
+    },
+    {
+      "id": "moveMediaNode",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "publish a graph mutation through an installed preparation factory"
+    },
+    {
+      "id": "connectMediaPorts",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "scan source and target ports through an owned graph cursor"
+    },
+    {
+      "id": "disconnectMediaEdge",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "publish a graph mutation through an installed preparation factory"
+    },
+    {
+      "id": "removeAppInstance",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "resolve interaction selection and publish graph removal incrementally"
+    },
+    {
+      "id": "deleteSelection",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "walk selected graph identities with a persistent cursor"
+    },
+    {
+      "id": "copyAppInstance",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "locate and serialize selected graph state incrementally"
+    },
+    {
+      "id": "duplicateAppInstance",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "locate and duplicate selected graph state incrementally"
+    },
+    {
+      "id": "pasteAppInstance",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "decode and publish clipboard graph state incrementally"
+    },
+    {
+      "id": "renameAppInstance",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "resolve selection and locate one graph node through a cursor"
+    },
+    {
+      "id": "patchMediaNodes",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "parse values and publish one node patch per grant"
+    },
+    {
+      "id": "patchAppInstances",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "parse values and publish one instance patch per grant"
+    },
+    {
+      "id": "bindParameterField",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "publish a document binding through an installed preparation factory"
+    },
+    {
+      "id": "unbindParameterField",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "publish a document unbinding through an installed preparation factory"
+    },
+    {
+      "id": "reorganizeWorkflow",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "layout graph nodes with a persistent cursor"
+    },
+    {
+      "id": "workflowEngagementSubmit",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "resolve registry definitions and publish a document mutation"
+    },
+    {
+      "id": "compiledDagEngagementSubmit",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "retain the mutation lane until a concrete implementation exists"
+    },
+    {
+      "id": "nodeGraphEdit",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "decode and apply graph edit operations with a persistent cursor"
+    },
+    {
+      "id": "setActivePanelTab",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "publish one capped Config mutation through two checkpointed Store preparation phases"
+    },
+    {
+      "id": "nodeGraphViewport",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "publish one capped Config mutation through two checkpointed Store preparation phases"
+    },
+    {
+      "id": "presenceHeartbeat",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "publish one capped Config mutation through two checkpointed Store preparation phases"
+    },
+    {
+      "id": "workflowEngagementInput",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "publish one capped Config mutation through two checkpointed Store preparation phases"
+    },
+    {
+      "id": "compiledDagEngagementInput",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "publish one capped Config mutation through two checkpointed Store preparation phases"
+    },
+    {
+      "id": "setActiveExample",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "enqueue one capped host navigation effect"
+    },
+    {
+      "id": "exportMedia",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "export media through retained byte pages"
+    },
+    {
+      "id": "importMedia",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "resolve format metadata without cloning process-global catalog payloads"
+    },
+    {
+      "id": "importMediaPayload",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "decode and publish retained media payload pages"
+    },
+    {
+      "id": "exportStudioPack",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "serialize studio pack through retained byte pages"
+    },
+    {
+      "id": "exportStudioDsl",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "serialize studio DSL through retained byte pages"
+    },
+    {
+      "id": "importSpacePack",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "enqueue one fixed host file-selection request"
+    },
+    {
+      "id": "importSpacePackPayload",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "decode and publish retained studio pack pages"
+    },
+    {
+      "id": "openSpace",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "resolve and serialize a workflow through operation-owned state"
+    },
+    {
+      "id": "openInstance",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "resolve interaction selection and locate one graph node"
+    },
+    {
+      "id": "closeFocusedInstance",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "publish one capped Config mutation through two checkpointed Store preparation phases"
+    },
+    {
+      "id": "goHome",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "enqueue one fixed host navigation effect"
+    },
+    {
+      "id": "navigateVirtualFileSystemNode",
+      "execution": "bounded",
+      "status": "migrated",
+      "feature": "enqueue one capped host navigation effect"
+    },
+    {
+      "id": "setAppRegistrations",
+      "execution": "batch",
+      "status": "batch-only",
+      "feature": "decode registrations into instance-owned registry state"
+    }
+  ],
+  "oracle": {
+    "library": "serde_json",
+    "scope": "test-only-existing-dependency",
+    "ownedInterface": "SpaceRetainedCatalogOracle",
+    "runtimeDependency": false,
+    "expected": {
+      "routes": 40,
+      "bounded": 10,
+      "batch": 30,
+      "migrated": 10,
+      "unique": true
+    }
+  }
+}

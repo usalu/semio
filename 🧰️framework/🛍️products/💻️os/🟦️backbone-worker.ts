@@ -61,7 +61,7 @@ function decodeWorkerRequest(message: BackboneWorkerWireMessage): BackboneWorker
   return decodeBackboneWorkerRequest(message.wire);
 }
 
-const workerScope = typeof self !== "undefined" && !("document" in self) ? (self as unknown as DedicatedWorkerGlobalScope) : null;
+const workerScope = typeof self !== "undefined" && !Reflect.has(self, "document") ? self : null;
 
 if (workerScope) {
   workerScope.onmessage = (messageEvent: MessageEvent<unknown>) => {
@@ -368,7 +368,7 @@ function fromWireEnvelope(envelope: WireMutationEnvelope): MutationEnvelope {
   return {
     id: envelope.mutation_id,
     actor: envelope.actor,
-    artifact: envelope.artifact_id,
+    document: envelope.document_id,
     schemaVersion: envelope.diff.schema,
     deps: [...envelope.dependencies],
     payloadHash: placeholderPayloadHash(payload),
@@ -400,7 +400,7 @@ function rollbackEnvelope(envelope: MutationEnvelope): MutationEnvelope {
   return {
     id: undoId,
     actor: envelope.actor,
-    artifact: envelope.artifact,
+    document: envelope.document,
     schemaVersion: envelope.schemaVersion,
     deps: [envelope.id],
     payloadHash: placeholderPayloadHash(envelope.inverse.inverseDiff.payload),
@@ -529,7 +529,7 @@ async function writeFolder(state: ArtifactState, binding: Extract<PersistenceBin
   const bundle = encodeDocumentPackBytes(new Uint8Array(pack), new Uint8Array(spr));
   const response = await fetchWithTimeout(
     folderEnvelopeUrl(binding, state.config.documentId),
-    { method: "PUT", headers: { "content-type": "application/octet-stream" }, body: bundle },
+    { method: "PUT", headers: { "content-type": "application/octet-stream" }, body: new Uint8Array(bundle) },
     { timeoutMs: FOLDER_FETCH_TIMEOUT_MS, signal: state.docAbort.signal },
   );
   if (!response.ok) throw new Error(`folder backbone write failed (${response.status})`);
@@ -1013,7 +1013,7 @@ async function getCachedBlob(hash: string): Promise<{ bytes: Uint8Array; mediaTy
 async function putCachedBlob(bytes: Uint8Array, mediaType: string): Promise<string> {
   const response = await fetchWithTimeout(
     `${BLOB_ENDPOINT_PATH}?mediaType=${encodeURIComponent(mediaType)}`,
-    { method: "PUT", headers: { "content-type": "application/octet-stream" }, body: bytes },
+    { method: "PUT", headers: { "content-type": "application/octet-stream" }, body: new Uint8Array(bytes) },
     { timeoutMs: BLOB_FETCH_TIMEOUT_MS },
   );
   if (!response.ok) throw new Error(`blob put failed (${response.status})`);
@@ -1177,7 +1177,7 @@ if (import.meta.vitest) {
     return {
       id: "edit-1",
       actor: "actor-1",
-      artifact: "doc-1",
+      document: "doc-1",
       schemaVersion: "demo/v1",
       deps: [],
       payloadHash: "unused-in-this-fallback",
@@ -1263,7 +1263,7 @@ if (import.meta.vitest) {
     });
 
     it("sign-in -> sign-out -> sign-in round-trips through applyIdentityConfigMutation, and each inverts the last", async () => {
-      const { applyIdentityConfigMutation, inverseIdentityConfigMutation, signIn, signOut } = await import("./🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component");
+      const { applyIdentityConfigMutation, inverseIdentityConfigMutation, signIn, signOut } = await import("./🎚️config/🧬️schema/🧬️mutations/🟦️component");
 
       const first = sampleIdentity();
       const afterFirstSignIn = applyIdentityConfigMutation(null, signIn(first));
@@ -1312,6 +1312,46 @@ if (import.meta.vitest) {
     });
   });
   //#endregion 🔖️IdentityTests
+
+  //#region 🔖️ConfigMutationTests
+  describe("config mutation TypeScript parity", () => {
+    it("opening mutations replace one coordinate, preserve siblings, and invert exactly", async () => {
+      const { applyOpeningConfigMutation, clearDefaultApp, inverseOpeningConfigMutation, setDefaultApp } = await import("./🎚️config/🧬️schema/🧬️mutations/🟦️component");
+      const dialect = { artifactKind: "s.cad.cad", standard: "1", subset: "*" };
+      const viewer = { pluginId: "cad", appId: "viewer" };
+      const editor = { pluginId: "cad", appId: "editor" };
+      const replacement = { pluginId: "draft", appId: "drafting" };
+      const base = { defaults: [{ dialect, role: "viewer" as const, app: viewer }, { dialect, role: "editor" as const, app: editor }] };
+      const set = setDefaultApp(dialect, "editor", replacement);
+      const afterSet = applyOpeningConfigMutation(base, set);
+      expect(afterSet).toEqual({ defaults: [{ dialect, role: "viewer", app: viewer }, { dialect, role: "editor", app: replacement }] });
+      expect(inverseOpeningConfigMutation(set, base)).toEqual([setDefaultApp(dialect, "editor", editor)]);
+      const clear = clearDefaultApp(dialect, "editor");
+      expect(applyOpeningConfigMutation(base, clear)).toEqual({ defaults: [{ dialect, role: "viewer", app: viewer }] });
+      expect(inverseOpeningConfigMutation(clear, base)).toEqual([setDefaultApp(dialect, "editor", editor)]);
+      expect(inverseOpeningConfigMutation(clearDefaultApp(dialect, "editor"), { defaults: [] })).toEqual([]);
+    });
+
+    it("change-merge-policy applies and inverts the prior whole-record setting", async () => {
+      const { applyMergePolicyConfigMutation, changeMergePolicy, inverseMergePolicyConfigMutation } = await import("./🎚️config/🧬️schema/🧬️mutations/🟦️component");
+      const mutation = changeMergePolicy("Vigilant");
+      expect(applyMergePolicyConfigMutation({ policy: "Normal" }, mutation)).toEqual({ policy: "Vigilant" });
+      expect(inverseMergePolicyConfigMutation(mutation, { policy: "Normal" })).toEqual([changeMergePolicy("Normal")]);
+    });
+
+    it("Nx project inputs track every external OS config and plugin-host source compiled by the targets", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const tsProject = JSON.parse(await readFile(new URL("./📦️packages/🟦️typescript/📋️project.json", import.meta.url), "utf8")) as { namedInputs: { default: string[] } };
+      const hostProject = JSON.parse(await readFile(new URL("./🖥️host/📦️packages/🦀️rust/📋️project.json", import.meta.url), "utf8")) as { namedInputs: { default: string[] } };
+      expect(tsProject.namedInputs.default).toContain("{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*");
+      expect(hostProject.namedInputs.default).toEqual(expect.arrayContaining([
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*.json",
+      ]));
+    });
+  });
+  //#endregion 🔖️ConfigMutationTests
 
   //#region 🔖️DirectoryLaneTests
   describe("backbone-worker directory lane", () => {

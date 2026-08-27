@@ -20,12 +20,12 @@ use serde::{Deserialize, Serialize};
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the clones used to also become the new
 /// selection here — selection is framework-owned `InteractionState` now, only ever mutated by the
 /// framework's own injected `interactionSelect` handling, never by an app command's `Emit`.
-async fn duplicate_blocks(document: &NoteSnapshot, ids: &[String]) -> Emit<NoteMutation, NoteConfigMutation> {
+async fn duplicate_blocks(document: &NoteSnapshot, ids: &[String], id_owner: &mut crate::artifacts::note::schema::NoteIdOwner) -> Emit<NoteMutation, NoteConfigMutation> {
     let mut source_ids = Vec::new();
     let mut blocks = Vec::new();
     for source_id in ids {
         if let Some(block) = find_block(&document.blocks, source_id) {
-            let mut cloned = clone_block(block);
+            let mut cloned = clone_block(id_owner, block);
             offset_block_tree(&mut cloned, 24.0, 24.0);
             source_ids.push(source_id.clone());
             blocks.push(cloned);
@@ -45,6 +45,6 @@ pub struct DuplicateBlock {
     pub block_id: String,
 }
 
-pub async fn handle(payload: &DuplicateBlock, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-    Ok(duplicate_blocks(doc.snapshot, std::slice::from_ref(&payload.block_id)))
+pub async fn handle(payload: &DuplicateBlock, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
+    Ok(duplicate_blocks(doc.snapshot, std::slice::from_ref(&payload.block_id), &mut ctx.id_owner))
 }

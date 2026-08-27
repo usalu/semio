@@ -1,6 +1,0 @@
-# create-primitive inverse facet.
-input GltfCreatePrimitivePayloadV1 {
-  mesh: Int!
-  position: Int!
-}
-type GltfCreatePrimitiveInverseV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

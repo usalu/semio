@@ -2,7 +2,7 @@
 //! working-scene `Model`, via `crate::artifacts::model::energy_model`) — `replace` is its own
 //! inverse partner (per `📓️taxonomy.md`).
 
-use crate::artifacts::model::mutations::replace_model::mutation::ReplaceModel;
+use crate::artifacts::model::mutations::replace_model::ReplaceModel;
 use crate::artifacts::model::mutations::EnergyModelMutation;
 use crate::artifacts::model::EnergyModelSnapshot;
 

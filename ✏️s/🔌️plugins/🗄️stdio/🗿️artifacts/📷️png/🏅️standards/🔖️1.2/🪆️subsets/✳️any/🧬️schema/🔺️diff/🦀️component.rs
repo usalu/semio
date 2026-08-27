@@ -84,7 +84,7 @@ pub struct PngTextChunkDiff {
 
 impl PngTextChunkDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn is_empty(&self) -> bool {
+    pub(in super::super) fn is_empty(&self) -> bool {
         self == &Self::default()
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -99,7 +99,7 @@ impl PngTextChunkDiff {
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn between(a: &PngTextChunk, b: &PngTextChunk) -> Self {
+    pub(in super::super) fn between(a: &PngTextChunk, b: &PngTextChunk) -> Self {
         Self {
             keyword: (a.keyword != b.keyword).then(|| b.keyword.clone()),
             value: (a.value != b.value).then(|| b.value.clone()),
@@ -471,7 +471,7 @@ fn apply_plte(base: &Option<Vec<PngRgb>>, d: &Option<PngPlteDiff>) -> Option<Vec
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_plte(a: &Option<Vec<PngRgb>>, b: &Option<Vec<PngRgb>>) -> Option<Option<PngPlteDiff>> {
+pub(crate) fn between_plte(a: &Option<Vec<PngRgb>>, b: &Option<Vec<PngRgb>>) -> Option<Option<PngPlteDiff>> {
     if a == b {
         return None;
     }
@@ -760,64 +760,20 @@ pub fn chunk_order_presence_diff(order: &[PngChunkMarker], is_marker: fn(&PngChu
 /// marker whose embedded index is `>= at` (`modified`, same `chunk_order` position, bumped
 /// payload) and appends the new marker just before `Iend` (`added`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn chunk_order_insert_text_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
-    let modified = order
-        .iter()
-        .enumerate()
-        .filter_map(|(pos, m)| match m {
-            PngChunkMarker::Text { index } if *index >= at => Some(PngChunkOrderModified { index: pos, marker: PngChunkMarker::Text { index: index + 1 } }),
-            _ => None,
-        })
-        .collect();
-    let added = vec![PngChunkOrderAdded { index: chunk_order_insert_pos(order, &PngChunkMarker::Text { index: at }), marker: PngChunkMarker::Text { index: at } }];
-    PngChunkOrderDiff { removed: vec![], modified, added }
-}
+
 
 /// ➖️ Diff for removing the `Text{index: at}` marker: drops it (`removed`) and renumbers every
 /// `Text` marker with a HIGHER embedded index down by one (`modified`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn chunk_order_remove_text_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
-    let removed: Vec<usize> = order.iter().position(|m| matches!(m, PngChunkMarker::Text { index } if *index == at)).into_iter().collect();
-    let modified = order
-        .iter()
-        .enumerate()
-        .filter_map(|(pos, m)| match m {
-            PngChunkMarker::Text { index } if *index > at => Some(PngChunkOrderModified { index: pos, marker: PngChunkMarker::Text { index: index - 1 } }),
-            _ => None,
-        })
-        .collect();
-    PngChunkOrderDiff { removed, modified, added: vec![] }
-}
+
 
 /// ➕️ `Unknown{index}` analogue of [`chunk_order_insert_text_diff`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn chunk_order_insert_unknown_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
-    let modified = order
-        .iter()
-        .enumerate()
-        .filter_map(|(pos, m)| match m {
-            PngChunkMarker::Unknown { index } if *index >= at => Some(PngChunkOrderModified { index: pos, marker: PngChunkMarker::Unknown { index: index + 1 } }),
-            _ => None,
-        })
-        .collect();
-    let added = vec![PngChunkOrderAdded { index: chunk_order_insert_pos(order, &PngChunkMarker::Unknown { index: at }), marker: PngChunkMarker::Unknown { index: at } }];
-    PngChunkOrderDiff { removed: vec![], modified, added }
-}
+
 
 /// ➖️ `Unknown{index}` analogue of [`chunk_order_remove_text_diff`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn chunk_order_remove_unknown_diff(order: &[PngChunkMarker], at: usize) -> PngChunkOrderDiff {
-    let removed: Vec<usize> = order.iter().position(|m| matches!(m, PngChunkMarker::Unknown { index } if *index == at)).into_iter().collect();
-    let modified = order
-        .iter()
-        .enumerate()
-        .filter_map(|(pos, m)| match m {
-            PngChunkMarker::Unknown { index } if *index > at => Some(PngChunkOrderModified { index: pos, marker: PngChunkMarker::Unknown { index: index - 1 } }),
-            _ => None,
-        })
-        .collect();
-    PngChunkOrderDiff { removed, modified, added: vec![] }
-}
+
 //#endregion 🔖️ChunkOrderMutationHelpers
 
 //#region 🔖️Diff
@@ -1098,102 +1054,49 @@ pub fn diff_set_snapshot(base: &PngSnapshot, next: &PngSnapshot) -> PngDiff {
 // including the matching `chunk_order` delta where the mutation changes chunk presence/order.
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_header(base: &PngSnapshot, width: u32, height: u32, bit_depth: u8, color_type: PngColorType, interlace: bool) -> PngDiff {
-    PngDiff {
-        width: (base.width != width).then_some(width),
-        height: (base.height != height).then_some(height),
-        bit_depth: (base.bit_depth != bit_depth).then_some(bit_depth),
-        color_type: (base.color_type != color_type).then_some(color_type),
-        interlace: (base.interlace != interlace).then_some(interlace),
-        ..Default::default()
-    }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_palette(base: &PngSnapshot, plte: &Option<Vec<PngRgb>>) -> PngDiff {
-    PngDiff { plte: between_plte(&base.plte, plte), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Plte), PngChunkMarker::Plte, base.plte.is_some(), plte.is_some()), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_transparency(base: &PngSnapshot, trns: &Option<PngTransparency>) -> PngDiff {
-    PngDiff { trns: (base.trns != *trns).then(|| trns.clone()), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Trns), PngChunkMarker::Trns, base.trns.is_some(), trns.is_some()), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_gamma(base: &PngSnapshot, gama: Option<u32>) -> PngDiff {
-    PngDiff { gama: (base.gama != gama).then_some(gama), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Gama), PngChunkMarker::Gama, base.gama.is_some(), gama.is_some()), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_chromaticities(base: &PngSnapshot, chrm: Option<PngChromaticities>) -> PngDiff {
-    PngDiff { chrm: (base.chrm != chrm).then_some(chrm), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Chrm), PngChunkMarker::Chrm, base.chrm.is_some(), chrm.is_some()), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_srgb_intent(base: &PngSnapshot, srgb: Option<PngSrgbIntent>) -> PngDiff {
-    PngDiff { srgb: (base.srgb != srgb).then_some(srgb), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Srgb), PngChunkMarker::Srgb, base.srgb.is_some(), srgb.is_some()), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_physical_dims(base: &PngSnapshot, phys: Option<PngPhysicalDims>) -> PngDiff {
-    PngDiff { phys: (base.phys != phys).then_some(phys), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Phys), PngChunkMarker::Phys, base.phys.is_some(), phys.is_some()), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_timestamp(base: &PngSnapshot, time: Option<PngTimestamp>) -> PngDiff {
-    PngDiff { time: (base.time != time).then_some(time), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Time), PngChunkMarker::Time, base.time.is_some(), time.is_some()), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_background(base: &PngSnapshot, bkgd: &Option<PngBackground>) -> PngDiff {
-    PngDiff { bkgd: (base.bkgd != *bkgd).then(|| bkgd.clone()), chunk_order: chunk_order_presence_diff(&base.chunk_order, |m| matches!(m, PngChunkMarker::Bkgd), PngChunkMarker::Bkgd, base.bkgd.is_some(), bkgd.is_some()), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_insert_text_chunk(base: &PngSnapshot, index: usize, chunk: PngTextChunk) -> PngDiff {
-    let at = index.min(base.text_chunks.len());
-    PngDiff { text_chunks: Some(PngTextChunksDiff { removed: vec![], modified: vec![], added: vec![PngTextChunkAdded { index: at, chunk }] }), chunk_order: Some(chunk_order_insert_text_diff(&base.chunk_order, at)), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_remove_text_chunk(base: &PngSnapshot, index: usize) -> PngDiff {
-    if index >= base.text_chunks.len() {
-        return PngDiff::default();
-    }
-    PngDiff { text_chunks: Some(PngTextChunksDiff { removed: vec![index], modified: vec![], added: vec![] }), chunk_order: Some(chunk_order_remove_text_diff(&base.chunk_order, index)), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_text_chunk(base: &PngSnapshot, index: usize, chunk: PngTextChunk) -> PngDiff {
-    let existing = match base.text_chunks.get(index) {
-        Some(c) => c,
-        None => return PngDiff::default(),
-    };
-    let d = PngTextChunkDiff::between(existing, &chunk);
-    if d.is_empty() {
-        return PngDiff::default();
-    }
-    PngDiff { text_chunks: Some(PngTextChunksDiff { removed: vec![], modified: vec![PngTextChunkModified { index, diff: d }], added: vec![] }), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_pixels(base: &PngSnapshot, pixels: Vec<u8>) -> PngDiff {
-    PngDiff { pixels: (base.pixels != pixels).then_some(pixels), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_insert_unknown_chunk(base: &PngSnapshot, index: usize, chunk: PngChunk) -> PngDiff {
-    let at = index.min(base.unknown_chunks.len());
-    PngDiff { unknown_chunks: Some(PngUnknownChunksDiff { removed: vec![], modified: vec![], added: vec![PngUnknownChunkAdded { index: at, chunk }] }), chunk_order: Some(chunk_order_insert_unknown_diff(&base.chunk_order, at)), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_remove_unknown_chunk(base: &PngSnapshot, index: usize) -> PngDiff {
-    if index >= base.unknown_chunks.len() {
-        return PngDiff::default();
-    }
-    PngDiff { unknown_chunks: Some(PngUnknownChunksDiff { removed: vec![index], modified: vec![], added: vec![] }), chunk_order: Some(chunk_order_remove_unknown_diff(&base.chunk_order, index)), ..Default::default() }
-}
+
 //#endregion 🔖️MutationDiffBuilders
 
 //#region 🔖️HandcraftedDiffCodec
@@ -1869,9 +1772,7 @@ pub(crate) fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl F
     }
     Ok(out)
 }
-/// 🧩 Whole-`PngSnapshot` real binary encoding — reused by `PngMutation::SetSnapshot`'s own
-/// binary op arm (`🧬️mutations/🦀️component.rs`) so a full snapshot payload isn't hand-encoded
-/// a second time.
+/// 🧩 Whole-`PngSnapshot` binary encoding for sparse diff field serialization.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &PngSnapshot) {
     write_bin_str(w, &s.schema);

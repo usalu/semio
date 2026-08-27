@@ -1,0 +1,10 @@
+{
+  "schema": "semio.flow.slider-labels",
+  "cases": [
+    { "widget": { "kind": "inputSlider", "id": "height", "label": "Column Height", "value": 6, "min": 0, "max": 10, "step": 0.5 }, "expectedDagName": "Column Height" },
+    { "widget": { "kind": "inputSlider", "id": "radius", "label": "Profile Radius", "value": 0.5, "min": 0.1, "max": 2, "step": 0.05 }, "expectedDagName": "Profile Radius" },
+    { "widget": { "kind": "inputSlider", "id": "sides", "label": "Side Count", "value": 6, "min": 3, "max": 12, "step": 1 }, "expectedDagName": "Side Count" },
+    { "widget": { "kind": "inputSlider", "id": "unicode", "label": "Höhe 🌊\n\"α\"", "value": 1, "min": 0, "max": 2, "step": 0.1 }, "expectedDagName": "Höhe 🌊\n\"α\"" },
+    { "widget": { "kind": "inputSlider", "id": "empty", "label": "", "value": 1, "min": 0, "max": 2, "step": 0.1 }, "expectedDagName": "" }
+  ]
+}

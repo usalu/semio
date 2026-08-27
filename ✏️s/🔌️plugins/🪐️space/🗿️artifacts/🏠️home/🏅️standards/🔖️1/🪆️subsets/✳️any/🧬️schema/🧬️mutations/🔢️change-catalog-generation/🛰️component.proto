@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.space.home.mutation;
+
+message ChangeCatalogGeneration {
+  uint64 new_catalog_generation = 1;
+}

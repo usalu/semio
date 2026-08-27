@@ -1,0 +1,3 @@
+# 🧬️ change-restart-interval/ChangeRestartInterval
+scalar ChangeRestartIntervalMutationValue
+input ChangeRestartIntervalMutation { restartInterval: ChangeRestartIntervalMutationValue }

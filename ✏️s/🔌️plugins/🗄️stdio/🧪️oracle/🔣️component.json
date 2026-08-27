@@ -121,23 +121,6 @@
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
     },
     {
-      "id": "hound",
-      "ecosystem": "rust",
-      "package": "hound",
-      "version": "3",
-      "capabilities": [
-        "wave-audio"
-      ],
-      "comparisonProfiles": [
-        "semantic-audio-v1"
-      ],
-      "license": "Apache-2.0",
-      "testOnly": true,
-      "homepage": "https://github.com/ruuda/hound",
-      "rationale": "The reference RIFF/PCM WAVE reader/writer of the Rust ecosystem, and an independent reader for this repository's own writer. Chunk padding, LIST/INFO metadata and chunk order are writer freedom; the format block and the decoded samples are normative.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
-    },
-    {
       "id": "csv",
       "ecosystem": "rust",
       "package": "csv",
@@ -280,7 +263,21 @@
       "rationale": "Text extraction is the one PDF capability this repository has no Rust reference for. `lopdf` — the registered editing and parsing oracle — exposes the object graph and the raw content streams, but reconstructing a page's reading order means decoding the font's /Encoding and /ToUnicode CMaps, undoing ligature and glyph-index mappings and re-assembling text-showing operators into lines; it does none of that, and no other crate linked by the oracle host does either. `pypdf` implements exactly that layer and is the reference every Python PDF toolchain builds text extraction on. Deterministic for a fixed document, pure Python, no network, no system libraries, cross-platform. Scoped to the text layer only: page geometry, object structure and rendering stay with the existing oracles."
     }
   ],
-  "noOracleDecisions": [],
+  "noOracleDecisions": [
+    {
+      "id": "frozen-hound-pcm16",
+      "capabilities": [
+        "wave-audio",
+        "wav-riff-pcm-mutate"
+      ],
+      "rationale": "Hound 3.5.1 established the canonical PCM16 bytes and all existing WAVE mutation projections before removal. Those results are frozen in a language-neutral ticket golden and checked by an owned RIFF boundary that shares no subject codec code.",
+      "substitutes": [
+        "language-neutral-goldens",
+        "owned-independent-boundary",
+        "hostile-wire-fixtures"
+      ]
+    }
+  ],
   "comparisonProfiles": [
     {
       "id": "semantic-pdf-v1",

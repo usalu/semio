@@ -1,11 +1,12 @@
-//! 📝️ GLTF mutation text transport is the generic descriptor envelope codec.
+//! 📝️ Generic text framing for the visible glTF mutation aggregate.
 
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 
-use crate::artifacts::gltf::schema::modules::mutation_dispatch::{validate_gltf_mutation_envelope, GltfMutation, GltfMutationEnvelope, GltfMutationPhase, GLTF_MUTATION_MAX_PAYLOAD_BYTES};
+use crate::artifacts::gltf::schema::mutations::GltfMutation;
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+const GLTF_MUTATION_MAX_PAYLOAD_BYTES: usize = 64 * 1024;
+
 fn encode_hex(bytes: &[u8]) -> String {
     const HEX: &[u8; 16] = b"0123456789abcdef";
     let mut text = String::with_capacity(bytes.len() * 2);
@@ -16,67 +17,40 @@ fn encode_hex(bytes: &[u8]) -> String {
     text
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_hex(text: &str) -> Result<Vec<u8>, String> {
-    if text.len() % 2 != 0 || text.len() > GLTF_MUTATION_MAX_PAYLOAD_BYTES * 2 {
+fn decode_hex(value: &str) -> Result<Vec<u8>, String> {
+    if value.len() % 2 != 0 || value.len() > GLTF_MUTATION_MAX_PAYLOAD_BYTES * 2 {
         return Err("GLTF mutation text payload exceeds its budget".into());
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn nibble(value: u8) -> Option<u8> {
-        match value {
-            b'0'..=b'9' => Some(value - b'0'),
-            b'a'..=b'f' => Some(value - b'a' + 10),
-            _ => None,
+        if value.is_ascii_digit() {
+            return Some(value - b'0');
         }
+        (b'a'..=b'f').contains(&value).then_some(value - b'a' + 10)
     }
-    text.as_bytes()
+    value
+        .as_bytes()
         .chunks_exact(2)
-        .map(|pair| match (nibble(pair[0]), nibble(pair[1])) {
-            (Some(high), Some(low)) => Ok((high << 4) | low),
-            _ => Err("GLTF mutation payloadHex must be lowercase hexadecimal".into()),
+        .map(|pair| {
+            let high = nibble(pair[0]).ok_or_else(|| "GLTF mutation payload must be lowercase hexadecimal".to_string())?;
+            let low = nibble(pair[1]).ok_or_else(|| "GLTF mutation payload must be lowercase hexadecimal".to_string())?;
+            Ok((high << 4) | low)
         })
         .collect()
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn text_error(detail: impl Into<String>) -> store::TextError {
     store::TextError::new(detail.into(), dsl::TextSpan::at(1, 1))
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_field<'a>(field: &'a str, name: &str) -> Result<&'a str, store::TextError> {
-    field.strip_prefix(name).ok_or_else(|| text_error(format!("expected {name}")))
-}
-
 impl protocol::OpText for GltfMutation {
     fn print_op(&self) -> String {
-        let envelope = self.envelope();
-        let phase = match envelope.phase {
-            GltfMutationPhase::Mutation => "mutation",
-            GltfMutationPhase::Inverse => "inverse",
-            GltfMutationPhase::Diff => unreachable!("GltfMutation cannot carry a diff envelope"),
-        };
-        let payload = (!envelope.payload.is_empty()).then(|| encode_hex(&envelope.payload)).unwrap_or_else(|| "-".into());
-        format!("gltf-mutation commandId={} version={} phase={phase} payload={payload}", encode_hex(envelope.command_id.as_bytes()), envelope.version)
+        let payload = serde_json::to_vec(self).expect("GltfMutation serialization is infallible");
+        format!("gltf-mutation payload={}", encode_hex(&payload))
     }
 
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let fields: Vec<_> = line.split_ascii_whitespace().collect();
-        if fields.len() != 5 || fields[0] != "gltf-mutation" {
-            return Err(text_error("expected canonical GLTF mutation envelope"));
-        }
-        let command_id = decode_hex(parse_field(fields[1], "commandId=")?).map_err(text_error)?;
-        let command_id = String::from_utf8(command_id).map_err(|error| text_error(error.to_string()))?;
-        let version = parse_field(fields[2], "version=")?.parse().map_err(|error| text_error(format!("invalid mutation version: {error}")))?;
-        let phase = match parse_field(fields[3], "phase=")? {
-            "mutation" => GltfMutationPhase::Mutation,
-            "inverse" => GltfMutationPhase::Inverse,
-            _ => return Err(text_error("unknown GLTF mutation phase")),
-        };
-        let payload_hex = parse_field(fields[4], "payload=")?;
-        let payload = if payload_hex == "-" { Vec::new() } else { decode_hex(payload_hex).map_err(text_error)? };
-        let envelope = GltfMutationEnvelope { command_id, version, phase, payload };
-        validate_gltf_mutation_envelope(&envelope).map_err(|error| text_error(error.to_string()))?;
-        GltfMutation::from_transport(envelope).map_err(|error| text_error(error.to_string()))
+        let payload = line.strip_prefix("gltf-mutation payload=").ok_or_else(|| text_error("expected canonical GLTF mutation aggregate"))?;
+        let bytes = decode_hex(payload).map_err(text_error)?;
+        serde_json::from_slice(&bytes).map_err(|error| text_error(error.to_string()))
     }
 }

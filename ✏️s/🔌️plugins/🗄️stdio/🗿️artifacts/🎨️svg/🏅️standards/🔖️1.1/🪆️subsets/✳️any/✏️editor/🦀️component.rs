@@ -1,11 +1,12 @@
 //! ✏️ `svg` editor (any) — `ArtifactEditor` surface built on the frozen
 //! `ImageWindowKit` window kit (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.6).
-//! SVG has no pixel buffer: `set-pixel-region` replaces the whole vector snapshot via the artifact's own DSL text round-trip (`parse_dsl`/`SetSnapshot`), the closest real mutation this format declares — not a pixel edit.
+//! SVG has no pixel buffer: `set-pixel-region` parses the vector DSL and emits direct prolog, attribute, and child mutations rather than editing pixels.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::svg::standards::v1_1::subsets::any::schema::mutations::SvgMutation;
+use crate::artifacts::svg::standards::v1_1::subsets::any::schema::mutations::{InsertElementMutation, InsertElementPayload, RemoveElementMutation, RemoveElementPayload, SetAttributeMutation, SetAttributePayload, SetDeclarationMutation, SetDeclarationPayload, SetDoctypeMutation, SetDoctypePayload, SetElementNameMutation, SetElementNamePayload, SvgMutation};
 use crate::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::SvgSnapshot;
 use crate::artifacts::svg::{STDIO_SVG_DOCUMENT_SCHEMA, SVG_ANY_DIALECT};
+use crate::artifacts::xml::schema::snapshot::XmlNode;
 use crate::editor::svg_any::modes::edit;
 use crate::editor::svg_any::modes::edit::windows::main;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
@@ -54,17 +55,28 @@ impl ArtifactEditor for SvgAnyEditor {
 
     fn handle(
         command: &Self::Command,
-        _doc: &ArtifactView<'_, Self::Snapshot>,
+        doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            SvgAnyEditCommand::SetPixelRegion { source } => match <SvgSnapshot as store::ArtifactDsl>::parse_dsl(source) {
-                Ok(snapshot) => Ok(Emit::mutations(vec![SvgMutation::SetSnapshot { snapshot }])),
-                Err(_) => Ok(Emit::default()),
-            },
+            SvgAnyEditCommand::SetPixelRegion { source } => {
+                let Ok(snapshot) = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(source) else { return Ok(Emit::default()) };
+                if snapshot.doc.prolog != doc.snapshot.doc.prolog { return Ok(Emit::default()) }
+                let (Some(XmlNode::Element { name: current_name, attrs: current_attrs, children: current_children }), Some(XmlNode::Element { name, attrs, children })) = (&doc.snapshot.doc.root, &snapshot.doc.root) else { return Ok(Emit::default()) };
+                let mut mutations = vec![
+                    SvgMutation::SetDeclaration(SetDeclarationMutation::Apply(SetDeclarationPayload { declaration: snapshot.doc.declaration.clone() })),
+                    SvgMutation::SetDoctype(SetDoctypeMutation::Apply(SetDoctypePayload { doctype: snapshot.doc.doctype.clone() })),
+                ];
+                if current_name != name { mutations.push(SvgMutation::SetElementName(SetElementNameMutation::Apply(SetElementNamePayload { path: Vec::new(), name: name.clone() }))); }
+                mutations.extend(current_attrs.iter().filter(|current| !attrs.iter().any(|target| target.name == current.name)).map(|current| SvgMutation::SetAttribute(SetAttributeMutation::Apply(SetAttributePayload { path: Vec::new(), name: current.name.clone(), value: None }))));
+                mutations.extend(attrs.iter().map(|attribute| SvgMutation::SetAttribute(SetAttributeMutation::Apply(SetAttributePayload { path: Vec::new(), name: attribute.name.clone(), value: Some(attribute.value.clone()) }))));
+                mutations.extend((0..current_children.len()).rev().map(|index| SvgMutation::RemoveElement(RemoveElementMutation::Apply(RemoveElementPayload { parent: Vec::new(), index }))));
+                mutations.extend(children.iter().cloned().enumerate().map(|(index, node)| SvgMutation::InsertElement(InsertElementMutation::Apply(InsertElementPayload { parent: Vec::new(), index, node }))));
+                Ok(Emit::mutations(mutations))
+            }
         }
     }
 

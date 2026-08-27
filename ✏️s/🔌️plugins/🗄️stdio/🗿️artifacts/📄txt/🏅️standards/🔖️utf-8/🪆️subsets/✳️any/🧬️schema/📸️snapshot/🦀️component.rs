@@ -38,7 +38,7 @@ impl LineEnding {
 ///
 /// 🧪️ F6: `dsl::DslRecord` added alongside the existing hand-rolled `store::ArtifactDsl`/
 /// `store::ArtifactPack` below — NOT a replacement. `DslRecord` only gives this type `DslField`
-/// (so it can be embedded as a variant payload, e.g. `TxtMutation::SetSnapshot{snapshot}`), it
+/// (so it can be carried by direct mutation payloads and storage surfaces), it
 /// does not touch the artifact's own honest line-joined-by-line-ending envelope format.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]

@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7_ua.mutation.set_struct_tree_root;
+
+// 🌲️ Direct set-struct-tree-root protobuf payload.
+message SetStructTreeRootMutation {
+}

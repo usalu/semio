@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-parameter-binding",
+  "semanticKind": "remove-parameter-binding",
+  "displayName": "Remove Parameter Binding",
+  "emoji": "🧹️",
+  "aggregateVariant": "RemoveParameterBinding",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "remove-parameter-binding",
+  "binaryTag": 4,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s.stdio.pdf.1.7.h/mutation/remove-launch-action.json",
+  "title": "RemoveLaunchAction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "target"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeLaunchAction"
+    },
+    "target": {
+      "type": "string"
+    }
+  }
+}

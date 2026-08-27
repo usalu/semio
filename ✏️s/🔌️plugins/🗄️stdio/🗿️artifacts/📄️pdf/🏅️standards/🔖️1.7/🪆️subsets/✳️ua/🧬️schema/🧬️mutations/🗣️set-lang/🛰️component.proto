@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7_ua.mutation.set_lang;
+
+// 🗣️ Direct set-lang protobuf payload.
+message SetLangMutation {
+  string lang = 1;
+}

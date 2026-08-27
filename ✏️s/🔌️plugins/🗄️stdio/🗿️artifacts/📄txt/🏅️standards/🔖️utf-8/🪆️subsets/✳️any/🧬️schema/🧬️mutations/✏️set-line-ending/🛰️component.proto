@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.txt.mutation;
+// set-line-ending/SetLineEnding
+message SetLineEndingPayload { string value = 1; }

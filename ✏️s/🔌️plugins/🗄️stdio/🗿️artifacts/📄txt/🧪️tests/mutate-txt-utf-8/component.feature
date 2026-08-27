@@ -114,8 +114,6 @@ Feature: Apply every typed UTF-8 text-line mutation to a real document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id | params |
-      | no-mutation | {} |
-      | set-snapshot | {"lines": ["Ersetztes Protokoll", "Zweite Zeile mit Umlaut: äöüß und Emoji 🎉"], "trailingNewline": true, "lineEnding": "lf"} |
       | set-trailing-newline | {"value": false} |
       | set-line-ending | {"value": "crLf"} |
       | insert-line | {"index": 20, "text": "Eingefügte Randnotiz zu Bauhütte 4.0"} |
@@ -135,8 +133,6 @@ Feature: Apply every typed UTF-8 text-line mutation to a real document
     Then the oracle and the subject agree on the semantic projection of the original document
     Examples:
       | id | params |
-      | no-mutation | {} |
-      | set-snapshot | {"lines": ["Ersetztes Protokoll", "Zweite Zeile mit Umlaut: äöüß und Emoji 🎉"], "trailingNewline": true, "lineEnding": "lf"} |
       | set-trailing-newline | {"value": false} |
       | set-line-ending | {"value": "crLf"} |
       | insert-line | {"index": 20, "text": "Eingefügte Randnotiz zu Bauhütte 4.0"} |

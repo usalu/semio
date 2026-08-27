@@ -1,25 +1,8 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
-  "_comment": "🧩️ This subset's contribution to the repository test platform: the exhaustive mutation vocabulary of WAV RIFF-PCM's `any` subset and the reference oracle that proves each kind against `hound`. The shared stdio manifest already registers `hound` under capability `wave-audio` for the older creation/retune case — that capability is not `…-mutate`, so this subset registers its own oracle entry under a distinct id and capability rather than reusing it (reusing would fail the contract with `oracle-capability-mismatch`).",
-  "oracles": [
-    {
-      "id": "hound-wav-riff-pcm-mutate",
-      "ecosystem": "rust",
-      "package": "hound",
-      "version": "3",
-      "capabilities": [
-        "wav-riff-pcm-mutate"
-      ],
-      "comparisonProfiles": [
-        "semantic-audio-v1"
-      ],
-      "license": "Apache-2.0",
-      "testOnly": true,
-      "homepage": "https://github.com/ruuda/hound",
-      "rationale": "The reference RIFF/PCM WAVE reader/writer of the Rust ecosystem, used here as the independent implementation for every declared mutation kind of the `any` subset: the fmt/data pair is decoded and re-encoded through hound itself, and only the RIFF chunk *framing* hound has no concept of (arbitrary non-fmt/non-data chunks) is spliced by hand — the same fixed 8-byte fourcc+size wire header the format itself defines, not an interpretive choice this oracle is making on hound's behalf."
-    }
-  ],
+  "_comment": "🧩️ This subset contributes the exhaustive WAV RIFF-PCM mutation vocabulary. The root stdio oracle manifest owns the shared dependency-free PCM16 oracle for both creation and mutation capabilities.",
+  "oracles": [],
   "mutationCatalogs": [
     {
       "id": "wav-riff-pcm-any",

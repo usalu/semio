@@ -168,6 +168,19 @@ function parseFeatureSelection(raw: string): { positions: string[]; routes: stri
   }
 }
 
+export function resolveMapInteractionSync(selectionJson: string, hoverJson: string): { granularity: "position" | "route"; selectedIdsJson: string; hoveredId?: string } {
+  const selection = parseFeatureSelection(selectionJson);
+  const hover = parseMapHoveredFeature(hoverJson);
+  const granularity = selection.routes.length > 0 ? "route" : selection.positions.length > 0 ? "position" : hover?.kind ?? "position";
+  const selectedIds = granularity === "route" ? selection.routes : selection.positions;
+  return { granularity, selectedIdsJson: JSON.stringify(selectedIds), ...(hover?.kind === granularity ? { hoveredId: hover.id } : {}) };
+}
+
+function syncMapInteraction(session: MapWasmSession, selectionJson: string, hoverJson: string): void {
+  const interaction = resolveMapInteractionSync(selectionJson, hoverJson);
+  session.syncInteraction(interaction.granularity, interaction.selectedIdsJson, interaction.hoveredId);
+}
+
 function getTiledMapCameraLimits(session?: MapWasmSession): { min: number; max: number } {
   if (session) {
     return JSON.parse(session.cameraLimitsJson()) as { min: number; max: number };
@@ -758,8 +771,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
           }
         }
         renderer.syncDescriptor(scene.mapFixtureJson);
-        renderer.session.setSelectionJson(scene.selectionJson);
-        renderer.session.setHoverJson(scene.hoverJson);
+        syncMapInteraction(renderer.session, scene.selectionJson, scene.hoverJson);
         await renderer.refreshTiles();
         renderer.startLoop();
       };
@@ -818,14 +830,9 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
   }, [scene?.mapFixtureJson]);
 
   useEffect(() => {
-    if (!scene) return;
-    rendererRef.current?.session.setSelectionJson(scene.selectionJson);
-  }, [scene?.selectionJson]);
-
-  useEffect(() => {
-    if (!scene) return;
-    rendererRef.current?.session.setHoverJson(scene.hoverJson);
-  }, [scene?.hoverJson]);
+    if (!scene || !rendererRef.current) return;
+    syncMapInteraction(rendererRef.current.session, scene.selectionJson, scene.hoverJson);
+  }, [scene?.selectionJson, scene?.hoverJson]);
 
   useEffect(() => {
     if (!scene || panningRef.current) return;
@@ -1017,7 +1024,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
       if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
       mirrorSessionCameraToReact();
     };
-    const onContextMenu = (event: MouseEvent): void => {
+    const onContextMenu = (event: globalThis.MouseEvent): void => {
       event.preventDefault();
       event.stopPropagation();
       if (!requestContextMenu || !scene) return;
@@ -1032,7 +1039,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
         const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
-            menu: { id: "tiledMap" },
+            menu: { id: "tiledMap", args: null },
             surface: { surfaceId: node.surfaceId, kind: "tiledMap", hits, selection: selectionGroups },
             point: { x: event.clientX, y: event.clientY },
           },

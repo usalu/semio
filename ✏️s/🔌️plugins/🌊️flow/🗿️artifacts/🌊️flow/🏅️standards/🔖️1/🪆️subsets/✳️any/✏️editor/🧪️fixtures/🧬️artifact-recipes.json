@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "grants": [1, 64, 4096],
+  "label": { "unit": "🌊", "repetitions": 1200, "expectedBytes": 4800 },
+  "cases": [
+    { "id": "delete-widget", "mutation": { "mutation": "deleteWidget", "id": "b" }, "widgets": ["a", "c"], "synapses": ["ac"], "inverseKinds": ["createWidget", "moveWidgets", "connectWidgets", "connectWidgets"] },
+    { "id": "disconnect", "mutation": { "mutation": "disconnectWidgets", "id": "ab" }, "widgets": ["a", "b", "c"], "synapses": ["bc", "ac"], "inverseKinds": ["connectWidgets"] },
+    { "id": "move-widget", "mutation": { "mutation": "moveWidgets", "entries": [{ "id": "b", "layout": { "x": 5, "y": 7 } }] }, "widgets": ["a", "b", "c"], "synapses": ["ab", "bc", "ac"], "inverseKinds": ["moveWidgets"] },
+    { "id": "replace-widget", "mutation": { "mutation": "replaceWidget", "id": "b", "widget": { "kind": "inputSlider", "id": "b", "label": "changed", "value": 7, "min": 0, "max": 10, "step": 1 } }, "widgets": ["a", "b", "c"], "synapses": ["ab", "bc", "ac"], "inverseKinds": ["replaceWidget"] }
+  ],
+  "cancelAfterSteps": [0, 1, 17, 131],
+  "terminalEmpty": true
+}

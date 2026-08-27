@@ -16,6 +16,7 @@ pub use semio_framework_os_kernel::os_spr;
 /// 🧬️ Components still use former kernel path names (`crate::os_store` / `os_dsl` / `os_spr`).
 pub use semio_framework_os_kernel::os_store;
 pub use semio_framework_os_kernel::os_vcs;
+pub use protocol::value::ordered::{OrderedMap, OrderedSet};
 //#endregion 🔖️KernelModuleAliases
 
 //#region 🔖️InfiniteAlias
@@ -38,6 +39,14 @@ pub mod playbook;
 #[path = "../../📄️artifact/🦀️component.rs"]
 pub mod artifact;
 pub use artifact::*;
+
+//#region 🎚️GraphParameterIntent
+#[path = "../../🎚️parameter/📨️intent/🦀️component.rs"]
+pub mod graph_parameter;
+//#endregion 🎚️GraphParameterIntent
+
+#[path = "../../🧵️retained/🦀️component.rs"]
+pub mod retained;
 
 #[path = "../../📚️catalogue/🦀️component.rs"]
 pub mod catalogue;

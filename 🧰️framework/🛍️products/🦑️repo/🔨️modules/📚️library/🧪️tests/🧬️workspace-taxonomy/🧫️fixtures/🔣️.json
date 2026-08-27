@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "canonicalLocator": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+  "childLocator": "🧪️virtual/📚️child/🔣️taxonomy.json",
+  "cases": [
+    { "name": "missing", "manifest": {}, "target": "regular", "expected": "reject", "reason": "metadata.semio.taxonomy" },
+    { "name": "non-string", "manifest": { "metadata": { "semio": { "taxonomy": 7 } } }, "target": "regular", "expected": "reject", "reason": "metadata.semio.taxonomy" },
+    { "name": "absolute", "manifest": { "metadata": { "semio": { "taxonomy": "/outside/🔣️taxonomy.json" } } }, "target": "regular", "expected": "reject", "reason": "safe repository-relative" },
+    { "name": "drive-relative", "manifest": { "metadata": { "semio": { "taxonomy": "C:taxonomy.json" } } }, "target": "regular", "expected": "reject", "reason": "safe repository-relative" },
+    { "name": "drive-absolute", "manifest": { "metadata": { "semio": { "taxonomy": "C:/outside/🔣️taxonomy.json" } } }, "target": "regular", "expected": "reject", "reason": "safe repository-relative" },
+    { "name": "backslash", "manifest": { "metadata": { "semio": { "taxonomy": "🧪️virtual\\🔣️taxonomy.json" } } }, "target": "regular", "expected": "reject", "reason": "safe repository-relative" },
+    { "name": "empty", "manifest": { "metadata": { "semio": { "taxonomy": "" } } }, "target": "regular", "expected": "reject", "reason": "safe repository-relative" },
+    { "name": "dot", "manifest": { "metadata": { "semio": { "taxonomy": "." } } }, "target": "regular", "expected": "reject", "reason": "unsafe path segment" },
+    { "name": "parent", "manifest": { "metadata": { "semio": { "taxonomy": "../🔣️taxonomy.json" } } }, "target": "regular", "expected": "reject", "reason": "unsafe path segment" },
+    { "name": "nul", "manifest": { "metadata": { "semio": { "taxonomy": "🧪️virtual/\u0000taxonomy.json" } } }, "target": "regular", "expected": "reject", "reason": "safe repository-relative" },
+    { "name": "virtual-compose", "manifest": { "metadata": { "semio": { "taxonomy": "compose/🧪️virtual/🔣️taxonomy.json" } } }, "target": "regular", "expected": "reject", "reason": "excluded compose" },
+    { "name": "virtual-compose-titlecase", "manifest": { "metadata": { "semio": { "taxonomy": "Compose/🧪️virtual/🔣️taxonomy.json" } } }, "target": "regular", "expected": "reject", "reason": "excluded compose" },
+    { "name": "virtual-compose-uppercase", "manifest": { "metadata": { "semio": { "taxonomy": "COMPOSE/🧪️virtual/🔣️taxonomy.json" } } }, "target": "regular", "expected": "reject", "reason": "excluded compose" },
+    { "name": "canonical-root", "manifest": { "metadata": { "semio": { "taxonomy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json" } } }, "target": "regular", "expected": "resolve", "reason": "" },
+    { "name": "child-directory", "manifest": { "metadata": { "semio": { "taxonomy": "🧪️virtual/📚️child/🔣️taxonomy.json" } } }, "target": "regular", "expected": "resolve", "reason": "" },
+    { "name": "terminal-symlink", "manifest": { "metadata": { "semio": { "taxonomy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json" } } }, "target": "file-symlink", "expected": "reject", "reason": "must not be a symlink" },
+    { "name": "component-symlink", "manifest": { "metadata": { "semio": { "taxonomy": "🧪️virtual/📚️child/🔣️taxonomy.json" } } }, "target": "directory-symlink", "expected": "reject", "reason": "must not be a symlink" },
+    { "name": "manifest-symlink", "manifest": { "metadata": { "semio": { "taxonomy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json" } } }, "target": "manifest-symlink", "expected": "reject", "reason": "must not be a symlink" }
+  ],
+  "startCases": [
+    { "name": "marker-pair", "entry": "root", "nx": "missing", "expected": "reject", "reason": "nx manifest" },
+    { "name": "symlink-ancestor", "entry": "linked-child", "nx": "regular", "expected": "reject", "reason": "must not be a symlink" },
+    { "name": "child-directory", "entry": "child", "nx": "regular", "expected": "resolve", "reason": "" },
+    { "name": "virtual-compose-root", "entry": "compose", "nx": "regular", "expected": "reject", "reason": "excluded compose" },
+    { "name": "virtual-compose-parent-root", "entry": "compose-parent-root", "nx": "regular", "expected": "reject", "reason": "excluded compose" },
+    { "name": "virtual-compose-parent-start", "entry": "compose-parent-start", "nx": "regular", "expected": "reject", "reason": "excluded compose" },
+    { "name": "root-nul", "entry": "root-nul", "nx": "regular", "expected": "reject", "reason": "contains a NUL" },
+    { "name": "root-drive-relative", "entry": "root-drive-relative", "nx": "regular", "expected": "reject", "reason": "drive-relative" },
+    { "name": "ancestor-symlink-parent", "entry": "symlink-parent", "nx": "regular", "expected": "reject", "reason": "contains a dot or parent" }
+  ],
+  "anchorCases": [
+    { "name": "missing-project", "nx": "regular", "project": "missing", "reason": "project manifest is missing" },
+    { "name": "symlink-project", "nx": "regular", "project": "symlink", "reason": "project manifest must not be a symlink" },
+    { "name": "symlink-nx", "nx": "symlink", "project": "regular", "reason": "nx manifest must not be a symlink" }
+  ]
+}

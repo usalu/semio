@@ -5,7 +5,7 @@ use crate::artifacts::flow::{flow_working_scene, FlowSnapshot};
 
 use super::mutation::ReorderSynapses;
 
-pub async fn diff(payload: &ReorderSynapses, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
+pub fn diff(payload: &ReorderSynapses, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
     let mut scene = flow_working_scene(base);
     let Some(from) = scene.synapses.iter().position(|synapse| synapse.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Synapse \"{}\" does not exist.", payload.id), [payload.id.clone()]);

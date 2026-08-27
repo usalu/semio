@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-member",
+  "semanticKind": "remove-member",
+  "displayName": "Remove Member",
+  "emoji": "🗑️",
+  "aggregateVariant": "RemoveMember",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "remove-member",
+  "binaryTag": 2,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -39,7 +39,7 @@ mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_plugin_sequence::artifacts::sequence::dsl::{parse_dsl, print_dsl};
     use semio_s_plugin_sequence::artifacts::sequence::mutations::{apply_sequence_mutation, decode_sequence_mutation_json, decode_sequence_scene_json, encode_sequence_projection_json, inverse_sequence_mutation, SequenceMutation};
-    use semio_s_plugin_sequence::artifacts::sequence::{sequence_content_child_handle_and_cache, SequenceSnapshot};
+    use semio_s_plugin_sequence::artifacts::sequence::{sequence_content_child_with_owner, SequenceSnapshot};
     use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves};
 
     //#region 🔖️CommittedInput
@@ -55,7 +55,7 @@ mod subject {
         if steps.is_empty() {
             return Err("the committed base scene declares no steps, so no id-keyed kind could address anything".into());
         }
-        decoded.content = sequence_content_child_handle_and_cache(steps, edges);
+        decoded.content = sequence_content_child_with_owner(steps, edges);
         Ok(decoded)
     }
 

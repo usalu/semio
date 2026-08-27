@@ -4,7 +4,7 @@ use crate::artifacts::jack::diff::{diff_replace_content, JackDiff};
 use crate::artifacts::jack::{EntityRef, JackSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ChangeDataProperty, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
+pub fn diff(payload: &super::ChangeDataProperty, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
     let mut scene = crate::artifacts::jack::jack_working_scene(base);
     let (kind, id) = match &payload.entity {
         EntityRef::Node(id) => ("node", id),

@@ -451,7 +451,7 @@ function WasmEditorSurface({
               emitSelection();
             },
             commitRename: () => {
-              if (renameInfo) startRename(renameInfo);
+              if (renameInfo) startRename();
             },
             cut: () => {
               document.execCommand("cut");
@@ -480,7 +480,7 @@ function WasmEditorSurface({
           const menu = await openSurfaceContextMenu(
             requestContextMenu,
             {
-              menu: { id: "textEditor" },
+              menu: { id: "textEditor", args: null },
               surface: {
                 surfaceId,
                 kind: "textEditor",

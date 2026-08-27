@@ -1,22 +1,9 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/space/home/mutation.json",
   "title": "SHomeMutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "schema",
-    "catalogGeneration"
+  "oneOf": [
+    {"$ref": "./🔢️change-catalog-generation/🔣️payload.schema.json"}
   ],
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "catalogGeneration": {
-      "type": "integer",
-      "format": "int64",
-      "minimum": 0,
-      "x-semio-state": "artifact"
-    }
-  }
+  "x-semio-mutationKinds": ["change-catalog-generation"]
 }

@@ -1,0 +1,23 @@
+{
+  "schema": "retained-member-publication/v1",
+  "wireSchema": "demo.member.json-number",
+  "maximumItems": 1,
+  "maximumBytes": 4096,
+  "groupId": "member-group-ordered",
+  "orderedMembers": [
+    { "id": "first", "wire": "17", "paddingBytes": 8192, "expected": 17 },
+    { "id": "second", "wire": "-23", "paddingBytes": 0, "expected": -23 },
+    { "id": "first", "wire": "42", "paddingBytes": 0, "expected": 42 }
+  ],
+  "laws": [
+    "missing-factory-returns-exact-wire-owner",
+    "wrong-member-authority-does-not-advance",
+    "revision-change-before-commit-rejects",
+    "cancel-before-commit-does-not-mutate",
+    "ack-does-not-republish",
+    "group-stamp-is-sealed-before-digest",
+    "close-retires-one-wire-byte-per-turn",
+    "zero-grant-does-not-advance",
+    "maximum-production-grant-makes-progress"
+  ]
+}

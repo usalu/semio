@@ -75,7 +75,7 @@ pub fn register(registry: &mut Registry) {
 /// 📦️ Flow extension manifest JSON contributed to host catalogues.
 pub fn extension_manifest_json() -> String {
     use flow_extension_sdk::{build_manifest_json, FlowExtensionCommand};
-    build_manifest_json("logic", "Logic", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "logic.showHelp".into(), title: "Logic: Show Help".into() }], vec![])
+    build_manifest_json("logic", "Logic", "0.1.0", &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "logic.showHelp".into(), title: "Logic: Show Help".into() }], vec![])
 }
 
 /// 🌊️ Builds an in-process operator registry for this extension.
@@ -105,14 +105,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn manifest_lists_logic_operators() {
-        let json = build_manifest_json("logic", "Logic", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "logic.showHelp".into(), title: "Logic: Show Help".into() }], vec![]);
+        let json = build_manifest_json("logic", "Logic", "0.1.0", &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "logic.showHelp".into(), title: "Logic: Show Help".into() }], vec![]);
         assert!(json.contains("logic.greater"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn evaluate_json_greater() {
         let input = Dictionary::new().insert("a", Value::Dictionary(number_dictionary(5.0))).insert("b", Value::Dictionary(number_dictionary(2.0)));
-        let out_json = evaluate_json(&module_registry(), "logic.greater", &serde_json::to_string(&input).unwrap());
+        let out_json = evaluate_json(&neural_engine::ColdOwner::new(module_registry()), "logic.greater", &serde_json::to_string(&input).unwrap());
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
         let boolean = out.get("boolean").and_then(|v| v.as_dictionary()).expect("boolean channel");
         assert_eq!(boolean.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_bool()), Some(true));
@@ -169,7 +169,7 @@ mod extension_guest {
         let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
         semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
             let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string()))?;
-            Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
+            Ok(evaluate_json(&neural_engine::ColdOwner::new(module_registry()), &request.operator_id, &request.input_json).into_bytes())
         }))
     }
 

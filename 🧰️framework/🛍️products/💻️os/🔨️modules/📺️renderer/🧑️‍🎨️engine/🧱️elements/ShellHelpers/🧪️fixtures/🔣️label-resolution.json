@@ -1,0 +1,13 @@
+{
+  "matrix": {"native": {"en": "Node", "de": "Knoten"}, "reuse": {"en": "Part", "de": "Bauteil"}},
+  "cases": [
+    {"id": "native-en", "terminology": "native", "locale": "en", "expected": "Node"},
+    {"id": "native-de", "terminology": "native", "locale": "de", "expected": "Knoten"},
+    {"id": "reuse-en", "terminology": "reuse", "locale": "en", "expected": "Part"},
+    {"id": "reuse-de", "terminology": "reuse", "locale": "de", "expected": "Bauteil"},
+    {"id": "unknown-locale", "terminology": "native", "locale": "fr", "expected": ""},
+    {"id": "unknown-terminology", "terminology": "other", "locale": "de", "expected": ""},
+    {"id": "user-authored", "terminology": "reuse", "locale": "de", "data": "ユーザー α 🧬", "expected": "ユーザー α 🧬"},
+    {"id": "empty-data", "terminology": "native", "locale": "en", "data": "", "expected": ""}
+  ]
+}

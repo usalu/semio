@@ -1,6 +1,6 @@
 //! 📜️ 📜️ Trinity Rewrite app command — `set-lhs-json`.
 
-use crate::artifacts::rewrite::mutations::rewrite_snapshot_mutations;
+use crate::artifacts::rewrite::rewrite_snapshot_mutations;
 use crate::artifacts::rewrite::op::RewriteRuleMutation;
 use crate::artifacts::rewrite::RewriteSnapshot;
 use crate::editor::rewrite::config::RewriteConfigMutation;

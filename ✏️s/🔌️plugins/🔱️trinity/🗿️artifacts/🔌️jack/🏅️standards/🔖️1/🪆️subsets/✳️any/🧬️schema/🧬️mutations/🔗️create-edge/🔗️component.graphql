@@ -1,0 +1,4 @@
+# 🔗️ Direct create-edge / CreateEdge payload.
+scalar JSON
+input CreateEdgeEdgeInput { id: String!, kind: String!, source: String!, target: String!, properties: JSON! }
+input CreateEdgeInput { edge: CreateEdgeEdgeInput! }

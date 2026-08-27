@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["schemaVersion", "descriptor", "enumWireValues", "binaryTagVectors", "ownerBoundaryVectors", "rosterVectors"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "descriptor": { "$ref": "https://semio.tech/schema/mutation-descriptor/1" },
+    "enumWireValues": {
+      "type": "object",
+      "required": ["invertibility", "diffParticipation", "outcomeClasses", "composition", "requiredLanguageSurfaces"],
+      "properties": {
+        "invertibility": { "type": "array", "items": { "enum": ["self", "explicit-mutation", "plan", "non-invertible"] } },
+        "diffParticipation": { "type": "array", "items": { "enum": ["detect", "apply-only", "plan", "none"] } },
+        "outcomeClasses": { "type": "array", "items": { "enum": ["applied", "info", "warning", "error", "fatal"] } },
+        "composition": { "type": "array", "items": { "enum": ["atomic", "composite"] } },
+        "requiredLanguageSurfaces": { "type": "array", "items": { "enum": ["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"] } }
+      },
+      "additionalProperties": false
+    },
+    "binaryTagVectors": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "required": ["name", "expected"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "value": {},
+          "missing": { "const": true },
+          "expected": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "ownerBoundaryVectors": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["name", "owner", "expected"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "owner": { "type": "string" },
+          "expected": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "rosterVectors": {
+      "type": "array",
+      "minItems": 20,
+      "items": {
+        "type": "object",
+        "required": ["name", "expected"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "expected": { "type": "boolean" },
+          "field": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

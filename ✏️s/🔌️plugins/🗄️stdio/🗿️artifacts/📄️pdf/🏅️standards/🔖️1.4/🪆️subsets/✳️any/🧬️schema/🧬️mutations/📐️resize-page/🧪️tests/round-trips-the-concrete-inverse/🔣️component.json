@@ -1,0 +1,50 @@
+{
+  "base": {
+    "schema": "stdio.pdf",
+    "pages": [
+      {
+        "width": 612,
+        "height": 792,
+        "text": "base (\\) é"
+      },
+      {
+        "width": 300.5,
+        "height": 400.25,
+        "text": "second"
+      }
+    ]
+  },
+  "mutation": {
+    "mutation": "resize-page",
+    "payload": {
+      "index": 1,
+      "width": 0,
+      "height": 841.89
+    }
+  },
+  "expected": {
+    "schema": "stdio.pdf",
+    "pages": [
+      {
+        "width": 612,
+        "height": 792,
+        "text": "base (\\) é"
+      },
+      {
+        "width": 0,
+        "height": 841.89,
+        "text": "second"
+      }
+    ]
+  },
+  "inverse": [
+    {
+      "mutation": "resize-page",
+      "payload": {
+        "index": 1,
+        "width": 300.5,
+        "height": 400.25
+      }
+    }
+  ]
+}

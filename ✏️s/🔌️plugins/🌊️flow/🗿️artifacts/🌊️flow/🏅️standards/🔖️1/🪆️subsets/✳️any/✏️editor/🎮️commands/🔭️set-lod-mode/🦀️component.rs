@@ -13,7 +13,7 @@ pub struct SetLodMode {
 
 /// 🎚️ Unknown lod ids are rejected outright (rather than clamped) — the select control only ever
 /// offers `FLOW_LOD_MODE_AUTOMATIC` plus the real `DagDrawLod` ids.
-pub async fn handle(payload: &SetLodMode, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub fn handle(payload: &SetLodMode, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     if payload.value == FLOW_LOD_MODE_AUTOMATIC || DagDrawLod::from_id(&payload.value).is_some() {
         Ok(Emit::config(vec![FlowConfigMutation::SetLodMode { value: payload.value.clone() }]))
     } else {

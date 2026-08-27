@@ -1,8 +1,8 @@
 //! 🦀️ WAVE creation and retuning case — Rust adapter.
 //!
-//! The oracle writes the waveform with `hound`; the subject DECODES that same artifact with this
+//! The owned oracle writes the waveform independently; the subject DECODES that same artifact with this
 //! repository's `decode_wav` and re-encodes it with `encode_wav`. Both byte streams are then read
-//! back by the independent `hound` reader, so a lossy decode or a malformed re-encode surfaces as a
+//! back by the independent owned reader, so a lossy decode or a malformed re-encode surfaces as a
 //! real difference instead of a producer agreeing with its own reading.
 
 use semio_s_plugin_stdio_test_oracle::audio::{oracle_create_wav, oracle_retune_wav, project_wav, AudioSpec};

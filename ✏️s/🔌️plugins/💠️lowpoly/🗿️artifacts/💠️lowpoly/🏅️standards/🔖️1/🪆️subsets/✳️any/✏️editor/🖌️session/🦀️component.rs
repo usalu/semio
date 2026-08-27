@@ -740,6 +740,24 @@ impl LowpolyTransient {
         }
     }
 
+    pub(crate) fn stroke_diff_parts(&self) -> Option<(&str, usize, &[u8], &[u8])> {
+        self.state.stroke.as_deref().map(|stroke| (stroke.object_id.as_str(), stroke.layer_index, stroke.base.as_slice(), stroke.scratch.as_slice()))
+    }
+
+    pub(crate) fn finish_stroke_drag(&self) -> Self {
+        Self {
+            state: Arc::new(LowpolyTransientState {
+                stroke: None,
+                stroke_drag_active: false,
+                stroke_dirty: self.state.stroke_dirty.saturating_add(u64::from(self.state.stroke.is_some())),
+                transform: self.state.transform.clone(),
+                transform_drag_active: self.state.transform_drag_active,
+                preview_seq: self.state.preview_seq,
+                mesh_workspace: self.state.mesh_workspace.clone(),
+            }),
+        }
+    }
+
     pub fn segmented_extent(&self, segment_bytes: usize) -> Option<usize> {
         if segment_bytes == 0 {
             return None;

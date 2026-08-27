@@ -11,12 +11,12 @@
 //! Because no new content handle is minted, `➡️after` equals `⬅️before` and the committed diff is
 //! `FlowDiff`'s all-`null` `Default` — the only honestly hand-authorable applied state for a flow
 //! verb, since every state-changing flow diff addresses its composed `s.stdio.semio.flow` CHILD by a
-//! `DefaultHasher` digest of the child content.
+//! domain-separated SHA-256 digest of the child content.
 
 use crate::artifacts::flow::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, FlowMutation};
 use crate::artifacts::flow::{cache_flow_content, flow_working_scene, FlowDiff, FlowSnapshot};
 use flow::Widget;
-use std::collections::BTreeMap;
+use flow::OrderedMap;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -39,7 +39,7 @@ fn before() -> FlowSnapshot {
     let FlowMutation::ReplaceWidget(payload) = mutation() else {
         panic!("replaces-a-note-with-an-identical-note's committed mutation must be a replace-widget");
     };
-    cache_flow_content(&mut snapshot.content, vec![payload.widget.clone()], Vec::new(), BTreeMap::new());
+    cache_flow_content(&mut snapshot.content, vec![payload.widget.clone()], Vec::new(), OrderedMap::new());
     snapshot
 }
 

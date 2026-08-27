@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️edit-before-fixture",
+  "semanticKind": "edit-before-fixture",
+  "displayName": "Edit Before Fixture",
+  "emoji": "🖼️",
+  "aggregateVariant": "EditBeforeFixture",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "edit-before-fixture",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -156,6 +156,7 @@ pub enum WidgetDsl {
     },
     InputSlider {
         id: String,
+        label: String,
         value: f64,
         min: f64,
         max: f64,
@@ -201,7 +202,7 @@ pub fn widget_to_dsl(widget: &Widget) -> WidgetDsl {
         Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, preview } => {
             WidgetDsl::Neuron { id: id.clone(), neuron_kind: neuron_kind.clone(), preview: *preview, input_ports: input_ports.clone(), output_ports: output_ports.clone(), params: dictionary_to_value_dsl_entries(params) }
         }
-        Widget::InputSlider { id, value, min, max, step } => WidgetDsl::InputSlider { id: id.clone(), value: *value, min: *min, max: *max, step: *step },
+        Widget::InputSlider { id, label, value, min, max, step } => WidgetDsl::InputSlider { id: id.clone(), label: label.clone(), value: *value, min: *min, max: *max, step: *step },
         Widget::InputNote { id, text } => WidgetDsl::InputNote { id: id.clone(), text: text.clone() },
         Widget::InputImage { id, src } => WidgetDsl::InputImage { id: id.clone(), src: src.clone() },
         Widget::Variable { id, name, schema } => WidgetDsl::Variable { id: id.clone(), name: name.clone(), schema: schema.clone() },
@@ -215,7 +216,7 @@ pub fn widget_to_dsl(widget: &Widget) -> WidgetDsl {
 pub fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, store::TextError> {
     Ok(match widget {
         WidgetDsl::Neuron { id, neuron_kind, preview, input_ports, output_ports, params } => Widget::Neuron { id, neuron_kind, params: value_dsl_entries_to_dictionary(&params), input_ports, output_ports, preview },
-        WidgetDsl::InputSlider { id, value, min, max, step } => Widget::InputSlider { id, value, min, max, step },
+        WidgetDsl::InputSlider { id, label, value, min, max, step } => Widget::InputSlider { id, label, value, min, max, step },
         WidgetDsl::InputNote { id, text } => Widget::InputNote { id, text },
         WidgetDsl::InputImage { id, src } => Widget::InputImage { id, src },
         WidgetDsl::Variable { id, name, schema } => Widget::Variable { id, name, schema },
@@ -326,7 +327,7 @@ fn procedural3d_document_from_dsl(parsed: Procedural3dSnapshotDsl) -> Result<Pro
     let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(&entry))).collect();
     Ok(Procedural3dSnapshot {
         fixture: FlowFixture { schema: parsed.schema, camera: camera_from_dsl(&parsed.camera), widgets, synapses, layout },
-        generation: GenerationPlayState { generations: parsed.generations.into_iter().map(form_generation_from_dsl).collect(), selected_generation_id: parsed.selected_generation_id, preview_text: parsed.preview_text },
+        generation: GenerationPlayState { generations: parsed.generations.into_iter().map(form_generation_from_dsl).collect(), selected_generation_id: parsed.selected_generation_id, preview_text: parsed.preview_text }.into(),
     })
 }
 

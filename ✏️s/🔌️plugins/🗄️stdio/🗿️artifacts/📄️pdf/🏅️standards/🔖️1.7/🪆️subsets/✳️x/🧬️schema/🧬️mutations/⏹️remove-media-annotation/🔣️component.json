@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🧬️schema/🧬️mutations/⏹️remove-media-annotation",
+  "semanticKind": "remove-media-annotation",
+  "displayName": "Remove Media Annotation",
+  "emoji": "⏹️",
+  "aggregateVariant": "RemoveMediaAnnotation",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "remove-media-annotation",
+  "binaryTag": 13,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

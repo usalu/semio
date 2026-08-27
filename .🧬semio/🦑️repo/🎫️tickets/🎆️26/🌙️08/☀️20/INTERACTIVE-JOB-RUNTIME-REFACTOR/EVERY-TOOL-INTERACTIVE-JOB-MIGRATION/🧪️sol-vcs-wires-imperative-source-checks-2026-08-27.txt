@@ -1,0 +1,9 @@
+[DEBUG] AJV_OK vcs.retained-command-routes.v1 routes=10
+[DEBUG] AJV_OK reasoning.wires.retained-command-routes.v1 routes=10
+[DEBUG] AJV_OK imperative.retained-command-routes.v1 routes=11
+[DEBUG] SOURCE_CENSUS_OK wires routes=10
+[DEBUG] SOURCE_CENSUS_OK imperative routes=11
+[DEBUG] SOURCE_CENSUS_OK vcs routes=10 store-seams=artifact,config
+[DEBUG] DIFF_CHECK_OK vcs-wires-imperative
+
+Commands were intentionally limited to Bun/Ajv/source checks and git diff --check. No cargo, nx, rustfmt, compiler, or task runner was invoked under the fleet compiler lease.

@@ -1,0 +1,17 @@
+{
+  "schema": "nextest-execution-filter-vectors/v1",
+  "cases": [
+    { "name": "unchanged-build-selection", "input": ["--lib", "--features", "fixtures", "--target", "aarch64-apple-darwin"], "build": ["--lib", "--features", "fixtures", "--target", "aarch64-apple-darwin"], "execution": [], "libtest": [] },
+    { "name": "exact-filter-reaches-metadata-run", "input": ["--lib", "-E", "test(retained_factory_proofs_activate_)", "--features", "fixtures"], "build": ["--lib", "--features", "fixtures"], "execution": ["-E", "test(retained_factory_proofs_activate_)"], "libtest": [] },
+    { "name": "inline-filter-and-partition", "input": ["--filter-expr=test(canonical_)", "--target-dir", "ticket-build", "--partition", "count:1/2", "--run-ignored=only"], "build": ["--target-dir", "ticket-build"], "execution": ["--filter-expr=test(canonical_)", "--partition", "count:1/2", "--run-ignored=only"], "libtest": [] },
+    { "name": "repeated-filter-preserves-order", "input": ["-Etest(first)", "--ignore-default-filter", "--filter-expr", "not test(second)", "--release"], "build": ["--release"], "execution": ["-Etest(first)", "--ignore-default-filter", "--filter-expr", "not test(second)"], "libtest": [] },
+    { "name": "build-value-is-not-a-runtime-option", "input": ["--target-dir=-Etest(fake)", "--features", "filter-expr", "--lib", "-E", "test(third)"], "build": ["--target-dir=-Etest(fake)", "--features", "filter-expr", "--lib"], "execution": ["-E", "test(third)"], "libtest": [] },
+    { "name": "positional-filter-reaches-execution", "input": ["--lib", "--no-default-features", "--build-jobs", "1", "language_neutral_forward_and_concrete_inverse"], "build": ["--lib", "--no-default-features", "--build-jobs", "1"], "execution": ["language_neutral_forward_and_concrete_inverse"], "libtest": [] },
+    { "name": "multiple-positional-filters-preserve-order", "input": ["--lib", "law::forward", "law::inverse", "law::regression"], "build": ["--lib"], "execution": ["law::forward", "law::inverse", "law::regression"], "libtest": [] },
+    { "name": "valued-cargo-target-selectors-remain-build-options", "input": ["--test", "integration", "--bin", "semio", "--bench", "perf", "--example", "example", "semantic_law"], "build": ["--test", "integration", "--bin", "semio", "--bench", "perf", "--example", "example"], "execution": ["semantic_law"], "libtest": [] },
+    { "name": "valued-metadata-options-and-joined-shorts-do-not-steal-filters", "input": ["--cargo-profile", "fast", "--cargo-message-format", "json", "--timings=html", "--config", "build.jobs=1", "-Zunstable-options", "-pfixture", "-Ffixtures", "law::forward", "law::inverse"], "build": ["--cargo-profile", "fast", "--cargo-message-format", "json", "--timings=html", "--config", "build.jobs=1", "-Zunstable-options", "-pfixture", "-Ffixtures"], "execution": ["law::forward", "law::inverse"], "libtest": [] },
+    { "name": "bare-timings-does-not-steal-positional-filters", "input": ["--timings", "first_filter", "second_filter"], "build": ["--timings"], "execution": ["first_filter", "second_filter"], "libtest": [] },
+    { "name": "separator-preserves-libtest-arguments", "input": ["--lib", "semantic_law", "--", "--nocapture", "module::law"], "build": ["--lib"], "execution": ["semantic_law"], "libtest": ["--nocapture", "module::law"] }
+  ],
+  "rejected": [["-E"], ["--filter-expr="], ["--partition"], ["--run-ignored", "--lib"], ["--cargo-profile"], ["-Z"], ["--timings="]]
+}

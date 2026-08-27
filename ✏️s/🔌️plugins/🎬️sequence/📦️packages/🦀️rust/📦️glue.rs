@@ -78,6 +78,8 @@ pub mod artifacts {
                                 mod component;
                                 pub use component::*;
                             }
+                            #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🦀️component.rs"]
+                            pub mod operations;
                             #[path = "."]
                             pub mod mutations {
                                 #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
@@ -89,8 +91,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/rejects-a-duplicate-step-id/🦀️component.rs"]
                                     mod tests_rejects_a_duplicate_step_id;
@@ -101,8 +104,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/rejects-deleting-a-missing-step/🦀️component.rs"]
                                     mod tests_rejects_deleting_a_missing_step;
@@ -113,8 +117,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-step/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-step/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-step/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-step/🧪️tests/no-ops-when-the-step-is-already-at-that-position/🦀️component.rs"]
                                     mod tests_no_ops_when_the_step_is_already_at_that_position;
@@ -125,8 +130,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🧪️tests/no-ops-when-the-params-are-already-identical/🦀️component.rs"]
                                     mod tests_no_ops_when_the_params_are_already_identical;
@@ -137,8 +143,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️change-step-collapsed/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🧪️tests/no-ops-when-the-step-is-already-collapsed/🦀️component.rs"]
                                     mod tests_no_ops_when_the_step_is_already_collapsed;
@@ -149,8 +156,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-steps/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-steps/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-steps/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-steps/🧪️tests/rejects-connecting-a-step-to-itself/🦀️component.rs"]
                                     mod tests_rejects_connecting_a_step_to_itself;
@@ -161,8 +169,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-steps/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-steps/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-steps/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-steps/🧪️tests/rejects-disconnecting-a-missing-edge/🦀️component.rs"]
                                     mod tests_rejects_disconnecting_a_missing_edge;
@@ -173,8 +182,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧬duplicate-step/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧬duplicate-step/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧬duplicate-step/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧬duplicate-step/🧪️tests/rejects-when-the-new-id-already-exists/🦀️component.rs"]
                                     mod tests_rejects_when_the_new_id_already_exists;

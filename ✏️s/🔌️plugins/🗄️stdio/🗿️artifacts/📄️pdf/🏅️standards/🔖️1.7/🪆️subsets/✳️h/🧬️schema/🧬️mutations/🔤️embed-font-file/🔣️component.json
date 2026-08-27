@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🧬️mutations/🔤️embed-font-file",
+  "semanticKind": "embed-font-file",
+  "displayName": "Embed Font File",
+  "emoji": "🔤️",
+  "aggregateVariant": "EmbedFontFile",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "embed-font-file",
+  "binaryTag": 8,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

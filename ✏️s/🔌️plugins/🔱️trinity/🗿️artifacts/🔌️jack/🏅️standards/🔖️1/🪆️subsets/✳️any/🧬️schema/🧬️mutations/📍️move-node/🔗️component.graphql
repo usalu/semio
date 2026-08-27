@@ -1,0 +1,2 @@
+# 📍️ Direct move-node / MoveNode payload.
+input MoveNodeInput { id: String!, x: Float!, y: Float! }

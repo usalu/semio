@@ -60,7 +60,7 @@ async fn decode_dag_snapshot_binary(bytes: &[u8]) -> Result<DagSnapshot, String>
     let schema = read_str_lp(&mut reader)?;
     let nodes: Vec<DagNodeSpec> = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
     let edges: Vec<DagFixtureEdge> = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
-    let content = crate::artifacts::dag::dag_content_child_handle_and_cache(nodes, edges);
+    let content = crate::artifacts::dag::dag_content_child_with_owner(nodes, edges);
     Ok(DagSnapshot { schema, content })
 }
 //#endregion 🔖️BinaryPrimitives
@@ -112,7 +112,7 @@ mod tests {
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let document = DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), content: crate::artifacts::dag::dag_content_child_handle_and_cache(Vec::new(), Vec::new()) };
+        let document = DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), content: crate::artifacts::dag::dag_content_child_with_owner(Vec::new(), Vec::new()) };
         let mut store: ArtifactStore<DagSnapshot, DagMutation> = ArtifactStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag-demo", document, None)).expect("valid artifact store fixture");
         let node = crate::artifacts::dag::schema::default_node_for_kind("note", "node-1", 0.0, 0.0);
         store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::dag::mutations::create_node(node)], description: None }).expect("apply");

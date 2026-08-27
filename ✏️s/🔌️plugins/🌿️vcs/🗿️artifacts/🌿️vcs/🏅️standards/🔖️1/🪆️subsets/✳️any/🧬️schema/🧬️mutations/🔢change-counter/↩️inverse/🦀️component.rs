@@ -3,7 +3,7 @@ use crate::artifacts::vcs::mutations::VcsDemoMutation;
 use crate::artifacts::vcs::VcsSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::mutation::ChangeCounter, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
-    vec![super::mutation::change_counter(base.counter)]
+pub fn inverse(_payload: &super::ChangeCounter, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
+    vec![super::change_counter(base.counter)]
 }
 //#endregion 🔖️Inverse

@@ -1,0 +1,65 @@
+//! 📝️ Generic text framing and direct-owner registry for the visible PDF/H mutation aggregate.
+
+use super::PdfHMutation;
+use protocol::OpText;
+
+//#region 🧾️DerivedRegistry
+pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
+    ("SetInfoTitle", super::set_info_title::text::TEXT_OPCODE),
+    ("SetInfoAuthor", super::set_info_author::text::TEXT_OPCODE),
+    ("InsertJavascriptAction", super::insert_javascript_action::text::TEXT_OPCODE),
+    ("RemoveJavascriptAction", super::remove_javascript_action::text::TEXT_OPCODE),
+    ("InsertLaunchAction", super::insert_launch_action::text::TEXT_OPCODE),
+    ("RemoveLaunchAction", super::remove_launch_action::text::TEXT_OPCODE),
+    ("InsertSignatureField", super::insert_signature_field::text::TEXT_OPCODE),
+    ("RemoveSignatureField", super::remove_signature_field::text::TEXT_OPCODE),
+    ("EmbedFontFile", super::embed_font_file::text::TEXT_OPCODE),
+    ("RemoveFontFile", super::remove_font_file::text::TEXT_OPCODE),
+];
+//#endregion 🧾️DerivedRegistry
+
+//#region 🧱️Framing
+const MAX_PAYLOAD_BYTES: usize = 256 * 1024;
+
+fn encode_hex(bytes: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut text = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        text.push(HEX[(byte >> 4) as usize] as char);
+        text.push(HEX[(byte & 0x0f) as usize] as char);
+    }
+    text
+}
+
+fn decode_hex(value: &str) -> Result<Vec<u8>, String> {
+    if value.len() % 2 != 0 || value.len() > MAX_PAYLOAD_BYTES * 2 {
+        return Err("PDF/H mutation text payload exceeds its budget".into());
+    }
+    fn nibble(value: u8) -> Option<u8> {
+        if value.is_ascii_digit() { return Some(value - b'0'); }
+        (b'a'..=b'f').contains(&value).then_some(value - b'a' + 10)
+    }
+    value.as_bytes().chunks_exact(2).map(|pair| {
+        let high = nibble(pair[0]).ok_or_else(|| "PDF/H mutation payload must be lowercase hexadecimal".to_string())?;
+        let low = nibble(pair[1]).ok_or_else(|| "PDF/H mutation payload must be lowercase hexadecimal".to_string())?;
+        Ok((high << 4) | low)
+    }).collect()
+}
+
+fn text_error(detail: impl Into<String>) -> store::TextError {
+    store::TextError::new(detail.into(), dsl::TextSpan::at(1, 1))
+}
+
+impl OpText for PdfHMutation {
+    fn print_op(&self) -> String {
+        let payload = serde_json::to_vec(self).expect("PdfHMutation serialization is infallible");
+        format!("pdf-h-mutation payload={}", encode_hex(&payload))
+    }
+
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        let payload = line.strip_prefix("pdf-h-mutation payload=").ok_or_else(|| text_error("expected canonical PDF/H mutation aggregate"))?;
+        let bytes = decode_hex(payload).map_err(text_error)?;
+        serde_json::from_slice(&bytes).map_err(|error| text_error(error.to_string()))
+    }
+}
+//#endregion 🧱️Framing

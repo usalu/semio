@@ -14,11 +14,9 @@ Feature: Apply every typed opening-preferences mutation to its committed specifi
   `🔌️plugin/🖥️host` rather than beside the vocabulary it exercises, because `🎚️config` has no crate
   of its own: `📦️glue.rs` in `🖥️host/📦️packages/🦀️rust` is the ONE place `OpeningConfigMutation` is
   mounted, and a case placed at `🎚️config` would resolve its subject crate to the OS kernel, which
-  does not expose the facet at all. Second, `🎚️config` carries a SECOND mutation vocabulary that
-  this case does not cover: `MergePolicyConfigMutation`'s `change-merge-policy` sits in a file whose
-  own module doc states it is mounted in no crate's `📦️glue.rs`, so nothing compiles it — not even
-  its own committed fixture. That gap is recorded as the `os-config-merge-policy-unmounted-facet`
-  decision rather than papered over with a catalog nothing could execute.
+  does not expose the facet at all. Second, the same mount compiles the sibling merge-policy and
+  identity vocabularies, but this feature remains scoped to opening preferences and their two
+  committed vectors.
 
   What distinguishes the vocabulary that IS here is how completely two kinds cover it.
   `OpeningPreferences` holds one list of pins keyed on `(dialect, role)`, so a pin is an UPSERT — it

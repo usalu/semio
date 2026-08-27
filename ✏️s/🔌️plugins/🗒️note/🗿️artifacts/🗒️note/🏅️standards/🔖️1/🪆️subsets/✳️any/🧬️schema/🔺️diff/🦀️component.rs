@@ -477,7 +477,7 @@ mod diff_apply_tests {
     async fn malformed_nested_parent_rejects_without_changing_the_base() {
         let base = NoteSnapshot::default();
         let diff = NoteDiff {
-            blocks: Some(NoteBlocksDelta { added: vec![NoteAddedBlockEntry { parent_id: Some("missing-group".into()), index: Some(0), block: crate::artifacts::note::schema::create_block_by_kind("text", 0.0, 0.0) }], ..Default::default() }),
+            blocks: Some(NoteBlocksDelta { added: vec![NoteAddedBlockEntry { parent_id: Some("missing-group".into()), index: Some(0), block: crate::artifacts::note::schema::create_block_by_kind(&mut crate::artifacts::note::schema::NoteIdOwner::new("diff-hostile-test", 0), "text", 0.0, 0.0) }], ..Default::default() }),
             ..Default::default()
         };
         let error = diff.apply(&base).expect_err("missing nested parent must reject");

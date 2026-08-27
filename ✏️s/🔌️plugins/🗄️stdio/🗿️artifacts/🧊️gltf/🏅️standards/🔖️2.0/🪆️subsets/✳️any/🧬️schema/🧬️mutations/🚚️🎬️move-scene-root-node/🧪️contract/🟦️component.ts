@@ -1,0 +1,6 @@
+/** 🧪️ Mutation-law probe for move-scene-root-node. */
+import type { GltfSnapshot } from '../../../📸️snapshot/🟦️component.ts';
+import { applyGltfMoveSceneRootNode, type GltfMoveSceneRootNodePayload } from '../../move-scene-root-node/🟦️component.ts';
+import { deriveGltfMoveSceneRootNodeDiff } from '../../move-scene-root-node/🔺️diff/🟦️component.ts';
+import { deriveGltfMoveSceneRootNodeInverse } from '../../move-scene-root-node/↩️inverse/🟦️component.ts';
+export const assertGltfMoveSceneRootNodeLaws = (base: GltfSnapshot, payload: GltfMoveSceneRootNodePayload) => { const first = applyGltfMoveSceneRootNode(base, payload); if (!first.accepted) return first; const replay = applyGltfMoveSceneRootNode(base, payload); if (!replay.accepted || JSON.stringify(first.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(first.diff) !== JSON.stringify(replay.diff)) throw new Error('move-scene-root-node replay is non-deterministic'); const direct = deriveGltfMoveSceneRootNodeDiff(base, payload); const inverse = deriveGltfMoveSceneRootNodeInverse(base, payload); if (!direct.accepted || !inverse.accepted || JSON.stringify(direct.touchedPaths) !== JSON.stringify(first.touchedPaths) || JSON.stringify(inverse.touchedPaths) !== JSON.stringify(first.touchedPaths)) throw new Error('move-scene-root-node diff or inverse law failed'); return { first, direct, inverse }; };

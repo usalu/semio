@@ -3,18 +3,24 @@
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runCargo(["test", "-p", "semio-framework-replication", ...rest], this.repoRoot);
+    await runCargo(["test", "-p", "semio-framework-replication", ...rest], this.repoRoot);
   }
 }
 
 class BuildScript extends BundleScript {
-  run(segments: string[]): void {
-    runCargo(["build", "-p", "semio-framework-replication", ...segments], this.repoRoot);
+  async run(segments: string[]): Promise<void> {
+    await runCargo(["build", "-p", "semio-framework-replication", ...segments], this.repoRoot);
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("build", BuildScript);
+class SourceTestScript extends BundleScript {
+  async run(): Promise<void> {
+    await import("../../../🌱️value/🗂️ordered/🧪️fixtures/📜️script.ts");
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("build", BuildScript).register("test-source", SourceTestScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

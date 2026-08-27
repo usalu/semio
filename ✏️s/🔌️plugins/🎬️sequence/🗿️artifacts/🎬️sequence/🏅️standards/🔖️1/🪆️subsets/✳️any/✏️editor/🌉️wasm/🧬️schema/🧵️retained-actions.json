@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/sequence/retained-actions.v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["owner", "controller", "documentSchema", "runtimeLaws", "locales", "accessibility", "customization", "persistentOracle", "routes"],
+  "properties": {
+    "owner": { "const": "EditorApp<SequencePlayApp>" },
+    "controller": { "const": "s.sequence.sequence@1/*#editor" },
+    "documentSchema": { "const": "sequence.sequence" },
+    "runtimeLaws": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximumStepMicros", "cancellation", "freshness", "retirement", "replay", "artifactStoreAuthority", "configStoreAuthority"],
+      "properties": {
+        "maximumStepMicros": { "type": "integer", "minimum": 1, "maximum": 8000 },
+        "cancellation": { "const": "perOperation" },
+        "freshness": { "const": "validateImmediatelyBeforeExposure" },
+        "retirement": { "const": "boundedAbandonClose" },
+        "replay": { "const": "operationOwnedCheckpoint" },
+        "artifactStoreAuthority": { "const": true },
+        "configStoreAuthority": { "const": true }
+      }
+    },
+    "locales": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": { "enum": ["en", "de"] }
+    },
+    "accessibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["progressAnnouncements", "cancellable", "keyboardReachable"],
+      "properties": {
+        "progressAnnouncements": { "const": true },
+        "cancellable": { "const": true },
+        "keyboardReachable": { "const": true }
+      }
+    },
+    "customization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["orientation", "locale", "viewport"],
+      "properties": {
+        "orientation": { "const": true },
+        "locale": { "const": true },
+        "viewport": { "const": true }
+      }
+    },
+    "persistentOracle": {
+      "const": {
+        "reorganize": {
+          "orientation": "leftRight",
+          "nodes": ["a", "b", "c"],
+          "edges": [["a", "b"], ["b", "c"]],
+          "expected": [{ "id": "a", "x": 0, "y": 0 }, { "id": "b", "x": 280, "y": 0 }, { "id": "c", "x": 560, "y": 0 }]
+        },
+        "nodeGraphEdit": {
+          "baseSteps": [{ "id": "a", "kind": "state.set" }, { "id": "b", "kind": "log.print" }],
+          "baseEdges": [{ "id": "e1", "from": "a", "to": "b" }],
+          "targetSteps": [{ "id": "a", "kind": "math.add" }, { "id": "c", "kind": "log.print" }],
+          "targetEdges": [{ "id": "e2", "from": "a", "to": "c" }],
+          "expectedMutations": ["DeleteStep:b", "DeleteStep:a", "CreateStep:a", "CreateStep:c", "ConnectSteps:e2"]
+        },
+        "run": {
+          "nodes": ["set", "log"],
+          "edges": [["set", "log"]],
+          "expectedOrder": ["set", "log"]
+        }
+      }
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 17,
+      "maxItems": 17,
+      "items": { "$ref": "#/$defs/route" }
+    }
+  },
+  "$defs": {
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximumRawBytes", "maximumUnits", "checkpointBytes", "replay", "abandonClose"],
+      "properties": {
+        "maximumRawBytes": { "type": "integer", "minimum": 1, "maximum": 4096 },
+        "maximumUnits": { "type": "integer", "minimum": 2, "maximum": 66049 },
+        "checkpointBytes": { "const": 24 },
+        "replay": { "const": true },
+        "abandonClose": { "const": true }
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "classification", "publicationLane", "contract"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "classification": { "enum": ["Migrated", "BatchOnlyPendingRewrite"] },
+        "publicationLane": { "enum": ["Artifact", "Config"] },
+        "contract": { "anyOf": [{ "$ref": "#/$defs/contract" }, { "type": "null" }] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "classification": { "const": "Migrated" } }, "required": ["classification"] },
+          "then": { "properties": { "contract": { "$ref": "#/$defs/contract" } } },
+          "else": { "properties": { "contract": { "type": "null" } } }
+        }
+      ]
+    }
+  }
+}

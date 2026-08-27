@@ -15,11 +15,9 @@
 //! owner — from `🎚️config` that walk reaches the OS kernel, which does not expose the facet at all.
 //! The feature says the same thing in prose so a reader is not left guessing.
 //!
-//! **The gap this case does not close.** `🎚️config` carries a second vocabulary,
-//! `MergePolicyConfigMutation`, whose file states it is mounted in no crate's `📦️glue.rs`; nothing
-//! compiles it, not even its own committed fixture. It is recorded as the
-//! `os-config-merge-policy-unmounted-facet` no-oracle decision rather than given a catalog nothing
-//! could execute against.
+//! **Scope.** The same host mount now compiles the merge-policy and identity vocabularies and their
+//! direct-leaf unit tests. This exhaustive case remains intentionally scoped to the two opening
+//! kinds and their committed fixtures.
 //!
 //! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role, so every law this
 //! case claims is asserted INSIDE the subject handler. A handler that merely returned `Ok` would
@@ -34,11 +32,10 @@
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 
 //#region 🔖️Kinds
-/// 🏷️ Mirrors `OpeningConfigMutation::KINDS` (`../../../../../🎚️config/🧬️schema/🧬️mutations/
-/// 🦀️component.rs`) — duplicated, not imported, because the oracle-only build must not link the
-/// subject crate. The contract's mutation-coverage gate keeps this list honest against the catalog;
-/// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum,
-/// by exhaustive `match` rather than by a derive table, since this facet's dispatch is hand-written.
+/// 🏷️ Mirrors the derive-generated `OpeningConfigMutation` descriptor order — duplicated, not
+/// imported, because the oracle-only build must not link the subject crate. The contract's
+/// mutation-coverage gate keeps this list honest against the catalog, while `dsl::Mutations`
+/// mechanically derives the production vocabulary from the two wrapped direct leaves.
 const KINDS: &[&str] = &["set-default-app", "clear-default-app"];
 //#endregion 🔖️Kinds
 
@@ -99,8 +96,8 @@ fn round_trip_oracle(_ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use semio_framework_plugin_host::opening_config::mutations::{apply_opening_config_mutation_reporting, decode_opening_config_mutation_json, decode_opening_preferences_json, encode_opening_preferences_json, inverse_opening_config_mutation_steps, OpeningConfigMutation};
-    use semio_framework_plugin_host::opening_config::OpeningPreferences;
+    use semio_framework_plugin_host::opening_config::mutations::OpeningConfigMutation;
+    use semio_framework_plugin_host::opening_config::{apply_opening_config_mutation_reporting, decode_opening_config_mutation_json, decode_opening_preferences_json, encode_opening_preferences_json, inverse_opening_config_mutation_steps, OpeningPreferences};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
 
     //#region 🔖️FixtureDecode

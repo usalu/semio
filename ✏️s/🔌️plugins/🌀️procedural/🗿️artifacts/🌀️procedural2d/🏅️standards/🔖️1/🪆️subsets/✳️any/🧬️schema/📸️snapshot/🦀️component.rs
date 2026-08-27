@@ -1,6 +1,6 @@
 //! 🧬️ Procedural2d snapshot schema — artifact-lane fields only.
 
-use flow::playbook::GenerationPlayState;
+use flow::playbook::GenerationPlayRoot;
 use flow::FlowFixture;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -15,12 +15,12 @@ pub struct Procedural2dSnapshot {
     #[state(artifact)]
     pub fixture: FlowFixture,
     #[state(artifact)]
-    pub generation: GenerationPlayState,
+    pub generation: GenerationPlayRoot,
 }
 //#endregion 🔖️Procedural2dSnapshot
 
 impl Default for Procedural2dSnapshot {
     fn default() -> Self {
-        Self { fixture: FlowFixture::default(), generation: GenerationPlayState::default() }
+        Self { fixture: FlowFixture::default(), generation: GenerationPlayRoot::default() }
     }
 }

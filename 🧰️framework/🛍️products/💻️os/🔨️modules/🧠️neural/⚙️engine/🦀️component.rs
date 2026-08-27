@@ -1,18 +1,28 @@
 //! 🧠️ Headless neural engine: dictionary in, dictionary out.
 
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
+use std::mem::ManuallyDrop;
 use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
+use protocol::value::ordered::OrderedMap;
+
+#[path = "🧵️retirement/🦀️component.rs"]
+pub mod retirement;
+pub use retirement::{ColdDictionaryBuilder, ColdValueOwner, ValueRetirement, ValueRetirementStep};
+
+#[path = "🧊️cold/🦀️component.rs"]
+pub mod cold;
+pub use cold::{ColdOwner, ColdRetire};
 
 // #region 🔖️Dictionary
 /// 📚️ Immutable, unordered, collision-free key-value collection.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize)]
 #[serde(transparent)]
 pub struct Dictionary {
-    pairs: BTreeMap<String, Value>,
+    pairs: OrderedMap<Value>,
 }
 
 impl Dictionary {
@@ -24,9 +34,11 @@ impl Dictionary {
         Self::new().insert(SCHEMA_KEY, Value::Atom(Atom::String(schema.into())))
     }
 
-    pub fn insert(mut self, key: impl Into<String>, value: Value) -> Self {
-        self.pairs.insert(key.into(), value);
-        self
+    /// 🧊️ Explicit synchronous dictionary construction; retained callers use immutable sharing and typed update cursors.
+    pub fn insert(self, key: impl Into<String>, value: Value) -> Self {
+        let mut builder = ColdDictionaryBuilder::from_dictionary(self);
+        builder.insert(key.into(), value);
+        builder.finish()
     }
 
     pub fn get(&self, key: &str) -> Option<&Value> {
@@ -41,6 +53,14 @@ impl Dictionary {
         self.pairs.keys()
     }
 
+    /// 🔎️ Borrows ordered entries without cloning nested values.
+    pub fn iter(&self) -> impl DoubleEndedIterator<Item = (&String, &Value)> + ExactSizeIterator {
+        self.pairs.iter()
+    }
+
+    /// 📤️ Moves exact dictionary ownership into nested byte-aware retirement without cloning values.
+    pub fn into_retirement(self) -> ValueRetirement { ValueRetirement::from_dictionary(self) }
+
     pub fn len(&self) -> usize {
         self.pairs.len()
     }
@@ -50,11 +70,36 @@ impl Dictionary {
     }
 
     pub fn merge(&self, other: &Dictionary) -> Dictionary {
-        let mut pairs = self.pairs.clone();
+        let mut builder = ColdDictionaryBuilder::from_dictionary(self.clone());
         for (k, v) in &other.pairs {
-            pairs.insert(k.clone(), v.clone());
+            builder.insert(k.clone(), v.clone());
         }
-        Dictionary { pairs }
+        builder.finish()
+    }
+}
+
+impl Drop for Dictionary {
+    fn drop(&mut self) {
+        if let Err(_retirement) = std::mem::take(&mut self.pairs).release_shared() {
+            assert!(std::thread::panicking(), "final Dictionary ownership must be explicitly retired or owned by a cold boundary");
+        }
+    }
+}
+
+/// 🧊️ Cold decoding stages every replacement and partial failure in a domain-aware builder.
+impl<'de> Deserialize<'de> for Dictionary {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        struct Visitor;
+        impl<'de> serde::de::Visitor<'de> for Visitor {
+            type Value = Dictionary;
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { formatter.write_str("a neural dictionary") }
+            fn visit_map<A: serde::de::MapAccess<'de>>(self, mut access: A) -> Result<Self::Value, A::Error> {
+                let mut builder = ColdDictionaryBuilder::new();
+                while let Some((key, value)) = access.next_entry::<String, Value>()? { builder.insert(key, value); }
+                Ok(builder.finish())
+            }
+        }
+        deserializer.deserialize_map(Visitor)
     }
 }
 
@@ -198,7 +243,7 @@ impl FieldSpec {
     }
 
     pub fn with_default(mut self, default: Value) -> Self {
-        self.default = Some(default);
+        self.default.replace(default).retire_cold();
         self
     }
 
@@ -482,17 +527,17 @@ pub struct SchemaComponent {
 
 impl SchemaComponent {
     fn construct(&self, input: &Dictionary, provided: &[&FieldSpec]) -> Result<Dictionary, NeuralEngineError> {
-        let mut dictionary = self.schema.default_dictionary();
+        let mut dictionary = ColdDictionaryBuilder::from_dictionary(self.schema.default_dictionary());
         for field in provided {
-            dictionary = dictionary.insert(field.key.clone(), read_schema_field_input(input, field)?);
+            dictionary.insert(field.key.clone(), read_schema_field_input(input, field)?);
         }
         for field in &self.schema.fields {
-            if dictionary.get(&field.key).is_none() {
+            if dictionary.dictionary().get(&field.key).is_none() {
                 return Err(NeuralEngineError::MissingField(field.key.clone()));
             }
         }
-        self.schema.validate(&dictionary)?;
-        Ok(dictionary)
+        self.schema.validate(dictionary.dictionary())?;
+        Ok(dictionary.finish())
     }
 
     fn deconstruct(&self, input: &Dictionary) -> Result<Dictionary, NeuralEngineError> {
@@ -502,24 +547,25 @@ impl SchemaComponent {
     }
 
     fn modify(&self, input: &Dictionary, provided: &[&FieldSpec]) -> Result<Dictionary, NeuralEngineError> {
-        let mut dictionary = read_schema_instance(input, &self.schema)?.clone();
+        let mut dictionary = ColdDictionaryBuilder::from_dictionary(read_schema_instance(input, &self.schema)?.clone());
         for field in provided {
-            dictionary = dictionary.insert(field.key.clone(), read_schema_field_input(input, field)?);
+            dictionary.insert(field.key.clone(), read_schema_field_input(input, field)?);
         }
-        self.schema.validate(&dictionary)?;
-        Ok(dictionary)
+        self.schema.validate(dictionary.dictionary())?;
+        Ok(dictionary.finish())
     }
 
     fn success_output(&self, instance: &Dictionary) -> Result<Dictionary, NeuralEngineError> {
-        let mut output = Dictionary::new().insert(self.schema.id.clone(), Value::Dictionary(instance.clone()));
+        let mut output = ColdDictionaryBuilder::from_dictionary(Dictionary::new().insert(self.schema.id.clone(), Value::Dictionary(instance.clone())));
         for field in &self.schema.fields {
             // 🛡️ `instance` only reaches here after `Schema::validate` confirmed every
             // declared field.key is present, so this lookup can never miss.
             let value = instance.get(&field.key).expect("validated field");
             let channel = field_to_channel(value, &field.value)?;
-            output = output.insert(field.key.clone(), channel);
+            output.insert(field.key.clone(), channel);
         }
-        Ok(output.insert("errors", Value::Dictionary(schema_errors_list(&[]))))
+        output.insert("errors".into(), Value::Dictionary(schema_errors_list(&[])));
+        Ok(output.finish())
     }
 
     fn error_output(&self, messages: &[String]) -> Dictionary {
@@ -532,6 +578,8 @@ impl SchemaComponent {
 }
 
 impl Operator for SchemaComponent {
+        fn retire_cold(self: Box<Self>) { self.schema.retire_cold(); }
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let has_instance = schema_input_present(input, &self.schema.id);
         let provided: Vec<&FieldSpec> = self.schema.fields.iter().filter(|field| schema_input_present(input, &field.key)).collect();
@@ -542,7 +590,7 @@ impl Operator for SchemaComponent {
             (true, false) => self.deconstruct(input),
             (true, true) => self.modify(input, &provided),
         };
-        Ok(match result.and_then(|instance| self.success_output(&instance)) {
+        Ok(match result.and_then(|instance| self.success_output(&ColdOwner::new(instance))) {
             Ok(output) => output,
             Err(error) => self.error_output(&[error.to_string()]),
         })
@@ -664,6 +712,8 @@ impl std::error::Error for EvalError {}
 /// 🧮️ Computational unit: one dictionary to another.
 pub trait Operator: Send + Sync {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError>;
+    /// 🧊️ Explicit cold registry teardown; implementations owning neural domains retire those fields here.
+    fn retire_cold(self: Box<Self>) { drop(self); }
 }
 
 // #region 🔖️Cardinality
@@ -837,7 +887,7 @@ impl ChannelSpec {
     }
 
     pub fn with_default(mut self, default: Value) -> Self {
-        self.default = Some(default);
+        self.default.replace(default).retire_cold();
         self
     }
 
@@ -943,7 +993,7 @@ impl Registry {
     }
 
     pub fn register_schema(&mut self, schema: Schema) {
-        self.schemas.insert(schema.id.clone(), schema);
+        self.schemas.insert(schema.id.clone(), schema).retire_cold();
         self.finalized = false;
     }
 
@@ -958,7 +1008,7 @@ impl Registry {
             }
         }
         self.operator_produces.insert(id.clone(), produces.iter().map(|entry| (*entry).to_string()).collect());
-        self.operators.insert(id, OperatorRecord { info, implementations });
+        self.operators.insert(id, OperatorRecord { info, implementations }).retire_cold();
         self.finalized = false;
     }
 
@@ -968,7 +1018,7 @@ impl Registry {
         }
         let schema_ids: Vec<String> = self.schemas.keys().cloned().collect();
         for schema_id in schema_ids {
-            let Some(schema) = self.schemas.get(&schema_id).cloned() else { continue };
+            let Some(schema) = self.schemas.get(&schema_id).cloned().map(ColdOwner::new) else { continue };
             if !should_auto_register_schema_component(&schema) {
                 continue;
             }
@@ -983,7 +1033,7 @@ impl Registry {
             }
             self.schema_providers.entry(schema.id.clone()).or_default().insert(operator_id.clone());
             self.operator_produces.insert(operator_id.clone(), produces);
-            self.operators.insert(operator_id, OperatorRecord { info, implementations: vec![OperatorImpl { schemas: vec![], operator: Box::new(SchemaComponent { schema }) }] });
+            self.operators.insert(operator_id, OperatorRecord { info, implementations: vec![OperatorImpl { schemas: vec![], operator: Box::new(SchemaComponent { schema: schema.into_inner() }) }] }).retire_cold();
         }
         let operator_produces = self.operator_produces.clone();
         let schema_providers = self.schema_providers.clone();
@@ -1085,9 +1135,9 @@ impl Registry {
             .find(|implementation| implementation.schemas == signature)
             .or_else(|| operator.implementations.iter().find(|implementation| implementation.schemas.is_empty()))
             .ok_or_else(|| EvalError::InvalidInput(format!("no implementation for {operator_id}({})", signature.join(", "))))?;
-        let output = implementation.operator.evaluate(input)?;
+        let output = ColdOwner::new(implementation.operator.evaluate(input)?);
         validate_operator_outputs(&operator.info, &output)?;
-        Ok(output)
+        Ok(output.into_inner())
     }
 }
 // #endregion 🔖️OperatorRecord
@@ -1135,58 +1185,63 @@ pub fn node_hash(kind: &str, input: &Dictionary) -> u64 {
 /// 🧠️ Epoch-bounded in-process cache for DAG node outputs.
 #[derive(Default)]
 pub struct NeuralCache {
-    entries: Mutex<HashMap<u64, (u64, Dictionary)>>,
+    entries: ManuallyDrop<Mutex<BTreeMap<u64, (u64, Dictionary)>>>,
+    retirement: ManuallyDrop<Mutex<ValueRetirement>>,
     epoch: AtomicU64,
 }
 
-/// 🧹 Incremental exact-owner retirement for one cache control and its retained entries.
-pub struct NeuralCacheRetirement {
+struct NeuralCacheRetirementState {
     cache: Option<std::sync::Arc<NeuralCache>>,
-    entries: Option<HashMap<u64, (u64, Dictionary)>>,
+    entries: BTreeMap<u64, (u64, Dictionary)>,
+    retirement: ValueRetirement,
     terminal: bool,
 }
 
+/// 🧹️ Exact cache-root handoff and byte-aware nested retirement; u64 tree metadata has fixed machine-width height.
+pub struct NeuralCacheRetirement { state: ManuallyDrop<NeuralCacheRetirementState> }
+
 impl NeuralCacheRetirement {
     pub fn new(cache: std::sync::Arc<NeuralCache>) -> Self {
-        Self { cache: Some(cache), entries: None, terminal: false }
+        Self { state: ManuallyDrop::new(NeuralCacheRetirementState { cache: Some(cache), entries: BTreeMap::new(), retirement: ValueRetirement::default(), terminal: false }) }
     }
 
-    pub fn close_step(&mut self) -> bool {
-        if let Some(cache) = self.cache.take() {
-            if std::sync::Arc::strong_count(&cache) != 1 {
-                drop(cache);
-                self.terminal = true;
-                return true;
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> ValueRetirementStep {
+        if maximum_items == 0 || maximum_bytes == 0 { return ValueRetirementStep::Blocked; }
+        let state = &mut *self.state;
+        if !state.retirement.terminal_is_empty() { return state.retirement.close_step(maximum_items, maximum_bytes); }
+        if let Some(cache) = state.cache.take() {
+            if let Some(mut cache) = std::sync::Arc::into_inner(cache) {
+                state.entries = std::mem::take(cache.entries.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner));
+                state.retirement = std::mem::take(cache.retirement.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner));
             }
-            let cache = match std::sync::Arc::try_unwrap(cache) {
-                Ok(cache) => cache,
-                Err(cache) => {
-                    self.cache = Some(cache);
-                    return false;
-                }
-            };
-            self.entries = Some(cache.entries.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner));
-            return false;
+            return ValueRetirementStep::Pending { released_items: 1, released_bytes: 0 };
         }
-        if let Some(entries) = self.entries.as_mut() {
-            if entries.extract_if(|_, _| true).next().is_some() {
-                return false;
-            }
-            self.entries = None;
-            return false;
+        if let Some((_, (_, value))) = state.entries.pop_first() {
+            state.retirement.push_dictionary(value);
+            return ValueRetirementStep::Pending { released_items: 1, released_bytes: 0 };
         }
-        self.terminal = true;
-        true
+        state.terminal = true;
+        ValueRetirementStep::Complete
     }
 
     pub fn terminal_nonopaque_is_empty(&self) -> bool {
-        self.terminal && self.cache.is_none() && self.entries.is_none()
+        self.state.terminal && self.state.cache.is_none() && self.state.entries.is_empty() && self.state.retirement.terminal_is_empty()
     }
 }
 
 impl Drop for NeuralCacheRetirement {
     fn drop(&mut self) {
-        debug_assert!(self.terminal_nonopaque_is_empty(), "NeuralCacheRetirement must reach terminal-empty before release");
+        if !self.terminal_nonopaque_is_empty() { assert!(std::thread::panicking(), "NeuralCacheRetirement must reach terminal-empty before release"); return; }
+        unsafe { ManuallyDrop::drop(&mut self.state); }
+    }
+}
+
+impl Drop for NeuralCache {
+    fn drop(&mut self) {
+        let empty = self.entries.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty()
+            && self.retirement.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner).terminal_is_empty();
+        if !empty { assert!(std::thread::panicking(), "final NeuralCache must be explicitly retired"); return; }
+        unsafe { ManuallyDrop::drop(&mut self.entries); ManuallyDrop::drop(&mut self.retirement); }
     }
 }
 
@@ -1227,9 +1282,8 @@ impl NeuralCache {
     /// 🌱️ Pre-seeds a node output (host-mediated extension eval) so the next budgeted pass hits the cache.
     pub fn seed(&self, key: u64, value: Dictionary) {
         let epoch = self.epoch.load(Ordering::Relaxed);
-        if let Ok(mut entries) = self.entries.lock() {
-            entries.insert(key, (epoch, value));
-        }
+        let displaced = self.entries.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(key, (epoch, value));
+        if let Some((_, value)) = displaced { self.retirement.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push_dictionary(value); }
     }
 
     pub fn get(&self, key: u64) -> Option<Dictionary> {
@@ -1255,17 +1309,16 @@ impl NeuralCache {
             }
         }
         let value = compute()?;
-        if let Ok(mut entries) = self.entries.lock() {
-            entries.insert(key, (epoch, value.clone()));
-        }
+        self.seed(key, value.clone());
         Ok(value)
     }
 
     pub fn sweep(&self) {
         let epoch = self.epoch.load(Ordering::Relaxed);
-        if let Ok(mut entries) = self.entries.lock() {
-            entries.retain(|_, (entry_epoch, _)| *entry_epoch == epoch);
-        }
+        let mut entries = self.entries.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let expired: Vec<_> = entries.iter().filter(|(_, (entry_epoch, _))| *entry_epoch != epoch).map(|(key, _)| *key).collect();
+        let mut retirement = self.retirement.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        for key in expired { if let Some((_, value)) = entries.remove(&key) { retirement.push_dictionary(value); } }
     }
 }
 
@@ -1347,13 +1400,13 @@ struct NeuronSnapshot {
 /// evaluations without re-hashing or re-walking neurons that provably didn't change.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct TreeSnapshot {
-    neurons: HashMap<String, NeuronSnapshot>,
-    seed_keys: HashMap<String, u64>,
+    neurons: BTreeMap<String, NeuronSnapshot>,
+    seed_keys: BTreeMap<String, u64>,
 }
 
 impl TreeSnapshot {
     pub fn capture(tree: &Tree, seeds: &HashMap<String, Dictionary>) -> Self {
-        let mut neurons: HashMap<String, NeuronSnapshot> = tree.neurons.iter().map(|neuron| (neuron.id.clone(), NeuronSnapshot { key: neuron_key_hash(neuron), incoming: incoming_edges_signature(tree, &neuron.id), dependents: Vec::new() })).collect();
+        let mut neurons: BTreeMap<String, NeuronSnapshot> = tree.neurons.iter().map(|neuron| (neuron.id.clone(), NeuronSnapshot { key: neuron_key_hash(neuron), incoming: incoming_edges_signature(tree, &neuron.id), dependents: Vec::new() })).collect();
         for syn in &tree.synapses {
             if !neurons.contains_key(&syn.to) {
                 continue;
@@ -1362,7 +1415,7 @@ impl TreeSnapshot {
                 source.dependents.push(syn.to.clone());
             }
         }
-        let mut seed_keys = HashMap::new();
+        let mut seed_keys = BTreeMap::new();
         for (id, dict) in seeds {
             let mut hasher = std::collections::hash_map::DefaultHasher::new();
             hash_dictionary(&mut hasher, dict);
@@ -1438,8 +1491,8 @@ fn budgeted_remaining_from(order: &[String], from_index: usize, dirty: &HashSet<
 /// 📡️ Resolved neuron inputs and outputs from one evaluation pass.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct EvalChannels {
-    pub outputs: HashMap<String, Dictionary>,
-    pub inputs: HashMap<String, Dictionary>,
+    pub outputs: BTreeMap<String, Dictionary>,
+    pub inputs: BTreeMap<String, Dictionary>,
 }
 
 /// ⏳️ Result of a budget-limited evaluation pass — `remaining` (in topo order) is empty once the
@@ -1470,8 +1523,9 @@ impl<'a> Evaluator<'a> {
         Self { registry }
     }
 
-    pub fn evaluate(&self, tree: &Tree, seeds: &HashMap<String, Dictionary>) -> Result<HashMap<String, Dictionary>, EvalError> {
-        Ok(self.evaluate_channels(tree, seeds, &HashMap::new())?.outputs)
+    pub fn evaluate(&self, tree: &Tree, seeds: &HashMap<String, Dictionary>) -> Result<BTreeMap<String, Dictionary>, EvalError> {
+        let EvalChannels { outputs, inputs } = self.evaluate_channels(tree, seeds, &HashMap::new())?;
+        inputs.retire_cold(); Ok(outputs)
     }
 
     pub fn evaluate_with(
@@ -1480,8 +1534,9 @@ impl<'a> Evaluator<'a> {
         seeds: &HashMap<String, Dictionary>,
         operator_infos: &HashMap<String, OperatorInfo>,
         dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
-    ) -> Result<HashMap<String, Dictionary>, EvalError> {
-        Ok(self.evaluate_channels_with(tree, seeds, operator_infos, dispatch)?.outputs)
+    ) -> Result<BTreeMap<String, Dictionary>, EvalError> {
+        let EvalChannels { outputs, inputs } = self.evaluate_channels_with(tree, seeds, operator_infos, dispatch)?;
+        inputs.retire_cold(); Ok(outputs)
     }
 
     pub fn evaluate_channels(&self, tree: &Tree, seeds: &HashMap<String, Dictionary>, operator_infos: &HashMap<String, OperatorInfo>) -> Result<EvalChannels, EvalError> {
@@ -1495,7 +1550,7 @@ impl<'a> Evaluator<'a> {
         operator_infos: &HashMap<String, OperatorInfo>,
         dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
     ) -> Result<EvalChannels, EvalError> {
-        let cache = NeuralCache::new();
+        let cache = ColdOwner::new(NeuralCache::new());
         cache.begin_epoch();
         let result = self.evaluate_channels_sequential_cached(tree, seeds, operator_infos, dispatch, &cache, &HashSet::new(), None);
         cache.sweep();
@@ -1534,29 +1589,29 @@ impl<'a> Evaluator<'a> {
         budget: usize,
     ) -> Result<BudgetedEval, EvalError> {
         let order = topo_order(tree)?;
-        let mut outputs: HashMap<String, Dictionary> = seeds.clone();
-        let mut inputs: HashMap<String, Dictionary> = HashMap::new();
+        let mut outputs = ColdOwner::new(seeds.iter().map(|(key, value)| (key.clone(), value.clone())).collect::<BTreeMap<String, Dictionary>>());
+        let mut inputs = ColdOwner::new(BTreeMap::<String, Dictionary>::new());
         let mut spent = 0usize;
         for (index, neuron_id) in order.iter().enumerate() {
             if !dirty.contains(neuron_id) {
                 if let Some(prev) = previous {
                     if let (Some(out), Some(inp)) = (prev.outputs.get(neuron_id), prev.inputs.get(neuron_id)) {
-                        outputs.insert(neuron_id.clone(), out.clone());
-                        inputs.insert(neuron_id.clone(), inp.clone());
+                        outputs.insert(neuron_id.clone(), out.clone()).retire_cold();
+                        inputs.insert(neuron_id.clone(), inp.clone()).retire_cold();
                         continue;
                     }
                 }
             }
             let neuron = tree.neurons.iter().find(|n| n.id == *neuron_id).ok_or_else(|| EvalError::InvalidInput(format!("missing neuron {neuron_id}")))?;
             let operator_info = operator_info_for_neuron(neuron, operator_infos, self.registry.operator_info(&neuron.kind));
-            let input = collect_neuron_input(tree, &outputs, neuron_id, operator_info)?;
-            inputs.insert(neuron_id.clone(), input.clone());
+            let input = ColdOwner::new(collect_neuron_input(tree, &outputs, neuron_id, operator_info)?);
+            inputs.insert(neuron_id.clone(), input.clone()).retire_cold();
             if let Some(seed) = seeds.get(neuron_id) {
-                outputs.insert(neuron_id.clone(), seed.clone());
+                outputs.insert(neuron_id.clone(), seed.clone()).retire_cold();
                 continue;
             }
             if neuron.kind == INPUT_KIND || neuron.kind == OUTPUT_KIND {
-                outputs.insert(neuron_id.clone(), input.merge(&neuron.params));
+                outputs.insert(neuron_id.clone(), input.merge(&neuron.params)).retire_cold();
                 continue;
             }
             // 🚧️ A budget-exhausted cache miss (cluster or operator) stops the walk here; this
@@ -1565,18 +1620,18 @@ impl<'a> Evaluator<'a> {
             // cluster is conservatively always charged as a miss.
             if let Some(sub_tree) = neuron.tree.as_deref() {
                 if spent >= budget {
-                    return Ok(BudgetedEval { channels: EvalChannels { outputs, inputs }, remaining: budgeted_remaining_from(&order, index, dirty), pending_extension: None });
+                    return Ok(BudgetedEval { channels: EvalChannels { outputs: outputs.into_inner(), inputs: inputs.into_inner() }, remaining: budgeted_remaining_from(&order, index, dirty), pending_extension: None });
                 }
                 let out = self.evaluate_cluster_sequential(sub_tree, &input, operator_infos, dispatch, cache)?;
-                outputs.insert(neuron_id.clone(), out);
+                outputs.insert(neuron_id.clone(), out).retire_cold();
                 spent += 1;
                 continue;
             }
-            let merged = input.merge(&neuron.params);
+            let merged = ColdOwner::new(input.merge(&neuron.params));
             let key = node_hash(&neuron.kind, &merged);
             let is_miss = !cache.contains(key);
             if is_miss && spent >= budget {
-                return Ok(BudgetedEval { channels: EvalChannels { outputs, inputs }, remaining: budgeted_remaining_from(&order, index, dirty), pending_extension: None });
+                return Ok(BudgetedEval { channels: EvalChannels { outputs: outputs.into_inner(), inputs: inputs.into_inner() }, remaining: budgeted_remaining_from(&order, index, dirty), pending_extension: None });
             }
             let out = if let Some(cached) = cache.get(key) {
                 cached
@@ -1585,7 +1640,7 @@ impl<'a> Evaluator<'a> {
                     Err(EvalError::PendingExtension { extension_id, operator_id, node_hash }) => {
                         let input_json = serde_json::to_string(&merged).unwrap_or_else(|_| "{}".into());
                         return Ok(BudgetedEval {
-                            channels: EvalChannels { outputs, inputs },
+                            channels: EvalChannels { outputs: outputs.into_inner(), inputs: inputs.into_inner() },
                             remaining: budgeted_remaining_from(&order, index, dirty),
                             pending_extension: Some(PendingExtensionEval { extension_id, operator_id, node_hash, input_json }),
                         });
@@ -1597,12 +1652,12 @@ impl<'a> Evaluator<'a> {
                     }
                 }
             };
-            outputs.insert(neuron_id.clone(), out);
+            outputs.insert(neuron_id.clone(), out).retire_cold();
             if is_miss {
                 spent += 1;
             }
         }
-        Ok(BudgetedEval { channels: EvalChannels { outputs, inputs }, remaining: Vec::new(), pending_extension: None })
+        Ok(BudgetedEval { channels: EvalChannels { outputs: outputs.into_inner(), inputs: inputs.into_inner() }, remaining: Vec::new(), pending_extension: None })
     }
 
     pub fn evaluate_channels_with(
@@ -1612,7 +1667,7 @@ impl<'a> Evaluator<'a> {
         operator_infos: &HashMap<String, OperatorInfo>,
         dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
     ) -> Result<EvalChannels, EvalError> {
-        let cache = NeuralCache::new();
+        let cache = ColdOwner::new(NeuralCache::new());
         cache.begin_epoch();
         let result = self.evaluate_channels_cached(tree, seeds, operator_infos, dispatch, &cache, &HashSet::new(), None);
         cache.sweep();
@@ -1631,57 +1686,59 @@ impl<'a> Evaluator<'a> {
         previous: Option<&EvalChannels>,
     ) -> Result<EvalChannels, EvalError> {
         let levels = topo_levels(tree)?;
-        let mut outputs: HashMap<String, Dictionary> = seeds.clone();
-        let mut inputs: HashMap<String, Dictionary> = HashMap::new();
+        let mut outputs = ColdOwner::new(seeds.iter().map(|(key, value)| (key.clone(), value.clone())).collect::<BTreeMap<String, Dictionary>>());
+        let mut inputs = ColdOwner::new(BTreeMap::<String, Dictionary>::new());
         for level in levels {
-            let mut level_inputs: HashMap<String, Dictionary> = HashMap::new();
-            let mut level_outputs: HashMap<String, Dictionary> = HashMap::new();
-            let mut deferred_clusters: Vec<(String, Tree, Dictionary)> = Vec::new();
-            let mut compute_jobs: Vec<(String, String, Dictionary)> = Vec::new();
+            let mut level_inputs = ColdOwner::new(BTreeMap::<String, Dictionary>::new());
+            let mut level_outputs = ColdOwner::new(BTreeMap::<String, Dictionary>::new());
+            let mut deferred_clusters = ColdOwner::new(Vec::<(String, Tree, Dictionary)>::new());
+            let mut compute_jobs = ColdOwner::new(Vec::<(String, String, Dictionary)>::new());
 
             for neuron_id in &level {
                 if !dirty.contains(neuron_id) {
                     if let Some(prev) = previous {
                         if let (Some(out), Some(inp)) = (prev.outputs.get(neuron_id), prev.inputs.get(neuron_id)) {
-                            level_outputs.insert(neuron_id.clone(), out.clone());
-                            level_inputs.insert(neuron_id.clone(), inp.clone());
+                            level_outputs.insert(neuron_id.clone(), out.clone()).retire_cold();
+                            level_inputs.insert(neuron_id.clone(), inp.clone()).retire_cold();
                             continue;
                         }
                     }
                 }
                 let neuron = tree.neurons.iter().find(|n| n.id == *neuron_id).ok_or_else(|| EvalError::InvalidInput(format!("missing neuron {neuron_id}")))?;
                 let operator_info = operator_info_for_neuron(neuron, operator_infos, self.registry.operator_info(&neuron.kind));
-                let input = collect_neuron_input(tree, &outputs, neuron_id, operator_info)?;
-                level_inputs.insert(neuron_id.clone(), input.clone());
+                let input = ColdOwner::new(collect_neuron_input(tree, &outputs, neuron_id, operator_info)?);
+                level_inputs.insert(neuron_id.clone(), input.clone()).retire_cold();
                 if let Some(seed) = seeds.get(neuron_id) {
-                    level_outputs.insert(neuron_id.clone(), seed.clone());
+                    level_outputs.insert(neuron_id.clone(), seed.clone()).retire_cold();
                     continue;
                 }
                 if let Some(sub_tree) = neuron.tree.as_deref().cloned() {
-                    deferred_clusters.push((neuron_id.clone(), sub_tree, input));
+                    deferred_clusters.push((neuron_id.clone(), sub_tree, input.into_inner()));
                     continue;
                 }
                 if neuron.kind == INPUT_KIND || neuron.kind == OUTPUT_KIND {
-                    level_outputs.insert(neuron_id.clone(), input.merge(&neuron.params));
+                    level_outputs.insert(neuron_id.clone(), input.merge(&neuron.params)).retire_cold();
                     continue;
                 }
                 compute_jobs.push((neuron_id.clone(), neuron.kind.clone(), input.merge(&neuron.params)));
             }
 
-            for (neuron_id, kind, merged) in compute_jobs {
+            for (neuron_id, kind, merged) in compute_jobs.into_inner() {
+                let merged = ColdOwner::new(merged);
                 let out = evaluate_cached_output(cache, &kind, &merged, || dispatch(&kind, &merged));
-                level_outputs.insert(neuron_id, out);
+                level_outputs.insert(neuron_id, out).retire_cold();
             }
 
-            for (neuron_id, sub_tree, input) in deferred_clusters {
+            for (neuron_id, sub_tree, input) in deferred_clusters.into_inner() {
+                let sub_tree = ColdOwner::new(sub_tree); let input = ColdOwner::new(input);
                 let out = self.evaluate_cluster(&sub_tree, &input, operator_infos, dispatch, cache)?;
-                level_outputs.insert(neuron_id, out);
+                level_outputs.insert(neuron_id, out).retire_cold();
             }
 
-            inputs.extend(level_inputs);
-            outputs.extend(level_outputs);
+            for (key, value) in level_inputs.into_inner() { inputs.insert(key, value).retire_cold(); }
+            for (key, value) in level_outputs.into_inner() { outputs.insert(key, value).retire_cold(); }
         }
-        Ok(EvalChannels { outputs, inputs })
+        Ok(EvalChannels { outputs: outputs.into_inner(), inputs: inputs.into_inner() })
     }
 
     /// 🧮️ Evaluates a tree as a function: in dictionary to out dictionary via boundary neurons.
@@ -1691,8 +1748,8 @@ impl<'a> Evaluator<'a> {
 
     /// 🧮️ Evaluates a tree as a function with custom dispatch and operator metadata.
     pub fn evaluate_function_with(&self, tree: &Tree, in_dict: &Dictionary, operator_infos: &HashMap<String, OperatorInfo>, dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync)) -> Result<Dictionary, EvalError> {
-        let seeds = seed_input_boundaries(tree, in_dict);
-        let channels = self.evaluate_channels_with(tree, &seeds, operator_infos, dispatch)?;
+        let seeds = ColdOwner::new(seed_input_boundaries(tree, in_dict));
+        let channels = ColdOwner::new(self.evaluate_channels_with(tree, &seeds, operator_infos, dispatch)?);
         collect_output_boundaries(tree, &channels)
     }
 
@@ -1705,8 +1762,8 @@ impl<'a> Evaluator<'a> {
         dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
         cache: &NeuralCache,
     ) -> Result<Dictionary, EvalError> {
-        let seeds = seed_input_boundaries(tree, in_dict);
-        let channels = self.evaluate_channels_cached(tree, &seeds, operator_infos, dispatch, cache, &HashSet::new(), None)?;
+        let seeds = ColdOwner::new(seed_input_boundaries(tree, in_dict));
+        let channels = ColdOwner::new(self.evaluate_channels_cached(tree, &seeds, operator_infos, dispatch, cache, &HashSet::new(), None)?);
         collect_output_boundaries(tree, &channels)
     }
 
@@ -1718,8 +1775,8 @@ impl<'a> Evaluator<'a> {
         dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
         cache: &NeuralCache,
     ) -> Result<Dictionary, EvalError> {
-        let sub_seeds = seed_input_boundaries(sub_tree, parent_input);
-        let sub_channels = self.evaluate_channels_sequential_cached(sub_tree, &sub_seeds, operator_infos, dispatch, cache, &HashSet::new(), None)?;
+        let sub_seeds = ColdOwner::new(seed_input_boundaries(sub_tree, parent_input));
+        let sub_channels = ColdOwner::new(self.evaluate_channels_sequential_cached(sub_tree, &sub_seeds, operator_infos, dispatch, cache, &HashSet::new(), None)?);
         collect_output_boundaries(sub_tree, &sub_channels)
     }
 
@@ -1731,11 +1788,11 @@ impl<'a> Evaluator<'a> {
         dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
         cache: &NeuralCache,
     ) -> Result<Dictionary, EvalError> {
-        let sub_seeds = seed_input_boundaries(sub_tree, parent_input);
+        let sub_seeds = ColdOwner::new(seed_input_boundaries(sub_tree, parent_input));
         // 🧩️ Nested cluster subtrees are evaluated atomically (v1 limitation): any change inside
         // re-evaluates the whole cluster rather than propagating dirtiness within it. Never stale,
         // just not maximally incremental for nested clusters.
-        let sub_channels = self.evaluate_channels_cached(sub_tree, &sub_seeds, operator_infos, dispatch, cache, &HashSet::new(), None)?;
+        let sub_channels = ColdOwner::new(self.evaluate_channels_cached(sub_tree, &sub_seeds, operator_infos, dispatch, cache, &HashSet::new(), None)?);
         collect_output_boundaries(sub_tree, &sub_channels)
     }
 }
@@ -1782,7 +1839,7 @@ pub fn seed_input_boundaries(tree: &Tree, in_dict: &Dictionary) -> HashMap<Strin
 
 /// 📤️ Collects output boundary neuron values into an out dictionary keyed by channel name.
 pub fn collect_output_boundaries(tree: &Tree, channels: &EvalChannels) -> Result<Dictionary, EvalError> {
-    let mut out = Dictionary::new();
+    let mut out = ColdDictionaryBuilder::new();
     for neuron in &tree.neurons {
         if neuron.kind != OUTPUT_KIND {
             continue;
@@ -1794,9 +1851,9 @@ pub fn collect_output_boundaries(tree: &Tree, channels: &EvalChannels) -> Result
         let Some(value) = boundary_output_value(neuron_input) else {
             return Err(EvalError::MissingInput(format!("output boundary {channel_id}")));
         };
-        out = out.insert(channel_id, value);
+        out.insert(channel_id, value);
     }
-    Ok(out)
+    Ok(out.finish())
 }
 
 fn synapse_source_value(src_out: &Dictionary, from_port: &str) -> Value {
@@ -1815,7 +1872,7 @@ fn synapse_source_value(src_out: &Dictionary, from_port: &str) -> Value {
         }
         return Value::Dictionary(src_out.clone());
     }
-    src_out.get(from_port).cloned().unwrap_or(Value::Dictionary(Dictionary::new().insert("error", Value::Atom(Atom::String(format!("missing channel {from_port}"))))))
+    src_out.get(from_port).cloned().unwrap_or_else(|| Value::Dictionary(Dictionary::new().insert("error", Value::Atom(Atom::String(format!("missing channel {from_port}"))))))
 }
 
 fn insert_variadic_slot(acc: Dictionary, slot_key: &str, port_id: &str, value: Value) -> Dictionary {
@@ -1937,7 +1994,7 @@ fn validate_operator_outputs(info: &OperatorInfo, output: &Dictionary) -> Result
     Ok(())
 }
 
-fn collect_neuron_input(tree: &Tree, outputs: &HashMap<String, Dictionary>, neuron_id: &str, operator_info: Option<&OperatorInfo>) -> Result<Dictionary, EvalError> {
+fn collect_neuron_input(tree: &Tree, outputs: &BTreeMap<String, Dictionary>, neuron_id: &str, operator_info: Option<&OperatorInfo>) -> Result<Dictionary, EvalError> {
     let mut acc = Dictionary::new();
     let variadic = operator_info.and_then(|info| info.variadic_input.as_ref());
     for syn in &tree.synapses {
@@ -1953,15 +2010,16 @@ fn collect_neuron_input(tree: &Tree, outputs: &HashMap<String, Dictionary>, neur
         }
         if syn.to_port.is_empty() {
             if let Value::Dictionary(dict) = value {
-                acc = acc.merge(&dict);
+                let next = acc.merge(&dict);
+                acc.retire_cold(); dict.retire_cold(); acc = next;
             }
             continue;
         }
         acc = insert_fixed_port(acc, &syn.to_port, value);
     }
-    let acc = inject_channel_defaults_for_operator(acc, operator_info);
+    let acc = ColdOwner::new(inject_channel_defaults_for_operator(acc, operator_info));
     validate_neuron_inputs(&acc, operator_info)?;
-    Ok(acc)
+    Ok(acc.into_inner())
 }
 
 fn channel_schema(input: &Dictionary, channel: &ChannelSpec) -> String {
@@ -2045,6 +2103,18 @@ fn topo_levels(tree: &Tree) -> Result<Vec<Vec<String>>, EvalError> {
 mod tests {
     use super::*;
 
+    #[test]
+    fn dictionary_owned_cursor_preserves_order_and_nested_ownership() {
+        let dictionary = Dictionary::new().insert("z", Value::Atom(Atom::String("last".into()))).insert("a", Value::Dictionary(Dictionary::new().insert("nested", Value::Atom(Atom::String("🌊".repeat(4096))))));
+        assert_eq!(dictionary.iter().map(|(key, _)| key.as_str()).collect::<Vec<_>>(), ["a", "z"]);
+        let before = dictionary.get("a").and_then(Value::as_dictionary).unwrap().get("nested").and_then(Value::as_atom).and_then(Atom::as_str).unwrap().as_ptr();
+        let alias = dictionary.clone();
+        let after = alias.get("a").unwrap().as_dictionary().unwrap().get("nested").and_then(Value::as_atom).and_then(Atom::as_str).unwrap().as_ptr();
+        assert_eq!(before, after);
+        drop(alias);
+        retirement::retire_value_cold(dictionary.into_retirement());
+    }
+
     struct Echo;
 
     impl Operator for Echo {
@@ -2106,6 +2176,7 @@ mod tests {
         let back: Dictionary = serde_json::from_str(&json).unwrap();
         assert_eq!(back.schema(), Some("number"));
         assert_eq!(d, back);
+        d.retire_cold(); back.retire_cold();
     }
 
     #[test]
@@ -2118,6 +2189,7 @@ mod tests {
         assert_eq!(refs.len(), 1);
         assert_eq!(refs[0].id, "number");
         assert_eq!(refs[0].name, "Number");
+        reg.retire_cold();
     }
 
     #[test]
@@ -2125,8 +2197,9 @@ mod tests {
         let mut reg = Registry::new();
         reg.register_schema(number_schema());
         reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operator: Box::new(Echo) }], &[]);
-        let out = reg.dispatch("echo", &Dictionary::new().insert("x", Value::Dictionary(number_dictionary(1.0)))).unwrap();
+        let out = reg.dispatch("echo", &ColdOwner::new(Dictionary::new().insert("x", Value::Dictionary(number_dictionary(1.0))))).unwrap();
         assert!(out.get("x").is_some());
+        out.retire_cold(); reg.retire_cold();
     }
 
     #[test]
@@ -2138,6 +2211,7 @@ mod tests {
         assert_eq!(reg.schema_catalogue()[0].id, "number");
         assert_eq!(reg.operator_catalogue()[0].id, "double");
         assert_eq!(reg.operator_catalogue()[1].id, "echo");
+        reg.retire_cold();
     }
 
     #[test]
@@ -2150,6 +2224,7 @@ mod tests {
             })
             .unwrap();
         assert_eq!(out.get("b").and_then(|d| d.get("doubled")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(6.0));
+        out.retire_cold(); tree.retire_cold();
     }
 
     #[test]
@@ -2164,6 +2239,7 @@ mod tests {
         };
         let out = Evaluator::new(&reg).evaluate(&tree, &HashMap::new()).unwrap();
         assert_eq!(out.get("b").and_then(|d| d.get("doubled")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(4.0));
+        out.retire_cold(); tree.retire_cold(); reg.retire_cold();
     }
 
     #[test]
@@ -2177,6 +2253,7 @@ mod tests {
         let channels = Evaluator::new(&reg).evaluate_channels(&tree, &seeds, &HashMap::from([(double_info().id.clone(), double_info())])).unwrap();
         assert_eq!(channels.inputs.get("add").and_then(|d| d.get("number")).and_then(|v| v.as_dictionary()).and_then(|d| d.schema()), Some("number"));
         assert_eq!(channels.outputs.get("add").and_then(|d| d.get("doubled")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(6.0));
+        channels.retire_cold(); seeds.retire_cold(); tree.retire_cold(); reg.retire_cold();
     }
 
     #[test]
@@ -2188,12 +2265,13 @@ mod tests {
                 Synapse { id: "s2".into(), from: "note".into(), to: "add".into(), from_port: "number".into(), to_port: "b".into() },
             ],
         };
-        let mut outputs = HashMap::new();
+        let mut outputs = BTreeMap::new();
         outputs.insert("slider".into(), channel_output("number", number_dictionary(2.0)));
         outputs.insert("note".into(), channel_output("number", number_dictionary(3.0)));
         let input = collect_neuron_input(&tree, &outputs, "add", None).unwrap();
         assert_eq!(input.get("a").and_then(|v| v.as_dictionary()).and_then(|d| d.schema()), Some("number"));
         assert_eq!(input.get("b").and_then(|v| v.as_dictionary()).and_then(|d| d.schema()), Some("number"));
+        input.retire_cold(); outputs.retire_cold(); tree.retire_cold();
     }
 
     #[test]
@@ -2217,13 +2295,14 @@ mod tests {
                 Synapse { id: "s2".into(), from: "b".into(), to: "merge".into(), from_port: "dictionary".into(), to_port: "1".into() },
             ],
         };
-        let mut outputs = HashMap::new();
+        let mut outputs = BTreeMap::new();
         outputs.insert("a".into(), channel_output("dictionary", Dictionary::with_schema("dictionary")));
         outputs.insert("b".into(), channel_output("dictionary", Dictionary::with_schema("dictionary")));
         let input = collect_neuron_input(&tree, &outputs, "merge", Some(&operator)).unwrap();
         let items = input.get("items").and_then(|v| v.as_dictionary()).expect("items");
         assert!(items.get("0").is_some());
         assert!(items.get("1").is_some());
+        input.retire_cold(); outputs.retire_cold(); tree.retire_cold(); operator.retire_cold();
     }
 
     struct AddNumbers;
@@ -2269,6 +2348,7 @@ mod tests {
         let info = cluster_operator_info("cluster-1", "Add cluster", &tree);
         assert_eq!(info.inputs.len(), 2);
         assert_eq!(info.outputs[0].name, "sum");
+        inputs.retire_cold(); outputs.retire_cold(); info.retire_cold(); tree.retire_cold();
     }
 
     #[test]
@@ -2300,6 +2380,7 @@ mod tests {
         seeds.insert("b_src".into(), channel_output("number", number_dictionary(3.0)));
         let out = Evaluator::new(&reg).evaluate(&tree, &seeds).unwrap();
         assert_eq!(out.get("cluster").and_then(|d| d.get("sum")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(5.0));
+        out.retire_cold(); seeds.retire_cold(); tree.retire_cold(); reg.retire_cold();
     }
 
     #[test]
@@ -2318,6 +2399,7 @@ mod tests {
         let in_dict = Dictionary::new().insert("a", Value::Dictionary(number_dictionary(2.0))).insert("b", Value::Dictionary(number_dictionary(3.0)));
         let out = Evaluator::new(&reg).evaluate_function(&tree, &in_dict).unwrap();
         assert_eq!(out.get("sum").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(5.0));
+        out.retire_cold(); in_dict.retire_cold(); tree.retire_cold(); reg.retire_cold();
     }
 
     #[test]
@@ -2333,6 +2415,7 @@ mod tests {
         seeds.insert("a_src".into(), channel_output("number", number_dictionary(7.0)));
         let out = Evaluator::new(&Registry::new()).evaluate(&back, &seeds).unwrap();
         assert_eq!(out.get("cluster").and_then(|d| d.get("a")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(7.0));
+        out.retire_cold(); seeds.retire_cold(); back.retire_cold(); tree.retire_cold();
     }
 
     #[test]
@@ -2349,9 +2432,10 @@ mod tests {
             ..Default::default()
         };
         let tree = Tree { neurons: vec![Neuron::with_kind("get", "list.get", Dictionary::new())], synapses: vec![] };
-        let input = collect_neuron_input(&tree, &HashMap::new(), "get", Some(&operator)).unwrap();
+        let input = collect_neuron_input(&tree, &BTreeMap::new(), "get", Some(&operator)).unwrap();
         assert_eq!(input.get("index").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(0.0));
         assert_eq!(input.get("wrap").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_bool()), Some(false));
+        input.retire_cold(); tree.retire_cold(); operator.retire_cold();
     }
 
     #[test]
@@ -2359,6 +2443,7 @@ mod tests {
         let input = number_dictionary(3.0);
         assert_eq!(node_hash("double", &input), node_hash("double", &input));
         assert_ne!(node_hash("double", &input), node_hash("echo", &input));
+        input.retire_cold();
     }
 
     #[test]
@@ -2380,11 +2465,12 @@ mod tests {
             reg.dispatch(kind, input)
         };
         cache.begin_epoch();
-        evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache, &HashSet::new(), None).unwrap();
+        evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache, &HashSet::new(), None).unwrap().retire_cold();
         assert_eq!(calls.load(Ordering::Relaxed), 2);
         cache.begin_epoch();
-        evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache, &HashSet::new(), None).unwrap();
+        evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache, &HashSet::new(), None).unwrap().retire_cold();
         assert_eq!(calls.load(Ordering::Relaxed), 2);
+        cache.retire_cold(); tree.retire_cold(); reg.retire_cold();
     }
 
     #[test]
@@ -2401,6 +2487,7 @@ mod tests {
         let add_out = channels.outputs.get("add").expect("add output");
         assert!(add_out.get("error").is_some() || add_out.get("sum").is_none());
         assert!(channels.outputs.contains_key("a"));
+        channels.retire_cold(); tree.retire_cold(); reg.retire_cold();
     }
 
     #[test]
@@ -2422,13 +2509,14 @@ mod tests {
             reg.dispatch(kind, input)
         };
         cache.begin_epoch();
-        evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache, &HashSet::new(), None).unwrap();
+        evaluator.evaluate_channels_cached(&tree, &HashMap::new(), &HashMap::new(), &dispatch, &cache, &HashSet::new(), None).unwrap().retire_cold();
         assert_eq!(calls.load(Ordering::Relaxed), 3);
         let mut tree_changed = tree.clone();
         tree_changed.neurons[0] = Neuron::with_kind("a", "echo", number_dictionary(3.0));
         cache.begin_epoch();
-        evaluator.evaluate_channels_cached(&tree_changed, &HashMap::new(), &HashMap::new(), &dispatch, &cache, &HashSet::new(), None).unwrap();
+        evaluator.evaluate_channels_cached(&tree_changed, &HashMap::new(), &HashMap::new(), &dispatch, &cache, &HashSet::new(), None).unwrap().retire_cold();
         assert_eq!(calls.load(Ordering::Relaxed), 5);
+        tree_changed.retire_cold(); cache.retire_cold(); tree.retire_cold(); reg.retire_cold();
     }
 
     #[test]
@@ -2454,6 +2542,7 @@ mod tests {
         let result = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &dirty, None, 0).unwrap();
         assert_eq!(calls.load(Ordering::Relaxed), 0);
         assert_eq!(result.remaining, vec!["b".to_string()], "clean branch node \"c\" must not appear in remaining");
+        result.retire_cold(); cache.retire_cold(); tree.retire_cold(); reg.retire_cold();
     }
 
     #[test]
@@ -2478,6 +2567,7 @@ mod tests {
         let result = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, 0).unwrap();
         assert_eq!(calls.load(Ordering::Relaxed), 0, "a budget-0 probe must never dispatch");
         assert_eq!(result.remaining, vec!["a".to_string(), "b".to_string()], "nothing computed yet — every neuron is still pending, in topo order");
+        result.retire_cold(); cache.retire_cold(); tree.retire_cold(); reg.retire_cold();
     }
 
     #[test]
@@ -2509,6 +2599,7 @@ mod tests {
         assert!(tick2.remaining.is_empty(), "the walk reached the end of the topo order");
         let doubled = tick2.channels.outputs.get("b").and_then(|dict| dict.get("doubled")).and_then(|value| value.as_dictionary()).and_then(|dict| dict.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64());
         assert_eq!(doubled, Some(4.0));
+        tick1.retire_cold(); tick2.retire_cold(); cache.retire_cold(); tree.retire_cold(); reg.retire_cold();
     }
 
     #[test]
@@ -2529,6 +2620,7 @@ mod tests {
         assert!(result.remaining.is_empty());
         let doubled = result.channels.outputs.get("b").and_then(|dict| dict.get("doubled")).and_then(|value| value.as_dictionary()).and_then(|dict| dict.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64());
         assert_eq!(doubled, Some(4.0));
+        result.retire_cold(); cache.retire_cold(); tree.retire_cold(); reg.retire_cold();
     }
 
     #[test]
@@ -2543,6 +2635,7 @@ mod tests {
         cache.get(42);
         cache.sweep();
         assert_eq!(cache.len(), 1, "get must also refresh epoch so a completing eval does not evict its own hits");
+        cache.retire_cold();
     }
 
     #[test]
@@ -2577,13 +2670,14 @@ mod tests {
             ..Default::default()
         };
         let tree = Tree { neurons: vec![Neuron::with_kind("size", "list.size", Dictionary::new())], synapses: vec![Synapse { id: "s1".into(), from: "src".into(), to: "size".into(), from_port: "list".into(), to_port: "list".into() }] };
-        let mut outputs = HashMap::new();
+        let mut outputs = BTreeMap::new();
         outputs.insert(
             "src".into(),
             channel_output("list", Dictionary::with_schema("list").insert("0", Value::Dictionary(number_dictionary(1.0))).insert("1", Value::Dictionary(Dictionary::with_schema("text").insert("value", Value::Atom(Atom::String("x".into())))))),
         );
         let err = collect_neuron_input(&tree, &outputs, "size", Some(&operator)).unwrap_err();
         assert!(matches!(err, EvalError::HeterogeneousList(_)));
+        outputs.retire_cold(); tree.retire_cold(); operator.retire_cold();
     }
 
     fn point_schema() -> Schema {
@@ -2626,10 +2720,11 @@ mod tests {
         let built = registry.dispatch("math.point", &construct).unwrap();
         let point = built.get("point").and_then(|value| value.as_dictionary()).expect("point");
         assert_eq!(point.get("z").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(3.0));
-        let deconstructed = registry.dispatch("math.point", &Dictionary::new().insert("point", Value::Dictionary(point.clone()))).unwrap();
+        let deconstructed = registry.dispatch("math.point", &ColdOwner::new(Dictionary::new().insert("point", Value::Dictionary(point.clone())))).unwrap();
         assert_eq!(deconstructed.get("x").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(1.0));
-        let modified = registry.dispatch("math.point", &Dictionary::new().insert("point", Value::Dictionary(point.clone())).insert("x", Value::Dictionary(number_dictionary(9.0)))).unwrap();
+        let modified = registry.dispatch("math.point", &ColdOwner::new(Dictionary::new().insert("point", Value::Dictionary(point.clone())).insert("x", Value::Dictionary(number_dictionary(9.0))))).unwrap();
         assert_eq!(modified.get("point").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("x")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(9.0));
+        modified.retire_cold(); deconstructed.retire_cold(); built.retire_cold(); construct.retire_cold(); registry.retire_cold();
     }
 
     #[test]
@@ -2643,6 +2738,7 @@ mod tests {
         let errors = output.get("errors").and_then(|value| value.as_dictionary()).expect("errors");
         assert_eq!(errors.schema(), Some("list"));
         assert!(errors.get("0").is_some());
+        output.retire_cold(); registry.retire_cold();
     }
 
     #[test]
@@ -2654,6 +2750,7 @@ mod tests {
         let seeds = HashMap::new();
         let snapshot = TreeSnapshot::capture(&tree, &seeds);
         assert!(compute_dirty_set(Some(&snapshot), &snapshot).is_empty());
+        tree.retire_cold();
     }
 
     #[test]
@@ -2668,8 +2765,8 @@ mod tests {
             ],
         };
         let seeds = HashMap::new();
-        let previous = TreeSnapshot::capture(&make_tree(1.0), &seeds);
-        let current = TreeSnapshot::capture(&make_tree(2.0), &seeds);
+        let previous = TreeSnapshot::capture(&ColdOwner::new(make_tree(1.0)), &seeds);
+        let current = TreeSnapshot::capture(&ColdOwner::new(make_tree(2.0)), &seeds);
         let dirty = compute_dirty_set(Some(&previous), &current);
         assert_eq!(dirty, HashSet::from(["a".to_string(), "b".to_string()]));
     }
@@ -2695,6 +2792,7 @@ mod tests {
         let dirty = compute_dirty_set(Some(&previous), &current);
         assert!(dirty.contains("c"), "surviving dependent of a removed neuron must be dirtied");
         assert!(!dirty.contains("a"), "unrelated unchanged neuron must stay clean");
+        before.retire_cold(); after.retire_cold();
     }
 
     #[test]
@@ -2708,6 +2806,7 @@ mod tests {
         let current = TreeSnapshot::capture(&tree, &after_seeds);
         let dirty = compute_dirty_set(Some(&previous), &current);
         assert_eq!(dirty, HashSet::from(["a".to_string()]));
+        before_seeds.retire_cold(); after_seeds.retire_cold(); tree.retire_cold();
     }
 }
 // #endregion 🔖️Tests

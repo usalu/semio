@@ -75,9 +75,11 @@ function CaptureBridge(targetMemory) {
   let terminal = false;
   this.frameHex = undefined;
   this.exports = {
+    sequence_bridge_create() { return 1; },
+    sequence_bridge_destroy() { return 1; },
     sequence_bridge_allocate(length) { const pointer = cursor; cursor += Math.max(1, length); return pointer; },
     sequence_bridge_release() {},
-    sequence_bridge_send: (pointer, length) => {
+    sequence_bridge_send: (_owner, pointer, length) => {
       const bytes = new Uint8Array(targetMemory.buffer, pointer, length).slice();
       const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
       if (view.getUint8(0) !== 1) return -1;
@@ -93,7 +95,7 @@ function CaptureBridge(targetMemory) {
       } else return -1;
       return 1;
     },
-    sequence_bridge_poll(pointer, capacity) {
+    sequence_bridge_poll(_owner, pointer, capacity) {
       if (!outbound) return terminal ? -1 : 0;
       if (outbound.length > capacity) return outbound.length;
       new Uint8Array(targetMemory.buffer, pointer, outbound.length).set(outbound);

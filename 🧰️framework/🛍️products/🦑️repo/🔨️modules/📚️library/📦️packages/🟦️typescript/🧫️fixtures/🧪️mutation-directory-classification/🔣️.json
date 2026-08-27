@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "contract": "mutation-directory-projection-preserves-independent-leaf-classification",
+  "sourceMutationNames": ["♻️replace-model", "replace-model"],
+  "cases": [
+    { "path": "🔣️payload.schema.json", "content": "{\"type\":\"object\"}\n", "fileKind": "json", "violations": ["semantic-stem-unresolved"] },
+    { "path": "🔣️zzyy-unregistered.json", "content": "{}\n", "fileKind": "json", "violations": ["semantic-stem-unresolved"] },
+    { "path": "🚧️unresolved.blob", "content": "unregistered format\n", "fileKind": null, "violations": ["file-kind-unresolved"] },
+    { "path": "🔣️.json", "content": "{}\n", "fileKind": "json", "violations": [] }
+  ]
+}

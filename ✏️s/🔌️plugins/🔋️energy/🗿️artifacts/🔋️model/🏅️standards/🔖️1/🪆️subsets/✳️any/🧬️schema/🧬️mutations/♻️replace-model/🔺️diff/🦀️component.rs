@@ -3,7 +3,7 @@
 //! (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM); never touches `schema` or `results_json`.
 
 use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::replace_model::mutation::ReplaceModel;
+use crate::artifacts::model::mutations::replace_model::ReplaceModel;
 use crate::artifacts::model::EnergyModelSnapshot;
 
 //#region 🔖️Diff

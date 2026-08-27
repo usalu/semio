@@ -1,0 +1,4 @@
+# Direct remove-signature-field GraphQL payload.
+input RemoveSignatureFieldMutationInput {
+  name: String!
+}

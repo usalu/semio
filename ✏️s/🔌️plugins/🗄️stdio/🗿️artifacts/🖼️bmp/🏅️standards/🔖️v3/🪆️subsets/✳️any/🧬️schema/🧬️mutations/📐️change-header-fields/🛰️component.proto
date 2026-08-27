@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.bmp.mutation;
+// 🧬️ change-header-fields/ChangeHeaderFields; complex fields follow the direct payload schema.
+message ChangeHeaderFieldsMutation { bytes header_size = 1; bytes width = 2; bytes height = 3; bytes row_order = 4; bytes planes = 5; bytes bits_per_pixel = 6; bytes compression = 7; bytes image_size = 8; bytes x_pixels_per_meter = 9; bytes y_pixels_per_meter = 10; bytes colors_used = 11; bytes colors_important = 12; }

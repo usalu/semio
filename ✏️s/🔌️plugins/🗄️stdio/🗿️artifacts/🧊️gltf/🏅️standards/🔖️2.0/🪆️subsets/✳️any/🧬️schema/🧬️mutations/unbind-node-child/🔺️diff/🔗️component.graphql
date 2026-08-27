@@ -1,1 +1,0 @@
-input GltfUnbindNodeChildDiffV1 { parent: Int!, child: Int!, position: Int!, touchedPaths: [String!]! }

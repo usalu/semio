@@ -87,13 +87,13 @@ export function SyncAttachCard({ activeUri, cardKind, draftPath, syncUtilities, 
               </p>
             ) : null}
           </div>
-          <Input value={draftPath} placeholder={placeholder} onChange={(event) => onDraftPathChange(event.target.value)} />
+          <Input id={`framework.sync.${cardKind}.path`} value={draftPath} placeholder={placeholder} onChange={(event) => onDraftPathChange(event.target.value)} />
           <div className="flex items-center gap-2">
-            <Button type="button" onClick={attachFromDraft}>
+            <Button icon="link" type="button" onClick={attachFromDraft}>
               {attachLabel}
             </Button>
             {activeUri ? (
-              <Button type="button" onClick={onDetach}>
+              <Button icon="x" type="button" onClick={onDetach}>
                 {detachLabel}
               </Button>
             ) : null}

@@ -1,0 +1,16 @@
+[DEBUG] Command: NX_DAEMON=false bun x nx run @semio-tech/plugin-registry:generate --skip-nx-cache
+[DEBUG] Exit: 1
+[DEBUG] NX Cannot find configuration for task @semio-tech/plugin-registry:generate
+[DEBUG] The inspected owner 📋️project.json declares this exact project and target. No generated-output write occurred in this attempt. The authoritative seed contains the nine requested gates; actual Nx graph resolution is being inspected before retry.
+[DEBUG] Forced graph retry: NX_DAEMON=false NX_CACHE_PROJECT_GRAPH=false bun x nx run @semio-tech/plugin-registry:generate --skip-nx-cache
+[DEBUG] Forced graph retry exit: 1
+[DEBUG] Forced graph retry result: NX still reports no @semio-tech/plugin-registry:generate task.
+[DEBUG] Actual graph projection: {"root":"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry","name":"@semio-tech/plugin-registry","includedScripts":[],"targets":{}}
+[DEBUG] No generated-output write occurred. The seed remains authoritative and changed; generated launch output remains unverified.
+[DEBUG] Coordinator-requested retry: NX_DAEMON=false bun x nx run @semio-tech/plugin-registry:generate --skip-nx-cache
+[DEBUG] Coordinator-requested retry exit: 1; same missing-target failure.
+[DEBUG] Isolated retry: NX_DAEMON=false NX_CACHE_PROJECT_GRAPH=false NX_ISOLATE_PLUGINS=false bun x nx run @semio-tech/plugin-registry:generate --skip-nx-cache
+[DEBUG] Isolated retry exit: 0.
+[DEBUG] Canonical generator output: plugin registry catalog refreshed (59 plugin crates, 60 playgrounds, 38 framework packages).
+[DEBUG] Canonical generator output: .vscode/launch.json regenerated; Nx successfully ran @semio-tech/plugin-registry:generate.
+[DEBUG] Read-only verification: parsed standalone-comment-free JSON projections with jq and diffed the complete seed/generated configuration objects for presentation orders 401 through 409. All nine configurations match exactly, including the CAD SEMIO_TEST_ARTIFACT_DIR forwarding environment. diff exit 0.

@@ -1,0 +1,2 @@
+# 🧬 set-view-box/SetViewBox
+input SetViewBoxPayload { path: [Int!]! viewBox: MutationPayload }

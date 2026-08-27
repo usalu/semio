@@ -1,4 +1,5 @@
-; abnf stdio.bmp mutations (binary) — protocol::OpBinary: raw UTF-8 JSON bytes of
-; BmpMutation, NOT wrapped in the shared `.semio` envelope.
-document = payload
-payload = *OCTET   ; UTF-8 JSON object per sibling ../📝️text/📖️component.grammar.semio
+; Direct binary frame: version, descriptor tag, leaf-owned payload.
+; change-header-fields=2, insert-palette-entry=3, remove-palette-entry=4, replace-palette-entry=5, replace-pixel-data=6
+mutation = %x01 tag *OCTET
+tag = %x02 / %x03 / %x04 / %x05 / %x06
+OCTET = %x00-FF

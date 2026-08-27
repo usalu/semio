@@ -77,8 +77,6 @@ Feature: Apply every typed SVG 1.1 mutation to a real-world document
     And the semantic projection moved, unless the kind is no-mutation
     Examples:
       | id                | params                                                                                                                                                      |
-      | no-mutation        | {}                                                                                                                                                          |
-      | set-snapshot       | {"rootId": "wave7-snapshot-marker", "viewBoxWidth": 2030}                                                                                                  |
       | set-declaration    | {"version": "1.1", "encoding": "UTF-8", "standalone": true}                                                                                                |
       | set-doctype        | {"doctype": "svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\""}                                                |
       | insert-element     | {"parent": [4, 0, 0, 0], "index": 1, "node": {"kind": "element", "name": "circle", "attrs": [{"name": "cx", "value": "50"}, {"name": "cy", "value": "50"}, {"name": "r", "value": "10"}, {"name": "id", "value": "wave7-marker-circle"}], "children": []}} |
@@ -101,8 +99,6 @@ Feature: Apply every typed SVG 1.1 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                | params                                                                                                                                                      |
-      | no-mutation        | {}                                                                                                                                                          |
-      | set-snapshot       | {"rootId": "wave7-snapshot-marker", "viewBoxWidth": 2030}                                                                                                  |
       | set-declaration    | {"version": "1.1", "encoding": "UTF-8", "standalone": true}                                                                                                |
       | set-doctype        | {"doctype": "svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\""}                                                |
       | insert-element     | {"parent": [4, 0, 0, 0], "index": 1, "node": {"kind": "element", "name": "circle", "attrs": [{"name": "cx", "value": "50"}, {"name": "cy", "value": "50"}, {"name": "r", "value": "10"}, {"name": "id", "value": "wave7-marker-circle"}], "children": []}} |

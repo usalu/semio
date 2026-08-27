@@ -46,7 +46,7 @@ pub type FlowEnvelope = ArtifactEnvelope<FlowSnapshot, FlowMutation>;
 pub type FlowStore = ArtifactStore<FlowSnapshot, FlowMutation>;
 
 /// 🌈️ Applies a mutation onto a snapshot in place.
-pub async fn apply_flow_mutation(snapshot: &mut FlowSnapshot, mutation: &FlowMutation) -> protocol::MutationApplyResult<()> {
+pub fn apply_flow_mutation(snapshot: &mut FlowSnapshot, mutation: &FlowMutation) -> protocol::MutationApplyResult<()> {
     let next = <FlowMutation as Mutation<FlowSnapshot>>::diff(mutation, snapshot).diff().apply(snapshot)?;
 
     *snapshot = next;
@@ -54,7 +54,7 @@ pub async fn apply_flow_mutation(snapshot: &mut FlowSnapshot, mutation: &FlowMut
 }
 
 /// ↩️ Inverse mutations for undo.
-pub async fn inverse_flow_mutation(snapshot: &FlowSnapshot, mutation: &FlowMutation) -> Vec<FlowMutation> {
+pub fn inverse_flow_mutation(snapshot: &FlowSnapshot, mutation: &FlowMutation) -> Vec<FlowMutation> {
     <FlowMutation as Mutation<FlowSnapshot>>::inverse(mutation, snapshot)
 }
 //#endregion 🔹Operation
@@ -73,7 +73,7 @@ pub fn decode_flow_mutation_json(text: &str) -> Result<FlowMutation, String> {
 /// real values a composed content child is seeded with. `Widget` is a typed UNION whose variant
 /// decides its own field set, so a caller outside this crate cannot rebuild one by hand without
 /// re-implementing that discriminant — which is exactly the knowledge this subset owns.
-pub fn decode_flow_scene_json(text: &str) -> Result<(Vec<flow::Widget>, Vec<flow::SynapseSpec>, std::collections::BTreeMap<String, flow::WidgetLayout>), String> {
+pub fn decode_flow_scene_json(text: &str) -> Result<(Vec<flow::Widget>, Vec<flow::SynapseSpec>, flow::OrderedMap<flow::WidgetLayout>), String> {
     #[derive(serde::Deserialize)]
     struct CommittedScene {
         #[serde(default)]
@@ -81,7 +81,7 @@ pub fn decode_flow_scene_json(text: &str) -> Result<(Vec<flow::Widget>, Vec<flow
         #[serde(default)]
         synapses: Vec<flow::SynapseSpec>,
         #[serde(default)]
-        layout: std::collections::BTreeMap<String, flow::WidgetLayout>,
+        layout: flow::OrderedMap<flow::WidgetLayout>,
     }
     let scene: CommittedScene = serde_json::from_str(text).map_err(|error| error.to_string())?;
     Ok((scene.widgets, scene.synapses, scene.layout))
@@ -91,9 +91,9 @@ pub fn decode_flow_scene_json(text: &str) -> Result<(Vec<flow::Widget>, Vec<flow
 /// layout)`, the inline document fields plus the composed content child's working scene. It belongs
 /// to the subset rather than to a test adapter, because what counts as this document's meaning is
 /// this subset's ruling, not a case's. The content handle is deliberately absent:
-/// `flow_content_child_handle` content-addresses exactly that triple through `std`'s deliberately
-/// unspecified `DefaultHasher`, so projecting it would compare the same content twice and pin a
-/// value the standard library does not promise.
+/// `flow_content_child_handle` content-addresses that triple with domain-separated SHA-256.
+/// Dedicated cross-language identity fixtures pin its exact canonical bytes and digest, while this
+/// projection measures semantic mutation behavior without comparing the same content twice.
 pub fn encode_flow_projection_json(snapshot: &FlowSnapshot) -> String {
     let scene = crate::artifacts::flow::flow_working_scene(snapshot);
     serde_json::json!({ "schema": snapshot.schema, "camera": snapshot.camera, "widgets": scene.widgets, "synapses": scene.synapses, "layout": scene.layout }).to_string()
@@ -111,11 +111,11 @@ pub fn encode_flow_projection_json(snapshot: &FlowSnapshot) -> String {
 /// ✏️ Runs a stateful host mutation and diffs the result back into granular `FlowMutation`s — pure
 /// over two snapshots, so it lives here beside [`from_framework_mutation`] rather than under an app.
 /// Returns an empty vec when the two fixtures are identical.
-pub async fn snapshot_operations(before: &FlowSnapshot, after: &FlowSnapshot) -> Vec<FlowMutation> {
+pub fn snapshot_operations(before: &FlowSnapshot, after: &FlowSnapshot) -> Vec<FlowMutation> {
     flow::flow_fixture_operations(&before.to_fixture(), &after.to_fixture()).into_iter().filter_map(from_framework_mutation).collect()
 }
 
-pub async fn from_framework_mutation(mutation: flow::FlowMutation) -> Option<FlowMutation> {
+pub fn from_framework_mutation(mutation: flow::FlowMutation) -> Option<FlowMutation> {
     Some(match mutation {
         flow::FlowMutation::Widgets(operation) => match operation {
             CollectionMutation::Add { index, item } => FlowMutation::CreateWidget(super::create_widget::mutation::CreateWidget { index, widget: item }),
@@ -139,7 +139,7 @@ pub async fn from_framework_mutation(mutation: flow::FlowMutation) -> Option<Flo
 /// framework-generic op (it plans two: a `Widgets::Add` then a `Synapses::Add`), so there is no
 /// framework-generic counterpart to bridge to — mirrors [`from_framework_mutation`]'s `SetFixture`
 /// case, one direction over.
-pub async fn to_framework_mutation(mutation: &FlowMutation) -> Option<flow::FlowMutation> {
+pub fn to_framework_mutation(mutation: &FlowMutation) -> Option<flow::FlowMutation> {
     Some(match mutation {
         FlowMutation::CreateWidget(payload) => flow::FlowMutation::Widgets(CollectionMutation::Add { index: payload.index, item: payload.widget.clone() }),
         FlowMutation::DeleteWidget(payload) => flow::FlowMutation::Widgets(CollectionMutation::Remove { id: payload.id.clone() }),
@@ -171,7 +171,7 @@ const DUPLICATE_WIDGET_OP_BINARY_TAG: u8 = 0xD0;
 const DUPLICATE_WIDGET_OP_TEXT_KEYWORD: &str = "duplicate-widget ";
 
 impl protocol::OpBinary for FlowMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let FlowMutation::DuplicateWidget(payload) = self else {
             let framework_mutation = to_framework_mutation(self).expect("only DuplicateWidget has no framework-generic op");
             return protocol::OpBinary::encode_op(&framework_mutation);
@@ -180,7 +180,7 @@ impl protocol::OpBinary for FlowMutation {
         bytes.extend(serde_json::to_vec(payload).map_err(|error| protocol::ProtocolError::Malformed { what: "flow.op", offset: 0, detail: format!("duplicate-widget: {error}") })?);
         Ok(bytes)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         if bytes.first() == Some(&DUPLICATE_WIDGET_OP_BINARY_TAG) {
             let payload: super::duplicate_widget::mutation::DuplicateWidget = serde_json::from_slice(&bytes[1..]).map_err(|error| protocol::ProtocolError::Malformed { what: "flow.op", offset: 1, detail: format!("duplicate-widget: {error}") })?;
             return Ok(FlowMutation::DuplicateWidget(payload));
@@ -194,7 +194,7 @@ impl protocol::OpBinary for FlowMutation {
     }
 }
 impl protocol::OpText for FlowMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         if let Some(rest) = line.strip_prefix(DUPLICATE_WIDGET_OP_TEXT_KEYWORD) {
             let payload: super::duplicate_widget::mutation::DuplicateWidget = serde_json::from_str(rest).map_err(|error| store::TextError::new(format!("duplicate-widget: {error}"), store::TextSpan::at(1, 1)))?;
             return Ok(FlowMutation::DuplicateWidget(payload));
@@ -202,7 +202,7 @@ impl protocol::OpText for FlowMutation {
         let framework_mutation = <flow::FlowMutation as protocol::OpText>::parse_op(line)?;
         from_framework_mutation(framework_mutation).ok_or_else(|| store::TextError::new("set-fixture has no semantic mutation representation (whole-document replace is banned; route through ArtifactStore::reset)", store::TextSpan::at(1, 1)))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let FlowMutation::DuplicateWidget(payload) = self else {
             let framework_mutation = to_framework_mutation(self).expect("only DuplicateWidget has no framework-generic op");
             return protocol::OpText::print_op(&framework_mutation);
@@ -232,7 +232,7 @@ mod tests {
         Widget::InputNote { id: id.into(), text: String::new() }
     }
     async fn widget_slider(id: &str) -> Widget {
-        Widget::InputSlider { id: id.into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 }
+        Widget::InputSlider { id: id.into(), label: id.into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 }
     }
 
     async fn apply(base: &FlowSnapshot, mutation: &FlowMutation) -> FlowSnapshot {

@@ -228,6 +228,16 @@ impl SnapshotReadLease {
     }
 }
 
+fn return_snapshot_read<T: ?Sized>(owner: &mut Option<Arc<T>>, lease: &mut Option<SnapshotReadLease>, after_alias_release: impl FnOnce()) -> bool {
+    let Some(mut lease) = lease.take() else {
+        assert!(owner.is_none(), "snapshot read alias requires its exact unreturned registry guard");
+        return false;
+    };
+    drop(owner.take());
+    after_alias_release();
+    lease.return_now()
+}
+
 pub struct SnapshotRead<T: ?Sized> {
     owner: Option<Arc<T>>,
     lease: Option<SnapshotReadLease>,
@@ -266,31 +276,23 @@ impl<T: ?Sized> SnapshotRead<T> {
     /// 🧹 Returns this lease to its exact registry while the registry retains the snapshot
     /// root for its own one-owner maintenance cursor.
     pub fn return_to_registry(mut self) -> bool {
-        let returned = self.lease.as_mut().is_some_and(SnapshotReadLease::return_now);
-        self.lease = None;
-        self.owner = None;
-        returned
+        return_snapshot_read(&mut self.owner, &mut self.lease, || {})
     }
 
     /// 🧹 Returns this lease and hands the caller an exact generation witness for store retirement.
     pub fn return_to_registry_witness(mut self) -> Option<SnapshotReadReturn> {
-        let lease = self.lease.as_mut()?;
+        let lease = self.lease.as_ref()?;
         let witness = SnapshotReadReturn { registry: lease.registry.clone(), index: lease.index, generation: lease.generation };
-        if !lease.return_now() {
+        if !return_snapshot_read(&mut self.owner, &mut self.lease, || {}) {
             return None;
         }
-        self.lease = None;
-        self.owner = None;
         Some(witness)
     }
 }
 
 impl<T: ?Sized> Drop for SnapshotRead<T> {
     fn drop(&mut self) {
-        if let Some(lease) = self.lease.as_mut() {
-            let _ = lease.return_now();
-        }
-        drop(self.owner.take());
+        let _ = return_snapshot_read(&mut self.owner, &mut self.lease, || {});
     }
 }
 
@@ -322,9 +324,8 @@ impl ErasedSnapshotRead {
         if self.lease.as_ref().is_none_or(|lease| !Arc::ptr_eq(&lease.registry, registry)) || self.owner.as_deref().is_none_or(|owner| !owner.is::<T>()) {
             return Err(self);
         }
-        let mut lease = self.lease.take().expect("validated snapshot read lease is present");
+        let lease = self.lease.take().expect("validated snapshot read lease is present");
         let owner = self.owner.take().expect("validated snapshot read owner is present").downcast::<T>().expect("validated snapshot read type");
-        let _ = lease.return_now();
         let guard = match registry.try_take(lease.index, lease.generation) {
             Ok(guard) => guard,
             Err(_) => {
@@ -340,10 +341,7 @@ impl ErasedSnapshotRead {
 
 impl Drop for ErasedSnapshotRead {
     fn drop(&mut self) {
-        if let Some(lease) = self.lease.as_mut() {
-            let _ = lease.return_now();
-        }
-        drop(self.owner.take());
+        let _ = return_snapshot_read(&mut self.owner, &mut self.lease, || {});
     }
 }
 
@@ -1977,6 +1975,8 @@ where
     initial_snapshot_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
     mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
     store_disposer: Box<dyn ArtifactStoreOwnedDisposer<P, Mutation>>,
+    one_item_preparation: Option<Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>>,
+    one_item_wire_preparation: Option<Arc<dyn MemberStoreOneItemWirePreparationFactory<P, Mutation>>>,
 }
 
 impl<P, Mutation> MemberStoreOwners<P, Mutation>
@@ -1990,7 +1990,19 @@ where
         mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
         store_disposer: Box<dyn ArtifactStoreOwnedDisposer<P, Mutation>>,
     ) -> Self {
-        Self { snapshot_retirement, initial_snapshot_retirement, mutation_retirement, store_disposer }
+        Self { snapshot_retirement, initial_snapshot_retirement, mutation_retirement, store_disposer, one_item_preparation: None, one_item_wire_preparation: None }
+    }
+
+    pub fn with_one_item_preparation(mut self, factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>) -> Self {
+        assert!(self.one_item_preparation.is_none(), "member typed publication authority installs exactly once");
+        self.one_item_preparation = Some(factory);
+        self
+    }
+
+    pub fn with_one_item_wire_preparation(mut self, factory: Arc<dyn MemberStoreOneItemWirePreparationFactory<P, Mutation>>) -> Self {
+        assert!(self.one_item_wire_preparation.is_none(), "member wire publication authority installs exactly once");
+        self.one_item_wire_preparation = Some(factory);
+        self
     }
 }
 
@@ -2064,13 +2076,126 @@ pub async fn document_backbone_ref(uri: &str) -> ArtifactBackboneRef {
 /// mirrors `ArtifactStore::current_checkpoint_id`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ArtifactCursor {
+pub struct ArtifactCursorOwners {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub applied_edit_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub redo_edit_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub checkpoint_id: Option<String>,
+}
+
+/// 🧭 Read-visible cursor root; prepared group owners stay private until their shared decision.
+pub struct ArtifactCursor {
+    owners: std::mem::ManuallyDrop<ArtifactCursorOwners>,
+    group: std::mem::ManuallyDrop<Option<ArtifactCursorGroupRoot>>,
+}
+
+struct ArtifactCursorGroupRoot {
+    visibility: Arc<crate::os_vcs::ArtifactGroupVisibility>,
+    owners: ArtifactCursorOwners,
+}
+
+impl ArtifactCursor {
+    pub fn new(applied_edit_ids: Vec<String>, redo_edit_ids: Vec<String>, checkpoint_id: Option<String>) -> Self {
+        Self::from_owners(ArtifactCursorOwners { applied_edit_ids, redo_edit_ids, checkpoint_id })
+    }
+
+    pub fn from_owners(owners: ArtifactCursorOwners) -> Self {
+        Self { owners: std::mem::ManuallyDrop::new(owners), group: std::mem::ManuallyDrop::new(None) }
+    }
+
+    pub(crate) fn stage_group_owned(&mut self, owners: ArtifactCursorOwners, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), ArtifactCursorOwners> {
+        if self.group.is_some() || !visibility.pending() {
+            return Err(owners);
+        }
+        *self.group = Some(ArtifactCursorGroupRoot { visibility: Arc::clone(visibility), owners });
+        Ok(())
+    }
+
+    pub(crate) fn adopt_group_owned(&mut self, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<ArtifactCursorOwners, ()> {
+        if !visibility.committed() || !self.group.as_ref().is_some_and(|group| Arc::ptr_eq(&group.visibility, visibility)) {
+            return Err(());
+        }
+        let group = self.group.take().expect("validated committed cursor root remains owned");
+        Ok(std::mem::replace(&mut *self.owners, group.owners))
+    }
+
+    pub(crate) fn abort_group_owned(&mut self, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<ArtifactCursorOwners, ()> {
+        if visibility.pending() || visibility.committed() || !self.group.as_ref().is_some_and(|group| Arc::ptr_eq(&group.visibility, visibility)) {
+            return Err(());
+        }
+        Ok(self.group.take().expect("validated aborted cursor root remains owned").owners)
+    }
+
+    fn group_visibility(&self) -> Option<&crate::os_vcs::ArtifactGroupVisibility> {
+        self.group.as_ref().map(|group| group.visibility.as_ref())
+    }
+
+    fn read_group(&self, decision: Option<&crate::os_vcs::ArtifactGroupReadDecision<'_>>) -> Result<&ArtifactCursorOwners, ()> {
+        match self.group.as_ref() {
+            Some(group) if decision.ok_or(())?.committed_for(&group.visibility)? => Ok(&group.owners),
+            _ => Ok(&*self.owners),
+        }
+    }
+}
+
+impl Default for ArtifactCursor {
+    fn default() -> Self {
+        Self::from_owners(ArtifactCursorOwners::default())
+    }
+}
+
+impl std::ops::Deref for ArtifactCursor {
+    type Target = ArtifactCursorOwners;
+
+    fn deref(&self) -> &Self::Target {
+        self.group.as_ref().filter(|group| group.visibility.committed()).map_or(&*self.owners, |group| &group.owners)
+    }
+}
+
+impl std::ops::DerefMut for ArtifactCursor {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        assert!(self.group.is_none(), "mutable cursor access requires its staged group to be adopted or aborted");
+        &mut self.owners
+    }
+}
+
+impl Clone for ArtifactCursor {
+    fn clone(&self) -> Self {
+        Self::from_owners((**self).clone())
+    }
+}
+
+impl std::fmt::Debug for ArtifactCursor {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        (**self).fmt(formatter)
+    }
+}
+
+impl PartialEq for ArtifactCursor {
+    fn eq(&self, other: &Self) -> bool {
+        **self == **other
+    }
+}
+
+impl Serialize for ArtifactCursor {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        (**self).serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for ArtifactCursor {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        Ok(Self::from_owners(ArtifactCursorOwners::deserialize(deserializer)?))
+    }
+}
+
+impl Drop for ArtifactCursor {
+    fn drop(&mut self) {
+        assert!(self.group.is_none(), "artifact cursor reached Drop before its exact staged root was adopted or returned for retirement");
+        unsafe { std::mem::ManuallyDrop::drop(&mut self.owners) };
+    }
 }
 
 //#region 🔖️HistoryLane
@@ -2100,33 +2225,27 @@ impl HistoryLane {
 }
 //#endregion 🔖️HistoryLane
 
-#[derive(Debug, PartialEq, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, PartialEq)]
 pub struct ArtifactEnvelopeOwners<P, Mutation> {
     pub schema: String,
     pub id: String,
     pub vcs: ArtifactVcs<P, Mutation>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub backbone: Option<ArtifactBackboneRef>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub active_alternative_id: Option<String>,
     /// @emoji 🎯️ Undo/redo/checkout position, present only once a store has synced it (see
     /// `ArtifactStore::sync_cursor`) — absent for a freshly-constructed envelope or one loaded
     /// from a source that predates this field, in which case position stays runtime-only exactly
     /// as before.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cursor: Option<ArtifactCursor>,
     /// @emoji 🗣️ The dialect this envelope's `vcs.initial_snapshot` (and every replayed edit) is
     /// currently in — absent for envelopes minted before dialect-tracking existed, or for document
     /// kinds that never adopted more than one dialect. See `26/08/10` D4 evolution slice; nothing
     /// in `ArtifactStore::dispatch` reads or writes this yet (that wiring is later scope) — it is
     /// purely a persisted fact a future migration-aware caller can act on.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dialect: Option<crate::os_io::ArtifactDialect>,
     /// @emoji 🧬️ Set once, the first time this envelope's snapshot was produced by migrating a
     /// prior document's dialect (see `migrate_document` below) rather than being authored directly
     /// in `dialect`. Absent for every envelope that was never migrated.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub migrated_from: Option<MigrationProvenance>,
     /// @emoji 🏠️ Present exactly when this envelope is a CHILD in a composition — the ownership
     /// stamp naming which parent/slot/`child_id` created it (see `🔖️Composition` below). Placed on
@@ -2134,7 +2253,6 @@ pub struct ArtifactEnvelopeOwners<P, Mutation> {
     /// queryable directly from the child side — e.g. "is this document embeddable standalone, or
     /// does deleting it require going through its owner". Absent for every independent artifact
     /// (the overwhelming majority) and for every envelope minted before this ticket.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub owner: Option<OwnerRef>,
     /// @emoji 🛤️ Sparse `Edit.id → HistoryLane` ledger: only entries recorded under a NON-`Document`
     /// lane are ever inserted (an ordinary document edit never gets a map entry at all), so an id
@@ -2144,10 +2262,55 @@ pub struct ArtifactEnvelopeOwners<P, Mutation> {
     /// matching prior undo/redo behavior exactly. Lives on the envelope (not on `Edit<Mutation>`
     /// itself, which this crate's per-technology `Mutation` types don't own) so it survives a plain
     /// JSON round trip (`ArtifactStore::envelope_json`) alongside `cursor`/`owner`/`dialect`.
-    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
     pub lanes: std::collections::BTreeMap<String, HistoryLane>,
     pub edit_messages: ArtifactEditMessageLedger,
     pub conflicts: Vec<crate::os_spr::Conflict>,
+}
+
+/// 📸️ One immutable envelope observation; cursor and every history ledger share one captured decision.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ArtifactEnvelopeRead<'a, P, Mutation> {
+    schema: &'a str,
+    id: &'a str,
+    vcs: crate::os_vcs::ArtifactVcsRead<'a, P, Mutation>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    backbone: Option<&'a ArtifactBackboneRef>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    active_alternative_id: Option<&'a String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    cursor: Option<&'a ArtifactCursorOwners>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    dialect: Option<&'a crate::os_io::ArtifactDialect>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    migrated_from: Option<&'a MigrationProvenance>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    owner: Option<&'a OwnerRef>,
+    #[serde(skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    lanes: &'a std::collections::BTreeMap<String, HistoryLane>,
+    edit_messages: &'a ArtifactEditMessageLedger,
+    conflicts: &'a Vec<crate::os_spr::Conflict>,
+}
+
+impl<P, Mutation> ArtifactEnvelopeOwners<P, Mutation> {
+    /// 📸️ Captures read roots before any serializer can cross a shared group decision.
+    pub fn capture_read(&self) -> Result<ArtifactEnvelopeRead<'_, P, Mutation>, &'static str> {
+        let history_visibility = self.vcs.group_visibility().map_err(|()| "envelope history contains different group authorities")?;
+        let cursor_visibility = self.cursor.as_ref().and_then(ArtifactCursor::group_visibility);
+        if history_visibility.zip(cursor_visibility).is_some_and(|(history, cursor)| !std::ptr::eq(history, cursor)) {
+            return Err("envelope cursor and history have different group authorities");
+        }
+        let decision = history_visibility.or(cursor_visibility).map(crate::os_vcs::ArtifactGroupVisibility::capture);
+        let vcs = self.vcs.read_group(decision.as_ref()).map_err(|()| "envelope history lost its captured group authority")?;
+        let cursor = self.cursor.as_ref().map(|cursor| cursor.read_group(decision.as_ref())).transpose().map_err(|()| "envelope cursor lost its captured group authority")?;
+        Ok(ArtifactEnvelopeRead { schema: &self.schema, id: &self.id, vcs, backbone: self.backbone.as_ref(), active_alternative_id: self.active_alternative_id.as_ref(), cursor, dialect: self.dialect.as_ref(), migrated_from: self.migrated_from.as_ref(), owner: self.owner.as_ref(), lanes: &self.lanes, edit_messages: &self.edit_messages, conflicts: &self.conflicts })
+    }
+}
+
+impl<P: Serialize, Mutation: Serialize> Serialize for ArtifactEnvelopeOwners<P, Mutation> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.capture_read().map_err(serde::ser::Error::custom)?.serialize(serializer)
+    }
 }
 
 /// @emoji 🛡️ Terminal shell for one exact document record. Deep fields are ManuallyDrop from
@@ -2425,6 +2588,18 @@ impl<S> ArtifactChild<S> {
     /// 🧵 Retains a type-checked local-only materialization without cloning its payload.
     pub fn local_owner<T: std::any::Any + Send + Sync>(&self) -> Option<Arc<T>> {
         Arc::downcast::<T>(self.local_owner.clone()?).ok()
+    }
+
+    /// 📤️ Transfers the exact typed local owner; a type mismatch retains the untouched owner.
+    pub fn take_local_owner<T: std::any::Any + Send + Sync>(&mut self) -> Result<Option<Arc<T>>, &'static str> {
+        let Some(owner) = self.local_owner.take() else { return Ok(None); };
+        match Arc::downcast::<T>(owner) {
+            Ok(owner) => Ok(Some(owner)),
+            Err(owner) => {
+                self.local_owner = Some(owner);
+                Err("artifact child local owner has a different exact type")
+            }
+        }
     }
 
     /// 🪆 Attaches immutable local-only text to this owned child handle.
@@ -3123,6 +3298,167 @@ pub struct LaneItemReceipt {
     pub generation_after: u64,
 }
 
+//#region 📬️EphemeralOneItemPublication
+pub struct ArtifactEphemeralOneItemPrepared<P> {
+    pub next_root: Arc<P>,
+}
+
+pub struct ArtifactEphemeralOneItemPreparationRequest<P, Mutation> {
+    pub operation: semio_framework_job::OperationId,
+    pub generation: semio_framework_job::Generation,
+    pub base: Arc<P>,
+    pub mutation: Mutation,
+}
+
+pub trait ArtifactEphemeralOneItemPreparation<P, Mutation>: Send {
+    fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String>;
+    fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint;
+    fn prepared(&self) -> Option<&ArtifactEphemeralOneItemPrepared<P>>;
+    fn take_prepared(&mut self) -> Option<ArtifactEphemeralOneItemPrepared<P>>;
+    fn cancel(&mut self);
+    fn begin_close(&mut self);
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String>;
+    fn terminal_is_empty(&self) -> bool;
+}
+
+pub trait ArtifactEphemeralOneItemPreparationFactory<P, Mutation>: Send + Sync {
+    fn preflight(&self, mutation: &Mutation) -> Result<ArtifactStoreOneItemFootprint, String>;
+    fn begin(&self, request: ArtifactEphemeralOneItemPreparationRequest<P, Mutation>) -> Result<Box<dyn ArtifactEphemeralOneItemPreparation<P, Mutation>>, ArtifactEphemeralOneItemPreparationRequest<P, Mutation>>;
+}
+
+#[derive(Debug)]
+pub struct ArtifactEphemeralOneItemAdmissionRejected<Mutation> {
+    pub reason: String,
+    pub mutation: Mutation,
+}
+
+impl<Mutation> ArtifactEphemeralOneItemAdmissionRejected<Mutation> {
+    pub fn into_owners(self) -> (String, Mutation) {
+        (self.reason, self.mutation)
+    }
+}
+
+pub struct ArtifactEphemeralOneItemPublication<P, Mutation> {
+    operation: semio_framework_job::OperationId,
+    expected_generation: u64,
+    footprint: ArtifactStoreOneItemFootprint,
+    preparation: Option<Box<dyn ArtifactEphemeralOneItemPreparation<P, Mutation>>>,
+    displaced_root_retirement: Option<Box<dyn ErasedSnapshotRetirement>>,
+    root_retirement_factory: Option<Arc<dyn SnapshotRetirementFactory<P>>>,
+    receipt: Option<LaneItemReceipt>,
+    attempts: u8,
+    published: bool,
+    cancel_requested: bool,
+    close_started: bool,
+    fault: Option<String>,
+    phase: ArtifactStoreOneItemPublicationPhase,
+}
+
+impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
+    pub fn operation(&self) -> semio_framework_job::OperationId {
+        self.operation
+    }
+
+    pub fn phase(&self) -> ArtifactStoreOneItemPublicationPhase {
+        self.phase
+    }
+
+    pub fn progress(&self) -> ArtifactStoreOneItemCheckpoint {
+        self.preparation.as_ref().map_or_else(ArtifactStoreOneItemCheckpoint::default, |owner| owner.checkpoint())
+    }
+
+    pub fn fault(&self) -> Option<&str> {
+        self.fault.as_deref()
+    }
+
+    pub fn retry(&mut self) -> bool {
+        if self.phase != ArtifactStoreOneItemPublicationPhase::AwaitingAck || self.attempts >= ARTIFACT_STORE_ONE_ITEM_MAXIMUM_RETRIES {
+            return false;
+        }
+        self.attempts += 1;
+        true
+    }
+
+    pub fn acknowledge(&mut self) -> bool {
+        if self.phase != ArtifactStoreOneItemPublicationPhase::AwaitingAck {
+            return false;
+        }
+        self.phase = ArtifactStoreOneItemPublicationPhase::Closing;
+        self.begin_close();
+        true
+    }
+
+    pub fn begin_close(&mut self) {
+        if self.close_started {
+            return;
+        }
+        self.close_started = true;
+        self.phase = if self.phase == ArtifactStoreOneItemPublicationPhase::Complete { ArtifactStoreOneItemPublicationPhase::Complete } else { ArtifactStoreOneItemPublicationPhase::Closing };
+        if let Some(owner) = self.preparation.as_mut() {
+            if !self.published {
+                self.cancel_requested = true;
+                owner.cancel();
+            }
+            owner.begin_close();
+        }
+    }
+
+    pub fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+        self.begin_close();
+        if let Some(owner) = self.preparation.as_mut() {
+            let step = owner.close_step(ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes })?;
+            if step != SnapshotRetirementStep::Complete {
+                return Ok(step);
+            }
+            if !owner.terminal_is_empty() {
+                return Err("ephemeral one-item preparation reported complete without terminal emptiness".into());
+            }
+            self.preparation = None;
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(owner) = self.displaced_root_retirement.as_mut() {
+            let step = owner.close_step(grant.maximum_items.min(1), grant.maximum_bytes)?;
+            if step != SnapshotRetirementStep::Complete {
+                return Ok(step);
+            }
+            if !owner.terminal_is_empty() {
+                return Err("ephemeral displaced-root retirement reported complete without terminal emptiness".into());
+            }
+            self.displaced_root_retirement = None;
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        self.root_retirement_factory = None;
+        if grant.maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.receipt.take().is_some() {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(fault) = self.fault.as_mut().filter(|fault| !fault.is_empty()) {
+            let scalar = fault.chars().next_back().expect("nonempty ephemeral publication fault");
+            if scalar.len_utf8() > grant.maximum_bytes {
+                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            fault.pop();
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: scalar.len_utf8() });
+        }
+        self.fault = None;
+        self.phase = ArtifactStoreOneItemPublicationPhase::Complete;
+        Ok(SnapshotRetirementStep::Complete)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.phase == ArtifactStoreOneItemPublicationPhase::Complete && self.preparation.is_none() && self.displaced_root_retirement.is_none() && self.root_retirement_factory.is_none() && self.receipt.is_none() && self.fault.is_none()
+    }
+}
+
+impl<P, Mutation> Drop for ArtifactEphemeralOneItemPublication<P, Mutation> {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "ephemeral one-item publication reached Drop without its terminal-empty witness");
+    }
+}
+//#endregion 📬️EphemeralOneItemPublication
+
 /// @emoji 👥️ The PRESENCE lane's store: ephemeral SHARED state — a last-writer-wins roster, NOT an
 /// event log.
 ///
@@ -3135,23 +3471,42 @@ pub struct LaneItemReceipt {
 ///
 /// `generation` bumps on every local change so the host can tell "something to broadcast" from
 /// "nothing changed" without diffing snapshots — the signal a heartbeat coalescer throttles on.
-#[derive(Clone)]
 pub struct PresenceStore<P, Mutation> {
     local: Arc<P>,
     peers: Arc<PresencePeersRoot<P>>,
     peer_retirement_factory: Option<Arc<dyn SnapshotRetirementFactory<P>>>,
     generation: u64,
+    close_started: bool,
     _mutation: PhantomData<fn() -> Mutation>,
 }
 
 pub const PRESENCE_PEER_SLOTS: usize = 64;
 pub const PRESENCE_PEER_ID_BYTES: usize = 256;
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 struct PresencePeerEntry<P> {
-    actor: String,
-    presence: Option<Arc<P>>,
+    actor: std::mem::ManuallyDrop<String>,
+    presence: std::mem::ManuallyDrop<Option<Arc<P>>>,
     received_at_ms: i64,
+}
+
+impl<P> PresencePeerEntry<P> {
+    fn new(actor: String, presence: Arc<P>, received_at_ms: i64) -> Self {
+        Self { actor: std::mem::ManuallyDrop::new(actor), presence: std::mem::ManuallyDrop::new(Some(presence)), received_at_ms }
+    }
+}
+
+impl<P> Drop for PresencePeerEntry<P> {
+    fn drop(&mut self) {
+        let terminal = self.actor.is_empty() && self.presence.is_none();
+        if !std::thread::panicking() { assert!(terminal, "presence peer entry requires exact final-owner retirement"); }
+        if terminal {
+            unsafe {
+                drop(std::mem::ManuallyDrop::take(&mut self.actor));
+                drop(std::mem::ManuallyDrop::take(&mut self.presence));
+            }
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -3160,8 +3515,8 @@ pub struct PresencePeersRoot<P> {
     len: usize,
 }
 
-impl<P> Clone for PresencePeersRoot<P> {
-    fn clone(&self) -> Self {
+impl<P> PresencePeersRoot<P> {
+    fn clone_aliases(&self) -> Self {
         Self { entries: self.entries.clone(), len: self.len }
     }
 }
@@ -3187,13 +3542,13 @@ impl<P> PresencePeersRoot<P> {
         if actor.is_empty() || actor.len() > PRESENCE_PEER_ID_BYTES {
             return Err("presence peer actor is empty or exceeds its fixed byte authority".into());
         }
-        let mut next = self.clone();
+        let mut next = self.clone_aliases();
         let mut index = 0usize;
         while index < next.len && next.entries[index].as_ref().is_some_and(|entry| entry.actor.as_str() < actor.as_str()) {
             index += 1;
         }
-        if next.entries.get(index).and_then(Option::as_ref).is_some_and(|entry| entry.actor == actor) {
-            let retired = next.entries[index].replace(Arc::new(PresencePeerEntry { actor, presence: Some(Arc::new(presence)), received_at_ms }));
+        if next.entries.get(index).and_then(Option::as_ref).is_some_and(|entry| entry.actor.as_str() == actor.as_str()) {
+            let retired = next.entries[index].replace(Arc::new(PresencePeerEntry::new(actor, Arc::new(presence), received_at_ms)));
             return Ok((next, retired));
         }
         if next.len == PRESENCE_PEER_SLOTS {
@@ -3202,14 +3557,14 @@ impl<P> PresencePeersRoot<P> {
         for cursor in (index..next.len).rev() {
             next.entries[cursor + 1] = next.entries[cursor].take();
         }
-        next.entries[index] = Some(Arc::new(PresencePeerEntry { actor, presence: Some(Arc::new(presence)), received_at_ms }));
+        next.entries[index] = Some(Arc::new(PresencePeerEntry::new(actor, Arc::new(presence), received_at_ms)));
         next.len += 1;
         Ok((next, None))
     }
 
     fn remove(&self, actor: &str) -> (Self, Option<Arc<PresencePeerEntry<P>>>) {
-        let mut next = self.clone();
-        let Some(index) = next.entries[..next.len].iter().position(|entry| entry.as_ref().is_some_and(|entry| entry.actor == actor)) else {
+        let mut next = self.clone_aliases();
+        let Some(index) = next.entries[..next.len].iter().position(|entry| entry.as_ref().is_some_and(|entry| entry.actor.as_str() == actor)) else {
             return (next, None);
         };
         let retired = next.entries[index].take();
@@ -3223,9 +3578,9 @@ impl<P> PresencePeersRoot<P> {
 
     fn remove_at(&self, index: usize) -> (Self, Option<Arc<PresencePeerEntry<P>>>) {
         if index >= self.len {
-            return (self.clone(), None);
+            return (self.clone_aliases(), None);
         }
-        let mut next = self.clone();
+        let mut next = self.clone_aliases();
         let retired = next.entries[index].take();
         for cursor in index..next.len.saturating_sub(1) {
             next.entries[cursor] = next.entries[cursor + 1].take();
@@ -3296,6 +3651,8 @@ impl<P> Drop for PresencePeersRetiredEntries<P> {
 }
 
 pub struct PresencePeersRetirement<P> {
+    root: std::mem::ManuallyDrop<Option<Arc<PresencePeersRoot<P>>>>,
+    owned_root: std::mem::ManuallyDrop<Option<PresencePeersRoot<P>>>,
     retired: std::mem::ManuallyDrop<PresencePeersRetiredEntries<P>>,
     waiting: std::mem::ManuallyDrop<Option<Arc<PresencePeerEntry<P>>>>,
     entry: std::mem::ManuallyDrop<Option<PresencePeerEntry<P>>>,
@@ -3317,12 +3674,13 @@ pub struct PresencePeersPublication<P> {
 pub struct PresencePeersCommit<P> {
     root: Arc<PresencePeersRoot<P>>,
     retirement: Option<PresencePeersRetirement<P>>,
+    factory: Arc<dyn SnapshotRetirementFactory<P>>,
 }
 
 impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
     fn new(current: &PresencePeersRoot<P>, factory: Arc<dyn SnapshotRetirementFactory<P>>) -> Self {
         Self {
-            candidate: std::mem::ManuallyDrop::new(Some(current.clone())),
+            candidate: std::mem::ManuallyDrop::new(Some(current.clone_aliases())),
             created: std::mem::ManuallyDrop::new(PresencePeersRetiredEntries::empty()),
             retired: std::mem::ManuallyDrop::new(PresencePeersRetiredEntries::empty()),
             active: std::mem::ManuallyDrop::new(None),
@@ -3364,20 +3722,20 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
         if actor.is_empty() || actor.len() > PRESENCE_PEER_ID_BYTES {
             return Err(("presence peer actor is empty or exceeds its fixed byte authority".into(), presence));
         }
-        if candidate.len == PRESENCE_PEER_SLOTS && !candidate.entries[..candidate.len].iter().any(|entry| entry.as_ref().is_some_and(|entry| entry.actor == actor)) {
+        if candidate.len == PRESENCE_PEER_SLOTS && !candidate.entries[..candidate.len].iter().any(|entry| entry.as_ref().is_some_and(|entry| entry.actor.as_str() == actor.as_str())) {
             return Err(("presence peer root exceeds its fixed item authority".into(), presence));
         }
-        let mut next = candidate.clone();
+        let mut next = candidate.clone_aliases();
         let mut index = 0usize;
         while index < next.len && next.entries[index].as_ref().is_some_and(|entry| entry.actor.as_str() < actor.as_str()) {
             index += 1;
         }
-        let replaces = next.entries.get(index).and_then(Option::as_ref).is_some_and(|entry| entry.actor == actor);
+        let replaces = next.entries.get(index).and_then(Option::as_ref).is_some_and(|entry| entry.actor.as_str() == actor.as_str());
         if self.created.len == PRESENCE_PEER_SLOTS || (replaces && self.retired.len == PRESENCE_PEER_SLOTS) {
             return Err(("presence peer publication ownership authority is saturated".into(), presence));
         }
         let presence = Arc::new(presence);
-        let inserted = Arc::new(PresencePeerEntry { actor, presence: Some(presence), received_at_ms });
+        let inserted = Arc::new(PresencePeerEntry::new(actor, presence, received_at_ms));
         let retired = if replaces {
             next.entries[index].replace(inserted.clone())
         } else {
@@ -3422,7 +3780,7 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
         let candidate = Arc::new(self.candidate.take().ok_or_else(|| "presence peer publication candidate was already transferred".to_string())?);
         let retired = std::mem::replace(&mut *self.retired, PresencePeersRetiredEntries::empty());
         let retirement = (!retired.is_empty()).then(|| PresencePeersRetirement::new(retired, self.factory.clone()));
-        Ok(PresencePeersCommit { root: candidate, retirement })
+        Ok(PresencePeersCommit { root: candidate, retirement, factory: self.factory.clone() })
     }
 
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
@@ -3443,7 +3801,7 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
         if let Some(candidate) = self.candidate.as_mut() {
             if candidate.len != 0 {
                 candidate.len -= 1;
-                drop(candidate.entries[candidate.len].take());
+                *self.active = Some(PresencePeersRetirement::new(PresencePeersRetiredEntries::one(candidate.entries[candidate.len].take()), self.factory.clone()));
                 return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
             drop(self.candidate.take());
@@ -3452,7 +3810,7 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
         if self.retired.len != 0 {
             self.retired.len -= 1;
             let index = self.retired.len;
-            drop(self.retired.entries[index].take());
+            *self.active = Some(PresencePeersRetirement::new(PresencePeersRetiredEntries::one(self.retired.entries[index].take()), self.factory.clone()));
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if self.created.len != 0 {
@@ -3476,7 +3834,7 @@ impl<P> Drop for PresencePeersPublication<P> {
 
 impl<P: Send + Sync + 'static> PresencePeersRetirement<P> {
     fn new(retired: PresencePeersRetiredEntries<P>, factory: Arc<dyn SnapshotRetirementFactory<P>>) -> Self {
-        Self { retired: std::mem::ManuallyDrop::new(retired), waiting: std::mem::ManuallyDrop::new(None), entry: std::mem::ManuallyDrop::new(None), active: std::mem::ManuallyDrop::new(None), factory, cursor: 0 }
+        Self { root: std::mem::ManuallyDrop::new(None), owned_root: std::mem::ManuallyDrop::new(None), retired: std::mem::ManuallyDrop::new(retired), waiting: std::mem::ManuallyDrop::new(None), entry: std::mem::ManuallyDrop::new(None), active: std::mem::ManuallyDrop::new(None), factory, cursor: 0 }
     }
 
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
@@ -3498,13 +3856,13 @@ impl<P: Send + Sync + 'static> PresencePeersRetirement<P> {
             };
         }
         if let Some(entry) = self.entry.as_mut() {
-            if !entry.actor.is_empty() {
-                if entry.actor.len() > maximum_bytes {
+            if let Some(scalar) = entry.actor.chars().next_back() {
+                let bytes = scalar.len_utf8();
+                if bytes > maximum_bytes {
                     return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                 }
-                let bytes = entry.actor.len();
-                entry.actor.clear();
-                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+                entry.actor.pop();
+                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: bytes });
             }
             let snapshot = entry.presence.take().ok_or_else(|| "presence peer retirement entry lost its exact snapshot authority".to_string())?;
             *self.active = Some(self.factory.retire(snapshot));
@@ -3513,39 +3871,50 @@ impl<P: Send + Sync + 'static> PresencePeersRetirement<P> {
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(waiting) = self.waiting.take() {
-            match Arc::try_unwrap(waiting) {
-                Ok(entry) => {
-                    *self.entry = Some(entry);
-                    return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-                }
-                Err(waiting) => {
-                    *self.waiting = Some(waiting);
-                    return Ok(SnapshotRetirementStep::Blocked);
-                }
-            }
+            *self.entry = Arc::into_inner(waiting);
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        while self.cursor < self.retired.len {
+        if self.cursor < self.retired.len {
             let index = self.cursor;
             self.cursor += 1;
             if let Some(entry) = self.retired.entries[index].take() {
                 *self.waiting = Some(entry);
-                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         self.retired.len = 0;
+        if let Some(root) = self.root.take() {
+            return match Arc::try_unwrap(root) {
+                Ok(root) => { *self.owned_root = Some(root); Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }) }
+                Err(root) => { *self.root = Some(root); Ok(SnapshotRetirementStep::Blocked) }
+            };
+        }
+        if let Some(root) = self.owned_root.as_mut() {
+            if root.len != 0 {
+                root.len -= 1;
+                *self.waiting = root.entries[root.len].take();
+            } else {
+                drop(self.owned_root.take());
+            }
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
         Ok(SnapshotRetirementStep::Complete)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.retired.len == 0 && self.waiting.is_none() && self.entry.is_none() && self.active.is_none()
+        self.root.is_none() && self.owned_root.is_none() && self.retired.len == 0 && self.waiting.is_none() && self.entry.is_none() && self.active.is_none()
     }
 }
 
 impl<P> Drop for PresencePeersRetirement<P> {
     fn drop(&mut self) {
-        debug_assert!(self.retired.len == 0 && self.waiting.is_none() && self.entry.is_none() && self.active.is_none(), "incomplete presence-peer retirement reached Drop without bounded disposal");
+        if !std::thread::panicking() { assert!(self.root.is_none() && self.owned_root.is_none() && self.retired.len == 0 && self.waiting.is_none() && self.entry.is_none() && self.active.is_none(), "incomplete presence-peer retirement reached Drop without bounded disposal"); }
     }
 }
+
+#[path = "👥️presence/♻️retirement/🦀️component.rs"]
+mod presence_retirement;
+pub use presence_retirement::PresenceStoreRetirement;
 
 // 🚫️async: E1 impl of external `Default` — signature fixed outside this repo.
 impl<P: Clone + Default, Mutation: self::Mutation<P>> Default for PresenceStore<P, Mutation> {
@@ -3558,7 +3927,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
     /// 🏗️ A roster holding only this actor's own initial presence.
     // 🚫️async: E1 pure constructor, consumed by `Default::default()` — see R9.
     pub fn new(local: P) -> Self {
-        Self { local: Arc::new(local), peers: Arc::new(PresencePeersRoot::empty()), peer_retirement_factory: None, generation: 0, _mutation: PhantomData }
+        Self { local: Arc::new(local), peers: Arc::new(PresencePeersRoot::empty()), peer_retirement_factory: None, generation: 0, close_started: false, _mutation: PhantomData }
     }
 
     /// 👤️ This actor's own presence — what gets broadcast.
@@ -3573,6 +3942,9 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
 
     /// ✍️ Applies local presence operations atomically, bumping `generation` after the full batch.
     pub async fn apply(&mut self, mutations: &[Mutation]) -> crate::os_spr::MutationApplyResult<()> {
+        if self.close_started {
+            return Err(crate::os_spr::MutationApplyError::new("presence.store.closed", "presence store no longer admits local mutations"));
+        }
         let mut candidate = self.local.as_ref().clone();
         for mutation in mutations {
             candidate = mutation.diff(&candidate).diff().apply(&candidate)?;
@@ -3584,9 +3956,144 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
         Ok(())
     }
 
+    pub fn begin_publish_one(
+        &self,
+        operation: semio_framework_job::OperationId,
+        expected_generation: u64,
+        mutation: Mutation,
+        factory: Option<&dyn ArtifactEphemeralOneItemPreparationFactory<P, Mutation>>,
+        root_retirement_factory: Option<Arc<dyn SnapshotRetirementFactory<P>>>,
+    ) -> Result<ArtifactEphemeralOneItemPublication<P, Mutation>, ArtifactEphemeralOneItemAdmissionRejected<Mutation>> {
+        let reject = |reason: String, mutation: Mutation| ArtifactEphemeralOneItemAdmissionRejected { reason, mutation };
+        if self.close_started {
+            return Err(reject("presence store no longer admits local publication".into(), mutation));
+        }
+        if self.generation != expected_generation {
+            return Err(reject("presence publication generation is stale".into(), mutation));
+        }
+        let Some(factory) = factory else {
+            return Err(reject("presence publication requires an explicit app-owned retained preparation factory".into(), mutation));
+        };
+        let Some(root_retirement_factory) = root_retirement_factory else {
+            return Err(reject("presence publication requires an explicit local-root retirement factory".into(), mutation));
+        };
+        let footprint = match factory.preflight(&mutation) {
+            Ok(footprint) if footprint.is_admissible() => footprint,
+            Ok(_) => return Err(reject("presence publication footprint exceeds its fixed item or byte capacity".into(), mutation)),
+            Err(reason) => return Err(reject(reason, mutation)),
+        };
+        let request = ArtifactEphemeralOneItemPreparationRequest { operation, generation: semio_framework_job::Generation(expected_generation), base: Arc::clone(&self.local), mutation };
+        let preparation = match factory.begin(request) {
+            Ok(preparation) => preparation,
+            Err(request) => return Err(reject("presence preparation factory rejected its exact owner bundle".into(), request.mutation)),
+        };
+        Ok(ArtifactEphemeralOneItemPublication {
+            operation,
+            expected_generation,
+            footprint,
+            preparation: Some(preparation),
+            displaced_root_retirement: None,
+            root_retirement_factory: Some(root_retirement_factory),
+            receipt: None,
+            attempts: 0,
+            published: false,
+            cancel_requested: false,
+            close_started: false,
+            fault: None,
+            phase: ArtifactStoreOneItemPublicationPhase::Preparing,
+        })
+    }
+
+    pub fn advance_publish_one(&mut self, publication: &mut ArtifactEphemeralOneItemPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, String> {
+        if publication.phase == ArtifactStoreOneItemPublicationPhase::Complete {
+            return Ok(ArtifactStoreOneItemAdvance::Complete);
+        }
+        if publication.phase == ArtifactStoreOneItemPublicationPhase::Closing {
+            return Ok(ArtifactStoreOneItemAdvance::Blocked);
+        }
+        if publication.phase == ArtifactStoreOneItemPublicationPhase::AwaitingAck {
+            return Ok(ArtifactStoreOneItemAdvance::AwaitingAck(publication.receipt.expect("presence publication awaiting ACK retains its receipt")));
+        }
+        if self.close_started {
+            publication.begin_close();
+            return Err("presence store closed before publication".into());
+        }
+        if publication.cancel_requested {
+            publication.begin_close();
+            return Ok(ArtifactStoreOneItemAdvance::Blocked);
+        }
+        if self.generation != publication.expected_generation {
+            publication.fault = Some("presence publication became stale before commit".into());
+            publication.phase = ArtifactStoreOneItemPublicationPhase::Fault;
+            publication.begin_close();
+            return Err("presence publication became stale before commit".into());
+        }
+        if !grant.permits_one() {
+            return Ok(ArtifactStoreOneItemAdvance::Blocked);
+        }
+        match publication.phase {
+            ArtifactStoreOneItemPublicationPhase::Preparing => {
+                let owner = publication.preparation.as_mut().ok_or_else(|| "presence publication lost its preparation owner".to_string())?;
+                match owner.advance(ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes })? {
+                    ArtifactStoreOneItemPreparationStep::Progress(checkpoint) => Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint)),
+                    ArtifactStoreOneItemPreparationStep::Prepared(checkpoint) => {
+                        if owner.prepared().is_none() {
+                            return Err("presence preparation reported Prepared without its root".into());
+                        }
+                        publication.phase = ArtifactStoreOneItemPublicationPhase::PreparingCursor;
+                        Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint))
+                    }
+                    ArtifactStoreOneItemPreparationStep::Blocked => Ok(ArtifactStoreOneItemAdvance::Blocked),
+                }
+            }
+            ArtifactStoreOneItemPublicationPhase::PreparingCursor => {
+                if publication.preparation.as_ref().and_then(|owner| owner.prepared()).is_none() {
+                    return Err("presence prepared root is absent".into());
+                }
+                publication.phase = ArtifactStoreOneItemPublicationPhase::PreflightingCommit;
+                Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()))
+            }
+            ArtifactStoreOneItemPublicationPhase::PreflightingCommit => {
+                if self.generation == u64::MAX || publication.footprint.work_items == 0 {
+                    return Err("presence publication fixed commit authority is exhausted".into());
+                }
+                publication.phase = ArtifactStoreOneItemPublicationPhase::Publishing;
+                Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()))
+            }
+            ArtifactStoreOneItemPublicationPhase::Publishing => {
+                let prepared = publication.preparation.as_mut().and_then(|owner| owner.take_prepared()).ok_or_else(|| "presence publication lost its prepared root".to_string())?;
+                let generation_before = self.generation;
+                let previous = std::mem::replace(&mut self.local, prepared.next_root);
+                let retirement_factory = publication.root_retirement_factory.as_ref().ok_or_else(|| "presence publication lost its local-root retirement factory".to_string())?;
+                publication.displaced_root_retirement = Some(retirement_factory.retire(previous));
+                self.generation += 1;
+                let receipt = LaneItemReceipt { generation_before, generation_after: self.generation };
+                publication.expected_generation = self.generation;
+                publication.receipt = Some(receipt);
+                publication.published = true;
+                publication.phase = ArtifactStoreOneItemPublicationPhase::AwaitingAck;
+                Ok(ArtifactStoreOneItemAdvance::Published(receipt))
+            }
+            ArtifactStoreOneItemPublicationPhase::Fault => Err(publication.fault.clone().unwrap_or_else(|| "presence publication faulted".into())),
+            ArtifactStoreOneItemPublicationPhase::AwaitingAck | ArtifactStoreOneItemPublicationPhase::Closing | ArtifactStoreOneItemPublicationPhase::Complete => unreachable!("handled presence publication control phase"),
+        }
+    }
+
+    pub fn cancel_publish_one(&mut self, publication: &mut ArtifactEphemeralOneItemPublication<P, Mutation>) -> bool {
+        if matches!(publication.phase, ArtifactStoreOneItemPublicationPhase::Complete | ArtifactStoreOneItemPublicationPhase::Closing) {
+            return false;
+        }
+        publication.cancel_requested = true;
+        publication.begin_close();
+        true
+    }
+
     /// 🎯️ Applies one retained publication item against an exact generation and returns its
     /// per-lane receipt. A stale item is rejected before its mutation is inspected.
     pub fn apply_one(&mut self, expected_generation: u64, mutation: Mutation) -> Result<LaneItemReceipt, (String, Mutation)> {
+        if self.close_started {
+            return Err(("presence store no longer admits local mutations".into(), mutation));
+        }
         if self.generation != expected_generation {
             return Err(("presence publication generation is stale".into(), mutation));
         }
@@ -3605,7 +4112,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
     }
 
     pub fn install_peer_retirement_factory(&mut self, factory: Arc<dyn SnapshotRetirementFactory<P>>) -> Result<(), String> {
-        if self.peer_retirement_factory.is_some() {
+        if self.close_started || self.peer_retirement_factory.is_some() {
             return Err("presence peer retirement factory is already installed".into());
         }
         self.peer_retirement_factory = Some(factory);
@@ -3628,14 +4135,24 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
     where
         P: Send + Sync + 'static,
     {
+        if self.close_started {
+            return Err("presence store no longer admits peer publication".into());
+        }
         let factory = self.peer_retirement_factory.as_ref().ok_or_else(|| "presence peer publication has no exact bounded snapshot retirement factory".to_string())?;
         Ok(PresencePeersPublication::new(self.peers.as_ref(), factory.clone()))
     }
 
-    pub fn publish_peer_commit(&mut self, commit: PresencePeersCommit<P>) -> Option<PresencePeersRetirement<P>> {
+    pub fn publish_peer_commit(&mut self, commit: PresencePeersCommit<P>) -> Result<Option<PresencePeersRetirement<P>>, PresencePeersCommit<P>>
+    where
+        P: Send + Sync + 'static,
+    {
+        if self.close_started {
+            return Err(commit);
+        }
         let previous = std::mem::replace(&mut self.peers, commit.root);
-        drop(previous);
-        commit.retirement
+        let mut retirement = commit.retirement.unwrap_or_else(|| PresencePeersRetirement::new(PresencePeersRetiredEntries::empty(), commit.factory));
+        *retirement.root = Some(previous);
+        Ok(Some(retirement))
     }
 
     /// 🔢️ Bumps on every local change; never on adopting a remote peer (that needs no rebroadcast).
@@ -3696,6 +4213,131 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
             self.generation = self.generation.wrapping_add(1);
         }
         Ok(())
+    }
+
+    pub fn begin_publish_one(
+        &self,
+        operation: semio_framework_job::OperationId,
+        expected_generation: u64,
+        mutation: Mutation,
+        factory: Option<&dyn ArtifactEphemeralOneItemPreparationFactory<P, Mutation>>,
+        root_retirement_factory: Option<Arc<dyn SnapshotRetirementFactory<P>>>,
+    ) -> Result<ArtifactEphemeralOneItemPublication<P, Mutation>, ArtifactEphemeralOneItemAdmissionRejected<Mutation>> {
+        let reject = |reason: String, mutation: Mutation| ArtifactEphemeralOneItemAdmissionRejected { reason, mutation };
+        if self.generation != expected_generation {
+            return Err(reject("transient publication generation is stale".into(), mutation));
+        }
+        let Some(factory) = factory else {
+            return Err(reject("transient publication requires an explicit app-owned retained preparation factory".into(), mutation));
+        };
+        let Some(root_retirement_factory) = root_retirement_factory else {
+            return Err(reject("transient publication requires an explicit local-root retirement factory".into(), mutation));
+        };
+        let footprint = match factory.preflight(&mutation) {
+            Ok(footprint) if footprint.is_admissible() => footprint,
+            Ok(_) => return Err(reject("transient publication footprint exceeds its fixed item or byte capacity".into(), mutation)),
+            Err(reason) => return Err(reject(reason, mutation)),
+        };
+        let request = ArtifactEphemeralOneItemPreparationRequest { operation, generation: semio_framework_job::Generation(expected_generation), base: Arc::clone(&self.current), mutation };
+        let preparation = match factory.begin(request) {
+            Ok(preparation) => preparation,
+            Err(request) => return Err(reject("transient preparation factory rejected its exact owner bundle".into(), request.mutation)),
+        };
+        Ok(ArtifactEphemeralOneItemPublication {
+            operation,
+            expected_generation,
+            footprint,
+            preparation: Some(preparation),
+            displaced_root_retirement: None,
+            root_retirement_factory: Some(root_retirement_factory),
+            receipt: None,
+            attempts: 0,
+            published: false,
+            cancel_requested: false,
+            close_started: false,
+            fault: None,
+            phase: ArtifactStoreOneItemPublicationPhase::Preparing,
+        })
+    }
+
+    pub fn advance_publish_one(&mut self, publication: &mut ArtifactEphemeralOneItemPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, String> {
+        if publication.phase == ArtifactStoreOneItemPublicationPhase::Complete {
+            return Ok(ArtifactStoreOneItemAdvance::Complete);
+        }
+        if publication.phase == ArtifactStoreOneItemPublicationPhase::Closing {
+            return Ok(ArtifactStoreOneItemAdvance::Blocked);
+        }
+        if publication.phase == ArtifactStoreOneItemPublicationPhase::AwaitingAck {
+            return Ok(ArtifactStoreOneItemAdvance::AwaitingAck(publication.receipt.expect("transient publication awaiting ACK retains its receipt")));
+        }
+        if publication.cancel_requested {
+            publication.begin_close();
+            return Ok(ArtifactStoreOneItemAdvance::Blocked);
+        }
+        if self.generation != publication.expected_generation {
+            publication.fault = Some("transient publication became stale before commit".into());
+            publication.phase = ArtifactStoreOneItemPublicationPhase::Fault;
+            publication.begin_close();
+            return Err("transient publication became stale before commit".into());
+        }
+        if !grant.permits_one() {
+            return Ok(ArtifactStoreOneItemAdvance::Blocked);
+        }
+        match publication.phase {
+            ArtifactStoreOneItemPublicationPhase::Preparing => {
+                let owner = publication.preparation.as_mut().ok_or_else(|| "transient publication lost its preparation owner".to_string())?;
+                match owner.advance(ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes })? {
+                    ArtifactStoreOneItemPreparationStep::Progress(checkpoint) => Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint)),
+                    ArtifactStoreOneItemPreparationStep::Prepared(checkpoint) => {
+                        if owner.prepared().is_none() {
+                            return Err("transient preparation reported Prepared without its root".into());
+                        }
+                        publication.phase = ArtifactStoreOneItemPublicationPhase::PreparingCursor;
+                        Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint))
+                    }
+                    ArtifactStoreOneItemPreparationStep::Blocked => Ok(ArtifactStoreOneItemAdvance::Blocked),
+                }
+            }
+            ArtifactStoreOneItemPublicationPhase::PreparingCursor => {
+                if publication.preparation.as_ref().and_then(|owner| owner.prepared()).is_none() {
+                    return Err("transient prepared root is absent".into());
+                }
+                publication.phase = ArtifactStoreOneItemPublicationPhase::PreflightingCommit;
+                Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()))
+            }
+            ArtifactStoreOneItemPublicationPhase::PreflightingCommit => {
+                if self.generation == u64::MAX || publication.footprint.work_items == 0 {
+                    return Err("transient publication fixed commit authority is exhausted".into());
+                }
+                publication.phase = ArtifactStoreOneItemPublicationPhase::Publishing;
+                Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()))
+            }
+            ArtifactStoreOneItemPublicationPhase::Publishing => {
+                let prepared = publication.preparation.as_mut().and_then(|owner| owner.take_prepared()).ok_or_else(|| "transient publication lost its prepared root".to_string())?;
+                let generation_before = self.generation;
+                let previous = std::mem::replace(&mut self.current, prepared.next_root);
+                let retirement_factory = publication.root_retirement_factory.as_ref().ok_or_else(|| "transient publication lost its local-root retirement factory".to_string())?;
+                publication.displaced_root_retirement = Some(retirement_factory.retire(previous));
+                self.generation += 1;
+                let receipt = LaneItemReceipt { generation_before, generation_after: self.generation };
+                publication.expected_generation = self.generation;
+                publication.receipt = Some(receipt);
+                publication.published = true;
+                publication.phase = ArtifactStoreOneItemPublicationPhase::AwaitingAck;
+                Ok(ArtifactStoreOneItemAdvance::Published(receipt))
+            }
+            ArtifactStoreOneItemPublicationPhase::Fault => Err(publication.fault.clone().unwrap_or_else(|| "transient publication faulted".into())),
+            ArtifactStoreOneItemPublicationPhase::AwaitingAck | ArtifactStoreOneItemPublicationPhase::Closing | ArtifactStoreOneItemPublicationPhase::Complete => unreachable!("handled transient publication control phase"),
+        }
+    }
+
+    pub fn cancel_publish_one(&mut self, publication: &mut ArtifactEphemeralOneItemPublication<P, Mutation>) -> bool {
+        if matches!(publication.phase, ArtifactStoreOneItemPublicationPhase::Complete | ArtifactStoreOneItemPublicationPhase::Closing) {
+            return false;
+        }
+        publication.cancel_requested = true;
+        publication.begin_close();
+        true
     }
 
     /// 🎯️ Applies one retained local-only item against an exact live generation.
@@ -8423,7 +9065,7 @@ impl ArtifactCodec {
                         None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
                     };
                     let mut envelope = parsed.envelope;
-                    envelope.cursor = Some(ArtifactCursor { applied_edit_ids: applied, redo_edit_ids: redo, checkpoint_id: envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone()) });
+                    envelope.cursor = Some(ArtifactCursor::new(applied, redo, envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone())));
                     let store = ArtifactStore::new(envelope).await?;
                     store
                 };
@@ -8877,7 +9519,7 @@ where
         vcs: ArtifactVcs { initial_snapshot, edits: ArtifactHistoryLedger::new(), changes: ArtifactHistoryLedger::new(), checkpoints: ArtifactHistoryLedger::new(), alternatives: ArtifactHistoryLedger::new() },
         backbone,
         active_alternative_id: None,
-        cursor: Some(ArtifactCursor { applied_edit_ids: Vec::new(), redo_edit_ids: Vec::new(), checkpoint_id: None }),
+        cursor: Some(ArtifactCursor::default()),
         dialect: None,
         migrated_from: None,
         owner: None,
@@ -9965,7 +10607,7 @@ where
 
     let cursor = log
         .cursor
-        .map(|cursor| ArtifactCursor { applied_edit_ids: cursor.applied_edit_ids, redo_edit_ids: cursor.redo_edit_ids, checkpoint_id: cursor.checkpoint_id })
+        .map(|cursor| ArtifactCursor::new(cursor.applied_edit_ids, cursor.redo_edit_ids, cursor.checkpoint_id))
         .ok_or_else(|| TextError::new("history has no explicit cursor".to_string(), TextSpan::at(1, 1)))?;
     // 🌀️ `conflict_from_history_conflict` is async (calls the 📡️replication `decode_envelope`);
     // `Iterator::map`'s closure is sync (R10 shape 1), so it's hoisted into an explicit loop.
@@ -10143,7 +10785,7 @@ where
                 if cursor.is_some() {
                     return Err(TextError::new("ops text repeats its cursor".to_string(), TextSpan::at(line_no, 1)));
                 }
-                cursor = Some(ArtifactCursor { applied_edit_ids: applied, redo_edit_ids: redo, checkpoint_id: checkpoint });
+                cursor = Some(ArtifactCursor::new(applied, redo, checkpoint));
             }
             OpsHeaderLine::Inverse { edit, ops } => {
                 let mut inverse = Vec::with_capacity(ops.len());
@@ -11208,6 +11850,8 @@ impl CursorRevisionAccumulator {
 pub struct ArtifactStoreInitializationOwnerCatalog {
     applied_edit_ids: Vec<String>,
     redo_edit_ids: Vec<String>,
+    cursor_applied_edit_ids: Vec<String>,
+    cursor_redo_edit_ids: Vec<String>,
     applied_revision: Vec<CursorRevisionRecord>,
     redo_revision: Vec<CursorRevisionRecord>,
 }
@@ -11217,17 +11861,21 @@ impl ArtifactStoreInitializationOwnerCatalog {
         let capacity = crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY;
         let mut applied_edit_ids = Vec::new();
         let mut redo_edit_ids = Vec::new();
+        let mut cursor_applied_edit_ids = Vec::new();
+        let mut cursor_redo_edit_ids = Vec::new();
         let mut applied_revision = Vec::new();
         let mut redo_revision = Vec::new();
         applied_edit_ids.try_reserve_exact(capacity).map_err(|_| "artifact store applied owner catalog allocation failed")?;
         redo_edit_ids.try_reserve_exact(capacity).map_err(|_| "artifact store redo owner catalog allocation failed")?;
+        cursor_applied_edit_ids.try_reserve_exact(capacity).map_err(|_| "artifact store cursor-applied owner catalog allocation failed")?;
+        cursor_redo_edit_ids.try_reserve_exact(capacity).map_err(|_| "artifact store cursor-redo owner catalog allocation failed")?;
         applied_revision.try_reserve_exact(capacity).map_err(|_| "artifact store applied revision catalog allocation failed")?;
         redo_revision.try_reserve_exact(capacity).map_err(|_| "artifact store redo revision catalog allocation failed")?;
-        Ok(Self { applied_edit_ids, redo_edit_ids, applied_revision, redo_revision })
+        Ok(Self { applied_edit_ids, redo_edit_ids, cursor_applied_edit_ids, cursor_redo_edit_ids, applied_revision, redo_revision })
     }
 
     pub fn admitted_items(&self) -> usize {
-        self.applied_edit_ids.capacity() + self.redo_edit_ids.capacity() + self.applied_revision.capacity() + self.redo_revision.capacity()
+        self.applied_edit_ids.capacity() + self.redo_edit_ids.capacity() + self.cursor_applied_edit_ids.capacity() + self.cursor_redo_edit_ids.capacity() + self.applied_revision.capacity() + self.redo_revision.capacity()
     }
 
     pub fn admitted_bytes(&self) -> Option<usize> {
@@ -11235,6 +11883,8 @@ impl ArtifactStoreInitializationOwnerCatalog {
             .capacity()
             .checked_mul(std::mem::size_of::<String>())?
             .checked_add(self.redo_edit_ids.capacity().checked_mul(std::mem::size_of::<String>())?)?
+            .checked_add(self.cursor_applied_edit_ids.capacity().checked_mul(std::mem::size_of::<String>())?)?
+            .checked_add(self.cursor_redo_edit_ids.capacity().checked_mul(std::mem::size_of::<String>())?)?
             .checked_add(self.applied_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)?
             .checked_add(self.redo_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)
     }
@@ -11244,6 +11894,8 @@ pub struct ArtifactStoreInitializationRuntime<P> {
     current: std::mem::ManuallyDrop<Option<P>>,
     applied_edit_ids: std::mem::ManuallyDrop<Vec<String>>,
     redo_edit_ids: std::mem::ManuallyDrop<Vec<String>>,
+    cursor_applied_edit_ids: std::mem::ManuallyDrop<Vec<String>>,
+    cursor_redo_edit_ids: std::mem::ManuallyDrop<Vec<String>>,
     current_checkpoint_id: std::mem::ManuallyDrop<Option<String>>,
     local_actor_id: std::mem::ManuallyDrop<Option<String>>,
     dag: std::mem::ManuallyDrop<Option<crate::os_spr::MutationDag>>,
@@ -11264,11 +11916,13 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
 
     pub fn new_with_owner_catalog(artifact_id: &str, schema: &str, current: P, initial_digest: [u8; 32], catalog: ArtifactStoreInitializationOwnerCatalog) -> Self {
         let identity_digest = CursorRevisionAccumulator::hash_record(b"initial", &[artifact_id.as_bytes(), schema.as_bytes(), &initial_digest]);
-        let ArtifactStoreInitializationOwnerCatalog { applied_edit_ids, redo_edit_ids, applied_revision, redo_revision } = catalog;
+        let ArtifactStoreInitializationOwnerCatalog { applied_edit_ids, redo_edit_ids, cursor_applied_edit_ids, cursor_redo_edit_ids, applied_revision, redo_revision } = catalog;
         Self {
             current: std::mem::ManuallyDrop::new(Some(current)),
             applied_edit_ids: std::mem::ManuallyDrop::new(applied_edit_ids),
             redo_edit_ids: std::mem::ManuallyDrop::new(redo_edit_ids),
+            cursor_applied_edit_ids: std::mem::ManuallyDrop::new(cursor_applied_edit_ids),
+            cursor_redo_edit_ids: std::mem::ManuallyDrop::new(cursor_redo_edit_ids),
             current_checkpoint_id: std::mem::ManuallyDrop::new(None),
             local_actor_id: std::mem::ManuallyDrop::new(None),
             dag: std::mem::ManuallyDrop::new(Some(crate::os_spr::MutationDag::new())),
@@ -11302,6 +11956,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         }
         let identity_digest = self.revision.identity_digest;
         Self::push_revision_record(&mut self.revision.applied, identity_digest, b"applied", &id, edit_digest)?;
+        self.cursor_applied_edit_ids.push(id.clone());
         self.applied_edit_ids.push(id);
         Ok(())
     }
@@ -11312,6 +11967,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         }
         let identity_digest = self.revision.identity_digest;
         Self::push_revision_record(&mut self.revision.redo, identity_digest, b"redo", &id, edit_digest)?;
+        self.cursor_redo_edit_ids.push(id.clone());
         self.redo_edit_ids.push(id);
         Ok(())
     }
@@ -11381,45 +12037,61 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
                 self.close_phase = 3;
             }
             3 => {
-                if let Some(id) = self.current_checkpoint_id.take() {
+                if let Some(id) = self.cursor_applied_edit_ids.pop() {
                     *self.close_active = Some(Box::new(ArtifactStoreStringRetirement::new(id)));
                     return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                 }
                 self.close_phase = 4;
             }
             4 => {
-                if let Some(id) = self.local_actor_id.take() {
+                if let Some(id) = self.cursor_redo_edit_ids.pop() {
                     *self.close_active = Some(Box::new(ArtifactStoreStringRetirement::new(id)));
                     return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                 }
                 self.close_phase = 5;
             }
             5 => {
-                if let Some(dag) = self.dag.take() {
-                    *self.close_active = Some(Box::new(ArtifactStoreMutationDagRetirement::new(dag)));
+                if let Some(id) = self.current_checkpoint_id.take() {
+                    *self.close_active = Some(Box::new(ArtifactStoreStringRetirement::new(id)));
                     return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                 }
                 self.close_phase = 6;
             }
             6 => {
-                if self.revision.applied.pop().is_some() {
-                    return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+                if let Some(id) = self.local_actor_id.take() {
+                    *self.close_active = Some(Box::new(ArtifactStoreStringRetirement::new(id)));
+                    return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                 }
                 self.close_phase = 7;
             }
             7 => {
-                if self.revision.redo.pop().is_some() {
-                    return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+                if let Some(dag) = self.dag.take() {
+                    *self.close_active = Some(Box::new(ArtifactStoreMutationDagRetirement::new(dag)));
+                    return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                 }
                 self.close_phase = 8;
             }
             8 => {
+                if self.revision.applied.pop().is_some() {
+                    return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                self.close_phase = 9;
+            }
+            9 => {
+                if self.revision.redo.pop().is_some() {
+                    return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                self.close_phase = 10;
+            }
+            10 => {
                 let applied = unsafe { std::mem::ManuallyDrop::take(&mut self.applied_edit_ids) };
                 let redo = unsafe { std::mem::ManuallyDrop::take(&mut self.redo_edit_ids) };
+                let cursor_applied = unsafe { std::mem::ManuallyDrop::take(&mut self.cursor_applied_edit_ids) };
+                let cursor_redo = unsafe { std::mem::ManuallyDrop::take(&mut self.cursor_redo_edit_ids) };
                 let revision = unsafe { std::mem::ManuallyDrop::take(&mut self.revision) };
-                assert!(applied.is_empty() && redo.is_empty() && revision.applied.is_empty() && revision.redo.is_empty());
-                drop((applied, redo, revision));
-                self.close_phase = 9;
+                assert!(applied.is_empty() && redo.is_empty() && cursor_applied.is_empty() && cursor_redo.is_empty() && revision.applied.is_empty() && revision.redo.is_empty());
+                drop((applied, redo, cursor_applied, cursor_redo, revision));
+                self.close_phase = 11;
                 return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
             _ => {
@@ -11434,17 +12106,18 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         self.taken && self.current.is_none() && self.dag.is_none() && self.close_active.is_none()
     }
 
-    fn into_parts(mut self) -> (P, Vec<String>, Vec<String>, Option<String>, Option<String>, crate::os_spr::MutationDag, i32, HybridLogicalTimestamp, [u8; 32], CursorRevisionAccumulator) {
+    fn into_parts(mut self) -> (P, Vec<String>, Vec<String>, ArtifactCursor, Option<String>, crate::os_spr::MutationDag, i32, HybridLogicalTimestamp, [u8; 32], CursorRevisionAccumulator) {
         assert!(self.close_phase == 0 && self.close_active.is_none(), "a closing initialization runtime cannot be adopted");
         let current = self.current.take().expect("validated initialization owns its current snapshot");
         let applied = unsafe { std::mem::ManuallyDrop::take(&mut self.applied_edit_ids) };
         let redo = unsafe { std::mem::ManuallyDrop::take(&mut self.redo_edit_ids) };
         let checkpoint = self.current_checkpoint_id.take();
+        let cursor = ArtifactCursor::new(unsafe { std::mem::ManuallyDrop::take(&mut self.cursor_applied_edit_ids) }, unsafe { std::mem::ManuallyDrop::take(&mut self.cursor_redo_edit_ids) }, checkpoint);
         let actor = self.local_actor_id.take();
         let dag = self.dag.take().expect("validated initialization owns its causal graph");
         let revision = unsafe { std::mem::ManuallyDrop::take(&mut self.revision) };
         self.taken = true;
-        (current, applied, redo, checkpoint, actor, dag, self.edit_sequence, self.clock.clone(), self.initial_digest, revision)
+        (current, applied, redo, cursor, actor, dag, self.edit_sequence, self.clock.clone(), self.initial_digest, revision)
     }
 }
 
@@ -11855,6 +12528,502 @@ impl Drop for ArtifactEditMessageLedger {
     }
 }
 
+//#region 📬️OneItemPublication
+#[path = "🧵️canonical-edit/🦀️component.rs"]
+mod canonical_edit;
+pub use canonical_edit::{ArtifactCanonicalJson, ArtifactCanonicalJsonArray, ArtifactCanonicalJsonCursor, ArtifactCanonicalJsonNode, ArtifactCanonicalJsonObject, ArtifactCanonicalJsonReader, ArtifactCanonicalJsonValue, ArtifactStoreOneItemSealCheckpoint, ArtifactStoreOneItemSealer, ARTIFACT_CANONICAL_JSON_CHUNK_BYTES, ARTIFACT_CANONICAL_JSON_DEPTH};
+
+pub const ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS: usize = 65_536;
+pub const ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES: usize = 1_048_576;
+pub const ARTIFACT_STORE_ONE_ITEM_MAXIMUM_RETRIES: u8 = 2;
+pub const ARTIFACT_STORE_ONE_ITEM_ID_BYTES: usize = 256;
+
+/// 🧮 Exact capacity declaration checked before a retained one-item preparation receives
+/// the immutable base root or mutation owner.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ArtifactStoreOneItemFootprint {
+    pub work_items: usize,
+    pub retained_bytes: usize,
+}
+
+impl ArtifactStoreOneItemFootprint {
+    pub fn is_admissible(self) -> bool {
+        self.work_items != 0 && self.work_items <= ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS && self.retained_bytes <= ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES
+    }
+}
+
+/// 🎟️ One scheduler grant. A preparation owner must consume at most one semantic unit even
+/// when both limits are larger than one.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ArtifactStoreOneItemGrant {
+    pub maximum_items: usize,
+    pub maximum_bytes: usize,
+}
+
+impl ArtifactStoreOneItemGrant {
+    pub fn permits_one(self) -> bool {
+        self.maximum_items != 0 && self.maximum_bytes != 0
+    }
+}
+
+/// 📍 Fixed-width replay checkpoint emitted after every accepted preparation unit.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ArtifactStoreOneItemCheckpoint {
+    pub cursor: u32,
+    pub completed_items: u32,
+    pub completed_bytes: u64,
+    pub digest: [u8; 32],
+}
+
+/// 🛠️ Result of one domain-owned preparation turn.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ArtifactStoreOneItemPreparationStep {
+    Progress(ArtifactStoreOneItemCheckpoint),
+    Prepared(ArtifactStoreOneItemCheckpoint),
+    Blocked,
+}
+
+/// 🪪 Exact live publication metadata minted by the Store and shared immutably with the
+/// domain preparation owner. Apps cannot invent cursor position, sequence, clock, or actor.
+pub struct ArtifactStoreOneItemLiveAuthority {
+    operation: semio_framework_job::OperationId,
+    generation: semio_framework_job::Generation,
+    base_revision: [u8; 32],
+    base_applied_edit_count: usize,
+    next_sequence_number: i32,
+    next_clock: HybridLogicalTimestamp,
+    actor: String,
+    group_id: Option<String>,
+}
+
+impl ArtifactStoreOneItemLiveAuthority {
+    pub fn operation(&self) -> semio_framework_job::OperationId {
+        self.operation
+    }
+
+    pub fn generation(&self) -> semio_framework_job::Generation {
+        self.generation
+    }
+
+    pub fn base_revision(&self) -> [u8; 32] {
+        self.base_revision
+    }
+
+    pub fn base_applied_edit_count(&self) -> usize {
+        self.base_applied_edit_count
+    }
+
+    pub fn next_sequence_number(&self) -> i32 {
+        self.next_sequence_number
+    }
+
+    pub fn next_clock(&self) -> HybridLogicalTimestamp {
+        self.next_clock
+    }
+
+    pub fn actor(&self) -> &str {
+        &self.actor
+    }
+
+    pub fn group_id(&self) -> Option<&str> {
+        self.group_id.as_deref()
+    }
+
+    /// 🧹️ Transfers the authority Arc and its final actor/group strings into byte-bounded retirement.
+    pub fn retire(self: Arc<Self>) -> Box<dyn ErasedSnapshotRetirement> {
+        Box::new(canonical_edit::ArtifactStoreOneItemAuthorityRetirement::new(self))
+    }
+
+    fn validate_semantic_edit<Mutation>(&self, edit: &Edit<Mutation>) -> Result<(), String> {
+        let meta = edit.mutation_meta.first().ok_or_else(|| "one-item edit lacks its exact authority metadata".to_string())?;
+        if edit.id.is_empty()
+            || edit.id.len() > ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || edit.sequence_number != self.next_sequence_number
+            || edit.forwards.len() != 1
+            || edit.mutation_meta.len() != 1
+            || edit.actor.as_deref() != Some(self.actor.as_str())
+            || meta.author_id.as_ref().map(|actor| actor.0.as_str()) != Some(self.actor.as_str())
+            || meta.timestamp != self.next_clock
+            || meta.group_id.as_deref() != self.group_id.as_deref()
+        {
+            return Err("one-item semantic edit disagrees with its immutable Store authority".into());
+        }
+        Ok(())
+    }
+
+    /// 🔏 Canonical oracle for explicitly bounded edits; retained large edits use the byte sealer.
+    pub fn prepared_edit_digest<Mutation: Serialize>(&self, edit: &Edit<Mutation>) -> Result<[u8; 32], String> {
+        self.validate_semantic_edit(edit)?;
+        Ok(CursorRevisionAccumulator::edit_digest(edit))
+    }
+
+    /// 📦 Seals an explicitly bounded semantic edit into exact Store-owned publication authority.
+    pub fn prepare_one_item<P, Mutation: Serialize>(self: &Arc<Self>, edit: Edit<Mutation>, post_snapshot: Arc<P>) -> Result<ArtifactStoreOneItemPrepared<P, Mutation>, String> {
+        let edit_digest = self.prepared_edit_digest(&edit)?;
+        Ok(self.seal_prepared(Box::new(edit), post_snapshot, edit_digest))
+    }
+
+    /// 🧵️ Moves the exact edit and post root into retained canonical preparation without encoding.
+    pub fn begin_one_item_seal<P, Mutation>(self: &Arc<Self>, edit: Edit<Mutation>, post_snapshot: Arc<P>, mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>, snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>>) -> ArtifactStoreOneItemSealer<P, Mutation> {
+        ArtifactStoreOneItemSealer::new(Arc::clone(self), edit, post_snapshot, mutation_retirement, snapshot_retirement)
+    }
+
+    fn seal_prepared<P, Mutation>(self: &Arc<Self>, edit: Box<Edit<Mutation>>, post_snapshot: Arc<P>, edit_digest: [u8; 32]) -> ArtifactStoreOneItemPrepared<P, Mutation> {
+        let edit_id = edit.id.clone();
+        let identities = [self.actor.clone(), edit_id.clone(), edit_id];
+        self.seal_prepared_owned(edit, post_snapshot, edit_digest, identities)
+    }
+
+    fn seal_prepared_owned<P, Mutation>(self: &Arc<Self>, edit: Box<Edit<Mutation>>, post_snapshot: Arc<P>, edit_digest: [u8; 32], identities: [String; 3]) -> ArtifactStoreOneItemPrepared<P, Mutation> {
+        let [actor, applied_edit_id, tail_edit_id] = identities;
+        let seal = ArtifactStoreOneItemSeal { authority: Arc::clone(self), edit_address: edit.as_ref() as *const Edit<Mutation> as usize, post_address: Arc::as_ptr(&post_snapshot) as usize, digest: edit_digest };
+        ArtifactStoreOneItemPrepared { edit, post_snapshot, next_clock: self.next_clock, edit_digest, local_actor: Some(actor), applied_edit_id, tail_edit_id, seal }
+    }
+
+    fn validate_prepared<P, Mutation>(self: &Arc<Self>, prepared: &ArtifactStoreOneItemPrepared<P, Mutation>) -> Result<(), String> {
+        self.validate_semantic_edit(&prepared.edit)?;
+        if !Arc::ptr_eq(self, &prepared.seal.authority)
+            || prepared.seal.edit_address != prepared.edit.as_ref() as *const Edit<Mutation> as usize
+            || prepared.seal.post_address != Arc::as_ptr(&prepared.post_snapshot) as usize
+            || prepared.seal.digest != prepared.edit_digest {
+            return Err("one-item private Store seal disagrees with exact authority or moved owners".into());
+        }
+        Ok(())
+    }
+}
+
+struct ArtifactStoreOneItemSeal {
+    authority: Arc<ArtifactStoreOneItemLiveAuthority>,
+    edit_address: usize,
+    post_address: usize,
+    digest: [u8; 32],
+}
+
+/// 📦 Fully prepared one-item candidate. The domain must build every potentially unbounded
+/// mutation inverse/diff/apply/encoding result inside its retained cursor before exposing this
+/// value. The store publication turn only validates fixed authorities and moves these owners.
+pub struct ArtifactStoreOneItemPrepared<P, Mutation> {
+    edit: Box<Edit<Mutation>>,
+    post_snapshot: Arc<P>,
+    next_clock: HybridLogicalTimestamp,
+    edit_digest: [u8; 32],
+    local_actor: Option<String>,
+    applied_edit_id: String,
+    tail_edit_id: String,
+    seal: ArtifactStoreOneItemSeal,
+}
+
+impl<P, Mutation> ArtifactStoreOneItemPrepared<P, Mutation> {
+    pub fn edit_digest(&self) -> [u8; 32] {
+        self.edit_digest
+    }
+}
+
+/// 🧳 Exact owner bundle transferred to a domain preparation factory only after preflight.
+pub struct ArtifactStoreOneItemPreparationRequest<P, Mutation> {
+    pub operation: semio_framework_job::OperationId,
+    pub generation: semio_framework_job::Generation,
+    pub base_revision: [u8; 32],
+    pub lane: HistoryLane,
+    pub authority: Arc<ArtifactStoreOneItemLiveAuthority>,
+    pub description: Option<String>,
+    pub base: SnapshotRead<P>,
+    pub mutation: Mutation,
+}
+
+impl<P, Mutation> ArtifactStoreOneItemPreparationRequest<P, Mutation> {
+    pub fn into_owners(self) -> (SnapshotRead<P>, Mutation, Option<String>) {
+        (self.base, self.mutation, self.description)
+    }
+}
+
+/// 🧩 Domain-owned retained mutation preparation. Generic `Mutation` is intentionally not
+/// invoked by the store: a domain that cannot split its mutation semantics into these turns is
+/// rejected at admission instead of receiving false resumability credit.
+pub trait ArtifactStoreOneItemPreparation<P, Mutation>: Send {
+    fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String>;
+    fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint;
+    fn prepared(&self) -> Option<&ArtifactStoreOneItemPrepared<P, Mutation>>;
+    fn take_prepared(&mut self) -> Option<ArtifactStoreOneItemPrepared<P, Mutation>>;
+    fn cancel(&mut self);
+    fn begin_close(&mut self);
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String>;
+    fn terminal_is_empty(&self) -> bool;
+}
+
+/// 🏭️ Exact app-owned factory. `preflight` must not allocate, copy the mutation, or retain
+/// the supplied references; `begin` receives ownership only after the declared footprint passes.
+pub trait ArtifactStoreOneItemPreparationFactory<P, Mutation>: Send + Sync {
+    fn preflight(&self, mutation: &Mutation, description: Option<&str>, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String>;
+    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, Mutation>) -> Result<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, ArtifactStoreOneItemPreparationRequest<P, Mutation>>;
+}
+
+//#region 🧩️MemberOneItemPublication
+/// 📨 Owned member wire, transferred without decoding or cloning at the composition boundary.
+#[derive(Debug)]
+pub struct MemberStoreOneItemWire {
+    pub schema: String,
+    pub bytes: Vec<u8>,
+}
+
+/// 🧾 Exact member revision and grouped-history metadata accompanying one owned wire item.
+pub struct MemberStoreOneItemWireRequest {
+    pub operation: semio_framework_job::OperationId,
+    pub expected_generation: u64,
+    pub expected_revision: [u8; 32],
+    pub actor: String,
+    pub group_id: Option<String>,
+    pub wire: MemberStoreOneItemWire,
+    pub description: Option<String>,
+}
+
+/// 🏭 A member's retained decoder and semantic preparation, never a generic `decode_op` fallback.
+pub trait MemberStoreOneItemWirePreparationFactory<P, Mutation>: Send + Sync {
+    fn preflight(&self, wire: &MemberStoreOneItemWire, description: Option<&str>, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String>;
+    fn begin(
+        &self,
+        request: ArtifactStoreOneItemPreparationRequest<P, MemberStoreOneItemWire>,
+    ) -> Result<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, ArtifactStoreOneItemPreparationRequest<P, MemberStoreOneItemWire>>;
+}
+
+/// 🪪 Erased retained publication; only its exact member may advance the typed candidate.
+pub trait ErasedMemberStoreOneItemPublication: Send {
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
+    fn phase(&self) -> ArtifactStoreOneItemPublicationPhase;
+    fn progress(&self) -> ArtifactStoreOneItemCheckpoint;
+    fn fault(&self) -> Option<&str>;
+    fn retry(&mut self) -> bool;
+    fn acknowledge(&mut self) -> bool;
+    fn begin_close(&mut self);
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String>;
+    fn terminal_is_empty(&self) -> bool;
+}
+
+struct MemberStoreOneItemPublication<P, Mutation> {
+    member: Option<Arc<SnapshotReadLeaseRegistry>>,
+    publication: ArtifactStoreOneItemPublication<P, Mutation>,
+    group_history: Option<ArtifactStoreHistoryCommitReservation>,
+    group_displaced: Option<ArtifactStoreDisplacedOwnerReservation>,
+}
+
+impl<P: 'static, Mutation: 'static> ErasedMemberStoreOneItemPublication for MemberStoreOneItemPublication<P, Mutation> {
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+
+    fn phase(&self) -> ArtifactStoreOneItemPublicationPhase {
+        self.publication.phase()
+    }
+
+    fn progress(&self) -> ArtifactStoreOneItemCheckpoint {
+        self.publication.progress()
+    }
+
+    fn fault(&self) -> Option<&str> {
+        self.publication.fault()
+    }
+
+    fn retry(&mut self) -> bool {
+        self.publication.retry()
+    }
+
+    fn acknowledge(&mut self) -> bool {
+        self.publication.acknowledge()
+    }
+
+    fn begin_close(&mut self) {
+        self.publication.begin_close();
+    }
+
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+        if self.group_history.is_some() || self.group_displaced.is_some() {
+            return Ok(SnapshotRetirementStep::Blocked);
+        }
+        if !self.publication.terminal_is_empty() {
+            return self.publication.close_step(grant).map(|step| if step == SnapshotRetirementStep::Complete { SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 } } else { step });
+        }
+        if grant.maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.member.take().is_some() {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.member.is_none() && self.publication.terminal_is_empty() && self.group_history.is_none() && self.group_displaced.is_none()
+    }
+}
+
+impl<P, Mutation> Drop for MemberStoreOneItemPublication<P, Mutation> {
+    fn drop(&mut self) {
+        assert!(self.member.is_none() && self.publication.terminal_is_empty() && self.group_history.is_none() && self.group_displaced.is_none(), "member publication reached Drop before exact member, reservation, and candidate retirement");
+    }
+}
+//#endregion 🧩️MemberOneItemPublication
+
+/// 🔄 Persistent store-side operation phases. Publication and ACK are distinct turns; close
+/// remains observable until the domain owner proves exact terminal emptiness.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ArtifactStoreOneItemPublicationPhase {
+    Preparing,
+    PreparingCursor,
+    PreflightingCommit,
+    Publishing,
+    AwaitingAck,
+    Closing,
+    Complete,
+    Fault,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ArtifactStoreOneItemAdvance {
+    Progress(ArtifactStoreOneItemCheckpoint),
+    Published(LaneItemReceipt),
+    AwaitingAck(LaneItemReceipt),
+    Complete,
+    Blocked,
+}
+
+/// 🚫 Exact owners returned when the app has no retained factory, preflight rejects, or the
+/// store's live base authority no longer matches.
+#[derive(Debug)]
+pub struct ArtifactStoreOneItemAdmissionRejected<Mutation> {
+    pub reason: String,
+    pub mutation: Mutation,
+    pub description: Option<String>,
+}
+
+impl<Mutation> ArtifactStoreOneItemAdmissionRejected<Mutation> {
+    pub fn into_owners(self) -> (String, Mutation, Option<String>) {
+        (self.reason, self.mutation, self.description)
+    }
+}
+
+/// 📬️ Retained one-item publication authority. It never calls `apply_one`, `apply_command`,
+/// `replay_mutations`, `pump`, or `flush_outbound`.
+pub struct ArtifactStoreOneItemPublication<P, Mutation> {
+    operation: semio_framework_job::OperationId,
+    expected_generation: u64,
+    expected_revision: [u8; 32],
+    lane: HistoryLane,
+    footprint: ArtifactStoreOneItemFootprint,
+    authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
+    preparation: Option<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>>,
+    receipt: Option<LaneItemReceipt>,
+    attempts: u8,
+    published: bool,
+    cancel_requested: bool,
+    close_started: bool,
+    fault: Option<String>,
+    phase: ArtifactStoreOneItemPublicationPhase,
+}
+
+impl<P, Mutation> ArtifactStoreOneItemPublication<P, Mutation> {
+    pub fn operation(&self) -> semio_framework_job::OperationId {
+        self.operation
+    }
+
+    pub fn phase(&self) -> ArtifactStoreOneItemPublicationPhase {
+        self.phase
+    }
+
+    pub fn progress(&self) -> ArtifactStoreOneItemCheckpoint {
+        self.preparation.as_ref().map_or_else(ArtifactStoreOneItemCheckpoint::default, |owner| owner.checkpoint())
+    }
+
+    pub fn fault(&self) -> Option<&str> {
+        self.fault.as_deref()
+    }
+
+    pub fn retry(&mut self) -> bool {
+        if self.phase != ArtifactStoreOneItemPublicationPhase::AwaitingAck || self.attempts >= ARTIFACT_STORE_ONE_ITEM_MAXIMUM_RETRIES {
+            return false;
+        }
+        self.attempts += 1;
+        true
+    }
+
+    pub fn acknowledge(&mut self) -> bool {
+        if self.phase != ArtifactStoreOneItemPublicationPhase::AwaitingAck {
+            return false;
+        }
+        self.phase = ArtifactStoreOneItemPublicationPhase::Closing;
+        self.begin_close();
+        true
+    }
+
+    pub fn begin_close(&mut self) {
+        if self.close_started {
+            return;
+        }
+        self.close_started = true;
+        self.phase = if self.phase == ArtifactStoreOneItemPublicationPhase::Complete { ArtifactStoreOneItemPublicationPhase::Complete } else { ArtifactStoreOneItemPublicationPhase::Closing };
+        if let Some(owner) = self.preparation.as_mut() {
+            if !self.published {
+                self.cancel_requested = true;
+                owner.cancel();
+            }
+            owner.begin_close();
+        }
+    }
+
+    pub fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+        self.begin_close();
+        if let Some(owner) = self.preparation.as_mut() {
+            let step = owner.close_step(ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes })?;
+            if step != SnapshotRetirementStep::Complete {
+                return Ok(step);
+            }
+            if !owner.terminal_is_empty() {
+                return Err("one-item preparation reported complete without terminal emptiness".into());
+            }
+            self.preparation = None;
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if grant.maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.receipt.take().is_some() {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if authority.actor.len().saturating_add(authority.group_id.as_ref().map_or(0, String::len)) > grant.maximum_bytes {
+                return Ok(SnapshotRetirementStep::Blocked);
+            }
+            drop(self.authority.take());
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(fault) = self.fault.as_mut().filter(|fault| !fault.is_empty()) {
+            let scalar = fault.chars().next_back().expect("nonempty one-item fault");
+            if scalar.len_utf8() > grant.maximum_bytes {
+                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            fault.pop();
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: scalar.len_utf8() });
+        }
+        self.fault = None;
+        self.phase = ArtifactStoreOneItemPublicationPhase::Complete;
+        Ok(SnapshotRetirementStep::Complete)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.phase == ArtifactStoreOneItemPublicationPhase::Complete && self.preparation.is_none() && self.authority.is_none() && self.receipt.is_none() && self.fault.is_none()
+    }
+}
+
+impl<P, Mutation> Drop for ArtifactStoreOneItemPublication<P, Mutation> {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "one-item artifact-store publication reached Drop without its exact terminal-empty witness");
+    }
+}
+//#endregion 📬️OneItemPublication
+
 pub struct ArtifactStore<P, Mutation>
 where
     P: Clone + Serialize + DeserializeOwned,
@@ -11919,6 +13088,8 @@ where
     displaced_retirements: std::mem::ManuallyDrop<ArtifactStoreDisplacedRetirements>,
     owned_disposer: std::mem::ManuallyDrop<Option<Box<dyn ArtifactStoreOwnedDisposer<P, Mutation>>>>,
     owned_disposer_terminal: bool,
+    one_item_preparation_factory: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>>>,
+    one_item_wire_preparation_factory: std::mem::ManuallyDrop<Option<Arc<dyn MemberStoreOneItemWirePreparationFactory<P, Mutation>>>>,
     /// @emoji 📨️ Transient handoff from whichever `dispatch_inner` arm actually produced messages
     /// this call (`apply_command`/`amend_command`/`ingest_remote`/`resolve_conflict`) to `dispatch`,
     /// which drains it into the returned `CommandReceipt`. Reset at the top of every `dispatch`
@@ -12096,7 +13267,7 @@ where
                 step => Ok(step),
             };
         }
-        for _ in 0..16 {
+        for _ in 0..10_000 {
             let Some(candidate) = self.candidate.as_mut() else {
                 self.phase = ArtifactStoreResolutionCandidateRetirementPhase::Complete;
                 return Ok(SnapshotRetirementStep::Complete);
@@ -12241,23 +13412,48 @@ where
     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    fn seed_runtime_state(envelope: &ArtifactEnvelope<P, Mutation>) -> Result<(crate::os_spr::MutationDag, i32, HybridLogicalTimestamp), VcsError> {
+    fn preflight_runtime_seed(identities: &[MutationId]) -> Result<(), VcsError> {
+        let mut unique = HashSet::new();
+        for identity in identities {
+            if identity.0.len() > crate::os_spr::causal::MUTATION_DAG_IDENTIFIER_BYTES {
+                return Err(VcsError::ValidationFailed("runtime causal seed identity exceeds its exact byte capacity".into()));
+            }
+            unique.insert(identity.0.as_str());
+            if unique.len() > crate::os_spr::causal::MUTATION_DAG_CAPACITY {
+                return Err(VcsError::ValidationFailed("runtime causal seed exceeds its exact identity capacity".into()));
+            }
+        }
+        Ok(())
+    }
+
+    fn adopt_runtime_seed(identities: Vec<MutationId>) -> (crate::os_spr::MutationDag, Vec<String>) {
         let mut dag = crate::os_spr::MutationDag::new();
+        let mut rejected = Vec::new();
+        for identity in identities {
+            match dag.seed_applied(identity) {
+                Ok(()) => {}
+                Err(owner) if owner.error == crate::os_spr::MutationDagError::Duplicate => rejected.push(owner.mutation_id.0),
+                Err(_) => unreachable!("prevalidated causal seed admission cannot fail after owner adoption"),
+            }
+        }
+        (dag, rejected)
+    }
+
+    fn seed_runtime_state(envelope: &ArtifactEnvelope<P, Mutation>) -> Result<(crate::os_spr::MutationDag, i32, HybridLogicalTimestamp, Vec<String>), VcsError> {
+        let mut identities = Vec::new();
         let mut edit_sequence = 0;
-        // 🌀️ `clock` is mutated in place across the loop below (`merge` takes `&mut self`) — it
-        // must be resolved to a plain value ONCE, not re-`.await`ed per iteration (R10 shape 2).
         let mut clock = HybridLogicalTimestamp::new(0, now_ms());
         for edit in &envelope.vcs.edits {
             edit_sequence = edit_sequence.max(edit.sequence_number);
-            dag.seed_applied(MutationId(edit.id.clone())).map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
-            for mutation_id in crate::os_spr::mutation_ids_for_edit(edit) {
-                dag.seed_applied(mutation_id).map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
-            }
+            identities.push(MutationId(edit.id.clone()));
+            identities.extend(crate::os_spr::mutation_ids_for_edit(edit));
             for meta in &edit.mutation_meta {
                 clock.merge(&meta.timestamp);
             }
         }
-        Ok((dag, edit_sequence, clock))
+        Self::preflight_runtime_seed(&identities)?;
+        let (dag, rejected) = Self::adopt_runtime_seed(identities);
+        Ok((dag, edit_sequence, clock, rejected))
     }
 
     /// @emoji 🚫️ A store is always constructed with no backbone attached — the envelope's
@@ -12271,21 +13467,40 @@ where
     /// foreign-edit check keeps working immediately after reload (a real `VcsArtifactApp` overrides
     /// it anyway via `set_local_actor_id` on every dispatch). Absent a cursor, every edit is
     /// treated as applied in authoritative history order.
-    pub async fn new(envelope: ArtifactEnvelope<P, Mutation>) -> Result<Self, VcsError> {
+    pub async fn new(mut envelope: ArtifactEnvelope<P, Mutation>) -> Result<Self, VcsError> {
         validate_durable_history(&envelope).await?;
-        let (applied_edit_ids, redo_edit_ids, current_checkpoint_id) = match &envelope.cursor {
+        let (loaded_applied_edit_ids, loaded_redo_edit_ids, current_checkpoint_id) = match &envelope.cursor {
             Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone(), cursor.checkpoint_id.clone().or_else(|| envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone()))),
             None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new(), envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone())),
         };
-        validate_history_lanes(&envelope, &applied_edit_ids, &redo_edit_ids).await?;
-        let current = Self::fold_history(&envelope, &applied_edit_ids).await?;
+        validate_history_lanes(&envelope, &loaded_applied_edit_ids, &loaded_redo_edit_ids).await?;
+        let current = Self::fold_history(&envelope, &loaded_applied_edit_ids).await?;
         let initial_digest = *blake3::hash(&envelope.vcs.initial_snapshot.encode_pack()).as_bytes();
-        let mut revision_accumulator = CursorRevisionAccumulator::new(&envelope, initial_digest);
+        let catalog = ArtifactStoreInitializationOwnerCatalog::try_new().map_err(|reason| VcsError::ValidationFailed(reason.into()))?;
+        let ArtifactStoreInitializationOwnerCatalog {
+            applied_edit_ids: mut applied_edit_ids,
+            redo_edit_ids: mut redo_edit_ids,
+            cursor_applied_edit_ids: mut cursor_applied_edit_ids,
+            cursor_redo_edit_ids: mut cursor_redo_edit_ids,
+            applied_revision,
+            redo_revision,
+        } = catalog;
+        cursor_applied_edit_ids.extend(loaded_applied_edit_ids.iter().cloned());
+        cursor_redo_edit_ids.extend(loaded_redo_edit_ids.iter().cloned());
+        applied_edit_ids.extend(loaded_applied_edit_ids);
+        redo_edit_ids.extend(loaded_redo_edit_ids);
+        envelope.cursor = Some(ArtifactCursor::new(cursor_applied_edit_ids, cursor_redo_edit_ids, current_checkpoint_id.clone()));
+        let identity_digest = CursorRevisionAccumulator::hash_record(b"initial", &[envelope.id.as_bytes(), envelope.schema.as_bytes(), &initial_digest]);
+        let mut revision_accumulator = CursorRevisionAccumulator { identity_digest, applied: applied_revision, redo: redo_revision };
         let (retired_applied, retired_redo) = revision_accumulator.reconcile(&applied_edit_ids, &redo_edit_ids, &envelope.vcs.edits);
         assert!(retired_applied.is_empty() && retired_redo.is_empty(), "new revision accumulator unexpectedly displaced an owner during construction");
         let content_revision = revision_accumulator.revision(current_checkpoint_id.as_deref());
         let local_actor_id = applied_edit_ids.last().and_then(|edit_id| envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id)).and_then(|edit| edit.actor.clone());
-        let (dag, edit_sequence, clock) = Self::seed_runtime_state(&envelope)?;
+        let (dag, edit_sequence, clock, rejected_seed_identities) = Self::seed_runtime_state(&envelope)?;
+        let mut displaced_retirements = ArtifactStoreDisplacedRetirements::new();
+        if !rejected_seed_identities.is_empty() {
+            displaced_retirements.push_reserved(Box::new(ArtifactStoreStringVectorRetirement::new(rejected_seed_identities)));
+        }
         Ok(Self {
             envelope: std::mem::ManuallyDrop::new(envelope),
             envelope_detached: false,
@@ -12309,9 +13524,11 @@ where
             initial_snapshot_retirement_factory: std::mem::ManuallyDrop::new(None),
             mutation_retirement_factory: std::mem::ManuallyDrop::new(None),
             snapshot_read_leases: std::mem::ManuallyDrop::new(Arc::new(SnapshotReadLeaseRegistry::new())),
-            displaced_retirements: std::mem::ManuallyDrop::new(ArtifactStoreDisplacedRetirements::new()),
+            displaced_retirements: std::mem::ManuallyDrop::new(displaced_retirements),
             owned_disposer: std::mem::ManuallyDrop::new(None),
             owned_disposer_terminal: false,
+            one_item_preparation_factory: std::mem::ManuallyDrop::new(None),
+            one_item_wire_preparation_factory: std::mem::ManuallyDrop::new(None),
             tail_undo_cache: std::mem::ManuallyDrop::new(None),
             pending_report: std::mem::ManuallyDrop::new(PendingCommandReport::default()),
         })
@@ -12320,8 +13537,10 @@ where
     /// @emoji 🏗️ Atomically adopts a domain-validated initialization runtime. Every
     /// history/reference/snapshot owner was prepared under the caller's StepContext before this
     /// non-suspending move; no validation or collection traversal occurs at publication.
-    pub fn from_initialized_runtime_with_owners(envelope: ArtifactEnvelope<P, Mutation>, runtime: ArtifactStoreInitializationRuntime<P>, generation: u64, owners: MemberStoreOwners<P, Mutation>) -> Self {
-        let (current, applied_edit_ids, redo_edit_ids, current_checkpoint_id, local_actor_id, dag, edit_sequence, clock, initial_digest, revision_accumulator) = runtime.into_parts();
+    pub fn from_initialized_runtime_with_owners(mut envelope: ArtifactEnvelope<P, Mutation>, runtime: ArtifactStoreInitializationRuntime<P>, generation: u64, owners: MemberStoreOwners<P, Mutation>) -> Self {
+        let (current, applied_edit_ids, redo_edit_ids, cursor, local_actor_id, dag, edit_sequence, clock, initial_digest, revision_accumulator) = runtime.into_parts();
+        let current_checkpoint_id = cursor.checkpoint_id.clone();
+        envelope.cursor = Some(cursor);
         let content_revision = revision_accumulator.revision(current_checkpoint_id.as_deref());
         Self {
             envelope: std::mem::ManuallyDrop::new(envelope),
@@ -12350,6 +13569,8 @@ where
             displaced_retirements: std::mem::ManuallyDrop::new(ArtifactStoreDisplacedRetirements::new()),
             owned_disposer: std::mem::ManuallyDrop::new(Some(owners.store_disposer)),
             owned_disposer_terminal: false,
+            one_item_preparation_factory: std::mem::ManuallyDrop::new(owners.one_item_preparation),
+            one_item_wire_preparation_factory: std::mem::ManuallyDrop::new(owners.one_item_wire_preparation),
             pending_report: std::mem::ManuallyDrop::new(PendingCommandReport::default()),
         }
     }
@@ -12511,16 +13732,20 @@ where
         validate_history_lanes(&envelope, &applied_edit_ids, &redo_edit_ids).await?;
         let current = Self::fold_history(&envelope, &applied_edit_ids).await?;
         let initial_digest = *blake3::hash(&envelope.vcs.initial_snapshot.encode_pack()).as_bytes();
-        let (dag, edit_sequence, clock) = Self::seed_runtime_state(&envelope)?;
         let revision_accumulator = CursorRevisionAccumulator::new(&envelope, initial_digest);
         let current_checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
         let runtime_slots = usize::from(self.backbone.is_some())
             + Self::string_owner_slots(&self.current_checkpoint_id)
             + Self::string_vector_owner_slots(&self.applied_edit_ids)
             + Self::string_vector_owner_slots(&self.redo_edit_ids)
-            + Self::revision_owner_slots(&self.revision_accumulator);
+            + Self::revision_owner_slots(&self.revision_accumulator)
+            + 1;
         let commit_authority = self.prepare_document_root_commit(runtime_slots)?;
+        let (dag, edit_sequence, clock, rejected_seed_identities) = Self::seed_runtime_state(&envelope)?;
         self.commit_document_roots_retained(envelope, Arc::new(current), dag, None, commit_authority);
+        if !rejected_seed_identities.is_empty() {
+            self.displaced_retirements.push_reserved(Box::new(ArtifactStoreStringVectorRetirement::new(rejected_seed_identities)));
+        }
         if let Some(previous) = self.backbone.take() {
             self.displaced_retirements.push_reserved(Box::new(ArtifactStoreBackboneRetirement::new(previous)));
         }
@@ -12658,6 +13883,8 @@ where
         *self.initial_snapshot_retirement_factory = Some(owners.initial_snapshot_retirement);
         *self.mutation_retirement_factory = Some(owners.mutation_retirement);
         *self.owned_disposer = Some(owners.store_disposer);
+        *self.one_item_preparation_factory = owners.one_item_preparation;
+        *self.one_item_wire_preparation_factory = owners.one_item_wire_preparation;
     }
 
     pub fn owned_disposer_installed(&self) -> bool {
@@ -13512,6 +14739,280 @@ where
     /// 🎯️ Publishes exactly one durable lane item after validating the live generation.
     /// The returned lane witness is independent of the edit receipt so a retained publisher can
     /// validate, ACK, retry, and retire one semantic unit without entering a batch API.
+    //#region 📬️OneItemPublication
+    /// 🎟️ Admits one exact app-owned retained mutation preparation. No generic mutation
+    /// method is called here or by `advance_apply_one`; absence of a domain factory is explicit.
+    pub fn begin_apply_one(
+        &self,
+        operation: semio_framework_job::OperationId,
+        expected_generation: u64,
+        expected_revision: [u8; 32],
+        actor: String,
+        mutation: Mutation,
+        description: Option<String>,
+        lane: HistoryLane,
+        factory: Option<&dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>,
+    ) -> Result<ArtifactStoreOneItemPublication<P, Mutation>, ArtifactStoreOneItemAdmissionRejected<Mutation>>
+    where
+        P: Sync,
+    {
+        let Some(factory) = factory else {
+            return Err(ArtifactStoreOneItemAdmissionRejected { reason: "one-item publication requires an explicit app-owned ArtifactStoreOneItemPreparationFactory".into(), mutation, description });
+        };
+        self.begin_apply_one_owned(operation, expected_generation, expected_revision, actor, mutation, description, lane, None, |mutation, description, lane| factory.preflight(mutation, description, lane), |request| factory.begin(request))
+    }
+
+    /// 🧩 Uses the exact typed factory installed by the member's owner catalog.
+    pub fn begin_member_apply_one(
+        &self,
+        operation: semio_framework_job::OperationId,
+        expected_generation: u64,
+        expected_revision: [u8; 32],
+        actor: String,
+        mutation: Mutation,
+        description: Option<String>,
+    ) -> Result<ArtifactStoreOneItemPublication<P, Mutation>, ArtifactStoreOneItemAdmissionRejected<Mutation>>
+    where
+        P: Sync,
+    {
+        self.begin_apply_one(operation, expected_generation, expected_revision, actor, mutation, description, HistoryLane::Document, self.one_item_preparation_factory.as_deref())
+    }
+
+    fn begin_apply_one_owned<Input>(
+        &self,
+        operation: semio_framework_job::OperationId,
+        expected_generation: u64,
+        expected_revision: [u8; 32],
+        actor: String,
+        mutation: Input,
+        description: Option<String>,
+        lane: HistoryLane,
+        group_id: Option<String>,
+        preflight: impl FnOnce(&Input, Option<&str>, HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String>,
+        begin: impl FnOnce(ArtifactStoreOneItemPreparationRequest<P, Input>) -> Result<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, ArtifactStoreOneItemPreparationRequest<P, Input>>,
+    ) -> Result<ArtifactStoreOneItemPublication<P, Mutation>, ArtifactStoreOneItemAdmissionRejected<Input>>
+    where
+        P: Sync,
+    {
+        let reject = |reason: String, mutation: Input, description: Option<String>| ArtifactStoreOneItemAdmissionRejected { reason, mutation, description };
+        if self.generation != expected_generation || self.content_revision != expected_revision {
+            return Err(reject("one-item publication base generation or revision is stale".into(), mutation, description));
+        }
+        if lane != HistoryLane::Document {
+            return Err(reject("one-item publication has no retained side-lane map preparation authority".into(), mutation, description));
+        }
+        if self.backbone.is_some() {
+            return Err(reject("one-item publication has no retained outbound backbone encoder/sender authority".into(), mutation, description));
+        }
+        let footprint = match preflight(&mutation, description.as_deref(), lane) {
+            Ok(footprint) if footprint.is_admissible() => footprint,
+            Ok(_) => return Err(reject("one-item preparation footprint exceeds its fixed item or byte capacity".into(), mutation, description)),
+            Err(reason) => return Err(reject(reason, mutation, description)),
+        };
+        if actor.is_empty() || actor.len() > ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+            return Err(reject("one-item publication actor exceeds its fixed identity capacity".into(), mutation, description));
+        }
+        if group_id.as_ref().is_some_and(|id| id.is_empty() || id.len() > ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err(reject("one-item publication group exceeds its fixed identity capacity".into(), mutation, description));
+        }
+        let Some(cursor) = self.envelope.cursor.as_ref() else {
+            return Err(reject("one-item publication requires an initialized live cursor authority".into(), mutation, description));
+        };
+        if cursor.applied_edit_ids.len() != self.applied_edit_ids.len() || cursor.redo_edit_ids.len() != self.redo_edit_ids.len() || cursor.checkpoint_id.as_deref() != self.current_checkpoint_id.as_deref() {
+            return Err(reject("one-item publication live cursor is stale or lacks preinstalled fixed capacity".into(), mutation, description));
+        }
+        let next_sequence_number = match self.edit_sequence.checked_add(1) {
+            Some(value) => value,
+            None => return Err(reject("one-item edit sequence exhausted".into(), mutation, description)),
+        };
+        let mut next_clock = self.clock;
+        next_clock.tick(now_ms());
+        let authority = Arc::new(ArtifactStoreOneItemLiveAuthority {
+            operation,
+            generation: semio_framework_job::Generation(expected_generation),
+            base_revision: expected_revision,
+            base_applied_edit_count: self.applied_edit_ids.len(),
+            next_sequence_number,
+            next_clock,
+            actor,
+            group_id,
+        });
+        let base = match self.snapshot_read() {
+            Ok(base) => base,
+            Err(error) => return Err(reject(error.to_string(), mutation, description)),
+        };
+        let request = ArtifactStoreOneItemPreparationRequest { operation, generation: semio_framework_job::Generation(expected_generation), base_revision: expected_revision, lane, authority: Arc::clone(&authority), description, base, mutation };
+        let preparation = match begin(request) {
+            Ok(preparation) => preparation,
+            Err(request) => {
+                let (base, mutation, description) = request.into_owners();
+                let _ = base.return_to_registry();
+                return Err(reject("app-owned one-item preparation factory rejected its exact owner bundle".into(), mutation, description));
+            }
+        };
+        Ok(ArtifactStoreOneItemPublication {
+            operation,
+            expected_generation,
+            expected_revision,
+            lane,
+            footprint,
+            authority: Some(authority),
+            preparation: Some(preparation),
+            receipt: None,
+            attempts: 0,
+            published: false,
+            cancel_requested: false,
+            close_started: false,
+            fault: None,
+            phase: ArtifactStoreOneItemPublicationPhase::Preparing,
+        })
+    }
+
+    /// ⏭️ Advances at most one preparation, cursor, preflight, or atomic move-publication
+    /// unit. The post-snapshot is an already-built `Arc` and is moved into the store.
+    pub fn advance_apply_one(&mut self, publication: &mut ArtifactStoreOneItemPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, VcsError> {
+        if publication.phase == ArtifactStoreOneItemPublicationPhase::Complete {
+            return Ok(ArtifactStoreOneItemAdvance::Complete);
+        }
+        if publication.phase == ArtifactStoreOneItemPublicationPhase::Closing {
+            return Ok(ArtifactStoreOneItemAdvance::Blocked);
+        }
+        if publication.phase == ArtifactStoreOneItemPublicationPhase::AwaitingAck {
+            return Ok(ArtifactStoreOneItemAdvance::AwaitingAck(publication.receipt.expect("awaiting-ACK publication retains its receipt")));
+        }
+        if publication.cancel_requested {
+            publication.begin_close();
+            return Ok(ArtifactStoreOneItemAdvance::Blocked);
+        }
+        if self.generation != publication.expected_generation || self.content_revision != publication.expected_revision {
+            publication.fault = Some("one-item publication became stale before commit".into());
+            publication.phase = ArtifactStoreOneItemPublicationPhase::Fault;
+            publication.begin_close();
+            return Err(VcsError::ValidationFailed("one-item publication became stale before commit".into()));
+        }
+        if !grant.permits_one() {
+            return Ok(ArtifactStoreOneItemAdvance::Blocked);
+        }
+        match publication.phase {
+            ArtifactStoreOneItemPublicationPhase::Preparing => {
+                let owner = publication.preparation.as_mut().ok_or_else(|| VcsError::ValidationFailed("one-item publication lost its retained preparation owner".into()))?;
+                match owner.advance(ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes }).map_err(VcsError::ValidationFailed)? {
+                    ArtifactStoreOneItemPreparationStep::Progress(checkpoint) => Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint)),
+                    ArtifactStoreOneItemPreparationStep::Prepared(checkpoint) => {
+                        if owner.prepared().is_none() {
+                            return Err(VcsError::ValidationFailed("one-item preparation reported Prepared without its exact candidate owner".into()));
+                        }
+                        publication.phase = ArtifactStoreOneItemPublicationPhase::PreparingCursor;
+                        Ok(ArtifactStoreOneItemAdvance::Progress(checkpoint))
+                    }
+                    ArtifactStoreOneItemPreparationStep::Blocked => Ok(ArtifactStoreOneItemAdvance::Blocked),
+                }
+            }
+            ArtifactStoreOneItemPublicationPhase::PreparingCursor => {
+                let prepared = publication.preparation.as_ref().and_then(|owner| owner.prepared()).ok_or_else(|| VcsError::ValidationFailed("one-item cursor preparation lost its candidate".into()))?;
+                let authority = publication.authority.as_ref().ok_or_else(|| VcsError::ValidationFailed("one-item cursor preparation lost its live authority".into()))?;
+                if prepared.edit.id.is_empty() || prepared.edit.id.len() > ARTIFACT_STORE_ONE_ITEM_ID_BYTES || authority.base_applied_edit_count != self.applied_edit_ids.len() {
+                    return Err(VcsError::ValidationFailed("domain-prepared one-item candidate failed its live cursor authority".into()));
+                }
+                publication.phase = ArtifactStoreOneItemPublicationPhase::PreflightingCommit;
+                Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()))
+            }
+            ArtifactStoreOneItemPublicationPhase::PreflightingCommit => {
+                let prepared = publication.preparation.as_ref().and_then(|owner| owner.prepared()).ok_or_else(|| VcsError::ValidationFailed("one-item commit preflight lost its candidate".into()))?;
+                let authority = publication.authority.as_ref().ok_or_else(|| VcsError::ValidationFailed("one-item commit preflight lost its live authority".into()))?;
+                let meta = prepared.edit.mutation_meta.first().ok_or_else(|| VcsError::ValidationFailed("one-item edit lacks its exact authority metadata".into()))?;
+                authority.validate_prepared(prepared).map_err(VcsError::ValidationFailed)?;
+                if publication.lane != HistoryLane::Document
+                    || prepared.edit.sequence_number != authority.next_sequence_number
+                    || prepared.edit.forwards.len() != 1
+                    || prepared.edit.mutation_meta.len() != 1
+                    || prepared.edit.id != prepared.applied_edit_id
+                    || prepared.edit.id != prepared.tail_edit_id
+                    || prepared.edit.actor.as_deref() != Some(authority.actor.as_str())
+                    || prepared.local_actor.as_deref() != Some(authority.actor.as_str())
+                    || prepared.next_clock != authority.next_clock
+                    || meta.author_id.as_ref().map(|actor| actor.0.as_str()) != Some(authority.actor.as_str())
+                    || meta.timestamp != authority.next_clock
+                    || prepared.edit.inverse.len().saturating_add(prepared.edit.forwards.len()) > publication.footprint.work_items
+                    || self.backbone.is_some()
+                {
+                    return Err(VcsError::ValidationFailed("one-item prepared candidate failed its exact fixed commit contract".into()));
+                }
+                if self.applied_edit_ids.len() == self.applied_edit_ids.capacity()
+                    || self.revision_accumulator.applied.len() == self.revision_accumulator.applied.capacity()
+                    || self.envelope.cursor.as_ref().is_none_or(|cursor| cursor.applied_edit_ids.len() == cursor.applied_edit_ids.capacity())
+                {
+                    return Err(VcsError::ValidationFailed("one-item publication requires preinstalled fixed applied and revision capacity".into()));
+                }
+                if self.generation == u64::MAX {
+                    return Err(VcsError::ValidationFailed("one-item store generation is exhausted".into()));
+                }
+                self.displaced_retirements.reserve(12)?;
+                if self.snapshot_retirement_factory.is_none() || self.mutation_retirement_factory.is_none() {
+                    return Err(VcsError::ValidationFailed("one-item commit lacks exact snapshot or mutation retirement authority".into()));
+                }
+                publication.phase = ArtifactStoreOneItemPublicationPhase::Publishing;
+                Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()))
+            }
+            ArtifactStoreOneItemPublicationPhase::Publishing => {
+                let reservation = self.reserve_edit_history_slot()?;
+                let prepared = publication.preparation.as_mut().and_then(|owner| owner.take_prepared()).ok_or_else(|| VcsError::ValidationFailed("one-item publication lost its prepared candidate at atomic transfer".into()))?;
+                let generation_before = self.generation;
+                let pre_snapshot = Arc::clone(&self.current);
+                let cursor = self.envelope.cursor.as_mut().ok_or_else(|| VcsError::ValidationFailed("one-item publication lost its live cursor authority".into()))?;
+                let retired_cursor_redo = std::mem::take(&mut cursor.redo_edit_ids);
+                cursor.applied_edit_ids.push(prepared.edit.id.clone());
+                if !retired_cursor_redo.is_empty() || retired_cursor_redo.capacity() != 0 {
+                    self.displaced_retirements.push_reserved(Box::new(ArtifactStoreStringVectorRetirement::new(retired_cursor_redo)));
+                }
+                self.replace_pending_report_retained(PendingCommandReport::default())?;
+                self.replace_local_actor_retained(prepared.local_actor)?;
+                self.replace_tail_undo_cache_retained(Some((prepared.tail_edit_id, pre_snapshot)))?;
+                self.applied_edit_ids.push(prepared.applied_edit_id);
+                self.replace_redo_edit_ids_retained(Vec::new())?;
+                self.replace_current_retained(prepared.post_snapshot)?;
+                self.edit_sequence = prepared.edit.sequence_number;
+                self.clock = prepared.next_clock;
+                let edit_id_digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[prepared.edit.id.as_bytes()]);
+                let previous = self.revision_accumulator.applied.last().map_or(self.revision_accumulator.identity_digest, |record| record.prefix_digest);
+                let prefix_digest = CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &prepared.edit_digest]);
+                self.insert_reserved_edit_history(reservation, *prepared.edit)?;
+                self.revision_accumulator.applied.push(CursorRevisionRecord { id_digest: edit_id_digest, edit_digest: prepared.edit_digest, prefix_digest });
+                let retired_redo = std::mem::take(&mut self.revision_accumulator.redo);
+                if !retired_redo.is_empty() || retired_redo.capacity() != 0 {
+                    self.displaced_retirements.push_reserved(Box::new(ArtifactStoreRevisionAccumulatorRetirement::new(CursorRevisionAccumulator {
+                        identity_digest: self.revision_accumulator.identity_digest,
+                        applied: Vec::new(),
+                        redo: retired_redo,
+                    })));
+                }
+                self.generation += 1;
+                self.content_revision = self.revision_accumulator.revision(self.current_checkpoint_id.as_deref());
+                assert!(self.snapshot_read_leases.publish_authority(self.generation, self.content_revision), "single-owner one-item publication must advance its exact snapshot authority");
+                self.last_projection_cause = Some(ArtifactProjectionCause::Apply);
+                let receipt = LaneItemReceipt { generation_before, generation_after: self.generation };
+                publication.expected_generation = self.generation;
+                publication.expected_revision = self.content_revision;
+                publication.receipt = Some(receipt);
+                publication.published = true;
+                publication.phase = ArtifactStoreOneItemPublicationPhase::AwaitingAck;
+                Ok(ArtifactStoreOneItemAdvance::Published(receipt))
+            }
+            ArtifactStoreOneItemPublicationPhase::Fault => Err(VcsError::ValidationFailed(publication.fault.clone().unwrap_or_else(|| "one-item publication faulted".into()))),
+            ArtifactStoreOneItemPublicationPhase::AwaitingAck | ArtifactStoreOneItemPublicationPhase::Closing | ArtifactStoreOneItemPublicationPhase::Complete => unreachable!("handled one-item terminal control phase"),
+        }
+    }
+
+    pub fn cancel_apply_one(&mut self, publication: &mut ArtifactStoreOneItemPublication<P, Mutation>) -> bool {
+        if matches!(publication.phase, ArtifactStoreOneItemPublicationPhase::Complete | ArtifactStoreOneItemPublicationPhase::Closing) {
+            return false;
+        }
+        publication.cancel_requested = true;
+        publication.begin_close();
+        true
+    }
+    //#endregion 📬️OneItemPublication
+
     pub async fn apply_one(&mut self, expected_generation: u64, mutation: Mutation, description: Option<String>, lane: HistoryLane) -> Result<(CommandReceipt, LaneItemReceipt), VcsError>
     where
         P: Sync,
@@ -14717,7 +16218,11 @@ where
     /// `envelope.cursor` — the single choke point that keeps the persisted cursor in sync with
     /// live undo/redo state. Called from every `bump()`, so every mutating command re-syncs it.
     fn sync_cursor(&mut self) {
-        let next = Some(ArtifactCursor { applied_edit_ids: (&*self.applied_edit_ids).clone(), redo_edit_ids: (&*self.redo_edit_ids).clone(), checkpoint_id: (&*self.current_checkpoint_id).clone() });
+        let mut applied = Vec::with_capacity(self.applied_edit_ids.capacity());
+        applied.extend(self.applied_edit_ids.iter().cloned());
+        let mut redo = Vec::with_capacity(self.redo_edit_ids.capacity());
+        redo.extend(self.redo_edit_ids.iter().cloned());
+        let next = Some(ArtifactCursor::new(applied, redo, (&*self.current_checkpoint_id).clone()));
         if let Some(previous) = std::mem::replace(&mut self.envelope.cursor, next) {
             self.displaced_retirements.push_reserved(Box::new(ArtifactStoreCursorRetirement::new(previous)));
         }
@@ -14780,6 +16285,8 @@ where
             drop(std::mem::ManuallyDrop::take(&mut self.snapshot_read_leases));
             drop(std::mem::ManuallyDrop::take(&mut self.displaced_retirements));
             drop(std::mem::ManuallyDrop::take(&mut self.owned_disposer));
+            drop(std::mem::ManuallyDrop::take(&mut self.one_item_preparation_factory));
+            drop(std::mem::ManuallyDrop::take(&mut self.one_item_wire_preparation_factory));
             drop(std::mem::ManuallyDrop::take(&mut self.pending_report));
         }
     }
@@ -15504,6 +17011,12 @@ pub trait BlobStore: Send + Sync {
 // site, never from a bound named here.
 pub trait SpaceMember {
     async fn document_id(&self) -> &str;
+    fn one_item_publication_identity(&self) -> (u64, [u8; 32]);
+    fn one_item_wire_publication_supported(&self) -> bool;
+    fn begin_one_item_wire_publication(&self, request: MemberStoreOneItemWireRequest) -> Result<Box<dyn ErasedMemberStoreOneItemPublication>, ArtifactStoreOneItemAdmissionRejected<MemberStoreOneItemWire>>;
+    fn advance_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, String>;
+    fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String>;
+    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String>;
     /// 🧵️ The live typed snapshot behind an opaque immutable ownership boundary.
     async fn snapshot_read_erased(&self) -> Result<ErasedSnapshotRead, String>;
     fn retire_snapshot_read_erased(&mut self, snapshot: ErasedSnapshotRead) -> Result<Box<dyn ErasedSnapshotRetirement>, SnapshotRetirementRejected>;
@@ -15661,6 +17174,109 @@ where
 {
     async fn document_id(&self) -> &str {
         self.envelope().id.as_str()
+    }
+
+    fn one_item_publication_identity(&self) -> (u64, [u8; 32]) {
+        (self.generation, self.content_revision)
+    }
+
+    fn one_item_wire_publication_supported(&self) -> bool {
+        self.one_item_wire_preparation_factory.is_some() && self.snapshot_retirement_factory.is_some() && self.mutation_retirement_factory.is_some() && self.backbone.is_none() && !self.owned_disposer_terminal
+    }
+
+    fn begin_one_item_wire_publication(&self, request: MemberStoreOneItemWireRequest) -> Result<Box<dyn ErasedMemberStoreOneItemPublication>, ArtifactStoreOneItemAdmissionRejected<MemberStoreOneItemWire>> {
+        let Some(factory) = self.one_item_wire_preparation_factory.as_ref().filter(|_| self.one_item_wire_publication_supported()) else {
+            return Err(ArtifactStoreOneItemAdmissionRejected { reason: "member requires its exact retained wire preparation and retirement authority".into(), mutation: request.wire, description: request.description });
+        };
+        if request.wire.schema.len() > ARTIFACT_STORE_ONE_ITEM_ID_BYTES || request.wire.bytes.len() > ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES {
+            return Err(ArtifactStoreOneItemAdmissionRejected { reason: "member wire exceeds its fixed schema or byte admission".into(), mutation: request.wire, description: request.description });
+        }
+        let publication = self.begin_apply_one_owned(
+            request.operation,
+            request.expected_generation,
+            request.expected_revision,
+            request.actor,
+            request.wire,
+            request.description,
+            HistoryLane::Document,
+            request.group_id,
+            |wire, description, lane| factory.preflight(wire, description, lane),
+            |request| factory.begin(request),
+        )?;
+        Ok(Box::new(MemberStoreOneItemPublication { member: Some(Arc::clone(&self.snapshot_read_leases)), publication, group_history: None, group_displaced: None }))
+    }
+
+    fn advance_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, String> {
+        let publication = publication.as_any_mut().downcast_mut::<MemberStoreOneItemPublication<P, Mutation>>().ok_or_else(|| "member publication concrete owner type does not match".to_string())?;
+        if !publication.member.as_ref().is_some_and(|member| Arc::ptr_eq(member, &self.snapshot_read_leases)) {
+            return Err("member publication belongs to a different exact store authority".into());
+        }
+        if publication.group_history.is_some() || publication.group_displaced.is_some() {
+            return Err("group-reserved member candidate requires an atomic group visibility authority".into());
+        }
+        self.advance_apply_one(&mut publication.publication, ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes }).map_err(|error| error.to_string())
+    }
+
+    fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+        let publication = publication.as_any_mut().downcast_mut::<MemberStoreOneItemPublication<P, Mutation>>().ok_or_else(|| "member group preparation concrete owner type does not match".to_string())?;
+        if !publication.member.as_ref().is_some_and(|member| Arc::ptr_eq(member, &self.snapshot_read_leases)) {
+            return Err("member group preparation belongs to a different exact store authority".into());
+        }
+        if self.generation != publication.publication.expected_generation || self.content_revision != publication.publication.expected_revision {
+            publication.publication.fault = Some("member group preparation became stale before visibility publication".into());
+            publication.publication.begin_close();
+            return Err("member group preparation became stale before visibility publication".into());
+        }
+        if !grant.permits_one() {
+            return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if publication.publication.phase() == ArtifactStoreOneItemPublicationPhase::Publishing {
+            if publication.group_history.is_some() && publication.group_displaced.is_some() {
+                return Ok(ArtifactStoreOneItemPreparationStep::Prepared(publication.publication.progress()));
+            }
+            if publication.group_displaced.is_none() {
+                publication.group_displaced = Some(self.displaced_retirements.reserve_owner_slots(12).map_err(|error| error.to_string())?);
+                return Ok(ArtifactStoreOneItemPreparationStep::Progress(publication.publication.progress()));
+            }
+            publication.group_history = Some(self.reserve_edit_history_slot().map_err(|error| error.to_string())?);
+            return Ok(ArtifactStoreOneItemPreparationStep::Prepared(publication.publication.progress()));
+        }
+        if matches!(publication.publication.phase(), ArtifactStoreOneItemPublicationPhase::AwaitingAck | ArtifactStoreOneItemPublicationPhase::Closing | ArtifactStoreOneItemPublicationPhase::Complete | ArtifactStoreOneItemPublicationPhase::Fault) {
+            return Err("member group preparation is no longer in a prepublication phase".into());
+        }
+        match self.advance_apply_one(&mut publication.publication, ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes }).map_err(|error| error.to_string())? {
+            ArtifactStoreOneItemAdvance::Progress(checkpoint) => Ok(ArtifactStoreOneItemPreparationStep::Progress(checkpoint)),
+            ArtifactStoreOneItemAdvance::Blocked => Ok(ArtifactStoreOneItemPreparationStep::Blocked),
+            _ => Err("member group preparation crossed its reserved prepublication boundary".into()),
+        }
+    }
+
+    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+        let publication = publication.as_any_mut().downcast_mut::<MemberStoreOneItemPublication<P, Mutation>>().ok_or_else(|| "member group abort concrete owner type does not match".to_string())?;
+        if publication.terminal_is_empty() {
+            return Ok(SnapshotRetirementStep::Complete);
+        }
+        if !publication.member.as_ref().is_some_and(|member| Arc::ptr_eq(member, &self.snapshot_read_leases)) {
+            return Err("member group abort belongs to a different exact store authority".into());
+        }
+        publication.publication.begin_close();
+        if grant.maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(reservation) = publication.group_history.take() {
+            let ArtifactStoreHistoryCommitReservation { history, rejected_owner } = reservation;
+            if let Err(history) = self.envelope.vcs.edits.cancel_reservation(history) {
+                publication.group_history = Some(ArtifactStoreHistoryCommitReservation { history, rejected_owner });
+                return Err("member group abort lost its exact history reservation".into());
+            }
+            self.displaced_retirements.release_owner_slots(rejected_owner).map_err(|error| error.to_string())?;
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(reservation) = publication.group_displaced.take() {
+            self.displaced_retirements.release_owner_slots(reservation).map_err(|error| error.to_string())?;
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        publication.close_step(ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), maximum_bytes: grant.maximum_bytes })
     }
 
     async fn snapshot_read_erased(&self) -> Result<ErasedSnapshotRead, String> {
@@ -15900,6 +17516,30 @@ impl SpaceMember for NoMembers {
         match *self {}
     }
 
+    fn one_item_publication_identity(&self) -> (u64, [u8; 32]) {
+        match *self {}
+    }
+
+    fn one_item_wire_publication_supported(&self) -> bool {
+        match *self {}
+    }
+
+    fn begin_one_item_wire_publication(&self, _request: MemberStoreOneItemWireRequest) -> Result<Box<dyn ErasedMemberStoreOneItemPublication>, ArtifactStoreOneItemAdmissionRejected<MemberStoreOneItemWire>> {
+        match *self {}
+    }
+
+    fn advance_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, String> {
+        match *self {}
+    }
+
+    fn prepare_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+        match *self {}
+    }
+
+    fn abort_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+        match *self {}
+    }
+
     async fn snapshot_read_erased(&self) -> Result<ErasedSnapshotRead, String> {
         match *self {}
     }
@@ -16057,6 +17697,24 @@ macro_rules! space_members {
         impl $crate::os_store::SpaceMember for $enum_name {
             async fn document_id(&self) -> &str {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::document_id(m).await),+ }
+            }
+            fn one_item_publication_identity(&self) -> (u64, [u8; 32]) {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::one_item_publication_identity(m)),+ }
+            }
+            fn one_item_wire_publication_supported(&self) -> bool {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::one_item_wire_publication_supported(m)),+ }
+            }
+            fn begin_one_item_wire_publication(&self, request: $crate::os_store::MemberStoreOneItemWireRequest) -> Result<Box<dyn $crate::os_store::ErasedMemberStoreOneItemPublication>, $crate::os_store::ArtifactStoreOneItemAdmissionRejected<$crate::os_store::MemberStoreOneItemWire>> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::begin_one_item_wire_publication(m, request)),+ }
+            }
+            fn advance_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::ErasedMemberStoreOneItemPublication, grant: $crate::os_store::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::ArtifactStoreOneItemAdvance, String> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::advance_one_item_publication(m, publication, grant)),+ }
+            }
+            fn prepare_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::ErasedMemberStoreOneItemPublication, grant: $crate::os_store::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::ArtifactStoreOneItemPreparationStep, String> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::prepare_one_item_publication(m, publication, grant)),+ }
+            }
+            fn abort_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::ErasedMemberStoreOneItemPublication, grant: $crate::os_store::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::SnapshotRetirementStep, String> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::abort_one_item_publication(m, publication, grant)),+ }
             }
             async fn snapshot_read_erased(&self) -> Result<$crate::os_store::ErasedSnapshotRead, String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_erased(m).await),+ }
@@ -17869,6 +19527,137 @@ impl ArtifactPack for protocol::InteractionState {
 mod tests {
     use super::*;
 
+    const ONE_ITEM_PUBLICATION_FIXTURE: &str =
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/EVERY-TOOL-INTERACTIVE-JOB-MIGRATION/🧪️artifact-store-one-item-publication-v1.json"));
+    const EPHEMERAL_ONE_ITEM_PUBLICATION_FIXTURE: &str =
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/EVERY-TOOL-INTERACTIVE-JOB-MIGRATION/🧪️artifact-ephemeral-one-item-publication-v1.json"));
+
+    struct SerdeOneItemPublicationOracle {
+        maximum_items: usize,
+        maximum_bytes: usize,
+        maximum_retries: u8,
+    }
+
+    impl SerdeOneItemPublicationOracle {
+        fn from_fixture(fixture: &serde_json::Value) -> Self {
+            Self {
+                maximum_items: fixture["capacities"]["maximumWorkItems"].as_u64().expect("maximum work items") as usize,
+                maximum_bytes: fixture["capacities"]["maximumRetainedBytes"].as_u64().expect("maximum retained bytes") as usize,
+                maximum_retries: fixture["capacities"]["maximumRetries"].as_u64().expect("maximum retries") as u8,
+            }
+        }
+
+        fn admits(&self, items: usize, bytes: usize) -> bool {
+            items != 0 && items <= self.maximum_items && bytes <= self.maximum_bytes
+        }
+
+        fn freshness(base_generation: u64, live_generation: u64, base_revision: u64, live_revision: u64) -> &'static str {
+            if base_generation == live_generation && base_revision == live_revision {
+                "accepted"
+            } else {
+                "fault"
+            }
+        }
+
+        fn retry(&self, attempts: u8, acknowledged: bool) -> &'static str {
+            if attempts > self.maximum_retries {
+                "retry-exhausted"
+            } else if acknowledged {
+                "complete-empty"
+            } else {
+                "awaiting-ack"
+            }
+        }
+    }
+
+    #[test]
+    fn one_item_publication_fixture_matches_the_third_party_json_oracle() {
+        let fixture: serde_json::Value = serde_json::from_str(ONE_ITEM_PUBLICATION_FIXTURE).expect("language-neutral one-item publication fixture");
+        let oracle = SerdeOneItemPublicationOracle::from_fixture(&fixture);
+        assert_eq!(fixture["capacities"]["historyItems"], crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY);
+        for case in fixture["admissionCases"].as_array().expect("admission cases") {
+            let actual = oracle.admits(case["workItems"].as_u64().expect("work items") as usize, case["retainedBytes"].as_u64().expect("retained bytes") as usize);
+            assert_eq!(actual, case["accepted"].as_bool().expect("accepted"), "{}", case["id"]);
+            assert_eq!(case["fuelAfter"], 0, "rejected preflight consumes no fuel");
+        }
+        for case in fixture["authorityCases"].as_array().expect("authority cases") {
+            let accepted = case["authorityMatches"] == true && case["digestOwner"] == "store" && case["cursorFieldsExposed"] == false;
+            assert_eq!(accepted, case["accepted"].as_bool().expect("authority acceptance"), "{}", case["id"]);
+        }
+        for case in fixture["lifecycleCases"].as_array().expect("lifecycle cases") {
+            match case["id"].as_str().expect("case id") {
+                "stale-generation" | "stale-revision" => assert_eq!(
+                    SerdeOneItemPublicationOracle::freshness(
+                        case["baseGeneration"].as_u64().expect("base generation"),
+                        case["liveGeneration"].as_u64().expect("live generation"),
+                        case["baseRevision"].as_u64().expect("base revision"),
+                        case["liveRevision"].as_u64().expect("live revision"),
+                    ),
+                    case["expected"].as_str().expect("expected freshness")
+                ),
+                "retry-then-ack" | "retry-plus-one" => {
+                    assert_eq!(oracle.retry(case["retryAttempts"].as_u64().expect("retry attempts") as u8, case["acknowledged"].as_bool().expect("acknowledged")), case["expected"].as_str().expect("expected retry outcome"))
+                }
+                "cancel-before-publish" | "interrupted-close" => assert_eq!(case["expected"], "complete-empty"),
+                unexpected => panic!("unknown one-item lifecycle fixture {unexpected}"),
+            }
+        }
+    }
+
+    #[test]
+    fn ephemeral_one_item_publication_fixture_matches_the_third_party_json_oracle() {
+        let fixture: serde_json::Value = serde_json::from_str(EPHEMERAL_ONE_ITEM_PUBLICATION_FIXTURE).expect("language-neutral ephemeral publication fixture");
+        assert_eq!(fixture["lanes"], serde_json::json!(["presence", "transient"]));
+        for case in fixture["admissionCases"].as_array().expect("ephemeral admission cases") {
+            let work_items = case["workItems"].as_u64().expect("work items") as usize;
+            let retained_bytes = case["retainedBytes"].as_u64().expect("retained bytes") as usize;
+            let factories = case["preparationFactory"].as_bool().expect("preparation factory") && case["retirementFactory"].as_bool().expect("retirement factory");
+            let admitted = factories && ArtifactStoreOneItemFootprint { work_items, retained_bytes }.is_admissible();
+            assert_eq!(admitted, case["accepted"].as_bool().expect("accepted"), "{}", case["id"]);
+        }
+        for case in fixture["lifecycleCases"].as_array().expect("ephemeral lifecycle cases") {
+            let expected = case["expected"].as_str().expect("expected");
+            match case["id"].as_str().expect("case id") {
+                "stale-generation" => assert_eq!(expected, "fault"),
+                "single-publication" => assert_eq!(case["generationDelta"], 1),
+                "cancel" | "retry-ack" | "interrupted-close" => assert_eq!(expected, "complete-empty"),
+                unexpected => panic!("unknown ephemeral lifecycle fixture {unexpected}"),
+            }
+        }
+    }
+
+    #[test]
+    fn one_item_publication_source_denies_generic_or_unbounded_shortcuts() {
+        let source = include_str!("🦀️component.rs");
+        let authority_start = source.find("pub struct ArtifactStoreOneItemLiveAuthority").expect("private live authority");
+        let authority_end = source[authority_start..].find("impl ArtifactStoreOneItemLiveAuthority").map(|offset| authority_start + offset).expect("authority helper");
+        let authority_shape = &source[authority_start..authority_end];
+        for forbidden in ["pub operation:", "pub generation:", "pub base_revision:", "pub base_applied_edit_count:", "pub next_sequence_number:", "pub next_clock:", "pub actor:"] {
+            assert!(!authority_shape.contains(forbidden), "live authority exposes raw fabrication field {forbidden}");
+        }
+        let prepared_start = source.find("pub struct ArtifactStoreOneItemPrepared").expect("sealed prepared envelope");
+        let prepared_end = source[prepared_start..].find("impl<P, Mutation> ArtifactStoreOneItemPrepared").map(|offset| prepared_start + offset).expect("prepared accessor");
+        let prepared_shape = &source[prepared_start..prepared_end];
+        assert!(!prepared_shape.contains("pub edit:"));
+        assert!(!prepared_shape.contains("pub edit_digest:"));
+        assert!(!prepared_shape.contains("cursor"), "domain-prepared envelope cannot carry cursor or history fabrication fields");
+        let start = source.find("pub fn advance_apply_one(").expect("retained one-item advance");
+        let end = source[start..].find("pub fn cancel_apply_one(").map(|offset| start + offset).expect("retained one-item cancel");
+        let advance = &source[start..end];
+        for forbidden in [".diff(", ".inverse(", "apply_mutation(", "replay_mutations(", "apply_command(", "flush_outbound(", "try_reserve(", "try_reserve_exact(", "post_snapshot.clone()", "current.as_ref().clone()", ".to_vec()"] {
+            assert!(!advance.contains(forbidden), "one-item advance contains forbidden shortcut {forbidden}");
+        }
+        let close_start = source.find("pub fn close_step(&mut self, grant: ArtifactStoreOneItemGrant)").expect("one-item close");
+        let close_end = source[close_start..].find("pub fn terminal_is_empty").map(|offset| close_start + offset).expect("one-item terminal witness");
+        let close = &source[close_start..close_end];
+        assert!(close.contains("maximum_items.min(1)"));
+        assert!(close.contains("maximum_bytes"));
+        assert!(close.contains("terminal_is_empty"));
+        assert!(!close.contains(".clear()"));
+        assert!(advance.contains("authority.validate_prepared(prepared)"), "Store validation must verify its private exact-owner seal");
+        assert!(!advance.contains("prepared_edit_digest("), "Store commit validation must not reserialize retained edits");
+    }
+
     fn drain_channel_for_test(remote: &ChannelBackboneRemote) -> Result<Vec<BackboneMessage>, VcsError> {
         let mut messages = Vec::new();
         while let Some(message) = remote.try_pop_front()? {
@@ -18880,15 +20669,15 @@ mod tests {
 
     impl<P, Mutation> ArtifactStore<P, Mutation>
     where
-        P: Clone + Serialize + DeserializeOwned + ArtifactPack,
-        Mutation: Clone + Serialize + DeserializeOwned + super::Mutation<P> + OpBinary + OpText,
+        P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+        Mutation: Clone + Serialize + DeserializeOwned + super::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         async fn new(envelope: ArtifactEnvelope<P, Mutation>) -> Self {
             Self(super::ArtifactStore::new(envelope).await.expect("test fixture history is valid"))
         }
 
         async fn current_checkpoint_id(&self) -> Option<&str> {
-            self.0.current_checkpoint_id().await
+            self.0.current_checkpoint_id()
         }
     }
 
@@ -18921,6 +20710,24 @@ mod tests {
     {
         async fn document_id(&self) -> &str {
             SpaceMember::document_id(&self.0).await
+        }
+        fn one_item_publication_identity(&self) -> (u64, [u8; 32]) {
+            SpaceMember::one_item_publication_identity(&self.0)
+        }
+        fn one_item_wire_publication_supported(&self) -> bool {
+            SpaceMember::one_item_wire_publication_supported(&self.0)
+        }
+        fn begin_one_item_wire_publication(&self, request: MemberStoreOneItemWireRequest) -> Result<Box<dyn ErasedMemberStoreOneItemPublication>, ArtifactStoreOneItemAdmissionRejected<MemberStoreOneItemWire>> {
+            SpaceMember::begin_one_item_wire_publication(&self.0, request)
+        }
+        fn advance_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, String> {
+            SpaceMember::advance_one_item_publication(&mut self.0, publication, grant)
+        }
+        fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+            SpaceMember::prepare_one_item_publication(&mut self.0, publication, grant)
+        }
+        fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+            SpaceMember::abort_one_item_publication(&mut self.0, publication, grant)
         }
         async fn snapshot_read_erased(&self) -> Result<ErasedSnapshotRead, String> {
             SpaceMember::snapshot_read_erased(&self.0).await
@@ -19143,9 +20950,9 @@ mod tests {
         }
     }
 
-    struct DemoMutationRetirement(Option<DemoMutation>);
+    struct DemoMutationRetirement<Mutation>(Option<Mutation>);
 
-    impl ErasedSnapshotRetirement for DemoMutationRetirement {
+    impl<Mutation: Send> ErasedSnapshotRetirement for DemoMutationRetirement<Mutation> {
         fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
             if maximum_items == 0 {
                 return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
@@ -19163,8 +20970,8 @@ mod tests {
 
     struct DemoMutationRetirementFactory;
 
-    impl ArtifactOwnedValueRetirementFactory<DemoMutation> for DemoMutationRetirementFactory {
-        fn retire_owned(&self, value: DemoMutation) -> Box<dyn ErasedSnapshotRetirement> {
+    impl<Mutation: Send + 'static> ArtifactOwnedValueRetirementFactory<Mutation> for DemoMutationRetirementFactory {
+        fn retire_owned(&self, value: Mutation) -> Box<dyn ErasedSnapshotRetirement> {
             Box::new(DemoMutationRetirement(Some(value)))
         }
     }
@@ -19190,7 +20997,7 @@ mod tests {
         let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "root-close", DemoSnapshot { n: 7 }, None);
         let mut store = super::ArtifactStore::new(envelope).await.expect("valid empty-history store");
         store.install_member_store_owners_exact(DemoSnapshot::member_store_owners());
-        store.tail_undo_cache = Some(("tail-owner".repeat(64), Arc::clone(&*store.current)));
+        *store.tail_undo_cache = Some(("tail-owner".repeat(64), Arc::clone(&*store.current)));
 
         let tail_id = store.close_take_runtime_string_retirement(ArtifactStoreCloseStringLane::TailUndoEditId).expect("tail id retires before its snapshot");
         drive_retirement_terminal(tail_id);
@@ -19376,9 +21183,1150 @@ mod tests {
         }
     }
 
+    //#region 📬️OneItemPublicationLaws
+    //#region 🧩️RetainedMemberPublicationLaws
+    crate::space_members! {
+        pub enum RetainedTestMembers {
+            First("demo.first", "demo/v1") => super::ArtifactStore<DemoSnapshot, DemoMutation>,
+            Second("demo.second", "demo/v1") => super::ArtifactStore<DemoSnapshot, DemoMutation>,
+        }
+    }
+
+    fn member_publication_fixture() -> serde_json::Value {
+        serde_json::from_str(include_str!("🧪️member-publication.json")).expect("language-neutral member publication fixture")
+    }
+
+    fn close_erased_member_publication(publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: ArtifactStoreOneItemGrant) {
+        publication.begin_close();
+        for _ in 0..65_536 {
+            match publication.close_step(grant).expect("one retained member close unit") {
+                SnapshotRetirementStep::Complete => {
+                    assert!(publication.terminal_is_empty());
+                    return;
+                }
+                SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                    assert!(released_items <= grant.maximum_items);
+                    assert!(released_bytes <= grant.maximum_bytes);
+                }
+                SnapshotRetirementStep::Blocked => panic!("admitted member close must progress under the production grant"),
+            }
+        }
+        panic!("member publication did not retire its exact owners");
+    }
+
+    fn retained_demo_member_owners() -> MemberStoreOwners<DemoSnapshot, DemoMutation> {
+        demo_closable_store_owners().with_one_item_preparation(Arc::new(DemoOneItemPreparationFactory::admissible())).with_one_item_wire_preparation(Arc::new(DemoMemberWirePreparationFactory))
+    }
+
+    struct DemoMemberWirePreparationFactory;
+
+    struct DemoMemberWirePreparation {
+        request: Option<ArtifactStoreOneItemPreparationRequest<DemoSnapshot, MemberStoreOneItemWire>>,
+        wire: Option<MemberStoreOneItemWire>,
+        inner: Option<Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation>>>,
+        offset: usize,
+        magnitude: u32,
+        negative: bool,
+        state: u8,
+        closing: bool,
+    }
+
+    impl MemberStoreOneItemWirePreparationFactory<DemoSnapshot, DemoMutation> for DemoMemberWirePreparationFactory {
+        fn preflight(&self, wire: &MemberStoreOneItemWire, description: Option<&str>, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
+            if wire.schema != "demo.member.json-number" || wire.bytes.is_empty() || description.is_some_and(|description| description.len() > 256) || lane != HistoryLane::Document {
+                return Err("demo retained member wire schema or metadata is not admitted".into());
+            }
+            Ok(ArtifactStoreOneItemFootprint { work_items: wire.bytes.len().saturating_add(3), retained_bytes: wire.bytes.len().saturating_add(1024) })
+        }
+
+        fn begin(
+            &self,
+            request: ArtifactStoreOneItemPreparationRequest<DemoSnapshot, MemberStoreOneItemWire>,
+        ) -> Result<Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation>>, ArtifactStoreOneItemPreparationRequest<DemoSnapshot, MemberStoreOneItemWire>> {
+            Ok(Box::new(DemoMemberWirePreparation { request: Some(request), wire: None, inner: None, offset: 0, magnitude: 0, negative: false, state: 0, closing: false }))
+        }
+    }
+
+    impl DemoMemberWirePreparation {
+        fn parse_byte(&mut self, byte: u8) -> Result<(), String> {
+            let whitespace = matches!(byte, b' ' | b'\t' | b'\n' | b'\r');
+            match self.state {
+                0 if whitespace => {}
+                0 if byte == b'-' => {
+                    self.negative = true;
+                    self.state = 1;
+                }
+                0 | 1 if byte.is_ascii_digit() => {
+                    self.magnitude = u32::from(byte - b'0');
+                    self.state = if byte == b'0' { 2 } else { 3 };
+                }
+                3 if byte.is_ascii_digit() => {
+                    self.magnitude = self.magnitude.checked_mul(10).and_then(|value| value.checked_add(u32::from(byte - b'0'))).ok_or_else(|| "member number overflows i32".to_string())?;
+                    if self.magnitude > i32::MAX as u32 + u32::from(self.negative) {
+                        return Err("member number overflows i32".into());
+                    }
+                }
+                2 | 3 | 4 if whitespace => self.state = 4,
+                _ => return Err("member wire is not an exact JSON integer".into()),
+            }
+            Ok(())
+        }
+
+        fn close_wire(wire: &mut MemberStoreOneItemWire, grant: ArtifactStoreOneItemGrant) -> Option<SnapshotRetirementStep> {
+            if !wire.bytes.is_empty() {
+                if grant.maximum_bytes == 0 {
+                    return Some(SnapshotRetirementStep::Blocked);
+                }
+                wire.bytes.pop();
+                return Some(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 1 });
+            }
+            if let Some(scalar) = wire.schema.chars().next_back() {
+                if scalar.len_utf8() > grant.maximum_bytes {
+                    return Some(SnapshotRetirementStep::Blocked);
+                }
+                wire.schema.pop();
+                return Some(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: scalar.len_utf8() });
+            }
+            None
+        }
+    }
+
+    impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoMemberWirePreparation {
+        fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+            if !grant.permits_one() || self.closing {
+                return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
+            }
+            if let Some(inner) = self.inner.as_mut() {
+                return match inner.advance(grant)? {
+                    ArtifactStoreOneItemPreparationStep::Prepared(_) => Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint())),
+                    ArtifactStoreOneItemPreparationStep::Progress(_) => Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint())),
+                    ArtifactStoreOneItemPreparationStep::Blocked => Ok(ArtifactStoreOneItemPreparationStep::Blocked),
+                };
+            }
+            if let Some(byte) = self.request.as_ref().and_then(|request| request.mutation.bytes.get(self.offset)).copied() {
+                self.parse_byte(byte)?;
+                self.offset += 1;
+                return Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint()));
+            }
+            if !matches!(self.state, 2 | 3 | 4) {
+                return Err("member wire ended without an integer".into());
+            }
+            let request = self.request.take().ok_or_else(|| "member wire lost its request".to_string())?;
+            let n = if self.negative { -(i64::from(self.magnitude)) as i32 } else { self.magnitude as i32 };
+            self.wire = Some(request.mutation);
+            let typed = ArtifactStoreOneItemPreparationRequest {
+                operation: request.operation,
+                generation: request.generation,
+                base_revision: request.base_revision,
+                lane: request.lane,
+                authority: request.authority,
+                description: request.description,
+                base: request.base,
+                mutation: DemoMutation::SetN { n },
+            };
+            self.inner = Some(DemoOneItemPreparationFactory::admissible().begin(typed).unwrap_or_else(|_| panic!("demo typed owner accepts its exact decoded input")));
+            Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint()))
+        }
+
+        fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint {
+            let inner = self.inner.as_ref().map_or_else(ArtifactStoreOneItemCheckpoint::default, |inner| inner.checkpoint());
+            ArtifactStoreOneItemCheckpoint { cursor: self.offset as u32 + inner.cursor, completed_items: self.offset as u32 + inner.completed_items, completed_bytes: self.offset as u64, digest: inner.digest }
+        }
+
+        fn prepared(&self) -> Option<&ArtifactStoreOneItemPrepared<DemoSnapshot, DemoMutation>> {
+            self.inner.as_ref().and_then(|inner| inner.prepared())
+        }
+
+        fn take_prepared(&mut self) -> Option<ArtifactStoreOneItemPrepared<DemoSnapshot, DemoMutation>> {
+            self.inner.as_mut().and_then(|inner| inner.take_prepared())
+        }
+
+        fn cancel(&mut self) {
+            self.closing = true;
+            if let Some(inner) = self.inner.as_mut() {
+                inner.cancel();
+            }
+        }
+
+        fn begin_close(&mut self) {
+            self.closing = true;
+            if let Some(inner) = self.inner.as_mut() {
+                inner.begin_close();
+            }
+        }
+
+        fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+            if !self.closing || grant.maximum_items == 0 {
+                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if let Some(inner) = self.inner.as_mut() {
+                let step = inner.close_step(grant)?;
+                if step != SnapshotRetirementStep::Complete {
+                    return Ok(step);
+                }
+                if !inner.terminal_is_empty() {
+                    return Err("member typed owner falsely reported terminal".into());
+                }
+                self.inner = None;
+                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if let Some(wire) = self.wire.as_mut() {
+                if let Some(step) = Self::close_wire(wire, grant) {
+                    return Ok(step);
+                }
+                self.wire = None;
+                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if let Some(request) = self.request.as_mut() {
+                if let Some(step) = Self::close_wire(&mut request.mutation, grant) {
+                    return Ok(step);
+                }
+                if let Some(description) = request.description.as_mut().filter(|value| !value.is_empty()) {
+                    let bytes = description.chars().next_back().unwrap().len_utf8();
+                    if bytes > grant.maximum_bytes {
+                        return Ok(SnapshotRetirementStep::Blocked);
+                    }
+                    description.pop();
+                    return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: bytes });
+                }
+                let bytes = request.authority.actor.len() + request.authority.group_id.as_ref().map_or(0, String::len);
+                if bytes > grant.maximum_bytes {
+                    return Ok(SnapshotRetirementStep::Blocked);
+                }
+                let request = self.request.take().unwrap();
+                assert!(request.base.return_to_registry());
+                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+            }
+            Ok(SnapshotRetirementStep::Complete)
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing && self.request.is_none() && self.wire.is_none() && self.inner.is_none()
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_member_publication_preserves_order_group_identity_and_exact_maximum_grant_progress() {
+        let fixture = member_publication_fixture();
+        let grant = ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_bytes: fixture["maximumBytes"].as_u64().unwrap() as usize };
+        let mut first = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "first", DemoSnapshot { n: 0 }, None)).await;
+        let mut second = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "second", DemoSnapshot { n: 0 }, None)).await;
+        first.install_member_store_owners_exact(retained_demo_member_owners());
+        second.install_member_store_owners_exact(retained_demo_member_owners());
+        let mut members = [RetainedTestMembers::First(first.0), RetainedTestMembers::Second(second.0)];
+        let mut observed = Vec::new();
+        for (sequence, row) in fixture["orderedMembers"].as_array().unwrap().iter().enumerate() {
+            let index = usize::from(row["id"] == "second");
+            let member = &mut members[index];
+            assert!(member.one_item_wire_publication_supported());
+            let (generation, revision) = member.one_item_publication_identity();
+            let mut bytes = row["wire"].as_str().unwrap().as_bytes().to_vec();
+            bytes.resize(bytes.len() + row["paddingBytes"].as_u64().unwrap() as usize, b' ');
+            let oracle: i32 = serde_json::from_slice(&bytes).expect("independent third-party JSON decoder");
+            let byte_count = bytes.len();
+            let wire_ptr = bytes.as_ptr();
+            let request = MemberStoreOneItemWireRequest {
+                operation: semio_framework_job::OperationId(700 + sequence as u64),
+                expected_generation: generation,
+                expected_revision: revision,
+                actor: "member-test".into(),
+                group_id: Some(fixture["groupId"].as_str().unwrap().into()),
+                wire: MemberStoreOneItemWire { schema: fixture["wireSchema"].as_str().unwrap().into(), bytes },
+                description: None,
+            };
+            let mut publication = member.begin_one_item_wire_publication(request).unwrap_or_else(|_| panic!("exact member factory admits owned wire"));
+            assert_eq!(publication.progress().completed_bytes, 0);
+            assert!(matches!(member.advance_one_item_publication(&mut *publication, ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 4096 }), Ok(ArtifactStoreOneItemAdvance::Blocked)));
+            let mut published = false;
+            for _ in 0..byte_count + 32 {
+                let before = publication.progress();
+                match member.advance_one_item_publication(&mut *publication, grant).expect("bounded retained member unit") {
+                    ArtifactStoreOneItemAdvance::Published(receipt) => {
+                        assert_eq!(receipt.generation_after, generation + 1);
+                        published = true;
+                        break;
+                    }
+                    ArtifactStoreOneItemAdvance::Progress(after) => assert!(after.completed_bytes.saturating_sub(before.completed_bytes) <= grant.maximum_bytes as u64),
+                    step => panic!("member publication did not progress: {step:?}"),
+                }
+            }
+            assert!(published);
+            assert!(publication.retry());
+            assert!(matches!(member.advance_one_item_publication(&mut *publication, grant), Ok(ArtifactStoreOneItemAdvance::AwaitingAck(_))));
+            assert_eq!(member.one_item_publication_identity().0, generation + 1);
+            assert!(publication.acknowledge());
+            assert!(!publication.acknowledge());
+            close_erased_member_publication(&mut *publication, grant);
+            let concrete = member.as_any_mut().await.downcast_mut::<super::ArtifactStore<DemoSnapshot, DemoMutation>>().unwrap();
+            assert_eq!(concrete.snapshot().unwrap().n, oracle);
+            assert_eq!(oracle as i64, row["expected"].as_i64().unwrap());
+            assert_eq!(SpaceMember::tail_group_id(concrete).await.as_deref(), fixture["groupId"].as_str());
+            observed.push(oracle);
+            eprintln!("[DEBUG] retained member sequence={sequence} wire={wire_ptr:p} bytes={byte_count} value={oracle}");
+        }
+        assert_eq!(observed, vec![17, -23, 42]);
+        for member in &mut members {
+            for _ in 0..4096 {
+                if member.close_owned_step(grant.maximum_items, grant.maximum_bytes).unwrap() == SnapshotRetirementStep::Complete {
+                    break;
+                }
+            }
+            assert!(member.close_owned_terminal_is_empty());
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_member_publication_rejects_wrong_owner_staleness_and_cancels_without_commit() {
+        let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4096 };
+        let mut member = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: 0 }, None)).await;
+        let mut wrong = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: 0 }, None)).await;
+        member.install_member_store_owners_exact(retained_demo_member_owners());
+        wrong.install_member_store_owners_exact(demo_closable_store_owners());
+        let request = |generation, revision| MemberStoreOneItemWireRequest {
+            operation: semio_framework_job::OperationId(800),
+            expected_generation: generation,
+            expected_revision: revision,
+            actor: "member-test".into(),
+            group_id: Some("cancel-group".into()),
+            wire: MemberStoreOneItemWire { schema: "demo.member.json-number".into(), bytes: b"123".to_vec() },
+            description: None,
+        };
+        let missing = request(wrong.generation(), wrong.content_revision_now());
+        let original = missing.wire.bytes.as_ptr();
+        let rejected = wrong.begin_one_item_wire_publication(missing).err().expect("missing member factory fails closed");
+        assert_eq!(rejected.mutation.bytes.as_ptr(), original, "rejection returns the exact input owner");
+        let mut stale = member.begin_one_item_wire_publication(request(member.generation(), member.content_revision_now())).unwrap_or_else(|_| panic!("owned wire admits"));
+        assert!(wrong.advance_one_item_publication(&mut *stale, grant).is_err(), "matching schema/id/revision cannot impersonate the exact store owner");
+        assert_eq!(stale.progress().completed_bytes, 0);
+        let mut replacement = member.begin_member_apply_one(semio_framework_job::OperationId(801), member.generation(), member.content_revision_now(), "member-test".into(), DemoMutation::SetN { n: 9 }, None).unwrap();
+        for _ in 0..16 {
+            if matches!(member.advance_apply_one(&mut replacement, grant).unwrap(), ArtifactStoreOneItemAdvance::Published(_)) {
+                break;
+            }
+        }
+        assert!(replacement.acknowledge());
+        close_durable_publication(&mut replacement);
+        assert!(member.advance_one_item_publication(&mut *stale, grant).is_err());
+        close_erased_member_publication(&mut *stale, grant);
+        for steps in [0, 1, 3, 5] {
+            let before = member.one_item_publication_identity();
+            let mut cancelled = member.begin_one_item_wire_publication(request(before.0, before.1)).unwrap_or_else(|_| panic!("cancel owner admits"));
+            for _ in 0..steps {
+                assert!(!matches!(member.advance_one_item_publication(&mut *cancelled, grant).unwrap(), ArtifactStoreOneItemAdvance::Published(_)));
+            }
+            cancelled.begin_close();
+            close_erased_member_publication(&mut *cancelled, grant);
+            assert_eq!(member.one_item_publication_identity(), before);
+            assert_eq!(member.snapshot().unwrap().n, 9);
+        }
+        close_demo_artifact_store(&mut member);
+        close_demo_artifact_store(&mut wrong);
+        eprintln!("[DEBUG] retained member wrong-owner/stale/cancel laws reached terminal-empty");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_member_group_preparation_reserves_real_history_without_partial_visibility_and_aborts_stale_owners() {
+        let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4096 };
+        let mut members = [
+            ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-first", DemoSnapshot { n: 0 }, None)).await,
+            ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-second", DemoSnapshot { n: 0 }, None)).await,
+        ];
+        for member in &mut members {
+            member.install_member_store_owners_exact(retained_demo_member_owners());
+        }
+        let roots = [members[0].snapshot_root(), members[1].snapshot_root()];
+        let before = [members[0].one_item_publication_identity(), members[1].one_item_publication_identity()];
+        let mut publications = Vec::new();
+        for (index, member) in members.iter().enumerate() {
+            publications.push(member.begin_one_item_wire_publication(MemberStoreOneItemWireRequest {
+                operation: semio_framework_job::OperationId(900),
+                expected_generation: before[index].0,
+                expected_revision: before[index].1,
+                actor: "group-test".into(),
+                group_id: Some("reserved-group".into()),
+                wire: MemberStoreOneItemWire { schema: "demo.member.json-number".into(), bytes: if index == 0 { b"17".to_vec() } else { b"23".to_vec() } },
+                description: None,
+            }).unwrap_or_else(|_| panic!("group member wire admits")));
+        }
+        for index in 0..members.len() {
+            let mut reserved = false;
+            for _ in 0..32 {
+                let step = members[index].prepare_one_item_publication(&mut *publications[index], grant).expect("one group preparation or reservation turn");
+                for other in 0..members.len() {
+                    assert_eq!(members[other].one_item_publication_identity(), before[other]);
+                    assert!(members[other].envelope().vcs.edits.is_empty());
+                    assert!(members[other].applied_edit_ids().is_empty());
+                    assert_eq!(members[other].snapshot().unwrap().n, 0);
+                    assert!(Arc::ptr_eq(&roots[other], &members[other].snapshot_root()));
+                }
+                if matches!(step, ArtifactStoreOneItemPreparationStep::Prepared(_)) {
+                    reserved = true;
+                    break;
+                }
+            }
+            assert!(reserved, "member must reach real history and retirement reservation under maximum grant");
+            assert!(members[index].advance_one_item_publication(&mut *publications[index], grant).is_err(), "ordinary publication cannot consume a group-reserved candidate");
+        }
+        let mut competing = members[0].begin_member_apply_one(semio_framework_job::OperationId(901), before[0].0, before[0].1, "other-test".into(), DemoMutation::SetN { n: 99 }, None).unwrap();
+        for _ in 0..16 {
+            if competing.phase() == ArtifactStoreOneItemPublicationPhase::Publishing {
+                break;
+            }
+            members[0].advance_apply_one(&mut competing, grant).unwrap();
+        }
+        assert!(members[0].advance_apply_one(&mut competing, grant).is_err(), "the real reserved edit slot excludes a competing append before any visible mutation");
+        close_durable_publication(&mut competing);
+        members[1].invalidate_after_external_resource_change().unwrap();
+        assert!(members[1].prepare_one_item_publication(&mut *publications[1], grant).is_err(), "freshness is revalidated even after reservation");
+        assert!(members[1].abort_one_item_publication(&mut *publications[0], grant).is_err(), "only the exact member can release its reservation");
+        for index in 0..members.len() {
+            publications[index].begin_close();
+            assert_eq!(publications[index].close_step(grant).unwrap(), SnapshotRetirementStep::Blocked, "generic close cannot silently abandon live member reservations");
+            for _ in 0..128 {
+                if members[index].abort_one_item_publication(&mut *publications[index], grant).unwrap() == SnapshotRetirementStep::Complete {
+                    break;
+                }
+            }
+            assert!(publications[index].terminal_is_empty());
+            assert_eq!(members[index].snapshot().unwrap().n, 0);
+            assert!(members[index].envelope().vcs.edits.is_empty());
+            let reservation = members[index].reserve_edit_history_slot().expect("aborted group returns the exact ledger reservation");
+            assert!(members[index].envelope.vcs.edits.cancel_reservation(reservation.history).is_ok());
+            members[index].displaced_retirements.release_owner_slots(reservation.rejected_owner).unwrap();
+        }
+        drop(roots);
+        for member in &mut members {
+            close_demo_artifact_store(member);
+        }
+        eprintln!("[DEBUG] two-member retained preparation reserved real slots, exposed no edits, and aborted stale/cancelled owners without undo");
+    }
+    //#endregion 🧩️RetainedMemberPublicationLaws
+
+    struct DemoOneItemPreparationFactory {
+        footprint: ArtifactStoreOneItemFootprint,
+        published_root: Arc<std::sync::Mutex<Option<std::sync::Weak<DemoSnapshot>>>>,
+        forge_digest: bool,
+    }
+
+    impl DemoOneItemPreparationFactory {
+        fn admissible() -> Self {
+            Self { footprint: ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 512 }, published_root: Arc::new(std::sync::Mutex::new(None)), forge_digest: false }
+        }
+
+        fn forged_digest() -> Self {
+            Self { forge_digest: true, ..Self::admissible() }
+        }
+    }
+
+    struct DemoOneItemPreparation {
+        base: Option<SnapshotRead<DemoSnapshot>>,
+        mutation: Option<DemoMutation>,
+        description: Option<String>,
+        authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
+        prepared: Option<ArtifactStoreOneItemPrepared<DemoSnapshot, DemoMutation>>,
+        checkpoint: ArtifactStoreOneItemCheckpoint,
+        published_root: Arc<std::sync::Mutex<Option<std::sync::Weak<DemoSnapshot>>>>,
+        forge_digest: bool,
+        active_id_retirement: Option<ArtifactStoreStringRetirement>,
+        cancelled: bool,
+        closing: bool,
+    }
+
+    impl ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation> for DemoOneItemPreparationFactory {
+        fn preflight(&self, _mutation: &DemoMutation, _description: Option<&str>, _lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
+            Ok(self.footprint)
+        }
+
+        fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<DemoSnapshot, DemoMutation>) -> Result<Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation>>, ArtifactStoreOneItemPreparationRequest<DemoSnapshot, DemoMutation>> {
+            Ok(Box::new(DemoOneItemPreparation {
+                base: Some(request.base),
+                mutation: Some(request.mutation),
+                description: request.description,
+                authority: Some(request.authority),
+                prepared: None,
+                checkpoint: ArtifactStoreOneItemCheckpoint::default(),
+                published_root: self.published_root.clone(),
+                forge_digest: self.forge_digest,
+                active_id_retirement: None,
+                cancelled: false,
+                closing: false,
+            }))
+        }
+    }
+
+    impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItemPreparation {
+        fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+            if !grant.permits_one() {
+                return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
+            }
+            if self.cancelled {
+                return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
+            }
+            if self.prepared.is_some() {
+                return Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+            }
+            let base = self.base.as_ref().ok_or_else(|| "demo preparation lost its base root".to_string())?;
+            let mutation = self.mutation.take().ok_or_else(|| "demo preparation lost its mutation".to_string())?;
+            let (next_n, inverse) = match mutation {
+                DemoMutation::SetN { n } => (n, DemoMutation::SetN { n: base.get().n }),
+                DemoMutation::DeleteN => (i32::MIN, DemoMutation::SetN { n: base.get().n }),
+                DemoMutation::BumpN { delta } => (base.get().n.saturating_add(delta), DemoMutation::SetN { n: base.get().n }),
+            };
+            let authority = self.authority.as_ref().ok_or_else(|| "demo preparation lost its live Store authority".to_string())?;
+            let sequence_number = authority.next_sequence_number;
+            let id = format!("retained-one-item-{sequence_number}");
+            let forward = DemoMutation::SetN { n: next_n };
+            let edit = Edit {
+                id: id.clone(),
+                actor: Some(authority.actor.clone()),
+                forwards: vec![forward],
+                inverse: vec![inverse],
+                mutation_meta: vec![MutationMeta {
+                    mutation_id: Some(MutationId(format!("{id}#0"))),
+                    dependencies: Vec::new(),
+                    base_version: 0,
+                    author_id: Some(ActorId(authority.actor.clone())),
+                    timestamp: authority.next_clock,
+                    undo_policy: UndoPolicy::ExactBaseOnly,
+                    payload_hash: None,
+                    semantic_kind: None,
+                    label: None,
+                    group_id: authority.group_id.clone(),
+                    origin: Default::default(),
+                }],
+                description: self.description.take(),
+                coalesce_key: None,
+                sequence_number,
+                started_at: String::new(),
+                finished_at: None,
+            };
+            let post_snapshot = Arc::new(DemoSnapshot { n: next_n });
+            *self.published_root.lock().expect("root witness lock") = Some(Arc::downgrade(&post_snapshot));
+            let mut prepared = authority.prepare_one_item(edit, post_snapshot)?;
+            if self.forge_digest {
+                prepared.edit_digest[0] ^= 0xff;
+            }
+            let edit_digest = prepared.edit_digest;
+            self.checkpoint = ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: edit_digest };
+            self.prepared = Some(prepared);
+            Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+        }
+
+        fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint {
+            self.checkpoint
+        }
+
+        fn prepared(&self) -> Option<&ArtifactStoreOneItemPrepared<DemoSnapshot, DemoMutation>> {
+            self.prepared.as_ref()
+        }
+
+        fn take_prepared(&mut self) -> Option<ArtifactStoreOneItemPrepared<DemoSnapshot, DemoMutation>> {
+            self.prepared.take()
+        }
+
+        fn cancel(&mut self) {
+            self.cancelled = true;
+        }
+
+        fn begin_close(&mut self) {
+            self.closing = true;
+        }
+
+        fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+            if !self.closing || grant.maximum_items == 0 {
+                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if self.prepared.take().is_some() {
+                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if let Some(base) = self.base.take() {
+                assert!(base.return_to_registry());
+                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if let Some(active) = self.active_id_retirement.as_mut() {
+                let step = active.close_step(grant.maximum_items.min(1), grant.maximum_bytes)?;
+                if step != SnapshotRetirementStep::Complete {
+                    return Ok(step);
+                }
+                assert!(active.terminal_is_empty());
+                self.active_id_retirement = None;
+                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if let Some(id) = self.description.take() {
+                self.active_id_retirement = Some(ArtifactStoreStringRetirement::new(id));
+                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if let Some(authority) = self.authority.as_ref() {
+                if grant.maximum_bytes < authority.actor.len().saturating_add(authority.group_id.as_ref().map_or(0, String::len)) {
+                    return Ok(SnapshotRetirementStep::Blocked);
+                }
+                drop(self.authority.take());
+                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            self.mutation = None;
+            Ok(SnapshotRetirementStep::Complete)
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing && self.base.is_none() && self.mutation.is_none() && self.prepared.is_none() && self.description.is_none() && self.authority.is_none() && self.active_id_retirement.is_none()
+        }
+    }
+
+    struct DemoEphemeralPreparationFactory {
+        footprint: ArtifactStoreOneItemFootprint,
+        published_root: Arc<std::sync::Mutex<Option<std::sync::Weak<DemoSnapshot>>>>,
+    }
+
+    impl DemoEphemeralPreparationFactory {
+        fn admissible() -> Self {
+            Self { footprint: ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 64 }, published_root: Arc::new(std::sync::Mutex::new(None)) }
+        }
+    }
+
+    struct DemoEphemeralPreparation {
+        request: Option<ArtifactEphemeralOneItemPreparationRequest<DemoSnapshot, DemoMutation>>,
+        prepared: Option<ArtifactEphemeralOneItemPrepared<DemoSnapshot>>,
+        checkpoint: ArtifactStoreOneItemCheckpoint,
+        published_root: Arc<std::sync::Mutex<Option<std::sync::Weak<DemoSnapshot>>>>,
+        cancelled: bool,
+        closing: bool,
+    }
+
+    impl ArtifactEphemeralOneItemPreparationFactory<DemoSnapshot, DemoMutation> for DemoEphemeralPreparationFactory {
+        fn preflight(&self, _mutation: &DemoMutation) -> Result<ArtifactStoreOneItemFootprint, String> {
+            Ok(self.footprint)
+        }
+
+        fn begin(
+            &self,
+            request: ArtifactEphemeralOneItemPreparationRequest<DemoSnapshot, DemoMutation>,
+        ) -> Result<Box<dyn ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation>>, ArtifactEphemeralOneItemPreparationRequest<DemoSnapshot, DemoMutation>> {
+            Ok(Box::new(DemoEphemeralPreparation { request: Some(request), prepared: None, checkpoint: ArtifactStoreOneItemCheckpoint::default(), published_root: self.published_root.clone(), cancelled: false, closing: false }))
+        }
+    }
+
+    impl ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> for DemoEphemeralPreparation {
+        fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+            if !grant.permits_one() || self.cancelled {
+                return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
+            }
+            if self.prepared.is_some() {
+                return Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+            }
+            let request = self.request.take().ok_or_else(|| "ephemeral preparation lost its request".to_string())?;
+            let next_n = match request.mutation {
+                DemoMutation::SetN { n } => n,
+                DemoMutation::DeleteN => i32::MIN,
+                DemoMutation::BumpN { delta } => request.base.n.saturating_add(delta),
+            };
+            let next_root = Arc::new(DemoSnapshot { n: next_n });
+            *self.published_root.lock().expect("ephemeral root witness lock") = Some(Arc::downgrade(&next_root));
+            self.prepared = Some(ArtifactEphemeralOneItemPrepared { next_root });
+            self.checkpoint = ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: [7; 32] };
+            Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+        }
+
+        fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint {
+            self.checkpoint
+        }
+
+        fn prepared(&self) -> Option<&ArtifactEphemeralOneItemPrepared<DemoSnapshot>> {
+            self.prepared.as_ref()
+        }
+
+        fn take_prepared(&mut self) -> Option<ArtifactEphemeralOneItemPrepared<DemoSnapshot>> {
+            self.prepared.take()
+        }
+
+        fn cancel(&mut self) {
+            self.cancelled = true;
+        }
+
+        fn begin_close(&mut self) {
+            self.closing = true;
+        }
+
+        fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<SnapshotRetirementStep, String> {
+            if !self.closing || grant.maximum_items == 0 {
+                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if self.prepared.take().is_some() || self.request.take().is_some() {
+                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            Ok(SnapshotRetirementStep::Complete)
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing && self.request.is_none() && self.prepared.is_none()
+        }
+    }
+
+    fn close_durable_publication(publication: &mut ArtifactStoreOneItemPublication<DemoSnapshot, DemoMutation>) {
+        for _ in 0..16 {
+            let step = publication.close_step(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 }).expect("durable publication closes");
+            if step == SnapshotRetirementStep::Complete {
+                assert!(publication.terminal_is_empty());
+                return;
+            }
+        }
+        panic!("durable publication did not reach terminal empty");
+    }
+
+    fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>) {
+        for _ in 0..4_096 {
+            let step = SpaceMember::close_owned_step(store, 1, 512).expect("demo artifact store closes under its bounded owner grant");
+            if step == SnapshotRetirementStep::Complete {
+                assert!(SpaceMember::close_owned_terminal_is_empty(store));
+                return;
+            }
+        }
+        panic!("demo artifact store did not reach its exact terminal-empty witness");
+    }
+
+    fn demo_closable_store_owners() -> MemberStoreOwners<DemoSnapshot, DemoMutation> {
+        MemberStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new()))
+    }
+
+    fn close_ephemeral_publication(publication: &mut ArtifactEphemeralOneItemPublication<DemoSnapshot, DemoMutation>) {
+        for _ in 0..16 {
+            let step = publication.close_step(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 8 }).expect("ephemeral publication closes");
+            if step == SnapshotRetirementStep::Complete {
+                assert!(publication.terminal_is_empty());
+                return;
+            }
+        }
+        panic!("ephemeral publication did not reach terminal empty");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_store_one_item_single_retry_ack_and_move_only_root_preserve_generation_revision_and_history() {
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-single", DemoSnapshot { n: 0 }, None)).await;
+        store.install_member_store_owners_exact(demo_closable_store_owners());
+        let generation = store.generation_now();
+        let revision = store.content_revision_now();
+        let factory = DemoOneItemPreparationFactory::admissible();
+        let mut publication =
+            store.begin_apply_one(semio_framework_job::OperationId(1), generation, revision, "retained-test".into(), DemoMutation::SetN { n: 7 }, Some("single".into()), HistoryLane::Document, Some(&factory)).expect("explicit domain factory admits");
+        let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };
+        let receipt = loop {
+            if let ArtifactStoreOneItemAdvance::Published(receipt) = store.advance_apply_one(&mut publication, grant).expect("one bounded durable step") {
+                break receipt;
+            }
+        };
+        assert_eq!(receipt, LaneItemReceipt { generation_before: generation, generation_after: generation + 1 });
+        assert_eq!(store.snapshot().expect("published snapshot"), DemoSnapshot { n: 7 });
+        assert_eq!(store.applied_edit_ids().len(), 1);
+        assert_ne!(store.content_revision_now(), revision);
+        let prepared_root = factory.published_root.lock().expect("root witness lock").as_ref().and_then(std::sync::Weak::upgrade).expect("published root remains owned");
+        assert!(Arc::ptr_eq(&prepared_root, &store.snapshot_root()), "commit moves the exact prepared Arc root");
+        assert!(publication.retry());
+        assert!(publication.retry());
+        assert!(!publication.retry());
+        assert_eq!(store.generation_now(), generation + 1, "retry never republishes");
+        assert!(publication.acknowledge());
+        close_durable_publication(&mut publication);
+        close_demo_artifact_store(&mut store);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_latest_wins_cold_rebase_preserves_admitted_cursor_capacity_for_next_publication() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔌️plugin/🧪️tool-latest-wins-integration.json")).unwrap();
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "cold-retained-rebase", DemoSnapshot { n: 0 }, None)).await;
+        store.install_member_store_owners_exact(demo_closable_store_owners());
+        let capacity = store.envelope.cursor.as_ref().unwrap().applied_edit_ids.capacity();
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 13 }], description: None }).await.unwrap();
+        assert_eq!(store.envelope.cursor.as_ref().unwrap().applied_edit_ids.capacity(), capacity);
+        assert_eq!(serde_json::json!(store.generation_now()), fixture["rebase"]["afterGeneration"]);
+        let revision = store.content_revision_now();
+        let factory = DemoOneItemPreparationFactory::admissible();
+        let mut publication = store.begin_apply_one(semio_framework_job::OperationId(93), store.generation_now(), revision, "fixture".into(), DemoMutation::SetN { n: 97 }, None, HistoryLane::Document, Some(&factory)).unwrap();
+        let grant = ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_bytes: fixture["maximumBytes"].as_u64().unwrap() as usize };
+        for _ in 0..32 {
+            if matches!(store.advance_apply_one(&mut publication, grant).unwrap(), ArtifactStoreOneItemAdvance::Published(_)) { break; }
+        }
+        assert_eq!(serde_json::to_value(store.snapshot_root().as_ref()).unwrap(), serde_json::json!({ "n": 97 }));
+        assert_eq!(store.generation_now(), 2);
+        assert_eq!(store.envelope.cursor.as_ref().unwrap().applied_edit_ids.capacity(), capacity);
+        assert!(publication.acknowledge());
+        close_durable_publication(&mut publication);
+        close_demo_artifact_store(&mut store);
+        eprintln!("[DEBUG] cold cursor reconstruction preserved its admitted capacity for a real retained second publication");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_store_one_item_digest_helper_matches_validation_and_rejects_forged_cursor_history() {
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-digest-authority", DemoSnapshot { n: 0 }, None)).await;
+        store.install_member_store_owners_exact(demo_closable_store_owners());
+        let generation = store.generation_now();
+        let revision = store.content_revision_now();
+        let root = store.snapshot_root();
+        let mut publication = store
+            .begin_apply_one(semio_framework_job::OperationId(11), generation, revision, "retained-test".into(), DemoMutation::SetN { n: 12 }, Some("forged digest".into()), HistoryLane::Document, Some(&DemoOneItemPreparationFactory::forged_digest()))
+            .expect("Store-minted immutable authority admits the domain owner");
+        let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };
+        assert!(matches!(store.advance_apply_one(&mut publication, grant), Ok(ArtifactStoreOneItemAdvance::Progress(_))));
+        let authority = publication.authority.as_ref().expect("publication retains Store authority");
+        let prepared = publication.preparation.as_ref().and_then(|owner| owner.prepared()).expect("domain prepared candidate");
+        assert_eq!(authority.operation(), semio_framework_job::OperationId(11));
+        assert_eq!(authority.generation(), semio_framework_job::Generation(generation));
+        assert_eq!(authority.base_revision(), revision);
+        assert_eq!(authority.base_applied_edit_count(), 0);
+        let canonical = authority.prepared_edit_digest(&prepared.edit).expect("Store helper accepts its exact semantic edit");
+        assert_eq!(canonical, CursorRevisionAccumulator::edit_digest(&prepared.edit), "public helper and private Store validation share one canonical digest law");
+        assert_ne!(prepared.edit_digest(), canonical, "hostile domain altered only its exposed candidate digest");
+        assert!(matches!(store.advance_apply_one(&mut publication, grant), Ok(ArtifactStoreOneItemAdvance::Progress(_))));
+        assert!(store.advance_apply_one(&mut publication, grant).is_err(), "Store recomputation rejects a domain-forged digest before publication");
+        publication.begin_close();
+        close_durable_publication(&mut publication);
+        assert_eq!(store.generation_now(), generation);
+        assert_eq!(store.content_revision_now(), revision);
+        assert!(Arc::ptr_eq(&root, &store.snapshot_root()), "forged cursor/history authority cannot replace the root");
+        close_demo_artifact_store(&mut store);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_store_one_item_stale_saturation_and_cancel_leave_root_generation_and_revision_unchanged() {
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-rejections", DemoSnapshot { n: 3 }, None)).await;
+        store.install_member_store_owners_exact(demo_closable_store_owners());
+        let generation = store.generation_now();
+        let revision = store.content_revision_now();
+        let root = store.snapshot_root();
+        let stale = store.begin_apply_one(semio_framework_job::OperationId(2), generation + 1, revision, "retained-test".into(), DemoMutation::SetN { n: 9 }, None, HistoryLane::Document, Some(&DemoOneItemPreparationFactory::admissible()));
+        assert!(stale.is_err());
+
+        let mut cancelled = store
+            .begin_apply_one(semio_framework_job::OperationId(3), generation, revision, "retained-test".into(), DemoMutation::SetN { n: 8 }, None, HistoryLane::Document, Some(&DemoOneItemPreparationFactory::admissible()))
+            .expect("fresh publication admits");
+        assert!(store.cancel_apply_one(&mut cancelled));
+        close_durable_publication(&mut cancelled);
+        assert_eq!(store.generation_now(), generation);
+        assert_eq!(store.content_revision_now(), revision);
+        assert!(Arc::ptr_eq(&root, &store.snapshot_root()));
+
+        let saturated_ids = (0..crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY).map(|index| format!("saturated-{index}")).collect::<Vec<_>>();
+        store.applied_edit_ids.extend(saturated_ids.iter().cloned());
+        store.envelope.cursor.as_mut().expect("initialized cursor").applied_edit_ids.extend(saturated_ids.iter().cloned());
+        store.revision_accumulator.applied.extend((0..crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY).map(|_| CursorRevisionRecord { id_digest: [1; 32], edit_digest: [2; 32], prefix_digest: [3; 32] }));
+        let mut saturated = store
+            .begin_apply_one(semio_framework_job::OperationId(4), generation, revision, "retained-test".into(), DemoMutation::SetN { n: 10 }, None, HistoryLane::Document, Some(&DemoOneItemPreparationFactory::admissible()))
+            .expect("capacity is validated by retained commit preflight");
+        let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };
+        assert!(matches!(store.advance_apply_one(&mut saturated, grant), Ok(ArtifactStoreOneItemAdvance::Progress(_))));
+        assert!(matches!(store.advance_apply_one(&mut saturated, grant), Ok(ArtifactStoreOneItemAdvance::Progress(_))));
+        assert!(store.advance_apply_one(&mut saturated, grant).is_err(), "maximum plus one fails before store mutation");
+        saturated.begin_close();
+        close_durable_publication(&mut saturated);
+        assert_eq!(store.generation_now(), generation);
+        assert_eq!(store.content_revision_now(), revision);
+        assert!(Arc::ptr_eq(&root, &store.snapshot_root()));
+        close_demo_artifact_store(&mut store);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn presence_and_transient_one_item_publications_are_retained_stale_safe_cancelable_and_exactly_closed() {
+        let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 64 };
+        let presence_factory = DemoEphemeralPreparationFactory::admissible();
+        let mut presence = PresenceStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: 0 });
+        let old_presence_root = Arc::downgrade(&presence.local_root());
+        let mut presence_publication = presence.begin_publish_one(semio_framework_job::OperationId(5), 0, DemoMutation::SetN { n: 5 }, Some(&presence_factory), Some(Arc::new(DemoSnapshotRetirementFactory))).expect("presence factory admits");
+        let presence_receipt = loop {
+            if let ArtifactStoreOneItemAdvance::Published(receipt) = presence.advance_publish_one(&mut presence_publication, grant).expect("presence step") {
+                break receipt;
+            }
+        };
+        assert_eq!(presence_receipt, LaneItemReceipt { generation_before: 0, generation_after: 1 });
+        assert_eq!(presence.local().await.n, 5);
+        let presence_root = presence_factory.published_root.lock().expect("presence witness").as_ref().and_then(std::sync::Weak::upgrade).expect("presence root");
+        assert!(Arc::ptr_eq(&presence_root, &presence.local_root()));
+        assert!(presence_publication.acknowledge());
+        assert!(old_presence_root.upgrade().is_some(), "displaced presence root remains retained before bounded close");
+        let _ = presence_publication.close_step(grant).expect("presence close advances one owner");
+        assert!(old_presence_root.upgrade().is_some(), "first close unit cannot destroy the displaced root");
+        close_ephemeral_publication(&mut presence_publication);
+        assert!(old_presence_root.upgrade().is_none(), "bounded retirement releases the displaced presence root");
+        assert!(presence.begin_publish_one(semio_framework_job::OperationId(6), 0, DemoMutation::SetN { n: 9 }, Some(&presence_factory), Some(Arc::new(DemoSnapshotRetirementFactory))).is_err());
+
+        let transient_factory = DemoEphemeralPreparationFactory::admissible();
+        let mut transient = TransientStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: 2 });
+        let root = transient.current_root();
+        let mut cancelled = transient.begin_publish_one(semio_framework_job::OperationId(7), 0, DemoMutation::SetN { n: 6 }, Some(&transient_factory), Some(Arc::new(DemoSnapshotRetirementFactory))).expect("transient factory admits");
+        assert!(transient.cancel_publish_one(&mut cancelled));
+        close_ephemeral_publication(&mut cancelled);
+        assert_eq!(transient.generation_now(), 0);
+        assert!(Arc::ptr_eq(&root, &transient.current_root()));
+        drop(root);
+        let old_transient_root = Arc::downgrade(&transient.current_root());
+        let mut transient_publication = transient.begin_publish_one(semio_framework_job::OperationId(8), 0, DemoMutation::SetN { n: 11 }, Some(&transient_factory), Some(Arc::new(DemoSnapshotRetirementFactory))).expect("transient publication admits");
+        let transient_receipt = loop {
+            if let ArtifactStoreOneItemAdvance::Published(receipt) = transient.advance_publish_one(&mut transient_publication, grant).expect("transient step") {
+                break receipt;
+            }
+        };
+        assert_eq!(transient_receipt, LaneItemReceipt { generation_before: 0, generation_after: 1 });
+        assert_eq!(transient.current().await.n, 11);
+        let transient_root = transient_factory.published_root.lock().expect("transient witness").as_ref().and_then(std::sync::Weak::upgrade).expect("transient root");
+        assert!(Arc::ptr_eq(&transient_root, &transient.current_root()));
+        assert!(transient_publication.acknowledge());
+        assert!(old_transient_root.upgrade().is_some(), "displaced transient root remains retained before bounded close");
+        let _ = transient_publication.close_step(grant).expect("transient close advances one owner");
+        assert!(old_transient_root.upgrade().is_some(), "first close unit cannot destroy the displaced transient root");
+        close_ephemeral_publication(&mut transient_publication);
+        assert!(old_transient_root.upgrade().is_none(), "bounded retirement releases the displaced transient root");
+        let oversized = DemoEphemeralPreparationFactory {
+            footprint: ArtifactStoreOneItemFootprint { work_items: ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS + 1, retained_bytes: ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES },
+            published_root: Arc::new(std::sync::Mutex::new(None)),
+        };
+        assert!(transient.begin_publish_one(semio_framework_job::OperationId(9), 1, DemoMutation::SetN { n: 7 }, Some(&oversized), Some(Arc::new(DemoSnapshotRetirementFactory))).is_err());
+        assert!(transient.begin_publish_one(semio_framework_job::OperationId(10), 1, DemoMutation::SetN { n: 7 }, None, Some(Arc::new(DemoSnapshotRetirementFactory))).is_err());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    #[should_panic(expected = "terminal-empty witness")]
+    async fn artifact_store_one_item_drop_rejects_an_unclosed_publication_owner() {
+        let store = Box::leak(Box::new(ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-drop", DemoSnapshot { n: 0 }, None)).await));
+        store.install_member_store_owners_exact(demo_closable_store_owners());
+        let publication = store
+            .begin_apply_one(
+                semio_framework_job::OperationId(10),
+                store.generation_now(),
+                store.content_revision_now(),
+                "retained-test".into(),
+                DemoMutation::SetN { n: 1 },
+                None,
+                HistoryLane::Document,
+                Some(&DemoOneItemPreparationFactory::admissible()),
+            )
+            .expect("publication admits");
+        drop(publication);
+    }
+    //#endregion 📬️OneItemPublicationLaws
+
+    //#region 📸️CompoundEnvelopeReadLaws
+    struct GroupReadTriggerSnapshot {
+        value: i32,
+        commit: Option<Arc<std::sync::Mutex<crate::os_vcs::ArtifactGroupVisibilityOwner>>>,
+    }
+
+    impl Serialize for GroupReadTriggerSnapshot {
+        fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+            if let Some(owner) = self.commit.as_ref() { owner.lock().expect("injected serializer decision").commit(); }
+            serializer.serialize_i32(self.value)
+        }
+    }
+
+    fn group_read_fixture_edit(id: &str) -> Edit<()> {
+        Edit { id: id.into(), actor: None, forwards: Vec::new(), inverse: Vec::new(), mutation_meta: Vec::new(), description: None, coalesce_key: None, sequence_number: 0, started_at: String::new(), finished_at: None }
+    }
+
+    fn group_read_fixture_envelope(snapshot: GroupReadTriggerSnapshot) -> ArtifactEnvelope<GroupReadTriggerSnapshot, ()> {
+        let mut edits = ArtifactHistoryLedger::new();
+        edits.try_push(group_read_fixture_edit("initial")).unwrap();
+        ArtifactEnvelope::from_owners(ArtifactEnvelopeOwners {
+            schema: "group-read/v1".into(), id: "group-reader".into(),
+            vcs: ArtifactVcs { initial_snapshot: snapshot, edits, changes: ArtifactHistoryLedger::new(), checkpoints: ArtifactHistoryLedger::new(), alternatives: ArtifactHistoryLedger::new() },
+            backbone: None, active_alternative_id: None, cursor: Some(ArtifactCursor::new(vec!["initial".into()], Vec::new(), None)), dialect: None, migrated_from: None, owner: None,
+            lanes: std::collections::BTreeMap::new(), edit_messages: ArtifactEditMessageLedger::new(), conflicts: Vec::new(),
+        })
+    }
+
+    fn close_group_read_fixture(envelope: ArtifactEnvelope<GroupReadTriggerSnapshot, ()>) {
+        let mut owners = envelope.into_owners();
+        let mut cursor = ArtifactStoreCursorRetirement::new(owners.cursor.take().unwrap());
+        for _ in 0..1_024 {
+            let step = cursor.close_step(1, 4_096).unwrap();
+            if step == SnapshotRetirementStep::Complete { break; }
+            if let SnapshotRetirementStep::Pending { released_items, released_bytes } = step { assert!(released_items <= 1 && released_bytes <= 4_096); }
+        }
+        assert!(cursor.terminal_is_empty());
+        while owners.vcs.edits.pop().is_some() {}
+    }
+
+    #[test]
+    fn retained_group_envelope_read_captures_history_and_cursor_before_serializer_commit() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️group-read.json")).unwrap();
+        for case in fixture["cases"].as_array().unwrap() {
+            let owner = Arc::new(std::sync::Mutex::new(crate::os_vcs::ArtifactGroupVisibilityOwner::new()));
+            let view = owner.lock().unwrap().view();
+            let inject_commit = case["capture"] == "pending" && case["decision"] == "committed";
+            let mut envelope = group_read_fixture_envelope(GroupReadTriggerSnapshot { value: 0, commit: inject_commit.then(|| owner.clone()) });
+            let prepared_ids: Vec<String> = serde_json::from_value(fixture["prepared"]["appliedEditIds"].clone()).unwrap();
+            envelope.cursor.as_mut().unwrap().stage_group_owned(ArtifactCursorOwners { applied_edit_ids: prepared_ids.clone(), redo_edit_ids: Vec::new(), checkpoint_id: None }, &view).unwrap();
+            for id in &prepared_ids[1..] {
+                let reservation = envelope.vcs.edits.reserve_group_one(&view).unwrap();
+                envelope.vcs.edits.stage_group_reserved(reservation, group_read_fixture_edit(id), &view).unwrap();
+            }
+            if case["capture"] == "committed" { assert!(owner.lock().unwrap().commit()); }
+            let read = envelope.capture_read().unwrap();
+            if case["decision"] == "aborted" { assert!(owner.lock().unwrap().abort()); }
+            let captured = serde_json::to_value(&read).unwrap();
+            let fresh = serde_json::to_value(&envelope).unwrap();
+            for (value, selector) in [(&captured, "captured"), (&fresh, "fresh")] {
+                let expected = &fixture[case[selector].as_str().unwrap()];
+                let actual_ids: Vec<_> = value["vcs"]["edits"].as_array().unwrap().iter().map(|edit| edit["id"].clone()).collect();
+                assert_eq!(serde_json::json!(actual_ids), expected["history"], "{} {selector}", case["id"]);
+                assert_eq!(value["cursor"]["appliedEditIds"], expected["appliedEditIds"], "{} {selector}", case["id"]);
+            }
+            drop(read);
+            let retired_cursor = if view.committed() {
+                envelope.vcs.edits.adopt_group(&view).unwrap();
+                envelope.cursor.as_mut().unwrap().adopt_group_owned(&view).unwrap()
+            } else {
+                owner.lock().unwrap().abort();
+                while envelope.vcs.edits.abort_group_one(&view).unwrap().is_some() {}
+                envelope.cursor.as_mut().unwrap().abort_group_owned(&view).unwrap()
+            };
+            let mut retirement = ArtifactStoreCursorRetirement::new(ArtifactCursor::from_owners(retired_cursor));
+            for _ in 0..1_024 { if retirement.close_step(1, 4_096).unwrap() == SnapshotRetirementStep::Complete { break; } }
+            assert!(retirement.terminal_is_empty());
+            close_group_read_fixture(envelope);
+            eprintln!("[DEBUG] compound envelope read {} serialized one captured history/cursor decision across injected commit", case["id"]);
+        }
+    }
+
+    #[test]
+    fn retained_group_envelope_read_rejects_foreign_cursor_visibility_before_serialization() {
+        let mut history_owner = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
+        let history = history_owner.view();
+        let mut cursor_owner = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
+        let cursor = cursor_owner.view();
+        let mut envelope = group_read_fixture_envelope(GroupReadTriggerSnapshot { value: 0, commit: None });
+        let reservation = envelope.vcs.edits.reserve_group_one(&history).unwrap();
+        envelope.vcs.edits.stage_group_reserved(reservation, group_read_fixture_edit("foreign"), &history).unwrap();
+        envelope.cursor.as_mut().unwrap().stage_group_owned(ArtifactCursorOwners::default(), &cursor).unwrap();
+        assert!(envelope.capture_read().is_err());
+        assert!(serde_json::to_value(&envelope).is_err());
+        history_owner.abort();
+        cursor_owner.abort();
+        while envelope.vcs.edits.abort_group_one(&history).unwrap().is_some() {}
+        drop(envelope.cursor.as_mut().unwrap().abort_group_owned(&cursor).unwrap());
+        close_group_read_fixture(envelope);
+    }
+    //#endregion 📸️CompoundEnvelopeReadLaws
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_group_cursor_shares_history_visibility_and_retires_displaced_roots() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("./🧪️group-cursor.json")).expect("group cursor fixture");
+        let mut cursor: ArtifactCursor = serde_json::from_value(fixture["before"].clone()).expect("independent old cursor");
+        let next: ArtifactCursorOwners = serde_json::from_value(fixture["after"].clone()).expect("independent next cursor");
+        let mut owner = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
+        let view = owner.view();
+        let mut history = ArtifactHistoryLedger::new();
+        history.try_push("initial".to_string()).expect("old history");
+        cursor.stage_group_owned(next, &view).expect("retained prepared cursor");
+        for id in ["member-a", "member-b"] {
+            let reservation = history.reserve_group_one(&view).expect("one history reservation");
+            history.stage_group_reserved(reservation, id.to_string(), &view).expect("one prepared history record");
+            assert_eq!(serde_json::to_value(&cursor).expect("old cursor serialization"), fixture["before"]);
+            assert_eq!(cursor.applied_edit_ids.len(), 1);
+            assert_eq!(history.len(), 1);
+        }
+        let held_before_commit: &ArtifactCursorOwners = &cursor;
+        let held_history = history.iter();
+        assert!(owner.commit());
+        assert_eq!(held_before_commit.applied_edit_ids, vec!["initial"]);
+        assert_eq!(held_history.cloned().collect::<Vec<_>>(), vec!["initial"]);
+        assert_eq!(serde_json::to_value(&cursor).expect("committed cursor serialization"), fixture["after"]);
+        assert_eq!(cursor.applied_edit_ids, history.iter().cloned().collect::<Vec<_>>());
+        assert!(cursor.abort_group_owned(&view).is_err());
+        let displaced = cursor.adopt_group_owned(&view).expect("exact displaced cursor owner");
+        history.adopt_group(&view).expect("nonpublishing history adoption");
+        assert_eq!(serde_json::to_value(&cursor).expect("adopted cursor serialization"), fixture["after"]);
+        let mut retirement = ArtifactStoreCursorRetirement::new(ArtifactCursor::from_owners(displaced));
+        let grant = (fixture["maximumItems"].as_u64().expect("item grant") as usize, fixture["maximumBytes"].as_u64().expect("byte grant") as usize);
+        for _ in 0..1024 {
+            match retirement.close_step(grant.0, grant.1).expect("bounded displaced cursor close") {
+                SnapshotRetirementStep::Complete => break,
+                SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= grant.0 && released_bytes <= grant.1),
+                SnapshotRetirementStep::Blocked => panic!("cursor root owns every retirement byte"),
+            }
+        }
+        assert!(retirement.terminal_is_empty());
+        while history.pop().is_some() {}
+        assert!(history.terminal_is_empty());
+        let mut abort_owner = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
+        let abort_view = abort_owner.view();
+        let mut wrong_owner = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
+        let wrong_view = wrong_owner.view();
+        let next: ArtifactCursorOwners = serde_json::from_value(fixture["before"].clone()).expect("cancelled cursor owner");
+        cursor.stage_group_owned(next, &abort_view).expect("unpublished next cursor");
+        assert!(wrong_owner.abort());
+        assert!(cursor.abort_group_owned(&wrong_view).is_err());
+        assert!(abort_owner.abort());
+        let cancelled = cursor.abort_group_owned(&abort_view).expect("returned exact uncommitted owner");
+        assert_eq!(serde_json::to_value(cancelled).expect("cancelled owner oracle"), fixture["before"]);
+        assert_eq!(serde_json::to_value(cursor).expect("unchanged committed cursor"), fixture["after"]);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_group_cursor_empty_base_and_dropped_publisher_return_every_staged_owner() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("./🧪️group-cursor.json")).expect("group cursor fixture");
+        let mut cursor = ArtifactCursor::default();
+        let mut history = ArtifactHistoryLedger::<String>::new();
+        let owner = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
+        let view = owner.view();
+        let next: ArtifactCursorOwners = serde_json::from_value(fixture["after"].clone()).expect("prepared cursor");
+        cursor.stage_group_owned(next, &view).expect("staged empty-base cursor");
+        #[cfg(not(target_arch = "wasm32"))]
+        assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| cursor.applied_edit_ids.push("forbidden".into()))).is_err(), "DerefMut cannot expose either root while staged");
+        let reservation = history.reserve_group_one(&view).expect("reserved but not staged slot");
+        assert!(cursor.applied_edit_ids.is_empty() && history.is_empty());
+        assert_eq!(serde_json::to_value(&cursor).expect("empty cursor"), serde_json::json!({}));
+        drop(owner);
+        assert!(!view.pending() && !view.committed(), "dropping the unique publisher aborts the decision without dropping staged payloads");
+        history.cancel_reservation(reservation).expect("exact cancelled reservation");
+        assert_eq!(history.abort_group_one(&view), Ok(None));
+        assert!(history.terminal_is_empty());
+        let cancelled = cursor.abort_group_owned(&view).expect("exact staged cursor survives publisher drop");
+        assert_eq!(serde_json::to_value(&cancelled).expect("cancelled owner"), fixture["after"]);
+        let mut retirement = ArtifactStoreCursorRetirement::new(ArtifactCursor::from_owners(cancelled));
+        for _ in 0..1024 {
+            match retirement.close_step(1, 4096).expect("cancelled cursor retirement") {
+                SnapshotRetirementStep::Complete => break,
+                SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 4096),
+                SnapshotRetirementStep::Blocked => panic!("cancelled cursor must remain closeable"),
+            }
+        }
+        assert!(retirement.terminal_is_empty());
+        assert!(cursor.applied_edit_ids.is_empty());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn canonical_runtime_seed_retains_duplicate_owners_and_preflights_before_building() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("./🧪️runtime-seed.json")).expect("runtime seed fixture");
+        let ids: Vec<MutationId> = serde_json::from_value::<Vec<String>>(fixture["identities"].clone()).expect("fixture identities").into_iter().map(MutationId).collect();
+        let expected: Vec<String> = serde_json::from_value(fixture["applied"].clone()).expect("independent fixture applied identities");
+        let retired: Vec<String> = serde_json::from_value(fixture["retired"].clone()).expect("independent fixture duplicate identities");
+        super::ArtifactStore::<DemoSnapshot, DemoMutation>::preflight_runtime_seed(&ids).expect("duplicate identities are valid existing authority");
+        let (mut dag, duplicates) = super::ArtifactStore::<DemoSnapshot, DemoMutation>::adopt_runtime_seed(ids);
+        assert_eq!(duplicates, retired);
+        let mut applied = Vec::new();
+        while let Some(crate::os_spr::MutationDagCloseOwner::Identity(id)) = dag.take_one_close_owner() {
+            applied.push(id);
+        }
+        applied.reverse();
+        assert_eq!(applied, expected);
+        assert!(dag.terminal_is_empty());
+        let mut retirement = ArtifactStoreStringVectorRetirement::new(duplicates);
+        let maximum_items = fixture["maximumItems"].as_u64().expect("item grant") as usize;
+        let maximum_bytes = fixture["maximumBytes"].as_u64().expect("byte grant") as usize;
+        for _ in 0..1024 {
+            match retirement.close_step(maximum_items, maximum_bytes).expect("exact rejected identity retirement") {
+                SnapshotRetirementStep::Complete => break,
+                SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= maximum_items && released_bytes <= maximum_bytes),
+                SnapshotRetirementStep::Blocked => panic!("owned seed identities must progress"),
+            }
+        }
+        assert!(retirement.terminal_is_empty());
+        let oversized = vec![MutationId("x".repeat(crate::os_spr::causal::MUTATION_DAG_IDENTIFIER_BYTES + 1))];
+        assert!(super::ArtifactStore::<DemoSnapshot, DemoMutation>::preflight_runtime_seed(&oversized).is_err());
+        let saturated: Vec<_> = (0..=crate::os_spr::causal::MUTATION_DAG_CAPACITY).map(|index| MutationId(index.to_string())).collect();
+        assert!(super::ArtifactStore::<DemoSnapshot, DemoMutation>::preflight_runtime_seed(&saturated).is_err());
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn canonical_revision_distinguishes_interior_aba_across_load_and_reset() {
         let mut original = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "revision-aba", DemoSnapshot { n: 0 }, None)).await;
+        original.install_member_store_owners_exact(demo_closable_store_owners());
         for n in [1, 2, 3] {
             original.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n }], description: None }).await.expect("seed revision edit");
         }
@@ -19387,14 +22335,17 @@ mod tests {
         changed.vcs.edits[1].forwards = vec![DemoMutation::SetN { n: 99 }];
         changed.vcs.edits[1].inverse = vec![DemoMutation::SetN { n: 1 }];
         let applied: Vec<String> = changed.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
-        changed.cursor = Some(ArtifactCursor { applied_edit_ids: applied.clone(), redo_edit_ids: Vec::new(), checkpoint_id: None });
+        changed.cursor = Some(ArtifactCursor::new(applied.clone(), Vec::new(), None));
 
-        let loaded = ArtifactStore::new(changed).await;
+        let mut loaded = ArtifactStore::new(changed).await;
+        loaded.install_member_store_owners_exact(demo_closable_store_owners());
         assert_eq!(original.snapshot().expect("original snapshot").n, loaded.snapshot().expect("loaded snapshot").n, "interior ABA keeps the same materialized endpoint");
         assert_ne!(original_revision, loaded.content_revision().await, "canonical identity must cover the changed interior edit, not only cursor endpoints");
 
         original.reset(owned_test_envelope(&loaded).await, applied, Vec::new()).await.expect("reset changed history");
         assert_eq!(original.content_revision().await, loaded.content_revision().await, "reset reconstruction must recover the canonical loaded identity");
+        close_demo_artifact_store(&mut loaded);
+        close_demo_artifact_store(&mut original);
     }
 
     /// @emoji 🛰️ Builds a foreign {@link MutationEnvelope} (as if authored by `actor` on another peer) by
@@ -19531,10 +22482,10 @@ mod tests {
 
     async fn owned_test_envelope<P, Mutation>(store: &ArtifactStore<P, Mutation>) -> ArtifactEnvelope<P, Mutation>
     where
-        P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
-        Mutation: Clone + OpText + OpBinary + super::Mutation<P> + PartialEq + Serialize + DeserializeOwned,
+        P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned + Send + 'static,
+        Mutation: Clone + OpText + OpBinary + super::Mutation<P> + PartialEq + Serialize + DeserializeOwned + Send + 'static,
     {
-        let files = print_document_pack(store.envelope().await).await.expect("print owned test envelope");
+        let files = print_document_pack(store.envelope()).await.expect("print owned test envelope");
         parse_document_pack::<P, Mutation>(&files.pack, &files.spr).await.expect("parse owned test envelope").envelope
     }
 
@@ -19929,13 +22880,13 @@ mod tests {
 
         let pack_bytes = DemoSnapshot { n: 0 }.encode_pack();
         let encode = async |conflict: &crate::os_spr::Conflict| -> Vec<u8> {
-            let mut envelope = create_document_envelope("demo/v1", "conflict-round-trip", DemoSnapshot { n: 0 }, None);
+            let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "conflict-round-trip", DemoSnapshot { n: 0 }, None);
             envelope.conflicts = vec![conflict.clone()];
             print_document_spr(&envelope).await.expect("encode conflict via the real .spr codec")
         };
         let decode = async |bytes: &[u8]| -> crate::os_spr::Conflict {
             let parsed = parse_document_spr::<DemoSnapshot, DemoMutation>(&pack_bytes, bytes).await.expect("decode conflict via the real .spr codec");
-            parsed.envelope.conflicts.into_iter().next().expect("one conflict round-tripped")
+            parsed.envelope.conflicts.first().cloned().expect("one conflict round-tripped")
         };
         crate::os_spr::testkit::assert_conflict_spr_round_trip(&conflict, encode, decode).await;
     }
@@ -20599,7 +23550,7 @@ mod tests {
     async fn detach_backbone_stops_synchronizing_but_keeps_the_wip_graph() {
         let (backbone_a, backbone_b) = MemoryBackbone::pair("peer-a", "peer-b").await;
         let mut store_a = ArtifactStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await;
-        let mut store_b = ArtifactStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await;
+        let mut store_b: ArtifactStore<DemoSnapshot, DemoMutation> = ArtifactStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await;
         store_a.attach_backbone(Backbones::Memory(backbone_a)).await.expect("attach a");
         store_b.attach_backbone(Backbones::Memory(backbone_b)).await.expect("attach b");
         store_a.detach_backbone();
@@ -20755,15 +23706,15 @@ mod tests {
         let mut store = ArtifactStore::new(envelope).await;
 
         let before_replay = projection_probe(&store, ArtifactProjectionCause::Replay).await;
-        assert_eq!(store.invalidate_after_replay().cause, ArtifactProjectionCause::Replay);
+        assert_eq!(store.invalidate_after_replay().expect("replay invalidation").cause, ArtifactProjectionCause::Replay);
         assert_projection_is_stale(&store, before_replay).await;
 
         let before_policy = projection_probe(&store, ArtifactProjectionCause::PolicyChange).await;
-        assert_eq!(store.invalidate_after_policy_change().cause, ArtifactProjectionCause::PolicyChange);
+        assert_eq!(store.invalidate_after_policy_change().expect("policy invalidation").cause, ArtifactProjectionCause::PolicyChange);
         assert_projection_is_stale(&store, before_policy).await;
 
         let before_resource = projection_probe(&store, ArtifactProjectionCause::ExternalResourceChange).await;
-        assert_eq!(store.invalidate_after_external_resource_change().cause, ArtifactProjectionCause::ExternalResourceChange);
+        assert_eq!(store.invalidate_after_external_resource_change().expect("resource invalidation").cause, ArtifactProjectionCause::ExternalResourceChange);
         assert_projection_is_stale(&store, before_resource).await;
 
         store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply before checkpoint");
@@ -20785,7 +23736,7 @@ mod tests {
     async fn reset_and_apply_reject_malformed_history_before_persisting() {
         let fresh = || create_document_envelope("demo/v1", "reset-invalid", DemoSnapshot { n: 0 }, None);
         let mut malformed_constructor = fresh();
-        malformed_constructor.cursor = Some(ArtifactCursor { applied_edit_ids: vec!["missing".into()], redo_edit_ids: Vec::new(), checkpoint_id: None });
+        malformed_constructor.cursor = Some(ArtifactCursor::new(vec!["missing".into()], Vec::new(), None));
         assert!(matches!(super::ArtifactStore::new(malformed_constructor).await, Err(VcsError::UnknownEdit(id)) if id == "missing"), "construction must reject malformed cursor history before any mutation applies");
 
         let mut legacy_seed = super::ArtifactStore::new(fresh()).await.expect("valid seed history");
@@ -21584,6 +24535,12 @@ mod tests {
         }
     }
 
+    impl MemberStoreOwner<SeverityMutation> for DemoSnapshot {
+        fn member_store_owners() -> MemberStoreOwners<Self, SeverityMutation> {
+            MemberStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(DemoStoreOwnedDisposer::<SeverityMutation>(PhantomData)))
+        }
+    }
+
     /// 🛰️ Builds an explicitly stamped Severity envelope for policy and quarantine law tests.
     fn severity_mutation_envelope_at(document_id: &str, actor: &str, mutation_id: &str, operation: SeverityMutation, timestamp: HybridLogicalTimestamp) -> crate::os_spr::MutationEnvelope {
         crate::os_spr::MutationEnvelope {
@@ -21606,8 +24563,9 @@ mod tests {
         let kind = crate::os_spr::ConflictKind::Degraded { edit_ids: vec![edit.id.clone()] };
         let mutation_ids = stable_mutation_ids_for_edit(&edit).await.expect("stable operation identity");
         let timestamp = edit.mutation_meta.first().expect("metadata timestamp").timestamp;
+        let document_id = ArtifactId(store.envelope().id.clone());
         store.0.envelope.conflicts.push(crate::os_spr::Conflict {
-            id: crate::os_spr::ConflictId::new(&kind, &ArtifactId(store.envelope().id.clone()), &mutation_ids, &timestamp).await,
+            id: crate::os_spr::ConflictId::new(&kind, &document_id, &mutation_ids, &timestamp).await,
             kind,
             status: crate::os_spr::ConflictStatus::Open,
             messages,
@@ -21661,8 +24619,9 @@ mod tests {
         let timestamp = edit.mutation_meta.first().expect("timestamp").timestamp;
         let mut messages = store.envelope().edit_messages.last().expect("outcome message").messages.clone();
         messages[0].op_index = Some(1);
+        let document_id = ArtifactId(store.envelope().id.clone());
         store.0.envelope.conflicts.push(crate::os_spr::Conflict {
-            id: crate::os_spr::ConflictId::new(&kind, &ArtifactId(store.envelope().id.clone()), &mutation_ids, &timestamp).await,
+            id: crate::os_spr::ConflictId::new(&kind, &document_id, &mutation_ids, &timestamp).await,
             kind,
             status: crate::os_spr::ConflictStatus::Open,
             messages,
@@ -21737,7 +24696,7 @@ mod tests {
         let fatal = severity_mutation_envelope_at(document_id, "fatal-peer", "fatal-op", SeverityMutation::FatalN { n: 2 }, HybridLogicalTimestamp::new(2, 200));
         let mut remote = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", document_id, DemoSnapshot { n: 0 }, None)).await;
         remote.0.envelope.vcs.edits.try_push(edit_from_operation_envelope::<SeverityMutation>(&fatal).await.expect("fatal edit")).expect("test edit fits the fixed history ledger");
-        remote.0.envelope.cursor = Some(ArtifactCursor { applied_edit_ids: vec![fatal.mutation_id.0.clone()], redo_edit_ids: Vec::new(), checkpoint_id: None });
+        remote.0.envelope.cursor = Some(ArtifactCursor::new(vec![fatal.mutation_id.0.clone()], Vec::new(), None));
         let files = remote.snapshot_pack().await.expect("remote snapshot");
 
         let mut local = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", document_id, DemoSnapshot { n: 0 }, None)).await;
@@ -22461,6 +25420,12 @@ mod tests {
         }
     }
 
+    impl MemberStoreOwner<ValidatedMutation> for DemoSnapshot {
+        fn member_store_owners() -> MemberStoreOwners<Self, ValidatedMutation> {
+            MemberStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(DemoStoreOwnedDisposer::<ValidatedMutation>(PhantomData)))
+        }
+    }
+
     /// 🎯️ The dialect every composition fixture below mints children under.
     fn demo_child_dialect() -> crate::os_io::ArtifactDialect {
         crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.mesh".into(), standard: "1".into(), subset: "*".into() }
@@ -22566,7 +25531,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn member_close_rejects_missing_owner_and_preserves_the_installed_blocked_disposer() {
-        let mut missing = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "missing-member-owner", DemoSnapshot { n: 1 }, None)).await.expect("store");
+        let mut missing = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "missing-member-owner", DemoSnapshot { n: 1 }, None)).await;
         assert!(matches!(SpaceMember::close_owned_step(&mut missing, 1, 4_096), Err(reason) if reason.contains("no owner-supplied bounded disposer")));
 
         missing.install_member_store_owners_exact(DemoSnapshot::member_store_owners());

@@ -1,6 +1,0 @@
-# reorder-primitives diff facet.
-input GltfReorderPrimitivesPayloadV1 {
-  mesh: Int!
-  order: [Int!]!
-}
-type GltfReorderPrimitivesDiffV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

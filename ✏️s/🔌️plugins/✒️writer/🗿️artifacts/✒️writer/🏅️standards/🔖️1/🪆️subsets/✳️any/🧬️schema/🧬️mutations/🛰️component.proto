@@ -1,10 +1,16 @@
 syntax = "proto3";
-package semio.s.writer.writer;
+package semio.writer.v1;
+
+message RenameWriter { string new_id = 1; }
+message ChangeUri { string new_uri = 1; }
+message ChangeLanguage { string new_language_id = 1; }
+message EditText { string text = 1; }
 
 message WriterMutation {
-  string schema = 1;
-  string id = 2;
-  string language_id = 3;
-  string uri = 4;
-  string text = 5;
+  oneof mutation {
+    RenameWriter rename_writer = 1;
+    ChangeUri change_uri = 2;
+    ChangeLanguage change_language = 3;
+    EditText edit_text = 4;
+  }
 }

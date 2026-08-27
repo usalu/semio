@@ -6,8 +6,6 @@
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
-use std::cell::RefCell;
-use std::collections::HashMap;
 
 //#region 🔖️Types
 pub use crate::playbook::{
@@ -362,25 +360,12 @@ pub async fn forms_results_from_steps(steps: &[FormStep]) -> SemioTableSnapshot 
 //#endregion 🔖️Converters
 
 //#region 🔖️WorkingScene
-/// 🌱 Ephemeral, session-side cache of the live `steps` tree behind a `(structure, results)` child
-/// pair — NEVER persisted (matches the `EngineRep` contract: wholly derived, droppable at any
-/// instant, rebuilt from base). No `LinkResolver`/child-dispatch seam exists in
-/// `ArtifactApp::handle` yet (checked directly against `🔌️plugin/🦀️component.rs`, W1-owned,
-/// read-only — same standing gap every prior wave's report documents), so this is the only way a
-/// persisted content-addressed handle round-trips to the real steps tree within one process —
-/// mirrors mathematical's `MATH_SCRATCH`/writer's `WRITER_SCRATCH`. `structure`/`results` are
-/// always minted TOGETHER from the same `steps` (`forms_children_from_steps`), so
-/// `structure.child_id == results.child_id` and one cache entry serves both reads.
-///
-/// ⚠️ Same documented staleness gap as every prior exemplar: store-level undo/redo bypasses
-/// `ArtifactApp::handle` entirely, so a handle can in principle go uncached (fresh process, or an
-/// undo past this session's history). `forms_steps` fails soft (empty `Vec`) rather than panicking.
+/// 🌱 Ephemeral representation of one composed child's live step tree. The value belongs to
+/// the exact `ArtifactChild`; it is never persisted, never process-global, and retires with that
+/// owner. Equal wire identities cannot observe one another's materialization.
+#[derive(Clone, Debug, Default)]
 pub struct FormsWorkingScene {
     pub steps: Vec<FormStep>,
-}
-
-thread_local! {
-    static FORMS_SCRATCH: RefCell<HashMap<String, FormsWorkingScene>> = RefCell::new(HashMap::new());
 }
 
 async fn forms_scene_id(steps: &[FormStep]) -> String {
@@ -391,33 +376,28 @@ async fn forms_scene_id(steps: &[FormStep]) -> String {
     format!("forms-scene-{:016x}", hasher.finish())
 }
 
-/// 📝 Seeds the scratch cache for a handle — the id-keyed twin of [`forms_children_from_steps`],
-/// for the case where the handle already EXISTS (a snapshot decoded from persisted JSON, whose
-/// `child_id` this process never minted) and its steps must be brought into the working scene
-/// before any read path can see them. Mirrors dag's `cache_dag_content` and playbook's
-/// `cache_playbook_steps`.
-pub async fn cache_forms_steps(child_id: &str, steps: Vec<FormStep>) {
-    FORMS_SCRATCH.with(|cache| {
-        cache.borrow_mut().insert(child_id.to_string(), FormsWorkingScene { steps });
-    });
+/// 📝 Transfers decoded or test-provided steps into one exact structure-child owner.
+pub fn materialize_forms_steps(handle: &mut FormsStructureChild, steps: Vec<FormStep>) {
+    handle.set_local_owner(std::sync::Arc::new(FormsWorkingScene { steps }));
 }
 
-/// 🏗️ Mints both composed-child handles for a `steps` tree AND seeds the scratch cache in one
-/// call — the standard way every mutation-diff/fixture builder in this plugin creates
-/// `structure`/`results` field values; never construct these handles without also caching, or
-/// `forms_steps` will read back empty.
+/// 🏗️ Mints both composed-child handles and transfers the same immutable materialization
+/// into each exact owner. The shared `Arc` is scoped to this returned pair, never to wire identity.
 pub async fn forms_children_from_steps(steps: &[FormStep]) -> (FormsStructureChild, FormsResultsChild) {
     let scene_id = forms_scene_id(steps);
-    cache_forms_steps(&scene_id, steps.to_vec());
     let dialect_for = |subset: &str| store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
     let target_for = |subset: &str| store::os_io::ArtifactRef { artifact_id: format!("forms-{subset}"), dialect: dialect_for(subset) };
-    (store::ArtifactChild::new(scene_id.clone(), target_for("value")), store::ArtifactChild::new(scene_id, target_for("table")))
+    let scene = std::sync::Arc::new(FormsWorkingScene { steps: steps.to_vec() });
+    (
+        store::ArtifactChild::new(scene_id.clone(), target_for("value")).with_local_owner(scene.clone()),
+        store::ArtifactChild::new(scene_id, target_for("table")).with_local_owner(scene),
+    )
 }
 
-/// 🔎 Reads the cached working scene behind a snapshot's composed children — an empty `steps`
-/// (never a panic) on a cache miss, per this region's own doc comment.
+/// 🔎 Reads the materialization owned by this snapshot's exact structure child. A wire-only
+/// handle fails soft until the host materializes its child document.
 pub async fn forms_scene(snapshot: &FormsSnapshot) -> FormsWorkingScene {
-    FORMS_SCRATCH.with(|cache| cache.borrow().get(&snapshot.structure.child_id).map(|scene| FormsWorkingScene { steps: scene.steps.clone() })).unwrap_or_else(|| FormsWorkingScene { steps: Vec::new() })
+    snapshot.structure.local_owner::<FormsWorkingScene>().map(|scene| scene.as_ref().clone()).unwrap_or_default()
 }
 
 /// 🔎 The live `steps` tree behind a snapshot's composed children — the single read call site
@@ -430,7 +410,7 @@ pub async fn forms_steps(snapshot: &FormsSnapshot) -> Vec<FormStep> {
 /// 🔎 Twin of [`forms_steps`] for the UI-inclusive [`crate::artifacts::forms::schema::FormsArtifact`]
 /// (its own `structure`/`results` fields mirror the snapshot's — see that struct's own doc).
 pub async fn forms_artifact_steps(artifact: &crate::artifacts::forms::schema::FormsArtifact) -> Vec<FormStep> {
-    FORMS_SCRATCH.with(|cache| cache.borrow().get(&artifact.structure.child_id).map(|scene| scene.steps.clone())).unwrap_or_default()
+    artifact.structure.local_owner::<FormsWorkingScene>().map(|scene| scene.steps.clone()).unwrap_or_default()
 }
 
 /// 🏗️ Builds a full `FormsSnapshot` from a literal `steps` tree — the standard fixture/import
@@ -524,6 +504,18 @@ pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclarat
 mod tests {
     use super::*;
 
+    trait FormsChildOwnerOracle {
+        fn expected() -> serde_json::Value;
+    }
+
+    struct SerdeJsonFormsChildOwnerOracle;
+
+    impl FormsChildOwnerOracle for SerdeJsonFormsChildOwnerOracle {
+        fn expected() -> serde_json::Value {
+            serde_json::from_str(include_str!("🧪️fixtures/🎯️child-owner-isolation.json")).expect("language-neutral Forms child-owner fixture")
+        }
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn artifact_kind_uses_the_dictionary_media_kind_as_both_id_and_schema() {
         assert_eq!(artifact_kind().id, "form.dictionary");
@@ -548,6 +540,20 @@ mod tests {
         assert_eq!(question.min, Some(1.0));
         assert_eq!(question.unit.as_deref(), Some("people"));
         assert!(question.required.unwrap_or(false));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn forms_working_scene_is_owned_by_the_exact_snapshot_child() {
+        let (owned, _) = forms_children_from_steps(&[FormStep { id: "step-one".into(), title: "One".into(), description: None, blocks: Vec::new() }]);
+        let wire = serde_json::to_vec(&owned).expect("Forms child wire identity");
+        let reconstructed: FormsStructureChild = serde_json::from_slice(&wire).expect("Forms child wire roundtrip");
+        let observed = serde_json::json!({
+            "ownedHasScene": owned.local_owner::<FormsWorkingScene>().is_some(),
+            "wireIdentityMatches": owned == reconstructed,
+            "wireHasScene": reconstructed.local_owner::<FormsWorkingScene>().is_some(),
+        });
+
+        assert_eq!(observed, SerdeJsonFormsChildOwnerOracle::expected());
     }
 }
 //#endregion 🧪️Tests

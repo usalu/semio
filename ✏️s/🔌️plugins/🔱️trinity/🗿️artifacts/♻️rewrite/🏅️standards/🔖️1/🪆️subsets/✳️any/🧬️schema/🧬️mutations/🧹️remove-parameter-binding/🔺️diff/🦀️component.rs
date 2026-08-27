@@ -4,7 +4,7 @@ use crate::artifacts::rewrite::RewriteSnapshot;
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::RemoveParameterBinding, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
+pub fn diff(payload: &super::RemoveParameterBinding, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
     if !base.parameter_bindings.contains_key(&payload.key) {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Parameter binding \"{}\" is already absent.", payload.key));
     }

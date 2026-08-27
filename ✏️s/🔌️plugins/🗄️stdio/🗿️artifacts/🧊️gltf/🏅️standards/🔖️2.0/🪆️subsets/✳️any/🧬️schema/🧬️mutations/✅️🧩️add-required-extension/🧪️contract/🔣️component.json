@@ -1,0 +1,11 @@
+{
+  "id": "s.stdio.gltf.mutation.add-required-extension.v1",
+  "laws": {
+    "acceptance": "valid payload applies a named mutation",
+    "rejection": "invalid payload returns a typed rejection",
+    "apply": "only document/extensionsRequired changes",
+    "inverse": "direct inverse diff restores the base value",
+    "reference": "requires prior extensionsUsed membership",
+    "serialization": "all five facets retain this .v1 id"
+  }
+}

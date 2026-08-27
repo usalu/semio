@@ -36,7 +36,7 @@ impl Default for WiresArtifact {
     fn default() -> Self {
         Self {
             wires_fixture: crate::artifacts::wires::empty_wires_fixture(),
-            content: crate::artifacts::wires::wires_content_child_handle_and_cache(Vec::new(), Vec::new()),
+            content: crate::artifacts::wires::wires_content_child_with_owner(Vec::new(), Vec::new()),
             camera: crate::artifacts::wires::empty_camera(),
             meta: DslValue::Null,
             drag_node_id: None,
@@ -110,7 +110,7 @@ pub async fn wires_artifact_schema_descriptor() -> schema::ArtifactSchemaDescrip
 /// zero-boilerplate replacement) does NOT fit here: its `ArtifactBuilder` impl requires `S: Default`,
 /// and `WiresSnapshot` deliberately has none — `content` is a composed `ArtifactChild` that needs a
 /// freshly-minted, content-addressed handle (`empty_wires_snapshot()`'s
-/// `wires_content_child_handle_and_cache`), not a blanket zero value. This is the same class of
+/// `wires_content_child_with_owner`), not a blanket zero value. This is the same class of
 /// "the generic doesn't fit, keep the hand-rolled type" finding as `📓️w4-sequence-report.md`
 /// `## recipeGaps` #1 (there for `ArtifactInferrer`, here for `ArtifactBuilder`). No current caller
 /// exercises `ArtifactBuilder` for this subset (confirmed: zero references outside this module,

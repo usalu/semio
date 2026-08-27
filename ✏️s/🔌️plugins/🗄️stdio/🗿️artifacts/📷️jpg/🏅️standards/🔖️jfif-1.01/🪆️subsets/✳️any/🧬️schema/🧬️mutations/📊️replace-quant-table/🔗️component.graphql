@@ -1,0 +1,3 @@
+# 🧬️ replace-quant-table/ReplaceQuantTable
+scalar ReplaceQuantTableMutationValue
+input ReplaceQuantTableMutation { table: ReplaceQuantTableMutationValue! }

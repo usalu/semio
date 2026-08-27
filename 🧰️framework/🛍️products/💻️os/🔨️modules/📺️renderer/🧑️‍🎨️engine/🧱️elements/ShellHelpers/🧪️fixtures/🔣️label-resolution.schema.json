@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.renderer.label-resolution.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["matrix", "cases"],
+  "properties": {
+    "matrix": {
+      "type": "object", "additionalProperties": false, "required": ["native", "reuse"],
+      "properties": {"native": {"$ref": "#/definitions/languages"}, "reuse": {"$ref": "#/definitions/languages"}}
+    },
+    "cases": {"type": "array", "minItems": 8, "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "terminology", "locale", "expected"],
+      "properties": {"id": {"type": "string"}, "terminology": {"type": "string"}, "locale": {"type": "string"}, "expected": {"type": "string"}, "data": {"type": "string"}}
+    }}
+  },
+  "definitions": {"languages": {"type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"type": "string"}, "de": {"type": "string"}}}}
+}

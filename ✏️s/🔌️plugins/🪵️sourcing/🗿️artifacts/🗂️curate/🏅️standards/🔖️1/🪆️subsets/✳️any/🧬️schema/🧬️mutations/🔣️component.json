@@ -1,53 +1,11 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/sourcing/curate/mutation.json",
   "title": "SourcingMutation",
-  "description": "Closed semantic mutation vocabulary for the curate document, derived from CurateSnapshot.curated's id-keyed shape. `stock` is a bulk-populated reference catalogue and is not represented here.",
   "oneOf": [
-    { "$ref": "#/$defs/CreateCuratedItem" },
-    { "$ref": "#/$defs/DeleteCuratedItem" },
-    { "$ref": "#/$defs/ChangeCuratedItemCount" }
+    {"$ref": "./🌱create-curated-item/🔣️payload.schema.json"},
+    {"$ref": "./🗑️delete-curated-item/🔣️payload.schema.json"},
+    {"$ref": "./🔢change-curated-item-count/🔣️payload.schema.json"}
   ],
-  "$defs": {
-    "CuratedItem": {
-      "title": "CuratedItem",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["objectId", "count"],
-      "properties": {
-        "objectId": { "type": "string" },
-        "count": { "type": "integer", "format": "uint32" }
-      }
-    },
-    "CreateCuratedItem": {
-      "title": "CreateCuratedItem",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["mutation", "item"],
-      "properties": {
-        "mutation": { "const": "createCuratedItem" },
-        "item": { "$ref": "#/$defs/CuratedItem" }
-      }
-    },
-    "DeleteCuratedItem": {
-      "title": "DeleteCuratedItem",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["mutation", "objectId"],
-      "properties": {
-        "mutation": { "const": "deleteCuratedItem" },
-        "objectId": { "type": "string" }
-      }
-    },
-    "ChangeCuratedItemCount": {
-      "title": "ChangeCuratedItemCount",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["mutation", "objectId", "newCount"],
-      "properties": {
-        "mutation": { "const": "changeCuratedItemCount" },
-        "objectId": { "type": "string" },
-        "newCount": { "type": "integer", "format": "uint32" }
-      }
-    }
-  }
+  "x-semio-mutationKinds": ["create-curated-item", "delete-curated-item", "change-curated-item-count"]
 }

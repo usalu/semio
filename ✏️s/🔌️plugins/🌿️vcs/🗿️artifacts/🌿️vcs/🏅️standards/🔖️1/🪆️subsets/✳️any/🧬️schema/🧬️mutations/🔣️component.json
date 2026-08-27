@@ -1,44 +1,25 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/vcs/vcs/mutation.json",
   "title": "VcsMutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "schema",
-    "title",
-    "counter",
-    "notes",
-    "status",
-    "tags"
-  ],
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
+  "oneOf": [
+    {
+      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/rename-vcs.json"
     },
-    "title": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/change-counter.json"
     },
-    "counter": {
-      "type": "integer",
-      "format": "int64",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/change-notes.json"
     },
-    "notes": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/change-status.json"
     },
-    "status": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    {
+      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/add-tag.json"
     },
-    "tags": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "artifact"
+    {
+      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/remove-tag.json"
     }
-  }
+  ]
 }

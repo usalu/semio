@@ -21,7 +21,7 @@ pub mod set_exaggeration {
     }
 
     pub fn handle(payload: &SetExaggeration, _doc: &ArtifactView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
-        use crate::artifacts::gisterrain::mutations::change_exaggeration::mutation::ChangeExaggeration;
+        use crate::artifacts::gisterrain::mutations::change_exaggeration::ChangeExaggeration;
         Ok(Emit::amend(vec![GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: payload.exaggeration })], GIS3D_EXAGGERATION_COALESCE_KEY))
     }
 }

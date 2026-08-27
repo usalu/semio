@@ -46,7 +46,7 @@ type UtilityTreeProps = {
 function resolveLeafAction(node: UtilityLeaf | Extract<UtilityNode, { readonly kind: "button" | "toggle" }>): ActionDescriptor | null {
   if ("onPress" in node && node.onPress) return node.onPress;
   if ("onChange" in node && node.onChange) return node.onChange;
-  if (node.kind === "button" || node.kind === "toggle") {
+  if ((node.kind === "button" || node.kind === "toggle") && "action" in node) {
     if (!node.action || !node.controllerId) return null;
     return { controllerId: node.controllerId, action: node.action, args: node.args as Record<string, unknown> | undefined };
   }
@@ -202,11 +202,11 @@ export function findUtilityGroupPath(nodes: readonly UtilityNode[], targetId: st
 }
 
 function UtilityRibbonItems({ items, onAction }: { readonly items: readonly UtilityLeaf[]; readonly onAction: (action: ActionDescriptor) => void }): ReactElement {
-  const sorted = useMemo(() => sortUtilityNodes(items) as UtilityLeaf[], [items]);
+  const sorted = useMemo(() => [...items].sort((left, right) => (left.order ?? 0) - (right.order ?? 0)), [items]);
   const nodes = useMemo(() => {
     const rendered: ReactElement[] = [];
-    let buttonRun: UtilityLeaf[] = [];
-    let toggleRun: UtilityLeaf[] = [];
+    let buttonRun: Extract<UtilityLeaf, { kind: "button" }>[] = [];
+    let toggleRun: Extract<UtilityLeaf, { kind: "toggle" }>[] = [];
 
     const flushButtons = () => {
       if (buttonRun.length === 0) return;

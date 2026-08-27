@@ -240,7 +240,7 @@ pub async fn note_document_json_to_svg(value: &Value) -> Result<(String, u32, u3
 /// `text_block_from_dwg` below are real domain mappers over already-typed `DwgGeometry` fields
 /// (not hand-rolled DWG byte manipulation — `semio_framework::dwg_from_bytes` does the actual
 /// byte-level parse), kept as the honest, lossless choice until that bridge exists.
-async fn ink_block_from_points(points: &[[f64; 2]]) -> NoteBlockNode {
+async fn ink_block_from_points(ids: &mut crate::artifacts::note::schema::NoteIdOwner, points: &[[f64; 2]]) -> NoteBlockNode {
     let mut min_x = f64::INFINITY;
     let mut min_y = f64::INFINITY;
     let mut max_x = f64::NEG_INFINITY;
@@ -253,7 +253,7 @@ async fn ink_block_from_points(points: &[[f64; 2]]) -> NoteBlockNode {
     }
     let local_points = points.iter().map(|point| [point[0] - min_x, point[1] - min_y]).collect();
     NoteBlockNode::Ink {
-        id: crate::artifacts::note::schema::create_note_id("dwg-ink"),
+        id: crate::artifacts::note::schema::create_note_id(ids, "dwg-ink"),
         name: "Imported Stroke".into(),
         x: min_x,
         y: min_y,
@@ -268,9 +268,9 @@ async fn ink_block_from_points(points: &[[f64; 2]]) -> NoteBlockNode {
     }
 }
 
-async fn text_block_from_dwg(at: &[f64; 3], height: f64, rotation: f64, content: &str) -> NoteBlockNode {
+async fn text_block_from_dwg(ids: &mut crate::artifacts::note::schema::NoteIdOwner, at: &[f64; 3], height: f64, rotation: f64, content: &str) -> NoteBlockNode {
     let font_size = if height > 0.0 { height } else { 12.0 };
-    let id = crate::artifacts::note::schema::create_note_id("dwg-text");
+    let id = crate::artifacts::note::schema::create_note_id(ids, "dwg-text");
     let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: content.to_string(), bold: None, italic: None, underline: None, link: None }] }];
     NoteBlockNode::Text {
         content: crate::artifacts::note::note_text_child_record(&id, &paragraphs),
@@ -290,13 +290,14 @@ async fn text_block_from_dwg(at: &[f64; 3], height: f64, rotation: f64, content:
 }
 
 pub async fn note_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
+    let mut ids = crate::artifacts::note::schema::NoteIdOwner::new(format!("dwg-import:{}", drawing.entities.len()), 0);
     let mut document = crate::artifacts::note::schema::empty_note_snapshot();
-    document.id = crate::artifacts::note::schema::create_note_id("dwg-import");
+    document.id = crate::artifacts::note::schema::create_note_id(&mut ids, "dwg-import");
     document.title = Some("Imported Drawing".into());
     for entity in &drawing.entities {
         match &entity.geometry {
             DwgGeometry::Line { start, end } => {
-                document.blocks.push(ink_block_from_points(&[[start[0], start[1]], [end[0], end[1]]]));
+                document.blocks.push(ink_block_from_points(&mut ids, &[[start[0], start[1]], [end[0], end[1]]]));
             }
             DwgGeometry::LwPolyline { closed, vertices, .. } => {
                 if vertices.len() >= 2 {
@@ -304,11 +305,11 @@ pub async fn note_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, 
                     if *closed {
                         points.push(vertices[0]);
                     }
-                    document.blocks.push(ink_block_from_points(&points));
+                    document.blocks.push(ink_block_from_points(&mut ids, &points));
                 }
             }
             DwgGeometry::Text { at, height, rotation, content } => {
-                document.blocks.push(text_block_from_dwg(at, *height, *rotation, content));
+                document.blocks.push(text_block_from_dwg(&mut ids, at, *height, *rotation, content));
             }
             _ => {}
         }
@@ -446,8 +447,9 @@ mod media_tests {
     #[semio_framework_async_macros::async_test]
     async fn note_document_to_drawing_snapshot_flattens_visible_blocks_into_one_layer() {
         let mut document = crate::artifacts::note::schema::empty_note_snapshot();
-        document.blocks.push(crate::artifacts::note::schema::create_block_by_kind("text", 5.0, 6.0));
-        let mut hidden = crate::artifacts::note::schema::create_block_by_kind("text", 0.0, 0.0);
+        let mut ids = crate::artifacts::note::schema::NoteIdOwner::new("io-test", 0);
+        document.blocks.push(crate::artifacts::note::schema::create_block_by_kind(&mut ids, "text", 5.0, 6.0));
+        let mut hidden = crate::artifacts::note::schema::create_block_by_kind(&mut ids, "text", 0.0, 0.0);
         if let NoteBlockNode::Text { visible, .. } = &mut hidden {
             *visible = false;
         }

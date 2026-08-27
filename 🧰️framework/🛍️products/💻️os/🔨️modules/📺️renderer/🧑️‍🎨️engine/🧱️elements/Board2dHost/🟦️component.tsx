@@ -373,7 +373,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   const renderScheduledRef = useRef(false);
   const pendingCameraDispatchRef = useRef<{ readonly camera: BoardCamera } | null>(null);
   const pendingSelectionJsonRef = useRef<string | null>(null);
-  const onPeerGestureEndedRef = useRef<() => void>(() => {});
+  const onPeerGestureEndedRef = useRef<(flushed: boolean) => void>(() => {});
   const [sessionEpoch, setSessionEpoch] = useState(0);
   const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
   const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.board");
@@ -567,7 +567,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
         return;
       }
       sessionRef.current = session;
-      registerBoard2dPeer(node.controllerId, node.surfaceId, { session, onPeerGestureEnded: () => onPeerGestureEndedRef.current() });
+      registerBoard2dPeer(node.controllerId, node.surfaceId, { session, onPeerGestureEnded: (flushed) => onPeerGestureEndedRef.current(flushed) });
 
       const applySize = (): void => {
         const nextDpr = globalThis.devicePixelRatio || 1;
@@ -697,8 +697,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     if (!scene || !board2dHostShellScope) return;
     const updateOptions = () => {
       const mode = board2dHostShellScope.selection.get();
-      const wasmMode = mode === "default" ? "replace" : mode;
-      applyToSession(sessionRef.current, (session) => session.setSelectionOptions?.(scene.selectionMethod, wasmMode, true, true, true));
+      applyToSession(sessionRef.current, (session) => session.setSelectionOptions?.(scene.selectionMethod, mode, true, true, true));
     };
     updateOptions();
     return board2dHostShellScope.selection.subscribe(updateOptions);
@@ -852,7 +851,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       if (!(target instanceof HTMLElement)) return false;
       return target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
     };
-    const onKeyDown = (event: KeyboardEvent): void => {
+    const onKeyDown = (event: globalThis.KeyboardEvent): void => {
       if (!hoverActiveRef.current || isEditableTarget(event.target)) return;
       const session = sessionRef.current;
       if (!session) return;
@@ -894,6 +893,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       if (!scene?.interactive || !requestContextMenu) return;
       const session = sessionRef.current;
       if (!session?.pickTargetsAtScreenJson) return;
+      const pickTargetsAtScreenJson = session.pickTargetsAtScreenJson.bind(session);
       event.preventDefault();
       event.stopPropagation();
       void (async () => {
@@ -902,7 +902,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
         const sy = event.clientY - rect.top;
         let targets: CanvasPickTarget[] = [];
         try {
-          targets = JSON.parse(session.pickTargetsAtScreenJson(sx, sy)) as CanvasPickTarget[];
+          targets = JSON.parse(pickTargetsAtScreenJson(sx, sy)) as CanvasPickTarget[];
         } catch {
           targets = [];
         }
@@ -922,7 +922,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
         const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
-            menu: { id: "board2d" },
+            menu: { id: "board2d", args: null },
             surface: {
               surfaceId: node.surfaceId,
               kind: "board2d",

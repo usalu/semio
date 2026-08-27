@@ -1,39 +1,11 @@
 dialect protocol
-protocol stdio.txt.mutations
+protocol txt.mutations
 version 1
-schema stdio.txt.op
-start op
+schema stdio.txt
+start record
 
-# P2-P3: `protocol::OpBinary::encode_op`/`decode_op` (../🦀️component.rs) forward straight to
-# `dsl::variants_binary::encode_op`/`decode_op` (🗣️dsl/🦀️component.rs `OpRt` region) -- this was
-# ALREADY real binary before this program touched it, NOT the F6-era `print_op().into_bytes()`
-# text-as-binary shortcut (confirmed by direct reading, not assumed: `encode_op` calls
-# `os_pack::encode_record_body`, never `print_op`). Layout, byte-for-byte, per that helper's own
-# doc comment (`OP_BINARY_FORMAT`): a fixed `format` byte (always `1`), the matched variant's
-# ordinal as a `varint` (declaration order: `NoMutation`=0, `SetSnapshot`=1,
-# `SetTrailingNewline`=2, `SetLineEnding`=3, `InsertLine`=4, `RemoveLine`=5, `SetLine`=6 --
-# `dsl::DslVariants::variants()`'s own emission order), then the variant's own field payload,
-# `os_pack::encode_record_body(spec, record)` -- itself a varint-prefixed STRING-SYMBOL TABLE
-# followed by a generic, self-describing per-field-id TAG+value wire
-# (`🎒️pack/🔢️value/🦀️component.rs` `encode_record_body`/`encode_record_fields` -- confirmed by
-# direct reading, e.g. real `encode_op(NoMutation) == [1, 0, 0, 0]`: format=1, ordinal=0,
-# symbol-count=0, zero fields). This inner wire is the FRAMEWORK's own generic record-body
-# encoding -- shared verbatim by every `#[derive(dsl::DslRecord)]`/`DslOps`/`DslDiff` type in the
-# whole repo, not anything specific to `stdio.txt` -- and is genuinely NOT expressible by this
-# dialect's `Array`/`Ref`/`repeat` primitives as they stand today (no dynamic per-field TAG
-# dispatch keyed by a runtime field-id, no symbol-table back-reference resolution): the SAME real
-# limitation the sibling csv/json pilots hit for THEIR OWN nested collection payloads
-# (`csv-nested-record-array-unwalkable`, P2-P1 csv report §5), one level more fundamental here
-# since it is the record-body wire ITSELF, not just one deeply-nested field inside it. Modeled
-# honestly: `format`/`ordinal` are genuinely, individually byte-walked and validated; the
-# remaining record-body bytes are one opaque tail -- same "opaque segment only where honestly
-# irreducible" carve-out the user's own decisions already grant a compressed payload, generalized
-# here to "structurally irreducible under the current dialect's tag-dispatch limits." A
-# framework-level `record-body.protocol.semio` description (mirroring M3's own
-# `semio.envelope`/`pack_format` precedent) would let EVERY future `DslOps`/`DslDiff`-derived
-# artifact's own protocol file `use` it instead of repeating this same opaque-tail treatment --
-# out of this per-artifact ticket's ownership boundary (see this report's `mechanism_gaps`).
+# Direct descriptor identities and tags: set-trailing-newline=1, set-line-ending=2, insert-line=3, remove-line=4, set-line=5.
 framing record
-field format u8
-field ordinal varint
-chain bytes
+header fixed 1
+chain tag u8
+chain payload bytes

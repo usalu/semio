@@ -32,7 +32,7 @@ use semio_repo_test_host::Json;
 /// 🧾️ Kebab-case spelling of every variant this subset's `PdfUaMutation` declares, in
 /// declaration order. The catalog `pdf-1-7-ua` is measured against this exact list, and the
 /// subject-side `KINDS` carries the test that proves enum, constant and manifest never drift apart.
-pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-mark-info", "remove-mark-info", "set-struct-tree-root", "remove-struct-tree-root", "set-lang", "remove-lang", "set-display-doc-title", "remove-display-doc-title", "set-info-title", "embed-font-file", "remove-font-file"];
+pub const KINDS: &[&str] = &["set-mark-info", "remove-mark-info", "set-struct-tree-root", "remove-struct-tree-root", "set-lang", "remove-lang", "set-display-doc-title", "remove-display-doc-title", "set-info-title", "embed-font-file", "remove-font-file"];
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Profile
@@ -136,8 +136,6 @@ mod tests {
     /// carries, so a failure here and a failure there have the same cause.
     fn params_for(kind: &str) -> Json {
         match kind {
-            "no-mutation" => json_object(vec![]),
-            "set-snapshot" => json_object(vec![("conformance", Json::String("stamped".to_string()))]),
             "set-mark-info" => json_object(vec![("marked", Json::Bool(true))]),
             "remove-mark-info" => json_object(vec![]),
             "set-struct-tree-root" => json_object(vec![]),
@@ -170,9 +168,7 @@ mod tests {
             let base_projection = project_conformance(&base).unwrap_or_else(|error| panic!("{kind}: projecting the base failed: {error}"));
             let mutated = oracle_apply_mutation(&base, &forward).unwrap_or_else(|error| panic!("{kind}: {error}"));
             let mutated_projection = project_conformance(&mutated).unwrap_or_else(|error| panic!("{kind}: projecting the result failed: {error}"));
-            if *kind != "no-mutation" {
-                assert_ne!(mutated_projection, base_projection, "{kind} must be observable in the conformance-class projection");
-            }
+            assert_ne!(mutated_projection, base_projection, "{kind} must be observable in the conformance-class projection");
             let undo = oracle_inverse_spec(&base, &forward).unwrap_or_else(|error| panic!("{kind}: inverse spec: {error}"));
             let restored = oracle_apply_mutation(&mutated, &undo).unwrap_or_else(|error| panic!("{kind}: inverse: {error}"));
             let restored_projection = project_conformance(&restored).unwrap_or_else(|error| panic!("{kind}: projecting the restored document failed: {error}"));

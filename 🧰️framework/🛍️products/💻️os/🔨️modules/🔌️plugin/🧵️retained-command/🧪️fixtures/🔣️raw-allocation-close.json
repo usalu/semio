@@ -1,0 +1,9 @@
+{
+  "schema": "retained-command-raw-allocation-close/v1",
+  "maximumItems": 1,
+  "maximumBytes": 4096,
+  "cases": [
+    { "id": "empty-large-capacity", "capacity": 16384, "initializedBytes": 0, "expectedByteRelease": 0, "expectedAllocationRelease": 1 },
+    { "id": "partial-large-capacity", "capacity": 65536, "initializedBytes": 8193, "expectedByteRelease": 8193, "expectedAllocationRelease": 1 }
+  ]
+}

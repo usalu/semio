@@ -726,12 +726,12 @@ impl store::ArtifactDsl for XmlSnapshot {
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         match store::semio_format::split_text_preamble(text) {
-            Ok((_, body)) => crate::artifacts::xml::schema::mutations::dec_xml_snapshot(body.trim()).map_err(|e| store::TextError::new(format!("xml state parse: {e}"), dsl::TextSpan::at(1, 1))),
+            Ok((_, body)) => crate::artifacts::xml::schema::mutation_support::decode_snapshot(body.trim()).map_err(|e| store::TextError::new(format!("xml state parse: {e}"), dsl::TextSpan::at(1, 1))),
             Err(_) => Self::import_utf8(text.as_bytes()).map_err(|e| store::TextError::new(format!("xml parse: {e}"), dsl::TextSpan::at(1, 1))),
         }
     }
     fn print_dsl(&self) -> String {
-        let body = crate::artifacts::xml::schema::mutations::enc_xml_snapshot(self);
+        let body = crate::artifacts::xml::schema::mutation_support::encode_snapshot(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -749,7 +749,7 @@ impl store::ArtifactPack for XmlSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let mut raw = vec![1];
-        crate::artifacts::xml::schema::mutations::enc_xml_snapshot_bin(self, &mut raw);
+        crate::artifacts::xml::schema::mutation_support::encode_snapshot_binary(self, &mut raw);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -764,7 +764,7 @@ impl store::ArtifactPack for XmlSnapshot {
         if version != 1 {
             return Err(store::PackError::Schema(format!("unsupported xml snapshot state version {version}")));
         }
-        crate::artifacts::xml::schema::mutations::dec_xml_snapshot_bin(&mut reader).map_err(store::PackError::Schema)
+        crate::artifacts::xml::schema::mutation_support::decode_snapshot_binary(&mut reader).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

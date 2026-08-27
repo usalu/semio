@@ -1546,6 +1546,60 @@ export function resolveCargoPackageNames(packages: string[], cwd: string): strin
 }
 //#endregion 🦀️CargoPackageResolver
 
+//#region 🦀️NextestExecutionFilters
+/** 🧪️ Keeps runtime selection on the metadata execution command and build selection on the warm build. */
+export function partitionNextestExecutionFilters(args: readonly string[]): { buildArgs: string[]; executionArgs: string[]; libtestArgs: string[] } {
+  const valuedFilters = new Set(["-E", "--filter-expr", "--partition", "--run-ignored"]);
+  const requiredBuildOptions = new Set(["-p", "--package", "--exclude", "--manifest-path", "--target", "--target-dir", "--features", "-F", "--jobs", "-j", "--build-jobs", "--cargo-profile", "--cargo-message-format", "--config", "-Z", "--color", "--profile", "-P", "--test", "--bin", "--bench", "--example", "--message-format", "-T", "--list-type", "--archive-file", "--archive-format", "--extract-to", "--cargo-metadata", "--workspace-remap", "--binaries-metadata", "--target-dir-remap", "--build-dir-remap", "--config-file", "--user-config-file", "--tool-config-file"]);
+  const optionalBuildOptions = new Set(["--timings"]);
+  const joinedBuildOptions = ["-p", "-F", "-j", "-Z", "-P", "-T"];
+  const buildArgs: string[] = [], executionArgs: string[] = [];
+  const separator = args.indexOf("--");
+  const cargoArgs = separator < 0 ? args : args.slice(0, separator);
+  const libtestArgs = separator < 0 ? [] : args.slice(separator + 1);
+  for (let index = 0; index < cargoArgs.length; index += 1) {
+    const arg = cargoArgs[index]!;
+    const key = arg.split("=", 1)[0]!;
+    if (arg === "--ignore-default-filter" || (arg.startsWith("-E") && arg.length > 2)) {
+      executionArgs.push(arg);
+    } else if (valuedFilters.has(key)) {
+      if (arg.includes("=")) {
+        if (arg.endsWith("=")) throw new Error(`Nextest filter ${key} requires a value`);
+        executionArgs.push(arg);
+      } else {
+        const value = cargoArgs[index + 1];
+        if (value === undefined || value.length === 0 || value.startsWith("-")) throw new Error(`Nextest filter ${key} requires a value`);
+        executionArgs.push(arg, value);
+        index += 1;
+      }
+    } else {
+      if (!arg.startsWith("-")) executionArgs.push(arg);
+      else {
+        buildArgs.push(arg);
+        const inlineValue = arg.includes("=") || joinedBuildOptions.some((option) => arg.startsWith(option) && arg.length > option.length);
+        const requiresValue = requiredBuildOptions.has(key);
+        const allowsValue = optionalBuildOptions.has(key);
+        if ((requiresValue || allowsValue) && arg.endsWith("=")) throw new Error(`Nextest build option ${key} requires a non-empty value`);
+        if (!inlineValue && requiresValue) {
+          const value = cargoArgs[index + 1];
+          if (value !== undefined && value.length > 0 && !value.startsWith("-")) {
+            buildArgs.push(value);
+            index += 1;
+          } else if (requiresValue) throw new Error(`Nextest build option ${key} requires a value`);
+        }
+      }
+    }
+  }
+  return { buildArgs, executionArgs, libtestArgs };
+}
+
+/** 📁️ Selects a caller-owned artifact root without embedding any task identity in permanent tooling. */
+export function nextestArtifactLocation(cwd: string, env: NodeJS.ProcessEnv = process.env): { directory: string; retain: boolean } {
+  const explicit = env.SEMIO_TEST_ARTIFACT_DIR?.trim();
+  return explicit ? { directory: resolve(cwd, explicit), retain: true } : { directory: tmpdir(), retain: false };
+}
+//#endregion 🦀️NextestExecutionFilters
+
 /**
  * 🦀️Warm-builds the exact test runner invocation — bounded by [[buildBudgetMs]], NOT the test-level budget,
  * but never unbounded — then runs assertions under the active level's budget and [[nextest.toml]] profile (per-test
@@ -1591,22 +1645,26 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
   }
 
   if (cargoNextestAvailable()) {
-    const metadataDir = mkdtempSync(join(tmpdir(), "semio-nextest-"));
+    const { buildArgs, executionArgs, libtestArgs: nextestLibtestArgs } = partitionNextestExecutionFilters(extraArgs);
+    const artifactLocation = nextestArtifactLocation(cwd, env);
+    if (artifactLocation.retain) mkdirSync(artifactLocation.directory, { recursive: true });
+    const metadataDir = mkdtempSync(join(artifactLocation.directory, "semio-nextest-"));
     const binariesMetadataPath = join(metadataDir, "binaries-metadata.json");
     try {
       const binariesMetadata = await runTestCapturedBudgeted(
         "cargo",
-        ["nextest", "list", "--list-type", "binaries-only", "--message-format", "json", ...profileArgs, ...packageArgs, ...cargoArgs],
+        ["nextest", "list", "--list-type", "binaries-only", "--message-format", "json", ...profileArgs, ...packageArgs, ...buildArgs],
         { cwd, env, budgetMs: buildBudgetMs(), onTimeoutHint: budgetTimeoutHint("cargo") },
       );
       writeFileSync(binariesMetadataPath, binariesMetadata);
       await runTestBudgeted(
         "cargo",
-        ["nextest", "run", "--binaries-metadata", binariesMetadataPath, "--no-tests", "warn", "--status-level", "fail", "--final-status-level", "fail", ...assertionThreadArgs, ...profileArgs, "--", ...libtestArgs, ...skipArgs],
+        ["nextest", "run", "--binaries-metadata", binariesMetadataPath, "--no-tests", "warn", "--status-level", "fail", "--final-status-level", "fail", ...assertionThreadArgs, ...profileArgs, ...executionArgs, "--", ...nextestLibtestArgs, ...skipArgs],
         { cwd, env, budgetMs: testLevelBudgetMs(level) },
       );
     } finally {
-      rmSync(metadataDir, { recursive: true, force: true });
+      if (artifactLocation.retain) console.error(`[DEBUG] Nextest artifacts retained at ${metadataDir}`);
+      else rmSync(metadataDir, { recursive: true, force: true });
     }
     return;
   }

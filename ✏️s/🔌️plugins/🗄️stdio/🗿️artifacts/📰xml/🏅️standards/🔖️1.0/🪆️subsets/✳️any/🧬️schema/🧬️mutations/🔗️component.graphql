@@ -1,6 +1,11 @@
+# 🧬 Transparent XmlMutation descriptor roster.
+# set-declaration/SetDeclaration
+# set-doctype/SetDoctype
+# insert-element/InsertElement
+# remove-element/RemoveElement
+# set-attribute/SetAttribute
+# set-text/SetText
 enum XmlMutationKind {
-  NO_MUTATION
-  SET_SNAPSHOT
   SET_DECLARATION
   SET_DOCTYPE
   INSERT_ELEMENT
@@ -8,19 +13,5 @@ enum XmlMutationKind {
   SET_ATTRIBUTE
   SET_TEXT
 }
-
-""" 🧬️ XmlMutation union, flattened -- only the fields matching `mutation` are set.
-`insertElement`/`removeElement`'s `path` addresses the PARENT element; every other path-carrying
-variant's `path` addresses the target node itself. """
-type XmlMutation {
-  mutation: XmlMutationKind!
-  snapshot: XmlSnapshot
-  declaration: XmlDeclaration
-  doctype: XmlDoctype
-  path: [Int!]
-  index: Int
-  node: XmlNode
-  name: String
-  value: String
-  text: String
-}
+scalar MutationPayload
+input XmlMutationInput { kind: XmlMutationKind!, payload: MutationPayload! }

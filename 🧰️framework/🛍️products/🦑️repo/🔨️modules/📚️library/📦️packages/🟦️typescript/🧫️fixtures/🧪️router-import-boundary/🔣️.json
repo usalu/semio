@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "entrypoint": "📜️script.ts",
+  "deferredModule": "./.storybook/scopes.ts",
+  "catalogRoots": ["🧰️framework", "✏️s"],
+  "consumers": [
+    { "owner": "DevScript", "method": "parseStorybookSegments", "binding": "resolveActiveScopes", "caller": "runStorybook" },
+    { "owner": "VerifyScript", "method": "checkStorybookFreshness", "binding": "STORY_SCOPES", "caller": "runGate" }
+  ],
+  "runtimeMarker": "[DEBUG] router import completed without catalog enumeration"
+}

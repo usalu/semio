@@ -6,7 +6,7 @@
 //! Unlike every other stdio artifact, glTF has no `pub enum GltfMutation`: its vocabulary is a
 //! descriptor table (`GltfMutationLeafDescriptor`), and only 7 of the 120 real leaf directories on
 //! disk are both mounted as production modules AND listed in the descriptor assembly today — the
-//! ones this catalog declares. The other 113 are real, complete (`🦠️mutation`/`🔺️diff`/`↩️inverse`
+//! ones this catalog declares. The other 113 are real, complete (`🧬️operation`/`🔺️diff`/`↩️inverse`
 //! files, no stubs) but unmounted, which is `📦️glue.rs`-owned wiring out of this ticket's scope.
 //!
 //! **Why `json` (json-rust), not the `gltf` crate (1.4.1, MIT):** `gltf` is a credible, actively
@@ -31,7 +31,7 @@
 //! `json` is domain-BLIND (no glTF schema awareness at all, unlike `gltf`), so all seven mutations'
 //! actual semantics — index bounds, cycle rejection, duplicate-root rejection, alphaMode enum
 //! validity, `document/scene` remapping — are reimplemented from scratch below, independently of
-//! `../🧬️schema/🧬️mutations/*/🦠️mutation/🦀️component.rs`, operating on a hand-parsed GLB container
+//! `../🧬️schema/🧬️mutations/*/🧬️operation/🦀️component.rs`, operating on a hand-parsed GLB container
 //! and a plain `json::JsonValue` document tree rather than this subset's own `GltfSnapshot`.
 //!
 //! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
@@ -228,7 +228,7 @@ fn bool_param(params: &Json, key: &str) -> Result<bool, String> {
 
 //#region 🔖️Kinds
 /// 🦠️ `bind-node-child` — validated exactly as `../🧬️schema/🧬️mutations/bind-node-child/
-/// 🦠️mutation/🦀️component.rs` documents (index bounds, no self-parenting, no duplicate link, no
+/// 🧬️operation/🦀️component.rs` documents (index bounds, no self-parenting, no duplicate link, no
 /// cycle through the independently-walked `children` graph), reimplemented against the parsed tree.
 #[cfg(feature = "oracles")]
 fn bind_node_child(doc: &mut json::JsonValue, parent: usize, child: usize, position: usize) -> Result<(), String> {
@@ -282,7 +282,7 @@ fn unbind_node_child(doc: &mut json::JsonValue, parent: usize, child: usize) -> 
 
 /// 🦠️ `bind-scene-root-node` — an existing node becomes an additional root of a scene it is not
 /// already a root of. Mirrors production in NOT checking whether the node is already someone's
-/// child elsewhere: `../🧬️schema/🧬️mutations/bind-scene-root-node/🦠️mutation/🦀️component.rs`'s own
+/// child elsewhere: `../🧬️schema/🧬️mutations/bind-scene-root-node/🧬️operation/🦀️component.rs`'s own
 /// `validate` only rejects an out-of-range index or an already-present root.
 #[cfg(feature = "oracles")]
 fn bind_scene_root_node(doc: &mut json::JsonValue, scene: usize, node: usize, position: usize) -> Result<(), String> {
@@ -336,7 +336,7 @@ fn material_double_sided(doc: &json::JsonValue, index: usize) -> bool {
 
 /// 🦠️ `change-material-alpha-mode` — rejects an out-of-range material, an invalid enum spelling and
 /// a no-observable-change identity, exactly as `../🧬️schema/🧬️mutations/change-material-alpha-mode/
-/// 🦠️mutation/🦀️component.rs` does.
+/// 🧬️operation/🦀️component.rs` does.
 #[cfg(feature = "oracles")]
 fn change_material_alpha_mode(doc: &mut json::JsonValue, material: usize, alpha_mode: &str) -> Result<(), String> {
     if material >= top_level_len(doc, "materials") {
@@ -354,7 +354,7 @@ fn change_material_alpha_mode(doc: &mut json::JsonValue, material: usize, alpha_
 }
 
 /// 🦠️ `change-material-double-sided` — rejects an out-of-range material and a no-observable-change
-/// identity, exactly as `../🧬️schema/🧬️mutations/change-material-double-sided/🦠️mutation/
+/// identity, exactly as `../🧬️schema/🧬️mutations/change-material-double-sided/🧬️operation/
 /// 🦀️component.rs` does.
 #[cfg(feature = "oracles")]
 fn change_material_double_sided(doc: &mut json::JsonValue, material: usize, double_sided: bool) -> Result<(), String> {

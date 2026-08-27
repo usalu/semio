@@ -2,7 +2,7 @@
 //! document's single metadata string — no target to be missing; Warning `no-op` when the value is
 //! unchanged.
 
-use super::mutation::ChangeSchema;
+use super::ChangeSchema;
 use crate::artifacts::playground::standards::v1::subsets::any::schema::{diff::PlaygroundDiff, snapshot::PlaygroundSnapshot};
 
 //#region 🔖️Diff

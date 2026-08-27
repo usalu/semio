@@ -1,6 +1,0 @@
-# unbind-primitive-material diff facet.
-input GltfUnbindPrimitiveMaterialPayloadV1 {
-  mesh: Int!
-  primitive: Int!
-}
-type GltfUnbindPrimitiveMaterialDiffV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

@@ -4,46 +4,7 @@ version 1
 schema stdio.png.op
 start op
 
-# Real binary op-frame `protocol::OpBinary::encode_op`/`decode_op` NOW emit for `PngMutation` —
-# upgraded, this program, from the F6-era `print_op().into_bytes()` text-as-binary shortcut
-# (see this artifact's report). `tag u8` is the mutation's own ordinal (this enum cannot use
-# `#[derive(dsl::DslOps)]` — `SetTransparency`/`SetBackground` carry genuine data-carrying enums
-# directly, `SetSnapshot` transitively via `PngSnapshot`, see 🧬️mutations/🦀️component.rs's own
-# doc comment — so the ordinal is hand-assigned, declaration order: NoMutation=0,
-# SetSnapshot=1, SetHeader=2, SetPalette=3, SetTransparency=4, SetGamma=5,
-# SetChromaticities=6, SetSrgbIntent=7, SetPhysicalDims=8, SetTimestamp=9, SetBackground=10,
-# InsertTextChunk=11, RemoveTextChunk=12, SetTextChunk=13, SetPixels=14,
-# InsertUnknownChunk=15, RemoveUnknownChunk=16). Every genuinely scalar field below (the
-# ordinal, `index`, and `SetHeader`'s five IHDR fields) is individually, honestly byte-walked
-# and validated. Every OTHER field carries a nested, tri-state-or-enum-shaped payload
-# (`Option<T>`/`Option<Option<T>>`/`PngTransparency`/`PngBackground`/`PngTextChunk`/`PngChunk`/
-# a whole `PngSnapshot`) — one length-prefixed opaque `bytes` tail per arm, deliberately placed
-# LAST so it can honestly consume exactly its own declared span with no further length prefix
-# needed at the protocol-description level. `Prim::Ref` to a struct/enum still unconditionally
-# errors at walk time (confirmed unchanged since P2-M2) so these nested shapes aren't further
-# protocol-walkable field-by-field — the Rust `encode_op`/`decode_op` implementation IS
-# genuinely, fully structured real binary (see 🧬️mutations/🦀️component.rs's
-# `RealBinaryOpFrame` region), this is purely a limit on how deep the PROTOCOL DESCRIPTION
-# itself can validate structurally (same documented limitation as every other stdio pilot's
-# own nested-payload arm, e.g. csv's `snapshot bytes`/`record bytes`).
+# Direct identities: change-header=2, replace-palette=3, change-transparency=4, change-gamma=5, change-chromaticities=6, change-srgb-intent=7, change-physical-dims=8, change-timestamp=9, change-background=10, insert-text-chunk=11, remove-text-chunk=12, replace-text-chunk=13, replace-pixels=14, insert-unknown-chunk=15, remove-unknown-chunk=16
 framing record
-repeat op {
-tag u8
-arm 0 { }
-arm 1 { snapshot bytes }
-arm 2 { width u32 height u32 bit_depth u8 color_type u8 interlace u8 }
-arm 3 { plte bytes }
-arm 4 { trns bytes }
-arm 5 { gama bytes }
-arm 6 { chrm bytes }
-arm 7 { srgb bytes }
-arm 8 { phys bytes }
-arm 9 { time bytes }
-arm 10 { bkgd bytes }
-arm 11 { index varint chunk bytes }
-arm 12 { index varint }
-arm 13 { index varint chunk bytes }
-arm 14 { pixels bytes }
-arm 15 { index varint chunk bytes }
-arm 16 { index varint }
-}
+header fixed 2
+chain payload bytes

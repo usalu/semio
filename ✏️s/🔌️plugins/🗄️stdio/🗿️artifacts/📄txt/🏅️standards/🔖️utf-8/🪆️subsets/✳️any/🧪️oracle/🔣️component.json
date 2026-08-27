@@ -24,20 +24,37 @@
       "subsetDirectoryName": "✳️any",
       "vectors": [
         {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📄set-snapshot",
-          "mutationDirectoryName": "📄set-snapshot",
-          "scenarios": [
-            {
-              "id": "appends-a-third-line-and-switches-to-crlf",
-              "directoryName": "🧪️appends-a-third-line-and-switches-to-crlf"
-            }
-          ]
+          "mutationId": "set-trailing-newline",
+          "sourceMutationDirectoryName": "✏️set-trailing-newline",
+          "mutationDirectoryName": "✏️set-trailing-newline",
+          "scenarios": []
+        },
+        {
+          "mutationId": "set-line-ending",
+          "sourceMutationDirectoryName": "✏️set-line-ending",
+          "mutationDirectoryName": "✏️set-line-ending",
+          "scenarios": []
+        },
+        {
+          "mutationId": "insert-line",
+          "sourceMutationDirectoryName": "📥️insert-line",
+          "mutationDirectoryName": "📥️insert-line",
+          "scenarios": []
+        },
+        {
+          "mutationId": "remove-line",
+          "sourceMutationDirectoryName": "🗑️remove-line",
+          "mutationDirectoryName": "🗑️remove-line",
+          "scenarios": []
+        },
+        {
+          "mutationId": "set-line",
+          "sourceMutationDirectoryName": "✏️set-line",
+          "mutationDirectoryName": "✏️set-line",
+          "scenarios": []
         }
       ],
       "kinds": [
-        "no-mutation",
-        "set-snapshot",
         "set-trailing-newline",
         "set-line-ending",
         "insert-line",

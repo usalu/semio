@@ -3,22 +3,9 @@ grammar stdio.pdf.mutations
 start op
 comment none
 
-# P2-FG3: real one-line `OpText::print_op`/`parse_op` shape for `stdio.pdf` (1.4)'s hand-rolled
-# `PdfMutation` (../../🦀️component.rs's `OpCodecs` region). Every keyword and value production
-# below is copied verbatim from that file's own `format!(...)` call sites, never guessed.
-#
-# `#[derive(dsl::DslOps)]` was DROPPED for this facet in ticket
-# 26/08/23/END-TO-END-TESTING-REFACTOR when `PdfSnapshot` grew a real page tree: a derived printer
-# chooses the payload's token shape, and this file has to state that shape production for
-# production for `ops_grammar_conformance_law` to mean anything. Hand-rolling the printer makes
-# this grammar a transcription of real call sites instead of a transcription of a `[DEBUG]` dump.
-# The sibling 1.7 standard's own mutations grammar is written the same way, for the same reason.
-op = no-mutation | set-snapshot
-no-mutation = "no-mutation"
-
-# `SetSnapshot`'s whole `PdfSnapshot` payload is carried as lowercase hexadecimal over its own
-# binary encoding (`enc_snapshot_bin`, shared verbatim with the diff facet so one structure has
-# one encoding): schema as a length-prefixed string, a varint page count, then each `PageDoc` as
-# two little-endian `f64`s and a length-prefixed text.
-set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
-snapshot-lit = hex
+op = insert-page | remove-page | move-page | resize-page | replace-page-text
+insert-page = "insert-page" "payload" "=" hex
+remove-page = "remove-page" "payload" "=" hex
+move-page = "move-page" "payload" "=" hex
+resize-page = "resize-page" "payload" "=" hex
+replace-page-text = "replace-page-text" "payload" "=" hex

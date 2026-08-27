@@ -8,7 +8,7 @@ pub const FLOW_PLAY_BODY_INSPECTOR: &str = "flow.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -27,7 +27,7 @@ pub async fn definition() -> PanelTabDefinition {
 /// `FlowPlayApp::handle`) — dropped rather than shown stale, mirroring lowpoly's identical
 /// `render`/status-line note for the exact same gap. Peer/self selection surfaces generically off the
 /// declared domain regardless.
-pub async fn render(labels: &FlowPlayLabels) -> UiNode {
+pub fn render(labels: &FlowPlayLabels) -> UiNode {
     ui_declarative_sections_to_tree(&[UiSectionNode {
         presence: UiPresence::default(),
         id: "flow-play-inspector.empty".into(),

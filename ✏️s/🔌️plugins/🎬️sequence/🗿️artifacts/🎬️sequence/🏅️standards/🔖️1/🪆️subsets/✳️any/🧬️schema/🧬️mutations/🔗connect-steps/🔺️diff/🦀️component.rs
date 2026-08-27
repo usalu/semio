@@ -3,7 +3,7 @@ use crate::artifacts::sequence::diff::SequenceDiff;
 use crate::artifacts::sequence::{diff_replace_content, sequence_working_scene, SequenceEdge, SequenceSnapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::mutation::ConnectSteps, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
+pub async fn diff(payload: &super::ConnectSteps, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {
     let scene = sequence_working_scene(base);
     if !scene.steps.iter().any(|step| step.id == payload.from) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Step \"{}\" does not exist.", payload.from), [payload.from.clone()]);

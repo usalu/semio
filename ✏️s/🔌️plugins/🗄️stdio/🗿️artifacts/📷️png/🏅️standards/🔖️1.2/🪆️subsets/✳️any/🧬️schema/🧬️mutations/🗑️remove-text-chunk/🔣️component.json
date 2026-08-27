@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-text-chunk",
+  "semanticKind": "remove-text-chunk",
+  "displayName": "Remove Text Chunk",
+  "emoji": "🗑️",
+  "aggregateVariant": "RemoveTextChunk",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "remove-text-chunk",
+  "binaryTag": 12,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

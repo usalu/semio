@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.flow-note.action-cohort.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "owner", "source", "routeCount", "retainedRoutes", "frameworkOwnedRoutes", "groups", "globals", "scanThenMonolithRoutes", "laws"],
+  "properties": {
+    "schema": { "enum": ["semio.flow-note.action-cohort.v1", "semio.note.action-cohort.v1"] },
+    "owner": { "enum": ["FlowPlayApp", "NotePlayApp"] },
+    "source": { "type": "string", "minLength": 1 },
+    "routeCount": { "type": "integer", "minimum": 1 },
+    "retainedRoutes": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "frameworkOwnedRoutes": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "groups": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["status", "lanes", "routes"],
+        "properties": {
+          "status": { "enum": ["Migrated", "BatchOnlyPendingRewrite"] },
+          "lanes": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "enum": ["Artifact", "Config", "Draft", "Presence", "Transient", "Child", "HostOnly"] }
+          },
+          "routes": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "blocker": { "type": "string", "minLength": 1 }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "status": { "const": "BatchOnlyPendingRewrite" } } },
+            "then": { "properties": { "blocker": { "type": "string", "minLength": 1 } }, "required": ["blocker"] },
+            "else": { "properties": { "blocker": false } }
+          }
+        ]
+      }
+    },
+    "globals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["symbol", "scope", "blocker"],
+        "properties": {
+          "symbol": { "type": "string", "minLength": 1 },
+          "scope": { "enum": ["framework-process", "plugin-process"] },
+          "blocker": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "scanThenMonolithRoutes": { "type": "array", "maxItems": 0 },
+    "blockedSeams": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "materialization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stringChunkBytes", "typedTextOwnerPresent", "typedTextOwnerAbsent", "cancelDuringMetadataCopy", "nestedSnapshotRoot", "nestedBlockTree", "assetMapCursor", "linkedArtifactCursor", "progressPreview", "abandonmentTerminalEmptiness"],
+      "properties": {
+        "stringChunkBytes": { "type": "integer", "minimum": 1 },
+        "typedTextOwnerPresent": { "const": true },
+        "typedTextOwnerAbsent": { "const": true },
+        "cancelDuringMetadataCopy": { "const": true },
+        "nestedSnapshotRoot": { "const": true },
+        "nestedBlockTree": { "const": true },
+        "assetMapCursor": { "const": true },
+        "linkedArtifactCursor": { "const": true },
+        "progressPreview": { "const": true },
+        "abandonmentTerminalEmptiness": { "const": true }
+      }
+    },
+    "laws": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["activationBeforeDecodeRejected", "exactCensus", "forgedProofRejected", "factoryRequiresContract", "hostOnlyExclusive", "storeLaneRequiresPreparation"],
+      "properties": {
+        "activationBeforeDecodeRejected": { "const": true },
+        "exactCensus": { "const": true },
+        "forgedProofRejected": { "const": true },
+        "factoryRequiresContract": { "const": true },
+        "exactArtifactScalarReducer": { "const": true },
+        "gridSpacingInvariantPreserved": { "const": true },
+        "artifactPreparationRejectsOtherMutations": { "const": true },
+        "hostOnlyExclusive": { "const": true },
+        "operationFreshness": { "const": true },
+        "storeLaneRequiresPreparation": { "const": true },
+        "storeAuthorityOwnsDigest": { "const": true },
+        "terminalWitnessRequired": { "const": true }
+      }
+    }
+  }
+}

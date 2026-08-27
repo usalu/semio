@@ -27,7 +27,7 @@ use crate::artifacts::pdf::examples::bachelor_thesis::{source, FIXTURE_BYTES};
 use crate::artifacts::pdf::standards::v1_7::subsets::any::io::{decode_pdf, encode_pdf};
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::Pdf17Inference;
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, PdfMutation};
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, AppendPageContent, PdfMutation};
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfBuilderConstruction as PdfBuilder;
 use protocol::command::DiffAlgebra;
@@ -117,12 +117,7 @@ async fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_
     assert!(empty.is_empty());
     assert_eq!(encode_pdf(&empty.apply(&original).unwrap()).expect("self-diff logical export"), canonical);
 
-    let mut no_op = original.clone();
-    let no_op_diff = apply_pdf_mutation(&mut no_op, &PdfMutation::NoMutation);
-    assert!(no_op_diff.diff().is_empty());
-    assert_eq!(encode_pdf(&no_op).expect("no-op mutation logical export"), canonical);
-
-    let mutation = PdfMutation::AppendPageContent { index: 0, text: "dirty".into() };
+    let mutation = PdfMutation::AppendPageContent(AppendPageContent { index: 0, text: "dirty".into() });
     let mutation_frame = mutation.encode_op().expect("encode structural mutation");
     let restored_mutation = PdfMutation::decode_op(&mutation_frame).expect("decode structural mutation");
     assert_eq!(restored_mutation, mutation);

@@ -1,0 +1,132 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.playbook.generation-root.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "grants",
+    "generation",
+    "expected"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.playbook.generation-root.v1"
+    },
+    "grants": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4096
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "generation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generations",
+        "selectedGenerationId",
+        "previewText"
+      ],
+      "properties": {
+        "generations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name",
+              "values"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "values": {
+                "type": "object",
+                "additionalProperties": {
+                  "$ref": "#/definitions/value"
+                }
+              }
+            }
+          }
+        },
+        "selectedGenerationId": {
+          "type": "string"
+        },
+        "previewText": {
+          "type": "string"
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sharesAllocation",
+        "cloneCount",
+        "retirementRootDrops",
+        "liveDropRejected",
+        "unwindDoesNotRecurse",
+        "zeroGrantPreservesOwner"
+      ],
+      "properties": {
+        "sharesAllocation": {
+          "const": true
+        },
+        "cloneCount": {
+          "const": 2
+        },
+        "retirementRootDrops": {
+          "const": 1
+        },
+        "liveDropRejected": {
+          "const": true
+        },
+        "unwindDoesNotRecurse": {
+          "const": true
+        },
+        "zeroGrantPreservesOwner": {
+          "const": true
+        }
+      }
+    }
+  },
+  "definitions": {
+    "value": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/value"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/value"
+          }
+        }
+      ]
+    }
+  }
+}

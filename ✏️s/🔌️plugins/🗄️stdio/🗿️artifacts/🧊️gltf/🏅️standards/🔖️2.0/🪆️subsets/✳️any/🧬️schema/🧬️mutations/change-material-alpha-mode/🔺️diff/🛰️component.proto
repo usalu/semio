@@ -1,4 +1,0 @@
-syntax = "proto3";
-package stdio.gltf.mutation;
-enum GltfChangeMaterialAlphaModeDiffValue { GLTF_CHANGE_MATERIAL_ALPHA_MODE_DIFF_VALUE_OPAQUE = 0; GLTF_CHANGE_MATERIAL_ALPHA_MODE_DIFF_VALUE_MASK = 1; GLTF_CHANGE_MATERIAL_ALPHA_MODE_DIFF_VALUE_BLEND = 2; }
-message GltfChangeMaterialAlphaModeDiffV1 { uint64 material = 1; GltfChangeMaterialAlphaModeDiffValue expected_alpha_mode = 2; GltfChangeMaterialAlphaModeDiffValue alpha_mode = 3; repeated string touched_paths = 4; }

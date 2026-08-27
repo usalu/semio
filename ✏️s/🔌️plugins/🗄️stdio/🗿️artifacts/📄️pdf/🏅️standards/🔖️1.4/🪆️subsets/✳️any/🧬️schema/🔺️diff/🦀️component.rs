@@ -6,7 +6,7 @@
 //! `removed`/`modified`/`added`, `modified` carrying a sparse [`PdfPageDiff`] and `added` carrying
 //! a whole [`PageDoc`]. That is what makes "delete page 12" a three-byte diff instead of a
 //! whole-document replacement, and it is why there is still no `snapshot: Option<PdfSnapshot>`
-//! full-replace slot on `PdfDiff` — even `SetSnapshot`'s diff is `between(base, next)`.
+//! full-replace slot on `PdfDiff`; document differences stay sparse and page-addressed.
 //!
 //! ✍️ **Why the codecs are handcrafted rather than derived.** `#[derive(dsl::DslDiff)]` generates a
 //! printer whose exact token shape this module does not choose, and the three facet files next to
@@ -356,12 +356,6 @@ impl DiffAlgebra<PdfSnapshot> for PdfDiff {
     }
 }
 
-/// 🧩 `SetSnapshot`'s diff is the sparse page-by-page `between(base, next)` — no full-replace slot
-/// exists on `PdfDiff` to short-circuit into.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &PdfSnapshot, next: &PdfSnapshot) -> PdfDiff {
-    PdfDiff::between(base, next)
-}
 //#endregion 🔖️Diff
 
 //#region 🔖️TextCodec
@@ -521,27 +515,6 @@ pub(crate) fn dec_page_bin(reader: &mut store::ByteReader<'_>) -> Result<PageDoc
     let width = reader.read_f64_le().map_err(|error| error.to_string())?;
     let height = reader.read_f64_le().map_err(|error| error.to_string())?;
     Ok(PageDoc { width, height, text: read_str_lp(reader)? })
-}
-/// 📸️ The whole snapshot as binary — schema, then a varint page count, then each page. Shared with
-/// the mutations facet, whose `SetSnapshot` carries exactly this payload (hex-encoded in the text
-/// form), so the two never drift apart into two encodings of one structure.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_snapshot_bin(snapshot: &PdfSnapshot, out: &mut Vec<u8>) {
-    write_str_lp(out, &snapshot.schema);
-    store::pack_rt::write_varint_u64(out, snapshot.pages.len() as u64);
-    for page in &snapshot.pages {
-        enc_page_bin(page, out);
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfSnapshot, String> {
-    let schema = read_str_lp(reader)?;
-    let count = reader.read_varint_u64().map_err(|error| error.to_string())?;
-    let mut pages = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        pages.push(dec_page_bin(reader)?);
-    }
-    Ok(PdfSnapshot { schema, pages })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

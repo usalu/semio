@@ -825,7 +825,7 @@ function InkTextEditorOverlay({ block, screenBounds, onCommit, onCancel }: { rea
     range.selectNodeContents(editor);
     selection?.removeAllRanges();
     selection?.addRange(range);
-    const onKeyDown = (event: KeyboardEvent) => {
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
         onCancel();
@@ -1368,7 +1368,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
         const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
-            menu: { id: "inkCanvas" },
+            menu: { id: "inkCanvas", args: null },
             surface: {
               surfaceId: node.surfaceId,
               kind: "inkCanvas",

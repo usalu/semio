@@ -23,13 +23,13 @@ pub struct DuplicateWidget {
 impl CompositeMutationKind<FlowSnapshot, FlowMutation> for DuplicateWidget {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "duplicate", entity: "widget", kind: "duplicate-widget", record: "DuplicatedWidget" };
 
-    async fn plan(&self, base: &FlowSnapshot, planner: &mut Planner<FlowSnapshot, FlowMutation>) -> Result<(), PlanError> {
+    fn plan(&self, base: &FlowSnapshot, planner: &mut Planner<FlowSnapshot, FlowMutation>) -> Result<(), PlanError> {
         super::plan::plan(self, base, planner)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Duplicate widget \"{}\"", self.source_id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.source_id.clone(), self.new_id.clone()]
     }
 }

@@ -18,7 +18,9 @@ use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, M
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{
     FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,
 };
-use std::collections::{BTreeMap, HashMap};
+use serde::Serialize;
+use std::collections::HashMap;
+use std::io::Write;
 use std::sync::Arc;
 
 //#region 🔖️Types
@@ -42,13 +44,35 @@ pub const FLOW_DIALECT: Dialect = Dialect { artifact_kind: "s.flow.flow", standa
 /// `FlowSnapshot`.
 pub type FlowContentChild = store::ArtifactChild<SemioFlowSnapshot>;
 
+struct FlowContentHashWriter {
+    hasher: semio_framework_hash::Sha256,
+    written: usize,
+    maximum_bytes: usize,
+}
+
+impl Write for FlowContentHashWriter {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        let next = self.written.checked_add(bytes.len()).ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidData, "Flow content byte count overflow"))?;
+        if next > self.maximum_bytes {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Flow content exceeds its retained byte cap"));
+        }
+        self.hasher.update(bytes);
+        self.written = next;
+        Ok(bytes.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
 /// 🎛️ Per-widget-variant fields flattened into id-ordered string key/value `FlowParam`s — structured
 /// sub-values (`Dictionary`, port lists, `expanded` sets, cluster `Tree`/`FlowGui`) are JSON-encoded
 /// into the string value, the same "honest string boundary" `SemioFlowSnapshot`'s own doc comment
 /// describes for a generic flow DAG's per-node config. Every `Widget` field is covered — this is a
 /// real lossless mapping, not a stub.
-async fn widget_params(widget: &Widget) -> Vec<SemioFlowParam> {
-    async fn p(key: &str, value: String) -> SemioFlowParam {
+fn widget_params(widget: &Widget) -> Vec<SemioFlowParam> {
+    fn p(key: &str, value: String) -> SemioFlowParam {
         SemioFlowParam { key: key.into(), value }
     }
     match widget {
@@ -59,7 +83,7 @@ async fn widget_params(widget: &Widget) -> Vec<SemioFlowParam> {
             p("outputPorts", serde_json::to_string(output_ports).unwrap_or_default()),
             p("preview", preview.to_string()),
         ],
-        Widget::InputSlider { value, min, max, step, .. } => vec![p("value", value.to_string()), p("min", min.to_string()), p("max", max.to_string()), p("step", step.to_string())],
+        Widget::InputSlider { label, value, min, max, step, .. } => vec![p("label", label.clone()), p("value", value.to_string()), p("min", min.to_string()), p("max", max.to_string()), p("step", step.to_string())],
         Widget::InputNote { text, .. } => vec![p("text", text.clone())],
         Widget::InputImage { src, .. } => vec![p("src", src.clone())],
         Widget::Variable { name, schema, .. } => vec![p("name", name.clone()), p("schema", schema.clone())],
@@ -73,7 +97,7 @@ async fn widget_params(widget: &Widget) -> Vec<SemioFlowParam> {
 /// 🌉 Inverse of [`widget_params`] — reconstructs the exact `Widget` variant from its `kind` tag and
 /// flattened params; an unrecognized `kind` honestly surfaces as a note carrying the raw tag rather
 /// than silently dropping the node.
-async fn widget_from_node(node: &SemioFlowNode) -> Widget {
+fn widget_from_node(node: &SemioFlowNode) -> Widget {
     let params: HashMap<&str, &str> = node.params.iter().map(|param| (param.key.as_str(), param.value.as_str())).collect();
     let get = |key: &str| params.get(key).map(|value| value.to_string()).unwrap_or_default();
     let id = node.id.clone();
@@ -86,7 +110,7 @@ async fn widget_from_node(node: &SemioFlowNode) -> Widget {
             output_ports: serde_json::from_str(&get("outputPorts")).unwrap_or_default(),
             preview: get("preview").parse().unwrap_or(true),
         },
-        "inputSlider" => Widget::InputSlider { id, value: get("value").parse().unwrap_or(0.0), min: get("min").parse().unwrap_or(0.0), max: get("max").parse().unwrap_or(10.0), step: get("step").parse().unwrap_or(0.1) },
+        "inputSlider" => Widget::InputSlider { id, label: node.label.clone(), value: get("value").parse().unwrap_or(0.0), min: get("min").parse().unwrap_or(0.0), max: get("max").parse().unwrap_or(10.0), step: get("step").parse().unwrap_or(0.1) },
         "inputNote" => Widget::InputNote { id, text: get("text") },
         "inputImage" => Widget::InputImage { id, src: get("src") },
         "variable" => Widget::Variable { id, name: get("name"), schema: get("schema") },
@@ -105,14 +129,15 @@ async fn widget_from_node(node: &SemioFlowNode) -> Widget {
 /// [`widget_params`]/[`widget_from_node`]; `layout` merges directly into `FlowNode::position`;
 /// `SynapseSpec` maps onto `FlowEdge` 1:1 (`kind` is a constant "data" tag on encode, discarded on
 /// decode — lossless, since `SynapseSpec` carries no `kind` of its own to lose).
-pub async fn flow_content_snapshot_from_working(widgets: &[Widget], synapses: &[SynapseSpec], layout: &BTreeMap<String, WidgetLayout>) -> SemioFlowSnapshot {
+pub fn flow_content_snapshot_from_working(widgets: &[Widget], synapses: &[SynapseSpec], layout: &flow::OrderedMap<WidgetLayout>) -> SemioFlowSnapshot {
     let nodes = widgets
         .iter()
         .map(|widget| {
             let id = crate::artifacts::flow::schema::widget_id(widget).to_string();
             let kind = crate::artifacts::flow::schema::widget_kind_label(widget).to_string();
             let position = layout.get(&id).map(|entry| semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2 { x: entry.x, y: entry.y }).unwrap_or_default();
-            SemioFlowNode { id: id.clone(), kind: kind.clone(), label: kind, params: widget_params(widget), position }
+            let label = match widget { Widget::InputSlider { label, .. } => label.clone(), _ => kind.clone() };
+            SemioFlowNode { id: id.clone(), kind, label, params: widget_params(widget), position }
         })
         .collect();
     let edges = synapses
@@ -123,9 +148,9 @@ pub async fn flow_content_snapshot_from_working(widgets: &[Widget], synapses: &[
 }
 
 /// 🌉 Inverse of [`flow_content_snapshot_from_working`].
-pub async fn working_from_flow_content_snapshot(content: &SemioFlowSnapshot) -> (Vec<Widget>, Vec<SynapseSpec>, BTreeMap<String, WidgetLayout>) {
+pub fn working_from_flow_content_snapshot(content: &SemioFlowSnapshot) -> (Vec<Widget>, Vec<SynapseSpec>, flow::OrderedMap<WidgetLayout>) {
     let mut widgets = Vec::with_capacity(content.nodes.len());
-    let mut layout = BTreeMap::new();
+    let mut layout = flow::OrderedMap::new();
     for node in &content.nodes {
         widgets.push(widget_from_node(node));
         layout.insert(node.id.clone(), WidgetLayout { x: node.position.x, y: node.position.y });
@@ -137,17 +162,29 @@ pub async fn working_from_flow_content_snapshot(content: &SemioFlowSnapshot) -> 
 /// 🕸️ Deterministic content-addressed CHILD handle for the flow content — same `(child_id, target)`
 /// for identical `(widgets, synapses, layout)`, a different pair once the content actually changes;
 /// mirrors writer's `document_child_handle`/cad's `cad_model_child_handle`.
-pub async fn flow_content_child_handle(widgets: &[Widget], synapses: &[SynapseSpec], layout: &BTreeMap<String, WidgetLayout>) -> FlowContentChild {
-    use std::hash::{Hash, Hasher};
-    let snapshot = flow_content_snapshot_from_working(widgets, synapses, layout);
-    let content_json = serde_json::to_string(&snapshot).unwrap_or_default();
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    let content_hash = hasher.finish();
-    let child_id = format!("flow-content-{content_hash:016x}");
+pub fn flow_content_child_handle(widgets: &[Widget], synapses: &[SynapseSpec], layout: &flow::OrderedMap<WidgetLayout>) -> FlowContentChild {
+    flow_content_child_handle_bounded(widgets, synapses, layout, usize::MAX).expect("Flow content serialization")
+}
+
+/// 🌊️ Mints a content-addressed child while enforcing the caller's exact serialization cap without staging JSON.
+pub fn flow_content_child_handle_bounded(widgets: &[Widget], synapses: &[SynapseSpec], layout: &flow::OrderedMap<WidgetLayout>, maximum_bytes: usize) -> Result<FlowContentChild, String> {
+    #[derive(Serialize)]
+    struct Projection<'a> { widgets: &'a [Widget], synapses: &'a [SynapseSpec], layout: &'a flow::OrderedMap<WidgetLayout> }
+    let mut writer = FlowContentHashWriter { hasher: semio_framework_hash::Sha256::new(), written: 0, maximum_bytes };
+    writer.hasher.update(FLOW_CONTENT_ID_DOMAIN);
+    serde_json::to_writer(&mut writer, &Projection { widgets, synapses, layout }).map_err(|error| error.to_string())?;
+    Ok(flow_content_child_from_digest(writer.hasher.finalize(), Arc::new(FlowWorkingScene { widgets: widgets.to_vec(), synapses: synapses.to_vec(), layout: layout.clone() })))
+}
+
+/// 🪪️ Portable content identity framing; scene bytes follow this NUL-terminated UTF-8 domain.
+pub const FLOW_CONTENT_ID_DOMAIN: &[u8] = b"semio.flow.scene.sha256.v1\0";
+
+/// 🪆️ Adopts the exact prepared scene allocation after its complete canonical digest is known.
+pub(crate) fn flow_content_child_from_digest(digest: [u8; 32], scene: Arc<FlowWorkingScene>) -> FlowContentChild {
+    let child_id = format!("flow-content-sha256-{}", semio_framework_hash::hex_lower(&digest));
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
     let target = store::os_io::ArtifactRef { artifact_id: "flow-content".into(), dialect };
-    store::ArtifactChild::new(child_id, target).with_local_owner(Arc::new(FlowWorkingScene { widgets: widgets.to_vec(), synapses: synapses.to_vec(), layout: layout.clone() }))
+    store::ArtifactChild::new(child_id, target).with_local_owner(scene)
 }
 //#endregion 🔖️ContentBridge
 
@@ -156,32 +193,32 @@ pub async fn flow_content_child_handle(widgets: &[Widget], synapses: &[SynapseSp
 /// widgets/synapses/layout. The typed owner is retained by the exact `ArtifactChild`, omitted from
 /// every wire codec, and dies with its final child/snapshot clone. Durable child-id reuse therefore
 /// cannot replace or resolve another app instance's scene.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize)]
 pub struct FlowWorkingScene {
     pub widgets: Vec<Widget>,
     pub synapses: Vec<SynapseSpec>,
-    pub layout: BTreeMap<String, WidgetLayout>,
+    pub layout: flow::OrderedMap<WidgetLayout>,
 }
 
 /// 📝 Replaces one exact child handle's local scene owner without publishing process state.
-pub fn cache_flow_content(handle: &mut FlowContentChild, widgets: Vec<Widget>, synapses: Vec<SynapseSpec>, layout: BTreeMap<String, WidgetLayout>) {
+pub fn cache_flow_content(handle: &mut FlowContentChild, widgets: Vec<Widget>, synapses: Vec<SynapseSpec>, layout: flow::OrderedMap<WidgetLayout>) {
     handle.set_local_owner(Arc::new(FlowWorkingScene { widgets, synapses, layout }));
 }
 
 /// 🔎 Reads the exact child-local live scene, failing soft only for a wire-decoded unresolved handle.
-pub async fn flow_working_scene_for_handle(handle: &FlowContentChild) -> FlowWorkingScene {
+pub fn flow_working_scene_for_handle(handle: &FlowContentChild) -> FlowWorkingScene {
     handle.local_owner::<FlowWorkingScene>().map(|scene| (*scene).clone()).unwrap_or_default()
 }
 
 /// 🔎 Reads the current document's live widgets/synapses/layout off its `content` child handle — the
 /// single read call site every mutation diff/inverse in this plugin uses instead of the old
 /// `snapshot.widgets`/`.synapses`/`.layout` field access.
-pub async fn flow_working_scene(snapshot: &FlowSnapshot) -> FlowWorkingScene {
+pub fn flow_working_scene(snapshot: &FlowSnapshot) -> FlowWorkingScene {
     flow_working_scene_for_handle(&snapshot.content)
 }
 
 /// 🏗️ Mints a new content-addressed handle with its exact artifact-instance scene owner.
-pub async fn flow_content_child_handle_and_cache(widgets: Vec<Widget>, synapses: Vec<SynapseSpec>, layout: BTreeMap<String, WidgetLayout>) -> FlowContentChild {
+pub fn flow_content_child_handle_and_cache(widgets: Vec<Widget>, synapses: Vec<SynapseSpec>, layout: flow::OrderedMap<WidgetLayout>) -> FlowContentChild {
     flow_content_child_handle(&widgets, &synapses, &layout)
 }
 //#endregion 🔖️WorkingScene
@@ -189,7 +226,7 @@ pub async fn flow_content_child_handle_and_cache(widgets: Vec<Widget>, synapses:
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::editor::flow::create_flow_app`'s `🔖️Manifest` region.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.flow".into(),
         name: "Flow".into(),
@@ -214,7 +251,7 @@ mod tests {
 
     fn owner_handle(text: &str) -> FlowContentChild {
         let target = store::os_io::ArtifactRef { artifact_id: "flow-content".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() } };
-        let scene = FlowWorkingScene { widgets: vec![Widget::InputNote { id: "note".into(), text: text.into() }], synapses: Vec::new(), layout: BTreeMap::new() };
+        let scene = FlowWorkingScene { widgets: vec![Widget::InputNote { id: "note".into(), text: text.into() }], synapses: Vec::new(), layout: flow::OrderedMap::new() };
         FlowContentChild::new("flow-content-reused".into(), target).with_local_owner(Arc::new(scene))
     }
 
@@ -296,10 +333,21 @@ mod tests {
             assert_eq!(layout.get(id), Some(entry));
         }
     }
+
+    #[test]
+    fn authored_slider_labels_survive_child_content_round_trip() {
+        let cases: serde_json::Value = serde_json::from_str(include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🏷️slider-labels.json")).unwrap();
+        for row in cases["cases"].as_array().unwrap() {
+            let widget: Widget = serde_json::from_value(row["widget"].clone()).unwrap();
+            let content = flow_content_snapshot_from_working(&[widget.clone()], &[], &flow::OrderedMap::new());
+            assert_eq!(content.nodes[0].label, row["expectedDagName"].as_str().unwrap());
+            assert_eq!(working_from_flow_content_snapshot(&content).0, [widget]);
+        }
+    }
 }
 //#endregion 🧪️Tests
 //#region 🔖️Declaration
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     ArtifactDefinition::new(ArtifactIdentity::parse("s.flow")?)
         .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.flow.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.flow.flow")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.flow.flow")?)?)?
@@ -329,7 +377,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
         .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.flow.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Flow")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Flow")?)?)
 }
 
-pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::EditorApp;
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::flow::schema::flow_artifact_schema_descriptor())

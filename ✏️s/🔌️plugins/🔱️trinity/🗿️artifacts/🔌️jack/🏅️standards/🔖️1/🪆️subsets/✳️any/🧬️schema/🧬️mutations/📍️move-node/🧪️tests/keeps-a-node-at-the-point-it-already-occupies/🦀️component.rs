@@ -18,8 +18,9 @@
 //! no-op compare. This case pins the third, so the first two must both be shown to pass.
 
 use crate::artifacts::jack::diff::JackDiff;
-use crate::artifacts::jack::mutations::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation, TrinityGraphMutation};
-use crate::artifacts::jack::{cache_jack_content, jack_working_scene, JackSnapshot, Node, PropertyBag};
+use crate::artifacts::jack::mutations::TrinityGraphMutation;
+use crate::artifacts::jack::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation};
+use crate::artifacts::jack::{materialize_jack_content, jack_working_scene, JackSnapshot, Node, PropertyBag};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -37,12 +38,12 @@ fn mutation() -> TrinityGraphMutation {
 /// 🌱️ The committed `⬅️before`, with its composed child resolved to a scene holding one node ALREADY
 /// at the payload's absolute `(x, y)`. Id and position are read straight off the committed payload.
 fn before() -> JackSnapshot {
-    let snapshot: JackSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: JackSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let TrinityGraphMutation::MoveNode(payload) = mutation() else {
         panic!("keeps-a-node-at-the-point-it-already-occupies's committed mutation must be a move-node");
     };
     let seeded = Node { id: payload.id.clone(), kind: "Piece".into(), name: "Capsule A".into(), x: payload.x, y: payload.y, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: Vec::new() };
-    cache_jack_content(&snapshot.content.child_id, vec![seeded], Vec::new());
+    materialize_jack_content(&mut snapshot.content, vec![seeded], Vec::new());
     snapshot
 }
 

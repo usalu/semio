@@ -1,5 +1,5 @@
 //! ↩️ Undo mutation for `delete-widget`: re-`create`s the widget at its base-state index, restores
-//! its layout entry, then re-`connect`s severed synapses in reverse dependency order (taxonomy
+//! its layout entry, then re-`connect`s severed synapses at ascending original indices (taxonomy
 //! `## Addressing convention` §5 — inverse always computed from `base`, never by inverting the diff
 //! structurally).
 use crate::artifacts::flow::schema::mutations::connect_widgets::mutation::ConnectWidgets;
@@ -12,7 +12,7 @@ use protocol::Identified;
 
 use super::mutation::DeleteWidget;
 
-pub async fn inverse(payload: &DeleteWidget, base: &FlowSnapshot) -> Vec<FlowMutation> {
+pub fn inverse(payload: &DeleteWidget, base: &FlowSnapshot) -> Vec<FlowMutation> {
     let scene = flow_working_scene(base);
     let Some(index) = scene.widgets.iter().position(|widget| widget.id() == &payload.id) else {
         return Vec::new();
@@ -24,9 +24,7 @@ pub async fn inverse(payload: &DeleteWidget, base: &FlowSnapshot) -> Vec<FlowMut
         inverses.push(FlowMutation::MoveWidgets(MoveWidgets { entries: vec![FlowLayoutEntry { id: payload.id.clone(), layout: Some(layout.clone()) }] }));
     }
 
-    let severed_indices: Vec<usize> = scene.synapses.iter().enumerate().filter(|(_, synapse)| synapse.from == payload.id || synapse.to == payload.id).map(|(index, _)| index).collect();
-    for &synapse_index in severed_indices.iter().rev() {
-        let synapse = &scene.synapses[synapse_index];
+    for (synapse_index, synapse) in scene.synapses.iter().enumerate().filter(|(_, synapse)| synapse.from == payload.id || synapse.to == payload.id) {
         inverses.push(FlowMutation::ConnectWidgets(ConnectWidgets { index: synapse_index, id: synapse.id.clone(), from: synapse.from.clone(), from_port: synapse.from_port.clone(), to: synapse.to.clone(), to_port: synapse.to_port.clone() }));
     }
 

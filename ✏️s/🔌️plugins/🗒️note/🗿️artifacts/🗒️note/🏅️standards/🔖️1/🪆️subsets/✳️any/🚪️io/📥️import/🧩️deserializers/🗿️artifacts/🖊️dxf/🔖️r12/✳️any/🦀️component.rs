@@ -2,7 +2,7 @@
 //! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Only `DxfEntity::Line` is
 //! mapped back to ink blocks — never a general DXF importer, so this hop is `IoFidelity::Lossy`.
 
-use crate::artifacts::note::schema::{create_note_id, empty_note_snapshot};
+use crate::artifacts::note::schema::{create_note_id, empty_note_snapshot, NoteIdOwner};
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
@@ -21,8 +21,9 @@ impl Deserializer<NoteSnapshot> for DxfIntoNote {
             return Err(IoError { message: "DxfIntoNote: expected a text dxf payload".to_string(), diagnostics: Vec::new() });
         };
         let dxf = parse_dxf_document(text).map_err(|error| IoError { message: format!("DxfIntoNote: {error}"), diagnostics: Vec::new() })?;
+        let mut ids = NoteIdOwner::new(format!("dxf-import:{}", text.len()), 0);
         let mut snap = empty_note_snapshot();
-        snap.id = create_note_id("dxf-import");
+        snap.id = create_note_id(&mut ids, "dxf-import");
         snap.title = Some("Imported DXF".into());
         let mut i = 0usize;
         for entity in &dxf.entities {

@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.png.mutation;
+// 🧬️ insert-unknown-chunk/InsertUnknownChunk; complex fields follow the direct payload schema.
+message InsertUnknownChunkMutation { uint64 index = 1; bytes chunk = 2; }

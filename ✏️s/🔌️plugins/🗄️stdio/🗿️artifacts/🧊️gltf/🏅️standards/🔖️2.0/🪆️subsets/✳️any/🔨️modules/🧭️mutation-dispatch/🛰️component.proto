@@ -1,7 +1,0 @@
-syntax = "proto3";
-package semio.s_stdio_gltf.mutation;
-
-enum GltfMutationPhase { GLTF_MUTATION_PHASE_UNSPECIFIED = 0; GLTF_MUTATION_PHASE_MUTATION = 1; GLTF_MUTATION_PHASE_DIFF = 2; GLTF_MUTATION_PHASE_INVERSE = 3; }
-message GltfMutation { string command_id = 1; uint32 version = 2; GltfMutationPhase phase = 3; bytes payload = 4; }
-message GltfDiffEnvelope { string command_id = 1; uint32 version = 2; GltfMutationPhase phase = 3; bytes payload = 4; repeated string touched_paths = 5; }
-message GltfMutationRejection { string code = 1; string path = 2; string detail = 3; }

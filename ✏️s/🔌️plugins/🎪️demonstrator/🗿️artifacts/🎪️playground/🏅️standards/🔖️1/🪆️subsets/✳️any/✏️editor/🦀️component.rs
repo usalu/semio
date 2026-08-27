@@ -18,7 +18,7 @@ use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactory, Too
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, InteractiveJobClassification, Label, LocalizedLabel,
+    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, InteractiveJobClassification, Label, LocalizedLabel,
     NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult,
 };
 use serde_json::Value;
@@ -118,8 +118,176 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for PlaygroundCommandJo
     type Owner = semio_framework_plugin::EditorApp<PlaygroundEditor>;
     const TOOL_IDS: &'static [&'static str] = PLAYGROUND_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = PLAYGROUND_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] =
+        &[ArtifactToolPublicationContract { tool_id: "changeSchema", lanes: &[ArtifactToolPublicationLane::Artifact] }];
 }
 //#endregion 🧵️RetainedCommands
+
+//#region 📬️StorePreparation
+const PLAYGROUND_STORE_MAXIMUM_BYTES: usize = 8_192;
+
+struct PlaygroundStorePreparationFactory;
+
+struct PlaygroundStorePreparation {
+    base: Option<store::SnapshotRead<PlaygroundSnapshot>>,
+    mutation: Option<PlaygroundMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    candidate: Option<(PlaygroundSnapshot, Vec<PlaygroundMutation>, PlaygroundMutation, usize)>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<PlaygroundSnapshot, PlaygroundMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    phase: u8,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn playground_mutation_bytes(mutation: &PlaygroundMutation) -> Result<usize, String> {
+    match mutation {
+        PlaygroundMutation::ChangeSchema(payload) if payload.new_schema.len() <= PLAYGROUND_STORE_MAXIMUM_BYTES => Ok(payload.new_schema.len()),
+        PlaygroundMutation::ChangeSchema(_) => Err("Playground schema mutation exceeds its fixed Store envelope".into()),
+    }
+}
+
+fn playground_store_edit(forward: PlaygroundMutation, inverse: Vec<PlaygroundMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<PlaygroundMutation> {
+    let id = format!("playground-schema-retained-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<PlaygroundSnapshot, PlaygroundMutation> for PlaygroundStorePreparationFactory {
+    fn preflight(&self, mutation: &PlaygroundMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Playground Store preparation rejected its lane or description".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: playground_mutation_bytes(mutation)? })
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<PlaygroundSnapshot, PlaygroundMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<PlaygroundSnapshot, PlaygroundMutation>>, store::ArtifactStoreOneItemPreparationRequest<PlaygroundSnapshot, PlaygroundMutation>> {
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || request.base.get().schema.len() > PLAYGROUND_STORE_MAXIMUM_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(PlaygroundStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            candidate: None,
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            phase: 0,
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<PlaygroundSnapshot, PlaygroundMutation> for PlaygroundStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        use protocol::{Mutation as _, MutationDiff as _};
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() || self.phase >= 2 {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        match self.phase {
+            0 => {
+                let base = self.base.as_ref().ok_or_else(|| "Playground preparation lost its exact base root".to_string())?;
+                let mutation = self.mutation.take().ok_or_else(|| "Playground preparation lost its mutation owner".to_string())?;
+                let completed_bytes = playground_mutation_bytes(&mutation)?;
+                let inverse = mutation.inverse(base.get());
+                let post = mutation.diff(base.get()).into_parts().0.apply(base.get()).map_err(|_| "Playground mutation could not produce its post root".to_string())?;
+                self.candidate = Some((post, inverse, mutation, completed_bytes));
+                self.phase = 1;
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: completed_bytes as u64, digest: [0; 32] };
+                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
+            }
+            1 => {
+                let (post, inverse, mutation, completed_bytes) = self.candidate.take().ok_or_else(|| "Playground preparation lost its semantic candidate".to_string())?;
+                let authority = self.authority.as_ref().ok_or_else(|| "Playground preparation lost its Store authority".to_string())?;
+                let prepared = authority.prepare_one_item(playground_store_edit(mutation, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+                self.phase = 2;
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: completed_bytes as u64, digest: prepared.edit_digest() };
+                self.prepared = Some(prepared);
+                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+            }
+            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)),
+        }
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<PlaygroundSnapshot, PlaygroundMutation>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<PlaygroundSnapshot, PlaygroundMutation>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("Playground preparation could not return its exact base root".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️StorePreparation
 
 impl ArtifactEditor for PlaygroundEditor {
     type Snapshot = PlaygroundSnapshot;
@@ -137,12 +305,17 @@ impl ArtifactEditor for PlaygroundEditor {
     const DIALECT: Dialect = PLAYGROUND_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PLAYGROUND_DOCUMENT_SCHEMA;
 
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(PlaygroundStorePreparationFactory))
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<PlaygroundEditor>,
         owner_file: "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
         controller: "s.demonstrator.playground@1/*#editor",
         document_schema: "playground.playground",
         factory: "PlaygroundCommandJobFactory",
+        factory_type: PlaygroundCommandJobFactory,
         tools: {
             "changeSchema" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
         }
@@ -325,7 +498,7 @@ mod tests {
         let cfg = ConfigView { snapshot: &config };
         let command = PlaygroundCommand::ChangeSchema(change_schema::ChangeSchema { new_schema: "playground.custom".into() });
         let emit = command.dispatch(&doc, &cfg).expect("dispatch");
-        assert_eq!(emit.artifact_mutations, vec![PlaygroundMutation::ChangeSchema(crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::change_schema::mutation::ChangeSchema { new_schema: "playground.custom".into() })]);
+        assert_eq!(emit.artifact_mutations, vec![PlaygroundMutation::ChangeSchema(crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::change_schema::ChangeSchema { new_schema: "playground.custom".into() })]);
     }
 
     #[semio_framework_async_macros::async_test]

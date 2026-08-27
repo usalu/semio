@@ -1,5 +1,5 @@
 //! ↩️ Inverse reconstruction for `change-imported-features` — reads the BASE value, never the diff.
-use super::mutation::ChangeImportedFeatures;
+use super::ChangeImportedFeatures;
 use crate::artifacts::gisterrain::mutations::GisTerrainMutation;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 

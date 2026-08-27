@@ -1,0 +1,359 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "controller",
+    "documentSchema",
+    "factory",
+    "limits",
+    "publicationContracts",
+    "routes",
+    "oracle"
+  ],
+  "properties": {
+    "controller": {
+      "const": "s-play"
+    },
+    "documentSchema": {
+      "const": "os.workflow"
+    },
+    "factory": {
+      "const": "SpaceCommandJobFactory"
+    },
+    "limits": {
+      "type": "object",
+      "required": [
+        "bounded"
+      ],
+      "properties": {
+        "bounded": {
+          "$ref": "#/$defs/contract"
+        }
+      },
+      "additionalProperties": false
+    },
+    "publicationContracts": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "setActivePanelTab"
+            },
+            "lanes": {
+              "const": [
+                "config"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "nodeGraphViewport"
+            },
+            "lanes": {
+              "const": [
+                "config"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "presenceHeartbeat"
+            },
+            "lanes": {
+              "const": [
+                "config"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "workflowEngagementInput"
+            },
+            "lanes": {
+              "const": [
+                "config"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "compiledDagEngagementInput"
+            },
+            "lanes": {
+              "const": [
+                "config"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "closeFocusedInstance"
+            },
+            "lanes": {
+              "const": [
+                "config"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "setActiveExample"
+            },
+            "lanes": {
+              "const": [
+                "hostOnly"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "importSpacePack"
+            },
+            "lanes": {
+              "const": [
+                "hostOnly"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "goHome"
+            },
+            "lanes": {
+              "const": [
+                "hostOnly"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "toolId",
+            "lanes"
+          ],
+          "properties": {
+            "toolId": {
+              "const": "navigateVirtualFileSystemNode"
+            },
+            "lanes": {
+              "const": [
+                "hostOnly"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "items": false,
+      "minItems": 10,
+      "maxItems": 10
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 40,
+      "maxItems": 40,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "execution",
+          "status",
+          "feature"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "execution": {
+            "enum": [
+              "bounded",
+              "batch"
+            ]
+          },
+          "status": {
+            "enum": [
+              "migrated",
+              "batch-only"
+            ]
+          },
+          "feature": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "oracle": {
+      "type": "object",
+      "required": [
+        "library",
+        "scope",
+        "ownedInterface",
+        "runtimeDependency",
+        "expected"
+      ],
+      "properties": {
+        "library": {
+          "const": "serde_json"
+        },
+        "scope": {
+          "const": "test-only-existing-dependency"
+        },
+        "ownedInterface": {
+          "const": "SpaceRetainedCatalogOracle"
+        },
+        "runtimeDependency": {
+          "const": false
+        },
+        "expected": {
+          "type": "object",
+          "required": [
+            "routes",
+            "bounded",
+            "batch",
+            "migrated",
+            "unique"
+          ],
+          "properties": {
+            "routes": {
+              "const": 40
+            },
+            "bounded": {
+              "const": 10
+            },
+            "migrated": {
+              "const": 10
+            },
+            "unique": {
+              "const": true
+            },
+            "batch": {
+              "const": 30
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "contract": {
+      "type": "object",
+      "required": [
+        "maxRawBytes",
+        "maxDecodedItems",
+        "maxWorkUnitsPerStep",
+        "maxOutputBytes",
+        "maxStepMicros"
+      ],
+      "properties": {
+        "maxRawBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxDecodedItems": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxWorkUnitsPerStep": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxOutputBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxStepMicros": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7999
+        },
+        "maxCheckpointBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxInFlightPages": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

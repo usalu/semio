@@ -133,7 +133,7 @@ mod subject {
     /// 🧭️ The real descriptor for one catalog kind — the same 7 `DESCRIPTOR` consts
     /// `GLTF_MUTATION_LEAF_DESCRIPTORS` assembles, addressed directly rather than through the full
     /// command-id/phase/envelope registry (`../../🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔨️modules/
-    /// 🧭️mutation-dispatch/🦀️component.rs`), which this thin per-kind dispatch does not need.
+    /// 🧬️schema/🧬️mutations/🦀️component.rs`), which this thin per-kind dispatch does not need.
     fn descriptor_for_kind(kind: &str) -> Option<GltfMutationLeafDescriptor> {
         match kind {
             "bind-node-child" => Some(bind_node_child::DESCRIPTOR),

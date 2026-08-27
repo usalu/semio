@@ -479,6 +479,20 @@ export type ExecutionClass = GeneratedExecutionClass;
 export type CapabilityExecution = GeneratedCapabilityExecution;
 export type ActionSemantics = GeneratedActionSemantics;
 
+//#region 🎯️ActionSemanticsDefaults
+/** 🏭️ Mirrors native `ActionSemantics::for_kind`; defaults never constitute an interactive-job migration proof. */
+export function actionSemanticsForKind(kind: ActionKind): ActionSemantics {
+  const mutation = kind === "mutation";
+  const observes = kind === "view" || kind === "interaction";
+  return {
+    effects: { reads: observes ? ["config:{self}"] : [], writes: mutation ? ["artifact:{self}"] : [], external: false, destructive: false, reversible: mutation },
+    policy: { scopes: mutation || kind === "history" ? ["documents.write"] : observes ? ["documents.read", "shell.observe"] : kind === "clipboard" ? ["shell.clipboard"] : ["shell.navigate"], approval: mutation ? "whenDestructive" : "never" },
+    execution: { preview: mutation ? "diff" : "none", undo: { kind: mutation ? "inverse" : "none" }, idempotency: "none", expectedRevision: mutation, cancellable: false, class: "interactive", interactiveJob: "unclassified" },
+    useWhen: [], examples: [],
+  };
+}
+//#endregion 🎯️ActionSemanticsDefaults
+
 /** 🎛️ Mirrors Rust `ActionArgDef::control()` exactly (D6): derives the renderer-facing
  * `ActionArgControl` from `def.schema`/`def.presentation` — the ONLY place a TS reader should reach
  * for an argument's widget kind; never reconstructs `ActionArgControl` from `schema` by hand.
@@ -725,7 +739,7 @@ export type TutorialTracks = {
   readonly video: readonly TutorialVideoCue[];
   readonly events: readonly TutorialEvent[];
   readonly ui: readonly TutorialUiKeyframe[];
-  readonly artifact: readonly TutorialArtifactEvent[];
+  readonly document: readonly TutorialArtifactEvent[];
   readonly camera: readonly TutorialCameraKeyframe[];
   readonly gestures: readonly TutorialGestureCue[];
 };

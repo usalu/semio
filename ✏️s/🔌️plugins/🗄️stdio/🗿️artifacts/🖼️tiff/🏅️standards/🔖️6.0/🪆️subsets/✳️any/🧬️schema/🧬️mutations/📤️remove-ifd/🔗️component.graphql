@@ -1,0 +1,3 @@
+# 🧬️ remove-ifd/RemoveIfd
+scalar RemoveIfdMutationValue
+input RemoveIfdMutation { index: Int! }

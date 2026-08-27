@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false, "required": ["cases"],
+  "properties": { "cases": { "type": "array", "minItems": 4, "maxItems": 4, "items": {
+    "type": "object", "additionalProperties": false, "required": ["name", "update", "expected"],
+    "properties": {
+      "name": { "type": "string", "minLength": 1 },
+      "update": { "type": "object", "additionalProperties": false, "required": ["surface", "nodeKey", "own", "ttlMs"], "properties": {
+        "surface": { "type": "string", "minLength": 1 }, "nodeKey": { "type": "string", "minLength": 1 },
+        "own": { "type": "object", "additionalProperties": false, "properties": { "selected": { "const": true }, "hovered": { "const": true }, "previewed": { "const": true } } },
+        "ttlMs": { "type": "integer", "minimum": 1, "maximum": 4294967295 }
+      } },
+      "expected": { "type": "object", "additionalProperties": false, "required": ["selected", "hovered", "previewed"], "properties": { "selected": { "type": "boolean" }, "hovered": { "type": "boolean" }, "previewed": { "type": "boolean" } } }
+    }
+  } } }
+}

@@ -1,68 +1,30 @@
 syntax = "proto3";
 package semio.s.trinity.jack.mutation;
 
-// 🧬️ Jack mutation schema — artifact-lane fields only.
+import "google/protobuf/struct.proto";
+
+message JackMutationEntityRef { string entity = 1; string id = 2; }
+message JackMutationPort { string id = 1; string kind = 2; string direction = 3; map<string, google.protobuf.Value> properties = 4; }
+message JackMutationNode { string id = 1; string kind = 2; string name = 3; double x = 4; double y = 5; double width = 6; double height = 7; map<string, google.protobuf.Value> properties = 8; repeated JackMutationPort ports = 9; }
+message JackMutationEdge { string id = 1; string kind = 2; string source = 3; string target = 4; map<string, google.protobuf.Value> properties = 5; }
+message ChangeDataProperty { JackMutationEntityRef entity = 1; string key = 2; google.protobuf.Value new_value = 3; }
+message CreateEdge { JackMutationEdge edge = 1; }
+message CreateNode { JackMutationNode node = 1; }
+message DeleteEdge { string id = 1; }
+message DeleteNode { string id = 1; }
+message MoveNode { string id = 1; double x = 2; double y = 3; }
+message RemoveDataProperty { JackMutationEntityRef entity = 1; string key = 2; }
+message RenameNode { string id = 1; string new_name = 2; }
 
 message JackMutation {
-  // @state artifact
-  string schema = 1;
-  // @state artifact
-  string name = 2;
-  // @state artifact
-  optional string manifest_id = 3;
-  // @state artifact
-  Manifest manifest = 4;
-  // @state artifact
-  Camera camera = 5;
-  // @state artifact
-  repeated Node nodes = 6;
-  // @state artifact
-  repeated Edge edges = 7;
-  // @state artifact
-  optional string root_node_id = 8;
-}
-
-message Camera {
-  double x = 1;
-  double y = 2;
-  double zoom = 3;
-}
-
-message Port {
-  string id = 1;
-  string kind = 2;
-  string direction = 3;
-}
-
-message Node {
-  string id = 1;
-  string kind = 2;
-  string name = 3;
-  double x = 4;
-  double y = 5;
-  double width = 6;
-  double height = 7;
-  repeated Port ports = 8;
-}
-
-message Edge {
-  string id = 1;
-  string kind = 2;
-  string source = 3;
-  string target = 4;
-}
-
-message Manifest {
-  repeated ManifestKind node_kinds = 1;
-  repeated ManifestKind edge_kinds = 2;
-  repeated ManifestPortKind port_kinds = 3;
-}
-
-message ManifestKind {
-  string name = 1;
-}
-
-message ManifestPortKind {
-  string name = 1;
-  string direction = 2;
+  oneof mutation {
+    CreateNode create_node = 1;
+    DeleteNode delete_node = 2;
+    CreateEdge create_edge = 3;
+    DeleteEdge delete_edge = 4;
+    RenameNode rename_node = 5;
+    MoveNode move_node = 6;
+    ChangeDataProperty change_data_property = 7;
+    RemoveDataProperty remove_data_property = 8;
+  }
 }

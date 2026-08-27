@@ -11,6 +11,7 @@
 //! real window, `main` (`DocumentWindowKit`) -- see its own module doc comment for the render/
 //! mutation-mapping strategy and its honest scope limit.
 
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::AppendPageContent;
 use crate::artifacts::pdf::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF_DOCUMENT_SCHEMA};
 use crate::editor::pdf14::modes::edit;
 use crate::editor::pdf14::modes::edit::windows::main;
@@ -136,7 +137,7 @@ impl ArtifactEditor for Pdf14Editor {
                 if doc.snapshot.pages.get(*index).is_none() {
                     return Ok(Emit::default());
                 }
-                Ok(Emit { artifact_mutations: vec![PdfMutation::AppendPageContent { index: *index, text: text.clone() }], description: Some(format!("Set page {index}")), ..Default::default() })
+                Ok(Emit { artifact_mutations: vec![PdfMutation::AppendPageContent(AppendPageContent { index: *index, text: text.clone() })], description: Some(format!("Set page {index}")), ..Default::default() })
             }
         }
     }

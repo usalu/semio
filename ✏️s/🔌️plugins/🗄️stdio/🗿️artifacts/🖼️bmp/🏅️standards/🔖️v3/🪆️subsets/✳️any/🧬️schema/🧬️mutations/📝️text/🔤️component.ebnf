@@ -1,11 +1,6 @@
-(* BmpMutation's wire text IS its JSON serialization (protocol::OpText — serde_json),
-   tagged on "mutation" per 🦀️component.rs's enum. Real variant tags, not a placeholder. *)
-mutation = "{", '"mutation"', ":", tag, { ",", member }, "}" ;
-tag = '"noMutation"'
-    | '"setSnapshot"'
-    | '"setHeaderFields"'
-    | '"insertPaletteEntry"'
-    | '"removePaletteEntry"'
-    | '"setPaletteEntry"'
-    | '"setPixelData"' ;
-member = string, ":", json value ;
+(* Direct text registry; payload productions are owned by each leaf. *)
+mutation = opcode, { " ", argument } ;
+opcode = "change-header-fields" | "insert-palette-entry" | "remove-palette-entry" | "replace-palette-entry" | "replace-pixel-data" ;
+argument = name, "=", value ;
+name = letter, { letter | digit | "-" } ;
+value = character, { character } ;

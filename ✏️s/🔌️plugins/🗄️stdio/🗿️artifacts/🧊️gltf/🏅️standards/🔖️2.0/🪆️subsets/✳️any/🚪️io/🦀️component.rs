@@ -897,16 +897,15 @@ mod tests {
     mod conformance_laws {
         use super::*;
         use crate::artifacts::gltf::io::mutations as mutation_transport;
-        use crate::artifacts::gltf::schema::modules::mutation_dispatch::{registered_gltf_mutation_command_ids, GltfMutation, GltfMutationRegistryError, GLTF_MUTATION_MAX_PAYLOAD_BYTES};
-        use crate::artifacts::gltf::schema::mutations::change_material_alpha_mode::mutation;
+        use crate::artifacts::gltf::schema::mutations::change_material_alpha_mode::{ChangeMaterialAlphaModeMutation, GltfChangeMaterialAlphaModePayload};
+        use crate::artifacts::gltf::schema::mutations::GltfMutation;
         use crate::artifacts::gltf::schema::snapshot::GltfAlphaMode;
         use crate::artifacts::gltf::schema::{diff, snapshot};
         use protocol::{DiffCodec, Mutation, OpBinary, OpText};
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn alpha_mode_mutation() -> GltfMutation {
-            let payload = serde_json::to_vec(&mutation::GltfChangeMaterialAlphaModePayload { material: 0, alpha_mode: GltfAlphaMode::Mask }).expect("canonical alpha-mode payload");
-            GltfMutation::new(mutation::ID, 1, payload).expect("registered alpha-mode mutation")
+            GltfMutation::ChangeMaterialAlphaMode(ChangeMaterialAlphaModeMutation::Apply(GltfChangeMaterialAlphaModePayload { material: 0, alpha_mode: GltfAlphaMode::Mask }))
         }
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -959,13 +958,8 @@ mod tests {
         }
 
         #[semio_framework_async_macros::async_test]
-        async fn generic_envelope_registry_and_transport_laws() {
+        async fn aggregate_transport_laws() {
             let mutation = alpha_mode_mutation();
-            assert!(registered_gltf_mutation_command_ids().expect("valid immutable mutation registry").contains(&mutation::ID));
-            assert!(matches!(GltfMutation::new("s.stdio.gltf.mutation.unknown.v1", 1, Vec::new()), Err(GltfMutationRegistryError::UnknownCommand(_))));
-            assert!(matches!(GltfMutation::new(mutation::ID, 2, Vec::new()), Err(GltfMutationRegistryError::StaleVersion { expected: 1, actual: 2, .. })));
-            assert!(matches!(GltfMutation::new(mutation::ID, 1, vec![0; GLTF_MUTATION_MAX_PAYLOAD_BYTES + 1]), Err(GltfMutationRegistryError::BudgetExceeded("payload"))));
-
             let text = mutation.print_op();
             assert_eq!(GltfMutation::parse_op(&text).expect("text round trip"), mutation);
             let binary = mutation.encode_op().expect("binary encode");

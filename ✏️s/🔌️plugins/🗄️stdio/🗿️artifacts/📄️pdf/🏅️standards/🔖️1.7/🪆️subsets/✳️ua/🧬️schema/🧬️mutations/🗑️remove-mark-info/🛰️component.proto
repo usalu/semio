@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7_ua.mutation.remove_mark_info;
+
+// 🗑️ Direct remove-mark-info protobuf payload.
+message RemoveMarkInfoMutation {
+}

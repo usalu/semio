@@ -1,0 +1,2 @@
+# 🧬 insert-line/InsertLine
+input InsertLinePayload { index: Int! text: String! }

@@ -1,0 +1,3 @@
+# 🧬️ remove-tag/RemoveTag
+scalar RemoveTagMutationValue
+input RemoveTagMutation { ifdIndex: Int! tag: Int! }

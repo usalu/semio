@@ -158,7 +158,7 @@ const shellReplicationPackCodec = { encode: encodePackValue, decode: decodePackV
 import { IDENTITY_CONFIG_SCHEMA, identityActorConfig, foldIdentityEvent } from "../../../../../🟦️backbone-worker.ts";
 /** 🪪️ Self-contained identity facet (see that file's header doc for why it isn't re-exported through
  * `🎚️config/🧬️schema/**`) — `Identity`/mutation vocabulary, never redeclared here. */
-import { type Identity, type IdentityConfigMutation, applyIdentityConfigMutation, signIn } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component.ts";
+import { type Identity, type IdentityConfigMutation, applyIdentityConfigMutation, signIn } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️component.ts";
 import {
   decodeWorldProjectionTemplateId,
   worldProjectionSpecIconId,
@@ -319,6 +319,7 @@ import {
   isEphemeralShellBrand,
   type LoadedProgramState,
   resolveBootExampleId,
+  resolvePluginCanvasStatus,
   type ResolvedShellLocks,
   selectOpenConflicts,
   selectQuarantinedConflicts,
@@ -401,7 +402,8 @@ import {
   panelTabDefinitionToNode,
   parsePanelState,
   parseShellRoute,
-  patchDocumentTreeSelectedIds,
+  pluginShouldReceiveContributions,
+  pluginShouldEstablishSession,
   AutoCheckinScheduler,
   canCheckIn,
   checkinActionText,
@@ -409,7 +411,6 @@ import {
   checkinMessagePlaceholderText,
   checkinSubmitText,
   computeSyncPillState,
-  patchWorld3dChromeOntoNode,
   presenceClientIdentity,
   preserveJsonIdentity,
   renderStagedArgControl,
@@ -785,7 +786,7 @@ export class TutorialRecorder {
       durationMs,
       chapters: this.chapters,
       base: { documentDsl: this.baseDocumentJson ?? undefined, exampleId, ui: this.baseUiSnapshot, cameras: [] },
-      tracks: { narration: [], video: [], events: this.events, ui: this.uiKeyframes, artifact: [], camera: this.cameraKeyframes, gestures: [] },
+      tracks: { narration: [], video: [], events: this.events, ui: this.uiKeyframes, document: [], camera: this.cameraKeyframes, gestures: [] },
       recordedAt: new Date().toISOString(),
     };
   }
@@ -1554,12 +1555,8 @@ function FrameworkOsShellInner({
    * Every other registry entry streams in independently and is never fatal to boot. */
   const primaryPluginId = useMemo(() => hostConfig?.pluginId ?? (pluginFilter ? resolvePluginRegistryId(PLUGIN_CATALOG, pluginFilter) : undefined) ?? registry[0]?.pluginId, [hostConfig, pluginFilter, registry]);
   const shellPluginCanvasStatus = useMemo((): UiStatus | undefined => {
-    if (!session) return "loading";
-    if (!primaryPluginId) return undefined;
-    const pluginStatus = pluginStatusById[primaryPluginId];
-    if (pluginStatus === "installing" || pluginStatus === "reloading") return "loading";
-    return undefined;
-  }, [session, primaryPluginId, pluginStatusById]);
+    return resolvePluginCanvasStatus(!!session, error, primaryPluginId ? pluginStatusById[primaryPluginId] : undefined, primaryPluginId ? pluginSupervisorById[primaryPluginId] : undefined);
+  }, [session, error, primaryPluginId, pluginStatusById, pluginSupervisorById]);
   /** 🔌️ Dev `/plugin-modules` catalog plus extension-store `/extensions` installs share one
    * {@link PluginSource} so the incremental runtime can load from either tree. */
   const pluginSource: PluginSource = useMemo(() => multiplexPluginSources(createDevPluginSource(registry), createExtensionSource(PLUGIN_CATALOG)), [registry]);
@@ -1596,9 +1593,8 @@ function FrameworkOsShellInner({
         ? (() => {
             const found = manifest.apps.find((app) => app.id === appId);
             if (!found) {
-              // 🛟 Owner plugin not this handle — installPlugin retries when the owning crate loads.
-              console.log(`[DEBUG] establishPrimarySession deferring: appId "${appId}" not in ${handle.pluginId}`);
-              return undefined;
+              // 🔐️ A pinned app belongs to the selected primary aggregate, never a racing dependency.
+              throw new Error(`primary plugin ${handle.pluginId} does not declare pinned app ${appId}`);
             }
             return found;
           })()
@@ -1650,12 +1646,9 @@ function FrameworkOsShellInner({
         dispatch({ type: "UPSERT_LOADED_PLUGIN", value: { handle, manifest: handle.manifest } });
         dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
         dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "loaded" });
-        // 🎮️ Establish the session on whichever loaded plugin owns `appId` (demonstrator panes pin
-        // apps from dependency crates like cad/gis/puzzle). Falling back to the primary plugin only
-        // when no `appId` is pinned — previously every pane crashed with "appId does not resolve"
-        // because the primary crate's manifest never lists those dependency apps.
-        const ownsPinnedApp = appId !== undefined && handle.manifest.apps.some((app) => app.id === appId);
-        const shouldEstablish = !sessionRef.current && (ownsPinnedApp || (appId === undefined && pluginId === primaryPluginId));
+        // 🔐️ Only the configured primary may own the session; dependencies can expose the same
+        // app ids and arrive first because registry installation is intentionally concurrent.
+        const shouldEstablish = pluginShouldEstablishSession(pluginId, primaryPluginId, sessionRef.current !== null);
         if (shouldEstablish) {
           try {
             await establishPrimarySession(handle);
@@ -2560,6 +2553,7 @@ function FrameworkOsShellInner({
           contributionsJsonRef.current = contributionsPushKey;
           for (const pluginEntry of loadedPlugins) {
             if (!pluginEntry.manifest.apps?.length) continue;
+            if (!pluginShouldReceiveContributions(pluginEntry.handle.pluginId, nextSession.pluginId, hostMode)) continue;
             const isActive = pluginEntry.handle.pluginId === nextSession.pluginId;
             const targetApp = isActive ? nextSession.app : pluginEntry.manifest.apps.find((app) => appOwnsCommand(app, "setContributions"));
             if (!targetApp || !appOwnsCommand(targetApp, "setContributions") || !pluginEntry.handle.handleCommand) continue;
@@ -2643,7 +2637,7 @@ function FrameworkOsShellInner({
     // added to this array) avoids a temporal-dead-zone reference-before-init; safe because this callback
     // is only ever invoked after render completes, by which point `applyHostEffects` is initialized.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [appLabelsOverlay, injectActiveTool, uiLocale, uiTerminology],
+    [appLabelsOverlay, hostMode, injectActiveTool, uiLocale, uiTerminology],
   );
 
   /** @emoji 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session change, so an existing session's baked-in titles would otherwise go stale. */
@@ -2909,46 +2903,6 @@ function FrameworkOsShellInner({
           dispatch({ type: "SET_ACTIVE_TOOL", toolId: toolId || null });
           if (toolId) clearAllWindowUtilities();
           nextViewState = { ...nextViewState, activeToolId: toolId || undefined, activeUtilityId: toolId ? undefined : nextViewState.activeUtilityId };
-          continue;
-        }
-        if ("patchWorld3dChrome" in effect) {
-          const { selectionJson, vorticesJson, documentSelectedIds, documentHighlightedIds } = effect.patchWorld3dChrome;
-          const patch = { selectionJson, vorticesJson };
-          const windowInstances = sessionWindowInstances(baseSession.app, extraWindowInstancesRef.current);
-          const documentPanelKey = FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-          dispatch({
-            type: "SET_WINDOW_UI_BY_WINDOW_ID",
-            value: (current) =>
-              mergeRecordPreservingIdentity(
-                current,
-                windowInstances.map((instance) => {
-                  const node = current[instance.id];
-                  return [instance.id, node ? patchWorld3dChromeOntoNode(node, patch) : node] as const;
-                }),
-              ),
-          });
-          dispatch({
-            type: "SET_PANEL_UI_BY_KEY",
-            value: (current) => {
-              const documentNode = current[documentPanelKey];
-              if (!documentNode) return current;
-              return mergeRecordPreservingIdentity(current, [[documentPanelKey, patchDocumentTreeSelectedIds(documentNode, documentSelectedIds, documentHighlightedIds)]]);
-            },
-          });
-          const cache = uiRefreshCacheRef.current;
-          for (const instance of windowInstances) {
-            const cached = cache.get(`window:${instance.id}`);
-            if (cached?.value) {
-              cache.set(`window:${instance.id}`, { hash: cached.hash, value: patchWorld3dChromeOntoNode(cached.value as BuiltNode, patch) });
-            }
-          }
-          const documentCached = cache.get(`panel:${documentPanelKey}`);
-          if (documentCached?.value) {
-            cache.set(`panel:${documentPanelKey}`, {
-              hash: documentCached.hash,
-              value: patchDocumentTreeSelectedIds(documentCached.value as BuiltNode, documentSelectedIds, documentHighlightedIds),
-            });
-          }
           continue;
         }
         if ("openDialog" in effect) {
@@ -4457,7 +4411,7 @@ function FrameworkOsShellInner({
           pluginId: entry.handle.pluginId,
           apps: entry.manifest.apps as unknown as Record<string, unknown>[],
           artifactKinds: entry.manifest.artifactKinds,
-          dependencies: entry.manifest.dependencies?.length ? entry.manifest.dependencies : registry.find((candidate) => candidate.pluginId === entry.handle.pluginId)?.dependencies,
+          dependencies: entry.manifest.dependencies,
         })),
       );
     } catch (buildError) {

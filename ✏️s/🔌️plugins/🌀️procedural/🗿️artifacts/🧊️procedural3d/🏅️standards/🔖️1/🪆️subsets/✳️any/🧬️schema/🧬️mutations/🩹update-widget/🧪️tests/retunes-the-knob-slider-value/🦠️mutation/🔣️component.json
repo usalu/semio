@@ -2,6 +2,7 @@
   "UpdateWidget": {
     "widget": {
       "kind": "inputSlider",
+      "label": "Knob",
       "id": "knob",
       "value": 6.5,
       "min": 0.0,

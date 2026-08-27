@@ -3,7 +3,7 @@
 //! this is the surface's only taxonomy command, dispatching straight through to the artifact's one
 //! `PlaygroundMutation::ChangeSchema` variant.
 
-use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::change_schema::mutation::ChangeSchema as ChangeSchemaMutation;
+use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::change_schema::ChangeSchema as ChangeSchemaMutation;
 use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
 use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};

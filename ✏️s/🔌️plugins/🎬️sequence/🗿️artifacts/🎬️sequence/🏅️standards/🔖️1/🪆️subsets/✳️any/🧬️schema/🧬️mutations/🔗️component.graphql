@@ -1,10 +1,21 @@
-# 🧬️ Sequence mutation schema — artifact-lane fields only.
-type SequenceMutation {
-  schema: String! @state(class: ARTIFACT)
-  steps: [SequenceStep!]! @state(class: ARTIFACT)
-  edges: [SequenceEdge!]! @state(class: ARTIFACT)
-}
-type SequenceStep { id: String! kind: String! params: JSON! x: Float! y: Float! slot: SlotRef collapsed: Boolean! }
-type SequenceEdge { id: String! from: String! to: String! }
-type SlotRef { owner: String! name: String! }
+# import CreateStepInput from "./🌱create-step/🔗️component.graphql"
+# import DeleteStepInput from "./🗑️delete-step/🔗️component.graphql"
+# import MoveStepInput from "./📍move-step/🔗️component.graphql"
+# import EditStepParamsInput from "./🔧edit-step-params/🔗️component.graphql"
+# import ChangeStepCollapsedInput from "./🗂️change-step-collapsed/🔗️component.graphql"
+# import ConnectStepsInput from "./🔗connect-steps/🔗️component.graphql"
+# import DisconnectStepsInput from "./✂️disconnect-steps/🔗️component.graphql"
+# import DuplicateStepInput from "./🧬duplicate-step/🔗️component.graphql"
+
 scalar JSON
+
+input SequenceMutationInput @oneOf {
+  createStep: CreateStepInput
+  deleteStep: DeleteStepInput
+  moveStep: MoveStepInput
+  editStepParams: EditStepParamsInput
+  changeStepCollapsed: ChangeStepCollapsedInput
+  connectSteps: ConnectStepsInput
+  disconnectSteps: DisconnectStepsInput
+  duplicateStep: DuplicateStepInput
+}

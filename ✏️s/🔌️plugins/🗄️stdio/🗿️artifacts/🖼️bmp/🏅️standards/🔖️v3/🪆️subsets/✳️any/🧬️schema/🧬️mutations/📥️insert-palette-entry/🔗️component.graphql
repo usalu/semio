@@ -1,0 +1,3 @@
+# 🧬️ insert-palette-entry/InsertPaletteEntry
+scalar InsertPaletteEntryMutationValue
+input InsertPaletteEntryMutation { index: Int! entry: InsertPaletteEntryMutationValue! }

@@ -76,7 +76,9 @@ pub fn non_canonical_reason(lines: &[String], trailing_newline: bool) -> Option<
         return Some("a document with no lines cannot carry a trailing terminator — that pair renders the very bytes the one-empty-line document renders, and reading them back returns the latter".to_string());
     }
     if !trailing_newline && lines.last().is_some_and(|line| line.is_empty()) {
-        return Some("a document whose last line is empty cannot drop its trailing terminator — that pair renders the very bytes the same document one line shorter renders, and reading them back returns the latter, losing the empty line".to_string());
+        return Some(
+            "a document whose last line is empty cannot drop its trailing terminator — that pair renders the very bytes the same document one line shorter renders, and reading them back returns the latter, losing the empty line".to_string(),
+        );
     }
     None
 }
@@ -106,17 +108,6 @@ fn json_bool(params: &Json, key: &str) -> bool {
     matches!(params.get(key), Some(Json::Bool(true)))
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn json_strings(params: &Json, key: &str) -> Vec<String> {
-    params
-        .array(key)
-        .iter()
-        .map(|entry| match entry {
-            Json::String(text) => text.clone(),
-            _ => String::new(),
-        })
-        .collect()
-}
 //#endregion 🔖️SpecHelpers
 
 //#region 🔖️Dispatch
@@ -141,12 +132,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     let params = spec.get("params").cloned().unwrap_or(Json::Null);
     match spec.str("kind").as_str() {
         "" => return Err("mutation spec carries no `kind`".to_string()),
-        "no-mutation" => {}
-        "set-snapshot" => {
-            lines = json_strings(&params, "lines");
-            trailing_newline = json_bool(&params, "trailingNewline");
-            is_crlf = params.str("lineEnding") == "crLf";
-        }
         "set-trailing-newline" => trailing_newline = json_bool(&params, "value"),
         "set-line-ending" => is_crlf = params.str("value") == "crLf",
         "insert-line" => {
@@ -199,11 +184,6 @@ pub fn oracle_inverse_spec(original: &[u8], forward: &Json) -> Result<Json, Stri
     let spec = |kind: &str, params: Json| Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params)]);
     let ending = if is_crlf { "crLf" } else { "lf" };
     match forward.str("kind").as_str() {
-        "no-mutation" => Ok(spec("no-mutation", object(vec![]))),
-        "set-snapshot" => Ok(spec(
-            "set-snapshot",
-            object(vec![("lines", Json::Array(lines.into_iter().map(Json::String).collect())), ("trailingNewline", Json::Bool(trailing_newline)), ("lineEnding", Json::String(ending.to_string()))]),
-        )),
         "set-trailing-newline" => Ok(spec("set-trailing-newline", object(vec![("value", Json::Bool(trailing_newline))]))),
         "set-line-ending" => Ok(spec("set-line-ending", object(vec![("value", Json::String(ending.to_string()))]))),
         "insert-line" => {
@@ -214,14 +194,14 @@ pub fn oracle_inverse_spec(original: &[u8], forward: &Json) -> Result<Json, Stri
             let requested = index("index").ok_or("remove-line inverse: missing `index`")?;
             match lines.get(requested) {
                 Some(text) => Ok(spec("insert-line", object(vec![("index", Json::Number(requested as f64)), ("text", Json::String(text.clone()))]))),
-                None => Ok(spec("no-mutation", object(vec![]))),
+                None => Err("remove-line inverse has no operation for an absent line".to_string()),
             }
         }
         "set-line" => {
             let requested = index("index").ok_or("set-line inverse: missing `index`")?;
             match lines.get(requested) {
                 Some(text) => Ok(spec("set-line", object(vec![("index", Json::Number(requested as f64)), ("text", Json::String(text.clone()))]))),
-                None => Ok(spec("no-mutation", object(vec![]))),
+                None => Err("set-line inverse has no operation for an absent line".to_string()),
             }
         }
         other => Err(format!("no inverse rule for kind {other:?}")),
@@ -409,19 +389,6 @@ mod tests {
     }
 
     #[test]
-    fn set_snapshot_replaces_the_whole_document() {
-        let out = oracle_apply_mutation(b"a\nb\n", &spec("set-snapshot", &[("lines", Json::Array(vec![Json::String("x".into()), Json::String("y".into())])), ("trailingNewline", Json::Bool(false)), ("lineEnding", Json::String("crLf".into()))]))
-            .unwrap();
-        assert_eq!(String::from_utf8(out).unwrap(), "x\r\ny");
-    }
-
-    #[test]
-    fn no_mutation_is_a_true_identity() {
-        let out = oracle_apply_mutation(b"a\r\nb\n", &spec("no-mutation", &[])).unwrap();
-        assert_eq!(out, b"a\r\nb\n");
-    }
-
-    #[test]
     fn unknown_kind_is_an_error_never_a_silent_no_op() {
         assert!(oracle_apply_mutation(b"a\n", &spec("set-page-rotation", &[])).is_err());
     }
@@ -489,15 +456,6 @@ mod tests {
     // 🚫️async: E1 pure test-fixture builder, no I/O — see R9
     fn feature_example_rows() -> Vec<Json> {
         vec![
-            spec("no-mutation", &[]),
-            spec(
-                "set-snapshot",
-                &[
-                    ("lines", Json::Array(vec![Json::String("Ersetztes Protokoll".to_string()), Json::String("Zweite Zeile mit Umlaut: äöüß und Emoji 🎉".to_string())])),
-                    ("trailingNewline", Json::Bool(true)),
-                    ("lineEnding", Json::String("lf".to_string())),
-                ],
-            ),
             spec("set-trailing-newline", &[("value", Json::Bool(false))]),
             spec("set-line-ending", &[("value", Json::String("crLf".to_string()))]),
             spec("insert-line", &[("index", Json::Number(20.0)), ("text", Json::String("Eingefügte Randnotiz zu Bauhütte 4.0".to_string()))]),
@@ -512,7 +470,7 @@ mod tests {
     const REFUSED_ON_THIS_FIXTURE: &str = "set-trailing-newline";
 
     /// 👁️ The OBSERVABILITY law, carried here because the case cannot carry it. Every kind other
-    /// than `no-mutation`, with the feature file's OWN parameters, has to move the real document's
+    /// with the feature file's OWN parameters, has to move the real document's
     /// semantic projection — a row whose parameters address nothing (an index past the end, a value
     /// the document already has) would report as a pass while testing nothing at all. This subset's
     /// case is a recorded no-oracle one, so the runner never dispatches its oracle-phase scenarios
@@ -534,11 +492,7 @@ mod tests {
             }
             let mutated = oracle_apply_mutation(REAL_FIXTURE, &row).unwrap_or_else(|error| panic!("{kind} must apply to the real fixture: {error}"));
             let projection = project_txt(&mutated).expect("the mutated document projects");
-            if kind == "no-mutation" {
-                assert_eq!(projection, original, "no-mutation must be a true identity on the real document");
-            } else {
-                assert_ne!(projection, original, "{kind} with the feature file's own parameters left the real document's projection untouched — that row tests nothing");
-            }
+            assert_ne!(projection, original, "{kind} with the feature file's own parameters left the real document's projection untouched — that row tests nothing");
         }
     }
 
@@ -567,12 +521,7 @@ mod tests {
             let undo = oracle_inverse_spec(REAL_FIXTURE, &row).unwrap_or_else(|error| panic!("{kind} must have an inverse: {error}"));
             let restored = oracle_apply_mutation(&mutated, &undo).unwrap_or_else(|error| panic!("the inverse of {kind} must apply: {error}"));
             let restored_bytes = restored.len();
-            assert_eq!(
-                project_txt(&restored).expect("the restored document projects"),
-                original,
-                "applying {kind} and then its own inverse did not restore the real document ({restored_bytes} bytes back, {} in)",
-                REAL_FIXTURE.len()
-            );
+            assert_eq!(project_txt(&restored).expect("the restored document projects"), original, "applying {kind} and then its own inverse did not restore the real document ({restored_bytes} bytes back, {} in)", REAL_FIXTURE.len());
         }
     }
 

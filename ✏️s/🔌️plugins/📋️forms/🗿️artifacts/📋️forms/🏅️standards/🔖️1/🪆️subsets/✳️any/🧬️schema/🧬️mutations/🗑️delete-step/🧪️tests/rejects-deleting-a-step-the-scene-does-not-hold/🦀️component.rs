@@ -18,7 +18,7 @@
 //! real delete would have carried away with it.
 
 use crate::artifacts::forms::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::artifacts::forms::{cache_forms_steps, forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::artifacts::forms::{materialize_forms_steps, forms_steps, FormStep, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -35,8 +35,8 @@ fn expected_after() -> FormsSnapshot {
 /// 🌱 The committed `⬅️before`, with its composed children resolved to a one-step scene that holds
 /// `step-basics` — every step EXCEPT the one the committed payload addresses.
 fn before() -> FormsSnapshot {
-    let snapshot: FormsSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
-    cache_forms_steps(&snapshot.structure.child_id, vec![FormStep { id: "step-basics".into(), title: "Basics".into(), description: None, blocks: Vec::new() }]);
+    let mut snapshot: FormsSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    materialize_forms_steps(&mut snapshot.structure, vec![FormStep { id: "step-basics".into(), title: "Basics".into(), description: None, blocks: Vec::new() }]);
     snapshot
 }
 
@@ -47,7 +47,7 @@ async fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
     let snapshot = apply_form_edit_mutation(&base, &mutation()).expect("an empty diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "delete-step/rejects-deleting-a-step-the-scene-does-not-hold: applied state differs from committed after-snapshot");
-    assert_eq!((&snapshot.structure.child_id, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a rejected delete must not mint new structure/results handles");
+    assert_eq!((&mut snapshot.structure, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a rejected delete must not mint new structure/results handles");
     assert_eq!(forms_steps(&snapshot).len(), 1, "the step the scene DOES hold must survive a delete aimed at another id");
 }
 

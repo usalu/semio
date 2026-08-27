@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
-  "_comment": "🧩️ This owner's contribution. ⚠️ 🎚️config carries TWO mutation vocabularies and only ONE of them is testable today: `OpeningConfigMutation` (📌️set-default-app, 🧹clear-default-app) is mounted in 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📦️glue.rs and is covered by mutate-os-config-opening; `MergePolicyConfigMutation` (🛡️change-merge-policy, one kind) is a self-contained facet that is mounted in NO crate's 📦️glue.rs at all — its own file says so — so neither its own committed fixture nor any case can execute against it. It is named in noOracleDecisions below so this manifest does not read as full coverage of the owner; covering it needs a module mount, which is not this ticket's to make. The 🪪️sign-in/🚪️sign-out leaves beside them are TypeScript-only and declare no Rust vocabulary.",
+  "_comment": "🧩️ This owner's contribution. 🎚️config carries three typed mutation vocabularies, all mounted by the plugin host from direct semantic leaves: opening preferences (set-default-app, clear-default-app), merge policy (change-merge-policy), and identity (sign-in, sign-out). mutate-os-config-opening remains the exhaustive generated case for the opening vocabulary; merge policy carries a committed direct-leaf fixture, while identity is exercised in both Rust and TypeScript unit tests.",
   "oracles": [],
   "noOracleDecisions": [
     {
@@ -11,10 +11,16 @@
       "substitutes": ["specification-vectors", "metamorphic-laws"]
     },
     {
-      "id": "os-config-merge-policy-unmounted-facet",
+      "id": "os-config-merge-policy-mutation-semantics",
       "capabilities": ["os-config-merge-policy-1-mutate"],
-      "rationale": "⚠️ RECORDED AS AN UNCOVERED GAP, not as a discharged one. `MergePolicyConfigMutation` and its single `change-merge-policy` kind live in a deliberately self-contained file (`../🧬️schema/🧬️mutations/🛡️change-merge-policy/🦀️component.rs`) whose own module doc states it is not wired into any crate's `📦️glue.rs`. Nothing compiles it: its committed `tightens-the-authority-to-vigilant` fixture is mounted only by that same unmounted file, so even the facet's own unit tests never run, and a test case claiming a catalog for it would name a module path no crate exposes. No catalog is therefore declared for it — declaring one would make the completeness gate report a kind as covered when nothing can execute against it. The prerequisite is a module mount in the crate that will own this facet; until that lands this entry is the record that the kind exists and is untested.",
+      "rationale": "`os.config.merge-policy` is repository-owned authority configuration with no independent third-party implementation. Its direct `change-merge-policy` leaf is mounted by the plugin host and exercises the committed `tightens-the-authority-to-vigilant` specification vector plus inverse and canonical-JSON laws. Those independently handcrafted vectors are the appropriate substitute for a nonexistent external implementation.",
       "substitutes": ["specification-vectors"]
+    },
+    {
+      "id": "os-config-identity-mutation-semantics",
+      "capabilities": ["os-config-identity-1-mutate"],
+      "rationale": "`os.config.identity` is repository-owned session configuration with no independent third-party implementation. The direct sign-in and sign-out leaves are implemented in Rust and TypeScript, and both language surfaces exercise their whole-record apply and inverse laws plus the shared camel-case JSON projection.",
+      "substitutes": ["multi-implementation", "metamorphic-laws"]
     }
   ],
   "mutationCatalogs": [
@@ -22,6 +28,16 @@
       "id": "os-config-opening-1-any",
       "capability": "os-config-opening-1-mutate",
       "kinds": ["set-default-app", "clear-default-app"]
+    },
+    {
+      "id": "os-config-merge-policy-1-any",
+      "capability": "os-config-merge-policy-1-mutate",
+      "kinds": ["change-merge-policy"]
+    },
+    {
+      "id": "os-config-identity-1-any",
+      "capability": "os-config-identity-1-mutate",
+      "kinds": ["sign-in", "sign-out"]
     }
   ]
 }

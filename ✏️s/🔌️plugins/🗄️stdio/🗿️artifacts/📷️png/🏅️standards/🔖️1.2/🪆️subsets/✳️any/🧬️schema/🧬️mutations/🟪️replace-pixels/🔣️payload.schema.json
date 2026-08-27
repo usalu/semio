@@ -1,0 +1,333 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pixels"
+  ],
+  "properties": {
+    "pixels": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    }
+  },
+  "$defs": {
+    "PngColorType": {
+      "type": "string",
+      "enum": [
+        "grayscale",
+        "rgb",
+        "palette",
+        "grayscaleAlpha",
+        "rgba"
+      ]
+    },
+    "PngRgb": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "r",
+        "g",
+        "b"
+      ],
+      "properties": {
+        "r": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "g": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "b": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    },
+    "PngTransparency": {
+      "type": "object",
+      "required": [
+        "colorType"
+      ],
+      "properties": {
+        "colorType": {
+          "type": "string",
+          "enum": [
+            "indexed",
+            "grayscale",
+            "rgb"
+          ]
+        },
+        "alpha": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "gray": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "r": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "g": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "b": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        }
+      }
+    },
+    "PngChromaticities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "whiteX",
+        "whiteY",
+        "redX",
+        "redY",
+        "greenX",
+        "greenY",
+        "blueX",
+        "blueY"
+      ],
+      "properties": {
+        "whiteX": {
+          "type": "integer"
+        },
+        "whiteY": {
+          "type": "integer"
+        },
+        "redX": {
+          "type": "integer"
+        },
+        "redY": {
+          "type": "integer"
+        },
+        "greenX": {
+          "type": "integer"
+        },
+        "greenY": {
+          "type": "integer"
+        },
+        "blueX": {
+          "type": "integer"
+        },
+        "blueY": {
+          "type": "integer"
+        }
+      }
+    },
+    "PngSrgbIntent": {
+      "type": "string",
+      "enum": [
+        "perceptual",
+        "relativeColorimetric",
+        "saturation",
+        "absoluteColorimetric"
+      ]
+    },
+    "PngPhysicalDims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ppuX",
+        "ppuY",
+        "unitIsMeter"
+      ],
+      "properties": {
+        "ppuX": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ppuY": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unitIsMeter": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PngTimestamp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second"
+      ],
+      "properties": {
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer"
+        },
+        "day": {
+          "type": "integer"
+        },
+        "hour": {
+          "type": "integer"
+        },
+        "minute": {
+          "type": "integer"
+        },
+        "second": {
+          "type": "integer"
+        }
+      }
+    },
+    "PngBackground": {
+      "type": "object",
+      "required": [
+        "colorType"
+      ],
+      "properties": {
+        "colorType": {
+          "type": "string",
+          "enum": [
+            "grayscale",
+            "rgb",
+            "indexed"
+          ]
+        },
+        "gray": {
+          "type": "integer"
+        },
+        "r": {
+          "type": "integer"
+        },
+        "g": {
+          "type": "integer"
+        },
+        "b": {
+          "type": "integer"
+        },
+        "index": {
+          "type": "integer"
+        }
+      }
+    },
+    "PngTextKind": {
+      "type": "string",
+      "enum": [
+        "text",
+        "zText",
+        "iText"
+      ]
+    },
+    "PngTextChunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "keyword",
+        "value",
+        "compressed",
+        "kind",
+        "languageTag",
+        "translatedKeyword"
+      ],
+      "properties": {
+        "keyword": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "compressed": {
+          "type": "boolean"
+        },
+        "kind": {
+          "$ref": "#/$defs/PngTextKind"
+        },
+        "languageTag": {
+          "type": "string"
+        },
+        "translatedKeyword": {
+          "type": "string"
+        }
+      }
+    },
+    "PngChunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "data"
+      ],
+      "properties": {
+        "kind": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "PngChunkMarker": {
+      "type": "object",
+      "required": [
+        "chunk"
+      ],
+      "properties": {
+        "chunk": {
+          "type": "string",
+          "enum": [
+            "ihdr",
+            "plte",
+            "trns",
+            "gama",
+            "chrm",
+            "srgb",
+            "phys",
+            "time",
+            "bkgd",
+            "idat",
+            "iend",
+            "text",
+            "unknown"
+          ]
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "title": "ReplacePixelsMutation"
+}

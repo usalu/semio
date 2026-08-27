@@ -18,7 +18,7 @@
 //! container first, exactly as `MutationMessage::at` specifies.
 
 use crate::artifacts::forms::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::artifacts::forms::{cache_forms_steps, forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::artifacts::forms::{materialize_forms_steps, forms_steps, FormStep, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -35,11 +35,11 @@ fn expected_after() -> FormsSnapshot {
 /// 🌱 The committed `⬅️before`, with its composed children resolved to a scene that DOES hold the
 /// payload's owning step — carrying no blocks, so only the nested lookup can miss.
 fn before() -> FormsSnapshot {
-    let snapshot: FormsSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FormsSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let FormMutation::DeleteBlock(payload) = mutation() else {
         panic!("rejects-deleting-a-block-missing-from-an-existing-step's committed mutation must be a delete-block");
     };
-    cache_forms_steps(&snapshot.structure.child_id, vec![FormStep { id: payload.step_id.clone(), title: "Basics".into(), description: None, blocks: Vec::new() }]);
+    materialize_forms_steps(&mut snapshot.structure, vec![FormStep { id: payload.step_id.clone(), title: "Basics".into(), description: None, blocks: Vec::new() }]);
     snapshot
 }
 
@@ -50,7 +50,7 @@ async fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
     let snapshot = apply_form_edit_mutation(&base, &mutation()).expect("an empty diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "delete-block/rejects-deleting-a-block-missing-from-an-existing-step: applied state differs from committed after-snapshot");
-    assert_eq!((&snapshot.structure.child_id, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a rejected delete must not mint new structure/results handles");
+    assert_eq!((&mut snapshot.structure, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a rejected delete must not mint new structure/results handles");
 }
 
 /// ✂️ The step resolves, the block does not: an Error-level `mutation.target-missing` addressed by

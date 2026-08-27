@@ -1,0 +1,5 @@
+syntax = "proto3";
+package semio.s.trinity.jack.mutation.remove_data_property;
+// remove-data-property / RemoveDataProperty
+message RemoveDataPropertyEntityRef { string entity = 1; string id = 2; }
+message RemoveDataProperty { RemoveDataPropertyEntityRef entity = 1; string key = 2; }

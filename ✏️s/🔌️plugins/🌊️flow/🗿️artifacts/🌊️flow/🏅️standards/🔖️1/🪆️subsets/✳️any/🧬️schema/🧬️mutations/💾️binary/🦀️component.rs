@@ -18,12 +18,12 @@ use crate::artifacts::flow::op::FlowMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `FlowMutation` to its binary state-patch form.
-pub async fn encode_op(operation: &FlowMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &FlowMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `FlowMutation` from its binary state-patch form.
-pub async fn decode_op(bytes: &[u8]) -> Result<FlowMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<FlowMutation, protocol::ProtocolError> {
     FlowMutation::decode_op(bytes)
 }
 

@@ -10,7 +10,7 @@
 //! derived one kind per axis from this subset's OWN `check_vt_conformance`
 //! (`../🧬️schema/🦀️component.rs`), which reads every axis `check_x_conformance` reads, plus two of its own: `/Root/DPartRoot` (hard) and a `/DPM` metadata dictionary on every `/DPart` node reachable from it (soft).
 //!
-//! This is the one place in this artifact where a vocabulary is a strict SUPERSET of a sibling's, and it is so by the subset's own code rather than by copying: `check_vt_conformance`'s first statement is literally `let mut out = check_x_conformance(snapshot);`, because ISO 16612-2 is defined ON TOP of ISO 15930 — a PDF/VT file is a PDF/X file with a document-part hierarchy. The sixteen inherited kinds are therefore not duplicated prose but a stated inheritance, and the four that are this subset's own — the `/DPartRoot` pair and the `/DPM` pair — are the variable-data partitioning mechanism no other conformance class in this standard has any concept of. The implementation is shared through the named `document::pdf_conformance` engine, never copied: what differs between `✳️x` and `✳️vt` is the declared axis list and the declared vocabulary, which is what a subset is.
+//! This is the one place in this artifact where a vocabulary is a strict SUPERSET of a sibling's, and it is so by the subset's own code rather than by copying: `check_vt_conformance`'s first statement is literally `let mut out = check_x_conformance(snapshot);`, because ISO 16612-2 is defined ON TOP of ISO 15930 — a PDF/VT file is a PDF/X file with a document-part hierarchy. The fourteen inherited kinds are therefore not duplicated prose but a stated inheritance, and the four that are this subset's own — the `/DPartRoot` pair and the `/DPM` pair — are the variable-data partitioning mechanism no other conformance class in this standard has any concept of. The implementation is shared through the named `document::pdf_conformance` engine, never copied: what differs between `✳️x` and `✳️vt` is the declared axis list and the declared vocabulary, which is what a subset is.
 //!
 //! No `✳️any` mutation moves any of those axes, and no mutation here touches page content: the two
 //! vocabularies are disjoint by construction, which is exactly why this subset needs its own.
@@ -32,7 +32,7 @@ use semio_repo_test_host::Json;
 /// 🧾️ Kebab-case spelling of every variant this subset's `PdfVtMutation` declares, in
 /// declaration order. The catalog `pdf-1-7-vt` is measured against this exact list, and the
 /// subject-side `KINDS` carries the test that proves enum, constant and manifest never drift apart.
-pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-encryption-dictionary", "remove-encryption-dictionary", "set-output-intent", "remove-output-intent", "set-trim-box", "remove-trim-box", "embed-font-file", "remove-font-file", "insert-javascript-action", "remove-javascript-action", "insert-launch-action", "remove-launch-action", "insert-media-annotation", "remove-media-annotation", "set-dpart-root", "remove-dpart-root", "set-dpart-metadata", "remove-dpart-metadata"];
+pub const KINDS: &[&str] = &["insert-encryption-dictionary", "remove-encryption-dictionary", "set-output-intent", "remove-output-intent", "set-trim-box", "remove-trim-box", "embed-font-file", "remove-font-file", "insert-javascript-action", "remove-javascript-action", "insert-launch-action", "remove-launch-action", "insert-media-annotation", "remove-media-annotation", "set-dpart-root", "remove-dpart-root", "set-dpart-metadata", "remove-dpart-metadata"];
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Profile
@@ -136,8 +136,6 @@ mod tests {
     /// carries, so a failure here and a failure there have the same cause.
     fn params_for(kind: &str) -> Json {
         match kind {
-            "no-mutation" => json_object(vec![]),
-            "set-snapshot" => json_object(vec![("conformance", Json::String("stamped".to_string()))]),
             "insert-encryption-dictionary" => json_object(vec![("version", Json::Number(2.0)), ("revision", Json::Number(3.0))]),
             "remove-encryption-dictionary" => json_object(vec![("version", Json::Number(2.0)), ("revision", Json::Number(3.0))]),
             "set-output-intent" => json_object(vec![("identifier", Json::String("sRGB IEC61966-2.1".to_string()))]),
@@ -177,9 +175,7 @@ mod tests {
             let base_projection = project_conformance(&base).unwrap_or_else(|error| panic!("{kind}: projecting the base failed: {error}"));
             let mutated = oracle_apply_mutation(&base, &forward).unwrap_or_else(|error| panic!("{kind}: {error}"));
             let mutated_projection = project_conformance(&mutated).unwrap_or_else(|error| panic!("{kind}: projecting the result failed: {error}"));
-            if *kind != "no-mutation" {
-                assert_ne!(mutated_projection, base_projection, "{kind} must be observable in the conformance-class projection");
-            }
+            assert_ne!(mutated_projection, base_projection, "{kind} must be observable in the conformance-class projection");
             let undo = oracle_inverse_spec(&base, &forward).unwrap_or_else(|error| panic!("{kind}: inverse spec: {error}"));
             let restored = oracle_apply_mutation(&mutated, &undo).unwrap_or_else(|error| panic!("{kind}: inverse: {error}"));
             let restored_projection = project_conformance(&restored).unwrap_or_else(|error| panic!("{kind}: projecting the restored document failed: {error}"));

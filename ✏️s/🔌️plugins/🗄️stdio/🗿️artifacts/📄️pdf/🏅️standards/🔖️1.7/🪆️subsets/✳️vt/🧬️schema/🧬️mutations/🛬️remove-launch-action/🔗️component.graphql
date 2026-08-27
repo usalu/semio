@@ -1,0 +1,4 @@
+# 🛬️ Direct remove-launch-action GraphQL payload.
+input RemoveLaunchActionMutationInput {
+  target: String!
+}

@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.value.ordered-set.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "values",
+    "expectedValues",
+    "grants",
+    "expected"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.value.ordered-set.v1"
+    },
+    "values": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "expectedValues": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true,
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "grants": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4096
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sharedClone",
+        "wireArray",
+        "explicitRetirement"
+      ],
+      "properties": {
+        "sharedClone": {
+          "const": true
+        },
+        "wireArray": {
+          "const": true
+        },
+        "explicitRetirement": {
+          "const": true
+        }
+      }
+    }
+  }
+}

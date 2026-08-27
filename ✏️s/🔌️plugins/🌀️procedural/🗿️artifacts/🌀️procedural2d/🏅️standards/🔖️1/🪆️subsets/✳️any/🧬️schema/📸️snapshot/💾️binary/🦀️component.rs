@@ -49,9 +49,9 @@ mod tests {
         // `DslValue::Number`s (an engine-owned behavior, see the sibling dsl test) doesn't make this
         // round trip spuriously unequal.
         values.insert("count".into(), serde_json::json!(3.5));
-        projection.generation.generations.push(flow::playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
-        projection.generation.selected_generation_id = Some("generation-1".into());
-        projection.generation.preview_text = Some("42".into());
+        projection.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(flow::playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
+        projection.generation.cold_builder_mut().expect("unique cold generation owner").selected_generation_id = Some("generation-1".into());
+        projection.generation.cold_builder_mut().expect("unique cold generation owner").preview_text = Some("42".into());
         test_support::assert_dsl_pack_equivalence(&projection);
     }
 
@@ -59,7 +59,7 @@ mod tests {
     fn dsl_pack_equivalence_covers_every_widget_kind() {
         let mut projection = Procedural2dSnapshot::default();
         projection.fixture.widgets = vec![
-            Widget::InputSlider { id: "slider".into(), value: 2.0, min: 0.0, max: 10.0, step: 0.5 },
+            Widget::InputSlider { id: "slider".into(), label: "Number".into(), value: 2.0, min: 0.0, max: 10.0, step: 0.5 },
             Widget::InputImage { id: "image".into(), src: "data:image/png;base64,abc".into() },
             Widget::Variable { id: "variable".into(), name: "value".into(), schema: "dictionary".into() },
             Widget::OutputAction { id: "action".into(), action: "export".into() },
@@ -210,8 +210,8 @@ impl Procedural2dMountedTypedSnapshotOwner {
         let mut dsl_stack = Vec::new();
         dsl_stack.try_reserve_exact(PROCEDURAL2D_MOUNTED_TYPED_DEPTH).map_err(|_| "procedural2d-mounted.dsl-stack-preflight")?;
         let candidate = Procedural2dSnapshot {
-            fixture: flow::FlowFixture { schema: String::new(), camera: flow::CameraJson::default(), widgets: Vec::new(), synapses: Vec::new(), layout: std::collections::BTreeMap::new() },
-            generation: flow::playbook::GenerationPlayState::default(),
+            fixture: flow::FlowFixture { schema: String::new(), camera: flow::CameraJson::default(), widgets: Vec::new(), synapses: Vec::new(), layout: flow::OrderedMap::new() },
+            generation: flow::playbook::GenerationPlayRoot::default(),
         };
         Ok(Self { candidate: std::mem::ManuallyDrop::new(Some(candidate)), stack, string: None, pending_table_rows: None, json_stack, json_destination: None, dsl_stack, dsl_destination: None, complete: false, handed_back: false })
     }
@@ -329,13 +329,13 @@ impl Procedural2dMountedTypedSnapshotOwner {
                 }
             }
             Procedural2dMountedStringTarget::Root(5) => {
-                self.candidate.as_mut().ok_or("procedural2d-mounted.snapshot-owner")?.generation.selected_generation_id = Some(owner.value);
+                self.candidate.as_mut().ok_or("procedural2d-mounted.snapshot-owner")?.generation.cold_builder_mut()?.selected_generation_id = Some(owner.value);
                 if let Some(Procedural2dMountedContainerOwner::Record { field, .. }) = self.stack.last_mut() {
                     *field = None;
                 }
             }
             Procedural2dMountedStringTarget::Root(6) => {
-                self.candidate.as_mut().ok_or("procedural2d-mounted.snapshot-owner")?.generation.preview_text = Some(owner.value);
+                self.candidate.as_mut().ok_or("procedural2d-mounted.snapshot-owner")?.generation.cold_builder_mut()?.preview_text = Some(owner.value);
                 if let Some(Procedural2dMountedContainerOwner::Record { field, .. }) = self.stack.last_mut() {
                     *field = None;
                 }
@@ -493,7 +493,7 @@ impl Procedural2dMountedTypedSnapshotOwner {
             },
             Some(Procedural2dMountedContainerOwner::Record { owner: Procedural2dMountedRecordOwner::Widget(widget), field, .. }) => {
                 let field = field.take().ok_or("procedural2d-mounted.widget-number-owner")?;
-                *widget.numbers.get_mut(field.saturating_sub(1) as usize).ok_or("procedural2d-mounted.widget-number-field")? = value;
+                *widget.numbers.get_mut(field.checked_sub(2).ok_or("procedural2d-mounted.widget-number-field")? as usize).ok_or("procedural2d-mounted.widget-number-field")? = value;
             }
             Some(Procedural2dMountedContainerOwner::Record { owner: Procedural2dMountedRecordOwner::Layout { value: layout, .. }, field, .. }) => match field.take() {
                 Some(0) => layout.x = value,
@@ -686,12 +686,12 @@ impl Procedural2dMountedTypedSnapshotOwner {
         let [first_dynamic, second_dynamic] = owner.dynamic;
         Ok(match owner.keyword.as_str() {
             "neuron" => flow::Widget::Neuron { id, neuron_kind: second, params: first_dictionary, input_ports: first_list, output_ports: second_list, preview: owner.boolean },
-            "input-slider" => flow::Widget::InputSlider { id, value, min, max, step },
+            "input-slider" => flow::Widget::InputSlider { id, label: second, value, min, max, step },
             "input-note" => flow::Widget::InputNote { id, text: second },
             "input-image" => flow::Widget::InputImage { id, src: second },
             "variable" => flow::Widget::Variable { id, name: second, schema: third },
             "output-preview" => {
-                let mut expanded = std::collections::BTreeSet::new();
+                let mut expanded = flow::OrderedSet::new();
                 for entry in first_list {
                     expanded.insert(entry);
                 }
@@ -751,7 +751,7 @@ impl Procedural2dMountedTypedSnapshotOwner {
                 }
             }
             Procedural2dMountedContainerOwner::Generations { rows, .. } if kind == mounted::RetainedValueContainer::Table => {
-                let target = &mut self.candidate.as_mut().ok_or("procedural2d-mounted.snapshot-owner")?.generation.generations;
+                let target = &mut self.candidate.as_mut().ok_or("procedural2d-mounted.snapshot-owner")?.generation.cold_builder_mut()?.generations;
                 for row in rows {
                     target.push(flow::playbook::FormGeneration { id: row.id, name: row.name, values: row.values });
                 }
@@ -1317,7 +1317,7 @@ mod retained_mounted_laws {
         let nested = flow::neural::Dictionary::new().insert("enabled", flow::neural::Value::Atom(flow::neural::Atom::Boolean(true)));
         let params = flow::neural::Dictionary::new().insert("gain", flow::neural::Value::Atom(flow::neural::Atom::Decimal(2.5))).insert("nested", flow::neural::Value::Dictionary(nested));
         expected.fixture.widgets.push(flow::Widget::Neuron { id: "retained-neuron".into(), neuron_kind: "law".into(), params, input_ports: vec!["in".into()], output_ports: vec!["out".into()], preview: true });
-        let mut expanded = std::collections::BTreeSet::new();
+        let mut expanded = flow::OrderedSet::new();
         expanded.insert("answer".into());
         let preview = flow::neural::Dictionary::new().insert("answer", flow::neural::Value::Atom(flow::neural::Atom::String("visible".into())));
         expected.fixture.widgets.push(flow::Widget::OutputPreview { id: "retained-preview".into(), preview, expanded });
@@ -1325,9 +1325,9 @@ mod retained_mounted_laws {
         expected.fixture.synapses.push(flow::SynapseSpec { id: "retained-synapse".into(), from: "retained-neuron".into(), to: "retained-preview".into(), from_port: "out".into(), to_port: String::new() });
         let mut values = serde_json::Map::new();
         values.insert("nested".into(), serde_json::json!({"array": [true, null, 3.5], "text": "retained"}));
-        expected.generation.generations.push(flow::playbook::FormGeneration { id: "retained-generation".into(), name: "Generation".into(), values });
-        expected.generation.selected_generation_id = Some("retained-generation".into());
-        expected.generation.preview_text = Some("preview".into());
+        expected.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(flow::playbook::FormGeneration { id: "retained-generation".into(), name: "Generation".into(), values });
+        expected.generation.cold_builder_mut().expect("unique cold generation owner").selected_generation_id = Some("retained-generation".into());
+        expected.generation.cold_builder_mut().expect("unique cold generation owner").preview_text = Some("preview".into());
         assert!(!expected.fixture.widgets.is_empty());
         assert!(!expected.fixture.synapses.is_empty());
         let bytes = encode(&expected);

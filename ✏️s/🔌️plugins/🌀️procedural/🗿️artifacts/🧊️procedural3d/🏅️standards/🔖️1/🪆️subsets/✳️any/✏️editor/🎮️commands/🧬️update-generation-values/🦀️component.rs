@@ -17,7 +17,7 @@ use serde_json::{json, Value};
 /// value built from the typed command fields.
 fn handle_generation(action: &str, args: Option<&Value>, projection: &Procedural3dSnapshot, cfg: &Procedural3dConfig) -> Emit<Procedural3dMutation, Procedural3dConfigMutation> {
     let spec = flow_fixture_to_form_spec(&projection.fixture);
-    let mut state = projection.generation.clone();
+    let mut state = projection.generation.as_state().clone();
     state.selected_generation_id = cfg.selected_generation_id.clone();
     let Some(operations) = generation_operations(action, args, &state, &spec) else {
         return Emit::default();

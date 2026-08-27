@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️set-page-rotation",
+  "semanticKind": "set-page-rotation",
+  "displayName": "Set Page Rotation",
+  "emoji": "🔄️",
+  "aggregateVariant": "SetPageRotation",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "set-page-rotation",
+  "binaryTag": 15,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -11,7 +11,7 @@ pub const FLOW_PLAY_BODY_GENERATIONS: &str = "flow.play.generations";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: FLOW_PLAY_WINDOW_GENERATIONS.into(),
         label: LocalizedLabel::native("Generations", "Generationen"),
@@ -32,7 +32,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(config: &FlowConfig, locale: Locale, terminology: Terminology) -> UiNode {
+pub fn render(config: &FlowConfig, locale: Locale, terminology: Terminology) -> UiNode {
     let generation = config.generation();
     render_generations_tree(FLOW_PLAY_APP_ID, "flow-play-generate", &generation.generations, generation.selected_generation_id.as_deref(), locale, terminology)
 }

@@ -392,6 +392,7 @@ export type NodeGraphScene = {
   readonly controlsJson?: string;
   readonly clustersJson?: string;
   readonly computingJson?: string;
+  readonly statusJson?: string;
   readonly capabilitiesJson?: string;
   readonly fixtureJson?: string;
   readonly presencePeersJson?: string;
@@ -429,9 +430,10 @@ export type TextEditorScene = {
 };
 
 export const nodeGraphActions = {
-  select: "nodeGraphSelect",
-  hover: "nodeGraphHover",
+  select: "interactionSelect",
+  hover: "interactionHover",
   edit: "nodeGraphEdit",
+  parameter: "setGraphParameter",
   viewport: "nodeGraphViewport",
   spotlightCommit: "spotlightCommit",
 } as const;

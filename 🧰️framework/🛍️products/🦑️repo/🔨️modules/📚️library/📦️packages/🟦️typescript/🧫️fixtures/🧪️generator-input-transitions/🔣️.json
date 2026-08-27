@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "scope": "🧪️tests/🧪️fixture",
+  "files": {
+    "🧪️subject/🟦️component.ts": "export const value = 1;\n",
+    "🧪️consumer/🟦️.ts": "export { value } from \"../🧪️subject/🟦️component.ts\";\n"
+  },
+  "source": "🧪️subject/🟦️component.ts",
+  "destination": "🧪️subject/🟦️.ts",
+  "consumer": "🧪️consumer/🟦️.ts",
+  "prospectiveInputPaths": ["🧪️subject/🟦️.ts"],
+  "movedInputReference": "export * from \"./🟦️component.ts\";\n",
+  "failureStages": ["after-staging", "after-moves", "after-edits", "after-regenerations", "before-verify"],
+  "absentOutputParent": "🧪️pending",
+  "dynamicInputs": {
+    "root": "🧪️inputs",
+    "initialPath": "🧪️inputs/🔣️.json",
+    "emptyPath": "🧪️inputs/🧪️empty",
+    "unmatchedPath": "🧪️inputs/🔤️.txt",
+    "leafPattern": "🧪️inputs/**/*.json",
+    "addedPath": "🧪️inputs/🧪️added/🔣️.json",
+    "bytes": "{\"input\":true}\n",
+    "phases": ["staging", "moves", "edits", "regenerations"]
+  },
+  "tamperCases": [
+    { "id": "unchanged-input", "phase": "staging", "failureStage": "after-staging", "path": "🧪️generator/📜️script.ts", "expectedError": "regeneration inputs" },
+    { "id": "moved-input", "phase": "moves", "failureStage": "after-moves", "path": "🧪️subject/🟦️.ts", "expectedError": "move preimage" },
+    { "id": "edited-input", "phase": "edits", "failureStage": "after-edits", "path": "🧪️consumer/🟦️.ts", "expectedError": "applied edit" }
+  ]
+}

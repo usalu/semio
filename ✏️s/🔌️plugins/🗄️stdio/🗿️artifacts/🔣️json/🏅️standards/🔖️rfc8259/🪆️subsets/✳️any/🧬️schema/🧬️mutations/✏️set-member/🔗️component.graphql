@@ -1,0 +1,2 @@
+# 🧬 set-member/SetMember
+input SetMemberPayload { path: [MutationPathSegment!]! key: String! value: MutationPayload! }

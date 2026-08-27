@@ -1,0 +1,72 @@
+{
+  "schema": "semio.flow.graph-parameter.v1",
+  "cases": [
+    {
+      "app": "flow",
+      "controllerId": "s.flow.flow@1/*#editor",
+      "surfaceId": "flow-graph",
+      "widgetId": "radius",
+      "label": "Radius",
+      "before": {
+        "value": 2,
+        "min": 0,
+        "max": 10,
+        "step": 1
+      },
+      "request": 3,
+      "after": {
+        "value": 3,
+        "min": 0,
+        "max": 10,
+        "step": 1
+      }
+    },
+    {
+      "app": "procedural2d",
+      "controllerId": "s.procedural.procedural2d@1/*#editor",
+      "surfaceId": "procedural2d-graph",
+      "widgetId": "width",
+      "label": "Breite",
+      "before": {
+        "value": 2,
+        "min": 0,
+        "max": 10,
+        "step": 1
+      },
+      "request": 12,
+      "after": {
+        "value": 12,
+        "min": 0,
+        "max": 20,
+        "step": 1
+      }
+    },
+    {
+      "app": "procedural3d",
+      "controllerId": "s.procedural.procedural3d@1/*#editor",
+      "surfaceId": "procedural3d-graph",
+      "widgetId": "depth",
+      "label": "Tiefe",
+      "before": {
+        "value": 2,
+        "min": 0,
+        "max": 10,
+        "step": 1
+      },
+      "request": -0.5,
+      "after": {
+        "value": -0.5,
+        "min": -1,
+        "max": 1,
+        "step": 0.1
+      }
+    }
+  ],
+  "action": "setGraphParameter",
+  "expected": {
+    "documentJsonReads": 0,
+    "wholeFixtureActions": 0,
+    "gestureEndActions": 0,
+    "commitTimerMs": 0
+  }
+}

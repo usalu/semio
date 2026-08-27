@@ -198,12 +198,38 @@ pub fn note_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 /// {@link semio_example_json} are the only ways it should be consumed.
 const SEMIO_NOTE_EXAMPLE_TEXT: &str = crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT;
 
-/// 🆔️ Monotonic id generator for freshly created/duplicated/imported blocks.
-pub async fn create_note_id(prefix: &str) -> String {
-    use std::sync::atomic::{AtomicU64, Ordering};
-    static NEXT: AtomicU64 = AtomicU64::new(1);
-    let serial = NEXT.fetch_add(1, Ordering::Relaxed);
-    format!("{prefix}-{serial}")
+/// 🆔️ Durable identifier cursor owned by one exact app operation or importer child.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct NoteIdOwner {
+    pub scope: String,
+    pub next_serial: u64,
+}
+
+impl NoteIdOwner {
+    pub fn new(scope: impl Into<String>, next_serial: u64) -> Self {
+        Self { scope: scope.into(), next_serial }
+    }
+
+    pub fn for_document_child(document: &crate::artifacts::note::NoteSnapshot, child: &str) -> Self {
+        Self::new(format!("{}-{child}", document.id), document.blocks.len() as u64)
+    }
+
+    pub fn allocate(&mut self, prefix: &str) -> String {
+        let serial = self.next_serial;
+        self.next_serial = self.next_serial.checked_add(1).expect("note identifier owner exhausted its serial range");
+        format!("{prefix}-{}-{serial}", note_id_scope_tag(&self.scope))
+    }
+}
+
+fn note_id_scope_tag(scope: &str) -> String {
+    let digest = scope.as_bytes().iter().fold(0xcbf2_9ce4_8422_2325_u64, |state, byte| (state ^ u64::from(*byte)).wrapping_mul(0x100_0000_01b3));
+    format!("{digest:016x}")
+}
+
+/// 🆔️ Allocates from the caller-owned operation/child cursor; no plugin-process owner exists.
+pub async fn create_note_id(owner: &mut NoteIdOwner, prefix: &str) -> String {
+    owner.allocate(prefix)
 }
 
 /// 📄️ The `semio` example, parsed once from {@link SEMIO_NOTE_EXAMPLE_TEXT} — the source of truth for
@@ -341,8 +367,8 @@ pub async fn flatten_blocks(blocks: &[NoteBlockNode]) -> Vec<&NoteBlockNode> {
     out
 }
 
-pub async fn create_block_by_kind(kind: &str, x: f64, y: f64) -> NoteBlockNode {
-    let id = create_note_id(kind);
+pub async fn create_block_by_kind(owner: &mut NoteIdOwner, kind: &str, x: f64, y: f64) -> NoteBlockNode {
+    let id = create_note_id(owner, kind);
     match kind {
         "image" => NoteBlockNode::Image { id, name: "Image".into(), x, y, width: 240.0, height: 160.0, rotation: 0.0, visible: true, locked: false, image_key: "placeholder".into() },
         "table" => NoteBlockNode::Table {
@@ -400,7 +426,7 @@ pub async fn remove_block_from_tree(blocks: &mut Vec<NoteBlockNode>, target_id: 
     false
 }
 
-pub async fn reid_block_tree(block: &mut NoteBlockNode, rename_top: bool) {
+pub async fn reid_block_tree(owner: &mut NoteIdOwner, block: &mut NoteBlockNode, rename_top: bool) {
     let kind = block_kind(block).to_string();
     // 🧬️ A duplicated Text block must never keep its source's composed `content` child handle — two
     // distinct block ids sharing one content-addressed child slot would violate the "a child slot is
@@ -409,7 +435,7 @@ pub async fn reid_block_tree(block: &mut NoteBlockNode, rename_top: bool) {
     let recovered_paragraphs = if let NoteBlockNode::Text { content, .. } = &*block { Some(crate::artifacts::note::note_block_text(content)) } else { None };
     match block {
         NoteBlockNode::Text { id, name, .. } | NoteBlockNode::Image { id, name, .. } | NoteBlockNode::Table { id, name, .. } | NoteBlockNode::Math { id, name, .. } | NoteBlockNode::Ink { id, name, .. } | NoteBlockNode::Group { id, name, .. } => {
-            *id = create_note_id(&kind);
+            *id = create_note_id(owner, &kind);
             if rename_top {
                 *name = format!("{name} copy");
             }
@@ -420,14 +446,14 @@ pub async fn reid_block_tree(block: &mut NoteBlockNode, rename_top: bool) {
     }
     if let NoteBlockNode::Group { children, .. } = block {
         for child in children.iter_mut() {
-            reid_block_tree(child, false);
+            reid_block_tree(owner, child, false);
         }
     }
 }
 
-pub async fn clone_block(block: &NoteBlockNode) -> NoteBlockNode {
+pub async fn clone_block(owner: &mut NoteIdOwner, block: &NoteBlockNode) -> NoteBlockNode {
     let mut cloned: NoteBlockNode = serde_json::from_value(serde_json::to_value(block).unwrap()).unwrap();
-    reid_block_tree(&mut cloned, true);
+    reid_block_tree(owner, &mut cloned, true);
     cloned
 }
 
@@ -717,10 +743,11 @@ mod tests {
     /// 🧪️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
     #[semio_framework_async_macros::async_test]
     async fn clone_block_reids_group_children() {
-        let child = create_block_by_kind("text", 0.0, 0.0);
+        let mut ids = NoteIdOwner::new("schema-clone-test", 0);
+        let child = create_block_by_kind(&mut ids, "text", 0.0, 0.0);
         let child_id = block_id(&child).to_string();
         let group = NoteBlockNode::Group { id: "group-1".into(), name: "Group".into(), x: 0.0, y: 0.0, width: 100.0, height: 100.0, rotation: 0.0, visible: true, locked: false, children: vec![child] };
-        let cloned = clone_block(&group);
+        let cloned = clone_block(&mut ids, &group);
         if let NoteBlockNode::Group { children, .. } = &cloned {
             assert_ne!(block_id(&children[0]), child_id);
         } else {

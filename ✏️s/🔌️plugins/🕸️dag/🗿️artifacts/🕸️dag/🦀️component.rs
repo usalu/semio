@@ -6,7 +6,7 @@
 //! composes stdio's neutral `graph` subset instead. The rich live editing types
 //! (`infinite_board_port_directed_dag::DagNodeSpec`/`DagNodeKind`/`DagFixtureEdge`) still flow
 //! through the app exactly as before; only the PERSISTED shape changed. They now bridge through the
-//! composed child + `🔖️WorkingScene` cache rather than plain struct fields.
+//! composed child's exact local owner rather than plain struct fields.
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use serde::{Deserialize, Serialize};
@@ -128,42 +128,18 @@ pub async fn dag_content_child_handle(nodes: &[DagNodeSpec], edges: &[DagFixture
 //#endregion 🔖️ContentBridge
 
 //#region 🔖️WorkingScene
-/// 🌱 Ephemeral, session-side working representation of the composed content child's live
-/// nodes/edges — NEVER persisted, NEVER a durable field on `DagSnapshot` itself (matches the
-/// `EngineRep` contract: wholly derived, droppable at any instant, rebuilt from base). Exists
-/// because no `LinkResolver`/child-dispatch seam is wired into `ArtifactApp::handle` yet (checked
-/// directly against `🔌️plugin/🦀️component.rs` — same standing gap cad/lowpoly/writer/flow's reports
-/// all document); until one exists, the only way a persisted content-addressed HANDLE can round-trip
-/// to real nodes/edges within one process is this cache, keyed by `DagContentChild::child_id` —
-/// mirrors `FlowWorkingScene`/`WriterWorkingScene`/`LowpolyScratch.mesh_workspace`.
-///
-/// ⚠️ Same documented gap as flow/lowpoly/writer: store-level undo/redo bypasses
-/// `ArtifactApp::handle` entirely, and a bare `parse_dsl`/`decode_pack` of persisted bytes recovers
-/// only the opaque handle, never the content (the child's real payload lives in its own,
-/// not-yet-resolvable, child store). `dag_working_scene`/`dag_working_scene_for_handle` fail soft
-/// (an empty scene) rather than panicking. A real fix needs child-document resolution, which no
-/// WASM-guest plugin in this repo has yet.
+/// 🌱 Ephemeral representation of one composed child's live nodes and edges. The value is attached
+/// to the exact `ArtifactChild`; it is never persisted, never global, and is retired with that owner.
 #[derive(Clone, Debug, Default)]
 pub struct DagWorkingScene {
     pub nodes: Vec<DagNodeSpec>,
     pub edges: Vec<DagFixtureEdge>,
 }
 
-thread_local! {
-    static DAG_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, DagWorkingScene>> = std::cell::RefCell::new(std::collections::HashMap::new());
-}
-
-/// 📝 Seeds the scratch cache for a handle — call whenever new nodes/edges content is about to
-/// become a document's `content` field (every mutation-diff/fixture builder in this plugin does, via
-/// [`dag_content_child_handle_and_cache`]).
-pub async fn cache_dag_content(child_id: &str, nodes: Vec<DagNodeSpec>, edges: Vec<DagFixtureEdge>) {
-    DAG_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), DagWorkingScene { nodes, edges }));
-}
-
-/// 🔎 Reads the cached live scene for a content child handle — an empty scene (never a panic) when
-/// nothing has cached it yet (see this region's module doc comment for why that can happen).
+/// 🔎 Retains this exact child's typed working owner. A wire-only handle fails soft until the host
+/// materializes its child document.
 pub async fn dag_working_scene_for_handle(handle: &DagContentChild) -> DagWorkingScene {
-    DAG_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned()).unwrap_or_default()
+    handle.local_owner::<DagWorkingScene>().map(|scene| scene.as_ref().clone()).unwrap_or_default()
 }
 
 /// 🔎 Reads the current document's live nodes/edges off its `content` child handle — the single read
@@ -173,14 +149,11 @@ pub async fn dag_working_scene(snapshot: &DagSnapshot) -> DagWorkingScene {
     dag_working_scene_for_handle(&snapshot.content)
 }
 
-/// 🏗️ Mints a new content-addressed handle AND seeds the scratch cache with its scene in one call —
-/// the standard way every mutation-diff/fixture builder in this plugin creates a `content` field
-/// value; never construct a handle without also caching, or [`dag_working_scene`] will read back
-/// empty.
-pub async fn dag_content_child_handle_and_cache(nodes: Vec<DagNodeSpec>, edges: Vec<DagFixtureEdge>) -> DagContentChild {
+/// 🏗️ Mints one content-addressed child and transfers its immutable working scene into that exact
+/// local owner. No matching identity in another snapshot can observe the payload.
+pub async fn dag_content_child_with_owner(nodes: Vec<DagNodeSpec>, edges: Vec<DagFixtureEdge>) -> DagContentChild {
     let handle = dag_content_child_handle(&nodes, &edges);
-    cache_dag_content(&handle.child_id, nodes, edges);
-    handle
+    handle.with_local_owner(std::sync::Arc::new(DagWorkingScene { nodes, edges }))
 }
 //#endregion 🔖️WorkingScene
 
@@ -295,6 +268,18 @@ pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDe
 mod tests {
     use super::*;
 
+    trait DagChildOwnerOracle {
+        fn expected() -> serde_json::Value;
+    }
+
+    struct SerdeJsonDagChildOwnerOracle;
+
+    impl DagChildOwnerOracle for SerdeJsonDagChildOwnerOracle {
+        fn expected() -> serde_json::Value {
+            serde_json::from_str(include_str!("🧪️fixtures/🎯️child-owner-isolation.json")).expect("language-neutral DAG child-owner fixture")
+        }
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn artifact_kind_declares_the_graph_dag_component_kind() {
         assert_eq!(artifact_kind().id, "graph.dag");
@@ -314,6 +299,20 @@ mod tests {
         let (nodes, edges) = working_from_dag_content_snapshot(&content);
         assert_eq!(nodes, scene.nodes);
         assert_eq!(edges, scene.edges);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn dag_working_scene_is_owned_by_the_exact_snapshot_child() {
+        let owned = dag_content_child_with_owner(Vec::new(), Vec::new());
+        let wire = serde_json::to_vec(&owned).expect("DAG child wire identity");
+        let reconstructed: DagContentChild = serde_json::from_slice(&wire).expect("DAG child wire roundtrip");
+        let observed = serde_json::json!({
+            "ownedHasScene": owned.local_owner::<DagWorkingScene>().is_some(),
+            "wireIdentityMatches": owned == reconstructed,
+            "wireHasScene": reconstructed.local_owner::<DagWorkingScene>().is_some(),
+        });
+
+        assert_eq!(observed, SerdeJsonDagChildOwnerOracle::expected());
     }
 }
 //#endregion 🧪️Tests

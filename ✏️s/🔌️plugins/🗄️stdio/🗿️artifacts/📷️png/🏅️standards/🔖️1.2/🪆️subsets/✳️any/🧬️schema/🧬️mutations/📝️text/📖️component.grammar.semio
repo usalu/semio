@@ -1,55 +1,36 @@
+# Direct identities: change-header, replace-palette, change-transparency, change-gamma, change-chromaticities, change-srgb-intent, change-physical-dims, change-timestamp, change-background, insert-text-chunk, remove-text-chunk, replace-text-chunk, replace-pixels, insert-unknown-chunk, remove-unknown-chunk
 dialect grammar
 grammar stdio.png.mutations
 start op
 
-# Real one-line `keyword key=value ...` op-text form this artifact's `OpText::print_op`/
-# `parse_op` ALREADY emit (🧬️mutations/🦀️component.rs `print_png_mutation`/`parse_png_mutation`)
-# — NOT the pre-F6 serde-JSON shape this file used to describe (F6 replaced serde_json transfer
-# for ops/diffs repo-wide; this grammar was simply never updated to match until now).
 comment none
 
-# Every production body stays on ONE physical line — this dialect's alternation/sequence
-# parsing stops at the first Newline token (no line-continuation syntax exists, P2-P1 csv
-# report §3 item 1; confirmed live during this wave — a wrapped `op = ...` production here
-# silently truncated at the first line break, dropping every alternative after it).
-op = no-mutation-op | set-snapshot-op | set-header-op | set-palette-op | set-transparency-op | set-gamma-op | set-chromaticities-op | set-srgb-intent-op | set-physical-dims-op | set-timestamp-op | set-background-op | insert-text-chunk-op | remove-text-chunk-op | set-text-chunk-op | set-pixels-op | insert-unknown-chunk-op | remove-unknown-chunk-op
+op = change-header-op | replace-palette-op | change-transparency-op | change-gamma-op | change-chromaticities-op | change-srgb-intent-op | change-physical-dims-op | change-timestamp-op | change-background-op | insert-text-chunk-op | remove-text-chunk-op | replace-text-chunk-op | replace-pixels-op | insert-unknown-chunk-op | remove-unknown-chunk-op
 
-no-mutation-op = "no-mutation"
-set-snapshot-op = "set-snapshot" "snapshot" "=" snapshot-value
-set-header-op = "set-header" "width" "=" INT "height" "=" INT "bit-depth" "=" INT "color-type" "=" color-type "interlace" "=" bit
-set-palette-op = "set-palette" "plte" "=" palette-opt
-set-transparency-op = "set-transparency" "trns" "=" transparency-opt
-set-gamma-op = "set-gamma" "gama" "=" int-opt
-set-chromaticities-op = "set-chromaticities" "chrm" "=" chromaticities-opt
-set-srgb-intent-op = "set-srgb-intent" "srgb" "=" int-opt
-set-physical-dims-op = "set-physical-dims" "phys" "=" physical-dims-opt
-set-timestamp-op = "set-timestamp" "time" "=" timestamp-opt
-set-background-op = "set-background" "bkgd" "=" background-opt
+change-header-op = "change-header" "width" "=" INT "height" "=" INT "bit-depth" "=" INT "color-type" "=" color-type "interlace" "=" bit
+replace-palette-op = "replace-palette" "plte" "=" palette-opt
+change-transparency-op = "change-transparency" "trns" "=" transparency-opt
+change-gamma-op = "change-gamma" "gama" "=" int-opt
+change-chromaticities-op = "change-chromaticities" "chrm" "=" chromaticities-opt
+change-srgb-intent-op = "change-srgb-intent" "srgb" "=" int-opt
+change-physical-dims-op = "change-physical-dims" "phys" "=" physical-dims-opt
+change-timestamp-op = "change-timestamp" "time" "=" timestamp-opt
+change-background-op = "change-background" "bkgd" "=" background-opt
 insert-text-chunk-op = "insert-text-chunk" "index" "=" INT "chunk" "=" text-chunk-value
 remove-text-chunk-op = "remove-text-chunk" "index" "=" INT
-set-text-chunk-op = "set-text-chunk" "index" "=" INT "chunk" "=" text-chunk-value
-set-pixels-op = "set-pixels" "pixels" "=" hex
+replace-text-chunk-op = "replace-text-chunk" "index" "=" INT "chunk" "=" text-chunk-value
+replace-pixels-op = "replace-pixels" "pixels" "=" hex
 insert-unknown-chunk-op = "insert-unknown-chunk" "index" "=" INT "chunk" "=" chunk-value
 remove-unknown-chunk-op = "remove-unknown-chunk" "index" "=" INT
 
-# Shared primitive/value grammars — the SAME shapes `enc_png_snapshot`/`enc_rgb`/
-# `enc_transparency`/`enc_chromaticities`/`enc_srgb_intent`/`enc_physical_dims`/
-# `enc_timestamp`/`enc_background`/`enc_text_chunk`/`enc_chunk`/`enc_chunk_marker` print
-# (🔺️diff/🦀️component.rs, `pub(crate)` and reused by 🧬️mutations/🦀️component.rs — same
-# intra-artifact reuse pattern svg's diff/mutations pair uses). `encode_option`'s uniform
-# tri-state tag: `[0]` = None, `[1,<value>]` = Some(value).
 bit = "0" | "1"
 color-type = INT
 int-opt = "[" "0" "]" | "[" "1" "," INT "]"
-
-snapshot-value = "[" hex "," INT "," INT "," INT "," color-type "," bit "," palette-opt "," transparency-opt "," int-opt "," chromaticities-opt "," int-opt "," physical-dims-opt "," timestamp-opt "," background-opt "," text-chunk-list "," hex "," chunk-marker-list "," chunk-list "]"
 
 palette-opt = "[" "0" "]" | "[" "1" "," "[" palette-items? "]" "]"
 palette-items = rgb-value {"," rgb-value}*
 rgb-value = "[" INT "," INT "," INT "]"
 
-# `PngTransparency` — `I[<hex alpha bytes>]` (Indexed) / `G[<gray>]` (Grayscale) /
-# `R[<r>,<g>,<b>]` (Rgb) — `enc_transparency`/`dec_transparency`.
 transparency-opt = "[" "0" "]" | "[" "1" "," transparency-value "]"
 transparency-value = "I" "[" hex "]" | "G" "[" INT "]" | "R" "[" INT "," INT "," INT "]"
 
@@ -62,8 +43,6 @@ physical-dims-value = "[" INT "," INT "," bit "]"
 timestamp-opt = "[" "0" "]" | "[" "1" "," timestamp-value "]"
 timestamp-value = "[" INT "," INT "," INT "," INT "," INT "," INT "]"
 
-# `PngBackground` — `G[<gray>]` (Grayscale) / `R[<r>,<g>,<b>]` (Rgb) / `I[<index>]` (Indexed)
-# — `enc_background`/`dec_background`.
 background-opt = "[" "0" "]" | "[" "1" "," background-value "]"
 background-value = "G" "[" INT "]" | "R" "[" INT "," INT "," INT "]" | "I" "[" INT "]"
 
@@ -71,8 +50,6 @@ text-chunk-list = "[" text-chunk-items? "]"
 text-chunk-items = text-chunk-value {"," text-chunk-value}*
 text-chunk-value = "[" hex "," hex "," bit "," INT "," hex "," hex "]"
 
-# `PngChunkMarker` — unit variants print as their bare literal chunk-name tag; `Text`/
-# `Unknown` as `TAG[index]` — `enc_chunk_marker`/`dec_chunk_marker`.
 chunk-marker-list = "[" chunk-marker-items? "]"
 chunk-marker-items = chunk-marker-value {"," chunk-marker-value}*
 chunk-marker-value = "IHDR" | "PLTE" | "TRNS" | "GAMA" | "CHRM" | "SRGB" | "PHYS" | "TIME" | "BKGD" | "IDAT" | "IEND" | "TEXT" "[" INT "]" | "UNKN" "[" INT "]"
@@ -80,13 +57,3 @@ chunk-marker-value = "IHDR" | "PLTE" | "TRNS" | "GAMA" | "CHRM" | "SRGB" | "PHYS
 chunk-list = "[" chunk-items? "]"
 chunk-items = chunk-value {"," chunk-value}*
 chunk-value = "[" hex "," hex "]"
-
-# `hex` (bare `hex`, deliberately NOT defined as a production) is the framework's built-in
-# `hex` MACRO (`📖️grammar/🦀️component.rs`'s `default_macros`/`macro_hex_ok`) — see the
-# sibling json/csv artifacts' own `hex` doc comment (P2-P1 fix report) for why a macro, not a
-# hand-rolled `{INT | IDENT}*`-shaped production, is required for every open-ended hex run
-# below: a production's `Star` never backtracks, so a real wire shape like `chunk=[hex,hex]`
-# — where the trailing `]`/`,` tokenize distinctly, but `set-pixels pixels=<hex>` is
-# immediately followed by nothing, and `index=<INT> chunk=` sits immediately BEFORE a hex run
-# elsewhere — needs the macro's own largest-span-first backtracking (`Recognizer::
-# match_macro_span`) to avoid silently swallowing an adjacent keyword token.

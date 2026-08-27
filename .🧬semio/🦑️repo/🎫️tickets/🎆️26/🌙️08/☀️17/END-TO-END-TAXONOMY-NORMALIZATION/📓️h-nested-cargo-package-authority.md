@@ -16,19 +16,19 @@ The earlier report spells the WGPU directory `🧊gpu`. The current admitted tre
 
 All three files have external Cargo authority. None should create a semantic directory named `Cargo`, and none warrants a broad fixture or basename exception.
 
-| Current file | Classification | Exact semantic owner | Exact destination |
-|---|---|---|---|
-| `…/engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml` | Handwritten authoritative Cargo package metadata | Registered target owner `engine/🎯️targets/🧊️wgpu` | `…/engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml` |
-| `…/🧫️fixtures/🔌️jcoprobe/👽️guest/Cargo.toml` | Handwritten authoritative isolated fixture workspace/package metadata | Exact JCO component-guest owner `…/🔌️jcoprobe/👽️guest` | `…/🔌️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml` |
-| `…/🧫️fixtures/🔌️jcoprobe/👽️guest/Cargo.lock` | Cargo-generated, tracked reproducibility evidence owned by the isolated fixture package | Same JCO component-guest package | `…/🔌️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock` |
+| Current file                                             | Classification                                                                          | Exact semantic owner                                   | Exact destination                                        |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------- |
+| `…/engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml` | Handwritten authoritative Cargo package metadata                                        | Registered target owner `engine/🎯️targets/🧊️wgpu`      | `…/engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml` |
+| `…/🧫️fixtures/🔌️jcoprobe/👽️guest/Cargo.toml`             | Handwritten authoritative isolated fixture workspace/package metadata                   | Exact JCO component-guest owner `…/🔌️jcoprobe/👽️guest` | `…/🔌️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml`      |
+| `…/🧫️fixtures/🔌️jcoprobe/👽️guest/Cargo.lock`             | Cargo-generated, tracked reproducibility evidence owned by the isolated fixture package | Same JCO component-guest package                       | `…/🔌️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.lock`      |
 
 The destination paths are collision-free and within the 240-byte budget:
 
-| File | Source bytes | Destination bytes | Destination exists |
-|---|---:|---:|---|
-| WGPU `Cargo.toml` | 163 | 163 | no |
-| JCO `Cargo.toml` | 98 | 126 | no |
-| JCO `Cargo.lock` | 98 | 126 | no |
+| File              | Source bytes | Destination bytes | Destination exists |
+| ----------------- | -----------: | ----------------: | ------------------ |
+| WGPU `Cargo.toml` |          163 |               163 | no                 |
+| JCO `Cargo.toml`  |           98 |               126 | no                 |
+| JCO `Cargo.lock`  |           98 |               126 | no                 |
 
 ## WGPU renderer package
 
@@ -83,9 +83,9 @@ Exact current root:
 
 The two Cargo files are unchanged from the retained inventory:
 
-| File | Bytes | SHA-256 |
-|---|---:|---|
-| `Cargo.toml` | 584 | `41cac3870bbc659710d902b34a66f69a621a3a9cd39a10d5bb551e937fd3da2c` |
+| File         |  Bytes | SHA-256                                                            |
+| ------------ | -----: | ------------------------------------------------------------------ |
+| `Cargo.toml` |    584 | `41cac3870bbc659710d902b34a66f69a621a3a9cd39a10d5bb551e937fd3da2c` |
 | `Cargo.lock` | 11,211 | `15f877b56093fdbcc4a9aa06512583a989684068e944202f46885c4eca0986c8` |
 
 `Cargo.toml` is handwritten package authority:
@@ -134,31 +134,31 @@ This report does not rename `🔌️jcoprobe` or invent a new emoji. If the exis
 
 The primary exact current renderer-root token occurs 183 times in 14 files:
 
-| File | Count | Exact current line locations |
-|---|---:|---|
-| `.storybook/scopes.ts` | 2 | 129, 136 |
-| `.vscode/launch.json` | 65 | 158, 209, 291, 342, 393, 444, 495, 546, 598, 649, 700, 751, 802, 864, 915, 966, 1017, 1068, 1289, 1340, 1391, 1442, 1493, 1588, 1639, 1690, 1741, 1837, 1888, 2186, 2248, 2299, 2350, 2401, 2452, 2601, 2880, 2931, 2982, 3033, 3293, 3344, 3984, 4021, 4058, 4117, 4176, 4235, 4294, 4353, 4412, 4471, 4530, 4589, 4648, 4707, 4766, 4825, 4884, 4943, 4980, 5039, 5076, 5135, 5172 |
-| `.vscode/🧩️launch.seed.jsonc` | 42 | 120, 171, 215, 228, 241, 254, 267, 280, 293, 306, 319, 332, 345, 369, 382, 395, 408, 459, 528, 541, 592, 605, 656, 713, 726, 739, 752, 810, 861, 1121, 1145, 1158, 1209, 1222, 1235, 1249, 1488, 1501, 1514, 1527, 1749, 1762 |
-| `Cargo.toml` | 1 | 72 |
-| `bun.lock` | 2 | 405, 1408 |
-| `package.json` | 1 | 29 |
-| root `📜️script.ts` | 20 | 8183, 8767, 8797, 9482, 9641, 9718, 9724–9727, 9796, 10108–10110, 11568, 12225–12228, 12539 |
-| `🔒️dependencies.json` | 18 | 1755, 1828, 2138, 2158, 2304, 2412, 2454, 2862, 3063, 3186, 3308, 3346, 3430, 3445, 3517, 3546, 3596, 3648 |
-| `…/♾️infinite/🌍️world/🦀️component.rs` | 5 | 11478–11481, 12750 |
-| WGPU `📋️project.json` | 16 | 4, 14, 21, 28, 35, 42, 49, 56, 63, 70, 77, 85, 93, 102, 110, 118 |
-| `…/🔌️plugin/📇️registry/🖥️launch.ts` | 1 | 116 |
-| `…/🧑️‍💻️dev/…/⚙️vite.config.ts` | 1 | 95 |
-| `…/🧑️‍💻️dev/…/📜️script.ts` | 4 | 1891, 1893, 2161, 5045 |
-| taxonomy `🔣️taxonomy.json` | 5 | 1109, 1114–1116, 1118 |
+| File                                  | Count | Exact current line locations                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------------------- | ----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `.storybook/scopes.ts`                |     2 | 129, 136                                                                                                                                                                                                                                                                                                                                                                             |
+| `.vscode/launch.json`                 |    65 | 158, 209, 291, 342, 393, 444, 495, 546, 598, 649, 700, 751, 802, 864, 915, 966, 1017, 1068, 1289, 1340, 1391, 1442, 1493, 1588, 1639, 1690, 1741, 1837, 1888, 2186, 2248, 2299, 2350, 2401, 2452, 2601, 2880, 2931, 2982, 3033, 3293, 3344, 3984, 4021, 4058, 4117, 4176, 4235, 4294, 4353, 4412, 4471, 4530, 4589, 4648, 4707, 4766, 4825, 4884, 4943, 4980, 5039, 5076, 5135, 5172 |
+| `.vscode/🧩️launch.seed.jsonc`         |    42 | 120, 171, 215, 228, 241, 254, 267, 280, 293, 306, 319, 332, 345, 369, 382, 395, 408, 459, 528, 541, 592, 605, 656, 713, 726, 739, 752, 810, 861, 1121, 1145, 1158, 1209, 1222, 1235, 1249, 1488, 1501, 1514, 1527, 1749, 1762                                                                                                                                                        |
+| `Cargo.toml`                          |     1 | 72                                                                                                                                                                                                                                                                                                                                                                                   |
+| `bun.lock`                            |     2 | 405, 1408                                                                                                                                                                                                                                                                                                                                                                            |
+| `package.json`                        |     1 | 29                                                                                                                                                                                                                                                                                                                                                                                   |
+| root `📜️script.ts`                    |    20 | 8183, 8767, 8797, 9482, 9641, 9718, 9724–9727, 9796, 10108–10110, 11568, 12225–12228, 12539                                                                                                                                                                                                                                                                                          |
+| `🔒️dependencies.json`                 |    18 | 1755, 1828, 2138, 2158, 2304, 2412, 2454, 2862, 3063, 3186, 3308, 3346, 3430, 3445, 3517, 3546, 3596, 3648                                                                                                                                                                                                                                                                           |
+| `…/♾️infinite/🌍️world/🦀️component.rs` |     5 | 11478–11481, 12750                                                                                                                                                                                                                                                                                                                                                                   |
+| WGPU `📋️project.json`                 |    16 | 4, 14, 21, 28, 35, 42, 49, 56, 63, 70, 77, 85, 93, 102, 110, 118                                                                                                                                                                                                                                                                                                                     |
+| `…/🔌️plugin/📇️registry/🖥️launch.ts`   |     1 | 116                                                                                                                                                                                                                                                                                                                                                                                  |
+| `…/🧑️‍💻️dev/…/⚙️vite.config.ts`       |     1 | 95                                                                                                                                                                                                                                                                                                                                                                                   |
+| `…/🧑️‍💻️dev/…/📜️script.ts`            |     4 | 1891, 1893, 2161, 5045                                                                                                                                                                                                                                                                                                                                                               |
+| taxonomy `🔣️taxonomy.json`            |     5 | 1109, 1114–1116, 1118                                                                                                                                                                                                                                                                                                                                                                |
 
 Eight additional prose/relative leaf references name a file below `🎯️targets/🧊️wgpu` without the full renderer prefix and must gain `/📦️packages/🦀️rust`:
 
-| File | Locations | Meaning |
-|---|---|---|
-| `…/🏃️run/🦀️component.rs` | 38, 1424, 1443, 1456, 1525 | `📦️glue.rs` and members under it |
-| `…/💻️os/🖥️host/🎠️activation.rs` | 197 | `📦️glue.rs` helper |
-| `…/🔌️plugin/🖥️host/🧵️shard/🦀️component.rs` | 941 | WGPU `🎠️runtime.rs` |
-| moved WGPU `📦️glue.rs` | 7036 | own `🎠️runtime.rs` |
+| File                                       | Locations                  | Meaning                          |
+| ------------------------------------------ | -------------------------- | -------------------------------- |
+| `…/🏃️run/🦀️component.rs`                   | 38, 1424, 1443, 1456, 1525 | `📦️glue.rs` and members under it |
+| `…/💻️os/🖥️host/🎠️activation.rs`            | 197                        | `📦️glue.rs` helper               |
+| `…/🔌️plugin/🖥️host/🧵️shard/🦀️component.rs` | 941                        | WGPU `🎠️runtime.rs`              |
+| moved WGPU `📦️glue.rs`                     | 7036                       | own `🎠️runtime.rs`               |
 
 Owner-only references such as `🎯️targets/🧊️wgpu/**` remain semantically valid because the destination package stays beneath that exact owner. Three `include_str!` references in WGPU `📦️glue.rs:10108–10110` point to the separate framework UI WGPU target and must not be rewritten by this relocation.
 
@@ -173,11 +173,11 @@ Generated/reference-owner disposition:
 
 ### JCO: 3 live path-token edits in 3 files
 
-| File | Location | Required action |
-|---|---:|---|
-| `🔒️dependencies.json` | 3661 | Regenerate the manifest identity to the destination. |
-| taxonomy `🔣️taxonomy.json` | 895 | Update the exact tracked-lock identity through schema ownership. |
-| moved `👽️guest/🦀️component.rs` | 4 | Change the prose schema location to include `📦️packages/🦀️rust`, or make it package-root-relative. |
+| File                           | Location | Required action                                                                                    |
+| ------------------------------ | -------: | -------------------------------------------------------------------------------------------------- |
+| `🔒️dependencies.json`          |     3661 | Regenerate the manifest identity to the destination.                                               |
+| taxonomy `🔣️taxonomy.json`     |      895 | Update the exact tracked-lock identity through schema ownership.                                   |
+| moved `👽️guest/🦀️component.rs` |        4 | Change the prose schema location to include `📦️packages/🦀️rust`, or make it package-root-relative. |
 
 The Cargo `lib.path = "🦀️component.rs"` and `wit_bindgen` path `🧬️schema/📜️world.wit` remain valid and must not be edited. The `semio-jcoprobe-guest` strings in `Cargo.toml` and `Cargo.lock` are package identity, not path references.
 
@@ -240,3 +240,76 @@ These include compiler logs, reports, the retained inventory, and fixture copies
 - The JCO guest has no Nx project/script owner. Cargo metadata is the authoritative verifier; do not fabricate a generator owner.
 - JCO `Cargo.lock` is generated but intentionally tracked. Any regeneration must use the pinned Cargo/toolchain and compare canonical bytes rather than silently accepting drift.
 - The current schema's package-root fixed scope does not recognize these inverted/noncanonical roots. Broadening `**/Cargo.toml` or `**/Cargo.lock` would bless unrelated production lookalikes and is rejected.
+
+## Golden and independent execution closure
+
+The permanent language-neutral authority packet is now frozen at:
+
+```text
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️nested-cargo-package-authority/🔣️.json
+```
+
+It owns both exact source/destination package roots and expands `preserve-relative-path-from-source-root-to-destination-root` into all 36 current admitted mappings: 32 WGPU leaves and four JCO leaves. Every destination has an independently recomputed UTF-8 byte count; maxima are 209 bytes for WGPU and 146 for JCO against the 240-byte limit. The WGPU exclusion set now also records the live ignored generated leaf `🟦️typescript/🟨️boot.js`, in addition to `.DS_Store`, `.🦑️repo/**`, and `node_modules/**`; none is admitted to a move.
+
+The golden freezes the exact manifest evidence and rejection vocabulary for both identities. It additionally owns the non-Unicode WGPU `package.json#/repository/directory` repair and protects the three UI-WGPU `include_str!` references in the moving renderer glue from an over-broad rewrite.
+
+### Fresh live census
+
+The census used Git-index-exact live files and excluded `.🧬semio/**`, `compose/**`, `temp/compose/**`, and `temp-compose/**` at the pathspec boundary. The permanent golden itself is explicitly evidence-excluded so committing it cannot inflate later consumer scans. No protected Compose path was traversed or read.
+
+| Package       | Total occurrences/files | Authored occurrences/files | Generated occurrences/files | Forms                                                                                                                |
+| ------------- | ----------------------: | -------------------------: | --------------------------: | -------------------------------------------------------------------------------------------------------------------- |
+| WGPU renderer |                191 / 18 |                   106 / 15 |                      85 / 3 | 178 exact repository-root tokens, five engine-relative `include_str!` prefixes, eight owner-relative file references |
+| JCO guest     |                   3 / 3 |                      2 / 2 |                       1 / 1 | two repository-root tokens and one owner-relative WIT prose reference                                                |
+
+The three WGPU generated consumers remain `.vscode/launch.json` (65), `bun.lock` (2), and `🔒️dependencies.json` (18). Their exact authority is frozen as the launch seed plus launch renderer, root `package.json`, and root `📜️script.ts`, respectively. The JCO generated occurrence is the single `🔒️dependencies.json` row owned by root `📜️script.ts`.
+
+### Portable independent test
+
+The focused test is:
+
+```text
+.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️nested-cargo-package-authority.test.ts
+```
+
+It is repository-relative and accepts exactly one coherent package phase, so it verifies the current source layout and remains applicable after an atomic move to the destinations. It cross-checks:
+
+- Git-index enumeration against every frozen source mapping;
+- third-party `fast-glob` physical enumeration with ignored nodes excluded before traversal;
+- `@iarna/toml` parsing of root/package Cargo manifests and the JCO lock;
+- native JSON parsing of the root Node workspace, WGPU package, Nx project, and Cargo metadata output;
+- `cargo metadata --no-deps --locked --offline --format-version 1` for both packages;
+- exact reference counts, generator-owner existence, aggregate authored/generated counts, and one explicitly excluded full-corpus Git traversal for the unique root/prefix tokens;
+- counterfeit package/name/workspace/source-root evidence rejecting exact identity equality.
+
+Final repeated focused runs:
+
+```text
+bun test './.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️nested-cargo-package-authority.test.ts'
+4 pass, 0 fail, 313 expectations, 2.74 s
+4 pass, 0 fail, 313 expectations, 1.98 s
+```
+
+Formatting gate:
+
+```text
+bunx prettier --check '🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️nested-cargo-package-authority/🔣️.json' '.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🧪️nested-cargo-package-authority.test.ts'
+All matched files use Prettier code style.
+```
+
+The current scoped taxonomy report is intentionally not claimed green:
+
+```text
+bun ./📜️script.ts verify taxonomy report --scope '🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️nested-cargo-package-authority'
+clean=false errors=4 warnings=0
+```
+
+The four findings are the shared unresolved `library` parent, the same `test-case`/`test-fixture-member` ambiguity already reproduced by the existing scoped-inventory golden, the resulting premature `🔣️.json` hoist, and a source-path reference edit inside the preimage/destination authority golden. They are integration work for the schema/normalizer owner; this bounded packet was explicitly prohibited from editing taxonomy, discovery, or normalization.
+
+### Index safety observation
+
+Two calls to the provided `apply_patch` tool returned an empty result and did not create the requested worktree file, but independently left an added Git-index blob. No Git-modifying command was run, and the index was deliberately left untouched under the repository collaboration rule. The cached blob is non-authoritative tool-side state: 162 lines, SHA-256 `6599f5ae5feec0ad999dcdc802944df1d41ba7579fe4989db91bcd64f7a9b134`. The verified worktree golden is authoritative: 232 lines, SHA-256 `88619870710263fe4e968714a903dace8c2dc79c619fdc5df87950cf21653972`. Current status is `AM` for that one golden; the root coordinator independently confirmed the same hashes and will not mutate the shared index.
+
+The same tool-side anomaly also created a malformed duplicate framework root at `🧰️framework/🛝ep️products` containing one incomplete golden copy and a six-byte scratch leaf. Their creation times coincide with the failed golden publication, they are not production authority, and the root coordinator removed exactly those two worktree leaves with `apply_patch`. The anomalous staged entries remain untouched because repository policy forbids Git-index mutation.
+
+The root lane independently reran the final worktree test after handoff: `4 pass`, `0 fail`, `313 expect()` calls in 2.51 s. This third execution matches the frozen worktree golden and both Cargo metadata authorities.

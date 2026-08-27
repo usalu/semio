@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.demonstrator.playground.mutation;
+
+// ✒️ Direct change-schema payload.
+message ChangeSchema {
+  string new_schema = 1;
+}

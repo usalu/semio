@@ -1,0 +1,6 @@
+"""🔧 Direct edit-step-params payload."""
+input EditStepParamsInput {
+  pathRef: ImperativePathRefInput!
+  id: String!
+  newParams: JSON!
+}

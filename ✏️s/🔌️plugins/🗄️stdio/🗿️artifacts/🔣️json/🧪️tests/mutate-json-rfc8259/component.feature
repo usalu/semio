@@ -48,8 +48,8 @@ Feature: Apply every typed RFC 8259 JSON mutation to a real-world document
   `mantissa * 10^exponent` in floating point, so the fixture's `-1.3283902924697095e-17` surface
   normal reads out as `…097e-17`. The crate's own parser and `dump()` are exact on every probed
   value, so the oracle reaches the same `Number` through those halves instead. Before the workaround
-  `inverse-set-snapshot` failed on exactly those two coordinates: an inverse that carries the whole
-  424 KB model back through the reference drifts one ULP per cycle. That failure was a true report
+  Whole-document cycling failed on exactly those two coordinates: carrying the 424 KB model back
+  through the reference drifts one ULP per cycle. That failure was a true report
   about the reference library, not about this repository's codec and not about the fixture.
 
   @id-mutate
@@ -64,8 +64,6 @@ Feature: Apply every typed RFC 8259 JSON mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                    | params                                                                                                                                    |
-      | no-mutation           | {}                                                                                                                                        |
-      | set-snapshot          | {"value": {"a": 1, "b": [true, null, "Ünïcödé, mit Sonderzeichen"], "nested": {"c": "value"}}}                                            |
       | set-member            | {"path": ["models", 0, "model"], "key": "revision", "value": 99}                                                                         |
       | remove-member         | {"path": ["models", 0, "model", "objects", 0], "key": "typology"}                                                                        |
       | insert-array-element  | {"path": ["models", 0, "model", "geometry", "vertices"], "index": 0, "value": {"id": "mutation-test-vertex", "position": [0, 0, 0]}}     |
@@ -85,8 +83,6 @@ Feature: Apply every typed RFC 8259 JSON mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection of the original document
     Examples:
       | id                    | params                                                                                                                                    |
-      | no-mutation           | {}                                                                                                                                        |
-      | set-snapshot          | {"value": {"a": 1, "b": [true, null, "Ünïcödé, mit Sonderzeichen"], "nested": {"c": "value"}}}                                            |
       | set-member            | {"path": ["models", 0, "model"], "key": "revision", "value": 99}                                                                         |
       | remove-member         | {"path": ["models", 0, "model", "objects", 0], "key": "typology"}                                                                        |
       | insert-array-element  | {"path": ["models", 0, "model", "geometry", "vertices"], "index": 0, "value": {"id": "mutation-test-vertex", "position": [0, 0, 0]}}     |

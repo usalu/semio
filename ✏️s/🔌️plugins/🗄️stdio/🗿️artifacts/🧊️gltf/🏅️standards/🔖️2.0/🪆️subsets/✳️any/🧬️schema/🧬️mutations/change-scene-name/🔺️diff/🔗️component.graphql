@@ -1,2 +1,0 @@
-# change-scene-name diff typed facet.
-input GltfChangeSceneNameDiffV1 { operation: GltfChangeSceneNamePayloadV1!, after: String, touchedPaths: [String!]! }

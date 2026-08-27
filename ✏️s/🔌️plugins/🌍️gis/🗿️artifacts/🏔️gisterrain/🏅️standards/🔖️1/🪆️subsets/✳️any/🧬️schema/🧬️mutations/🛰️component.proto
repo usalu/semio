@@ -1,11 +1,12 @@
 syntax = "proto3";
 package semio.s.gis.gisterrain.mutation;
 
-// 🧬️ GIS terrain mutation schema — artifact-lane fields only.
+import "🎚change-exaggeration/🛰️component.proto";
+import "📥change-imported-features/🛰️component.proto";
 
 message GisTerrainMutation {
-  // @state artifact
-  double exaggeration = 1;
-  // @state artifact
-  string imported_features_json = 2;
+  oneof mutation {
+    ChangeExaggeration change_exaggeration = 1;
+    ChangeImportedFeatures change_imported_features = 2;
+  }
 }

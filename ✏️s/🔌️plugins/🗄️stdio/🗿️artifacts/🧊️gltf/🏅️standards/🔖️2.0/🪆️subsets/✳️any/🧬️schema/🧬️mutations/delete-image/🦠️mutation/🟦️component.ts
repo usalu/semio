@@ -1,7 +1,0 @@
-/** 🦠️ delete-image executable structural glTF command. */
-import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../../📸️snapshot/🟦️component.ts';
-import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔒️top-level-collections-private/🟦️component.ts';
-export const GltfDeleteImageDescriptor = { id: 's.stdio.gltf.mutation.delete-image.v1', version: 1, touchedPathPattern: 'document/images', referencePolicy: 'all typed image references are remapped, repaired, or rejected' } as const;
-export interface GltfDeleteImagePayload { index: number }
-export const validateGltfDeleteImage = (payload: GltfDeleteImagePayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.index, base.document.images.length, 'document/images'); if (index) return index;  return undefined; };
-export const applyGltfDeleteImage = (base: GltfSnapshot, payload: GltfDeleteImagePayload): GltfStructuralResult => { const rejection = validateGltfDeleteImage(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); remove(next, 'images', payload.index); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/images', String(error)) }; } };

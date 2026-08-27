@@ -21,7 +21,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::xml::standards::v1_0::subsets::
 /// `semio-s-plugin-stdio` (see this file's own header); `kinds_const_matches_enum_variants_in_
 /// declaration_order` on the production side and the framework's own catalog-completeness gate on
 /// this side are what keep the two lists honest against each other.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-declaration", "set-doctype", "insert-element", "remove-element", "set-attribute", "set-text"];
+const KINDS: &[&str] = &["set-declaration", "set-doctype", "insert-element", "remove-element", "set-attribute", "set-text"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -206,7 +206,10 @@ fn round_trip_oracle_once(input: &[u8], what: &str) -> Result<(Vec<u8>, Json), S
 mod subject {
     use super::{mutable_input, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::xml::schema::mutations::{apply_xml_mutation, XmlMutation, XmlNodePath};
+    use semio_s_plugin_stdio::artifacts::xml::schema::mutations::{
+        apply_xml_mutation, InsertElementMutation, InsertElementPayload, RemoveElementMutation, RemoveElementPayload, SetAttributeMutation, SetAttributePayload, SetDeclarationMutation,
+        SetDeclarationPayload, SetDoctypeMutation, SetDoctypePayload, SetTextMutation, SetTextPayload, XmlMutation, XmlNodePath,
+    };
     use semio_s_plugin_stdio::artifacts::xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode};
     use semio_s_plugin_stdio::artifacts::xml::XmlSnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::xml::standards::v1_0::subsets::any::project_xml_1_0;
@@ -272,23 +275,27 @@ mod subject {
         Some(XmlDoctype { name, external_id, declarations })
     }
 
-    /// 📄️ The scenario's `<id>`/`<params>` spec turned into the ONE typed `XmlMutation` this subset
-    /// declares for it. `set-snapshot` parses `params.xml` as a whole real document (the same real
-    /// `word/styles.xml` OOXML part the oracle side parses too), replacing the base snapshot outright.
+    /// 📄️ The scenario's `<id>`/`<params>` spec turned into the one direct typed mutation this subset declares for it.
     fn mutation_from_spec(spec: &Json) -> Result<XmlMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         match spec.str("kind").as_str() {
-            "no-mutation" => Ok(XmlMutation::NoMutation),
-            "set-snapshot" => {
-                let snapshot = XmlSnapshot::import_utf8(params.str("xml").as_bytes()).map_err(|error| format!("set-snapshot xml parse failed: {error}"))?;
-                Ok(XmlMutation::SetSnapshot { snapshot })
-            }
-            "set-declaration" => Ok(XmlMutation::SetDeclaration { declaration: json_to_declaration(&params) }),
-            "set-doctype" => Ok(XmlMutation::SetDoctype { doctype: json_to_doctype(&params) }),
-            "insert-element" => Ok(XmlMutation::InsertElement { path: XmlNodePath(usize_path(params.array("path"))), index: usize_field(&params, "index"), node: json_to_xml_node(&params.get("node").cloned().unwrap_or(Json::Null))? }),
-            "remove-element" => Ok(XmlMutation::RemoveElement { path: XmlNodePath(usize_path(params.array("path"))), index: usize_field(&params, "index") }),
-            "set-attribute" => Ok(XmlMutation::SetAttribute { path: XmlNodePath(usize_path(params.array("path"))), name: params.str("name"), value: match params.get("value") { Some(Json::String(text)) => Some(text.clone()), _ => None } }),
-            "set-text" => Ok(XmlMutation::SetText { path: XmlNodePath(usize_path(params.array("path"))), text: params.str("text") }),
+            "set-declaration" => Ok(XmlMutation::SetDeclaration(SetDeclarationMutation::Apply(SetDeclarationPayload { declaration: json_to_declaration(&params) }))),
+            "set-doctype" => Ok(XmlMutation::SetDoctype(SetDoctypeMutation::Apply(SetDoctypePayload { doctype: json_to_doctype(&params) }))),
+            "insert-element" => Ok(XmlMutation::InsertElement(InsertElementMutation::Apply(InsertElementPayload {
+                path: XmlNodePath(usize_path(params.array("path"))),
+                index: usize_field(&params, "index"),
+                node: json_to_xml_node(&params.get("node").cloned().unwrap_or(Json::Null))?,
+            }))),
+            "remove-element" => Ok(XmlMutation::RemoveElement(RemoveElementMutation::Apply(RemoveElementPayload {
+                path: XmlNodePath(usize_path(params.array("path"))),
+                index: usize_field(&params, "index"),
+            }))),
+            "set-attribute" => Ok(XmlMutation::SetAttribute(SetAttributeMutation::Apply(SetAttributePayload {
+                path: XmlNodePath(usize_path(params.array("path"))),
+                name: params.str("name"),
+                value: match params.get("value") { Some(Json::String(text)) => Some(text.clone()), _ => None },
+            }))),
+            "set-text" => Ok(XmlMutation::SetText(SetTextMutation::Apply(SetTextPayload { path: XmlNodePath(usize_path(params.array("path"))), text: params.str("text") }))),
             other => Err(format!("mutation kind {other:?} has no subject implementation")),
         }
     }
@@ -301,25 +308,26 @@ mod subject {
     /// beyond `semio-s-plugin-stdio` itself.
     fn inverse_of(mutation: &XmlMutation, base: &XmlSnapshot) -> XmlMutation {
         match mutation {
-            XmlMutation::NoMutation => XmlMutation::NoMutation,
-            XmlMutation::SetSnapshot { .. } => XmlMutation::SetSnapshot { snapshot: base.clone() },
-            XmlMutation::SetDeclaration { .. } => XmlMutation::SetDeclaration { declaration: base.doc.declaration.clone() },
-            XmlMutation::SetDoctype { .. } => XmlMutation::SetDoctype { doctype: base.doc.doctype.clone() },
-            XmlMutation::InsertElement { path, index, .. } => XmlMutation::RemoveElement { path: path.clone(), index: *index },
-            XmlMutation::RemoveElement { path, index } => {
-                let parent = path.resolve(base.doc.root.as_ref());
-                let node = parent.and_then(|node| match node { XmlNode::Element { children, .. } => children.get(*index).cloned(), _ => None }).unwrap_or(XmlNode::Text { text: String::new() });
-                XmlMutation::InsertElement { path: path.clone(), index: *index, node }
+            XmlMutation::SetDeclaration(_) => XmlMutation::SetDeclaration(SetDeclarationMutation::Apply(SetDeclarationPayload { declaration: base.doc.declaration.clone() })),
+            XmlMutation::SetDoctype(_) => XmlMutation::SetDoctype(SetDoctypeMutation::Apply(SetDoctypePayload { doctype: base.doc.doctype.clone() })),
+            XmlMutation::InsertElement(InsertElementMutation::Apply(payload)) => {
+                XmlMutation::RemoveElement(RemoveElementMutation::Apply(RemoveElementPayload { path: payload.path.clone(), index: payload.index }))
             }
-            XmlMutation::SetAttribute { path, name, .. } => {
-                let target = path.resolve(base.doc.root.as_ref());
-                let prior = target.and_then(|node| match node { XmlNode::Element { attrs, .. } => attrs.iter().find(|attr| &attr.name == name).map(|attr| attr.value.clone()), _ => None });
-                XmlMutation::SetAttribute { path: path.clone(), name: name.clone(), value: prior }
+            XmlMutation::RemoveElement(RemoveElementMutation::Apply(payload)) => {
+                let parent = payload.path.resolve(base.doc.root.as_ref());
+                let node = parent.and_then(|node| match node { XmlNode::Element { children, .. } => children.get(payload.index).cloned(), _ => None }).unwrap_or(XmlNode::Text { text: String::new() });
+                XmlMutation::InsertElement(InsertElementMutation::Apply(InsertElementPayload { path: payload.path.clone(), index: payload.index, node }))
             }
-            XmlMutation::SetText { path, .. } => {
-                let prior = path.resolve(base.doc.root.as_ref()).and_then(|node| match node { XmlNode::Text { text } => Some(text.clone()), _ => None }).unwrap_or_default();
-                XmlMutation::SetText { path: path.clone(), text: prior }
+            XmlMutation::SetAttribute(SetAttributeMutation::Apply(payload)) => {
+                let target = payload.path.resolve(base.doc.root.as_ref());
+                let prior = target.and_then(|node| match node { XmlNode::Element { attrs, .. } => attrs.iter().find(|attr| attr.name == payload.name).map(|attr| attr.value.clone()), _ => None });
+                XmlMutation::SetAttribute(SetAttributeMutation::Apply(SetAttributePayload { path: payload.path.clone(), name: payload.name.clone(), value: prior }))
             }
+            XmlMutation::SetText(SetTextMutation::Apply(payload)) => {
+                let prior = payload.path.resolve(base.doc.root.as_ref()).and_then(|node| match node { XmlNode::Text { text } => Some(text.clone()), _ => None }).unwrap_or_default();
+                XmlMutation::SetText(SetTextMutation::Apply(SetTextPayload { path: payload.path.clone(), text: prior }))
+            }
+            _ => XmlMutation::SetDeclaration(SetDeclarationMutation::Apply(SetDeclarationPayload { declaration: base.doc.declaration.clone() })),
         }
     }
     //#endregion 🔖️Inverse

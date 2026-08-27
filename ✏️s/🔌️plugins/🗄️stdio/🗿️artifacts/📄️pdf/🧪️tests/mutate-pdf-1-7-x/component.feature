@@ -75,8 +75,6 @@ Feature: Apply every typed ISO 15930-7 (PDF/X-4) conformance-class mutation to a
     Then the oracle and the subject agree on the conformance-class projection
     Examples:
       | id                           | params                                                            |
-      | no-mutation                  | {}                                                                |
-      | set-snapshot                 | {"conformance": "stamped"}                                        |
       | insert-encryption-dictionary | {"version": 2, "revision": 3}                                     |
       | remove-encryption-dictionary | {"version": 2, "revision": 3}                                     |
       | set-output-intent            | {"identifier": "sRGB IEC61966-2.1"}                               |
@@ -105,8 +103,6 @@ Feature: Apply every typed ISO 15930-7 (PDF/X-4) conformance-class mutation to a
     Then the conformance-class projection is the one the document started from
     Examples:
       | id                           | params                                                            |
-      | no-mutation                  | {}                                                                |
-      | set-snapshot                 | {"conformance": "stamped"}                                        |
       | insert-encryption-dictionary | {"version": 2, "revision": 3}                                     |
       | remove-encryption-dictionary | {"version": 2, "revision": 3}                                     |
       | set-output-intent            | {"identifier": "sRGB IEC61966-2.1"}                               |

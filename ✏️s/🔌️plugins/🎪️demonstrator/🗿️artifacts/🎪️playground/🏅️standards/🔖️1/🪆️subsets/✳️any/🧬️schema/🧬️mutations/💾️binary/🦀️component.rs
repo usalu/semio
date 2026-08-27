@@ -9,6 +9,9 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
 use protocol::OpBinary;
 
+/// 🧾️ Direct-owner binary tags in aggregate declaration order.
+pub const BINARY_TAG_REGISTRY: &[(&str, u32)] = &[("ChangeSchema", super::change_schema::binary::BINARY_TAG)];
+
 /// 📦️ Encodes a `PlaygroundMutation` to its binary state-patch form.
 pub fn encode_op(operation: &PlaygroundMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
@@ -26,7 +29,7 @@ mod tests {
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::change_schema::mutation::ChangeSchema;
+        use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::change_schema::ChangeSchema;
         let operation = PlaygroundMutation::ChangeSchema(ChangeSchema { new_schema: "playground.custom".into() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");

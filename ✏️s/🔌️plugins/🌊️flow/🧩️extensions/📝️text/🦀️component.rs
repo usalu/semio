@@ -62,7 +62,7 @@ pub fn register(registry: &mut Registry) {
 /// 📦️ Flow extension manifest JSON contributed to host catalogues.
 pub fn extension_manifest_json() -> String {
     use flow_extension_sdk::{build_manifest_json, FlowExtensionCommand};
-    build_manifest_json("text", "Text", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "text.showHelp".into(), title: "Text: Show Help".into() }], vec![])
+    build_manifest_json("text", "Text", "0.1.0", &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "text.showHelp".into(), title: "Text: Show Help".into() }], vec![])
 }
 
 /// 🌊️ Builds an in-process operator registry for this extension.
@@ -92,7 +92,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn manifest_lists_text_operators() {
-        let json = build_manifest_json("text", "Text", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "text.showHelp".into(), title: "Text: Show Help".into() }], vec![]);
+        let json = build_manifest_json("text", "Text", "0.1.0", &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "text.showHelp".into(), title: "Text: Show Help".into() }], vec![]);
         assert!(json.contains("text.concat"));
         assert!(json.contains("\"operators\""));
     }
@@ -100,7 +100,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn evaluate_json_uppercases_text() {
         let input = Dictionary::new().insert("text", Value::Dictionary(text_dictionary("hi".into())));
-        let out_json = evaluate_json(&module_registry(), "text.upper", &serde_json::to_string(&input).unwrap());
+        let out_json = evaluate_json(&neural_engine::ColdOwner::new(module_registry()), "text.upper", &serde_json::to_string(&input).unwrap());
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
         let text = out.get("text").and_then(|v| v.as_dictionary()).expect("text channel");
         assert_eq!(text.schema(), Some("text"));
@@ -158,7 +158,7 @@ mod extension_guest {
         let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
         semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
             let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string()))?;
-            Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
+            Ok(evaluate_json(&neural_engine::ColdOwner::new(module_registry()), &request.operator_id, &request.input_json).into_bytes())
         }))
     }
 

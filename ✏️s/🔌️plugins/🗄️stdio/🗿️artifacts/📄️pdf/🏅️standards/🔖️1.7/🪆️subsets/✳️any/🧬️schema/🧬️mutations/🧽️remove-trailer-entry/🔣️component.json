@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️remove-trailer-entry",
+  "semanticKind": "remove-trailer-entry",
+  "displayName": "Remove Trailer Entry",
+  "emoji": "🧽️",
+  "aggregateVariant": "RemoveTrailerEntry",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "remove-trailer-entry",
+  "binaryTag": 12,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

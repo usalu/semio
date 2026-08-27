@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "cases", "rejected"],
+  "properties": {
+    "schema": { "const": "nextest-execution-filter-vectors/v1" },
+    "cases": {
+      "type": "array", "minItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "input", "build", "execution", "libtest"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "input": { "type": "array", "items": { "type": "string" } },
+          "build": { "type": "array", "items": { "type": "string" } },
+          "execution": { "type": "array", "items": { "type": "string" } },
+          "libtest": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "rejected": { "type": "array", "minItems": 2, "items": { "type": "array", "items": { "type": "string" } } }
+  }
+}

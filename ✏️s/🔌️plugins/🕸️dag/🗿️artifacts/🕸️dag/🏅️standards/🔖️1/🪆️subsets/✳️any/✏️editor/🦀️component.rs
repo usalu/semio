@@ -15,7 +15,7 @@
 #![allow(clippy::result_large_err)]
 
 use crate::artifacts::dag::op::DagMutation;
-use crate::artifacts::dag::{DagSnapshot, DAG_DOCUMENT_SCHEMA};
+use crate::artifacts::dag::DagSnapshot;
 use crate::editor::dag::commands::set_locale;
 use crate::editor::dag::commands::{add_node, patch_dag_nodes, remove_node, rename_dag_node};
 use crate::editor::dag::commands::{connect_media_ports, delete_selection, disconnect, move_media_node, node_graph_edit, reorganize};
@@ -25,9 +25,12 @@ use crate::editor::dag::modes::edit;
 use crate::editor::dag::modes::edit::windows::{compiled, main};
 use crate::editor::dag::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::dag::terminology::{dag_play_labels, is_de_locale};
+use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::{Dialect, InteractionView};
+use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, AppActionRegistry, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DomainTopology, DraftView, Editor, Emit, Fault,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, AppActionRegistry, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest,
+    ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DomainTopology, DraftView, Editor, EditorApp, Emit, Fault,
     GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
 };
 use serde_json::Value;
@@ -167,6 +170,206 @@ async fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::ed
 #[derive(Default)]
 pub struct DagPlayApp;
 
+//#region 🧵️RetainedConfigCommands
+const DAG_RETAINED_CONFIG_TOOL_IDS: &[&str] = &["nodeGraphViewport", "setLocale"];
+const DAG_RETAINED_COMMAND_SCHEMA: &str = "dag.dag/v1.tool-command.v1";
+const DAG_RETAINED_RAW_BYTES: usize = 8_192;
+
+fn dag_retained_config_reduce(
+    command: &DagCommand,
+    snapshot: &DagSnapshot,
+    config: &DagConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> Result<Emit<DagMutation, DagConfigMutation, NoDraftMutation>, Fault> {
+    if !DAG_RETAINED_CONFIG_TOOL_IDS.contains(&command.command_id()) {
+        return Err(Fault::from("dag-retained-config-route-mismatch"));
+    }
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+}
+
+fn dag_retained_config_extent(command: &DagCommand, _snapshot: &DagSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    DAG_RETAINED_CONFIG_TOOL_IDS.contains(&command.command_id()).then_some(1)
+}
+
+struct DagConfigCommandJobFactory { keys: Vec<ToolFactoryKey> }
+
+impl DagConfigCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: DAG_RETAINED_CONFIG_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for DagConfigCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<DagPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<DagPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
+    fn payload_schema_id(&self) -> &str { DAG_RETAINED_COMMAND_SCHEMA }
+    fn classification(&self) -> semio_framework::InteractiveJobClassification { semio_framework::InteractiveJobClassification::Migrated }
+    fn execution_contract(&self) -> ToolExecutionContract { ToolExecutionContract::bounded_first_step(DAG_RETAINED_RAW_BYTES, 64, 1, 8_192, 7_500) }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> { Ok(ArtifactRetainedCommandJob::new(payload)) }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > DAG_RETAINED_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("bounded DAG Config command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DagConfigCommandJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<DagPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = DAG_RETAINED_CONFIG_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = "dag.dag";
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
+        ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
+    ];
+}
+//#endregion 🧵️RetainedConfigCommands
+
+//#region 📬️ConfigStorePreparation
+const DAG_CONFIG_STORE_MAXIMUM_BYTES: usize = 768;
+const DAG_CONFIG_TEXT_BYTES: usize = 96;
+const DAG_CONFIG_METADATA_BYTES: usize = 64;
+
+struct DagConfigPreparationFactory;
+struct DagConfigPreparation {
+    base: Option<store::SnapshotRead<DagConfig>>,
+    mutation: Option<DagConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    candidate: Option<(DagConfig, Vec<DagConfigMutation>, DagConfigMutation)>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<DagConfig, DagConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    retained_bytes: usize,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn dag_config_footprint(mutation: &DagConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let retained_bytes = match mutation {
+        DagConfigMutation::Snapshot { .. } => return Err("DAG Config preparation rejects whole-snapshot input".into()),
+        DagConfigMutation::SetLocale { value } => value.len(),
+        DagConfigMutation::SetCamera { .. } => 0,
+    };
+    if retained_bytes > DAG_CONFIG_TEXT_BYTES { return Err("DAG Config mutation exceeds its fixed preparation envelope".into()); }
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: DAG_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024 })
+}
+
+fn prepare_dag_config(base: &DagConfig, mutation: DagConfigMutation) -> Result<(DagConfig, Vec<DagConfigMutation>, DagConfigMutation), String> {
+    dag_config_footprint(&mutation)?;
+    if base.locale.len() > DAG_CONFIG_TEXT_BYTES { return Err("DAG Config base exceeds its fixed preparation envelope".into()); }
+    let mut post = base.clone();
+    let inverse = match &mutation {
+        DagConfigMutation::Snapshot { .. } => return Err("DAG Config preparation rejects whole-snapshot input".into()),
+        DagConfigMutation::SetCamera { x, y, zoom } => {
+            post.camera_x = *x; post.camera_y = *y; post.camera_zoom = *zoom;
+            DagConfigMutation::SetCamera { x: base.camera_x, y: base.camera_y, zoom: base.camera_zoom }
+        }
+        DagConfigMutation::SetLocale { value } => { post.locale = value.clone(); DagConfigMutation::SetLocale { value: base.locale.clone() } }
+    };
+    Ok((post, vec![inverse], mutation))
+}
+
+fn dag_config_edit(forward: DagConfigMutation, inverse: Vec<DagConfigMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<DagConfigMutation> {
+    let id = format!("dag-config-retained-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![forward], inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+        }],
+        description, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<DagConfig, DagConfigMutation> for DagConfigPreparationFactory {
+    fn preflight(&self, mutation: &DagConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > DAG_CONFIG_METADATA_BYTES) {
+            return Err("DAG Config preparation rejected its lane or description envelope".into());
+        }
+        dag_config_footprint(mutation)
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<DagConfig, DagConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<DagConfig, DagConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<DagConfig, DagConfigMutation>> {
+        if self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err() || request.operation != request.authority.operation() || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > DAG_CONFIG_METADATA_BYTES { return Err(request); }
+        Ok(Box::new(DagConfigPreparation { base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, prepared: None, checkpoint: Default::default(), retained_bytes: 0, cancelled: false, closing: false }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<DagConfig, DagConfigMutation> for DagConfigPreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled || self.closing { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        if self.candidate.is_none() {
+            let base = self.base.as_ref().ok_or_else(|| "DAG Config preparation lost its exact base root".to_string())?.get();
+            if base.locale.len() > DAG_CONFIG_TEXT_BYTES { return Err("DAG Config base exceeds its fixed preparation envelope".into()); }
+            let bytes = DAG_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024;
+            if grant.maximum_bytes < bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+            let mutation = self.mutation.take().ok_or_else(|| "DAG Config preparation lost its mutation owner".to_string())?;
+            self.candidate = Some(prepare_dag_config(base, mutation)?);
+            self.retained_bytes = bytes;
+            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: bytes as u64, digest: [0; 32] };
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
+        }
+        if grant.maximum_bytes < self.retained_bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "DAG Config preparation lost its candidate".to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "DAG Config preparation lost its Store authority".to_string())?;
+        let prepared = authority.prepare_one_item(dag_config_edit(forward, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<DagConfig, DagConfigMutation>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<DagConfig, DagConfigMutation>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || !grant.permits_one() { return Ok(store::SnapshotRetirementStep::Blocked); }
+        if self.prepared.is_some() || self.candidate.is_some() {
+            if grant.maximum_bytes < self.retained_bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            if self.prepared.take().is_none() { self.candidate = None; }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
+        }
+        if self.mutation.is_some() {
+            if grant.maximum_bytes < DAG_CONFIG_STORE_MAXIMUM_BYTES { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.mutation = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: DAG_CONFIG_STORE_MAXIMUM_BYTES });
+        }
+        if let Some(description) = self.description.as_ref() {
+            let bytes = description.len();
+            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.description = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() { return Err("DAG Config preparation could not return its exact base root".into()); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none() }
+}
+//#endregion 📬️ConfigStorePreparation
+
 impl ArtifactEditor for DagPlayApp {
     type Snapshot = DagSnapshot;
     type Mutation = DagMutation;
@@ -182,7 +385,48 @@ impl ArtifactEditor for DagPlayApp {
     type Command = DagCommand;
 
     const DIALECT: Dialect = crate::artifacts::dag::DAG_DIALECT;
-    const DOCUMENT_SCHEMA: &'static str = DAG_DOCUMENT_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = "dag.dag";
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<DagPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "dag-play",
+        document_schema: "dag.dag",
+        factory: "DagConfigCommandJobFactory",
+        factory_type: DagConfigCommandJobFactory,
+        tools: {
+            "nodeGraphViewport" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
+            "setLocale" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
+        }
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(DagConfigPreparationFactory))
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(DagConfigCommandJobFactory::new(&controller))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !DAG_RETAINED_CONFIG_TOOL_IDS.contains(&request.tool_id.as_str()) { return Ok(None); }
+        if request.command.command_id() != request.tool_id { return Err(Fault::from("dag-retained-command-tool-mismatch")); }
+        let tool_id = request.command.command_id();
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id,
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
+            *request.command, request.snapshot, request.config, request.history, request.interaction_state, request.interaction_hover, request.context,
+            operation_context, request.completion, DagCommand::command_id, DAG_RETAINED_RAW_BYTES, 1,
+            Box::new(BoundedArtifactCommandWork::new(tool_id, dag_retained_config_reduce, dag_retained_config_extent)),
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
 
     async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::dag::config::schema::app_schema_descriptor())
@@ -364,6 +608,19 @@ pub async fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             // call are dropped here (reported in the migration report, not silently lost). The
             // subset's own `📚️examples/🎬️demo` facet (`crate::artifacts::dag::examples::demo`,
             // real content, pre-existing) is the modern, role-agnostic replacement surface for this.
+            .action_interactive_job("addNode", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("removeNode", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("nodeGraphEdit", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("connectMediaPorts", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("disconnect", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("moveMediaNode", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("renameDagNode", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("reorganize", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("patchDagNodes", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("nodeGraphViewport", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("graphPointerDown", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setLocale", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .config(DagPlayApp::config_spec())
             .build_definition()
 }
@@ -411,6 +668,22 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    //#region 🧪️RetainedConfigOracle
+    #[test]
+    fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_one() {
+        let base = DagConfig::default();
+        let mut expected = serde_json::to_value(&base).expect("JSON oracle base");
+        expected["locale"] = serde_json::json!("de-DE");
+        let (post, inverse, _) = prepare_dag_config(&base, DagConfigMutation::SetLocale { value: "de-DE".into() }).expect("bounded config candidate");
+        assert_eq!(serde_json::to_value(post).expect("JSON oracle post"), expected);
+        assert!(matches!(&inverse[0], DagConfigMutation::SetLocale { value } if value == &base.locale));
+        assert!(dag_config_footprint(&DagConfigMutation::SetLocale { value: "x".repeat(DAG_CONFIG_TEXT_BYTES) }).is_ok());
+        assert!(dag_config_footprint(&DagConfigMutation::SetLocale { value: "x".repeat(DAG_CONFIG_TEXT_BYTES + 1) }).is_err());
+        assert!(dag_config_footprint(&DagConfigMutation::Snapshot { config: base }).is_err());
+        assert_eq!(DAG_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024, 4_096);
+    }
+    //#endregion 🧪️RetainedConfigOracle
     use crate::editor::dag::testkit::{new_app_with_registry, DagApp};
     use semio_framework_plugin::PluginApp;
 

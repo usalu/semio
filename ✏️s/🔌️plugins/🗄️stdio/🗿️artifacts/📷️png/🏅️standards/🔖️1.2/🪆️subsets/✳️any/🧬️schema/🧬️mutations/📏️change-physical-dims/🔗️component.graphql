@@ -1,0 +1,3 @@
+# 🧬️ change-physical-dims/ChangePhysicalDims
+scalar ChangePhysicalDimsMutationValue
+input ChangePhysicalDimsMutation { phys: ChangePhysicalDimsMutationValue }

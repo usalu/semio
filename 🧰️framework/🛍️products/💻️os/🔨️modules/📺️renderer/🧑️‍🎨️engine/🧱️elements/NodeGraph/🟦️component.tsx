@@ -93,6 +93,7 @@ type FrameworkGraphSession = GraphWasmSession & {
   selectionPreviewCrossing(): boolean;
   selectionPreviewMethod?(): string;
   selectedNodeIdsJson(): string;
+  selectionDomainsJson?(): string;
   hoveredNodeId(): string | null | undefined;
   hoveredChannelJson(): string;
   cameraJson(): string;
@@ -109,9 +110,43 @@ type FrameworkGraphSession = GraphWasmSession & {
 };
 //#endregion Types
 
+//#region 🎯️GraphPickContract
+/** 🎯️ Decodes the native handle target grammar emitted by the shared DAG engine. */
+export function nodeGraphPickChannel(target: Pick<CanvasPickTarget, "domain" | "id"> | null): { readonly nodeId: string; readonly portId: string } | null {
+  if (target?.domain !== "handle") return null;
+  const boundary = target.id.indexOf("@");
+  if (boundary <= 0 || boundary === target.id.length - 1) return null;
+  return { nodeId: target.id.slice(0, boundary), portId: target.id.slice(boundary + 1) };
+}
+
+function syncOptionalGraphCanvasTheme(session: FrameworkGraphSession | null): void {
+  if (session?.setCanvasThemeJson) syncSessionCanvasTheme({ setCanvasThemeJson: session.setCanvasThemeJson.bind(session) });
+}
+//#endregion 🎯️GraphPickContract
+
 //#region Viewport
 export function nodeGraphViewportActionArgs(cameraJson: string): { readonly viewportJson: string } {
   return { viewportJson: cameraJson };
+}
+
+type NodeGraphInteractionIds = {
+  readonly nodeIds: readonly string[];
+  readonly edgeIds?: readonly string[];
+  readonly handleIds?: readonly string[];
+};
+
+export function nodeGraphSelectionActionArgs(ids: NodeGraphInteractionIds) {
+  const targets = [
+    ...ids.nodeIds.map((id) => ({ granularity: "node", id })),
+    ...(ids.edgeIds ?? []).map((id) => ({ granularity: "edge", id })),
+    ...(ids.handleIds ?? []).map((id) => ({ granularity: "handle", id })),
+  ];
+  return { domainId: "graph", targets: JSON.stringify(targets), merge: "replace", method: "pick" };
+}
+
+export function nodeGraphHoverActionArgs(nodeId: string | null | undefined) {
+  const targets = nodeId ? [{ granularity: "node", id: nodeId }] : [];
+  return { domainId: "graph", channel: "pointer", targets: JSON.stringify(targets) };
 }
 //#endregion Viewport
 
@@ -182,6 +217,7 @@ export type FlowCatalogueSection = {
 /** @emoji 🧩️ Builds an addWidget/setGhostWidget descriptor JSON from a catalogue row. */
 export function flowCatalogueItemDescriptor(item: FlowCatalogueItem): string {
   const descriptor: Record<string, string> = { kind: item.kind };
+  if (item.kind === "inputSlider") descriptor.label = item.name;
   if (item.neuronKind) descriptor.neuronKind = item.neuronKind;
   if (item.action) descriptor.action = item.action;
   if (item.format) descriptor.format = item.format;
@@ -276,6 +312,7 @@ function FlowSpotlight({
   readonly onCommit: (item: FlowCatalogueItem) => void;
   readonly onClose: () => void;
 }) {
+  const inputId = React.useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const activeItemRef = useRef<HTMLButtonElement | null>(null);
   const [query, setQuery] = useState("");
@@ -328,6 +365,8 @@ function FlowSpotlight({
     >
       <div className={cn("flex shrink-0 items-center gap-single px-single py-half", borderNormalBottomClass)}>
         <Input
+          id={`flow-spotlight-${inputId}`}
+          aria-label={typeToAddLabel}
           autoFocus
           value={query}
           placeholder={typeToAddLabel}
@@ -473,7 +512,7 @@ function handleGraphKeyboard(event: KeyboardEvent<HTMLDivElement>, editable: boo
 //#endregion Keyboard
 
 //#region DiagramNode
-function WorkflowDiagramNode({ data }: NodeProps<WorkflowNodeData>) {
+function WorkflowDiagramNode({ data }: NodeProps<Node<WorkflowNodeData>>) {
   const inputCount = Math.max(data.inputs.length, 1);
   const outputCount = Math.max(data.outputs.length, 1);
   const rowCount = Math.max(inputCount, outputCount);
@@ -590,7 +629,7 @@ function WasmGraphSurface({
   const onSessionReady = useCallback(
     (session: GraphWasmSession) => {
       sessionRef.current = session as FrameworkGraphSession;
-      syncSessionCanvasTheme(sessionRef.current);
+      syncOptionalGraphCanvasTheme(sessionRef.current);
       try {
         sessionRef.current.syncFromScenePack?.(scenePack);
         paintOverlays();
@@ -604,7 +643,7 @@ function WasmGraphSurface({
   const wasmGraphSurfaceShellScope = useShellScopeOptional();
   useCanvasAppearanceSync(
     () => {
-      syncSessionCanvasTheme(sessionRef.current);
+      syncOptionalGraphCanvasTheme(sessionRef.current);
       try {
         sessionRef.current?.renderFrame();
       } catch {
@@ -670,9 +709,9 @@ function WasmGraphSurface({
     if (!session) return;
     try {
       const nodeIds = JSON.parse(session.selectedNodeIdsJson()) as string[];
-      dispatch(nodeGraphActions.select, { nodeIds });
+      dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs({ nodeIds }));
       const hovered = session.hoveredNodeId();
-      dispatch(nodeGraphActions.hover, { hoverJson: hovered ? JSON.stringify({ nodeId: hovered }) : null });
+      dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(hovered));
       dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(session.cameraJson()));
       const openId = session.takePendingOpenInstanceId?.();
       if (openId) dispatch("openInstance", { instanceId: openId });
@@ -711,16 +750,17 @@ function WasmGraphSurface({
       const session = sessionRef.current;
       if (!session) return;
       const target = focus.target;
+      const channel = nodeGraphPickChannel(target);
       if (!target) {
         session.setHover?.(null);
-      } else if (target.portId) {
-        session.setHoverChannel?.(target.id, target.portId);
+      } else if (channel) {
+        session.setHoverChannel?.(channel.nodeId, channel.portId);
       } else {
         session.setHover?.(target.id);
       }
       try {
         const hovered = session.hoveredNodeId();
-        dispatch(nodeGraphActions.hover, { hoverJson: hovered ? JSON.stringify({ nodeId: hovered }) : null });
+        dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(hovered));
       } catch {
         /* session not ready */
       }
@@ -765,7 +805,7 @@ function WasmGraphSurface({
           const menu = await openSurfaceContextMenu(
             requestContextMenu,
             {
-              menu: { id: "nodeGraph" },
+              menu: { id: "nodeGraph", args: null },
               surface: { surfaceId, kind: "nodeGraph", hits, selection: selectionGroupsFromDomains(domains) },
               windowInstanceId: windowInstanceId ?? undefined,
               point: { x: event.clientX, y: event.clientY },
@@ -847,7 +887,7 @@ function WasmGraphSurface({
           }}
         />
       ) : null}
-      <GraphSliderOverlays stateJson={sliderStateJson} logicalW={overlaySize.w} logicalH={overlaySize.h} editable={editable} onSliderChange={(widgetId, value) => dispatch(nodeGraphActions.edit, { operator: "setSlider", widgetId, value })} />
+      <GraphSliderOverlays scopeId={JSON.stringify([windowInstanceId, controllerId, surfaceId])} stateJson={sliderStateJson} logicalW={overlaySize.w} logicalH={overlaySize.h} editable={editable} onSliderChange={(widgetId, value) => dispatch(nodeGraphActions.edit, { operator: "setSlider", widgetId, value })} />
       <CanvasPickMenu request={pickInteraction.pickMenu} hoveredKey={pickInteraction.menuHoveredKey} onHoverKey={pickInteraction.onMenuHoverKey} onPick={pickInteraction.onMenuPick} onDismiss={pickInteraction.dismissPickMenu} />
       <ContextMenuController
         title={contextMenuTitleLabel}
@@ -941,7 +981,7 @@ function DiagramGraphFallback({
           const menu = await openSurfaceContextMenu(
             requestContextMenu,
             {
-              menu: { id: "nodeGraph" },
+              menu: { id: "nodeGraph", args: null },
               surface: { surfaceId: node.surfaceId, kind: "nodeGraph", hits: [], selection: [] },
               point: { x: event.clientX, y: event.clientY },
             },
@@ -999,7 +1039,7 @@ function DiagramGraphFallback({
         onNodeClick={(_event, clickedNode) => {
           const record = parsedNodes.find((entry) => entry.id === clickedNode.id);
           if (record?.instanceId) dispatch("selectInstance", { instanceId: record.instanceId });
-          dispatch(nodeGraphActions.select, { nodeIds: [clickedNode.id] });
+          dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs({ nodeIds: [clickedNode.id] }));
         }}
         onNodeDoubleClick={(_event, clickedNode) => {
           const record = parsedNodes.find((entry) => entry.id === clickedNode.id);
@@ -1007,7 +1047,7 @@ function DiagramGraphFallback({
         }}
         onSelectionChange={(selection) => {
           const nodeIds = selection.nodes.map((entry) => entry.id);
-          dispatch(nodeGraphActions.select, { nodeIds });
+          dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs({ nodeIds }));
         }}
       />
       <ContextMenuController
@@ -1072,7 +1112,7 @@ export function NodeGraphHost({ node, onAction, requestContextMenu }: ComponentS
   onFindItemRef.current = (itemId: string) => {
     const mediaNode = parsedNodes.find((entry) => entry.instanceId === itemId);
     if (!mediaNode) return;
-    dispatch(nodeGraphActions.select, { nodeIds: [mediaNode.id] });
+    dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs({ nodeIds: [mediaNode.id] }));
     dispatch("selectInstance", { instanceId: mediaNode.instanceId! });
   };
 
@@ -1160,6 +1200,7 @@ export type DagCameraState = { readonly x: number; readonly y: number; readonly 
 
 export type DagSliderOverlayRow = {
   readonly widgetId: string;
+  readonly label: string;
   readonly value: number;
   readonly min: number;
   readonly max: number;
@@ -1242,7 +1283,7 @@ export function parseDagLabelRows(stateJson: string): DagLabelOverlayRow[] {
     };
     const raw = parsed.labels ?? parsed.rows ?? [];
     return raw
-      .map((row) => {
+      .map((row): DagLabelOverlayRow | null => {
         const text = typeof row.text === "string" ? row.text.trim() : "";
         if (!text) return null;
         const align = row.align === "left" || row.align === "right" || row.align === "center" ? row.align : undefined;
@@ -1315,8 +1356,18 @@ function dagClampPortLabelFontPx(ctx: CanvasRenderingContext2D, text: string, ta
 
 export function parseDagSliderOverlays(stateJson: string): readonly DagSliderOverlayRow[] {
   try {
-    const parsed = JSON.parse(stateJson) as { readonly sliders?: DagSliderOverlayRow[] };
-    return parsed.sliders ?? [];
+    const parsed = JSON.parse(stateJson) as { readonly sliders?: unknown } | null;
+    if (!Array.isArray(parsed?.sliders)) return [];
+    const ids = new Set<string>();
+    return parsed.sliders.filter((value): value is DagSliderOverlayRow => {
+      if (!value || typeof value !== "object") return false;
+      const row = value as Partial<DagSliderOverlayRow>;
+      if (typeof row.widgetId !== "string" || !row.widgetId.trim() || ids.has(row.widgetId) || typeof row.label !== "string" || !row.label.trim()) return false;
+      if (![row.value, row.min, row.max, row.step, row.x, row.y, row.w, row.h].every((number) => typeof number === "number" && Number.isFinite(number))) return false;
+      if (row.min! > row.max! || row.step! <= 0 || row.w! <= 0 || row.h! <= 0) return false;
+      ids.add(row.widgetId);
+      return true;
+    });
   } catch {
     return [];
   }
@@ -1587,6 +1638,7 @@ export function sceneToSyncJson(scene: NodeGraphScene): string {
 
 //#region DagDomOverlays
 export function GraphSliderOverlays({
+  scopeId,
   stateJson,
   logicalW,
   logicalH,
@@ -1596,6 +1648,7 @@ export function GraphSliderOverlays({
   onSliderPointerUp,
   occluderRect = null,
 }: {
+  readonly scopeId: string;
   readonly stateJson: string;
   readonly logicalW: number;
   readonly logicalH: number;
@@ -1629,6 +1682,8 @@ export function GraphSliderOverlays({
             onPointerDown={(event) => event.stopPropagation()}
           >
             <Slider
+              id={`graph-slider-${encodeURIComponent(JSON.stringify([scopeId, slider.widgetId]))}`}
+              aria-label={slider.label}
               className="h-full w-full min-w-0"
               max={slider.max}
               min={slider.min}
@@ -1834,6 +1889,7 @@ export function FlowGraphCanvasHost({
   const [sliderStateJson, setSliderStateJson] = useState("{}");
   const [containerSize, setContainerSize] = useState({ w: 800, h: 600 });
   const [sessionReady, setSessionReady] = useState(false);
+  const overlayRequestRef = useRef(0);
   const [spotlight, setSpotlight] = useState<FlowSpotlightState | null>(null);
   const [spotlightSections, setSpotlightSections] = useState<readonly FlowCatalogueSection[]>([]);
   const pickTargetsRef = useRef<readonly CanvasPickTarget[]>([]);
@@ -1882,43 +1938,11 @@ export function FlowGraphCanvasHost({
     });
   }, [dispatch]);
 
-  // A continuous gesture (e.g. dragging a slider) fires many onValueChange ticks per second, each
-  // committing the whole document through an async plugin round-trip; concurrent in-flight commits
-  // can resolve out of order, and the scene-resync effect below would apply whichever one lands
-  // last — visibly reverting the drag mid-gesture. isGestureActiveRef suppresses that resync while
-  // a gesture is active, and commitFixtureThrottled caps how many concurrent commits are in flight.
   const isGestureActiveRef = useRef(false);
-  const lastCommitAtRef = useRef(0);
-  const pendingCommitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const GESTURE_COMMIT_THROTTLE_MS = 80;
-
-  const commitFixtureThrottled = useCallback(() => {
-    if (pendingCommitTimeoutRef.current != null) {
-      clearTimeout(pendingCommitTimeoutRef.current);
-      pendingCommitTimeoutRef.current = null;
-    }
-    const elapsed = Date.now() - lastCommitAtRef.current;
-    if (elapsed >= GESTURE_COMMIT_THROTTLE_MS) {
-      lastCommitAtRef.current = Date.now();
-      commitFixture();
-    } else {
-      pendingCommitTimeoutRef.current = setTimeout(() => {
-        pendingCommitTimeoutRef.current = null;
-        lastCommitAtRef.current = Date.now();
-        commitFixture();
-      }, GESTURE_COMMIT_THROTTLE_MS - elapsed);
-    }
-  }, [commitFixture]);
 
   const handleGesturePointerDown = useCallback(() => {
     isGestureActiveRef.current = true;
     schedulerRef.current?.beginContinuous("gesture");
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (pendingCommitTimeoutRef.current != null) clearTimeout(pendingCommitTimeoutRef.current);
-    };
   }, []);
 
   const paintOverlays = useCallback(() => {
@@ -1929,6 +1953,7 @@ export function FlowGraphCanvasHost({
     const rect = container.getBoundingClientRect();
     const dpr = globalThis.devicePixelRatio || 1;
     setContainerSize((prev) => (prev.w === rect.width && prev.h === rect.height ? prev : { w: rect.width, h: rect.height }));
+    const request = ++overlayRequestRef.current;
     void Promise.all([
       readObservedFlowTask(session, "labelOverlayPaintStateJson", session.labelOverlayPaintStateJson()),
       readObservedFlowTask(session, "selectedWidgetIds", session.selectedWidgetIds()),
@@ -1941,6 +1966,7 @@ export function FlowGraphCanvasHost({
       readObservedFlowTask(session, "selectionPreviewCrossing", session.selectionPreviewCrossing()),
       readObservedFlowTask(session, "selectionPreviewMethod", session.selectionPreviewMethod()),
     ]).then(([labelValue, selectedValue, preselectValue, dimmedValue, hoveredValue, sliderValue, boundsValue, pointsValue, crossingValue, methodValue]) => {
+      if (request !== overlayRequestRef.current || sessionRef.current !== session || labelCanvasRef.current !== labelCanvas) return;
       const labelJson = flowJsonText(labelValue);
       setLabelStateJson((prev) => (prev === labelJson ? prev : labelJson));
       const minimapCursor = parseDagMinimapWidgetCursor(labelJson);
@@ -1974,22 +2000,13 @@ export function FlowGraphCanvasHost({
     isGestureActiveRef.current = false;
     schedulerRef.current?.endContinuous("gesture");
     schedulerRef.current?.invalidate();
-    if (pendingCommitTimeoutRef.current != null) {
-      clearTimeout(pendingCommitTimeoutRef.current);
-      pendingCommitTimeoutRef.current = null;
-    }
     const session = sessionRef.current;
     if (session) {
-      // 🎚️ Gesture end: resync catalogue/selection/lod from the lagging scene document, but keep the wasm
-      // session's live fixture (slider seeds) and skip stale `evalJson`/`statusJson` until the plugin
-      // worker's `flowEvalTick` chain publishes a fresh scene after `commitFixture`.
       syncFlowSessionStructureFromScene(session, sceneRef.current, false, true);
       renderFlow();
       paintOverlays();
     }
-    lastCommitAtRef.current = Date.now();
-    commitFixture();
-  }, [commitFixture, paintOverlays, renderFlow]);
+  }, [paintOverlays, renderFlow]);
 
   const emitInteractionState = useCallback(() => {
     const session = sessionRef.current;
@@ -2001,10 +2018,10 @@ export function FlowGraphCanvasHost({
       readObservedFlowTask(session, "cameraJson:interaction", session.cameraJson()),
     ]).then(([domainsValue, hoveredValue, channelValue, cameraValue]) => {
       const domains = parseSelectionDomainsFromSession(flowJsonText(domainsValue));
-      dispatch(nodeGraphActions.select, { nodeIds: domains.nodes, edgeIds: domains.edges, handleIds: domains.handles });
+      dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs({ nodeIds: domains.nodes, edgeIds: domains.edges, handleIds: domains.handles }));
       const hovered = typeof hoveredValue === "string" ? hoveredValue : undefined;
-      const channelJson = flowJsonText(channelValue);
-      dispatch(nodeGraphActions.hover, { hoverJson: hovered ? channelJson : null });
+      void channelValue;
+      dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(hovered));
       const cameraJson = flowJsonText(cameraValue);
       if (cameraJson) dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(cameraJson));
     }).catch(() => {});
@@ -2140,10 +2157,11 @@ export function FlowGraphCanvasHost({
       const session = sessionRef.current;
       if (!session) return;
       const target = focus.target;
+      const channel = nodeGraphPickChannel(target);
       if (!target) {
         observeFlowTask(session, "setHover", session.setHover(null));
-      } else if (target.portId) {
-        observeFlowTask(session, "setHoverChannel", session.setHoverChannel(target.id, target.portId));
+      } else if (channel) {
+        observeFlowTask(session, "setHoverChannel", session.setHoverChannel(channel.nodeId, channel.portId));
       } else {
         observeFlowTask(session, "setHover", session.setHover(target.id));
       }
@@ -2151,7 +2169,8 @@ export function FlowGraphCanvasHost({
         readObservedFlowTask(session, "hoveredWidgetId:pointer", session.hoveredWidgetId()),
         readObservedFlowTask(session, "hoveredChannelJson:pointer", session.hoveredChannelJson()),
       ]).then(([hoveredValue, channelValue]) => {
-        dispatch(nodeGraphActions.hover, { hoverJson: hoveredValue ? flowJsonText(channelValue) : null });
+        void channelValue;
+        dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(typeof hoveredValue === "string" ? hoveredValue : undefined));
       }).catch(() => {});
       renderFlow();
       paintOverlays();
@@ -2394,7 +2413,7 @@ export function FlowGraphCanvasHost({
           const menu = await openSurfaceContextMenu(
             requestContextMenu,
             {
-              menu: { id: "nodeGraph" },
+              menu: { id: "nodeGraph", args: null },
               surface: {
                 surfaceId,
                 kind: "nodeGraph",
@@ -2415,6 +2434,7 @@ export function FlowGraphCanvasHost({
       <canvas ref={gpuCanvasRef} className="absolute inset-0 block h-full w-full" />
       <canvas ref={labelCanvasRef} className="pointer-events-none absolute inset-0 z-40" />
       <GraphSliderOverlays
+        scopeId={JSON.stringify([windowInstanceId, controllerId, surfaceId])}
         stateJson={sliderStateJson}
         logicalW={containerSize.w}
         logicalH={containerSize.h}
@@ -2424,8 +2444,8 @@ export function FlowGraphCanvasHost({
           const session = sessionRef.current;
           if (!session) return;
           observeFlowTask(session, "setSliderValue", session.setSliderValue(widgetId, value));
+          dispatch(nodeGraphActions.parameter, { widgetId, value });
           renderFlow();
-          commitFixtureThrottled();
           paintOverlays();
         }}
         onSliderPointerDown={handleGesturePointerDown}

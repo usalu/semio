@@ -3,7 +3,7 @@ use crate::artifacts::vcs::mutations::VcsDemoMutation;
 use crate::artifacts::vcs::VcsSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::mutation::RenameVcs, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
-    vec![super::mutation::rename_vcs(base.title.clone())]
+pub fn inverse(_payload: &super::RenameVcs, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
+    vec![super::rename_vcs(base.title.clone())]
 }
 //#endregion 🔖️Inverse

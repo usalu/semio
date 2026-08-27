@@ -1,0 +1,308 @@
+{
+  "schema": "semio.value.ordered-map",
+  "ownership": {
+    "liveOwners": ["map", "update", "lookup", "retirement"],
+    "liveDrop": "reject-without-payload-destruction",
+    "finalPayload": "owned-handoff",
+    "terminalOwners": 0
+  },
+  "lookupCases": [
+    {
+      "id": "found-equal-long-key",
+      "sourceKey": {"prefix": "🌊", "repetitions": 2048, "suffix": "a"},
+      "sourceValue": 17,
+      "query": {"prefix": "🌊", "repetitions": 2048, "suffix": "a"},
+      "expected": 17,
+      "expectedComparedBytes": 16386
+    },
+    {
+      "id": "missing-long-common-prefix",
+      "sourceKey": {"prefix": "🌊", "repetitions": 2048, "suffix": "a"},
+      "sourceValue": 17,
+      "query": {"prefix": "🌊", "repetitions": 2048, "suffix": "b"},
+      "expected": null,
+      "expectedComparedBytes": 16386
+    }
+  ],
+  "grants": [
+    1,
+    64,
+    4096
+  ],
+  "cancelAfterSteps": [
+    0,
+    1,
+    9,
+    100
+  ],
+  "cases": [
+    {
+      "id": "rotations-and-delete",
+      "operations": [
+        {
+          "op": "set",
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "c"
+          },
+          "value": "3"
+        },
+        {
+          "op": "set",
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "a"
+          },
+          "value": "1"
+        },
+        {
+          "op": "set",
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "b"
+          },
+          "value": "2"
+        },
+        {
+          "op": "set",
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "d"
+          },
+          "value": "4"
+        },
+        {
+          "op": "set",
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "f"
+          },
+          "value": "6"
+        },
+        {
+          "op": "set",
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "e"
+          },
+          "value": "5"
+        },
+        {
+          "op": "set",
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "g"
+          },
+          "value": "7"
+        },
+        {
+          "op": "set",
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "c"
+          },
+          "value": "updated"
+        },
+        {
+          "op": "remove",
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "a"
+          }
+        },
+        {
+          "op": "remove",
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "d"
+          }
+        },
+        {
+          "op": "remove",
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "f"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "b"
+          },
+          "value": "2"
+        },
+        {
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "c"
+          },
+          "value": "updated"
+        },
+        {
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "e"
+          },
+          "value": "5"
+        },
+        {
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "g"
+          },
+          "value": "7"
+        }
+      ]
+    },
+    {
+      "id": "long-common-prefix",
+      "operations": [
+        {
+          "op": "set",
+          "key": {
+            "prefix": "🌊",
+            "repetitions": 2048,
+            "suffix": "c"
+          },
+          "value": "C"
+        },
+        {
+          "op": "set",
+          "key": {
+            "prefix": "🌊",
+            "repetitions": 2048,
+            "suffix": "a"
+          },
+          "value": "A"
+        },
+        {
+          "op": "set",
+          "key": {
+            "prefix": "🌊",
+            "repetitions": 2048,
+            "suffix": "b"
+          },
+          "value": "B"
+        },
+        {
+          "op": "set",
+          "key": {
+            "prefix": "🌊",
+            "repetitions": 2048,
+            "suffix": "a"
+          },
+          "value": "updated"
+        },
+        {
+          "op": "remove",
+          "key": {
+            "prefix": "🌊",
+            "repetitions": 2048,
+            "suffix": "c"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "key": {
+            "prefix": "🌊",
+            "repetitions": 2048,
+            "suffix": "a"
+          },
+          "value": "updated"
+        },
+        {
+          "key": {
+            "prefix": "🌊",
+            "repetitions": 2048,
+            "suffix": "b"
+          },
+          "value": "B"
+        }
+      ]
+    },
+    {
+      "id": "unicode-order-and-missing",
+      "operations": [
+        {
+          "op": "set",
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": ""
+          },
+          "value": "private"
+        },
+        {
+          "op": "set",
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "🌊"
+          },
+          "value": "wave"
+        },
+        {
+          "op": "set",
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "a"
+          },
+          "value": "ascii"
+        },
+        {
+          "op": "remove",
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "missing"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "a"
+          },
+          "value": "ascii"
+        },
+        {
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": ""
+          },
+          "value": "private"
+        },
+        {
+          "key": {
+            "prefix": "",
+            "repetitions": 0,
+            "suffix": "🌊"
+          },
+          "value": "wave"
+        }
+      ]
+    }
+  ]
+}

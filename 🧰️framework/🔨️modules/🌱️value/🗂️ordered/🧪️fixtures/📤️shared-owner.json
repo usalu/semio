@@ -1,0 +1,1 @@
+{"schema":"semio.value.ordered-map.shared-owner","grants":[1,64,4096],"key":{"text":"🌊","repetitions":4096},"aliases":8,"expected":{"keyBytes":16384,"sharedReleases":7,"finalHandoffs":1,"payloadDropsBeforeHandoff":0,"terminalOwners":0}}

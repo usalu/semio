@@ -739,6 +739,9 @@ pub mod editor {
         mod component;
         pub use component::*;
 
+        #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️component.rs"]
+        pub mod retained;
+
         #[path = "."]
         pub mod config {
             #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]

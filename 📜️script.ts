@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * 🧭️ Monorepo command router: `bun ./📜️script.ts <verb> [segments…]` (e.g. `script.ts dev`, `script.ts dev mcp`, `script.ts generate neo4j elements`).
+ * 🧭️ Monorepo command router: `bun ./📜️script.ts <verb> [segments…]` (e.g. `📜️script.ts dev`, `📜️script.ts dev mcp`, `📜️script.ts generate neo4j elements`).
  */
 import {
   Script,
@@ -8,7 +8,7 @@ import {
   buildBudgetMs,
   canonicalFilenameForKind,
   canonicalFilenamesForKind,
-  canonicalStemmedFilenameForKind,
+  canonicalPrimaryFilenameForKind,
   coverageDir,
   coverageEnabled,
   daemonBudgetOpts,
@@ -49,7 +49,6 @@ import {
   runCmdStatus,
   runProbe,
   layeringBreaches,
-  policyDiscoveredAllowlist,
   layeringCounts,
   layeringReferences,
   writeLayeringBaseline,
@@ -71,10 +70,22 @@ import {
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import {
   buildSemanticCensus,
+  createRustMutationCodecOwnershipInspector,
+  inspectRustMutationAggregateSpan,
+  inspectRustModuleGraphFacts,
+  inspectRustPublicTypeNames,
+  inspectRustRunnableTests,
+  inspectRustStructure,
+  inspectRustSourceIdentities,
+  createRustMutationInputInspector,
+  resolveRustPathAttributes,
   renderSemanticCensusJson,
   renderSemanticCensusMarkdown,
   renderSemanticDuplicatesJson,
   renderSemanticDuplicatesMarkdown,
+  taxonomyRelativePathIsExcluded,
+  semanticPackageAdapterPreview,
+  mutationPayloadSchemaRelativePath,
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts";
 import {
   applyTaxonomyPlan,
@@ -85,28 +96,15 @@ import {
   taxonomyPlanDigest,
   verifyTaxonomy,
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
-import { createHash } from "node:crypto";
-import { existsSync, linkSync, lstatSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { createHash, randomUUID } from "node:crypto";
+import { existsSync, linkSync, lstatSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { builtinModules } from "node:module";
-import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
-import Ajv from "ajv";
+import { builtinModules, createRequire } from "node:module";
+import { dirname, extname, isAbsolute, join, posix, relative, resolve, sep } from "node:path";
 import { createServer } from "node:net";
 import { stat } from "node:fs/promises";
-import { resolveActiveScopes, STORY_SCOPES } from "./.storybook/scopes.ts";
 
 const WORKSPACE_ROOT = import.meta.dir;
-(() => {
-  try {
-    const alias = join(WORKSPACE_ROOT, "script.ts");
-    const source = readdirSync(WORKSPACE_ROOT).find((name) => /^📜️\uFE0E?script\.ts$/u.test(name));
-    if (!source) return;
-    if (existsSync(alias)) rmSync(alias, { force: true });
-    symlinkSync(source, alias, "file");
-  } catch {
-    /* ignore alias maintenance failures */
-  }
-})();
 
 const BUN = process.execPath;
 const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap");
@@ -309,17 +307,6 @@ export class SetupScript extends Script {
         linkSync(join(this.root, source), aliasPath);
       }
     }
-    const rootScript = readdirSync(this.root).find((name) => /^📜️\uFE0E?script\.ts$/u.test(name));
-    if (rootScript) {
-      const scriptAlias = join(this.root, "script.ts");
-      if (existsSync(scriptAlias)) rmSync(scriptAlias, { force: true });
-      try {
-        symlinkSync(rootScript, scriptAlias, "file");
-      } catch (error) {
-        if (process.platform !== "win32") throw error;
-        linkSync(join(this.root, rootScript), scriptAlias);
-      }
-    }
   }
 
   private runWorkspaceCodegen(): void {
@@ -476,7 +463,7 @@ export class DevScript extends Script {
     runFrameworkOsPlaygroundDev("s");
   }
 
-  private parseStorybookSegments(segments: string[]): { scope: string; args: string[] } {
+  private async parseStorybookSegments(segments: string[]): Promise<{ scope: string; args: string[] }> {
     const scopeSegments: string[] = [];
     const args: string[] = [];
     let parsingScope = true;
@@ -505,6 +492,7 @@ export class DevScript extends Script {
     }
     if (scopeIds.length > 0) {
       try {
+        const { resolveActiveScopes } = await import("./.storybook/scopes.ts");
         resolveActiveScopes(scopeIds.join(","));
       } catch (error) {
         console.error(error instanceof Error ? `[dev.storybook] ${error.message}` : error);
@@ -515,7 +503,7 @@ export class DevScript extends Script {
   }
 
   private async runStorybook(extra: string[]): Promise<void> {
-    const storybook = this.parseStorybookSegments(extra);
+    const storybook = await this.parseStorybookSegments(extra);
     const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
     const port = process.env.STORYBOOK_PORT ?? "6010";
     const useExactPort = process.env.STORYBOOK_EXACT_PORT === "1" || process.env.STORYBOOK_EXACT_PORT === "true";
@@ -679,10 +667,10 @@ function taxonomyContractFilenames(taxonomy: ReturnType<typeof loadTaxonomy>, co
   return contractIds.map((contractId) => taxonomyContractFilename(taxonomy, contractId));
 }
 
-function taxonomyMappedFilename(taxonomy: ReturnType<typeof loadTaxonomy>, mapping: Readonly<Record<string, string>>, key: string, stem: "component" | "test"): string {
+function taxonomyMappedFilename(taxonomy: ReturnType<typeof loadTaxonomy>, mapping: Readonly<Record<string, string>>, key: string): string {
   const fileKindId = mapping[key];
   if (!fileKindId) throw new Error(`[taxonomy] no file-kind mapping for ${JSON.stringify(key)}.`);
-  return canonicalStemmedFilenameForKind(fileKindId, stem, taxonomy);
+  return canonicalPrimaryFilenameForKind(fileKindId, taxonomy);
 }
 
 function taxonomyEcosystemEntryFilenames(taxonomy: ReturnType<typeof loadTaxonomy>, ecosystemId: string): string[] {
@@ -704,6 +692,27 @@ function taxonomyTicketDirectory(repoRoot: string, ticketId: string): string {
   }
   return current;
 }
+
+//#region 🧩️Nested Cargo Adapter Generation
+/** 🧩️ Emits or verifies exactly the JCO Cargo library adapter from schema-owned bytes. */
+export function runNestedCargoPackageAdapter(repoRoot: string, mode: string): void {
+  if (!["preview", "generate", "check"].includes(mode)) throw new Error("Package adapter mode must be preview, generate, or check");
+  const adapters = semanticPackageAdapterPreview(repoRoot, "jcoprobe-guest");
+  const nodes = adapters.map((entry) => ({ bytesBase64: Buffer.from(entry.content).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: entry.path }));
+  if (mode === "preview") { process.stdout.write(canonicalJson({ contractId: "jco-package-adapter", nodes, schemaVersion: 1, staleRemovals: [] }) + "\n"); return; }
+  for (const adapter of adapters) {
+    const path = join(repoRoot, adapter.path);
+    if (!existsSync(join(dirname(dirname(path)), "Cargo.toml"))) throw new Error("Package adapter generation requires its canonical Cargo manifest");
+    if (existsSync(path)) {
+      if (readFileSync(path, "utf8") !== adapter.content || (lstatSync(path).mode & 0o7777) !== 0o644) throw new Error("Package adapter bytes or mode drift: " + adapter.path);
+      continue;
+    }
+    if (mode === "check") throw new Error("Package adapter is absent: " + adapter.path);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, adapter.content, { flag: "wx", mode: 0o644 });
+  }
+}
+//#endregion 🧩️Nested Cargo Adapter Generation
 
 export class GenerateScript extends Script {
   run(segments: string[]): void {
@@ -754,6 +763,10 @@ export class GenerateScript extends Script {
   /** 🧩️ Writes deterministic census or duplicate evidence with its Markdown companion. */
   private generateTaxonomy(args: string[]): void {
     const operation = args[0];
+    if (operation === "package-adapter") {
+      runNestedCargoPackageAdapter(this.root, args[1] ?? "preview");
+      return;
+    }
     if (operation !== "census" && operation !== "duplicates") throw new Error(`[generate taxonomy] expected census or duplicates, got ${JSON.stringify(operation)}.`);
     const ticketId = taxonomyOption(args, "--ticket");
     if (!ticketId) throw new Error(`[generate taxonomy ${operation}] --ticket <ticket-id> is required.`);
@@ -882,6 +895,12 @@ type ToolJobCoverageReport = {
   acceptedCommandRows: ToolJobStaticRow[];
   acceptedReservedRoutes: string[];
   remainingCommands: { file: string; id: string; reason: string; source: "literal" | "macro" }[];
+  pipelineGates: {
+    fullToolOperationJobBounded: boolean;
+    durableOneItemPublicationBounded: boolean;
+    ephemeralOneItemPublicationBounded: boolean;
+    fullToolOperationBounded: boolean;
+  };
   selfTests: number;
   failures: string[];
 };
@@ -935,9 +954,65 @@ function toolJobRustBlock(source: string, open: number): { body: string; end: nu
   return undefined;
 }
 
+function toolJobRustArray(source: string, open: number): { body: string; end: number } | undefined {
+  if (source[open] !== "[") return undefined;
+  let depth = 0;
+  let string = false;
+  let escaped = false;
+  let lineComment = false;
+  let blockComment = 0;
+  for (let index = open; index < source.length; index += 1) {
+    const char = source[index]!;
+    const next = source[index + 1];
+    if (lineComment) {
+      if (char === "\n") lineComment = false;
+      continue;
+    }
+    if (blockComment > 0) {
+      if (char === "/" && next === "*") {
+        blockComment += 1;
+        index += 1;
+      } else if (char === "*" && next === "/") {
+        blockComment -= 1;
+        index += 1;
+      }
+      continue;
+    }
+    if (string) {
+      if (escaped) escaped = false;
+      else if (char === "\\") escaped = true;
+      else if (char === '"') string = false;
+      continue;
+    }
+    if (char === "/" && next === "/") {
+      lineComment = true;
+      index += 1;
+      continue;
+    }
+    if (char === "/" && next === "*") {
+      blockComment = 1;
+      index += 1;
+      continue;
+    }
+    if (char === '"') string = true;
+    else if (char === "[") depth += 1;
+    else if (char === "]" && --depth === 0) return { body: source.slice(open + 1, index), end: index + 1 };
+  }
+  return undefined;
+}
+
 type ToolJobStaticRow = { file: string; id: string; source: "literal" | "macro" };
 
-type ToolJobAppOwnedRow = { ownerFile: string; factoryFile: string; ownerTypeName: string; factory: string; toolId: string };
+type ToolJobPublicationLane = "HostOnly" | "Artifact" | "Config" | "Draft" | "Presence" | "Transient" | "Child";
+type ToolJobAppOwnedRow = {
+  ownerFile: string;
+  factoryFile: string;
+  ownerTypeName: string;
+  factory: string;
+  toolId: string;
+  publicationLanes: readonly ToolJobPublicationLane[];
+  publicationReady: boolean;
+};
 
 type GlobalPayloadStoreKind = "child-content-scratch" | "resizable-operation-registry" | "fixed-operation-registry" | "abi-bridge-retention" | "mutable-entropy" | "mutable-payload";
 type GlobalPayloadStoreOwner = { name: string; rustType: string; kind: GlobalPayloadStoreKind };
@@ -1097,6 +1172,49 @@ function toolJobStaticRows(files: ReadonlyMap<string, string>): ToolJobStaticRow
   return [...unique.values()].sort((left, right) => left.file.localeCompare(right.file) || left.id.localeCompare(right.id));
 }
 
+function toolJobPublicationContracts(
+  source: string,
+  factoryBody: string,
+  strings: ReadonlyMap<string, string>,
+): Map<string, ToolJobPublicationLane[]> | undefined {
+  const expression = factoryBody.match(/const\s+PUBLICATION_CONTRACTS\s*:\s*&'static\s*\[\s*(?:semio_framework_plugin::)?ArtifactToolPublicationContract\s*\]\s*=\s*([^;]+);/s)?.[1]?.trim();
+  if (!expression) return undefined;
+  const constant = expression.match(/^(?:[A-Za-z_][A-Za-z0-9_]*::)*([A-Z][A-Z0-9_]*)$/)?.[1];
+  const declaration = constant ? source.search(new RegExp(`(?:pub(?:\\([^)]*\\))?\\s+)?const\\s+${constant}\\s*:\\s*&(?:'static\\s+)?\\[\\s*(?:semio_framework_plugin::)?ArtifactToolPublicationContract\\s*\\]\\s*=`)) : -1;
+  const open = declaration < 0 ? -1 : source.indexOf("[", source.indexOf("=", declaration));
+  const array = open < 0 ? undefined : toolJobRustArray(source, open);
+  const contracts = constant ? array?.body : expression;
+  if (!contracts) return undefined;
+  const result = new Map<string, ToolJobPublicationLane[]>();
+  const row = /(?:semio_framework_plugin::)?ArtifactToolPublicationContract\s*\{\s*tool_id:\s*(?:"([^"]+)"|(?:[A-Za-z_][A-Za-z0-9_]*::)*([A-Z][A-Z0-9_]*))\s*,\s*lanes:\s*&\[([^\]]*)\]\s*\}/g;
+  let match: RegExpExecArray | null;
+  while ((match = row.exec(contracts))) {
+    const toolId = match[1] ?? strings.get(match[2] ?? "");
+    const lanes = [...match[3]!.matchAll(/(?:semio_framework_plugin::)?ArtifactToolPublicationLane::(HostOnly|Artifact|Config|Draft|Presence|Transient|Child)/g)].map((lane) => lane[1] as ToolJobPublicationLane);
+    if (!toolId || result.has(toolId) || lanes.length === 0 || new Set(lanes).size !== lanes.length || (lanes.includes("HostOnly") && lanes.length !== 1)) return undefined;
+    result.set(toolId, lanes);
+  }
+  return result.size > 0 ? result : undefined;
+}
+
+function toolJobPublicationAuthorityReady(ownerBody: string, lanes: readonly ToolJobPublicationLane[]): boolean {
+  const factory = (name: string) => {
+    const start = ownerBody.search(new RegExp(`fn\\s+${name}\\s*\\(`));
+    const open = start < 0 ? -1 : ownerBody.indexOf("{", start);
+    const body = open < 0 ? undefined : toolJobRustBlock(ownerBody, open);
+    return !!body && /\bSome\s*\(/.test(body.body);
+  };
+  return lanes.every((lane) => {
+    if (lane === "HostOnly") return true;
+    if (lane === "Child") return false;
+    if (lane === "Artifact") return factory("build_artifact_store_one_item_preparation_factory");
+    if (lane === "Config") return factory("build_config_store_one_item_preparation_factory");
+    if (lane === "Draft") return factory("build_draft_store_one_item_preparation_factory");
+    if (lane === "Presence") return factory("build_presence_store_one_item_preparation_factory") && factory("build_presence_local_root_retirement_factory");
+    return factory("build_transient_store_one_item_preparation_factory") && factory("build_transient_local_root_retirement_factory");
+  });
+}
+
 /** 🧩️ Enumerates only command rows backed by an explicitly registered app-owned factory and builder. */
 function toolJobAppOwnedRows(files: ReadonlyMap<string, string>): ToolJobAppOwnedRow[] {
   const stringConstants = new Map<string, Map<string, string>>();
@@ -1120,13 +1238,13 @@ function toolJobAppOwnedRows(files: ReadonlyMap<string, string>): ToolJobAppOwne
   }
   const ownerFiles = new Map<string, { file: string; body: string }>();
   for (const [file, source] of files) {
-    const owner = /impl\s+(?:semio_framework_plugin::)?ArtifactEditor\s+for\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/g;
+    const owner = /impl\s+(?:semio_framework_plugin::)?(ArtifactEditor|ArtifactApp)\s+for\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/g;
     let match: RegExpExecArray | null;
     while ((match = owner.exec(source))) {
       const open = source.indexOf("{", match.index);
       const block = toolJobRustBlock(source, open);
       if (!block) break;
-      ownerFiles.set(match[1]!, { file, body: block.body });
+      ownerFiles.set(`${match[1]}\0${match[2]}`, { file, body: block.body });
       owner.lastIndex = block.end;
     }
   }
@@ -1141,9 +1259,12 @@ function toolJobAppOwnedRows(files: ReadonlyMap<string, string>): ToolJobAppOwne
       const block = toolJobRustBlock(source, open);
       if (!block) break;
       implementation.lastIndex = block.end;
-      const ownerTypeName = block.body.match(/type\s+Owner\s*=\s*(?:semio_framework_plugin::)?EditorApp<\s*([A-Za-z_][A-Za-z0-9_]*)\s*>\s*;/)?.[1];
+      const ownerExpression = block.body.match(/type\s+Owner\s*=\s*([^;]+)\s*;/)?.[1]?.replaceAll(/\s+/g, "");
+      const editorOwner = ownerExpression?.match(/^(?:semio_framework_plugin::)?EditorApp<([A-Za-z_][A-Za-z0-9_]*)>$/)?.[1];
+      const directOwner = editorOwner ? undefined : ownerExpression?.match(/^(?:semio_framework_plugin::)?([A-Za-z_][A-Za-z0-9_]*)$/)?.[1];
+      const ownerTypeName = editorOwner ?? directOwner;
       const toolExpression = block.body.match(/const\s+TOOL_IDS\s*:\s*&'static\s*\[\s*&'static\s+str\s*\]\s*=\s*([^;]+);/s)?.[1]?.trim();
-      const owner = ownerTypeName ? ownerFiles.get(ownerTypeName) : undefined;
+      const owner = editorOwner ? ownerFiles.get(`ArtifactEditor\0${editorOwner}`) : directOwner ? ownerFiles.get(`ArtifactApp\0${directOwner}`) : undefined;
       const registered = new RegExp(`registry\\.register\\(\\s*(?:[A-Za-z_][A-Za-z0-9_]*::)*${factory}::new\\(`).test(production);
       const concrete = new RegExp(`impl\\s+(?:semio_framework::)?ToolJobFactory\\s+for\\s+${factory}\\s*\\{`).test(source) && source.includes("fn create_job") && source.includes("fn execution_contract");
       const builder = !!owner && /fn\s+build_tool_job\s*\([^)]*request/s.test(owner.body) && owner.body.includes("request");
@@ -1157,7 +1278,20 @@ function toolJobAppOwnedRows(files: ReadonlyMap<string, string>): ToolJobAppOwne
             .map((item) => item.match(/"([^"]+)"/)?.[1] ?? localStrings.get(item.trim().match(/(?:[A-Za-z_][A-Za-z0-9_]*::)*([A-Z][A-Z0-9_]*)/)?.[1] ?? ""))
             .filter((id): id is string => !!id)
         : localLists.get(toolExpression.match(/(?:[A-Za-z_][A-Za-z0-9_]*::)*([A-Z][A-Z0-9_]*)/)?.[1] ?? "") ?? [];
-      for (const toolId of ids) rows.push({ ownerFile: owner.file, factoryFile, ownerTypeName, factory, toolId });
+      const publication = toolJobPublicationContracts(source, block.body, localStrings);
+      const exactPublication = !!publication && publication.size === ids.length && ids.every((toolId) => publication.has(toolId));
+      for (const toolId of ids) {
+        const publicationLanes = exactPublication ? publication!.get(toolId)! : [];
+        rows.push({
+          ownerFile: owner.file,
+          factoryFile,
+          ownerTypeName,
+          factory,
+          toolId,
+          publicationLanes,
+          publicationReady: exactPublication && toolJobPublicationAuthorityReady(owner.body, publicationLanes),
+        });
+      }
     }
   }
   const unique = new Map<string, ToolJobAppOwnedRow>();
@@ -1189,6 +1323,7 @@ type ToolJobProof = {
   ownerTypeName: string;
   controllerId: string;
   factory: string;
+  factoryType?: string;
   toolId: string;
   documentSchema: string;
   execution: "bounded" | "resumable";
@@ -1208,18 +1343,19 @@ function toolJobProofs(files: ReadonlyMap<string, string>): ToolJobProof[] {
       if (!block) break;
       const header = block.body.match(/owner:\s*([^,]+),\s*owner_file:\s*"([^"]+)",\s*controller:\s*"([^"]+)",\s*document_schema:\s*"([^"]+)",\s*factory:\s*"([^"]+)"/s);
       if (header) {
-        const common = { sourceFile, ownerFile: header[2]!, ownerTypeName: header[1]!.replaceAll(/\s+/g, ""), controllerId: header[3]!, documentSchema: header[4]!, factory: header[5]! };
+        const factoryType = block.body.match(/factory_type:\s*([^,]+),/)?.[1]?.replaceAll(/\s+/g, "");
+        const common = { sourceFile, ownerFile: header[2]!, ownerTypeName: header[1]!.replaceAll(/\s+/g, ""), controllerId: header[3]!, documentSchema: header[4]!, factory: header[5]!, factoryType };
         const mappedRows = [...block.body.matchAll(/"([^"]+)"\s*=>\s*semio_framework::ToolExecutionContract::(bounded_first_step|resumable)\(([^)]*)\)/g)];
         for (const row of mappedRows) {
           const values = valuesOf(row[3]!);
           if (validValues(values)) proofs.push({ ...common, toolId: row[1]!, execution: row[2] === "resumable" ? "resumable" : "bounded", values });
         }
         if (mappedRows.length === 0) {
-          const sharedContract = block.body.match(/contract:\s*semio_framework::ToolExecutionContract::bounded_first_step\(([^)]*)\)/);
+          const sharedContract = block.body.match(/contract:\s*semio_framework::ToolExecutionContract::(bounded_first_step|resumable)\(([^)]*)\)/);
           const sharedTools = block.body.match(/tools:\s*\[([^\]]*)\]/s);
-          const values = valuesOf(sharedContract?.[1] ?? "");
+          const values = valuesOf(sharedContract?.[2] ?? "");
           if (sharedTools && validValues(values)) {
-            for (const tool of sharedTools[1]!.matchAll(/"([^"]+)"/g)) proofs.push({ ...common, toolId: tool[1]!, execution: "bounded", values });
+            for (const tool of sharedTools[1]!.matchAll(/"([^"]+)"/g)) proofs.push({ ...common, toolId: tool[1]!, execution: sharedContract?.[1] === "resumable" ? "resumable" : "bounded", values });
           }
         }
       }
@@ -1260,16 +1396,783 @@ function toolJobScanThenMonolithRows(files: ReadonlyMap<string, string>, proofs:
 }
 
 function toolJobProofIdentity(proof: ToolJobProof): string {
-  return `${proof.ownerFile}\0${proof.ownerTypeName}\0${proof.controllerId}\0${proof.factory}\0${proof.toolId}\0${proof.documentSchema}.tool-command.v1`;
+  return `${proof.ownerFile}\0${proof.ownerTypeName}\0${proof.controllerId}\0${proof.factory}\0${proof.factoryType ?? ""}\0${proof.toolId}\0${proof.documentSchema}.tool-command.v1`;
 }
+
+//#region 🧭️ConcreteFactoryResolution
+/** 🧭️ Resolves one crate module through its package's explicit taxonomy declarations. */
+function toolJobFactoryModuleFile(files: ReadonlyMap<string, string>, ownerFile: string, modulePath: string): string | undefined {
+  const candidates = new Set<string>();
+  const visit = (source: string, directory: string, prefix: string): void => {
+    const declaration = /#\[path\s*=\s*"([^"]+)"\]\s*(?:pub(?:\([^)]*\))?\s+)?mod\s+([A-Za-z_][A-Za-z0-9_]*)\s*([;{])/g;
+    let match: RegExpExecArray | null;
+    while ((match = declaration.exec(source))) {
+      const target = posix.normalize(posix.join(directory, match[1]!));
+      const name = `${prefix}::${match[2]}`;
+      if (match[3] === ";") {
+        const exportedComponent = prefix === modulePath && match[2] === "component" && /pub\s+use\s+component::\*\s*;/.test(source);
+        if ((name === modulePath || exportedComponent) && files.has(target)) candidates.add(target);
+      } else {
+        const block = toolJobRustBlock(source, source.indexOf("{", match.index));
+        if (!block) return;
+        visit(block.body, target, name);
+        declaration.lastIndex = block.end;
+      }
+    }
+  };
+  for (const [file, source] of files) {
+    if (!file.endsWith("/📦️glue.rs")) continue;
+    const packageBoundary = file.lastIndexOf("/📦️packages/");
+    if (packageBoundary < 0 || !ownerFile.startsWith(`${file.slice(0, packageBoundary)}/`)) continue;
+    visit(source, posix.dirname(file), "crate");
+  }
+  return candidates.size === 1 ? [...candidates][0] : undefined;
+}
+
+/** 🧬️ Resolves a compiler type token, including an explicit import alias, to one concrete source type. */
+function toolJobFactoryType(files: ReadonlyMap<string, string>, ownerFile: string, reference: string): { file: string; name: string } | undefined {
+  if (!/^(?:crate::)?[A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z_][A-Za-z0-9_]*)*$/.test(reference)) return undefined;
+  const ownerSource = files.get(ownerFile) ?? "";
+  let path = reference;
+  if (!reference.includes("::")) {
+    const imports = [...ownerSource.matchAll(/(?:^|\n)\s*use\s+(crate(?:::[A-Za-z_][A-Za-z0-9_]*)+)(?:\s+as\s+([A-Za-z_][A-Za-z0-9_]*))?\s*;/g)]
+      .filter((entry) => (entry[2] ?? entry[1]!.split("::").at(-1)) === reference);
+    const local = new RegExp(`(?:struct|enum)\\s+${reference}\\b`).test(ownerSource);
+    if (local && imports.length === 0) return { file: ownerFile, name: reference };
+    if (local || imports.length !== 1) return undefined;
+    path = imports[0]![1]!;
+  }
+  if (!path.startsWith("crate::")) return undefined;
+  const name = path.split("::").at(-1)!;
+  const file = toolJobFactoryModuleFile(files, ownerFile, path.slice(0, -(name.length + 2)));
+  return file ? { file, name } : undefined;
+}
+
+/** 🔐️ Binds the compiler witness to its actual factory, exact owner, route, and live registration site. */
+function toolJobConcreteFactoryExact(files: ReadonlyMap<string, string>, proof: ToolJobProof, ownerBody: string): boolean {
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(proof.factory) || !proof.factoryType) return false;
+  const witness = toolJobFactoryType(files, proof.ownerFile, proof.factoryType);
+  if (!witness || witness.name !== proof.factory) return false;
+  const source = files.get(witness.file) ?? "";
+  const implementation = (trait: string, namespace: string): string | undefined => {
+    const start = source.search(new RegExp(`impl\\s+(?:${namespace}::)?${trait}\\s+for\\s+${witness.name}\\s*\\{`));
+    return start < 0 ? undefined : toolJobRustBlock(source, source.indexOf("{", start))?.body;
+  };
+  const factory = implementation("ToolJobFactory", "semio_framework");
+  const owned = implementation("ArtifactOwnedToolJobFactory", "semio_framework_plugin");
+  const canonicalOwner = (owner: string) => owner.replaceAll(/\s+/g, "").replace(/^semio_framework_plugin::/, "");
+  if (!factory || !owned || !factory.includes("type Job =") || !/fn\s+create_job\s*\(/.test(factory) || !/fn\s+execution_contract\s*\(/.test(factory)
+    || canonicalOwner(owned.match(/type\s+Owner\s*=\s*([^;]+);/)?.[1] ?? "") !== canonicalOwner(proof.ownerTypeName)) return false;
+  const listExpression = owned.match(/const\s+TOOL_IDS\s*:[^=]+=\s*([^;]+);/)?.[1]?.trim();
+  const listName = listExpression?.match(/^(?:[A-Za-z_][A-Za-z0-9_]*::)*([A-Z][A-Z0-9_]*)$/)?.[1];
+  const list = listName ? source.match(new RegExp(`const\\s+${listName}\\s*:[^=]+=\\s*&\\[([^\\]]*)\\]`))?.[1] : listExpression;
+  if (!list) return false;
+  const strings = new Map([...source.matchAll(/const\s+([A-Z][A-Z0-9_]*)\s*:\s*&(?:'static\s+)?str\s*=\s*"([^"]+)"/g)].map((row) => [row[1]!, row[2]!]));
+  const toolIds = [...list.matchAll(/"([^"]+)"|\b([A-Z][A-Z0-9_]*)\b/g)].map((row) => row[1] ?? strings.get(row[2]!));
+  if (!toolIds.includes(proof.toolId)) return false;
+  const registeredIn = (body: string, file: string) => [...body.matchAll(/registry\.register\(\s*((?:[A-Za-z_][A-Za-z0-9_]*::)*[A-Za-z_][A-Za-z0-9_]*)::new\s*\(/g)].some((entry) => {
+    const registered = toolJobFactoryType(files, file, entry[1]!);
+    return registered?.file === witness.file && registered.name === witness.name;
+  });
+  if (registeredIn(ownerBody, proof.ownerFile)) return true;
+  return [...ownerBody.matchAll(/(crate(?:::[A-Za-z_][A-Za-z0-9_]*)+)::register\(registry\)/g)].some((entry) => {
+    const file = toolJobFactoryModuleFile(files, proof.ownerFile, entry[1]!);
+    if (file !== witness.file) return false;
+    const delegated = source.search(/\bfn\s+register\s*\(/);
+    const body = delegated < 0 ? undefined : toolJobRustBlock(source, source.indexOf("{", delegated))?.body;
+    return !!body && registeredIn(body, witness.file);
+  });
+}
+/** 🧪️ Runs strict language-neutral cross-file factory laws and hostile module substitutions. */
+export function toolJobOwnerFactoryResolutionSelfTests(): number {
+  const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command");
+  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️owner-factory-resolution.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🔣️owner-factory-resolution.json"), "utf8"));
+  const Ajv = createRequire(import.meta.url)("ajv");
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  if (!validate(fixture)) throw new Error(`owner factory fixture schema: ${JSON.stringify(validate.errors)}`);
+  const compilerProof = toolJobProofs(new Map([[fixture.ownerFile, fixture.ownerSource]]));
+  if (compilerProof.length !== 1 || compilerProof[0]?.factoryType !== fixture.factoryType) throw new Error("owner factory compiler witness field was not parsed exactly");
+  for (const hostile of [{ ...fixture, extra: true }, { ...fixture, cases: [{ ...fixture.cases[0], extra: true }] }, { ...fixture, cases: [{ ...fixture.cases[0], accepted: "true" }] }]) {
+    if (validate(hostile)) throw new Error("owner factory strict schema accepted an adversarial fixture");
+  }
+  for (const law of fixture.cases) {
+    const candidate = { ...fixture };
+    if (law.from && !candidate[law.target].includes(law.from)) throw new Error(`owner factory missing hostile anchor ${law.id}`);
+    candidate[law.target] = candidate[law.target].replace(law.from, law.to);
+    const files = new Map<string, string>([[candidate.ownerFile, candidate.ownerSource], [candidate.factoryFile, candidate.factorySource], [candidate.glueFile, candidate.glueSource]]);
+    const failures = toolJobProofCatalogFailures(files, toolJobStaticRows(files), toolJobDispositions(files), toolJobProofs(files));
+    if ((failures.length === 0) !== law.accepted) throw new Error(`owner factory ${law.id}: ${JSON.stringify(failures)}`);
+  }
+  return fixture.cases.length + 3;
+}
+
+/** 🧪️ Compares the runtime join fixture with an independent Ajv exact-authority oracle and hostile source variants. */
+export function toolJobFactoryProofJoinSelfTests(): number {
+  const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin");
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️tool-factory-proof.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "🧬️tool-factory-proof.schema.json"), "utf8"));
+  const Ajv = createRequire(import.meta.url)("ajv");
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  const validate = ajv.compile(schema);
+  if (!validate(fixture)) throw new Error(`factory runtime fixture schema: ${JSON.stringify(validate.errors)}`);
+  const exact = { ownerType: "TestApp", controller: "s.test.synthetic@1/*#editor", documentSchema: "semio.test/v1", tool: "setLabel", factoryType: "TestRetainedCommandFactory", factoryTypeName: "plugin::TestRetainedCommandFactory", payloadSchema: "semio.test.retained-command.v1", executionContract: "resumable:4096:4:1:4096:7500:1:1", liveBusRegistration: true, factoryName: "TestRetainedCommandFactory", registered: true, unique: true };
+  const oracle = ajv.compile({ const: exact });
+  const field = { wrongType: "factoryType", sameOwnerDifferentFactory: "factoryType", wrongTypeName: "factoryTypeName", wrongFactory: "factoryName", wrongOwner: "ownerType", wrongController: "controller", wrongDocumentSchema: "documentSchema", wrongTool: "tool", wrongContract: "executionContract", wrongPayloadSchema: "payloadSchema", differentBus: "liveBusRegistration" };
+  for (const law of fixture.cases) {
+    const candidate: Record<string, unknown> = { ...exact };
+    if (law.change === "missingType") delete candidate.factoryType;
+    else if (law.change === "missingRegistration") candidate.registered = false;
+    else if (law.change === "sentinel") { candidate.factoryName = "BoundedFirstStepCommandJobFactory"; delete candidate.factoryType; delete candidate.factoryTypeName; }
+    else if (law.change === "duplicate") candidate.unique = false;
+    else if (law.change !== "none") candidate[field[law.change as keyof typeof field]] = "other-authority";
+    if (oracle(candidate) !== law.accepted) throw new Error(`factory runtime oracle disagrees for ${law.id}`);
+  }
+  const source = readFileSync(join(base, "🦀️component.rs"), "utf8");
+  if (!toolJobRuntimeProofQualified(source)) throw new Error("production runtime factory join is not exact");
+  const hostile = [
+    "A::register_tool_job_factories(&mut app_tool_registry)",
+    "row.factory_type_id == Some(registration.factory_type_id)",
+    "row.factory_type_name == Some(registration.factory_type_name)",
+    "registration.owner == owner",
+    "registration.key.controller_id == runtime_controller_id",
+    "registration.key.tool_id == row.tool_id",
+    "registration.contract == row.contract",
+    "bus.admit_exact_wire(runtime_controller_id, row.tool_id, &registration.schema_id, &[])",
+    "QualifiedToolProof::AppOwned(registration.clone()).admits::<A>(&admission)",
+    "proof.with_factory_type::<$owner, $factory_type>()",
+    "&& registered.is_none()",
+  ];
+  for (const anchor of hostile) {
+    if (!source.includes(anchor)) throw new Error(`factory runtime hostile anchor missing: ${anchor}`);
+    if (toolJobRuntimeProofQualified(source.replaceAll(anchor, "unqualified_authority"))) throw new Error(`factory runtime accepts missing authority: ${anchor}`);
+  }
+  return fixture.cases.length + hostile.length + 1;
+}
+
+/** 🧪️ Scans every production app catalog for an exact compiler factory witness and rejects custom-covered generic rows. */
+export function toolJobFactoryProofActivationScan(root: string): { owners: number; customRows: number; genericRows: number; failures: string[] } {
+  const sources = new Map(policyAllRustFiles(root).filter((file) => file.includes("✏️s/🔌️plugins/") && !file.includes("/🧪️tests/")).map((file) => [file, toolJobProductionProtocolSource(policyReadFileSafe(root, file))]));
+  const proofs = toolJobProofs(sources);
+  const failures = toolJobProofCatalogFailures(sources, toolJobStaticRows(sources), toolJobDispositions(sources), proofs).filter((failure) => failure.startsWith("forged bounded reducer factory or compiler witness"));
+  return { owners: new Set(proofs.map((proof) => proof.ownerFile)).size, customRows: proofs.filter((proof) => proof.factoryType !== undefined).length, genericRows: proofs.filter((proof) => proof.factoryType === undefined).length, failures };
+}
+
+//#region 🗝️LatestWinsAuthorityLaws
+/** 🧹️ Cross-checks CAD domain retirement byte counts independently of its Rust ownership cursor. */
+export function cadPresenceRetirementSelfTests(): number {
+  const base = join(WORKSPACE_ROOT, "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence");
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️retirement.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️retirement.schema.json"), "utf8"));
+  const Ajv = createRequire(import.meta.url)("ajv");
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  if (!validate(fixture)) throw new Error(`CAD presence retirement schema: ${JSON.stringify(validate.errors)}`);
+  const counts = new Map<string, number>();
+  for (const law of fixture.cases) {
+    const bytes = [law.activeUtility, law.engagementStep, law.engagementPane].reduce((sum, part) => sum + (part === null ? 0 : Buffer.byteLength(part.unit.repeat(part.repeat), "utf8")), 0);
+    if (counts.has(law.name) || bytes !== law.expectedBytes) throw new Error(`CAD presence byte oracle: ${law.name}`);
+    counts.set(law.name, bytes);
+  }
+  for (const law of fixture.storeCases) {
+    if (!counts.has(law.local) || law.peers.some((peer) => !counts.has(peer.presence))) throw new Error(`CAD presence unknown fixture root: ${law.name}`);
+    const bytes = counts.get(law.local)! + law.peers.reduce((sum, peer) => sum + counts.get(peer.presence)! + Buffer.byteLength(peer.actor, "utf8"), 0);
+    if (bytes !== law.expectedBytes) throw new Error(`CAD presence roster byte oracle: ${law.name}`);
+  }
+  for (const hostile of [{ ...fixture, grant: { maximumItems: 2, maximumBytes: 4096 } }, { ...fixture, grant: { maximumItems: 1, maximumBytes: 65536 } }]) {
+    if (validate(hostile)) throw new Error("CAD presence schema accepted an enlarged production grant");
+  }
+  const storeBase = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence");
+  const storeFixture = JSON.parse(readFileSync(join(storeBase, "🧪️retirement.json"), "utf8"));
+  const storeSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🔣️retirement.schema.json"), "utf8"));
+  const validateStore = new Ajv({ strict: true, allErrors: true }).compile(storeSchema);
+  if (!validateStore(storeFixture)) throw new Error(`presence Store retirement schema: ${JSON.stringify(validateStore.errors)}`);
+  for (const law of storeFixture.cases) {
+    if (law.expectedSnapshots !== law.peers.length + 1 || law.expectedActorBytes !== law.peers.reduce((sum, peer) => sum + Buffer.byteLength(peer.actor, "utf8"), 0)) throw new Error(`presence Store retirement oracle: ${law.name}`);
+  }
+  const distinctPeers = new Map<string, { actor: string }>([...storeFixture.overlap.first, ...storeFixture.overlap.second].map((peer) => [JSON.stringify(peer), peer]));
+  if (distinctPeers.size !== storeFixture.overlap.expectedPeerSnapshots || [...distinctPeers.values()].reduce((sum, peer) => sum + Buffer.byteLength(peer.actor), 0) !== storeFixture.overlap.expectedActorBytes) throw new Error("presence overlapping-roster ownership oracle");
+  const readerReturn = storeFixture.readerReturn;
+  let readerAliases = 1;
+  let registryAliases = 1;
+  let returned = false;
+  for (const event of readerReturn.eventOrder) {
+    if (event === "reader-alias-released") readerAliases--;
+    else if (event === "return-published") { if (readerAliases !== 0 || registryAliases !== 1) throw new Error("read return precedes exact alias release"); returned = true; }
+    else if (event === "registry-owner-taken") { if (!returned || readerAliases !== 0) throw new Error("read registry take lacks exclusive payload authority"); }
+    else if (event === "final-owner-retired") registryAliases--;
+  }
+  if (readerAliases !== 0 || registryAliases !== 0) throw new Error("read ownership oracle retains an alias");
+  for (const hostile of [
+    { ...storeFixture, readerReturn: { ...readerReturn, eventOrder: ["return-published", "reader-alias-released", "registry-owner-taken", "final-owner-retired"] } },
+    { ...storeFixture, readerReturn: { ...readerReturn, contendedTransferPreservesUnreturned: false } },
+    { ...storeFixture, readerReturn: { ...readerReturn, transferPublishesReturn: true } },
+  ]) if (validateStore(hostile)) throw new Error("presence read schema accepted premature return or lost transfer authority");
+  const storeSource = readFileSync(join(storeBase, "../🦀️component.rs"), "utf8");
+  const exactReadReturn = (source: string): boolean => {
+    const block = (needle: string): string => { const start = source.indexOf(needle); return start < 0 ? "" : toolJobRustBlock(source, source.indexOf("{", start))?.body ?? ""; };
+    const release = block("fn return_snapshot_read<T:");
+    const transfer = block("fn into_typed<T:");
+    const drop = release.indexOf("drop(owner.take());");
+    const publish = release.indexOf("lease.return_now()");
+    return drop >= 0 && publish > drop && release.indexOf("after_alias_release();") > drop
+      && (source.match(/return_snapshot_read\(&mut self\.owner, &mut self\.lease, \|\| \{\}\)/g) ?? []).length === 4
+      && transfer.includes("registry.try_take(lease.index, lease.generation)") && !transfer.includes("return_now")
+      && transfer.includes("self.owner = Some(owner);") && transfer.includes("self.lease = Some(lease);");
+  };
+  if (!exactReadReturn(storeSource)) throw new Error("opaque snapshot read return/transfer lost its exact final-owner ordering");
+  const readHostiles = [
+    storeSource.replace("drop(owner.take());\n    after_alias_release();", "after_alias_release();"),
+    storeSource.replace("let guard = match registry.try_take(lease.index, lease.generation)", "let _ = lease.return_now();\n        let guard = match registry.try_take(lease.index, lease.generation)"),
+    storeSource.replace("self.lease = Some(lease);", "drop(lease);"),
+  ];
+  for (const hostile of readHostiles) if (hostile === storeSource || exactReadReturn(hostile)) throw new Error("opaque snapshot read source guard accepted a premature return or lost retained lease");
+  const exactPeerRelease = (source: string): boolean => {
+    const cursorStart = source.indexOf("impl<P: Send + Sync + 'static> PresencePeersRetirement<P>");
+    const cursor = cursorStart < 0 ? "" : toolJobRustBlock(source, source.indexOf("{", cursorStart))?.body ?? "";
+    const publicationStart = source.indexOf("impl<P: Send + Sync + 'static> PresencePeersPublication<P>");
+    const publication = publicationStart < 0 ? "" : toolJobRustBlock(source, source.indexOf("{", publicationStart))?.body ?? "";
+    return cursor.includes("*self.entry = Arc::into_inner(waiting)") && !cursor.includes("Arc::try_unwrap(waiting)")
+      && cursor.includes("Arc::try_unwrap(root)") && cursor.includes("self.owned_root.as_mut()")
+      && source.includes("*retirement.root = Some(previous)") && source.includes("presence peer entry requires exact final-owner retirement")
+      && source.includes("actor: std::mem::ManuallyDrop<String>") && source.includes("presence: std::mem::ManuallyDrop<Option<Arc<P>>>")
+      && !source.includes("impl<P> Clone for PresencePeersRoot<P>") && !source.includes("pub fn clone_aliases(&self)")
+      && (publication.match(/PresencePeersRetirement::new\(PresencePeersRetiredEntries::one/g) ?? []).length === 2;
+  };
+  if (!exactPeerRelease(storeSource)) throw new Error("presence peer roots lost exact shared-entry final-owner retirement");
+  const peerHostiles = [
+    storeSource.replace("*self.entry = Arc::into_inner(waiting)", "*self.entry = Arc::try_unwrap(waiting).ok()"),
+    storeSource.replace("*retirement.root = Some(previous)", "drop(previous)"),
+    storeSource.replace("fn clone_aliases(&self)", "pub fn clone_aliases(&self)"),
+  ];
+  for (const hostile of peerHostiles) if (hostile === storeSource || exactPeerRelease(hostile)) throw new Error("presence peer guard accepted shared-owner waiting, implicit root drop, or public owner cloning");
+  return 1 + fixture.cases.length + fixture.storeCases.length + 2 + 1 + storeFixture.cases.length + 13;
+}
+
+/** 🧪️ Cross-checks full-domain scope fixtures with Ajv equality and guards the active retained admission/publication seam. */
+export function toolJobLatestWinsSelfTests(): number {
+  const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin");
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️tool-latest-wins.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "🧪️tool-latest-wins.schema.json"), "utf8"));
+  const Ajv = createRequire(import.meta.url)("ajv");
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  const validate = ajv.compile(schema);
+  if (!validate(fixture)) throw new Error(`latest-wins schema: ${JSON.stringify(validate.errors)}`);
+  const equal = ajv.compile({ const: fixture.first });
+  for (const law of fixture.cases) {
+    if (Buffer.byteLength(law.next.target, "utf8") !== fixture.targetBytes || equal(law.next) !== law.superseded) throw new Error(`latest-wins exact scope oracle: ${law.id}`);
+  }
+  const hostiles = [
+    { ...fixture, maximumItems: 2 },
+    { ...fixture, maximumBytes: 8_192 },
+    { ...fixture, first: { ...fixture.first, document: undefined } },
+    { ...fixture, first: { ...fixture.first, inventedAuthority: true } },
+  ];
+  for (const hostile of hostiles) if (validate(hostile)) throw new Error("latest-wins schema accepted a forged scope or enlarged grant");
+  const integration = JSON.parse(readFileSync(join(base, "🧪️tool-latest-wins-integration.json"), "utf8"));
+  const integrationSchema = JSON.parse(readFileSync(join(base, "🧪️tool-latest-wins-integration.schema.json"), "utf8"));
+  const validateIntegration = ajv.compile(integrationSchema);
+  if (!validateIntegration(integration)) throw new Error(`latest-wins integration schema: ${JSON.stringify(validateIntegration.errors)}`);
+  for (const law of integration.cases) {
+    const same = ajv.compile({ const: law.firstTarget });
+    if (same(law.nextTarget) !== law.firstCancelled) throw new Error(`latest-wins integration equality oracle: ${law.id}`);
+  }
+  if (Buffer.byteLength(integration.keyRetirement.text, "utf8") !== integration.keyRetirement.utf8Bytes
+    || JSON.stringify(Array.from(integration.keyRetirement.text as string).reverse().map((scalar) => Buffer.byteLength(scalar, "utf8"))) !== JSON.stringify(integration.keyRetirement.scalarBytes)) throw new Error("latest-wins UTF-8 retirement byte oracle");
+  const integrationHostiles = [
+    { ...integration, maximumItems: 64 },
+    { ...integration, rebase: { ...integration.rebase, cancelOldKey: true } },
+    { ...integration, slotReservation: { ...integration.slotReservation, collisionAdmitted: true } },
+    { ...integration, reclamation: { ...integration.reclamation, acceptedTargets: 64 } },
+    { ...integration, fairness: { ...integration.fairness, secondPublishesWithinMetadataVisits: 65 } },
+    { ...integration, keyRetirement: { ...integration.keyRetirement, utf8Bytes: 3 } },
+    { ...integration, lostReservations: integration.lostReservations.map((law: object) => ({ ...law, rejectionAfterVacancy: false })) },
+  ];
+  for (const hostile of integrationHostiles) if (validateIntegration(hostile)) throw new Error("latest-wins integration schema accepted stale authority, collision, starvation, or a missing accepted target");
+  const source = readFileSync(join(base, "🦀️component.rs"), "utf8");
+  const body = (text: string, name: string): string => {
+    const start = text.lastIndexOf(`fn ${name}(`);
+    return start < 0 ? "" : toolJobRustBlock(text, text.indexOf("{", start))?.body ?? "";
+  };
+  const obligations: Array<[string, string]> = [
+    ["publish_mounted_typed_operation_unit", "mounted.reject_cancelled_publication()?"],
+    ["publish_mounted_typed_operation_unit", "ToolCancellationLease::try_claim_publication"],
+    ["reject_cancelled_publication", "pending.begin_close()"],
+    ["reject_cancelled_publication", "self.publication = completion.take()?"],
+    ["advance_latest_wins_command_one", "self.latest_wins_order.items.front().copied()"],
+    ["advance_latest_wins_command_one", "self.start_typed_command_operation(command, admission"],
+    ["advance_latest_wins_admission_unit", "pending.restarting = true"],
+    ["advance_latest_wins_admission_unit", "self.latest_wins_keys.begin(operation, key.clone()"],
+    ["advance_latest_wins_admission_unit", "registration.latest_wins_target"],
+    ["dispatch_typed_command_inner", "registration.latest_wins_command_disposer"],
+    ["dispatch_typed_command_inner", "self.tool_cancellations.begin_keyed"],
+    ["dispatch_typed_command_inner", "self.latest_wins_order.push(operation_id.0)"],
+    ["dispatch_typed_command_inner", "self.can_admit_typed_operation(operation_id.0)"],
+    ["advance_latest_wins_admission_unit", ".rebind_keyed(base_revision, generation)?"],
+    ["rebind_keyed", "scope.operation != self.key"],
+    ["rebind_keyed", "scope.operation.generation = generation"],
+    ["advance_typed_operation_publication_one", "next_id_from(self.typed_publication_cursor)"],
+    ["take_typed_operation_result_page", "next_id_from(self.typed_result_cursor)"],
+    ["cleanup_finished_slot", "scope.publication_claim.is_finished()"],
+    ["release_current", "std::sync::Arc::ptr_eq(&scope.publication_claim, &self.publication_claim)"],
+    ["try_claim_publication", "self.handle.publication_scope.try_claim()?"],
+    ["try_claim_publication", "self.publication_claim.try_claim()?"],
+  ];
+  const exact = (text: string): boolean => obligations.every(([name, token]) => body(text, name).includes(token))
+    && !body(text, "publish_mounted_typed_operation_unit").includes(".await")
+    && !body(text, "publish_mounted_typed_operation_unit").includes("dispatch_emit_group(")
+    && text.includes("self.token.child_now()")
+    && text.includes("compare_exchange(0, 1, std::sync::atomic::Ordering::AcqRel")
+    && text.includes("scope.operation")
+    && text.includes("retained_latest_wins_real_document_publication_cancellation_and_exhausted_ack_close");
+  if (!exact(source)) throw new Error("latest-wins production admission/publication authority is incomplete");
+  for (const [, token] of obligations) if (exact(source.replaceAll(token, "unqualified_authority"))) throw new Error(`latest-wins accepts missing authority: ${token}`);
+  const rawFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧪️fixtures/🔣️raw-allocation-close.json"), "utf8"));
+  const rawSchema = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧬️schema/🔣️raw-allocation-close.schema.json"), "utf8"));
+  const validateRaw = ajv.compile(rawSchema);
+  if (!validateRaw(rawFixture)) throw new Error(`retained raw allocation schema: ${JSON.stringify(validateRaw.errors)}`);
+  for (const law of rawFixture.cases) {
+    const oracle = Buffer.alloc(law.capacity).subarray(0, law.initializedBytes);
+    if (oracle.byteLength !== law.expectedByteRelease || law.capacity <= rawFixture.maximumBytes) throw new Error(`retained raw allocation initialized-byte oracle: ${law.id}`);
+  }
+  const rawSource = readFileSync(join(base, "🧵️retained-command/🦀️component.rs"), "utf8");
+  const rawClose = (text: string): boolean => text.includes("if self.raw.capacity() != 0 {\n            if maximum_items == 0 {")
+    && !text.includes("maximum_bytes < self.raw.capacity()") && !text.includes("let released = self.raw.capacity()")
+    && text.includes("fn test_raw_allocation_close<A: ArtifactApp>()");
+  if (!rawClose(rawSource)) throw new Error("retained command raw capacity incorrectly consumes semantic byte credit");
+  if (rawClose(rawSource.replace("if self.raw.capacity() != 0 {\n            if maximum_items == 0 {", "if self.raw.capacity() != 0 {\n            if maximum_items == 0 || maximum_bytes < self.raw.capacity() {"))) throw new Error("retained raw close accepts capacity-sized byte deadlock");
+  const storeSource = readFileSync(join(base, "../🏪️store/🦀️component.rs"), "utf8");
+  const publisherStart = source.lastIndexOf("fn publish_mounted_typed_operation_unit(");
+  const mutatePublisher = (before: string, after: string): string => source.slice(0, publisherStart) + source.slice(publisherStart).replace(before, after);
+  const mountedChecks: Array<[string, (text: string) => boolean, string]> = [
+    ["synchronous move-only unit", (text) => { const publisher = body(text, "publish_mounted_typed_operation_unit"); return text.includes("fn publish_mounted_typed_operation_unit") && !text.includes("async fn publish_mounted_typed_operation_unit") && ["artifact_mutations", "config_mutations", "draft_mutations", "presence", "transient"].every((lane) => publisher.includes(`${lane}.pop()`)) && !publisher.includes(".last().cloned()") && !publisher.includes(".await"); }, mutatePublisher("fn publish_mounted_typed_operation_unit", "async fn publish_mounted_typed_operation_unit")],
+    ["synchronous fresh publisher", toolJobPublicationFreshnessBeforeEveryTurn, source.replace("typed_operation_document_is_fresh(&mounted.operation", "accept_stale_operation(&mounted.operation")],
+    ["exact extracted setup", (text) => !!toolJobRetainedDispatchSetup(text), source.replace("self.start_typed_command_operation(command, admission, meta, operation_id, None).await", "self.unchecked_command_operation(command, admission, meta, operation_id, None).await")],
+    ["unsupported generic reducer denial", toolJobTypedRouteFailsClosedBeforePreparation, source.replace("QualifiedToolProof::FrameworkOwned(_) | QualifiedToolProof::Bounded(_) => {", "QualifiedToolProof::FrameworkOwned(_) | QualifiedToolProof::Bounded(_) => { return Ok(());")],
+    ["mounted persistent operation", toolJobTypedPersistentFoundation, source.replace("session.pump_one(pool, semio_framework_async::Lane::Interactive)", "session.run_to_terminal(pool)")],
+    ["retained ephemeral publisher", (text) => toolJobEphemeralOneItemPublicationBounded(storeSource, text), source.replace("self.presence_one_item_factory.as_deref()", "A::build_presence_store_one_item_preparation_factory()")],
+  ];
+  mountedChecks.push(["move-only mutation ownership", mountedChecks[0][1], mutatePublisher("emit.artifact_mutations.pop()", "emit.artifact_mutations.last().cloned()")]);
+  for (const [name, check, hostile] of mountedChecks) {
+    if (!check(source)) throw new Error(`mounted source binding rejected its real ${name}`);
+    if (hostile === source || check(hostile)) throw new Error(`mounted source binding accepted hostile ${name}`);
+  }
+  if (!toolJobStoreOneItemPublicationBounded(storeSource, source)) throw new Error("mounted Store source binding lost its retained owned-preparation helper");
+  const replayingOwnedBegin = storeSource.replace("let base = match self.snapshot_read() {", "replay_mutations(); let base = match self.snapshot_read() {");
+  if (replayingOwnedBegin === storeSource || toolJobStoreOneItemPublicationBounded(replayingOwnedBegin, source)) throw new Error("mounted Store source binding accepted replay inside extracted preparation");
+  return fixture.cases.length + hostiles.length + obligations.length + integration.cases.length + integrationHostiles.length + rawFixture.cases.length + 4 + mountedChecks.length * 2 + 2;
+}
+//#endregion 🗝️LatestWinsAuthorityLaws
+
+//#region 🔏️CanonicalEditSealerLaws
+/** 🧪️ Validates language-neutral canonical bytes and private Store sealer source boundaries. */
+export function storeCanonicalEditSealerSelfTests(): { grants: number; schemaHostiles: number; sourceHostiles: number; digestOracles: number; mapGrants: number; mapSchemaHostiles: number; mapSourceHostiles: number; mapDigestOracles: number; readerChecks: number } {
+  const storePath = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store";
+  const base = join(WORKSPACE_ROOT, storePath, "🧵️canonical-edit");
+  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️canonical-edit-sealer.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🔣️canonical-edit-sealer.json"), "utf8"));
+  const Ajv = createRequire(import.meta.url)("ajv");
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  if (!validate(fixture)) throw new Error(`canonical edit fixture schema: ${JSON.stringify(validate.errors)}`);
+  const schemaHostiles = [
+    { ...fixture, extra: true },
+    { ...fixture, edit: { ...fixture.edit, extra: true } },
+    { ...fixture, edit: { ...fixture.edit, forwards: [{ Unknown: {} }] } },
+    { ...fixture, edit: { ...fixture.edit, forwards: [{ Replace: { ...fixture.edit.forwards[0].Replace, text: 1 } }] } },
+    { ...fixture, edit: { ...fixture.edit, mutationMeta: [{ ...fixture.edit.mutationMeta[0], timestamp: { actor: 1, physical_ms: 42, logical: 2, extra: true } }] } },
+    { ...fixture, edit: { ...fixture.edit, mutationMeta: [{ ...fixture.edit.mutationMeta[0], undo_policy: "Unknown" }] } },
+    { ...fixture, grants: [0, -1, 2, 7, 256, 4096] },
+    { ...fixture, expectedDigest: "forged" },
+    { ...fixture, hostile: [...fixture.hostile, "forged-arbitrary-authority"] },
+  ];
+  for (const hostile of schemaHostiles) if (validate(hostile)) throw new Error("strict canonical sealer schema accepted hostile input");
+  const utf8 = new TextEncoder();
+  function* canonicalBytes(value: unknown): Generator<number> {
+    if (typeof value === "string") {
+      yield 34;
+      for (const character of value) {
+        const scalar = character.codePointAt(0)!;
+        const escaped = character === '"' ? '\\"' : character === "\\" ? "\\\\" : scalar === 8 ? "\\b" : scalar === 9 ? "\\t" : scalar === 10 ? "\\n" : scalar === 12 ? "\\f" : scalar === 13 ? "\\r" : scalar < 32 ? `\\u${scalar.toString(16).padStart(4, "0")}` : character;
+        yield* utf8.encode(escaped);
+      }
+      yield 34;
+    } else if (Array.isArray(value)) {
+      yield 91;
+      for (let index = 0; index < value.length; index++) { if (index) yield 44; yield* canonicalBytes(value[index]); }
+      yield 93;
+    } else if (value !== null && typeof value === "object") {
+      yield 123;
+      let index = 0;
+      for (const key of Object.keys(value)) { if (index++) yield 44; yield* canonicalBytes(key); yield 58; yield* canonicalBytes((value as Record<string, unknown>)[key]); }
+      yield 125;
+    } else {
+      yield* utf8.encode(JSON.stringify(value));
+    }
+  }
+  const expected = utf8.encode(fixture.expectedJson);
+  if (fixture.expectedJson !== JSON.stringify(fixture.edit) || expected.length <= 4096) throw new Error("canonical edit JSON oracle mismatch");
+  for (const maximum of fixture.grants.filter((value: number) => value > 0)) {
+    const iterator = canonicalBytes(fixture.edit);
+    const actual: number[] = [];
+    let complete = false;
+    while (!complete) {
+      const before = actual.length;
+      for (let count = 0; count < Math.min(maximum, 256); count++) {
+        const step = iterator.next();
+        if (step.done) { complete = true; break; }
+        actual.push(step.value);
+      }
+      if (actual.length - before > maximum) throw new Error("canonical edit byte grant exceeded");
+    }
+    if (!Buffer.from(actual).equals(expected)) throw new Error(`canonical edit byte oracle mismatch for grant ${maximum}`);
+  }
+  const hash = createHash("sha256");
+  const integer = (value: number) => { const bytes = Buffer.alloc(8); bytes.writeBigUInt64BE(BigInt(value)); return bytes; };
+  hash.update("semio.artifact.cursor.v2");
+  for (const part of [utf8.encode("edit"), utf8.encode(fixture.edit.id), expected]) { hash.update(integer(part.length)); hash.update(part); }
+  if (hash.digest("hex") !== fixture.expectedDigest) throw new Error("canonical edit third-party digest oracle mismatch");
+  const store = readFileSync(join(WORKSPACE_ROOT, storePath, "🦀️component.rs"), "utf8");
+  const source = readFileSync(join(base, "🦀️component.rs"), "utf8");
+  const method = (text: string, pattern: RegExp) => { const start = text.search(pattern); return start < 0 ? "" : toolJobRustBlock(text, text.indexOf("{", start))?.body ?? ""; };
+  const exact = (storeText: string, sealerText: string) => {
+    const validation = method(storeText, /fn validate_prepared</);
+    const mint = method(storeText, /fn seal_prepared_owned</);
+    const advance = method(sealerText, /pub fn advance\(&mut self, grant: ArtifactStoreOneItemGrant/);
+    const commitStart = storeText.indexOf("ArtifactStoreOneItemPublicationPhase::PreflightingCommit =>", storeText.indexOf("pub fn advance_apply_one("));
+    const commit = commitStart < 0 ? "" : toolJobRustBlock(storeText, storeText.indexOf("{", commitStart))?.body ?? "";
+    return validation.includes("Arc::ptr_eq(self, &prepared.seal.authority)")
+      && validation.includes("prepared.seal.edit_address != prepared.edit.as_ref() as *const")
+      && validation.includes("prepared.seal.post_address != Arc::as_ptr(&prepared.post_snapshot)")
+      && validation.includes("prepared.seal.digest != prepared.edit_digest")
+      && mint.includes("edit_address: edit.as_ref() as *const") && mint.includes("digest: edit_digest")
+      && !/pub\s+fn\s+seal_prepared/.test(storeText)
+      && advance.includes("self.encoder.encode_chunk(edit.as_ref(), &mut self.last_chunk[..maximum])")
+      && advance.includes("self.hash.update(&self.last_chunk[..self.last_length])")
+      && advance.includes("authority.seal_prepared_owned(edit, post, self.hash.clone().finalize(), identities)")
+      && !/serde_json::to_(?:vec|value|string)|prepared_edit_digest\(/.test(advance)
+      && commit.includes("authority.validate_prepared(prepared)") && !commit.includes("prepared_edit_digest(");
+  };
+  if (!exact(store, source)) throw new Error("live Store canonical sealer authority/byte source linkage missing");
+  const sourceHostiles = [
+    [store.replace("Arc::ptr_eq(self, &prepared.seal.authority)", "true"), source],
+    [store.replace("prepared.seal.edit_address != prepared.edit.as_ref() as *const", "prepared.seal.edit_address != forged_edit as *const"), source],
+    [store.replace("prepared.seal.post_address != Arc::as_ptr(&prepared.post_snapshot)", "prepared.seal.post_address != 0"), source],
+    [store.replace("authority.validate_prepared(prepared)", "authority.prepared_edit_digest(&prepared.edit)"), source],
+    [store.replace("fn seal_prepared_owned<", "pub fn seal_prepared_owned<"), source],
+    [store, source.replace("self.encoder.encode_chunk(edit.as_ref(), &mut self.last_chunk[..maximum])", "serde_json::to_vec(edit.as_ref())")],
+  ];
+  for (const [candidateStore, candidateSealer] of sourceHostiles) if (exact(candidateStore, candidateSealer)) throw new Error("canonical Store sealer accepted hostile authority/serialization source");
+  const mapSchema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️canonical-borrowed-map.schema.json"), "utf8"));
+  const mapFixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🔣️canonical-borrowed-map.json"), "utf8"));
+  const validateMap = new Ajv({ strict: true, allErrors: true }).compile(mapSchema);
+  if (!validateMap(mapFixture)) throw new Error(`borrowed map fixture schema: ${JSON.stringify(validateMap.errors)}`);
+  const mapSchemaHostiles = [{ ...mapFixture, extra: true }, { ...mapFixture, longKeyBytes: 4096 }, { ...mapFixture, lifetime: { ...mapFixture.lifetime, iteratorDropsBeforeRoot: false } }, { ...mapFixture, hostile: ["unchecked-pointer"] }];
+  for (const hostile of mapSchemaHostiles) if (validateMap(hostile)) throw new Error("borrowed map schema accepted hostile lifetime shape");
+  const mapExpected = utf8.encode(mapFixture.expectedJson);
+  if (mapFixture.expectedJson !== JSON.stringify(mapFixture.edit)) throw new Error("borrowed map canonical JSON oracle mismatch");
+  const keys = Object.keys(mapFixture.edit.forwards[0].ReplaceMap.map);
+  if (Math.max(...keys.map((key) => utf8.encode(key).length)) !== mapFixture.longKeyBytes) throw new Error("borrowed map long key is not the advertised UTF-8 length");
+  for (const grant of mapFixture.grants.filter((value: number) => value > 0)) {
+    const stream = canonicalBytes(mapFixture.edit);
+    const actual: number[] = [];
+    let done = false;
+    while (!done) for (let count = 0; count < Math.min(grant, 256); count++) {
+      const next = stream.next();
+      if (next.done) { done = true; break; }
+      actual.push(next.value);
+    }
+    if (!Buffer.from(actual).equals(mapExpected)) throw new Error("borrowed map byte oracle mismatch");
+  }
+  const mapHash = createHash("sha256");
+  mapHash.update("semio.artifact.cursor.v2");
+  for (const part of [utf8.encode("edit"), utf8.encode(mapFixture.edit.id), mapExpected]) { mapHash.update(integer(part.length)); mapHash.update(part); }
+  if (mapHash.digest("hex") !== mapFixture.expectedDigest) throw new Error("borrowed map Node crypto digest oracle mismatch");
+  const borrowed = readFileSync(join(base, "🧵️borrowed/🦀️component.rs"), "utf8");
+  const borrowedExact = (parent: string, child: string) => {
+    const close = method(parent, /pub fn close_step\(&mut self, grant: ArtifactStoreOneItemGrant/);
+    const bind = method(child, /fn bind</);
+    return parent.includes("pub trait ArtifactCanonicalJson: Sync")
+      && parent.indexOf("encoder: ArtifactCanonicalEditEncoder") < parent.indexOf("edit: Option<Box<Edit<M>>>")
+      && close.indexOf("self.encoder.close_step()") >= 0 && close.indexOf("self.encoder.close_step()") < close.indexOf("self.edit.take()")
+      && bind.includes("self.root_address != address") && bind.includes("root.canonical_json_borrowed_root()")
+      && child.includes("pub(super) struct ArtifactCanonicalEditEncoder")
+      && child.includes("Iterator<Item = (&'a str, ArtifactCanonicalJsonValue<'a>)> + Send + 'a")
+      && child.includes("values.values.next()") && child.includes("self.frames[self.depth] = None")
+      && parent.includes("self.depth >= self.maximum_depth") && child.includes("maximum_depth: ARTIFACT_CANONICAL_JSON_DEPTH - top")
+      && !/\.nth\(|\.range\(|serde_json::to_(?:vec|value|string)/.test(child);
+  };
+  if (!borrowedExact(source, borrowed)) throw new Error("borrowed map private root lifetime/source linkage missing");
+  const mapSourceHostiles = [
+    [source.replace("pub trait ArtifactCanonicalJson: Sync", "pub trait ArtifactCanonicalJson"), borrowed],
+    [source.replace("self.encoder.close_step()", "self.edit.take()"), borrowed],
+    [source, borrowed.replace("self.root_address != address", "false")],
+    [source, borrowed.replace("values.values.next()", "values.values.nth(0)")],
+    [source, borrowed.replace("pub(super) struct ArtifactCanonicalEditEncoder", "pub struct ArtifactCanonicalEditEncoder")],
+    [source, borrowed.replace("maximum_depth: ARTIFACT_CANONICAL_JSON_DEPTH - top", "maximum_depth: ARTIFACT_CANONICAL_JSON_DEPTH")],
+  ];
+  for (const [parent, child] of mapSourceHostiles) if (borrowedExact(parent, child)) throw new Error("borrowed map accepted hostile lifetime/source substitution");
+  const readerSchema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️canonical-reader.schema.json"), "utf8"));
+  const readerFixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🔣️canonical-reader.json"), "utf8"));
+  const readerValidate = new Ajv({ strict: true, allErrors: true }).compile(readerSchema);
+  if (!readerValidate(readerFixture) || readerFixture.expectedByteLength !== mapExpected.length || createHash("sha256").update(mapExpected).digest("hex") !== readerFixture.expectedJsonSha256) throw new Error("typed canonical reader schema/Node byte oracle mismatch");
+  const readerSchemaHostiles = [{ ...readerFixture, extra: true }, { ...readerFixture, sourceFixture: "unbound-root" }, { ...readerFixture, grants: [0, 1, 7, 4097] }];
+  for (const hostile of readerSchemaHostiles) if (readerValidate(hostile)) throw new Error("strict canonical reader schema accepted hostile input");
+  for (const maximum of readerFixture.grants.filter((grant: number) => grant > 0)) {
+    const iterator = canonicalBytes(mapFixture.edit);
+    const actual: number[] = [];
+    let done = false;
+    while (!done) for (let index = 0; index < Math.min(maximum, 256); index += 1) { const next = iterator.next(); if (next.done) { done = true; break; } actual.push(next.value); }
+    if (!Buffer.from(actual).equals(mapExpected)) throw new Error("canonical reader bounded byte oracle mismatch");
+  }
+  const reader = readFileSync(join(base, "📖️reader/🦀️component.rs"), "utf8");
+  const readerExact = (text: string) => {
+    const close = method(text, /fn close_step\(&mut self, grant: ArtifactStoreOneItemGrant/);
+    const transfer = method(text, /fn take_root\(&mut self\)/);
+    const encode = method(text, /fn encode_chunk\(&mut self, grant: ArtifactStoreOneItemGrant/);
+    return text.indexOf("encoder: ArtifactCanonicalEditEncoder") < text.indexOf("root: Option<Arc<T>>")
+      && close.indexOf("self.encoder.close_step()") >= 0 && close.indexOf("self.encoder.close_step()") < close.indexOf("self.root.take()")
+      && transfer.includes("if self.closing { self.encoder.terminal_is_empty() } else { self.is_complete() }") && transfer.includes("self.encoder.reset()")
+      && text.includes("owned: ManuallyDrop<ReaderState<T>>") && text.includes("!self.cancelled && !self.failed && !self.closing && self.encoder.is_complete()")
+      && text.includes("!std::thread::panicking()") && text.includes("ManuallyDrop::drop(&mut self.owned)")
+      && encode.includes("self.encoder.encode_chunk(root.as_ref(), &mut output[..maximum])") && encode.includes("grant.maximum_bytes.min(output.len()).min(ARTIFACT_CANONICAL_JSON_CHUNK_BYTES)")
+      && !/seal_prepared|serde_json::to_(?:vec|value|string)|unsafe impl/.test(text);
+  };
+  if (!readerExact(reader)) throw new Error("canonical reader exact retained root wiring missing");
+  const readerSourceHostiles = [
+    reader.replace("self.encoder.close_step()", "self.root.take()"),
+    reader.replace("if self.closing { self.encoder.terminal_is_empty() } else { self.is_complete() }", "self.encoder.is_complete() || self.closing && self.encoder.terminal_is_empty()"),
+    reader.replace("self.encoder.encode_chunk(root.as_ref(), &mut output[..maximum])", "serde_json::to_vec(root)"),
+    reader.replace("grant.maximum_bytes.min(output.len()).min(ARTIFACT_CANONICAL_JSON_CHUNK_BYTES)", "output.len()"),
+    reader.replace("owned: ManuallyDrop<ReaderState<T>>", "owned: ReaderState<T>"),
+    reader.replace("!std::thread::panicking()", "true"),
+  ];
+  for (const hostile of readerSourceHostiles) if (readerExact(hostile)) throw new Error("canonical reader accepted hostile ownership/grant substitution");
+  return { grants: fixture.grants.length - 1, schemaHostiles: schemaHostiles.length, sourceHostiles: sourceHostiles.length, digestOracles: 1, mapGrants: mapFixture.grants.length - 1, mapSchemaHostiles: mapSchemaHostiles.length, mapSourceHostiles: mapSourceHostiles.length, mapDigestOracles: 1, readerChecks: 1 + readerSchemaHostiles.length + readerFixture.grants.length - 1 + readerSourceHostiles.length };
+}
+//#endregion 🔏️CanonicalEditSealerLaws
+
+//#region 🧬️PlaybookGenerationRootLaws
+export function proceduralGenerationRootSelfTests(): number {
+  const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook");
+  const schema = JSON.parse(readFileSync(join(base, "🧬️generation/🧬️schema/🔣️generation-root.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧬️generation/🧪️fixtures/🔣️generation-root.json"), "utf8"));
+  const Ajv = createRequire(import.meta.url)("ajv");
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  if (!validate(fixture)) throw new Error("generation root fixture failed strict schema");
+  const hostiles = [{ ...fixture, extra: true }, { ...fixture, generation: { ...fixture.generation, extra: true } }, { ...fixture, expected: { ...fixture.expected, sharesAllocation: false } }];
+  for (const value of hostiles) if (validate(value)) throw new Error("generation root schema accepted hostile input");
+  const wire = JSON.stringify(fixture.generation);
+  if (Buffer.byteLength(wire) <= 16384 || JSON.stringify(JSON.parse(wire)) !== wire) throw new Error("generation root independent JSON oracle lost large nested content");
+  const source = readFileSync(join(base, "🧬️generation/🦀️component.rs"), "utf8");
+  const modelPath = "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs";
+  const snapshot = readFileSync(join(WORKSPACE_ROOT, modelPath), "utf8");
+  const second = readFileSync(join(WORKSPACE_ROOT, modelPath.replace("🧊️procedural3d", "🌀️procedural2d")), "utf8");
+  const exact = (root: string, model: string) => root.includes("struct GenerationPlayRoot(ManuallyDrop<Option<Arc<GenerationPlayState>>>)")
+    && root.includes("Arc::get_mut(self.0.as_mut()") && root.includes("Arc::into_inner(root)")
+    && root.includes("owned: ManuallyDrop<GenerationRetirementState>") && root.includes("!std::thread::panicking()")
+    && root.includes('panic!("nonempty generation root must be explicitly retired before drop")')
+    && root.includes("JsonOwner::Object(value.into_iter())") && root.includes("values.next()")
+    && root.includes("bytes.min(value.len())") && !/Arc::make_mut|DerefMut|\.collect\(/.test(root)
+    && model.includes("flow::playbook::GenerationPlayRoot") && model.includes("pub generation: GenerationPlayRoot");
+  if (!exact(source, snapshot) || !exact(source, second)) throw new Error("shared generation root immutable ownership linkage missing");
+  const sources = [
+    [source.replace("Arc<GenerationPlayState>", "GenerationPlayState"), snapshot],
+    [source.replace("Arc::get_mut(self.0.as_mut()", "Arc::make_mut(self.0.as_mut()"), snapshot],
+    [source.replaceAll("Arc::into_inner(root)", "Arc::try_unwrap(root).ok()"), snapshot],
+    [source, snapshot.replace("pub generation: GenerationPlayRoot", "pub generation: GenerationPlayState")],
+    [source, second.replace("pub generation: GenerationPlayRoot", "pub generation: GenerationPlayState")],
+    [source.replace("owned: ManuallyDrop<GenerationRetirementState>", "owned: GenerationRetirementState"), snapshot],
+    [source.replaceAll("!std::thread::panicking()", "true"), snapshot],
+  ];
+  for (const [root, model] of sources) if (exact(root, model)) throw new Error("generation root accepted hostile source mutation");
+  return 2 + hostiles.length + sources.length;
+}
+//#endregion 🧬️PlaybookGenerationRootLaws
+
+//#region 🧹️FlowTypedRetirementLaws
+export function flowTypedRetirementSelfTests(): number {
+  const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧵️retained");
+  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️retirement.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🔣️retirement.json"), "utf8"));
+  const Ajv = createRequire(import.meta.url)("ajv");
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  if (!validate(fixture)) throw new Error("Flow retirement strict fixture schema failed");
+  const malformed = structuredClone(fixture); malformed.fixture.widgets[0].extra = true;
+  const hostiles = [{ ...fixture, extra: true }, malformed, { ...fixture, expected: { ...fixture.expected, terminalEmpty: false } }];
+  for (const value of hostiles) if (validate(value)) throw new Error("Flow retirement schema accepted hostile payload");
+  const document = JSON.parse(JSON.stringify(fixture.fixture));
+  const [slider, preview, cluster] = document.widgets;
+  const text = [document.schema, slider.id, slider.label, preview.id, ...Object.keys(preview.preview), ...Object.keys(Object.values(preview.preview)[0] as object), "payload", ...preview.expanded,
+    cluster.id, cluster.name, ...Object.keys(cluster.flow.nodes), ...Object.values(cluster.flow.nodes).map((value: any) => value.chrome.label),
+    ...document.synapses.flatMap((value: any) => [value.id, value.from, value.to, value.fromPort, value.toPort]), ...Object.keys(document.layout)];
+  if (text.reduce((total, value) => total + Buffer.byteLength(value), 0) !== fixture.expected.releasedBytes) throw new Error("Flow retirement independent JSON byte oracle disagrees");
+  const source = readFileSync(join(base, "🦀️component.rs"), "utf8");
+  const exact = (value: string) => value.includes("owners: ManuallyDrop<LinkedList<FlowOwner>>")
+    && value.includes("maximum_bytes.min(bytes.len())") && value.includes("!std::thread::panicking()")
+    && value.includes("FlowOwner::Fixture(value)") && !/\.clone\(|serde_json::to_|\.collect\(/.test(value);
+  if (!exact(source)) throw new Error("Flow retirement exact source ownership linkage failed");
+  const mutants = [
+    source.replace("owners: ManuallyDrop<LinkedList<FlowOwner>>", "owners: LinkedList<FlowOwner>"),
+    source.replace("maximum_bytes.min(bytes.len())", "bytes.len()"),
+    source.replace("!std::thread::panicking()", "true"),
+    source.replace("FlowOwner::Fixture(value)", "FlowOwner::Fixture(_value)"),
+  ];
+  for (const value of mutants) if (exact(value)) throw new Error("Flow retirement accepted hostile source");
+  return 2 + hostiles.length + mutants.length;
+}
+//#endregion 🧹️FlowTypedRetirementLaws
+
+//#region 📑️FlowSelectedCopyLaws
+export function flowSelectedCopySelfTests(): number {
+  const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧵️retained");
+  const schema = JSON.parse(readFileSync(join(base, "📑️copy/🧬️schema/🔣️typed-copy.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "📑️copy/🧪️fixtures/🔣️typed-copy.json"), "utf8"));
+  const document = JSON.parse(readFileSync(join(base, "🧪️fixtures/🔣️retirement.json"), "utf8")).fixture;
+  const requireTest = createRequire(import.meta.url);
+  const Ajv = requireTest("ajv");
+  const stable = requireTest("fast-json-stable-stringify");
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  if (!validate(fixture)) throw new Error("Flow selected copy strict schema failed");
+  const malformed = structuredClone(fixture); malformed.cases[0].documentJson = "{}";
+  const hostiles = [{ ...fixture, extra: true }, malformed, { ...fixture, expected: { ...fixture.expected, framesBeforeRoot: false } }];
+  for (const value of hostiles) if (validate(value)) throw new Error("Flow selected copy accepted hostile schema");
+  for (const test of fixture.cases) {
+    const selected = test.kind === "fixture" ? document : document[test.kind === "widget" ? "widgets" : "synapses"][test.index];
+    const copied = structuredClone(selected);
+    if (stable(copied) !== stable(JSON.parse(JSON.stringify(selected)))) throw new Error("Flow selected copy third-party canonical oracle disagrees");
+    const pointer = test.pointer === "" ? document : test.pointer.slice(1).split("/").reduce((value: any, key: string) => value[key], document);
+    if (stable(pointer) !== stable(copied)) throw new Error("Flow selected copy fixture pointer disagrees");
+  }
+  const source = readFileSync(join(base, "📑️copy/🦀️component.rs"), "utf8");
+  const exact = (value: string) => value.includes("owned: ManuallyDrop<CopyState<R, T>>")
+    && value.includes("root: Arc<dyn Any + Send + Sync>") && value.includes("unsafe impl<T: Sync> Send for Rooted<T>")
+    && value.includes("maximum_bytes.min(source.len() - start)") && value.includes("if !state.started")
+    && value.includes("state.failed = true") && value.includes("!std::thread::panicking()")
+    && value.includes("state.tasks.pop_front()") && value.includes('expect("selected copy retirement factory").retire(root)')
+    && value.includes("released_items > 1 || released_bytes > maximum_bytes") && value.includes("state.root_retirement.is_none()")
+    && value.includes("target.try_reserve_exact(count)") && value.includes("bytes > self.maximum_single_bytes || total > self.maximum_total_bytes")
+    && value.includes("source: Rooted<T>") && value.includes("self.source.get().clone()")
+    && !/BTreeMap|BTreeSet|\.nth\(|serde_json::to_|Arc::make_mut|target\.insert\(/.test(value);
+  if (!exact(source)) throw new Error("Flow selected copy ownership source linkage missing");
+  const mutants = [
+    source.replace("owned: ManuallyDrop<CopyState<R, T>>", "owned: CopyState<R, T>"),
+    source.replace("maximum_bytes.min(source.len() - start)", "source.len() - start"),
+    source.replaceAll("state.failed = true", "state.failed = false"),
+    source.replaceAll("!std::thread::panicking()", "true"),
+    source.replace('expect("selected copy retirement factory").retire(root)', 'expect("selected copy retirement factory").drop(root)'),
+    source.replace("released_items > 1 || released_bytes > maximum_bytes", "false"),
+    source.replace("bytes > self.maximum_single_bytes || total > self.maximum_total_bytes", "false"),
+  ];
+  for (const value of mutants) if (exact(value)) throw new Error("Flow selected copy accepted hostile ownership source");
+  return fixture.cases.length + hostiles.length + mutants.length;
+}
+//#endregion 📑️FlowSelectedCopyLaws
+
+
+
+/** 🧪️ Checks scalar Config publication laws against strict Ajv, Immer, and exact live sources. */
+export function toolJobScalarConfigCohortSelfTests(): { routes: number; migrated: number; batchOnly: number; forbidden: number; mutationOracles: number; hostileCases: number } {
+  const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command");
+  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️scalar-config-cohort.schema.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🔣️scalar-config-cohort.json"), "utf8"));
+  const requireTest = createRequire(import.meta.url);
+  const Ajv = requireTest("ajv");
+  const { produceWithPatches, applyPatches, enablePatches } = requireTest("immer");
+  enablePatches();
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  if (!validate(fixture)) throw new Error(`scalar Config fixture schema: ${JSON.stringify(validate.errors)}`);
+  const files = new Map<string, string>(fixture.sources.map((file: string) => [file, readFileSync(join(WORKSPACE_ROOT, file), "utf8")]));
+  const evidence = toolJobOwnerSourceEvidence(files);
+  if (evidence.failures.length || evidence.scanThenMonolith.length) throw new Error(`scalar Config source evidence: ${JSON.stringify(evidence.failures)}`);
+  let routes = 0, migrated = 0, batchOnly = 0, forbidden = 0, hostileCases = 0;
+  for (const owner of fixture.owners) {
+    const actual = evidence.rows.filter((row) => row.file === owner.file);
+    if (actual.length !== owner.routes.length || new Set(owner.routes.map((route: { id: string }) => route.id)).size !== actual.length) throw new Error(`scalar Config route bijection ${owner.id}`);
+    for (const route of owner.routes) {
+      routes++;
+      const disposition = evidence.dispositions.find((candidate) => candidate.key === `${owner.file}\0${route.id}`)?.disposition;
+      if (!actual.some((row) => row.id === route.id) || disposition !== route.disposition) throw new Error(`scalar Config route disposition ${owner.id}/${route.id}`);
+      const owned = evidence.appOwned.find((candidate) => candidate.ownerFile === owner.file && candidate.toolId === route.id);
+      if (route.disposition === "Migrated") {
+        migrated++;
+        if (!owned?.publicationReady || JSON.stringify(owned.publicationLanes) !== JSON.stringify(route.lanes) || route.blocker !== "") throw new Error(`scalar Config exact publication ${owner.id}/${route.id}`);
+      } else {
+        if (owned || route.lanes.length || !route.blocker) throw new Error(`scalar Config false batch admission ${owner.id}/${route.id}`);
+        if (route.disposition === "ForbiddenFromUi") forbidden++; else batchOnly++;
+      }
+    }
+    const source = files.get(owner.file)!;
+    const witnesses = [
+      `const ${owner.prefix}_CONFIG_TEXT_MAXIMUM_BYTES: usize = 128;`,
+      `const ${owner.prefix}_CONFIG_PUBLICATION_MAXIMUM_BYTES: usize = 4_096;`,
+      "request.operation != request.authority.operation()", "request.generation != request.authority.generation()", "request.base_revision != request.authority.base_revision()",
+      "request.authority.actor().len() > 64", "self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err()",
+      `_config_text_bytes(request.base.get()) > ${owner.prefix}_CONFIG_TEXT_MAXIMUM_BYTES`,
+      `grant.maximum_bytes < ${owner.prefix}_CONFIG_PUBLICATION_MAXIMUM_BYTES || self.cancelled || self.closing`,
+      "if self.checkpoint.cursor != 0", "inverse: vec![inverse]", "protocol::UndoPolicy::ExactBaseOnly", "authority.prepare_one_item(edit, std::sync::Arc::new(next))?",
+      "if !base.return_to_registry()", "self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some()",
+    ];
+    const exact = (candidate: string) => witnesses.every((witness) => candidate.includes(witness));
+    if (!exact(source)) throw new Error(`scalar Config owner preparation contract ${owner.id}`);
+    for (const witness of witnesses) {
+      if (exact(source.replaceAll(witness, "REMOVED_BY_HOSTILE_FIXTURE"))) throw new Error(`scalar Config hostile preparation witness ${owner.id}/${witness}`);
+      hostileCases++;
+    }
+  }
+  for (const law of fixture.mutations) {
+    const actual = { ...law.base, ...law.changes };
+    const [oracle, patches, inverse] = produceWithPatches(law.base, (draft: Record<string, unknown>) => { for (const [key, value] of Object.entries(law.changes)) draft[key] = value; });
+    const reverse = { ...actual };
+    for (const key of Object.keys(law.changes)) reverse[key] = law.base[key];
+    if (JSON.stringify(actual) !== JSON.stringify(law.expected) || JSON.stringify(oracle) !== JSON.stringify(law.expected)
+      || JSON.stringify(reverse) !== JSON.stringify(law.base) || JSON.stringify(applyPatches(oracle, inverse)) !== JSON.stringify(law.base)
+      || JSON.stringify(applyPatches(law.base, patches)) !== JSON.stringify(law.expected)) throw new Error(`scalar Config Immer replay oracle ${law.owner}/${law.id}`);
+  }
+  for (const hostile of [{ ...fixture, extra: true }, { ...fixture, grantBytes: 4_097 }, { ...fixture, textMaximumBytes: 129 }, { ...fixture, owners: [{ ...fixture.owners[0], extra: true }, ...fixture.owners.slice(1)] }]) {
+    if (validate(hostile)) throw new Error("scalar Config strict schema accepted a hostile fixture");
+    hostileCases++;
+  }
+  return { routes, migrated, batchOnly, forbidden, mutationOracles: fixture.mutations.length, hostileCases };
+}
+
+/** 🧾️ Reports source-only exact route and publication evidence without running a compiler. */
+export function toolJobOwnerSourceEvidence(sources: ReadonlyMap<string, string>) {
+  const proofs = toolJobProofs(sources);
+  const rows = toolJobStaticRows(sources);
+  const dispositions = toolJobDispositions(sources);
+  return {
+    rows,
+    proofs,
+    dispositions: [...dispositions].map(([key, disposition]) => ({ key, disposition })),
+    appOwned: toolJobAppOwnedRows(sources),
+    scanThenMonolith: toolJobScanThenMonolithRows(sources, proofs),
+    failures: toolJobProofCatalogFailures(sources, rows, dispositions, proofs),
+  };
+}
+//#endregion 🧭️ConcreteFactoryResolution
 
 /** 🧬️ Enforces an exact dynamic proof/declaration bijection without a shared magic row count. */
 function toolJobProofCatalogFailures(files: ReadonlyMap<string, string>, rows: readonly ToolJobStaticRow[], dispositions: ReadonlyMap<string, string>, proofs: readonly ToolJobProof[]): string[] {
   const failures: string[] = [];
+  const appOwned = toolJobAppOwnedRows(files);
   const identities = new Set<string>();
   const publicKeys = new Set<string>();
   const constants = new Map<string, string>();
   for (const source of files.values()) for (const match of source.matchAll(/(?:pub\s+)?const\s+([A-Z][A-Z0-9_]*)\s*:\s*&(?:'static\s+)?str\s*=\s*"([^"]+)"/g)) constants.set(match[1]!, match[2]!);
+  const associatedConstants = new Map<string, Array<{ file: string; value?: string }>>();
+  for (const [file, source] of files) {
+    for (const alias of source.matchAll(/(?:pub\s+)?const\s+([A-Z][A-Z0-9_]*)\s*:\s*&(?:'static\s+)?str\s*=\s*([A-Za-z_][A-Za-z0-9_]*)::([A-Z][A-Z0-9_]*)\s*;/g)) {
+      const values: string[] = [];
+      const implementations = new RegExp(`impl\\s+${alias[2]}\\s*\\{`, "g");
+      for (const implementation of source.matchAll(implementations)) {
+        const body = toolJobRustBlock(source, source.indexOf("{", implementation.index))?.body ?? "";
+        const value = body.match(new RegExp(`const\\s+${alias[3]}\\s*:\\s*&(?:'static\\s+)?str\\s*=\\s*"([^"]+)"`))?.[1];
+        if (value !== undefined) values.push(value);
+      }
+      const entries = associatedConstants.get(alias[1]!) ?? [];
+      entries.push({ file, value: values.length === 1 ? values[0] : undefined });
+      associatedConstants.set(alias[1]!, entries);
+    }
+  }
   if (proofs.length === 0) failures.push("bounded reducer proof catalogs contain no exact owner-local rows");
   for (const proof of proofs) {
     const identity = toolJobProofIdentity(proof);
@@ -1277,26 +2180,36 @@ function toolJobProofCatalogFailures(files: ReadonlyMap<string, string>, rows: r
     if (!identities.add(identity)) failures.push(`duplicate bounded reducer proof identity ${identity}`);
     if (!publicKeys.add(publicKey)) failures.push(`ambiguous bounded reducer public key ${publicKey}`);
     const source = files.get(proof.sourceFile) ?? "";
-    const owner = proof.ownerTypeName.match(/(?:semio_framework_plugin::)?EditorApp<([A-Za-z_][A-Za-z0-9_]*)>/)?.[1];
-    const ownerStart = owner ? source.indexOf(`impl ArtifactEditor for ${owner}`) : -1;
+    const editorOwner = proof.ownerTypeName.match(/^(?:semio_framework_plugin::)?EditorApp<([A-Za-z_][A-Za-z0-9_]*)>$/)?.[1];
+    const directOwner = editorOwner ? undefined : proof.ownerTypeName.match(/^(?:semio_framework_plugin::)?([A-Za-z_][A-Za-z0-9_]*)$/)?.[1];
+    const owner = editorOwner ?? directOwner;
+    const ownerTrait = editorOwner ? "ArtifactEditor" : directOwner ? "ArtifactApp" : undefined;
+    const ownerPattern = owner && ownerTrait ? new RegExp(`impl\\s+(?:semio_framework_plugin::)?${ownerTrait}\\s+for\\s+${owner}\\s*\\{`) : undefined;
+    const ownerStart = ownerPattern ? source.search(ownerPattern) : -1;
     const ownerOpen = ownerStart < 0 ? -1 : source.indexOf("{", ownerStart);
     const ownerImpl = ownerOpen < 0 ? undefined : toolJobRustBlock(source, ownerOpen);
     const schemaExpression = ownerImpl?.body.match(/const\s+DOCUMENT_SCHEMA\s*:\s*&'static\s+str\s*=\s*(?:"([^"]+)"|((?:[A-Za-z_][A-Za-z0-9_]*::)*[A-Z][A-Z0-9_]*))/);
     const schemaConstant = schemaExpression?.[2]?.split("::").at(-1) ?? "";
-    const declaredSchema = schemaExpression?.[1] ?? constants.get(schemaConstant);
+    let declaredSchema = schemaExpression?.[1] ?? constants.get(schemaConstant);
+    if (!schemaExpression?.[1] && associatedConstants.has(schemaConstant)) {
+      const paths = new Set<string>();
+      const expression = schemaExpression?.[2] ?? "";
+      if (expression.startsWith("crate::")) paths.add(expression.slice(0, -(schemaConstant.length + 2)));
+      else {
+        for (const imported of source.matchAll(/(?:^|\n)\s*use\s+(crate(?:::[A-Za-z_][A-Za-z0-9_]*)+)::\{([^}]+)\}\s*;/g)) {
+          if (imported[2]!.split(",").some((entry) => entry.trim() === schemaConstant)) paths.add(imported[1]!);
+        }
+        for (const imported of source.matchAll(new RegExp(`(?:^|\\n)\\s*use\\s+(crate(?:::[A-Za-z_][A-Za-z0-9_]*)+)::${schemaConstant}\\s*;`, "g"))) paths.add(imported[1]!);
+      }
+      const candidates = associatedConstants.get(schemaConstant)!.filter((entry) => entry.file === proof.sourceFile || [...paths].some((path) => toolJobFactoryModuleFile(files, proof.sourceFile, path) === entry.file));
+      declaredSchema = candidates.length === 1 ? candidates[0]!.value : undefined;
+    }
     if (proof.sourceFile !== proof.ownerFile || !ownerImpl) failures.push(`forged bounded reducer owner/file authority ${identity}`);
     if (declaredSchema !== proof.documentSchema) failures.push(`forged bounded reducer document schema ${identity}`);
-    const factoryPattern = new RegExp(`impl\\s+semio_framework::ToolJobFactory\\s+for\\s+${proof.factory.replaceAll(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}\\s*\\{`);
-    const factoryStart = source.search(factoryPattern);
-    const factoryOpen = factoryStart < 0 ? -1 : source.indexOf("{", factoryStart);
-    const factoryImpl = factoryOpen < 0 ? undefined : toolJobRustBlock(source, factoryOpen);
-    const concreteFactoryExact =
-      !!factoryImpl &&
-      factoryImpl.body.includes("type Job =") &&
-      source.includes(`impl semio_framework_plugin::ArtifactOwnedToolJobFactory for ${proof.factory}`) &&
-      source.includes(`type Owner = ${proof.ownerTypeName};`) &&
-      source.includes(`registry.register(${proof.factory}::new(&controller))`);
-    if (proof.factory !== "BoundedFirstStepCommandJobFactory" && !concreteFactoryExact) failures.push(`forged bounded reducer factory ${identity}`);
+    const concreteFactoryExact = !!ownerImpl && toolJobConcreteFactoryExact(files, proof, ownerImpl.body);
+    const generic = proof.factory === "BoundedFirstStepCommandJobFactory" && proof.factoryType === undefined
+      && !appOwned.some((row) => row.ownerFile === proof.ownerFile && row.toolId === proof.toolId);
+    if (!generic && !concreteFactoryExact) failures.push(`forged bounded reducer factory or compiler witness ${identity}`);
     if (!rows.some((row) => row.file === proof.ownerFile && row.id === proof.toolId) || dispositions.get(`${proof.ownerFile}\0${proof.toolId}`) !== "Migrated") failures.push(`extra bounded reducer proof lacks its exact Migrated declaration ${identity}`);
   }
   for (const row of rows) {
@@ -1409,6 +2322,23 @@ function toolJobImportPreparationBounded(source: string): boolean {
   return !!block && !block.body.includes("serde_json::to_vec(&(port, media))") && !block.body.includes("raw.clone()") && block.body.includes("build_artifact_reserved_media_job(port, media");
 }
 
+function toolJobRetainedDispatchSetup(source: string): string | undefined {
+  const body = (name: string): string | undefined => {
+    const start = source.lastIndexOf(`async fn ${name}(`);
+    return start < 0 ? undefined : toolJobRustBlock(source, source.indexOf("{", start))?.body;
+  };
+  const dispatch = body("dispatch_typed_command_inner");
+  const setup = body("start_typed_command_operation");
+  if (!dispatch || !setup) return undefined;
+  const guard = dispatch.indexOf("self.require_complete_tool_operation_pipeline(&admission)?");
+  const direct = dispatch.indexOf("self.start_typed_command_operation(command, admission, meta, operation_id, None).await");
+  const retained = dispatch.indexOf("self.latest_wins_commands.insert_admitted(");
+  const reservation = setup.indexOf("assert!(self.tool_operations.can_insert(operation_id.0)");
+  const prepare = setup.indexOf("self.refresh_cache().await?");
+  return guard >= 0 && direct > guard && retained > guard && !dispatch.includes("refresh_cache().await")
+    && reservation >= 0 && prepare > reservation && setup.includes("self.typed_operation_reservations[") && setup.includes("self.can_admit_typed_operation(operation_id.0)") ? setup : undefined;
+}
+
 function toolJobFullOperationBounded(source: string): boolean {
   const start = source.lastIndexOf("async fn dispatch_typed_command_inner");
   const open = start < 0 ? -1 : source.indexOf("{", start);
@@ -1437,18 +2367,20 @@ function toolJobFullOperationBounded(source: string): boolean {
     source.includes("TypedCommandFullOperationJob::<A>");
   const monolithicReducer = invokesGenericReducer && !boundedFirstStepReducer;
   const legacyMountedOperation = worker >= 0 && operationJob && exactStages && boundedControl && freshness && !monolithicOutput && !monolithicReducer && preJobWork.every((needle) => !before.includes(needle)) && postJobWork.every((needle) => !after.includes(needle));
-  const publisherStart = source.lastIndexOf("async fn publish_mounted_typed_operation_unit");
+  const publisherStart = source.lastIndexOf("fn publish_mounted_typed_operation_unit");
   const publisherOpen = publisherStart < 0 ? -1 : source.indexOf("{", publisherStart);
   const publisher = publisherOpen < 0 ? undefined : toolJobRustBlock(source, publisherOpen);
+  const retainedSetup = toolJobRetainedDispatchSetup(source);
   const retainedMountedOperation =
-    block.body.includes("MountedWorkerJobSession::try_new") &&
-    block.body.includes("dispatch_wire_retained_with_spec") &&
-    block.body.includes("self.tool_operations.insert_admitted(") &&
-    block.body.includes("let draft_snapshot = self.draft_store.snapshot_root()") &&
-    block.body.includes("let interaction_state = self.interaction_store.snapshot_root()") &&
-    block.body.includes("let presence_local = self.presence_store.local_root()") &&
-    block.body.includes("let presence_peers = self.presence_store.peers_root()") &&
-    block.body.includes("let transient = self.transient_store.current_root()") &&
+    !!retainedSetup &&
+    retainedSetup.includes("MountedWorkerJobSession::try_new") &&
+    retainedSetup.includes("dispatch_wire_retained_with_spec") &&
+    retainedSetup.includes("self.tool_operations.insert_admitted(") &&
+    retainedSetup.includes("let draft_snapshot = self.draft_store.snapshot_root()") &&
+    retainedSetup.includes("let interaction_state = self.interaction_store.snapshot_root()") &&
+    retainedSetup.includes("let presence_local = self.presence_store.local_root()") &&
+    retainedSetup.includes("let presence_peers = self.presence_store.peers_root()") &&
+    retainedSetup.includes("let transient = self.transient_store.current_root()") &&
     source.includes("MountedTypedCommandFullOperationStage::AwaitingAck") &&
     source.includes("fn acknowledge_result_page") &&
     source.includes("if page.token != token") &&
@@ -1457,10 +2389,18 @@ function toolJobFullOperationBounded(source: string): boolean {
     source.includes(".remove(operation_id)") &&
     source.includes("self.tool_operations.insert_admitted(operation_id, mounted)") &&
     !!publisher &&
-    publisher.body.includes(".last().cloned()") &&
-    publisher.body.includes(".apply_one(") &&
+    !source.includes("async fn publish_mounted_typed_operation_unit") &&
+    ["artifact_mutations", "config_mutations", "draft_mutations", "presence", "transient"].every((lane) => publisher.body.includes(`${lane}.pop()`)) &&
+    !publisher.body.includes(".last().cloned()") &&
+    !publisher.body.includes(".await") &&
+    publisher.body.includes("pending_artifact_publication") &&
+    publisher.body.includes("begin_apply_one") &&
+    publisher.body.includes("begin_publish_one") &&
+    publisher.body.includes("advance_apply_one") &&
+    publisher.body.includes("advance_publish_one") &&
+    !publisher.body.includes(".apply_one(") &&
     publisher.body.includes(".pop()") &&
-    publisher.body.includes("validate_commit") &&
+    toolJobPublicationFreshnessBeforeEveryTurn(source) &&
     publisher.body.includes("content_revision_now()") &&
     !publisher.body.includes("while ") &&
     operationJob &&
@@ -1471,16 +2411,183 @@ function toolJobFullOperationBounded(source: string): boolean {
   return legacyMountedOperation || retainedMountedOperation;
 }
 
+/** 🔒️ Requires document freshness before either resuming or beginning one retained publication turn. */
+function toolJobPublicationFreshnessBeforeEveryTurn(source: string): boolean {
+  const publisherStart = source.lastIndexOf("fn publish_mounted_typed_operation_unit");
+  const publisherOpen = publisherStart < 0 ? -1 : source.indexOf("{", publisherStart);
+  const publisher = publisherOpen < 0 ? undefined : toolJobRustBlock(source, publisherOpen);
+  if (!publisher) return false;
+  const directFreshness = publisher.body.indexOf("validate_commit(&mounted.operation");
+  const helperFreshness = publisher.body.indexOf("typed_operation_document_is_fresh(&mounted.operation");
+  const helperStart = source.lastIndexOf("fn typed_operation_document_is_fresh");
+  const helperOpen = helperStart < 0 ? -1 : source.indexOf("{", helperStart);
+  const helper = helperOpen < 0 ? undefined : toolJobRustBlock(source, helperOpen);
+  const helperExact =
+    !!helper &&
+    helper.body.includes("canonical_revision == live_revision") &&
+    helper.body.includes("validate_commit(operation") &&
+    helper.body.includes("Generation(live_generation)") &&
+    helper.body.includes("CommitValidation::Accepted");
+  const freshness = directFreshness >= 0 ? directFreshness : helperExact ? helperFreshness : -1;
+  const pendingPublication = publisher.body.indexOf("if let Some(pending) = mounted.pending_artifact_publication.as_mut()");
+  const beginTurns = [
+    "self.store.begin_apply_one",
+    "self.config_store.begin_apply_one",
+    "self.draft_store.begin_apply_one",
+    "self.presence_store.begin_publish_one",
+    "self.transient_store.begin_publish_one",
+  ]
+    .map((needle) => publisher.body.indexOf(needle))
+    .filter((index) => index >= 0);
+  return (
+    freshness >= 0 &&
+    pendingPublication >= 0 &&
+    beginTurns.length > 0 &&
+    freshness < pendingPublication &&
+    beginTurns.every((begin) => freshness < begin) &&
+    (publisher.body.includes("mounted.canonical_revision != live_revision") || helperExact)
+  );
+}
+
+/** 🧵️ Rejects the last generic typed-command false green: a one-item publisher that
+ * enters whole mutation replay, history construction, or outbound serialization in one turn. */
+function toolJobStoreOneItemPublicationBounded(storeSource: string, pluginSource: string): boolean {
+  const blockOf = (source: string, needle: string, fromEnd = false) => {
+    const start = fromEnd ? source.lastIndexOf(needle) : source.indexOf(needle);
+    const open = start < 0 ? -1 : source.indexOf("{", start);
+    return open < 0 ? undefined : toolJobRustBlock(source, open);
+  };
+  const begin = blockOf(storeSource, "fn begin_apply_one");
+  const ownedBegin = blockOf(storeSource, "fn begin_apply_one_owned");
+  const preparation = begin?.body.includes("self.begin_apply_one_owned(") && ownedBegin?.body.includes("self.snapshot_read()") && ownedBegin.body.includes("begin(request)") ? ownedBegin : begin;
+  const advance = blockOf(storeSource, "fn advance_apply_one");
+  const cancel = blockOf(storeSource, "fn cancel_apply_one");
+  const publicationState = blockOf(storeSource, "pub struct ArtifactStoreOneItemPublication<P, Mutation>");
+  const publication = blockOf(storeSource, "impl<P, Mutation> ArtifactStoreOneItemPublication<P, Mutation>");
+  const close = publication ? blockOf(publication.body, "fn close_step") : undefined;
+  const terminal = publication ? blockOf(publication.body, "fn terminal_is_empty") : undefined;
+  const publisher = blockOf(pluginSource, "fn publish_mounted_typed_operation_unit", true);
+  const monolithic = ["replay_mutations(", "apply_command(", "flush_outbound(", "mutation.diff(", "diff.apply(", "try_reserve", "with_capacity(", ".collect::<Vec", ".to_vec("];
+  return (
+    storeSource.includes("pub struct ArtifactStoreOneItemPublication") &&
+    storeSource.includes("pub enum ArtifactStoreOneItemPublicationPhase") &&
+    storeSource.includes("pub trait ArtifactStoreOneItemPreparationFactory") &&
+    storeSource.includes("pub trait ArtifactStoreOneItemPreparation") &&
+    storeSource.includes("pub struct ArtifactStoreOneItemPrepared") &&
+    !!begin &&
+    !!advance &&
+    !!cancel &&
+    !!publicationState &&
+    !!publication &&
+    !!close &&
+    !!terminal &&
+    !!preparation && preparation.body.includes("ArtifactStoreOneItemPublication") &&
+    storeSource.includes("fn advance_apply_one") &&
+    storeSource.includes("fn cancel_apply_one") &&
+    publication.body.includes("fn begin_close") &&
+    close.body.includes("min(1)") &&
+    close.body.includes("maximum_bytes") &&
+    !close.body.includes(".clear()") &&
+    terminal.body.includes("ArtifactStoreOneItemPublicationPhase::Complete") &&
+    (terminal.body.includes(".is_empty()") || terminal.body.includes(".is_none()")) &&
+    publication.body.includes("maximum_items") &&
+    publication.body.includes("maximum_bytes") &&
+    /\b(?:expected_)?generation\b/.test(publicationState.body) &&
+    storeSource.includes("impl<P, Mutation> Drop for ArtifactStoreOneItemPublication") &&
+    monolithic.every((needle) => !begin.body.includes(needle) && !preparation.body.includes(needle) && !advance.body.includes(needle)) &&
+    pluginSource.includes("pending_artifact_publication") &&
+    pluginSource.includes("artifact_one_item_factory: Option<") &&
+    pluginSource.includes("config_one_item_factory: Option<") &&
+    pluginSource.includes("draft_one_item_factory: Option<") &&
+    pluginSource.includes("unsupported_publication_contracts") &&
+    !!publisher &&
+    publisher.body.includes("begin_apply_one") &&
+    publisher.body.includes("advance_apply_one") &&
+    publisher.body.includes("self.artifact_one_item_factory.as_deref()") &&
+    publisher.body.includes("self.config_one_item_factory.as_deref()") &&
+    publisher.body.includes("self.draft_one_item_factory.as_deref()") &&
+    !publisher.body.includes("A::build_artifact_store_one_item_preparation_factory") &&
+    !publisher.body.includes("A::build_config_store_one_item_preparation_factory") &&
+    !publisher.body.includes("A::build_draft_store_one_item_preparation_factory") &&
+    !publisher.body.includes(".apply_one(")
+  );
+}
+
+function toolJobEphemeralOneItemPublicationBounded(storeSource: string, pluginSource: string): boolean {
+  const blocks = (source: string, needle: string) => {
+    const result: { body: string; end: number }[] = [];
+    let cursor = 0;
+    for (;;) {
+      const start = source.indexOf(needle, cursor);
+      if (start < 0) return result;
+      const open = source.indexOf("{", start);
+      const block = open < 0 ? undefined : toolJobRustBlock(source, open);
+      if (!block) return result;
+      result.push(block);
+      cursor = block.end;
+    }
+  };
+  const advances = blocks(storeSource, "pub fn advance_publish_one");
+  const begins = blocks(storeSource, "pub fn begin_publish_one");
+  const cancels = blocks(storeSource, "pub fn cancel_publish_one");
+  const publication = storeSource.indexOf("impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation>");
+  const publicationOpen = publication < 0 ? -1 : storeSource.indexOf("{", publication);
+  const publicationBlock = publicationOpen < 0 ? undefined : toolJobRustBlock(storeSource, publicationOpen);
+  const forbidden = ["mutation.diff(", "diff.apply(", "apply_command(", "replay_mutations(", "try_reserve", ".to_vec(", "drop(previous)"];
+  const publisherStart = pluginSource.lastIndexOf("fn publish_mounted_typed_operation_unit");
+  const publisherOpen = publisherStart < 0 ? -1 : pluginSource.indexOf("{", publisherStart);
+  const publisher = publisherOpen < 0 ? undefined : toolJobRustBlock(pluginSource, publisherOpen);
+  return (
+    storeSource.includes("pub trait ArtifactEphemeralOneItemPreparationFactory") &&
+    storeSource.includes("pub trait ArtifactEphemeralOneItemPreparation") &&
+    storeSource.includes("pub struct ArtifactEphemeralOneItemPrepared") &&
+    storeSource.includes("pub struct ArtifactEphemeralOneItemPublication") &&
+    begins.length === 2 &&
+    advances.length === 2 &&
+    cancels.length === 2 &&
+    advances.every((block) => forbidden.every((needle) => !block.body.includes(needle)) && block.body.includes("retirement")) &&
+    !!publicationBlock &&
+    publicationBlock.body.includes("fn close_step") &&
+    publicationBlock.body.includes("fn terminal_is_empty") &&
+    storeSource.includes("impl<P, Mutation> Drop for ArtifactEphemeralOneItemPublication") &&
+    !!publisher &&
+    pluginSource.includes("presence_one_item_factory: Option<") &&
+    pluginSource.includes("transient_one_item_factory: Option<") &&
+    pluginSource.includes("presence_local_root_retirement_factory: Option<") &&
+    pluginSource.includes("transient_local_root_retirement_factory: Option<") &&
+    pluginSource.includes("unsupported_publication_contracts") &&
+    pluginSource.includes("if let Some(lane) = self.unsupported_publication_contracts.get(verb)") &&
+    publisher.body.includes("PendingArtifactStorePublication::Presence") &&
+    publisher.body.includes("PendingArtifactStorePublication::Transient") &&
+    (publisher.body.match(/begin_publish_one/g) ?? []).length >= 2 &&
+    (publisher.body.match(/advance_publish_one/g) ?? []).length >= 2 &&
+    publisher.body.includes("self.presence_one_item_factory.as_deref()") &&
+    publisher.body.includes("self.transient_one_item_factory.as_deref()") &&
+    publisher.body.includes("self.presence_local_root_retirement_factory.clone()") &&
+    publisher.body.includes("self.transient_local_root_retirement_factory.clone()") &&
+    !publisher.body.includes("A::build_presence_store_one_item_preparation_factory") &&
+    !publisher.body.includes("A::build_transient_store_one_item_preparation_factory") &&
+    !publisher.body.includes("presence_store.apply_one") &&
+    !publisher.body.includes("transient_store.apply_one") &&
+    !publisher.body.includes("presence_store.apply(") &&
+    !publisher.body.includes("transient_store.apply(")
+  );
+}
+
 function toolJobTypedRouteFailsClosedBeforePreparation(source: string): boolean {
   const start = source.lastIndexOf("async fn dispatch_typed_command_inner");
   const open = start < 0 ? -1 : source.indexOf("{", start);
   const block = open < 0 ? undefined : toolJobRustBlock(source, open);
   const guard = block?.body.indexOf("require_complete_tool_operation_pipeline(&admission)?") ?? -1;
-  const preparation = block?.body.indexOf("refresh_cache().await") ?? -1;
+  const preparation = block?.body.indexOf("self.start_typed_command_operation(") ?? -1;
   const authorityStart = source.indexOf("fn require_complete_tool_operation_pipeline");
   const authorityOpen = authorityStart < 0 ? -1 : source.indexOf("{", authorityStart);
   const authority = authorityOpen < 0 ? undefined : toolJobRustBlock(source, authorityOpen);
-  return guard >= 0 && preparation >= 0 && guard < preparation && !!authority && authority.body.includes('FaultCode::new("interactive-job.full-operation-pending")') && !authority.body.includes("Ok(");
+  if (guard < 0 || preparation <= guard || !toolJobRetainedDispatchSetup(source) || !authority) return false;
+  const rejected = authority.body.indexOf("QualifiedToolProof::FrameworkOwned(_) | QualifiedToolProof::Bounded(_) =>");
+  const rejection = rejected < 0 ? undefined : toolJobRustBlock(authority.body, authority.body.indexOf("{", rejected));
+  return authority.body.includes("self.require_tool_operation_authority(admission)?") && authority.body.includes("QualifiedToolProof::AppOwned(_) => Ok(())")
+    && !!rejection && rejection.body.includes('FaultCode::new("interactive-job.missing-owned-reducer")') && rejection.body.includes("Err(") && !rejection.body.includes("Ok(");
 }
 
 function toolJobTypedPersistentFoundation(source: string): boolean {
@@ -1492,36 +2599,38 @@ function toolJobTypedPersistentFoundation(source: string): boolean {
   const dispatchStart = source.lastIndexOf("async fn dispatch_typed_command_inner");
   const dispatchOpen = dispatchStart < 0 ? -1 : source.indexOf("{", dispatchStart);
   const dispatch = dispatchOpen < 0 ? undefined : toolJobRustBlock(source, dispatchOpen);
-  const active = blockOf("impl<A: ArtifactApp> ActiveToolCommand<A>");
-  const maintenanceStart = source.indexOf("impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send> PluginApp for VcsArtifactApp");
+  const active = blockOf("impl<A: ArtifactApp> MountedTypedCommandFullOperation<A>");
+  const maintenanceStart = source.indexOf("impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp");
   const maintenanceName = source.indexOf("fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize)", maintenanceStart);
   const maintenanceOpen = maintenanceName < 0 ? -1 : source.indexOf("{", maintenanceName);
   const maintenance = maintenanceOpen < 0 ? undefined : toolJobRustBlock(source, maintenanceOpen);
-  if (!dispatch || !active || !maintenance) return false;
+  const setup = toolJobRetainedDispatchSetup(source);
+  if (!dispatch || !active || !maintenance || !setup) return false;
   const guard = dispatch.body.indexOf("require_complete_tool_operation_pipeline(&admission)?");
-  const preparation = dispatch.body.indexOf("refresh_cache().await");
-  const preAdmission = dispatch.body.indexOf("!self.tool_operations.can_insert(operation_id.0)");
-  const session = dispatch.body.indexOf("WorkerJobSession::new");
-  const retained = dispatch.body.indexOf("self.tool_operations.insert_admitted(");
+  const preparation = setup.indexOf("refresh_cache().await");
+  const preAdmission = dispatch.body.indexOf("!self.can_admit_typed_operation(operation_id.0)");
+  const session = setup.indexOf("MountedWorkerJobSession::try_new");
+  const retained = setup.indexOf("self.tool_operations.insert_admitted(");
   return (
     guard >= 0 &&
-    preparation > guard &&
+    preparation >= 0 &&
     preAdmission >= 0 &&
-    preAdmission < preparation &&
+    preAdmission > guard &&
     session > preparation &&
     retained > session &&
-    dispatch.body.includes("active.drive_worker_step(&pool)?") &&
+    setup.includes("active.drive_worker_step(&pool)?") &&
     dispatch.body.includes('DslValue::String(operation_id.0.to_string())') &&
-    !dispatch.body.includes("session.step(&pool") &&
-    !dispatch.body.includes("let outcome = loop") &&
-    source.includes("tool_operations: ArtifactFixedRegistry<ActiveToolCommand<A>>") &&
-    active.body.includes("session.try_submit_step(pool, semio_framework_async::Lane::Interactive)") &&
-    active.body.includes("pending.try_recv()") &&
-    active.body.includes("ActiveToolCommandStage::CommitReady") &&
+    !setup.includes("session.step(&pool") &&
+    !setup.includes("let outcome = loop") &&
+    source.includes("tool_operations: ArtifactFixedRegistry<MountedTypedCommandFullOperation<A>>") &&
+    active.body.includes("session.pump_one(pool, semio_framework_async::Lane::Interactive)") &&
+    active.body.includes("session.take_checked_out_outcome()") &&
+    active.body.includes("MountedTypedCommandFullOperationStage::AwaitingAck") &&
     maintenance.body.includes("self.tool_operations.next_id_from(self.maintenance_tool_cursor)") &&
     maintenance.body.includes(".drive_worker_step(&pool)") &&
-    source.includes('FaultCode::new("interactive-job.close-typed-operation-disposer-missing")') &&
-    source.includes("rejected_worker_step_admission_retains_the_exact_persistent_session")
+    maintenance.body.includes("operation.retirement_step(maximum_items.min(1), maximum_bytes)?") &&
+    active.body.includes("fn terminal_is_empty") &&
+    source.includes("retained_latest_wins_registered_dispatch_rebases_worker_and_publishes_real_document")
   );
 }
 
@@ -3496,6 +4605,11 @@ function toolJobDecodeAfterAdmission(source: string): boolean {
 }
 
 function toolJobRuntimeProofQualified(source: string): boolean {
+  const activationStart = source.indexOf("pub async fn with_registry_on_bus(");
+  const activationOpen = activationStart < 0 ? -1 : source.indexOf("{", activationStart);
+  const activation = activationOpen < 0 ? "" : toolJobRustBlock(source, activationOpen)?.body ?? "";
+  const registered = activation.indexOf("A::register_tool_job_factories(&mut app_tool_registry)");
+  const joined = activation.indexOf(".tool_job_registration::<A>");
   return (
     source.includes("pub struct ArtifactBoundedFirstStepProof") &&
     source.includes("macro_rules! bounded_first_step_tool_proofs") &&
@@ -3503,8 +4617,19 @@ function toolJobRuntimeProofQualified(source: string): boolean {
     source.includes("pub struct ToolOwnerWitness") &&
     source.includes("std::any::TypeId::of::<A>()") &&
     source.includes("std::any::type_name::<A>()") &&
-    source.includes("for row in A::bounded_first_step_tool_proofs()") &&
-    source.includes("row.owner == owner && row.controller_id == runtime_controller_id && row.document_schema == document_schema && row.factory == BOUNDED_FIRST_STEP_FACTORY") &&
+    registered >= 0 && joined > registered &&
+    source.includes("A::bounded_first_step_tool_proofs())") &&
+    source.includes("row.owner == owner && row.controller_id == runtime_controller_id && row.document_schema == document_schema && (generic || exact_registered)") &&
+    source.includes("row.factory == BOUNDED_FIRST_STEP_FACTORY && row.factory_type_id.is_none() && row.factory_type_name.is_none() && registered.is_none()") &&
+    source.includes("row.factory_type_id == Some(registration.factory_type_id)") &&
+    source.includes("row.factory_type_name == Some(registration.factory_type_name)") &&
+    source.includes("registration.owner == owner") &&
+    source.includes("registration.key.controller_id == runtime_controller_id") &&
+    source.includes("registration.key.tool_id == row.tool_id") &&
+    source.includes("registration.contract == row.contract") &&
+    source.includes("bus.admit_exact_wire(runtime_controller_id, row.tool_id, &registration.schema_id, &[])") &&
+    source.includes("QualifiedToolProof::AppOwned(registration.clone()).admits::<A>(&admission)") &&
+    source.includes("proof.with_factory_type::<$owner, $factory_type>()") &&
     source.includes("seen != expected") &&
     /tool_job_registration\s*::<A>\s*\(\s*&app_id,\s*A::DOCUMENT_SCHEMA,/.test(source) &&
     source.includes("fn qualified_tool_proof(&self, verb: &str)") &&
@@ -5315,8 +6440,8 @@ function toolJobCoverageSelfTests(): number {
       encoded: { type: "array", minItems: 48, maxItems: 512, items: { type: "integer", minimum: 0, maximum: 255 } },
     },
   } as const;
-  const checkpointOracle = new Ajv({ allErrors: true, strict: true }).compile(checkpointSchema);
-  if (!checkpointOracle(checkpointFixture)) throw new Error(`[verify interactivity tool-jobs] self-test retained-command checkpoint Ajv oracle rejected the language-neutral fixture: ${checkpointOracle.errors?.map((error) => error.message).join(", ")}`);
+  const checkpointErrors = validateJsonSchemaSubset(checkpointSchema, checkpointFixture);
+  if (checkpointErrors.length > 0) throw new Error(`[verify interactivity tool-jobs] self-test retained-command checkpoint schema rejected the language-neutral fixture: ${checkpointErrors.join(", ")}`);
   const checkpointEncoded = new Uint8Array(48 + checkpointFixture.workState.length);
   checkpointEncoded.set(new TextEncoder().encode(checkpointFixture.format), 0);
   checkpointEncoded[4] = checkpointFixture.version;
@@ -5330,7 +6455,7 @@ function toolJobCoverageSelfTests(): number {
   checkpointEncoded.set(checkpointFixture.workState, 48);
   if (JSON.stringify([...checkpointEncoded]) !== JSON.stringify(checkpointFixture.encoded)) throw new Error("[verify interactivity tool-jobs] self-test retained-command checkpoint language-neutral encoding drifted from Rust.");
   const checkpointByteOverflow = { ...checkpointFixture, encoded: [...checkpointFixture.encoded.slice(0, -1), 256] };
-  if (checkpointOracle(checkpointByteOverflow)) throw new Error("[verify interactivity tool-jobs] self-test retained-command checkpoint byte plus-one was falsely accepted by the Ajv oracle.");
+  if (validateJsonSchemaSubset(checkpointSchema, checkpointByteOverflow).length === 0) throw new Error("[verify interactivity tool-jobs] self-test retained-command checkpoint byte plus-one was falsely accepted by the schema validator.");
   const globalStoreFixture = toolJobProductionProtocolSource(`
 thread_local! {
   static SCRATCH: RefCell<HashMap<String, Vec<u8>>> = RefCell::new(HashMap::new());
@@ -5563,7 +6688,7 @@ impl ArtifactCommandWork<EditorApp<Ownerownerrs>> for ScanWork {
   const sharedCatalog = { "owner.rs": `app_commands! { "bounded" => bounded::Payload }\n.action_interactive_job("bounded", InteractiveJobClassification::Migrated)\n${sharedProof}` };
   if (evaluate(sharedCatalog).length !== 1) throw new Error("[verify interactivity tool-jobs] self-test shared-contract-proof-only route was falsely accepted as executable.");
   const executableOwner = `
-${validCatalog["owner.rs"]}
+${validCatalog["owner.rs"].replace("impl ArtifactEditor for Ownerownerrs { const DOCUMENT_SCHEMA: &'static str = \"fixture.document\"; }", "").replace('factory: "BoundedFirstStepCommandJobFactory",', 'factory: "AppCommandJobFactory", factory_type: AppCommandJobFactory,')}
 const APP_COMMAND_TOOL_IDS: &'static [&'static str] = &["bounded"];
 struct AppCommandJobFactory;
 impl ToolJobFactory for AppCommandJobFactory {
@@ -5577,10 +6702,19 @@ impl ArtifactOwnedToolJobFactory for AppCommandJobFactory {
   const TOOL_IDS: &'static [&'static str] = APP_COMMAND_TOOL_IDS;
 }
 impl ArtifactEditor for Ownerownerrs {
+  const DOCUMENT_SCHEMA: &'static str = "fixture.document";
   fn register_tool_job_factories(registry: &mut Registry) { registry.register(AppCommandJobFactory::new("owner")); }
   fn build_tool_job(request: Request) -> Result<Option<ToolOperationSpec>, Fault> { build(request) }
 }`;
   if (evaluate({ "owner.rs": executableOwner }).length !== 0) throw new Error("[verify interactivity tool-jobs] self-test exact app-owned executable route was falsely rejected.");
+  const directExecutableOwner = executableOwner
+    .replaceAll("Ownerownerrs", "DirectOwner")
+    .replaceAll("impl ArtifactEditor for DirectOwner", "impl ArtifactApp for DirectOwner")
+    .replaceAll("semio_framework_plugin::EditorApp<DirectOwner>", "DirectOwner");
+  if (evaluate({ "owner.rs": directExecutableOwner }).length !== 0)
+    throw new Error("[verify interactivity tool-jobs] self-test direct ArtifactApp executable route was falsely rejected.");
+  if (evaluate({ "owner.rs": directExecutableOwner.replace("type Owner = DirectOwner;", "type Owner = ForgedDirectOwner;") }).length === 0)
+    throw new Error("[verify interactivity tool-jobs] self-test forged direct ArtifactApp owner was falsely accepted.");
   const qualifiedSchemaOwner = `const FIXTURE_DOCUMENT_SCHEMA: &str = "fixture.document";\n${executableOwner.replace(
     'const DOCUMENT_SCHEMA: &\'static str = "fixture.document";',
     "const DOCUMENT_SCHEMA: &'static str = crate::schema::FIXTURE_DOCUMENT_SCHEMA;",
@@ -5667,6 +6801,163 @@ impl ArtifactEditor for Ownerownerrs {
   if (toolJobFullOperationBounded(noStageWatchdog)) throw new Error("[verify interactivity tool-jobs] self-test full-operation-without-stage-watchdog was falsely accepted.");
   const staleExposure = noStageWatchdog.replace("validate_commit(base_revision, generation);", "").replace("fn step() { ", "fn step() { cx.is_cancelled(); cx.should_yield(); ");
   if (toolJobFullOperationBounded(staleExposure)) throw new Error("[verify interactivity tool-jobs] self-test full-operation-without-stale-result-validation was falsely accepted.");
+  const retainedStorePublication = `
+pub trait ArtifactStoreOneItemPreparationFactory {}
+pub trait ArtifactStoreOneItemPreparation {}
+pub struct ArtifactStoreOneItemPrepared;
+pub enum ArtifactStoreOneItemPublicationPhase { Prepare, Commit, Outbound, Retiring, Complete }
+pub struct ArtifactStoreOneItemPublication<P, Mutation> { generation: u64, maximum_items: usize, maximum_bytes: usize, marker: PhantomData<(P, Mutation)> }
+impl<P, Mutation> ArtifactStoreOneItemPublication<P, Mutation> {
+  fn begin_close(&mut self) {}
+  fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) { let items = maximum_items.min(1); if items > 0 && maximum_bytes > 0 { self.maximum_items = items; } }
+  fn terminal_is_empty(&self) -> bool { self.phase == ArtifactStoreOneItemPublicationPhase::Complete && self.marker.is_empty() && self.maximum_items == 0 && self.maximum_bytes == 0 && self.generation == 0 }
+}
+impl<P, Mutation> Drop for ArtifactStoreOneItemPublication<P, Mutation> { fn drop(&mut self) { assert!(self.terminal_is_empty()); } }
+impl<P, Mutation> ArtifactStore<P, Mutation> {
+  fn begin_apply_one(&mut self) -> ArtifactStoreOneItemPublication<P, Mutation> { ArtifactStoreOneItemPublication { generation, maximum_items, maximum_bytes, marker: PhantomData } }
+  fn advance_apply_one(&mut self, publication: &mut ArtifactStoreOneItemPublication<P, Mutation>) { publication.generation += 1; }
+  fn cancel_apply_one(&mut self, publication: &mut ArtifactStoreOneItemPublication<P, Mutation>) { publication.begin_close(); }
+}`;
+  const retainedPluginPublication = `
+struct Host {
+  artifact_one_item_factory: Option<ArtifactFactory>,
+  config_one_item_factory: Option<ConfigFactory>,
+  draft_one_item_factory: Option<DraftFactory>,
+  unsupported_publication_contracts: Contracts,
+}
+struct MountedTypedCommandFullOperation<A> { pending_artifact_publication: Option<ArtifactStoreOneItemPublication<A::Snapshot, A::Mutation>> }
+async fn publish_mounted_typed_operation_unit() {
+  self.artifact_one_item_factory.as_deref();
+  self.config_one_item_factory.as_deref();
+  self.draft_one_item_factory.as_deref();
+  mounted.pending_artifact_publication = Some(self.store.begin_apply_one());
+  self.store.advance_apply_one(mounted.pending_artifact_publication.as_mut().unwrap());
+}`;
+  if (!toolJobStoreOneItemPublicationBounded(retainedStorePublication, retainedPluginPublication))
+    throw new Error("[verify interactivity tool-jobs] self-test retained Store one-item publication was falsely rejected.");
+  if (toolJobStoreOneItemPublicationBounded(retainedStorePublication.replace("pub trait ArtifactStoreOneItemPreparationFactory {}", ""), retainedPluginPublication))
+    throw new Error("[verify interactivity tool-jobs] self-test Store publication without a domain preparation factory was falsely accepted.");
+  if (toolJobStoreOneItemPublicationBounded(retainedStorePublication.replace("publication.generation += 1;", "apply_command(publication);"), retainedPluginPublication))
+    throw new Error("[verify interactivity tool-jobs] self-test Store publication that restores whole apply_command was falsely accepted.");
+  if (toolJobStoreOneItemPublicationBounded(retainedStorePublication.replace("publication.generation += 1;", "cursor.try_reserve_exact(total); publication.generation += 1;"), retainedPluginPublication))
+    throw new Error("[verify interactivity tool-jobs] self-test Store publication that hides whole-vector growth in a phase was falsely accepted.");
+  if (toolJobStoreOneItemPublicationBounded(retainedStorePublication.replace("fn terminal_is_empty", "fn terminal_owner_remains"), retainedPluginPublication))
+    throw new Error("[verify interactivity tool-jobs] self-test Store publication without terminal-empty witness was falsely accepted.");
+  if (toolJobStoreOneItemPublicationBounded(retainedStorePublication.replace("impl<P, Mutation> Drop for ArtifactStoreOneItemPublication", "impl<P, Mutation> Closed for ArtifactStoreOneItemPublication"), retainedPluginPublication))
+    throw new Error("[verify interactivity tool-jobs] self-test Store publication without terminal Drop enforcement was falsely accepted.");
+  if (toolJobStoreOneItemPublicationBounded(retainedStorePublication.replace("self.maximum_items = items;", "owners.clear(); self.maximum_items = items;"), retainedPluginPublication))
+    throw new Error("[verify interactivity tool-jobs] self-test Store publication with whole-vector close was falsely accepted.");
+  if (toolJobStoreOneItemPublicationBounded(retainedStorePublication, retainedPluginPublication.replace("advance_apply_one", "apply_one")))
+    throw new Error("[verify interactivity tool-jobs] self-test plugin publisher that restores monolithic apply_one was falsely accepted.");
+  if (toolJobStoreOneItemPublicationBounded(retainedStorePublication, retainedPluginPublication.replace("self.artifact_one_item_factory.as_deref();", "A::build_artifact_store_one_item_preparation_factory();")))
+    throw new Error("[verify interactivity tool-jobs] self-test per-publication durable factory reconstruction was falsely accepted.");
+  const retainedEphemeralPublication = `
+pub trait ArtifactEphemeralOneItemPreparationFactory {}
+pub trait ArtifactEphemeralOneItemPreparation {}
+pub struct ArtifactEphemeralOneItemPrepared;
+pub struct ArtifactEphemeralOneItemPublication<P, Mutation>(PhantomData<(P, Mutation)>);
+impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
+  fn close_step(&mut self) { let released = 1; }
+  fn terminal_is_empty(&self) -> bool { true }
+}
+impl<P, Mutation> Drop for ArtifactEphemeralOneItemPublication<P, Mutation> { fn drop(&mut self) { assert!(self.terminal_is_empty()); } }
+impl<P, Mutation> PresenceStore<P, Mutation> {
+  pub fn begin_publish_one(&self) {}
+  pub fn advance_publish_one(&mut self) { let retirement = previous; publication = retirement; }
+  pub fn cancel_publish_one(&mut self) {}
+}
+impl<P, Mutation> TransientStore<P, Mutation> {
+  pub fn begin_publish_one(&self) {}
+  pub fn advance_publish_one(&mut self) { let retirement = previous; publication = retirement; }
+  pub fn cancel_publish_one(&mut self) {}
+}`;
+  const retainedEphemeralPublisher = `
+struct Host {
+  presence_one_item_factory: Option<PresenceFactory>,
+  transient_one_item_factory: Option<TransientFactory>,
+  presence_local_root_retirement_factory: Option<PresenceRetirementFactory>,
+  transient_local_root_retirement_factory: Option<TransientRetirementFactory>,
+  unsupported_publication_contracts: Contracts,
+}
+fn qualified_tool_proof(&self, verb: &str) { if let Some(lane) = self.unsupported_publication_contracts.get(verb) { reject(lane); } }
+async fn publish_mounted_typed_operation_unit() {
+  PendingArtifactStorePublication::Presence;
+  PendingArtifactStorePublication::Transient;
+  self.presence_one_item_factory.as_deref();
+  self.transient_one_item_factory.as_deref();
+  self.presence_local_root_retirement_factory.clone();
+  self.transient_local_root_retirement_factory.clone();
+  presence_store.begin_publish_one();
+  presence_store.advance_publish_one();
+  transient_store.begin_publish_one();
+  transient_store.advance_publish_one();
+}`;
+  if (!toolJobEphemeralOneItemPublicationBounded(retainedEphemeralPublication, retainedEphemeralPublisher))
+    throw new Error("[verify interactivity tool-jobs] self-test retained Presence/Transient one-item publication was falsely rejected.");
+  if (toolJobEphemeralOneItemPublicationBounded(retainedEphemeralPublication.replace("let retirement = previous;", "drop(previous);"), retainedEphemeralPublisher))
+    throw new Error("[verify interactivity tool-jobs] self-test immediate ephemeral displaced-root drop was falsely accepted.");
+  if (toolJobEphemeralOneItemPublicationBounded(retainedEphemeralPublication, retainedEphemeralPublisher.replace("transient_store.advance_publish_one();", "transient_store.apply_one();")))
+    throw new Error("[verify interactivity tool-jobs] self-test monolithic Transient publication was falsely accepted.");
+  if (toolJobEphemeralOneItemPublicationBounded(retainedEphemeralPublication, retainedEphemeralPublisher.replace("self.presence_one_item_factory.as_deref();", "A::build_presence_store_one_item_preparation_factory();")))
+    throw new Error("[verify interactivity tool-jobs] self-test per-publication Presence factory reconstruction was falsely accepted.");
+  const freshPublicationTurn = `
+async fn publish_mounted_typed_operation_unit() {
+  let live_revision = self.store.content_revision_now();
+  validate_commit(&mounted.operation, live_revision);
+  if mounted.canonical_revision != live_revision { return Err(stale); }
+  if let Some(pending) = mounted.pending_artifact_publication.as_mut() { advance(pending); }
+  self.store.begin_apply_one();
+}`;
+  if (!toolJobPublicationFreshnessBeforeEveryTurn(freshPublicationTurn))
+    throw new Error("[verify interactivity tool-jobs] self-test publication freshness before every resumed or new turn was falsely rejected.");
+  const staleResumedPublicationTurn = freshPublicationTurn
+    .replace("  validate_commit(&mounted.operation, live_revision);\n", "")
+    .replace(
+      "  if let Some(pending) = mounted.pending_artifact_publication.as_mut() { advance(pending); }",
+      "  if let Some(pending) = mounted.pending_artifact_publication.as_mut() { advance(pending); }\n  validate_commit(&mounted.operation, live_revision);",
+    );
+  if (toolJobPublicationFreshnessBeforeEveryTurn(staleResumedPublicationTurn))
+    throw new Error("[verify interactivity tool-jobs] self-test resumed publication advanced before freshness validation was falsely accepted.");
+  if (toolJobPublicationFreshnessBeforeEveryTurn(freshPublicationTurn.replace("mounted.canonical_revision != live_revision", "false")))
+    throw new Error("[verify interactivity tool-jobs] self-test publication freshness without canonical/live revision comparison was falsely accepted.");
+  const helperFreshPublicationTurn = `
+fn typed_operation_document_is_fresh(operation: &Operation, canonical_revision: Revision, live_revision: Revision, live_generation: u64) -> bool {
+  canonical_revision == live_revision && matches!(validate_commit(operation, live_revision, Generation(live_generation)), CommitValidation::Accepted)
+}
+async fn publish_mounted_typed_operation_unit() {
+  if !typed_operation_document_is_fresh(&mounted.operation, mounted.canonical_revision, live_revision, live_generation) { return Err(stale); }
+  if let Some(pending) = mounted.pending_artifact_publication.as_mut() { advance(pending); }
+  self.store.begin_apply_one();
+}`;
+  if (!toolJobPublicationFreshnessBeforeEveryTurn(helperFreshPublicationTurn))
+    throw new Error("[verify interactivity tool-jobs] self-test exact extracted publication freshness guard was falsely rejected.");
+  if (toolJobPublicationFreshnessBeforeEveryTurn(helperFreshPublicationTurn.replace("validate_commit(operation", "accept_without_validation(operation")))
+    throw new Error("[verify interactivity tool-jobs] self-test extracted publication freshness guard without commit validation was falsely accepted.");
+  const hostOnlyPublication = `const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "setView", lanes: &[ArtifactToolPublicationLane::HostOnly] }];`;
+  const hostOnlyContracts = toolJobPublicationContracts(hostOnlyPublication, hostOnlyPublication, new Map());
+  if (hostOnlyContracts?.get("setView")?.join(",") !== "HostOnly" || !toolJobPublicationAuthorityReady("", hostOnlyContracts.get("setView")!))
+    throw new Error("[verify interactivity tool-jobs] self-test exact host-only publication contract was falsely rejected.");
+  const namedHostOnlyPublication = `const VIEW_PUBLICATIONS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "setView", lanes: &[ArtifactToolPublicationLane::HostOnly] }]; const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = VIEW_PUBLICATIONS;`;
+  if (toolJobPublicationContracts(namedHostOnlyPublication, namedHostOnlyPublication.slice(namedHostOnlyPublication.indexOf("const PUBLICATION_CONTRACTS")), new Map())?.get("setView")?.join(",") !== "HostOnly")
+    throw new Error("[verify interactivity tool-jobs] self-test named exact publication contract was falsely rejected.");
+  const mixedHostPublication = hostOnlyPublication.replace("ArtifactToolPublicationLane::HostOnly]", "ArtifactToolPublicationLane::HostOnly, ArtifactToolPublicationLane::Config]");
+  if (toolJobPublicationContracts(mixedHostPublication, mixedHostPublication, new Map()))
+    throw new Error("[verify interactivity tool-jobs] self-test mixed host-only/Store publication contract was falsely accepted.");
+  const configPublication = hostOnlyPublication.replace("setView", "setLocale").replace("HostOnly", "Config");
+  const configContracts = toolJobPublicationContracts(configPublication, configPublication, new Map())!;
+  if (toolJobPublicationAuthorityReady("", configContracts.get("setLocale")!))
+    throw new Error("[verify interactivity tool-jobs] self-test Config publication without an app-owned preparation factory was falsely accepted.");
+  const configOwner = "fn build_config_store_one_item_preparation_factory() -> Option<Factory> { Some(Factory::new()) }";
+  if (!toolJobPublicationAuthorityReady(configOwner, configContracts.get("setLocale")!))
+    throw new Error("[verify interactivity tool-jobs] self-test exact Config publication preparation authority was falsely rejected.");
+  const presencePublication = hostOnlyPublication.replace("setView", "setPresence").replace("HostOnly", "Presence");
+  const presenceLanes = toolJobPublicationContracts(presencePublication, presencePublication, new Map())!.get("setPresence")!;
+  const presencePreparationOnly = "fn build_presence_store_one_item_preparation_factory() -> Option<Factory> { Some(Factory::new()) }";
+  if (toolJobPublicationAuthorityReady(presencePreparationOnly, presenceLanes))
+    throw new Error("[verify interactivity tool-jobs] self-test Presence publication without displaced-root retirement authority was falsely accepted.");
+  const presenceComplete = `${presencePreparationOnly} fn build_presence_local_root_retirement_factory() -> Option<Factory> { Some(Factory::new()) }`;
+  if (!toolJobPublicationAuthorityReady(presenceComplete, presenceLanes))
+    throw new Error("[verify interactivity tool-jobs] self-test exact Presence preparation and root-retirement authority was falsely rejected.");
   const unguardedIncompleteRoute = "async fn dispatch_typed_command_inner() { refresh_cache().await; let session = WorkerJobSession::new(job); }";
   if (toolJobTypedRouteFailsClosedBeforePreparation(unguardedIncompleteRoute)) throw new Error("[verify interactivity tool-jobs] self-test incomplete-typed-route-without-preparation-guard was falsely accepted.");
   const terminalLoopTypedFoundation = "struct ActiveToolCommand<A>; struct VcsArtifactApp<A> { tool_operations: ArtifactFixedRegistry<ActiveToolCommand<A>> } impl<A: ArtifactApp> ActiveToolCommand<A> { fn drive_worker_step() { session.try_submit_step(pool, semio_framework_async::Lane::Interactive); pending.try_recv(); ActiveToolCommandStage::CommitReady; } } async fn dispatch_typed_command_inner() { require_complete_tool_operation_pipeline(&admission)?; let operation_id = allocate_operation_id(); if !self.tool_operations.can_insert(operation_id.0) {} refresh_cache().await; let session = WorkerJobSession::new(job); self.tool_operations.insert_admitted(operation_id, active); let outcome = loop { session.step(&pool).await; }; active.drive_worker_step(&pool)?; DslValue::String(operation_id.0.to_string()); }";
@@ -6938,7 +8229,9 @@ async fn run_job_on_worker() { WorkerJobSession::try_new(relay, params); self.re
   if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("const GUEST_RELAY_MOUNTED_SLOTS: usize = 16", "slots: Vec<GuestRelayMountedSession>"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-fixed-mounted-registry-removal was falsely accepted.");
   if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("self.relay_registry.mount(index, mounted_generation, owner);", "loop { session.step().await; }"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-run-loop-restoration was falsely accepted.");
   if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("guest_cold_relay_registry_max_plus_one_generation_and_zero_pump_are_exact", "guest_cold_relay_registry_smoke"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-max-plus-one-generation-fixture-removal was falsely accepted.");
-  return fixtures.length + 383 + toolJobPuzzleReservedRoutesSelfTests();
+  const scalarConfig = toolJobScalarConfigCohortSelfTests();
+  const sealer = storeCanonicalEditSealerSelfTests();
+  return fixtures.length + 401 + toolJobPuzzleReservedRoutesSelfTests() + toolJobOwnerFactoryResolutionSelfTests() + toolJobFactoryProofJoinSelfTests() + toolJobLatestWinsSelfTests() + cadPresenceRetirementSelfTests() + proceduralGenerationRootSelfTests() + flowTypedRetirementSelfTests() + flowSelectedCopySelfTests() + scalarConfig.routes + scalarConfig.mutationOracles + scalarConfig.hostileCases + sealer.grants + sealer.schemaHostiles + sealer.sourceHostiles + sealer.digestOracles + sealer.mapGrants + sealer.mapSchemaHostiles + sealer.mapSourceHostiles + sealer.mapDigestOracles + sealer.readerChecks;
 }
 
 function toolJobFixedOperationRegistryExact(source: string): boolean {
@@ -8138,7 +9431,7 @@ function toolJobArtifactRetainedCommandExact(source: string): boolean {
     "StepOutcome::CheckpointReady(Checkpoint",
     "checkpoint.begin_close();",
     "self.checkpoint_input.is_none()",
-    "checkpoint_binary_matches_schema_fixture_and_byteorder_oracle",
+    "checkpoint_binary_matches_schema_fixture_and_owned_oracle",
     "checkpoint_decode_rejects_context_workspace_and_reserved_byte_drift",
   ];
   return (
@@ -8235,7 +9528,8 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const productionFiles = new Map(policyAllRustFiles(root).filter((file) => file.includes("✏️s/🔌️plugins/") && !file.includes("/🧪️tests/")).map((file) => [file, toolJobProductionProtocolSource(policyReadFileSafe(root, file))]));
   const staticRows = toolJobStaticRows(productionFiles);
   const appOwnedRows = toolJobAppOwnedRows(productionFiles);
-  const appOwnedKeys = new Set(appOwnedRows.map((row) => `${row.ownerFile}\0${row.toolId}`));
+  const registeredAppOwnedKeys = new Set(appOwnedRows.map((row) => `${row.ownerFile}\0${row.toolId}`));
+  const appOwnedKeys = new Set(appOwnedRows.filter((row) => row.publicationReady).map((row) => `${row.ownerFile}\0${row.toolId}`));
   const dispositions = toolJobDispositions(productionFiles);
   const batchOnlyRows = commandRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "BatchOnlyPendingRewrite").length;
   const forbiddenRows = commandRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "ForbiddenFromUi").length;
@@ -8367,10 +9661,15 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const frameworkReservedExact = toolJobFrameworkReservedRoutesExact(plugin);
   const puzzleReservedExact = toolJobPuzzleReservedRoutesExact(puzzle5d, plugin);
   const importPreparationBounded = toolJobImportPreparationBounded(plugin);
-  const fullToolOperationBounded = toolJobFullOperationBounded(plugin);
+  const fullToolOperationJobBounded = toolJobFullOperationBounded(plugin);
+  const storeOneItemPublicationBounded = toolJobStoreOneItemPublicationBounded(store, plugin);
+  const ephemeralOneItemPublicationBounded = toolJobEphemeralOneItemPublicationBounded(store, plugin);
+  const fullToolOperationBounded = fullToolOperationJobBounded && storeOneItemPublicationBounded && ephemeralOneItemPublicationBounded;
   if (!frameworkReservedExact) failures.push("framework-owned reserved routes lack exact route-specific resumable factories, direct-branch closure, binary fail-closure, or commit-held cancellation");
   if (!importPreparationBounded) failures.push("shared import submission serializes or clones the whole media envelope before resumable job construction");
-  if (!fullToolOperationBounded) failures.push("shared typed-command preparation or commit application remains outside the resumable job protocol");
+  if (!fullToolOperationJobBounded) failures.push("shared typed-command preparation remains outside the resumable job protocol");
+  if (!storeOneItemPublicationBounded) failures.push("shared one-item Store publication still enters whole replay/apply/outbound work instead of a domain-prepared persistent publication");
+  if (!ephemeralOneItemPublicationBounded) failures.push("shared Presence/Transient one-item publication lacks retained preparation, displaced-root retirement, ACK, cancellation, or terminal-empty closure");
   if (!fullToolOperationBounded && (!toolJobTypedRouteFailsClosedBeforePreparation(plugin) || !toolJobTypedPersistentFoundation(plugin))) failures.push("incomplete typed-command route is reachable before preparation or retains no saturation-safe persistent operation foundation");
   if (!toolJobImmutableOperationRootsExact(store)) failures.push("document, presence, or transient command preparation lacks exact O(1) immutable event-maintained roots");
   if (!toolJobChildContentRootExact(store, plugin)) failures.push("typed command preparation lacks a fixed-width event-maintained immutable child-content root and no-default terminal-witnessed old-root retirement authority");
@@ -8441,13 +9740,11 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (factoryContracts.some((factory) => factory.status === "missing")) failures.push(`${factoryContracts.filter((factory) => factory.status === "missing").length} ToolJobFactory implementation(s) lack explicit execution contracts`);
   if (globalPayloadStores.length > 0) failures.push(`${globalPayloadStores.length} process-global payload store candidate(s) require operation-owned state or an explicit static exemption`);
   if (scanThenMonolithRows.length > 0) failures.push(`${scanThenMonolithRows.length} resumable route(s) only scan inputs before invoking a monolithic reducer; see scanThenMonolithRows ledger`);
+  if (appOwnedRows.some((row) => row.publicationLanes.length === 0)) failures.push(`${appOwnedRows.filter((row) => row.publicationLanes.length === 0).length} app-owned retained route(s) lack an exact nonempty publication-lane contract`);
+  if (appOwnedRows.some((row) => row.publicationLanes.length > 0 && !row.publicationReady)) failures.push(`${appOwnedRows.filter((row) => row.publicationLanes.length > 0 && !row.publicationReady).length} app-owned retained route(s) declare Store publication lanes without their exact app-owned preparation authority`);
   if (/"typed-command"\.to_string\(\)/.test(inner?.body ?? "")) failures.push("typed-command dispatch fallback remains");
-  const publisherStart = plugin.lastIndexOf("async fn publish_mounted_typed_operation_unit");
-  const publisherOpen = publisherStart < 0 ? -1 : plugin.indexOf("{", publisherStart);
-  const publisher = publisherOpen < 0 ? undefined : toolJobRustBlock(plugin, publisherOpen);
-  const freshness = publisher?.body.indexOf("validate_commit(&mounted.operation") ?? -1;
-  const firstApply = publisher?.body.indexOf("self.presence_store.apply_one") ?? -1;
-  if (!publisher || freshness < 0 || firstApply < 0 || freshness > firstApply || !publisher.body.includes("mounted.canonical_revision != live_revision")) failures.push("commit freshness is not validated immediately before result exposure");
+  if (!toolJobPublicationFreshnessBeforeEveryTurn(plugin))
+    failures.push("commit freshness is not validated before every pending or newly begun result-publication turn");
   const remainingCommands = staticRows
     .filter((row) => {
       const disposition = dispositions.get(`${row.file}\0${row.id}`);
@@ -8469,11 +9766,13 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
       const reason =
         disposition !== "Migrated"
           ? "no explicit factory, bounded-first-step proof, or fail-closed disposition"
-          : !appOwnedKeys.has(`${row.file}\0${row.id}`)
+          : !registeredAppOwnedKeys.has(`${row.file}\0${row.id}`)
             ? "classification proof exists but no exact registered app-owned retained reducer factory and builder"
-            : scanThenMonolithKeys.has(`${row.file}\0${row.id}`)
-              ? "resumable route scans inputs then invokes a monolithic reducer"
-              : "owner-local retained route exists but full prepare/job/commit operation is not bounded";
+            : !appOwnedKeys.has(`${row.file}\0${row.id}`)
+              ? "app-owned retained reducer lacks an exact publishable completion-lane contract or preparation owner"
+              : scanThenMonolithKeys.has(`${row.file}\0${row.id}`)
+                ? "resumable route scans inputs then invokes a monolithic reducer"
+                : "owner-local retained route exists but full prepare/job/commit operation is not bounded";
       return { ...row, reason };
     });
   const remainingCommandKeys = new Set(remainingCommands.map((row) => `${row.file}\0${row.id}`));
@@ -8528,6 +9827,12 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
       ...(frameworkReservedExact ? TOOL_JOB_FRAMEWORK_RESERVED_IDS : []),
     ],
     remainingCommands,
+    pipelineGates: {
+      fullToolOperationJobBounded,
+      durableOneItemPublicationBounded: storeOneItemPublicationBounded,
+      ephemeralOneItemPublicationBounded,
+      fullToolOperationBounded,
+    },
     selfTests,
     failures,
   };
@@ -8948,6 +10253,9 @@ export class VerifyScript extends Script {
       const rustFixture = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/fixed-operation-registry-cases.rs");
       if (rustFixture !== toolJobFixedOperationRustFixtureSource(this.root)) throw new Error("[verify interactivity tool-jobs] generated fixed-operation Rust fixture is stale.");
       const plugin = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs");
+      const activation = toolJobFactoryProofActivationScan(this.root);
+      if (activation.failures.length > 0) throw new Error(`[verify interactivity tool-jobs] app activation factory proof scan: ${JSON.stringify(activation)}`);
+      console.log(`[verify interactivity tool-jobs] exact-factory-proof-owners=${activation.owners} custom-rows=${activation.customRows} generic-rows=${activation.genericRows} clean.`);
       console.log(`[verify interactivity tool-jobs] self-tests=${toolJobCoverageSelfTests() + toolJobFixedOperationRegistrySelfTests(jobRuntime) + toolJobDrawGestureOperationOwnerSelfTests() + toolJobArtifactRetainedCommandSelfTests(artifactRetainedCommand, plugin) + fixture.results.length + 1} clean.`);
       return;
     }
@@ -9096,7 +10404,7 @@ export class VerifyScript extends Script {
       if (domain !== "") runCmd("bun", [join(this.root, domain, "📜️script.ts"), "contract"], { cwd: join(this.root, domain), ...orchestratorBudgetOpts() });
     }
     console.log("[verify] storybook scope freshness…");
-    this.checkStorybookFreshness();
+    await this.checkStorybookFreshness();
     console.log("[verify] OS exclusive state authority policies…");
     {
       const osBreaches = [
@@ -9231,7 +10539,8 @@ export class VerifyScript extends Script {
    * `GENERATED_SCOPES` entries can't go stale this way (they're re-derived from disk on every import), but
    * a package's own opt-in `sourceRoots` value CAN still name a subdir that no longer exists — checked the
    * same way. See `26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG`. */
-  private checkStorybookFreshness(): void {
+  private async checkStorybookFreshness(): Promise<void> {
+    const { STORY_SCOPES } = await import("./.storybook/scopes.ts");
     const offenders: string[] = [];
     for (const scope of STORY_SCOPES) {
       for (const root of scope.sourceRoots) {
@@ -11189,7 +12498,7 @@ export function interactivityLiveReconcileFailures(reconcileSource: string, patc
   const reconcilerDrop = reconcile.slice(reconcile.indexOf("impl Drop for SurfaceReconciler"), reconcile.indexOf("impl<K, V> SurfaceLinearMap", reconcile.indexOf("impl Drop for SurfaceReconciler")));
   const readyDrop = reconcile.slice(reconcile.indexOf("impl Drop for SurfaceReconcileReadyPatch"), reconcile.indexOf("pub struct SurfaceReconcilePublishedPatch"));
   if (!reconcilerDrop.includes("handback_surface_reconcile(state)") || reconcilerDrop.includes("self.retained.clear()") || !readyDrop.includes("handback_surface_reconcile") || readyDrop.includes("release_surface_reconcile(credit)") || !reconcile.includes("SURFACE_RECONCILE_TREE_RETIRE_DEPTH: usize = 4_097") || !reconcile.includes("if self.depth == self.frames.len()")) failures.push("populated ordinary Drop or deep-tree retirement can bulk destroy ownership, release credit, or overflow its fixed frames");
-  if ((reactor.match(/patches\.drive_one\(\)/g) ?? []).length !== 1 || !reactor.includes("match patches.reserve_mounted(surface)") || !reactor.includes("let _ = grant.commit_source(tree.root)") || !reactor.includes("Err(_) => grant.cancel()") || !reactor.includes("let _ = patches.defer(surface)") || !reactor.includes("patches.begin_close_instance(*numeric_instance)") || !reactor.includes("patches.close_step()") || !reactor.includes("reconcile_work")) failures.push("production reactor does not mount one pre-reserved reconcile opportunity with deferred-storm and instance-close rearm");
+  if ((reactor.match(/patches\.drive_one\(\)/g) ?? []).length !== 1 || !reactor.includes("match PATCHES.with(|patches| patches.reserve_mounted(surface))") || !reactor.includes("let _ = grant.commit_source(tree.root)") || !reactor.includes("Err(_) => grant.cancel()") || !reactor.includes("let _ = patches.defer(surface)") || !reactor.includes("patches.begin_close_instance(*numeric_instance)") || !reactor.includes("patches.close_step()") || !reactor.includes("reconcile_work")) failures.push("production reactor does not mount one pre-reserved reconcile opportunity with deferred-storm and instance-close rearm");
   if (
     !reactor.includes("fn advance_command_cursor") ||
     !reactor.includes("cursor.page_index.checked_add(1)") ||
@@ -16421,6 +17730,11 @@ function dependencyDiscoverPackageJsonFiles(repoRoot: string): string[] {
   return found.sort();
 }
 
+/** 🧱️ Keeps both canonical and generated composition trees outside the governing refactor boundary. */
+function dependencyIsCompositionManifest(relPath: string): boolean {
+  return relPath.startsWith("compose/") || relPath.startsWith("temp/compose/");
+}
+
 /** 🔒️Merges every third-party (non-internal) dependency across the whole workspace (Rust + JS, `compose/` excluded) into one baseline-entry list, keyed by `${ecosystem}:${name}`. */
 function dependencyFreezeCurrentThirdParty(repoRoot: string): DependencyBaselineEntry[] {
   const byKey = new Map<string, DependencyBaselineEntry>();
@@ -16436,7 +17750,7 @@ function dependencyFreezeCurrentThirdParty(repoRoot: string): DependencyBaseline
     byKey.set(key, { ecosystem, name, version, kinds: [kind], users: [user], productionReachable: false, declarations: [{ user, version, kind }] });
   };
 
-  const cargoManifests = policyDiscoverCargoTomlFiles(repoRoot).filter((p) => !p.startsWith("compose/"));
+  const cargoManifests = policyDiscoverCargoTomlFiles(repoRoot).filter((path) => !dependencyIsCompositionManifest(path));
   const workspaceDeps = dependencyParseWorkspaceDeps(repoRoot);
   for (const manifest of cargoManifests) {
     for (const dep of dependencyParseCargoToml(repoRoot, manifest, workspaceDeps)) {
@@ -16851,6 +18165,8 @@ function dependencyTruthSummaryText(report: DependencyTruthReport): string {
 
 /** 🧪️Hostile source-only fixtures for every correction and exception in the literal-external census. */
 function dependencyTruthSelfTests(): number {
+  if (!dependencyIsCompositionManifest("compose/client/Cargo.toml") || !dependencyIsCompositionManifest("temp/compose/client/Cargo.toml") || dependencyIsCompositionManifest("temp/owned/Cargo.toml"))
+    throw new Error("[verify dependencies self-test] canonical or generated composition manifests escaped the declared out-of-scope boundary.");
   const rootRouter = DEPENDENCY_REPO_POLICY_ROUTERS[0];
   const boundarySource = `import { defineLint, runPolicyOnlyMain, type TechnologyLinter } from "${dependencyRepoPolicyLibrarySpecifier(WORKSPACE_ROOT, rootRouter)}";`;
   const missingBoundary = dependencyRepoPolicyImportBoundaryFailure(WORKSPACE_ROOT, rootRouter, boundarySource, () => false);
@@ -16901,7 +18217,7 @@ function dependencyTruthSelfTests(): number {
   if (mixedDevkit?.literalExternalUsers?.join() !== "product/package.json" || mixedDevkit.mandatedToolchainUsers?.join() !== "package.json") throw new Error("[verify dependencies self-test] mixed Nx identity did not split authorized and literal-external owner rows.");
   if (!report.auditedToolchain.authorizedRows.every((row) => row.lockOwned) || !report.auditedToolchain.unauthorizedRows.every((row) => row.lockOwned)) throw new Error("[verify dependencies self-test] Bun lock ownership evidence was not attached to every audited Nx owner row.");
   if (!report.auditedToolchain.bun.valid || report.entries.mandatedToolchain.some((item) => item.name === "eslint") || !report.entries.literalExternal.some((item) => item.name === "eslint") || !report.entries.literalExternal.some((item) => item.name === "@nx/undeclared")) throw new Error("[verify dependencies self-test] illicit root/non-declared Nx tooling escaped literal-external inventory.");
-  return 17;
+  return 18;
 }
 
 /** 🔷️`PackageReference`s of every non-compose .NET project; test projects contribute test-runner deps only. */
@@ -18056,7 +19372,7 @@ const CLEAN_CACHE_DIR_NAME = "⚡️cache";
 
 type CleanRemovalKind = "misplaced" | "gitignore" | "ticket-file" | "ticket-dir" | "build-artifact";
 
-type CleanRemoval = {
+export type CleanRemoval = {
   kind: CleanRemovalKind;
   path: string;
   bytes: number;
@@ -18064,6 +19380,7 @@ type CleanRemoval = {
 
 type TaxonomyCliFormat = "human" | "json";
 export type TaxonomyCliOperation = "inventory" | "plan" | "apply" | "verify";
+export type TaxonomyCliKind = "mutation";
 
 const TAXONOMY_CLI_ARTIFACT_DIRECTORIES: Readonly<Record<TaxonomyCliOperation, Readonly<{ json: string; markdown: string }>>> = {
   inventory: { json: "📊️taxonomy-inventory", markdown: "📓️taxonomy-inventory" },
@@ -18078,6 +19395,7 @@ export type TaxonomyCliOptions = {
   digest?: string;
   failOnWarning: boolean;
   format: TaxonomyCliFormat;
+  kind?: TaxonomyCliKind;
   plan?: string;
   resume?: string;
   scope?: string;
@@ -18091,6 +19409,7 @@ function taxonomyCliOptions(args: readonly string[]): TaxonomyCliOptions {
     "--baseline": "baseline",
     "--cancel-file": "cancelFile",
     "--digest": "digest",
+    "--kind": "kind",
     "--plan": "plan",
     "--resume": "resume",
     "--scope": "scope",
@@ -18118,7 +19437,10 @@ function taxonomyCliOptions(args: readonly string[]): TaxonomyCliOptions {
     if (!key) throw new Error(`[clean taxonomy] unknown option ${JSON.stringify(arg)}.`);
     const value = args[++index];
     if (!value || value.startsWith("--")) throw new Error(`[clean taxonomy] ${arg} requires a value.`);
-    options[key] = value;
+    if (key === "kind") {
+      if (value !== "mutation") throw new Error(`[clean taxonomy] --kind must be mutation, got ${JSON.stringify(value)}.`);
+      options.kind = value;
+    } else options[key] = value;
   }
   return options;
 }
@@ -18126,7 +19448,7 @@ function taxonomyCliOptions(args: readonly string[]): TaxonomyCliOptions {
 /** 🔒️ Rejects authority-bearing options outside their exact taxonomy operation. */
 export function taxonomyCliValidateOperationOptions(operation: TaxonomyCliOperation, options: TaxonomyCliOptions): void {
   const restricted: readonly [keyof TaxonomyCliOptions, string, readonly TaxonomyCliOperation[]][] = [
-    ["baseline", "--baseline", ["plan"]],
+    ["baseline", "--baseline", ["plan", "apply"]],
     ["digest", "--digest", ["apply"]],
     ["plan", "--plan", ["plan", "apply"]],
     ["resume", "--resume", ["apply"]],
@@ -18582,6 +19904,11 @@ function taxonomyCliWriteSummary(ticketDir: string | undefined, operation: Taxon
   writeFileSync(path, [`# ${title}`, "", ...rows, ""].join("\n"));
 }
 
+function taxonomyCliProgress(event: { readonly operation: string; readonly phase: string; readonly current: number; readonly total: number; readonly path?: string }): void {
+  if (event.total === 0 && event.phase.startsWith("transaction-")) return;
+  if (event.current === 0 || event.current === event.total || event.current % 100 === 0) console.error(`[clean taxonomy progress] ${event.operation} ${event.phase} ${event.current}/${event.total}${event.path ? ` ${event.path}` : ""}`);
+}
+
 function taxonomyCliInventoryOptions(root: string, options: TaxonomyCliOptions, cancelFile: string | undefined, ticketDir?: string) {
   return {
     repoRoot: root,
@@ -18589,6 +19916,7 @@ function taxonomyCliInventoryOptions(root: string, options: TaxonomyCliOptions, 
     ...(options.scope ? { scope: options.scope } : {}),
     ...(cancelFile ? { cancelFile } : {}),
     ...(options.workers ? { workers: options.workers } : {}),
+    progress: taxonomyCliProgress,
   };
 }
 
@@ -18641,6 +19969,588 @@ export function taxonomyCliRequireCommittedApply(state: string): void {
 function taxonomyCliPrintJson(value: unknown): void {
   process.stdout.write(`${canonicalJson(value)}\n`);
 }
+
+//#region 🧬️MutationTaxonomyWorkflow
+export interface MutationTaxonomyRecord {
+  readonly ownerPath: string;
+  readonly artifact: string | null;
+  readonly standard: string | null;
+  readonly subset: string | null;
+  readonly mutationRootPath: string;
+  readonly currentCentralComponent: string | null;
+  readonly aggregateVariant: string | null;
+  readonly payloadLocations: readonly string[];
+  readonly applyLocations: readonly string[];
+  readonly diffLocations: readonly string[];
+  readonly inverseLocations: readonly string[];
+  readonly outcomeLocations: readonly string[];
+  readonly textCodecLocations: readonly string[];
+  readonly binaryCodecLocations: readonly string[];
+  readonly schemaAndLanguageSurfaces: readonly string[];
+  readonly catalogAndRegistryConsumers: readonly string[];
+  readonly commandsEditorsViewers: readonly string[];
+  readonly testsFixturesExamplesOracles: readonly string[];
+  readonly sharedHelpers: readonly string[];
+  readonly crossOwnerDependencies: readonly string[];
+  readonly violationClasses: readonly string[];
+  readonly targetMutationDirectoryName: string;
+  readonly assignedLunaAuditor: string | null;
+  readonly assignedTerraExecutor: string | null;
+  readonly assignedRootIntegrator: string | null;
+  readonly state: "legacy" | "direct" | "central-only";
+  readonly structuralState: "legacy" | "direct" | "central-only";
+  readonly executionState: "unassigned" | "assigned" | "conflicting" | "invalid";
+  readonly consumerEdges: readonly MutationTaxonomyConsumerEdge[];
+  readonly assignmentEvidence: MutationTaxonomyAssignmentEvidence;
+  readonly evidence: MutationTaxonomyEvidence;
+}
+
+export type MutationTaxonomyConsumerKind = "catalog" | "command" | "cross-owner" | "editor" | "leaf" | "oracle" | "registry" | "sibling-operation" | "test" | "viewer";
+export interface MutationTaxonomyConsumerEdge { readonly sourcePath: string; readonly targetPath: string; readonly kind: MutationTaxonomyConsumerKind; readonly relation: "import" | "mount" | "reexport" }
+export interface MutationTaxonomyAssignmentEvidence { readonly status: "resolved" | "missing" | "conflicting" | "invalid"; readonly ledgerPath: string | null; readonly rows: readonly MutationTaxonomyAssignmentRow[]; readonly reason: string | null }
+export interface MutationTaxonomyAssignmentRow { readonly mutationRootPath: string; readonly targetMutationDirectoryName: string; readonly lunaAuditor: string; readonly terraExecutor: string; readonly rootIntegrator: string }
+export interface MutationTaxonomyEvidence { readonly sourceFiles: readonly string[]; readonly resolvedMounts: readonly MutationTaxonomyConsumerEdge[]; readonly unresolvedEdges: readonly { readonly sourcePath: string; readonly specifier: string; readonly reason: string }[] }
+export interface MutationTaxonomySourceRecord { readonly path: string; readonly sha256: string; readonly role: "source" | "assignment-ledger" }
+
+export interface MutationTaxonomyInventory {
+  readonly schemaVersion: 2;
+  readonly kind: "mutation";
+  readonly sourceTreeDigest: string;
+  readonly roots: readonly string[];
+  readonly sourceRoster: readonly MutationTaxonomySourceRecord[];
+  readonly records: readonly MutationTaxonomyRecord[];
+  readonly unresolved: readonly { readonly path: string; readonly reason: string }[];
+  readonly violations: readonly BreachRecord[];
+}
+
+export interface MutationTaxonomyInventoryOptions {
+  readonly afterFactsCollected?: () => void;
+  readonly assignmentLedger?: unknown;
+  readonly assignmentLedgerPath?: string;
+  readonly cancelFile?: string;
+  readonly progress?: (event: { readonly operation: "inventory"; readonly phase: string; readonly current: number; readonly total: number; readonly path?: string }) => void;
+  readonly scope?: string;
+}
+
+export interface MutationTaxonomyPlanMove { readonly source: string; readonly destination: string }
+export interface MutationTaxonomyPlan {
+  readonly schemaVersion: 1;
+  readonly kind: "mutation";
+  readonly baselineCommit: string;
+  readonly inventoryDigest: string;
+  readonly moves: readonly MutationTaxonomyPlanMove[];
+  readonly unresolved: readonly { path: string; reason: string }[];
+  readonly planDigest: string;
+}
+
+function mutationTaxonomySegmentAfter(path: string, marker: string): string | null {
+  const parts = path.split("/");
+  const index = parts.indexOf(marker);
+  return index >= 0 ? policyStripEmoji(parts[index + 1] ?? "") || null : null;
+}
+
+function mutationTaxonomyFiles(repoRoot: string, rootRel: string): string[] {
+  const files: string[] = [];
+  const walk = (relDir: string): void => {
+    const directory = lstatSync(join(repoRoot, relDir));
+    if (!directory.isDirectory() || directory.isSymbolicLink()) throw new Error(`[clean taxonomy --kind mutation] source scope must be a no-follow directory: ${relDir}.`);
+    for (const entry of readdirSync(join(repoRoot, relDir), { withFileTypes: true }).sort((left, right) => Buffer.from(left.name).compare(Buffer.from(right.name)))) {
+      const child = `${relDir}/${entry.name}`;
+      if (child === "compose" || child.startsWith("compose/")) continue;
+      const state = lstatSync(join(repoRoot, child));
+      if (state.isSymbolicLink()) throw new Error(`[clean taxonomy --kind mutation] source scope must not traverse symlink ${child}.`);
+      if (state.isDirectory()) walk(child);
+      else if (state.isFile()) files.push(child);
+    }
+  };
+  if (rootRel === "compose" || rootRel.startsWith("compose/")) throw new Error(`[clean taxonomy --kind mutation] source scope cannot include opaque root ${rootRel}.`);
+  walk(rootRel);
+  return files.sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
+}
+
+function mutationTaxonomyLocations(contents: ReadonlyMap<string, string>, files: readonly string[], pattern: RegExp): string[] {
+  return files.filter((file) => pattern.test(contents.get(file) ?? "")).sort();
+}
+
+const MUTATION_TAXONOMY_SOURCE_SKIP = new Set([".git", ".nx", ".🧬semio", "build", "coverage", "dist", "node_modules", "target"]);
+const MUTATION_TAXONOMY_ASSIGNMENT_LEDGER_SCHEMA = {
+  type: "object",
+  required: ["schemaVersion", "assignments"],
+  properties: {
+    schemaVersion: { const: 1 },
+    assignments: {
+      type: "array",
+      items: {
+        type: "object",
+        required: ["mutationRootPath", "targetMutationDirectoryName", "lunaAuditor", "terraExecutor", "rootIntegrator"],
+        properties: {
+          mutationRootPath: { type: "string", minLength: 1 },
+          targetMutationDirectoryName: { type: "string", minLength: 1 },
+          lunaAuditor: { type: "string", minLength: 1 },
+          terraExecutor: { type: "string", minLength: 1 },
+          rootIntegrator: { type: "string", minLength: 1 },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
+  additionalProperties: false,
+} as const;
+
+type MutationTaxonomySourceIndex = { readonly roots: readonly string[]; readonly files: readonly string[]; readonly bytes: ReadonlyMap<string, Buffer>; readonly contents: ReadonlyMap<string, string>; readonly sourceRoster: readonly MutationTaxonomySourceRecord[]; readonly sourceTreeDigest: string; readonly ledger: { readonly path: string | null; readonly rows: readonly MutationTaxonomyAssignmentRow[]; readonly invalidReason: string | null } };
+
+function mutationTaxonomyCompare(left: string, right: string): number {
+  return Buffer.from(left).compare(Buffer.from(right));
+}
+
+function mutationTaxonomyCancelled(repoRoot: string, options: MutationTaxonomyInventoryOptions): void {
+  if (!options.cancelFile) return;
+  const path = mutationTaxonomyInputPath(repoRoot, options.cancelFile);
+  if (existsSync(path)) throw new Error("[clean taxonomy --kind mutation] cancelled during inventory.");
+}
+
+function mutationTaxonomyInputPath(repoRoot: string, input: string): string {
+  const path = resolve(repoRoot, input);
+  const rel = relative(repoRoot, path).replaceAll("\\", "/");
+  if (rel === "" || rel === ".." || rel.startsWith("../") || rel === "compose" || rel.startsWith("compose/")) throw new Error(`[clean taxonomy --kind mutation] opaque or escaping input path: ${input}.`);
+  let current = repoRoot;
+  for (const segment of rel.split("/")) {
+    current = join(current, segment);
+    try { if (lstatSync(current).isSymbolicLink()) throw new Error(`[clean taxonomy --kind mutation] input path must not traverse symlink ${input}.`); } catch (error) { if (error instanceof Error && !/ENOENT/u.test(String((error as NodeJS.ErrnoException).code ?? error.message))) throw error; }
+  }
+  return path;
+}
+
+function mutationTaxonomyScope(scope: string): string {
+  const normalized = scope.replaceAll("\\", "/");
+  if (!normalized || isAbsolute(scope) || /^[A-Za-z]:[\\/]/u.test(scope) || normalized === "." || normalized === ".." || normalized.startsWith("../") || normalized.includes("/../") || normalized === "compose" || normalized.startsWith("compose/")) throw new Error(`[clean taxonomy --kind mutation] source scope is opaque or non-relative: ${scope}.`);
+  return normalized;
+}
+
+function mutationTaxonomySourceFiles(repoRoot: string, options: MutationTaxonomyInventoryOptions): string[] {
+  const files: string[] = [];
+  const walk = (relDir: string): void => {
+    mutationTaxonomyCancelled(repoRoot, options);
+    const directory = lstatSync(join(repoRoot, relDir));
+    if (!directory.isDirectory() || directory.isSymbolicLink()) throw new Error(`[clean taxonomy --kind mutation] source index must be a no-follow directory: ${relDir}.`);
+    for (const entry of readdirSync(join(repoRoot, relDir), { withFileTypes: true }).sort((left, right) => mutationTaxonomyCompare(left.name, right.name))) {
+      const child = `${relDir}/${entry.name}`;
+      if (entry.name === "compose" || child === "compose" || child.startsWith("compose/") || MUTATION_TAXONOMY_SOURCE_SKIP.has(entry.name) || entry.name.startsWith(".")) continue;
+      const state = lstatSync(join(repoRoot, child));
+      if (state.isSymbolicLink()) throw new Error(`[clean taxonomy --kind mutation] source index must not traverse symlink ${child}.`);
+      if (state.isDirectory()) walk(child);
+      else if (state.isFile()) files.push(child);
+    }
+  };
+  for (const root of policyRepositoryOwnedRoots()) if (root !== "compose" && !root.startsWith("compose/") && existsSync(join(repoRoot, root))) walk(root);
+  return files.sort(mutationTaxonomyCompare);
+}
+
+function mutationTaxonomyAssignmentLedger(repoRoot: string, options: MutationTaxonomyInventoryOptions): { readonly path: string | null; readonly bytes: Buffer | null; readonly rows: readonly MutationTaxonomyAssignmentRow[]; readonly invalidReason: string | null } {
+  const path = options.assignmentLedger === undefined ? options.assignmentLedgerPath ?? null : null;
+  let raw = options.assignmentLedger;
+  let bytes: Buffer | null = raw === undefined ? null : Buffer.from(canonicalJson(raw));
+  if (raw === undefined && path) {
+    let resolved: string;
+    try { resolved = mutationTaxonomyInputPath(repoRoot, path); } catch (error) { return { path, bytes, rows: [], invalidReason: error instanceof Error ? error.message : "Assignment ledger path is invalid." }; }
+    if (existsSync(resolved)) {
+      const content = readFileSync(resolved);
+      bytes = content;
+      try { raw = JSON.parse(content.toString("utf8")); } catch { return { path, bytes, rows: [], invalidReason: "Assignment ledger is not valid JSON." }; }
+    }
+  }
+  if (raw === undefined) return { path, bytes: null, rows: [], invalidReason: null };
+  const errors = validateJsonSchemaSubset(MUTATION_TAXONOMY_ASSIGNMENT_LEDGER_SCHEMA, raw);
+  if (errors.length > 0) return { path, bytes, rows: [], invalidReason: `Assignment ledger violates its schema: ${errors.join("; ")}` };
+  return { path, bytes, rows: (raw as { assignments: MutationTaxonomyAssignmentRow[] }).assignments, invalidReason: null };
+}
+
+function mutationTaxonomySourceIndex(repoRoot: string, options: MutationTaxonomyInventoryOptions): MutationTaxonomySourceIndex {
+  const allRoots = policyFindAllMutationsDirs(repoRoot).sort(mutationTaxonomyCompare);
+  const scopes = (options.scope ?? "").split(",").map((scope) => scope.trim()).filter(Boolean).map(mutationTaxonomyScope);
+  const roots = scopes.length === 0 ? allRoots : allRoots.filter((root) => scopes.some((scope) => root === scope || root.startsWith(`${scope}/`) || scope.startsWith(`${root}/`)));
+  const evidenceFile = (path: string): boolean => roots.some((root) => path.startsWith(`${root}/`)) || /(?:\.(?:rs|ts|tsx|json|graphql|proto|semio|toml|yaml|yml|md)$|(?:^|\/)(?:package\.json|Cargo\.toml|go\.mod)$)/u.test(path);
+  const files = mutationTaxonomySourceFiles(repoRoot, options).filter(evidenceFile);
+  const bytes = new Map<string, Buffer>();
+  const contents = new Map<string, string>();
+  for (const [index, file] of files.entries()) {
+    mutationTaxonomyCancelled(repoRoot, options);
+    const value = readFileSync(join(repoRoot, file));
+    bytes.set(file, value);
+    contents.set(file, value.toString("utf8"));
+    options.progress?.({ operation: "inventory", phase: "source-index", current: index + 1, total: files.length, path: file });
+  }
+  const ledger = mutationTaxonomyAssignmentLedger(repoRoot, options);
+  const sourceRoster = files.map((path) => ({ path, sha256: createHash("sha256").update(bytes.get(path)!).digest("hex"), role: "source" as const }));
+  if (ledger.bytes) sourceRoster.push({ path: ledger.path ?? "<supplied-assignment-ledger>", sha256: createHash("sha256").update(ledger.bytes).digest("hex"), role: "assignment-ledger" });
+  sourceRoster.sort((left, right) => mutationTaxonomyCompare(`${left.role}\0${left.path}`, `${right.role}\0${right.path}`));
+  return { roots, files, bytes, contents, sourceRoster, sourceTreeDigest: createHash("sha256").update(canonicalJson({ roots, sourceRoster })).digest("hex"), ledger: { path: ledger.path, rows: ledger.rows, invalidReason: ledger.invalidReason } };
+}
+
+function mutationTaxonomyLeafAlias(path: string): string {
+  return policyStripEmoji(path.split("/").at(-2) ?? "").replaceAll("-", "_");
+}
+
+function mutationTaxonomyFileAlias(path: string): string {
+  return policyStripEmoji(path.split("/").at(-1) ?? "").split(".")[0]!.replaceAll("-", "_");
+}
+
+function mutationTaxonomyConsumerKind(sourcePath: string, targetOwner: string, sourceOwner: string): MutationTaxonomyConsumerKind {
+  const segments = sourcePath.split("/").map((segment) => policyStripEmoji(segment));
+  if (targetOwner !== "" && sourceOwner !== targetOwner && sourcePath.includes("/🧬️mutations/")) return "cross-owner";
+  if (segments.includes("command")) return "command";
+  if (segments.includes("editor")) return "editor";
+  if (segments.includes("viewer")) return "viewer";
+  if (segments.includes("catalog")) return "catalog";
+  if (segments.includes("registry")) return "registry";
+  if (segments.includes("oracle")) return "oracle";
+  if (segments.includes("tests")) return "test";
+  if (segments.includes("operations")) return "sibling-operation";
+  return "leaf";
+}
+
+function mutationTaxonomySourceSnapshot(repoRoot: string, options: MutationTaxonomyInventoryOptions = {}): MutationTaxonomySourceIndex {
+  return mutationTaxonomySourceIndex(repoRoot, options);
+}
+
+function mutationTaxonomyRustSpecs(source: string): readonly { readonly specifier: string; readonly relation: "import" | "reexport"; readonly modulePath: readonly string[] }[] {
+  return inspectRustModuleGraphFacts(source).uses.map(({ specifier, relation, modulePath }) => ({ specifier, relation, modulePath }));
+}
+
+function mutationTaxonomyTsSpecs(source: string): readonly { readonly specifier: string; readonly relation: "import" | "reexport"; readonly modulePath: readonly string[] }[] {
+  return [...source.replace(/\/\*[\s\S]*?\*\//gu, "").replace(/(^|\s)\/\/.*$/gmu, "$1").matchAll(/(?:^|\n)\s*(import|export)\b[^\n]*?\bfrom\s*["']([^"']+)["']/gu)].map((match) => ({ specifier: match[2]!, relation: match[1] === "export" ? "reexport" as const : "import" as const, modulePath: [] }));
+}
+
+function mutationTaxonomyAssignment(rows: readonly MutationTaxonomyAssignmentRow[], ledger: MutationTaxonomySourceIndex["ledger"], mutationRootPath: string, targetMutationDirectoryName: string): MutationTaxonomyAssignmentEvidence {
+  if (ledger.invalidReason) return { status: "invalid", ledgerPath: ledger.path, rows: [], reason: ledger.invalidReason };
+  const matches = rows.filter((row) => row.mutationRootPath === mutationRootPath && row.targetMutationDirectoryName === targetMutationDirectoryName);
+  if (matches.length === 0) return { status: "missing", ledgerPath: ledger.path, rows: [], reason: "No explicit assignment ledger row exists for this exact mutation root and leaf." };
+  if ((["lunaAuditor", "terraExecutor", "rootIntegrator"] as const).some((field) => new Set(matches.map((row) => row[field])).size !== 1)) return { status: "conflicting", ledgerPath: ledger.path, rows: matches, reason: "Conflicting explicit assignment ledger rows exist for this exact mutation root and leaf." };
+  return { status: "resolved", ledgerPath: ledger.path, rows: matches, reason: null };
+}
+
+type MutationTaxonomyRustModuleContext = { readonly crateRoot: string; readonly modulePath: readonly string[]; readonly sourceScope: readonly string[]; readonly moduleBase: string };
+type MutationTaxonomyRustModuleGraph = { readonly targets: ReadonlyMap<string, string>; readonly contexts: ReadonlyMap<string, readonly MutationTaxonomyRustModuleContext[]>; readonly namedCrates: ReadonlyMap<string, readonly string[]>; readonly dependencies: ReadonlyMap<string, readonly string[]> };
+
+function mutationTaxonomyRustModuleKey(crateRoot: string, modulePath: readonly string[]): string {
+  return `${crateRoot}\0${modulePath.join("::")}`;
+}
+
+function mutationTaxonomyRustModuleTarget(moduleBase: string, module: { readonly name: string; readonly pathTarget: string | null }, files: ReadonlySet<string>): string | null {
+  const directory = moduleBase;
+  const candidates = module.pathTarget === null
+    ? [posix.join(directory, `${module.name}.rs`), posix.join(directory, module.name, "mod.rs")]
+    : [posix.normalize(posix.join(directory, module.pathTarget))];
+  const matching = candidates.filter((candidate) => !candidate.startsWith("../") && files.has(candidate));
+  return matching.length === 1 ? matching[0]! : null;
+}
+
+function mutationTaxonomyCargoManifest(source: string): { readonly crateName: string | null; readonly libPath: string | null } {
+  const section = (name: string): string | null => {
+    const start = new RegExp(`^\\s*\\[${name}\\]\\s*$`, "mu").exec(source);
+    if (!start || start.index === undefined) return null;
+    const remainder = source.slice(start.index + start[0].length);
+    const end = /^\s*\[[^\]]+\]\s*$/mu.exec(remainder);
+    return end?.index === undefined ? remainder : remainder.slice(0, end.index);
+  };
+  const packageSection = section("package");
+  const libSection = section("lib");
+  const packageName = packageSection ? /^\s*name\s*=\s*"([A-Za-z0-9_-]+)"\s*$/mu.exec(packageSection)?.[1] ?? null : null;
+  const libName = libSection ? /^\s*name\s*=\s*"([A-Za-z0-9_-]+)"\s*$/mu.exec(libSection)?.[1] ?? null : null;
+  const libPath = libSection ? /^\s*path\s*=\s*"([^"]+)"\s*$/mu.exec(libSection)?.[1] ?? null : null;
+  return { crateName: libName ?? packageName, libPath };
+}
+
+function mutationTaxonomyCargoDependencies(source: string): readonly string[] {
+  const start = /^\s*\[dependencies\]\s*$/mu.exec(source);
+  if (!start || start.index === undefined) return [];
+  const remainder = source.slice(start.index + start[0].length);
+  const end = /^\s*\[[^\]]+\]\s*$/mu.exec(remainder);
+  const section = end?.index === undefined ? remainder : remainder.slice(0, end.index);
+  return [...section.matchAll(/^\s*([A-Za-z0-9_-]+)\s*=/gmu)].map((match) => match[1]!.replaceAll("-", "_")).sort(mutationTaxonomyCompare);
+}
+
+/** 🦀️ Builds only crate/module edges demonstrated by a mounted Rust source graph. */
+function mutationTaxonomyRustModuleGraph(files: readonly string[], contents: ReadonlyMap<string, string>): MutationTaxonomyRustModuleGraph {
+  const sourceFiles = new Set(files.filter((path) => path.endsWith(".rs")));
+  const factsBySource = new Map([...sourceFiles].map((path) => [path, inspectRustModuleGraphFacts(contents.get(path) ?? "")]));
+  const targets = new Map<string, string>();
+  const contexts = new Map<string, MutationTaxonomyRustModuleContext[]>();
+  const namedCrates = new Map<string, string[]>();
+  const dependencies = new Map<string, string[]>();
+  const manifestRoots = files.filter((path) => path === "Cargo.toml" || path.endsWith("/Cargo.toml")).flatMap((manifest) => {
+    const facts = mutationTaxonomyCargoManifest(contents.get(manifest) ?? "");
+    const entry = posix.normalize(posix.join(posix.dirname(manifest), facts.libPath ?? "src/lib.rs"));
+    return sourceFiles.has(entry) ? [{ path: entry, crateName: facts.crateName, dependencies: mutationTaxonomyCargoDependencies(contents.get(manifest) ?? "") }] : [];
+  });
+  const conventionalRoots = [...sourceFiles].filter((path) => /(?:^|\/)(?:lib|main)\.rs$/u.test(path) && !manifestRoots.some((root) => root.path === path)).map((path) => ({ path, crateName: null, dependencies: [] as string[] }));
+  const roots = [...manifestRoots, ...conventionalRoots].sort((left, right) => mutationTaxonomyCompare(left.path, right.path));
+  const addContext = (path: string, context: MutationTaxonomyRustModuleContext): boolean => {
+    const existing = contexts.get(path) ?? [];
+    if (existing.some((value) => value.crateRoot === context.crateRoot && value.modulePath.join("::") === context.modulePath.join("::") && value.sourceScope.join("::") === context.sourceScope.join("::") && value.moduleBase === context.moduleBase)) return false;
+    contexts.set(path, [...existing, context]);
+    return true;
+  };
+  for (const root of roots) {
+    const crateRoot = root.path;
+    if (root.crateName) namedCrates.set(root.crateName.replaceAll("-", "_"), [...(namedCrates.get(root.crateName.replaceAll("-", "_")) ?? []), crateRoot]);
+    dependencies.set(crateRoot, root.dependencies);
+    const pending: { readonly sourcePath: string; readonly context: MutationTaxonomyRustModuleContext }[] = [{ sourcePath: crateRoot, context: { crateRoot, modulePath: [], sourceScope: [], moduleBase: posix.dirname(crateRoot) } }];
+    addContext(crateRoot, pending[0]!.context);
+    for (let index = 0; index < pending.length; index += 1) {
+      const { sourcePath, context } = pending[index]!;
+      for (const module of (factsBySource.get(sourcePath)?.modules ?? []).filter((fact) => fact.modulePath.length === context.sourceScope.length + 1 && fact.modulePath.slice(0, -1).join("::") === context.sourceScope.join("::"))) {
+        const target = module.inline ? sourcePath : mutationTaxonomyRustModuleTarget(module.pathTarget !== null && context.sourceScope.length === 0 ? posix.dirname(sourcePath) : context.moduleBase, module, sourceFiles);
+        if (!target) continue;
+        const moduleBase = module.inline ? posix.normalize(posix.join(context.moduleBase, module.pathTarget ?? module.name)) : module.pathTarget === null && target.endsWith(`/${module.name}.rs`) ? posix.join(posix.dirname(target), module.name) : posix.dirname(target);
+        const child: MutationTaxonomyRustModuleContext = { crateRoot, modulePath: [...context.modulePath, module.name], sourceScope: module.inline ? module.modulePath : [], moduleBase };
+        const key = mutationTaxonomyRustModuleKey(crateRoot, child.modulePath);
+        const prior = targets.get(key);
+        if (prior && prior !== target) continue;
+        targets.set(key, target);
+        if (addContext(target, child)) pending.push({ sourcePath: target, context: child });
+      }
+    }
+  }
+  for (const [name, crateRoots] of namedCrates) namedCrates.set(name, crateRoots.sort(mutationTaxonomyCompare));
+  return { targets, contexts, namedCrates, dependencies };
+}
+
+function mutationTaxonomyRustUsePath(specifier: string): string[] | null {
+  const match = /^\s*((?:::)?(?:[A-Za-z_][A-Za-z0-9_]*)(?:::[A-Za-z_][A-Za-z0-9_]*)*)/u.exec(specifier);
+  return match ? match[1]!.replace(/^::/u, "").split("::") : null;
+}
+
+function mutationTaxonomyResolveRustGraphTargets(sourcePath: string, specifier: string, modulePathInSource: readonly string[], graph: MutationTaxonomyRustModuleGraph): string[] {
+  const parts = mutationTaxonomyRustUsePath(specifier);
+  const sourceContexts = (graph.contexts.get(sourcePath) ?? []).filter((context) => context.sourceScope.join("::") === modulePathInSource.join("::"));
+  if (!parts || sourceContexts.length !== 1) return [];
+  const source = sourceContexts[0]!;
+  let crateRoots: readonly string[] = [source.crateRoot];
+  let modulePath: string[];
+  if (parts[0] === "crate") modulePath = parts.slice(1);
+  else if (parts[0] === "self") modulePath = [...source.modulePath, ...parts.slice(1)];
+  else if (parts[0] === "super") {
+    let offset = 0;
+    while (parts[offset] === "super") offset += 1;
+    if (offset > source.modulePath.length) return [];
+    modulePath = [...source.modulePath.slice(0, source.modulePath.length - offset), ...parts.slice(offset)];
+  } else {
+    crateRoots = (graph.dependencies.get(source.crateRoot) ?? []).includes(parts[0]!) ? graph.namedCrates.get(parts[0]!) ?? [] : [];
+    modulePath = parts.slice(1);
+  }
+  if (crateRoots.length !== 1) return [];
+  for (let length = modulePath.length; length > 0; length -= 1) {
+    const target = graph.targets.get(mutationTaxonomyRustModuleKey(crateRoots[0]!, modulePath.slice(0, length)));
+    if (target) return [target];
+  }
+  return [];
+}
+
+function mutationTaxonomyResolveTargets(repoRoot: string, sourcePath: string, source: string, specifier: string, files: readonly string[], rustGraph: MutationTaxonomyRustModuleGraph, modulePathInSource: readonly string[] = []): string[] {
+  if (specifier.startsWith(".")) {
+    const base = posix.normalize(posix.join(posix.dirname(sourcePath), specifier));
+    const taxonomy = loadTaxonomy();
+    const componentFiles = Object.values(taxonomy.componentFileKinds).map((kind) => canonicalPrimaryFilenameForKind(kind, taxonomy));
+    return [base, `${base}.ts`, `${base}.tsx`, `${base}.rs`, `${base}.json`, ...componentFiles.map((file) => `${base}/${file}`)].filter((candidate) => files.includes(candidate));
+  }
+  if (!sourcePath.endsWith(".rs")) return [];
+  const graphTargets = mutationTaxonomyResolveRustGraphTargets(sourcePath, specifier, modulePathInSource, rustGraph);
+  if (graphTargets.length > 0) return graphTargets;
+  if (/^(?:self|super|crate)::/u.test(specifier.trim())) return [];
+  const first = specifier.split("::")[0]?.trim();
+  if (!first) return [];
+  const declaration = inspectRustModuleGraphFacts(source).modules.find((module) => module.modulePath.length === modulePathInSource.length + 1 && module.modulePath.slice(0, -1).join("::") === modulePathInSource.join("::") && module.name === first && !module.inline && module.pathTarget !== null);
+  if (!declaration?.pathTarget) return [];
+  const target = relative(repoRoot, resolve(dirname(join(repoRoot, sourcePath)), declaration.pathTarget)).replaceAll("\\", "/");
+  if (files.includes(target)) return [target];
+  return [];
+}
+
+/** 📊️ Builds the deterministic direct-leaf mutation inventory without traversing opaque roots. */
+export function inventoryMutationTaxonomy(repoRoot: string, options: MutationTaxonomyInventoryOptions = {}): MutationTaxonomyInventory {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const before = mutationTaxonomySourceSnapshot(repoRoot, options);
+    const roots = before.roots;
+    const violations = policyMutationStructuralBreaches(repoRoot, roots);
+    const records: MutationTaxonomyRecord[] = [];
+    const leaves: { rootRel: string; leafRel: string; leafFiles: string[]; identity: string; folder: string | undefined; variants: string[] }[] = [];
+    for (let rootIndex = 0; rootIndex < roots.length; rootIndex += 1) {
+      mutationTaxonomyCancelled(repoRoot, options);
+      const rootRel = roots[rootIndex]!;
+      const files = mutationTaxonomyFiles(repoRoot, rootRel);
+      const rootComponent = `${rootRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+      const rootSource = policyReadFileSafe(repoRoot, rootComponent);
+      const variants = policyMutationEnumVariantNames(rootSource);
+      const folders = policyListMutationDirs(repoRoot, rootRel);
+      const folderByVariant = new Map(folders.map((folder) => [policyKebabToPascal(policyStripEmoji(folder)), folder]));
+      const identities = [...new Set([...folders.map((folder) => policyKebabToPascal(policyStripEmoji(folder))), ...variants])].sort();
+      for (const identity of identities) {
+        const folder = folderByVariant.get(identity);
+        const semantic = folder ? policyStripEmoji(folder) : identity.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+        const leafRel = folder ? `${rootRel}/${folder}` : rootRel;
+        const leafFiles = files.filter((file) => file === leafRel || file.startsWith(`${leafRel}/`));
+        leaves.push({ rootRel, leafRel, leafFiles, identity, folder, variants });
+      }
+    }
+    const edgesByTarget = new Map<string, MutationTaxonomyConsumerEdge[]>();
+    const helpersByLeaf = new Map<string, string[]>();
+    const unresolvedByLeaf = new Map<string, { sourcePath: string; specifier: string; reason: string }[]>();
+    const unresolvedBySource = new Map<string, { sourcePath: string; specifier: string; reason: string }[]>();
+    const rustGraph = mutationTaxonomyRustModuleGraph(before.files, before.contents);
+    for (const [index, sourcePath] of before.files.entries()) {
+      mutationTaxonomyCancelled(repoRoot, options);
+      const source = before.contents.get(sourcePath) ?? "";
+      const specs = sourcePath.endsWith(".rs") ? mutationTaxonomyRustSpecs(source) : sourcePath.endsWith(".ts") || sourcePath.endsWith(".tsx") ? mutationTaxonomyTsSpecs(source) : [];
+      for (const { specifier, relation, modulePath = [] } of specs) {
+        const sourceLeaf = leaves.find((leaf) => sourcePath.startsWith(`${leaf.leafRel}/`));
+        const targets = mutationTaxonomyResolveTargets(repoRoot, sourcePath, source, specifier, before.files, rustGraph, modulePath);
+        if (targets.length > 0) {
+          for (const targetPath of targets) {
+            const target = leaves.find((leaf) => leaf.leafFiles.includes(targetPath));
+            if (!target && sourceLeaf) helpersByLeaf.set(sourceLeaf.leafRel, [...(helpersByLeaf.get(sourceLeaf.leafRel) ?? []), targetPath]);
+            const edge: MutationTaxonomyConsumerEdge = { sourcePath, targetPath, kind: mutationTaxonomyConsumerKind(sourcePath, target?.rootRel ?? "", sourceLeaf?.rootRel ?? target?.rootRel ?? ""), relation };
+            edgesByTarget.set(targetPath, [...(edgesByTarget.get(targetPath) ?? []), edge]);
+          }
+        } else {
+          const unresolvedEdge = { sourcePath, specifier, reason: "The import could not be resolved to one unambiguous mounted source path." };
+          const mutationLike = /mutation/iu.test(specifier);
+          if (sourceLeaf || mutationLike) unresolvedBySource.set(sourcePath, [...(unresolvedBySource.get(sourcePath) ?? []), unresolvedEdge]);
+          if (sourceLeaf && mutationLike) unresolvedByLeaf.set(sourceLeaf.leafRel, [...(unresolvedByLeaf.get(sourceLeaf.leafRel) ?? []), unresolvedEdge]);
+        }
+      }
+      options.progress?.({ operation: "inventory", phase: "consumer-graph", current: index + 1, total: before.files.length, path: sourcePath });
+    }
+    for (const leaf of leaves) {
+      const rootComponent = `${leaf.rootRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+      const targetPath = leaf.leafFiles.find((path) => path.endsWith(`/${POLICY_RS_COMPONENT_LEAF_NAME}`));
+      const rootFacts = inspectRustStructure(before.contents.get(rootComponent) ?? "");
+      const rootSource = before.contents.get(rootComponent) ?? "";
+      const alias = targetPath ? mutationTaxonomyLeafAlias(targetPath) : "";
+      const mounted = rootFacts.modules.some((module) => module.name === alias);
+      const pathAttribute = resolveRustPathAttributes(join(repoRoot, rootComponent), rootSource).find((entry) => relative(repoRoot, entry.target).replaceAll("\\", "/") === targetPath);
+      const resolvedPath = pathAttribute ? relative(repoRoot, pathAttribute.target).replaceAll("\\", "/") : null;
+      const explicitPath = new RegExp(`#\\[path\\s*=\\s*"[^"]+"\\]\\s*(?:pub\\s+)?mod\\s+${alias}\\s*;`, "u").test(rootSource);
+      if (targetPath && mounted && (!explicitPath || resolvedPath === targetPath)) edgesByTarget.set(targetPath, [...(edgesByTarget.get(targetPath) ?? []), { sourcePath: rootComponent, targetPath, kind: "leaf", relation: "mount" }]);
+    }
+    for (const leaf of leaves) {
+      const semantic = leaf.folder ? policyStripEmoji(leaf.folder) : leaf.identity.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+      const direct = leaf.folder ? existsSync(join(repoRoot, `${leaf.leafRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`)) : false;
+      const nested = leaf.folder ? existsSync(join(repoRoot, `${leaf.leafRel}/🦠️mutation/${POLICY_RS_COMPONENT_LEAF_NAME}`)) : false;
+      const structuralState = direct ? "direct" as const : nested ? "legacy" as const : "central-only" as const;
+      const assignmentEvidence = mutationTaxonomyAssignment(before.ledger.rows, before.ledger, leaf.rootRel, leaf.folder ?? `🧬️${semantic}`);
+      const assigned = assignmentEvidence.rows[0] ?? null;
+      const executionState = assignmentEvidence.status === "resolved" ? "assigned" as const : assignmentEvidence.status === "conflicting" ? "conflicting" as const : assignmentEvidence.status === "invalid" ? "invalid" as const : "unassigned" as const;
+      const componentTargets = leaf.leafFiles.filter((file) => /\.(?:rs|ts|tsx|json|graphql|proto)$/u.test(file));
+      const outgoingCrossOwnerEdges = [...edgesByTarget.values()].flat().filter((edge) => edge.kind === "cross-owner" && edge.sourcePath.startsWith(`${leaf.leafRel}/`));
+      const consumerEdges = [...new Map([...componentTargets.flatMap((path) => edgesByTarget.get(path) ?? []), ...outgoingCrossOwnerEdges].map((edge) => [`${edge.sourcePath}\0${edge.targetPath}\0${edge.kind}\0${edge.relation}`, edge])).values()].sort((left, right) => mutationTaxonomyCompare(`${left.sourcePath}\0${left.targetPath}`, `${right.sourcePath}\0${right.targetPath}`));
+      records.push({
+        ownerPath: policyArtifactRootOfMutationsDir(leaf.rootRel), artifact: mutationTaxonomySegmentAfter(leaf.rootRel, "🗿️artifacts"), standard: mutationTaxonomySegmentAfter(leaf.rootRel, "🏅️standards"), subset: mutationTaxonomySegmentAfter(leaf.rootRel, "🪆️subsets"), mutationRootPath: leaf.rootRel, currentCentralComponent: existsSync(join(repoRoot, `${leaf.rootRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`)) ? `${leaf.rootRel}/${POLICY_RS_COMPONENT_LEAF_NAME}` : null, aggregateVariant: leaf.variants.includes(leaf.identity) ? leaf.identity : null,
+        payloadLocations: mutationTaxonomyLocations(before.contents, leaf.leafFiles, /\b(?:struct|enum|type)\s+\w+/u), applyLocations: mutationTaxonomyLocations(before.contents, leaf.leafFiles, /\b(?:apply|transform)\b/u), diffLocations: mutationTaxonomyLocations(before.contents, leaf.leafFiles, /\bdiff\b/u), inverseLocations: mutationTaxonomyLocations(before.contents, leaf.leafFiles, /\binverse\b/u), outcomeLocations: mutationTaxonomyLocations(before.contents, leaf.leafFiles, /\bMutationOutcome\b/u), textCodecLocations: leaf.leafFiles.filter((file) => file.includes("/📝️text/") || file.endsWith(".grammar.semio")), binaryCodecLocations: leaf.leafFiles.filter((file) => file.includes("/💾️binary/") || file.endsWith(".protocol.semio")), schemaAndLanguageSurfaces: leaf.leafFiles.filter((file) => /\.(?:ts|tsx|graphql|proto|json)$/u.test(file) && !file.includes("/🧪️")), catalogAndRegistryConsumers: consumerEdges.filter((edge) => edge.kind === "catalog" || edge.kind === "registry").map((edge) => edge.sourcePath), commandsEditorsViewers: consumerEdges.filter((edge) => edge.kind === "command" || edge.kind === "editor" || edge.kind === "viewer").map((edge) => edge.sourcePath), testsFixturesExamplesOracles: [...leaf.leafFiles.filter((file) => /\/(?:🧪️tests|🧫️fixtures|📚️examples|🧪️oracle)\//u.test(file)), ...consumerEdges.filter((edge) => edge.kind === "test" || edge.kind === "oracle").map((edge) => edge.sourcePath)].sort(mutationTaxonomyCompare), sharedHelpers: [...new Set(helpersByLeaf.get(leaf.leafRel) ?? [])].sort(mutationTaxonomyCompare), crossOwnerDependencies: [...new Set(consumerEdges.filter((edge) => edge.kind === "cross-owner" && edge.sourcePath.startsWith(`${leaf.leafRel}/`)).map((edge) => edge.targetPath))].sort(mutationTaxonomyCompare), violationClasses: [...new Set(violations.filter((violation) => violation.scope === leaf.leafRel || violation.scope.startsWith(`${leaf.leafRel}/`) || (leaf.folder === undefined && violation.scope.startsWith(leaf.rootRel))).map((violation) => violation.kind))].sort(), targetMutationDirectoryName: leaf.folder ?? `🧬️${semantic}`, assignedLunaAuditor: assigned?.lunaAuditor ?? null, assignedTerraExecutor: assigned?.terraExecutor ?? null, assignedRootIntegrator: assigned?.rootIntegrator ?? null, state: structuralState, structuralState, executionState, consumerEdges, assignmentEvidence, evidence: { sourceFiles: leaf.leafFiles, resolvedMounts: consumerEdges.filter((edge) => edge.relation === "mount"), unresolvedEdges: (unresolvedByLeaf.get(leaf.leafRel) ?? []).sort((left, right) => mutationTaxonomyCompare(`${left.sourcePath}\0${left.specifier}`, `${right.sourcePath}\0${right.specifier}`)) },
+      });
+    }
+    options.afterFactsCollected?.();
+    records.sort((left, right) => left.mutationRootPath.localeCompare(right.mutationRootPath) || left.targetMutationDirectoryName.localeCompare(right.targetMutationDirectoryName));
+    const unresolved = records.flatMap((record) => record.assignmentEvidence.status === "resolved" ? [] : [{ path: `${record.mutationRootPath}/${record.targetMutationDirectoryName}`, reason: record.assignmentEvidence.reason ?? "Assignment evidence is unresolved." }]);
+    for (const record of records) for (const edge of record.evidence.unresolvedEdges) unresolved.push({ path: edge.sourcePath, reason: edge.reason });
+    for (const [sourcePath, edges] of unresolvedBySource) for (const edge of edges) unresolved.push({ path: sourcePath, reason: `${edge.reason} ${edge.specifier}` });
+    const after = mutationTaxonomySourceSnapshot(repoRoot, options);
+    if (before.sourceTreeDigest === after.sourceTreeDigest) return { schemaVersion: 2, kind: "mutation", sourceTreeDigest: before.sourceTreeDigest, roots, sourceRoster: before.sourceRoster, records, unresolved: unresolved.sort((left, right) => mutationTaxonomyCompare(`${left.path}\0${left.reason}`, `${right.path}\0${right.reason}`)), violations };
+  }
+  throw new Error("[clean taxonomy --kind mutation] source changed while inventory facts were collected.");
+}
+
+/** 🗺️ Plans only lossless legacy-component moves; semantic/root/glue rewrites remain explicit blockers. */
+export function planMutationTaxonomy(inventory: MutationTaxonomyInventory, baselineCommit: string): MutationTaxonomyPlan {
+  const moves: MutationTaxonomyPlanMove[] = [];
+  const unresolved: { path: string; reason: string }[] = [];
+  for (const record of inventory.records) {
+    if (record.state === "direct") {
+      for (const violation of record.violationClasses) unresolved.push({ path: `${record.mutationRootPath}/${record.targetMutationDirectoryName}`, reason: `Direct-shaped mutation remains structurally unresolved: ${violation}.` });
+      continue;
+    }
+    if (record.state === "central-only") {
+      unresolved.push({ path: record.mutationRootPath, reason: `${record.aggregateVariant ?? record.targetMutationDirectoryName} requires semantic extraction from the aggregate.` });
+      continue;
+    }
+    const leafRel = `${record.mutationRootPath}/${record.targetMutationDirectoryName}`;
+    const source = `${leafRel}/🦠️mutation/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+    const destination = `${leafRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+    if (record.evidence.sourceFiles.includes(source)) moves.push({ source, destination });
+    unresolved.push({ path: leafRel, reason: "Direct cutover also requires AST-verified aggregate/glue references and root-purity redistribution." });
+  }
+  for (const item of inventory.unresolved ?? []) unresolved.push(item);
+  const representedViolations = new Set(unresolved.map(({ path }) => path));
+  for (const violation of inventory.violations) {
+    if (!representedViolations.has(violation.scope)) unresolved.push({ path: violation.scope, reason: `Live structural violation: ${violation.kind}.` });
+  }
+  moves.sort((left, right) => left.source.localeCompare(right.source));
+  unresolved.sort((left, right) => left.path.localeCompare(right.path));
+  const unsigned = { schemaVersion: 1 as const, kind: "mutation" as const, baselineCommit, inventoryDigest: inventory.sourceTreeDigest, moves, unresolved };
+  return { ...unsigned, planDigest: createHash("sha256").update(canonicalJson(unsigned)).digest("hex") };
+}
+
+function verifyMutationTaxonomy(repoRoot: string, options: MutationTaxonomyInventoryOptions = {}): { readonly clean: boolean; readonly inventoryDigest: string; readonly violations: readonly BreachRecord[] } {
+  const inventory = inventoryMutationTaxonomy(repoRoot, options);
+  return { clean: inventory.violations.length === 0, inventoryDigest: inventory.sourceTreeDigest, violations: inventory.violations };
+}
+
+function mutationTaxonomyCheckCancellation(root: string, cancelFile: string | undefined): void {
+  if (cancelFile && existsSync(taxonomyCliGuardedPath(root, cancelFile, "--cancel-file")!)) throw new Error("[clean taxonomy apply --kind mutation] cancelled before commit.");
+}
+
+export function runMutationTaxonomyCli(root: string, operation: TaxonomyCliOperation, options: TaxonomyCliOptions, ticketDir: string | undefined, cancelFile?: string): void {
+  const inventoryOptions: MutationTaxonomyInventoryOptions = {
+    ...(options.scope ? { scope: options.scope } : {}),
+    ...(cancelFile ?? options.cancelFile ? { cancelFile: cancelFile ?? options.cancelFile } : {}),
+    ...(ticketDir ? { assignmentLedgerPath: join(ticketDir, "📋️mutation-assignments.json") } : {}),
+    progress: taxonomyCliProgress,
+  };
+  if (operation === "inventory") {
+    const inventory = inventoryMutationTaxonomy(root, inventoryOptions);
+    if (ticketDir) taxonomyCliWriteJson(taxonomyCliArtifactPath(ticketDir, operation, "json"), inventory);
+    if (options.format === "json") taxonomyCliPrintJson(inventory);
+    else console.log(`[clean taxonomy inventory --kind mutation] roots=${inventory.roots.length} records=${inventory.records.length} violations=${inventory.violations.length}`);
+    return;
+  }
+  if (operation === "plan") {
+    if (!options.baseline) throw new Error("[clean taxonomy plan --kind mutation] --baseline <commit> is required.");
+    const plan = planMutationTaxonomy(inventoryMutationTaxonomy(root, inventoryOptions), options.baseline);
+    const path = options.plan ? taxonomyCliGuardedPath(root, options.plan, "--plan") : ticketDir ? taxonomyCliArtifactPath(ticketDir, operation, "json") : undefined;
+    if (path) taxonomyCliWriteJson(path, plan);
+    if (options.format === "json" || !path) taxonomyCliPrintJson(plan);
+    else console.log(`[clean taxonomy plan --kind mutation] moves=${plan.moves.length} unresolved=${plan.unresolved.length} digest=${plan.planDigest} -> ${path}`);
+    if (plan.unresolved.length > 0) throw new Error(`[clean taxonomy plan --kind mutation] blocked by ${plan.unresolved.length} semantic decision(s).`);
+    return;
+  }
+  if (operation === "apply") {
+    if (!ticketDir || !options.baseline || !options.plan) throw new Error("[clean taxonomy apply --kind mutation] --ticket, --baseline, and --plan are required.");
+    mutationTaxonomyCheckCancellation(root, cancelFile ?? options.cancelFile);
+    const planPath = taxonomyCliGuardedPath(root, options.plan, "--plan")!;
+    const plan = JSON.parse(readFileSync(planPath, "utf8")) as MutationTaxonomyPlan;
+    const { planDigest: _digest, ...unsigned } = plan;
+    const digest = createHash("sha256").update(canonicalJson(unsigned)).digest("hex");
+    if (plan.kind !== "mutation" || plan.schemaVersion !== 1 || digest !== plan.planDigest || plan.baselineCommit !== options.baseline) throw new Error("[clean taxonomy apply --kind mutation] plan identity or baseline is invalid.");
+    const terminalVerification = verifyMutationTaxonomy(root, inventoryOptions);
+    if (terminalVerification.inventoryDigest !== plan.inventoryDigest) throw new Error("[clean taxonomy apply --kind mutation] fresh inventory digest does not match the plan.");
+    if (plan.unresolved.length > 0 || plan.moves.length > 0) throw new Error("[clean taxonomy apply --kind mutation] direct cutover plans must be semantically integrated before apply; no partial compatibility move is permitted.");
+    if (!terminalVerification.clean) throw new Error(`[clean taxonomy apply --kind mutation] terminal verification has ${terminalVerification.violations.length} violation(s).`);
+    if (mutationTaxonomySourceSnapshot(root, inventoryOptions).sourceTreeDigest !== terminalVerification.inventoryDigest) throw new Error("[clean taxonomy apply --kind mutation] source changed after terminal verification.");
+    mutationTaxonomyCheckCancellation(root, cancelFile ?? options.cancelFile);
+    const result = { schemaVersion: 1 as const, kind: "mutation" as const, state: "committed" as const, planDigest: plan.planDigest, inventoryDigest: terminalVerification.inventoryDigest, terminalVerification, appliedMoves: 0 };
+    taxonomyCliWriteJson(taxonomyCliArtifactPath(ticketDir, operation, "json"), result);
+    if (options.format === "json") taxonomyCliPrintJson(result);
+    else console.log(`[clean taxonomy apply --kind mutation] state=committed moves=0 digest=${plan.planDigest}`);
+    taxonomyCliRequireCommittedApply(result.state);
+    return;
+  }
+  const verification = verifyMutationTaxonomy(root, inventoryOptions);
+  if (ticketDir) taxonomyCliWriteJson(taxonomyCliArtifactPath(ticketDir, operation, "json"), verification);
+  if (options.format === "json") taxonomyCliPrintJson(verification);
+  else console.log(`[clean taxonomy verify --kind mutation] clean=${verification.clean} errors=${verification.violations.length}`);
+  if (!verification.clean) throw new Error(`[clean taxonomy verify --kind mutation] errors=${verification.violations.length}.`);
+}
+//#endregion 🧬️MutationTaxonomyWorkflow
 
 /**
  * 🧹Workspace cleaner: misplaced emoji mounts, ticket junk, oversized build artifacts — never
@@ -18704,6 +20614,10 @@ export class CleanScript extends Script {
     const resumeArgumentPath = operation === "apply" ? taxonomyCliGuardedPath(this.root, options.resume, "--resume") : undefined;
     const cancelArgumentPath = taxonomyCliGuardedPath(this.root, options.cancelFile, "--cancel-file");
     const ticketDir = taxonomyCliTicket(this.root, options.ticket);
+    if (options.kind === "mutation") {
+      runMutationTaxonomyCli(this.root, operation, options, ticketDir, cancelArgumentPath);
+      return;
+    }
     const inventoryOptions = taxonomyCliInventoryOptions(this.root, options, cancelArgumentPath, ticketDir);
     if (operation === "inventory") {
       const inventory = inventoryTaxonomy(inventoryOptions);
@@ -18725,6 +20639,7 @@ export class CleanScript extends Script {
       const plan = planTaxonomy(inventory, {
         baselineCommit: options.baseline,
         excludedTreeDigests: [],
+        progress: taxonomyCliProgress,
       });
       const counts = taxonomyCliPlanOperationCounts(plan);
       const planPath = planArgumentPath ?? (ticketDir ? taxonomyCliArtifactPath(ticketDir, "plan", "json") : undefined);
@@ -18742,6 +20657,7 @@ export class CleanScript extends Script {
     }
     if (operation === "apply") {
       if (!ticketDir) throw new Error("[clean taxonomy apply] --ticket <ticket-id> is required.");
+      if (!options.baseline) throw new Error("[clean taxonomy apply] --baseline <commit> is required.");
       const planPath = planArgumentPath;
       if (!planPath) throw new Error("[clean taxonomy apply] --plan <path> is required.");
       const plan = parseTaxonomyPlan(JSON.parse(readFileSync(planPath, "utf8")) as unknown);
@@ -18753,10 +20669,12 @@ export class CleanScript extends Script {
       const result = applyTaxonomyPlan(plan, {
         repoRoot: this.root,
         ticketDir,
+        expectedBaselineCommit: options.baseline,
         planArtifactPath: planPath,
         expectedPlanDigest: options.digest ?? digest,
         ...(cancelArgumentPath ? { cancelFile: cancelArgumentPath } : {}),
         ...(resumeArgumentPath ? { resumeJournal: resumeArgumentPath } : {}),
+        progress: taxonomyCliProgress,
       });
       taxonomyCliWriteJson(taxonomyCliArtifactPath(ticketDir, "apply", "json"), result);
       taxonomyCliWriteSummary(ticketDir, "apply", "Taxonomy Apply", [
@@ -18836,6 +20754,99 @@ function cleanIsProtected(abs: string, protectedPrefixes: readonly string[]): bo
   return protectedPrefixes.some((prefix) => resolved === prefix || resolved.startsWith(prefix + sep));
 }
 
+//#region 🛡️TicketProtection
+export type CleanProtectionNodeKind = "directory" | "file" | "symlink" | "missing" | "unreadable";
+
+/** 🪟️ Read-only filesystem projection used by the deletion gate and synthetic safety laws. */
+export interface CleanProtectionView {
+  kind(path: string): CleanProtectionNodeKind;
+  children(path: string): readonly string[] | undefined;
+  read(path: string): string | undefined;
+}
+
+const CLEAN_PROTECTION_VIEW: CleanProtectionView = {
+  kind(path) {
+    try { const state = lstatSync(path); return state.isSymbolicLink() ? "symlink" : state.isDirectory() ? "directory" : state.isFile() ? "file" : "unreadable"; }
+    catch (error) { return (error as NodeJS.ErrnoException).code === "ENOENT" ? "missing" : "unreadable"; }
+  },
+  children(path) { try { return readdirSync(path); } catch { return undefined; } },
+  read(path) { try { return new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(path)); } catch { return undefined; } },
+};
+
+function cleanIntersectsProtected(abs: string, protectedPrefixes: readonly string[]): boolean {
+  const candidate = resolve(abs);
+  return protectedPrefixes.some((value) => { const prefix = resolve(value); return candidate === prefix || candidate.startsWith(prefix + sep) || prefix.startsWith(candidate + sep); });
+}
+
+function cleanTicketManifestIsClosed(directory: string, view: CleanProtectionView): boolean {
+  const path = join(directory, "🎫️ticket.json");
+  try {
+    if (view.kind(path) !== "file") return false;
+    const text = view.read(path);
+    if (text === undefined) return false;
+    const manifest: unknown = JSON.parse(text);
+    return manifest !== null && typeof manifest === "object" && !Array.isArray(manifest) && Object.hasOwn(manifest, "status") && (manifest as { status: unknown }).status === "closed";
+  } catch { return false; }
+}
+
+function cleanIsTicketFolderBoundary(root: string, directory: string): boolean {
+  const segments = relative(root, directory).split(sep).filter(Boolean);
+  return segments.some((name, index) => cleanEndsWithAscii(name, "tickets") && segments.length - index - 1 === 4);
+}
+
+/** 🛡️ Rejects a removal intersecting any non-closed ticket, unsafe path, or unreadable subtree without following symlinks. */
+export function cleanRemovalProtection(root: string, candidate: string, view: CleanProtectionView = CLEAN_PROTECTION_VIEW): string[] {
+  const workspace = resolve(root), target = resolve(workspace, candidate);
+  const local = relative(workspace, target);
+  if (local === "" || local === ".." || local.startsWith(".." + sep) || isAbsolute(local)) return [target];
+  const protectedPaths = new Set<string>(), closedTickets = new Set<string>();
+  const inspectDirectory = (directory: string): void => {
+    const manifestKind = view.kind(join(directory, "🎫️ticket.json"));
+    if (!cleanIsTicketFolderBoundary(workspace, directory) && manifestKind === "missing") return;
+    if (cleanTicketManifestIsClosed(directory, view)) closedTickets.add(directory);
+    else protectedPaths.add(directory);
+  };
+  let ancestor = workspace;
+  try {
+    if (view.kind(workspace) !== "directory") return [workspace];
+    inspectDirectory(workspace);
+    for (const segment of local.split(sep)) {
+      ancestor = join(ancestor, segment);
+      const kind = view.kind(ancestor);
+      if (kind === "symlink" || kind === "missing" || kind === "unreadable" || (ancestor !== target && kind !== "directory")) return [ancestor];
+      if (kind === "directory") inspectDirectory(ancestor);
+    }
+    if (protectedPaths.size > 0) return [...protectedPaths];
+    const stack = view.kind(target) === "directory" ? [target] : [];
+    while (stack.length > 0) {
+      const directory = stack.pop()!;
+      inspectDirectory(directory);
+      if (protectedPaths.has(directory)) continue;
+      const names = view.children(directory);
+      if (!names) { protectedPaths.add(directory); continue; }
+      for (const name of names) {
+        if (!name || name === "." || name === ".." || name.includes("/") || name.includes("\\")) { protectedPaths.add(directory); continue; }
+        const child = join(directory, name), kind = view.kind(child);
+        if (kind === "directory") stack.push(child);
+        else if (kind !== "file") protectedPaths.add(child);
+      }
+    }
+    for (const directory of closedTickets) if (!cleanTicketManifestIsClosed(directory, view)) protectedPaths.add(directory);
+  } catch { protectedPaths.add(ancestor); }
+  return [...protectedPaths];
+}
+
+/** 🧮️ Removes unsafe candidates before shallow deduplication so a protected parent cannot absorb eligible siblings. */
+export function cleanProjectRemovals(root: string, removals: readonly CleanRemoval[], protectedPrefixes: readonly string[] = [], view: CleanProtectionView = CLEAN_PROTECTION_VIEW, onProtected?: (path: string) => void): CleanRemoval[] {
+  return cleanDedupePreferShallowest(removals.filter((row) => {
+    const absolute = resolve(root, row.path);
+    const protectedPaths = cleanIntersectsProtected(absolute, protectedPrefixes) ? [absolute] : cleanRemovalProtection(root, row.path, view);
+    for (const path of protectedPaths) onProtected?.(path);
+    return protectedPaths.length === 0;
+  }));
+}
+//#endregion 🛡️TicketProtection
+
 function cleanPathBytes(abs: string): number {
   try {
     const st = lstatSync(abs);
@@ -18849,9 +20860,11 @@ function cleanPathBytes(abs: string): number {
   }
 }
 
-function cleanRemovePath(abs: string, dry: boolean): void {
-  if (dry) return;
+function cleanRemovePath(root: string, abs: string, dry: boolean, protectedPrefixes: readonly string[]): boolean {
+  if (cleanIntersectsProtected(abs, protectedPrefixes) || cleanRemovalProtection(root, abs).length !== 0) return false;
+  if (dry) return true;
   rmSync(abs, { recursive: true, force: true });
+  return true;
 }
 
 function cleanWalkDirs(root: string, visit: (abs: string, name: string) => "enter" | "skip" | "stop"): void {
@@ -18884,7 +20897,7 @@ function cleanCollectMisplaced(root: string, protectedPrefixes: readonly string[
   const out: CleanRemoval[] = [];
   const seen = new Set<string>();
   const push = (abs: string): void => {
-    if (cleanIsProtected(abs, protectedPrefixes) || seen.has(abs)) return;
+    if (cleanIntersectsProtected(abs, protectedPrefixes) || seen.has(abs)) return;
     seen.add(abs);
     out.push({ kind: "misplaced", path: relative(root, abs) || ".", bytes: cleanPathBytes(abs) });
   };
@@ -19027,6 +21040,7 @@ function cleanBuildArtifactRemovals(root: string, protectedPrefixes: readonly st
     if (cleanIsCanonicalTicketsDir(name)) return "skip";
     if (cleanIsProtected(abs, protectedPrefixes)) return "skip";
     if (cleanIsBuildArtifactDirName(name)) {
+      if (cleanIntersectsProtected(abs, protectedPrefixes)) return "skip";
       const bytes = cleanPathBytes(abs);
       if (bytes > CLEAN_BUILD_ARTIFACT_MAX_BYTES) out.push({ kind: "build-artifact", path: relative(root, abs), bytes });
       return "skip";
@@ -19060,23 +21074,26 @@ function cleanDedupePreferShallowest(removals: readonly CleanRemoval[]): CleanRe
 
 function runWorkspaceClean(root: string, dry: boolean): { removals: CleanRemoval[]; skippedProtected: string[] } {
   const protectedPrefixes = cleanProtectedPrefixes(root);
+  const ticketFolders = cleanDiscoverTicketRoots(root).flatMap(cleanDiscoverTicketFolders);
+  for (const folder of ticketFolders) if (!cleanTicketManifestIsClosed(folder, CLEAN_PROTECTION_VIEW)) protectedPrefixes.push(resolve(folder));
   const skippedProtected = protectedPrefixes.filter((p) => existsSync(p)).map((p) => relative(root, p) || p);
   const pending: CleanRemoval[] = [];
   pending.push(...cleanCollectMisplaced(root, protectedPrefixes));
-  for (const ticketRoot of cleanDiscoverTicketRoots(root)) {
-    if (cleanIsProtected(ticketRoot, protectedPrefixes)) continue;
-    for (const abs of cleanGitignoredUnder(root, ticketRoot)) {
-      if (!existsSync(abs) || cleanIsProtected(abs, protectedPrefixes)) continue;
+  for (const ticketFolder of ticketFolders) {
+    if (cleanIsProtected(ticketFolder, protectedPrefixes) || !cleanTicketManifestIsClosed(ticketFolder, CLEAN_PROTECTION_VIEW)) continue;
+    for (const abs of cleanGitignoredUnder(root, ticketFolder)) {
+      if (!existsSync(abs) || cleanIntersectsProtected(abs, protectedPrefixes)) continue;
       pending.push({ kind: "gitignore", path: relative(root, abs), bytes: cleanPathBytes(abs) });
     }
-    for (const ticketFolder of cleanDiscoverTicketFolders(ticketRoot)) {
-      if (cleanIsProtected(ticketFolder, protectedPrefixes)) continue;
-      pending.push(...cleanDedupePreferDeepest(cleanTicketSizeRemovals(root, ticketFolder, protectedPrefixes)));
-    }
+    pending.push(...cleanDedupePreferDeepest(cleanTicketSizeRemovals(root, ticketFolder, protectedPrefixes)));
   }
   pending.push(...cleanBuildArtifactRemovals(root, protectedPrefixes));
-  const removals = cleanDedupePreferShallowest(pending).filter((row) => !cleanIsProtected(join(root, row.path), protectedPrefixes));
-  for (const row of removals) cleanRemovePath(join(root, row.path), dry);
+  const candidates = cleanProjectRemovals(root, pending, protectedPrefixes, CLEAN_PROTECTION_VIEW, (path) => skippedProtected.push(relative(root, path) || path));
+  const removals: CleanRemoval[] = [];
+  for (const row of candidates) {
+    if (cleanRemovePath(root, resolve(root, row.path), dry, protectedPrefixes)) removals.push(row);
+    else skippedProtected.push(row.path);
+  }
   return { removals, skippedProtected };
 }
 //#endregion 🔖️CleanScript
@@ -19207,7 +21224,7 @@ export class ExamplesScript extends Script {
       const slug = root.split("/").pop() ?? root;
       const hasAssets = existsSync(join(this.root, root, taxonomy.exampleAssetsDirName));
       const hasTests = existsSync(join(this.root, root, taxonomy.exampleTestsDirName));
-      const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🦀️rust", "component");
+      const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🦀️rust");
       const hasLeaf = existsSync(join(this.root, root, rustLeaf));
       console.log(`${root}  leaf=${hasLeaf ? "yes" : "no"} assets=${hasAssets ? "yes" : "no"} tests=${hasTests ? "yes" : "no"} slug=${slug}`);
     }
@@ -19336,10 +21353,18 @@ function newScaffoldWriteIfAbsent(repoRoot: string, relPath: string, content: st
     skipped.push(relPath);
     return;
   }
-  created.push(relPath);
-  if (dryRun) return;
+  if (dryRun) {
+    created.push(relPath);
+    return;
+  }
   mkdirSync(dirname(abs), { recursive: true });
-  writeFileSync(abs, content);
+  try {
+    writeFileSync(abs, content, { flag: "wx" });
+    created.push(relPath);
+  } catch (error) {
+    if ((error as { code?: string }).code !== "EEXIST") throw error;
+    skipped.push(relPath);
+  }
 }
 
 /** 🔎️ Resolves a bare CLI id to the real emoji-prefixed child directory name of `parentAbs`. */
@@ -19359,8 +21384,8 @@ function newResolveChildDir(parentAbs: string, wantStripped: string): string | u
  * 📸️snapshot/🔺️diff, a wildcard-slug-ready empty facet marker for 🧬️mutations/💡️inferences (their real
  * content is per-mutation/per-inference emoji slugs, which `new subset` also cannot know in advance). */
 function newScaffoldIoTree(repoRoot: string, ioRel: string, taxonomy: ReturnType<typeof loadTaxonomy>, created: string[], skipped: string[], dryRun: boolean): void {
-  const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust", "component");
-  const typescriptLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript", "component");
+  const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust");
+  const typescriptLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript");
   const emptyMarker = canonicalFilenameForKind(taxonomy.windowEmptyFacetFileKindId, taxonomy);
   newScaffoldWriteIfAbsent(repoRoot, `${ioRel}/${rustLeaf}`, newScaffoldRustLeaf("io root (io() -> IoDeclaration stub)"), created, skipped, dryRun);
   newScaffoldWriteIfAbsent(repoRoot, `${ioRel}/${typescriptLeaf}`, newScaffoldTsLeaf("io root (IoEntryDescriptor[] mirror)"), created, skipped, dryRun);
@@ -19376,11 +21401,11 @@ function newScaffoldIoTree(repoRoot: string, ioRel: string, taxonomy: ReturnType
   }
 }
 
-function newScaffoldSubsetTree(repoRoot: string, subsetRel: string, taxonomy: ReturnType<typeof loadTaxonomy>, dryRun: boolean): { created: string[]; skipped: string[] } {
+export function newScaffoldSubsetTree(repoRoot: string, subsetRel: string, taxonomy: ReturnType<typeof loadTaxonomy>, dryRun: boolean): { created: string[]; skipped: string[] } {
   const created: string[] = [];
   const skipped: string[] = [];
-  const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust", "component");
-  const typescriptLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript", "component");
+  const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust");
+  const typescriptLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript");
   const emptyMarker = canonicalFilenameForKind(taxonomy.windowEmptyFacetFileKindId, taxonomy);
   newScaffoldWriteIfAbsent(repoRoot, `${subsetRel}/${rustLeaf}`, newScaffoldRustLeaf("subset root (subset() -> SubsetDeclaration stub; mounts schema/io/viewer/editor/examples)"), created, skipped, dryRun);
   newScaffoldWriteIfAbsent(repoRoot, `${subsetRel}/${typescriptLeaf}`, newScaffoldTsLeaf("subset root"), created, skipped, dryRun);
@@ -19396,12 +21421,12 @@ function newScaffoldSubsetTree(repoRoot: string, subsetRel: string, taxonomy: Re
   return { created, skipped };
 }
 
-function newScaffoldStandardTree(repoRoot: string, standardRel: string, dryRun: boolean): { created: string[]; skipped: string[] } {
+export function newScaffoldStandardTree(repoRoot: string, standardRel: string, dryRun: boolean): { created: string[]; skipped: string[] } {
   const created: string[] = [];
   const skipped: string[] = [];
   const taxonomy = loadTaxonomy();
-  const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust", "component");
-  const typescriptLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript", "component");
+  const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust");
+  const typescriptLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript");
   const subsetsManifest = canonicalFilenameForKind(taxonomy.subsetsManifestFileKindId, taxonomy);
   newScaffoldWriteIfAbsent(repoRoot, `${standardRel}/${rustLeaf}`, newScaffoldRustLeaf("standard root (standard() -> StandardDeclaration stub; mounts subsets)"), created, skipped, dryRun);
   newScaffoldWriteIfAbsent(repoRoot, `${standardRel}/${typescriptLeaf}`, newScaffoldTsLeaf("standard root"), created, skipped, dryRun);
@@ -19410,16 +21435,254 @@ function newScaffoldStandardTree(repoRoot: string, standardRel: string, dryRun: 
   return { created, skipped };
 }
 
-function newScaffoldArtifactTree(repoRoot: string, artRel: string, dryRun: boolean): { created: string[]; skipped: string[] } {
+export function newScaffoldArtifactTree(repoRoot: string, artRel: string, dryRun: boolean): { created: string[]; skipped: string[] } {
   const created: string[] = [];
   const skipped: string[] = [];
   const taxonomy = loadTaxonomy();
-  const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust", "component");
-  const typescriptLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript", "component");
+  const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust");
+  const typescriptLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript");
   newScaffoldWriteIfAbsent(repoRoot, `${artRel}/${rustLeaf}`, newScaffoldRustLeaf("artifact root (artifact() -> ArtifactDeclaration stub; mounts standards)"), created, skipped, dryRun);
   newScaffoldWriteIfAbsent(repoRoot, `${artRel}/${typescriptLeaf}`, newScaffoldTsLeaf("artifact root"), created, skipped, dryRun);
   return { created, skipped };
 }
+
+//#region 🧬️MutationScaffolding
+export type NewMutationScaffoldOptions = {
+  readonly composite?: boolean;
+  readonly text?: boolean;
+  readonly binary?: boolean;
+  readonly typescript?: boolean;
+  readonly graphql?: boolean;
+  readonly protobuf?: boolean;
+  readonly jsonSchema?: boolean;
+  readonly cancelled?: () => boolean;
+};
+
+function newMutationSemanticParts(name: string): { emoji: string; semanticKind: string; moduleName: string; variantName: string; verb: string; entity: string } {
+  const emoji = policyLeadingEmojiPrefix(name);
+  const semanticKind = policyStripEmoji(name);
+  const parts = semanticKind.split("-").filter(Boolean);
+  if (!emoji || parts.length < 2 || parts.some((part) => !/^[a-z][a-z0-9]*$/u.test(part))) throw new Error(`new mutation: "${name}" must be an emoji-prefixed semantic verb-noun kebab name.`);
+  const [verb, ...entityParts] = parts;
+  return { emoji, semanticKind, moduleName: semanticKind.replaceAll("-", "_"), variantName: policyKebabToPascal(semanticKind), verb: verb!, entity: entityParts.join("-") };
+}
+
+function newMutationRustLeaf(parts: ReturnType<typeof newMutationSemanticParts>): string {
+  return [
+    `//! 🧬️ ${NEW_SCAFFOLD_MARKER}: authoritative direct mutation owner for \`${parts.semanticKind}\`.`,
+    `//! @see ${NEW_SCAFFOLD_TICKET_PATH}`,
+    "",
+    "//#region 🪪️Descriptor",
+    `pub const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "${parts.verb}", entity: "${parts.entity}", kind: "${parts.semanticKind}", record: "${parts.variantName}" };`,
+    "//#endregion 🪪️Descriptor",
+    "",
+    "//#region 🧬️Mutation",
+    "#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]",
+    "pub struct Mutation;",
+    "//#endregion 🧬️Mutation",
+    "",
+  ].join("\n");
+}
+
+function newMutationDescriptor(owner: string, parts: ReturnType<typeof newMutationSemanticParts>, options: NewMutationScaffoldOptions): string {
+  return `${JSON.stringify({ schemaVersion: 1, owner, semanticKind: parts.semanticKind, displayName: parts.semanticKind.split("-").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" "), emoji: parts.emoji, aggregateVariant: parts.variantName, payloadSchema: options.jsonSchema ? mutationPayloadSchemaRelativePath() : `${POLICY_RS_COMPONENT_LEAF_NAME}#Mutation`, textOpcode: options.text ? parts.semanticKind : null, binaryTag: null, invertibility: options.composite ? "plan" : "explicit-mutation", diffParticipation: options.composite ? "plan" : "detect", outcomeClasses: ["applied"], composition: options.composite ? "composite" : "atomic", requiredLanguageSurfaces: ["rust", ...(options.typescript ? ["typescript"] : []), ...(options.graphql ? ["graphql"] : []), ...(options.protobuf ? ["protobuf"] : []), ...(options.jsonSchema ? ["json-schema"] : []), ...(options.text ? ["text"] : []), ...(options.binary ? ["binary"] : [])] }, null, 2)}\n`;
+}
+
+type NewMutationScaffoldOwnedPath = { readonly absolute: string; readonly content?: string; readonly device: number; readonly inode: number };
+
+function newMutationScaffoldLstat(path: string): ReturnType<typeof lstatSync> | null {
+  try {
+    return lstatSync(path);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
+}
+
+function newMutationScaffoldPath(repoRoot: string, relPath: string): string {
+  const rootStat = newMutationScaffoldLstat(repoRoot);
+  if (!rootStat || rootStat.isSymbolicLink() || !rootStat.isDirectory()) throw new Error(`new mutation: repository root is not a regular directory: ${JSON.stringify(repoRoot)}`);
+  const absolute = resolve(repoRoot, relPath);
+  const escaped = relative(repoRoot, absolute).replaceAll("\\", "/");
+  if (!escaped || escaped === ".." || escaped.startsWith("../") || isAbsolute(escaped)) throw new Error(`new mutation: path escapes repository root: ${JSON.stringify(relPath)}`);
+  let cursor = repoRoot;
+  const segments = escaped.split("/");
+  for (const [index, segment] of segments.entries()) {
+    cursor = join(cursor, segment);
+    const stat = newMutationScaffoldLstat(cursor);
+    if (!stat) continue;
+    if (stat.isSymbolicLink()) throw new Error(`new mutation: symlinked path is not writable: ${JSON.stringify(relPath)}`);
+    if (index < segments.length - 1 && !stat.isDirectory()) throw new Error(`new mutation: non-directory path segment is not writable: ${JSON.stringify(relPath)}`);
+  }
+  return absolute;
+}
+
+function newMutationScaffoldOwnPath(absolute: string, content?: string): NewMutationScaffoldOwnedPath {
+  const stat = newMutationScaffoldLstat(absolute);
+  if (!stat || stat.isSymbolicLink() || !stat.isFile()) throw new Error(`new mutation: publication did not create a regular file: ${absolute}`);
+  return { absolute, content, device: stat.dev, inode: stat.ino };
+}
+
+function newMutationScaffoldRemoveOwnedFile(entry: NewMutationScaffoldOwnedPath): void {
+  try {
+    const stat = newMutationScaffoldLstat(entry.absolute);
+    if (!stat || stat.isSymbolicLink() || !stat.isFile() || stat.dev !== entry.device || stat.ino !== entry.inode) return;
+    if (entry.content !== undefined && readFileSync(entry.absolute, "utf8") !== entry.content) return;
+    rmSync(entry.absolute, { force: false });
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+}
+
+function newMutationScaffoldEnsureParents(repoRoot: string, absolute: string): NewMutationScaffoldOwnedPath[] {
+  const relParent = relative(repoRoot, dirname(absolute)).replaceAll("\\", "/");
+  if (!relParent || relParent === ".") return [];
+  const owned: NewMutationScaffoldOwnedPath[] = [];
+  let cursor = repoRoot;
+  for (const segment of relParent.split("/")) {
+    cursor = join(cursor, segment);
+    const existing = newMutationScaffoldLstat(cursor);
+    if (existing) {
+      if (existing.isSymbolicLink() || !existing.isDirectory()) throw new Error(`new mutation: parent is not a regular directory: ${cursor}`);
+      continue;
+    }
+    mkdirSync(cursor);
+    const created = newMutationScaffoldLstat(cursor);
+    if (!created || created.isSymbolicLink() || !created.isDirectory()) throw new Error(`new mutation: parent creation did not produce a regular directory: ${cursor}`);
+    owned.push({ absolute: cursor, device: created.dev, inode: created.ino });
+  }
+  return owned;
+}
+
+function newMutationScaffoldRemoveOwnedDirectory(entry: NewMutationScaffoldOwnedPath): void {
+  try {
+    const stat = newMutationScaffoldLstat(entry.absolute);
+    if (!stat || stat.isSymbolicLink() || !stat.isDirectory() || stat.dev !== entry.device || stat.ino !== entry.inode) return;
+    if (readdirSync(entry.absolute).length > 0) return;
+    rmdirSync(entry.absolute);
+  } catch (error) {
+    if (!(["ENOENT", "ENOTEMPTY"] as const).includes((error as NodeJS.ErrnoException).code as "ENOENT" | "ENOTEMPTY")) throw error;
+  }
+}
+
+function newMutationCheckCancellation(options: NewMutationScaffoldOptions): void {
+  if (options.cancelled?.()) throw new Error("new mutation: cancelled before publication.");
+}
+
+function newMutationUpdateAggregate(repoRoot: string, mutationsRel: string, name: string, parts: ReturnType<typeof newMutationSemanticParts>): { rootRel: string; before: string; source: string; updated: string[] } {
+  const rootRel = `${mutationsRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+  const rootAbs = newMutationScaffoldPath(repoRoot, rootRel);
+  if (!existsSync(rootAbs)) throw new Error(`new mutation: missing aggregate ${rootRel}`);
+  if (!lstatSync(rootAbs).isFile()) throw new Error(`new mutation: aggregate ${rootRel} is not a regular file.`);
+  const source = readFileSync(rootAbs, "utf8");
+  const span = inspectRustMutationAggregateSpan(source);
+  if (!span) throw new Error(`new mutation: ${rootRel} must contain exactly one public aggregate Mutation enum.`);
+  const facts = inspectRustStructure(source);
+  const aggregate = facts.enums.find((item) => item.name === span.enumName);
+  if (!aggregate) throw new Error(`new mutation: ${rootRel} aggregate source map did not resolve an enum.`);
+  const mount = `#[path = "${name}/${POLICY_RS_COMPONENT_LEAF_NAME}"]\npub mod ${parts.moduleName};`;
+  const edits: string[] = [];
+  let next = source;
+  const existingMounts = inspectRustModuleGraphFacts(source).modules.filter((item) => item.modulePath.length === 1 && item.name === parts.moduleName);
+  if (existingMounts.length > 1) throw new Error(`new mutation: existing mount ${parts.moduleName} is ambiguous.`);
+  const existingMount = existingMounts[0];
+  if (existingMount && (existingMount.visibility !== "pub" || existingMount.inline || existingMount.pathTarget !== `${name}/${POLICY_RS_COMPONENT_LEAF_NAME}`)) {
+    throw new Error(`new mutation: existing mount ${parts.moduleName} does not target ${name}/${POLICY_RS_COMPONENT_LEAF_NAME}.`);
+  }
+  if (!existingMount) {
+    next = `${next.slice(0, span.declarationStart)}${mount}\n\n${next.slice(span.declarationStart)}`;
+    edits.push(`mount ${parts.moduleName}`);
+  }
+  const existingVariants = aggregate.variants.filter((item) => item.name === parts.variantName);
+  if (existingVariants.length > 1) throw new Error(`new mutation: existing variant ${parts.variantName} is ambiguous.`);
+  const existingVariant = existingVariants[0];
+  const expectedWrappedType = `${parts.moduleName}::Mutation`;
+  if (existingVariant && (existingVariant.fieldStyle !== "tuple" || existingVariant.fieldTypes.length !== 1 || existingVariant.wrappedTupleLeafType?.replaceAll(/\s+/gu, "") !== expectedWrappedType)) {
+    throw new Error(`new mutation: existing variant ${parts.variantName} does not wrap ${expectedWrappedType}.`);
+  }
+  if (!existingVariant) {
+    const refreshed = inspectRustMutationAggregateSpan(next);
+    if (!refreshed || refreshed.enumName !== span.enumName) throw new Error(`new mutation: ${rootRel} aggregate source map changed during preparation.`);
+    next = `${next.slice(0, refreshed.bodyOpen + 1)}\n    ${parts.variantName}(${parts.moduleName}::Mutation),${next.slice(refreshed.bodyOpen + 1)}`;
+    edits.push(`variant ${parts.variantName}`);
+  }
+  return { rootRel, before: source, source: next, updated: edits };
+}
+
+/** 🏗️ Scaffolds one direct mutation leaf and visibly wires its aggregate without overwriting leaves. */
+export function newScaffoldMutationTree(repoRoot: string, mutationsRel: string, name: string, options: NewMutationScaffoldOptions = {}, dryRun = false): { created: string[]; skipped: string[]; updated: string[] } {
+  const normalizedRoot = resolve(repoRoot);
+  const mutationRoot = resolve(normalizedRoot, mutationsRel);
+  const rel = relative(normalizedRoot, mutationRoot).replaceAll("\\", "/");
+  policyMutationValidatedRoots(normalizedRoot, [rel]);
+  const parts = newMutationSemanticParts(name);
+  for (const sibling of policyListMutationDirs(normalizedRoot, rel)) {
+    if (sibling === name) continue;
+    const siblingParts = newMutationSemanticParts(sibling);
+    if (siblingParts.emoji === parts.emoji) throw new Error(`new mutation: emoji ${JSON.stringify(parts.emoji)} is already owned by ${sibling}.`);
+    if (siblingParts.semanticKind === parts.semanticKind) throw new Error(`new mutation: semantic kind ${JSON.stringify(parts.semanticKind)} is already owned by ${sibling}.`);
+    if (siblingParts.variantName === parts.variantName) throw new Error(`new mutation: aggregate variant ${parts.variantName} is already owned by ${sibling}.`);
+  }
+  const leafRel = `${rel}/${name}`;
+  const taxonomy = loadTaxonomy();
+  const descriptorFilename = canonicalPrimaryFilenameForKind(taxonomy.mutationDescriptorFileKindId, taxonomy);
+  const proposed: { relPath: string; content: string }[] = [
+    { relPath: `${leafRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`, content: newMutationRustLeaf(parts) },
+    { relPath: `${leafRel}/${descriptorFilename}`, content: newMutationDescriptor(leafRel, parts, options) },
+    { relPath: `${leafRel}/🧪️tests/${POLICY_RS_COMPONENT_LEAF_NAME}`, content: `//! 🧪️ ${NEW_SCAFFOLD_MARKER}: behavioral and algebraic tests for ${parts.semanticKind}.\n` },
+    ...(options.composite ? [{ relPath: `${leafRel}/${POLICY_MUTATION_PLAN_DIR}/${POLICY_RS_COMPONENT_LEAF_NAME}`, content: newScaffoldRustLeaf(`${parts.semanticKind} composite plan`) }] : []),
+    ...(options.text ? [{ relPath: `${leafRel}/📝️text/${POLICY_RS_COMPONENT_LEAF_NAME}`, content: newScaffoldRustLeaf(`${parts.semanticKind} text codec contribution`) }] : []),
+    ...(options.binary ? [{ relPath: `${leafRel}/💾️binary/${POLICY_RS_COMPONENT_LEAF_NAME}`, content: newScaffoldRustLeaf(`${parts.semanticKind} binary codec contribution`) }] : []),
+    ...(options.typescript ? [{ relPath: `${leafRel}/${POLICY_TS_COMPONENT_LEAF}`, content: newScaffoldTsLeaf(`${parts.semanticKind} mutation`) }] : []),
+    ...(options.graphql ? [{ relPath: `${leafRel}/${canonicalPrimaryFilenameForKind(taxonomy.schemaFormats["🔗️graphql"].fileKindId, taxonomy)}`, content: `# 🧬️ ${NEW_SCAFFOLD_MARKER}: ${parts.variantName} GraphQL mutation input.\n` }] : []),
+    ...(options.protobuf ? [{ relPath: `${leafRel}/${canonicalPrimaryFilenameForKind(taxonomy.schemaFormats["🛰️protobuf"].fileKindId, taxonomy)}`, content: `// 🧬️ ${NEW_SCAFFOLD_MARKER}: ${parts.variantName} protobuf mutation message.\n` }] : []),
+    ...(options.jsonSchema ? [{ relPath: `${leafRel}/${mutationPayloadSchemaRelativePath(taxonomy)}`, content: `${JSON.stringify({ $schema: "http://json-schema.org/draft-07/schema#", title: parts.variantName, type: "object" }, null, 2)}\n` }] : []),
+  ];
+  const aggregate = newMutationUpdateAggregate(normalizedRoot, rel, name, parts);
+  const created: { relPath: string; content: string }[] = [];
+  const skipped: string[] = [];
+  for (const entry of proposed) {
+    const absolute = newMutationScaffoldPath(normalizedRoot, entry.relPath);
+    const existing = newMutationScaffoldLstat(absolute);
+    if (!existing) created.push(entry);
+    else if (existing.isSymbolicLink() || !existing.isFile()) throw new Error(`new mutation: existing target is not a regular file: ${entry.relPath}`);
+    else skipped.push(entry.relPath);
+  }
+  newMutationCheckCancellation(options);
+  if (dryRun) return { created: created.map((entry) => entry.relPath), skipped, updated: aggregate.updated };
+  const published: NewMutationScaffoldOwnedPath[] = [];
+  const createdDirectories: NewMutationScaffoldOwnedPath[] = [];
+  let temporary: NewMutationScaffoldOwnedPath | null = null;
+  try {
+    for (const entry of created) {
+      newMutationCheckCancellation(options);
+      const absolute = newMutationScaffoldPath(normalizedRoot, entry.relPath);
+      createdDirectories.push(...newMutationScaffoldEnsureParents(normalizedRoot, absolute));
+      newMutationScaffoldPath(normalizedRoot, entry.relPath);
+      writeFileSync(absolute, entry.content, { flag: "wx" });
+      published.push(newMutationScaffoldOwnPath(absolute, entry.content));
+    }
+    if (aggregate.updated.length > 0) {
+      newMutationCheckCancellation(options);
+      const aggregateAbs = newMutationScaffoldPath(normalizedRoot, aggregate.rootRel);
+      const aggregateStat = newMutationScaffoldLstat(aggregateAbs);
+      if (!aggregateStat || aggregateStat.isSymbolicLink() || !aggregateStat.isFile()) throw new Error("new mutation: aggregate changed to a non-regular file during publication.");
+      if (readFileSync(aggregateAbs, "utf8") !== aggregate.before) throw new Error("new mutation: aggregate changed during publication.");
+      const temporaryAbs = newMutationScaffoldPath(normalizedRoot, `${aggregate.rootRel}.scaffold-${process.pid}-${randomUUID()}.tmp`);
+      writeFileSync(temporaryAbs, aggregate.source, { flag: "wx" });
+      temporary = newMutationScaffoldOwnPath(temporaryAbs, aggregate.source);
+      renameSync(temporary.absolute, aggregateAbs);
+      temporary = null;
+    }
+  } catch (error) {
+    if (temporary) newMutationScaffoldRemoveOwnedFile(temporary);
+    for (const entry of published.reverse()) newMutationScaffoldRemoveOwnedFile(entry);
+    for (const directory of createdDirectories.reverse()) newMutationScaffoldRemoveOwnedDirectory(directory);
+    throw error;
+  }
+  return { created: created.map((entry) => entry.relPath), skipped, updated: aggregate.updated };
+}
+//#endregion 🧬️MutationScaffolding
 
 /**
  * 🚪️ `new artifact|standard|subset` CLI — registered as `bun ./📜️script.ts new <kind> …` via
@@ -19430,17 +21693,21 @@ function newScaffoldArtifactTree(repoRoot: string, artRel: string, dryRun: boole
 class CleanMechanismNewScript extends Script {
   run(segments: string[]): void {
     const kind = segments[0];
-    if (kind !== "subset" && kind !== "standard" && kind !== "artifact") {
+    if (kind !== "subset" && kind !== "standard" && kind !== "artifact" && kind !== "mutation") {
       console.error("usage: bun ./📜️script.ts new artifact <plugin> <new-artifact-dir>");
       console.error("   or: bun ./📜️script.ts new standard <plugin> <artifact-kind> <new-standard-dir>");
       console.error("   or: bun ./📜️script.ts new subset <plugin> <artifact-kind> <standard> <new-subset-dir> [--dry-run]");
+      console.error("   or: bun ./📜️script.ts new mutation <owner-mutation-root> <emoji-semantic-name> [--composite] [--text] [--binary] [--typescript] [--graphql] [--protobuf] [--json-schema] [--dry-run]");
       process.exit(1);
       return;
     }
     const taxonomy = loadTaxonomy();
     const rest = segments.slice(1);
-    const dryRun = rest.includes("--dry-run");
-    const positional = rest.filter((a) => a !== "--dry-run");
+    const flags = new Set(rest.filter((arg) => arg.startsWith("--")));
+    const knownFlags = new Set(["--dry-run", "--composite", "--text", "--binary", "--typescript", "--graphql", "--protobuf", "--json-schema"]);
+    for (const flag of flags) if (!knownFlags.has(flag)) throw new Error(`new ${kind}: unknown option ${flag}`);
+    const dryRun = flags.has("--dry-run");
+    const positional = rest.filter((a) => !a.startsWith("--"));
     const repoRoot = this.root;
     const pluginsRoot = join(repoRoot, "✏️s/🔌️plugins");
 
@@ -19451,6 +21718,14 @@ class CleanMechanismNewScript extends Script {
     };
 
     try {
+      if (kind === "mutation") {
+        if (positional.length !== 2) throw new Error("usage: bun ./📜️script.ts new mutation <owner-mutation-root> <emoji-semantic-name> [options]");
+        const [owner, name] = positional as [string, string];
+        const result = newScaffoldMutationTree(repoRoot, owner, name, { composite: flags.has("--composite"), text: flags.has("--text"), binary: flags.has("--binary"), typescript: flags.has("--typescript"), graphql: flags.has("--graphql"), protobuf: flags.has("--protobuf"), jsonSchema: flags.has("--json-schema") }, dryRun);
+        this.report(`${owner}/${name}`, result.created, result.skipped, dryRun);
+        for (const edit of result.updated) console.log(`  ${dryRun ? "~ (dry-run)" : "~"} ${edit}`);
+        return;
+      }
       if (kind === "artifact") {
         if (positional.length !== 2) throw new Error("usage: bun ./📜️script.ts new artifact <plugin> <new-artifact-dir>");
         const [pluginArg, newDir] = positional as [string, string];
@@ -19779,7 +22054,7 @@ export class Neo4jCypherExport {
  */
 
 //#region 🔧️PolicyFsScan
-const POLICY_SKIP_DIRS = new Set(["node_modules", ".git", ".🧬semio", "target", "dist", ".claude", "vendor", ".venv", ".turbo", ".nx", ".storybook", "storybook-static"]);
+const POLICY_SKIP_DIRS = new Set(["compose", "node_modules", ".git", ".🧬semio", "target", "dist", "build", "coverage", "🤖️generated", ".claude", "vendor", ".venv", ".turbo", ".nx", ".storybook", "storybook-static"]);
 
 /** 🧹️Drops every non-ASCII codepoint (emoji + variation selectors), e.g. `"📐️cad"` -> `"cad"`, `"🗣️dsl"` -> `"dsl"`. */
 function policyStripEmoji(segment: string): string {
@@ -19886,7 +22161,7 @@ function policyNormalizeRelPath(relPath: string): string {
     const pluginId = policyStripEmoji(segments[artifactsIdx - 1] ?? "");
     const artifactId = policyStripEmoji(segments[artifactsIdx + 1] ?? "");
     const component = policyCanonicalComponent(segments[artifactsIdx + 2]!);
-    const suffix = policyFileSuffix(segments.slice(artifactsIdx + 3), "🦀️component.rs");
+    const suffix = policyFileSuffix(segments.slice(artifactsIdx + 3), (POLICY_RS_COMPONENT_LEAF_NAME));
     return (artifactId && artifactId !== pluginId ? `${pluginId}/${artifactId}/${component}` : `${pluginId}/${component}`) + suffix;
   }
 
@@ -20327,7 +22602,7 @@ const POLICY_PROTOCOL_FILE_ALLOWLIST = new Set<string>([]);
 
 /**
  * ⚖️ Constitutional artifact facets whose `🟦️component.ts` may remain a WASM scaffold stub.
- * Stubs under these facets (and under `🧬️mutations/<mut>/{🦠️mutation,🔺️diff,↩️inverse}`) are accepted
+ * Stubs under these non-mutation facets are accepted
  * structurally — never tracked in a per-file allowlist (Wave 2b / OPERATIONS-TO-MUTATIONS).
  */
 const POLICY_TS_FACADE_CONSTITUTIONAL_FACETS = new Set<string>([
@@ -20336,18 +22611,14 @@ const POLICY_TS_FACADE_CONSTITUTIONAL_FACETS = new Set<string>([
   "🔺️diff",
   "🎒️pack",
   "📡️spr",
-  "🧬️mutations",
   "⚙️engine",
 ]);
-const POLICY_MUTATION_TRIAD_DIRS = ["🦠️mutation", "🔺️diff", "↩️inverse"] as const;
-/** 🧩️A COMPOSITE mutation owns its payload plus a plan; its diff and inverse are folded from that plan, so it owns neither `🔺️diff` nor `↩️inverse`. */
-const POLICY_MUTATION_COMPOSITE_DIRS = ["🦠️mutation", "🧩️plan"] as const;
 const POLICY_MUTATION_PLAN_DIR = "🧩️plan";
 const POLICY_MUTATIONS_FACET = "🧬️mutations";
 const POLICY_ENGINE_FACET = "⚙️engine";
 const POLICY_OP_FACET = "🔧️op";
-const POLICY_TS_COMPONENT_LEAF = "🟦️component.ts";
-const POLICY_RS_COMPONENT_LEAF_NAME = "🦀️component.rs";
+const POLICY_TS_COMPONENT_LEAF = canonicalPrimaryFilenameForKind(loadTaxonomy().componentFileKinds["🟦️typescript"]!, loadTaxonomy());
+const POLICY_RS_COMPONENT_LEAF_NAME = canonicalPrimaryFilenameForKind(loadTaxonomy().componentFileKinds["🦀️rust"]!, loadTaxonomy());
 /**
  * ⚖️P3/M4: colliding .grammar.semio/.protocol.semio after name/start normalization. Remove a path once its normalized hash is unique.
  * Seeded 0 paths at P3 — must shrink to empty by P6 (ticket HANDCRAFTED-GRAMMAR-FOR-EVERY-ARTIFACT).
@@ -21209,7 +23480,7 @@ function policyProtocolFileBreaches(_repoRoot: string): BreachRecord[] {
 }
 
 /**
- * 🏷️True when `relPath` is a constitutional artifact TS facade (facet root or mutation triad leaf).
+ * 🏷️True when `relPath` is a constitutional non-mutation artifact TS facade.
  * Stubs under these paths are accepted — no per-file allowlist (Wave 2b).
  */
 function policyIsConstitutionalTsFacadePath(relPath: string): boolean {
@@ -21218,7 +23489,6 @@ function policyIsConstitutionalTsFacadePath(relPath: string): boolean {
   if (!parts.includes("🗿️artifacts")) return false;
   const parent = parts[parts.length - 2] ?? "";
   if (POLICY_TS_FACADE_CONSTITUTIONAL_FACETS.has(parent)) return true;
-  if ((POLICY_MUTATION_TRIAD_DIRS as readonly string[]).includes(parent) && parts.includes(POLICY_MUTATIONS_FACET)) return true;
   return false;
 }
 
@@ -21229,8 +23499,7 @@ function policyTsFacadeIsScaffoldStub(content: string): boolean {
 
 /**
  * 📏️Structural TS-facade rule (replaces POLICY_TS_FACADE_ALLOWLIST): scaffold stubs are accepted under
- * constitutional facets (`🗣️dsl`/`🔧️op`/`🔺️diff`/`🎒️pack`/`📡️spr`/`🧬️mutations`/`⚙️engine`) and under
- * `🧬️mutations/<mut>/{🦠️mutation,🔺️diff,↩️inverse}`. A stub outside those slots is a breach.
+ * constitutional non-mutation facets. Mutation representations must be real descriptor-backed mirrors.
  */
 function policyTsFacadeBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -22199,7 +24468,7 @@ function policyTaxonomyDirsBreaches(repoRoot: string, crates: readonly PolicyCra
 export function policyWindowCompletenessBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const taxonomy = loadTaxonomy();
   const emptyMarker = canonicalFilenameForKind(taxonomy.windowEmptyFacetFileKindId, taxonomy);
-  const componentFilenames = new Set(Object.values(taxonomy.componentFileKinds).map((fileKindId) => canonicalStemmedFilenameForKind(fileKindId, "component", taxonomy)));
+  const componentFilenames = new Set(Object.values(taxonomy.componentFileKinds).map((fileKindId) => canonicalPrimaryFilenameForKind(fileKindId, taxonomy)));
   const breaches: BreachRecord[] = [];
   for (const crate of crates) {
     if (crate.shape !== "taxonomy") continue;
@@ -22267,7 +24536,7 @@ export function policyWindowCompletenessBreaches(repoRoot: string, crates: reado
               for (const member of members) {
                 const unit = { name: member.name, rel: `${capabilityDir}/${member.name}` };
                 for (const lang of taxonomy.windowComponentLangs) {
-                  const filename = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, lang, "component");
+                  const filename = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, lang);
                   if (existsSync(join(repoRoot, unit.rel, filename))) continue;
                   breaches.push({
                     id: `taxonomy-window-component-${unit.rel}-${lang}`,
@@ -22424,10 +24693,10 @@ function policyValidateExampleUnit(
       });
     }
   }
-  const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🦀️rust", "component");
-  const tsLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🟦️typescript", "component");
-  const rustTest = taxonomyMappedFilename(taxonomy, taxonomy.exampleTestFileKinds, "🦀️rust", "test");
-  const tsTest = taxonomyMappedFilename(taxonomy, taxonomy.exampleTestFileKinds, "🟦️typescript", "test");
+  const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🦀️rust");
+  const tsLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🟦️typescript");
+  const rustTest = taxonomyMappedFilename(taxonomy, taxonomy.exampleTestFileKinds, "🦀️rust");
+  const tsTest = taxonomyMappedFilename(taxonomy, taxonomy.exampleTestFileKinds, "🟦️typescript");
   if (!existsSync(join(repoRoot, exampleRel, rustLeaf))) {
     breaches.push({
       id: `semio-examples-leaf-rs-${exampleRel}`,
@@ -22524,7 +24793,7 @@ function policyValidateExampleUnit(
 function policySemioArtifactExamplesBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
   const taxonomy = loadTaxonomy();
   const examplesDir = "📚️examples";
-  const rustExampleLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🦀️rust", "component");
+  const rustExampleLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🦀️rust");
   const breaches: BreachRecord[] = [];
   for (const crate of crates) {
     if (crate.shape !== "taxonomy") continue;
@@ -22606,10 +24875,10 @@ function policyComponentFileBreaches(repoRoot: string, crates: readonly PolicyCr
   const taxonomy = loadTaxonomy();
   const rustFileKindId = taxonomy.componentFileKinds["🦀️rust"]!;
   const typescriptFileKindId = taxonomy.componentFileKinds["🟦️typescript"]!;
-  const leafFilename = canonicalStemmedFilenameForKind(rustFileKindId, "component", taxonomy);
+  const leafFilename = canonicalPrimaryFilenameForKind(rustFileKindId, taxonomy);
   const sourceExtensions = taxonomy.fileKinds[rustFileKindId]!.extensionChains;
   const sourceExtension = sourceExtensions[0]!;
-  const tsLeafFilename = canonicalStemmedFilenameForKind(typescriptFileKindId, "component", taxonomy);
+  const tsLeafFilename = canonicalPrimaryFilenameForKind(typescriptFileKindId, taxonomy);
   const tsSourceExtensions = taxonomy.fileKinds[typescriptFileKindId]!.extensionChains;
   const tsSourceExtension = tsSourceExtensions[0]!;
   const artifactFacetDirs = new Set(taxonomy.artifactComponentDirs ?? []);
@@ -22623,8 +24892,8 @@ function policyComponentFileBreaches(repoRoot: string, crates: readonly PolicyCr
       const parentName = relDir.split("/").pop() ?? "";
       const hasRustFile = entries.some((e) => !e.isDirectory && sourceExtensions.some((extension) => e.name.endsWith(extension)));
       const hasTsFile = entries.some((e) => !e.isDirectory && tsSourceExtensions.some((extension) => e.name.endsWith(extension)));
-      const exampleRustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🦀️rust", "component");
-      const exampleTsLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🟦️typescript", "component");
+      const exampleRustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🦀️rust");
+      const exampleTsLeaf = taxonomyMappedFilename(taxonomy, taxonomy.exampleFileKinds, "🟦️typescript");
       if (policyIsExampleSlugDir(relDir)) {
         if (hasRustFile && !entries.some((e) => !e.isDirectory && e.name === exampleRustLeaf)) {
           breaches.push({
@@ -22949,31 +25218,31 @@ function policyPluginRootShapeBreaches(repoRoot: string): BreachRecord[] {
         scope: ownerRel,
         priority: "high",
         reason: "Plugin contracts and facets are direct children of the plugin root.",
-        solution: `Move ${nestedContractRel}/🦀️component.rs and its facet leaves directly into ${ownerRel}/, then remove ${nestedContractRel}/.`,
+        solution: `Move ${nestedContractRel}/${POLICY_RS_COMPONENT_LEAF_NAME} and its facet leaves directly into ${ownerRel}/, then remove ${nestedContractRel}/.`,
       });
     }
-    if (!existsSync(join(repoRoot, ownerRel, "🦀️component.rs"))) {
+    if (!existsSync(join(repoRoot, ownerRel, (POLICY_RS_COMPONENT_LEAF_NAME)))) {
       breaches.push({
         id: `plugin-root-leaf-${ownerRel}`,
-        summary: `"${ownerRel}" is missing root 🦀️component.rs`,
+        summary: `"${ownerRel}" is missing root ${POLICY_RS_COMPONENT_LEAF_NAME}`,
         kind: "taxonomy/plugin-root-shape",
         scope: ownerRel,
         priority: "high",
         reason: "The plugin root must have a leaf component that returns Plugin via Plugin::builder.",
-        solution: `Add ${ownerRel}/🦀️component.rs exporting pub fn plugin() -> Plugin.`,
+        solution: `Add ${ownerRel}/${POLICY_RS_COMPONENT_LEAF_NAME} exporting pub fn plugin() -> Plugin.`,
       });
     }
     for (const child of children) {
-      const childLeaf = join(repoRoot, ownerRel, child, "🦀️component.rs");
+      const childLeaf = join(repoRoot, ownerRel, child, (POLICY_RS_COMPONENT_LEAF_NAME));
       if (!existsSync(childLeaf)) {
         breaches.push({
           id: `plugin-root-child-${ownerRel}/${child}`,
-          summary: `"${ownerRel}" is missing direct facet ${child}/🦀️component.rs`,
+          summary: `"${ownerRel}" is missing direct facet ${child}/${POLICY_RS_COMPONENT_LEAF_NAME}`,
           kind: "taxonomy/plugin-root-shape",
           scope: ownerRel,
           priority: "high",
           reason: `${child} is a required direct plugin-root facet (taxonomy.pluginChildDirs).`,
-          solution: `Add ${ownerRel}/${child}/🦀️component.rs.`,
+          solution: `Add ${ownerRel}/${child}/${POLICY_RS_COMPONENT_LEAF_NAME}.`,
         });
       }
     }
@@ -23001,8 +25270,8 @@ function policyPluginBuilderBreaches(repoRoot: string, crates: readonly PolicyCr
         kind: "taxonomy/plugin-builder",
         scope: crate.pluginId || crate.ownerRel,
         priority: "high",
-        reason: "semio_plugin! is retired; plugin identity lives in the root 🦀️component.rs via typestate PluginBuilder.",
-        solution: "Move registration into the plugin-root 🦀️component.rs using Plugin::builder(...).build() and call plugin_exports!(plugin::plugin).",
+        reason: ("semio_plugin! is retired; plugin identity lives in the root " + POLICY_RS_COMPONENT_LEAF_NAME + " via typestate PluginBuilder."),
+        solution: ("Move registration into the plugin-root " + POLICY_RS_COMPONENT_LEAF_NAME + " using Plugin::builder(...).build() and call plugin_exports!(plugin::plugin)."),
       });
     }
     if (content.includes("PluginBundle::new") || content.includes("PluginBundle {")) {
@@ -23167,7 +25436,7 @@ function policyPluginClosedShapeBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
   const allowedDirs = new Set<string>([...taxonomy.pluginChildDirs, taxonomy.artifactsDirName, taxonomy.packagesDirName, ...taxonomy.rootDataDirNames]);
   const allowedFiles = new Set<string>([
-    taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust", "component"),
+    taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust"),
     ...taxonomyContractFilenames(taxonomy, taxonomy.rootDocumentContractIds),
     ...taxonomyContractFilenames(taxonomy, taxonomy.rootDataContractIds),
   ]);
@@ -23215,7 +25484,7 @@ function policyPluginClosedShapeBreaches(repoRoot: string): BreachRecord[] {
           kind: "taxonomy/plugin-closed-shape",
           scope: ownerRel,
           priority: "medium",
-          reason: "APA: a plugin is EXACTLY 🗿️artifacts + root 🦀️component.rs/AGENTS.md/README.md + 📦️packages wiring — every other direct child is a shape violation, not merely a missing-facet gap (which is all policyPluginRootShapeBreaches ever checked).",
+          reason: ("APA: a plugin is EXACTLY 🗿️artifacts + root " + POLICY_RS_COMPONENT_LEAF_NAME + "/AGENTS.md/README.md + 📦️packages wiring — every other direct child is a shape violation, not merely a missing-facet gap (which is all policyPluginRootShapeBreaches ever checked)."),
           solution,
         });
         continue;
@@ -23834,7 +26103,6 @@ const POLICY_HOST_EFFECT_CAPABILITY: Readonly<Record<string, string>> = {
   OpenDialog: "Window", // Rights::Open, Scope::Instance
   DispatchAction: "Window", // Rights::Invoke, Scope::Instance
   ReplayShellCommand: "Window", // Rights::Invoke, Scope::Global
-  PatchWorld3dChrome: "Window", // Rights::Write, Scope::Instance
   InvokeExtension: "Engine", // Rights::Invoke, Scope::Plugin
 };
 
@@ -23859,7 +26127,7 @@ function policyEffectCapabilityParityBreaches(repoRoot: string): BreachRecord[] 
     if (POLICY_EFFECT_CAPABILITY_ALLOWLIST.has(ownerRel)) continue;
 
     const declared = new Set<string>();
-    const rootLeaf = join(repoRoot, ownerRel, "🦀️component.rs");
+    const rootLeaf = join(repoRoot, ownerRel, (POLICY_RS_COMPONENT_LEAF_NAME));
     if (existsSync(rootLeaf)) {
       const rootContent = readFileSync(rootLeaf, "utf8");
       POLICY_CAPABILITY_CALL_RE.lastIndex = 0;
@@ -23910,7 +26178,7 @@ function policyEffectCapabilityParityBreaches(repoRoot: string): BreachRecord[] 
         line: first.line,
         priority: "medium",
         reason: "APA/M5: every HostEffect variant maps to a CapabilityRequirement (📓️w0-d-sdk-surface.md §5) — a plugin that constructs the effect without declaring the matching capability makes today's capability system decorative; only 🪐️space declares any capability repo-wide, and it doesn't cover any of the effects plugins actually construct.",
-        solution: `Add .capability(ArtifactKind::${requiredKind}, ...) to ${ownerRel}/🦀️component.rs's Plugin::builder chain once M5's has_capability(ArtifactKind, Rights) gate lands, or remove the HostEffect::${variant} construction if the plugin shouldn't have this capability.`,
+        solution: `Add .capability(ArtifactKind::${requiredKind}, ...) to ${ownerRel}/${POLICY_RS_COMPONENT_LEAF_NAME}'s Plugin::builder chain once M5's has_capability(ArtifactKind, Rights) gate lands, or remove the HostEffect::${variant} construction if the plugin shouldn't have this capability.`,
       });
     }
   }
@@ -24196,15 +26464,15 @@ export function policyPhantomStandardsBreaches(repoRoot: string): BreachRecord[]
 export function policySubsetTsParityBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const subRel of policyListTopLevelSubsetDirs(repoRoot)) {
-    const ts = join(repoRoot, subRel, "🧬️schema", "🟦️component.ts");
+    const ts = join(repoRoot, subRel, "🧬️schema", (POLICY_TS_COMPONENT_LEAF));
     if (!existsSync(ts)) continue;
     const lines = readFileSync(ts, "utf8").split(/\r?\n/).length;
     if (lines > 0 && lines <= 7) {
       breaches.push({
         id: `subset-ts-meta-stub-${subRel}`,
-        summary: `"${subRel}/🧬️schema/🟦️component.ts" is a ${lines}-line meta stub`,
+        summary: `"${subRel}/🧬️schema/${POLICY_TS_COMPONENT_LEAF}" is a ${lines}-line meta stub`,
         kind: "subset-conformance/ts-parity",
-        scope: `${subRel}/🧬️schema/🟦️component.ts`,
+        scope: `${subRel}/🧬️schema/${POLICY_TS_COMPONENT_LEAF}`,
         priority: "medium",
         reason: "Derived/owning subsets require a real TypeScript implementation mirroring Rust.",
         solution: "Replace the meta stub with a full TypeScript mirror of the Rust conformance/schema surface.",
@@ -24274,8 +26542,8 @@ export function policySubsetSurfaceCompletenessBreaches(repoRoot: string): Breac
   const taxonomy = loadTaxonomy();
   const breaches: BreachRecord[] = [];
   const scaffoldLeafNames = new Set([
-    taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust", "component"),
-    taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript", "component"),
+    taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust"),
+    taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript"),
   ]);
   for (const subRel of policyListTopLevelSubsetDirs(repoRoot)) {
     if (!existsSync(join(repoRoot, subRel, "🧬️schema"))) continue;
@@ -24300,7 +26568,7 @@ export function policySubsetSurfaceCompletenessBreaches(repoRoot: string): Breac
         const windowsRel = `${modesRel}/${mode.name}/${taxonomy.windowsDirName}`;
         for (const w of policyReaddirSafe(repoRoot, windowsRel).filter((e) => e.isDirectory)) {
           const windowDir = `${windowsRel}/${w.name}`;
-          if (taxonomy.windowLeafLangs.every((lang) => existsSync(join(repoRoot, windowDir, taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, lang, "component"))))) hasCompleteWindow = true;
+          if (taxonomy.windowLeafLangs.every((lang) => existsSync(join(repoRoot, windowDir, taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, lang))))) hasCompleteWindow = true;
         }
       }
       if (!hasCompleteWindow) {
@@ -24428,8 +26696,8 @@ const POLICY_OS_CONFIG_SCHEMA_ID = "os.config.opening";
 const POLICY_OS_CONFIG_MUTATION_KINDS = ["set-default-app", "clear-default-app"] as const;
 
 /** 🎚️Locks the shape of the already-shipped C4 OS config facet: five `schemaFormats` leaves, the
- * frozen `os.config.opening` schema id, and both `set-default-app`/`clear-default-app` mutation
- * triads. Content-keyed (schema id / `kind:` string), not folder-name-keyed, so it survives a slug
+ * frozen `os.config.opening` schema id, and both direct `set-default-app`/`clear-default-app`
+ * mutations. Content-keyed (schema id / semantic identity), not folder-name-keyed, so it survives a slug
  * rename without drifting from the real frozen contract. */
 export function policyOsConfigShapeBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
@@ -24460,46 +26728,48 @@ export function policyOsConfigShapeBreaches(repoRoot: string): BreachRecord[] {
       solution: `Add ${schemaRel}/${leafFilename}.`,
     });
   }
-  const rootRust = policyReadFileSafe(repoRoot, schemaRel, "🦀️component.rs");
+  const rootRust = policyReadFileSafe(repoRoot, schemaRel, (POLICY_RS_COMPONENT_LEAF_NAME));
   if (!rootRust.includes(POLICY_OS_CONFIG_SCHEMA_ID)) {
     breaches.push({
       id: `os-config-shape-schema-id`,
-      summary: `"${schemaRel}/🦀️component.rs" no longer declares the frozen schema id "${POLICY_OS_CONFIG_SCHEMA_ID}"`,
+      summary: `"${schemaRel}/${POLICY_RS_COMPONENT_LEAF_NAME}" no longer declares the frozen schema id "${POLICY_OS_CONFIG_SCHEMA_ID}"`,
       kind: "taxonomy/os-config-shape",
       scope: "os/config",
       priority: "high",
       reason: "C4 froze the schema id os.config.opening; OpeningResolver and both hosts key off this exact string.",
-      solution: `Restore the "${POLICY_OS_CONFIG_SCHEMA_ID}" schema id constant in ${schemaRel}/🦀️component.rs.`,
+      solution: `Restore the "${POLICY_OS_CONFIG_SCHEMA_ID}" schema id constant in ${schemaRel}/${POLICY_RS_COMPONENT_LEAF_NAME}.`,
     });
   }
   const mutationsRel = `${schemaRel}/🧬️mutations`;
-  const mutationChildDirs = taxonomy.mutationChildDirs ?? ["🦠️mutation", "🔺️diff", "↩️inverse"];
+  const componentFilename = canonicalFilenameForKind(taxonomy.mutationComponentFileKindId, taxonomy);
   const mutationDirs = policyReaddirSafe(repoRoot, mutationsRel).filter((e) => e.isDirectory);
   for (const mutationKind of POLICY_OS_CONFIG_MUTATION_KINDS) {
-    const owner = mutationDirs.find((d) => policyReadFileSafe(repoRoot, mutationsRel, d.name, "🦠️mutation", "🦀️component.rs").includes(`kind: "${mutationKind}"`));
+    const owner = mutationDirs.find((d) => {
+      const component = policyReadFileSafe(repoRoot, mutationsRel, d.name, componentFilename);
+      return component.includes(`kind: "${mutationKind}"`) || component.includes(`\"${mutationKind}\"`);
+    });
     if (!owner) {
       breaches.push({
         id: `os-config-shape-mutation-missing-${mutationKind}`,
-        summary: `"${mutationsRel}" is missing the frozen "${mutationKind}" mutation triad`,
+        summary: `"${mutationsRel}" is missing the frozen direct "${mutationKind}" mutation`,
         kind: "taxonomy/os-config-shape",
         scope: "os/config",
         priority: "high",
         reason: `C4 froze both mutation kinds (set-default-app, clear-default-app) on ${POLICY_OS_CONFIG_SCHEMA_ID}.`,
-        solution: `Restore ${mutationsRel}/<slug>/🦠️mutation/🦀️component.rs declaring kind: "${mutationKind}".`,
+        solution: `Restore ${mutationsRel}/<slug>/${componentFilename} declaring the semantic identity "${mutationKind}".`,
       });
       continue;
     }
-    for (const child of mutationChildDirs) {
-      const childRel = `${mutationsRel}/${owner.name}/${child}/🦀️component.rs`;
-      if (existsSync(join(repoRoot, childRel))) continue;
+    const componentRel = `${mutationsRel}/${owner.name}/${componentFilename}`;
+    if (!existsSync(join(repoRoot, componentRel))) {
       breaches.push({
-        id: `os-config-shape-mutation-leaf-${childRel}`,
-        summary: `"${childRel}" is missing`,
+        id: `os-config-shape-mutation-leaf-${componentRel}`,
+        summary: `"${componentRel}" is missing`,
         kind: "taxonomy/os-config-shape",
         scope: "os/config",
         priority: "high",
-        reason: `Every mutation dir carries the full ${mutationChildDirs.join(", ")} triad.`,
-        solution: `Add ${childRel}.`,
+        reason: "Every mutation folder directly owns its mandatory component file.",
+        solution: `Add ${componentRel}.`,
       });
     }
   }
@@ -24513,9 +26783,9 @@ export function policyOsConfigShapeBreaches(repoRoot: string): BreachRecord[] {
 
 const POLICY_HANDCRAFTED_SPEC_ROOTS = ["✏️s", "🧰️framework"] as const;
 const POLICY_HANDCRAFTED_FACETS = ["🗣️dsl", "🔧️op", "🔺️diff", "🎒️pack", "📡️spr", "🧬️mutations"] as const;
-const POLICY_GRAMMAR_SPEC_LEAF = "📖️component.grammar.semio";
-const POLICY_PROTOCOL_SPEC_LEAF = "📡️component.protocol.semio";
-const POLICY_RS_COMPONENT_LEAF = "🦀️component.rs";
+const POLICY_GRAMMAR_SPEC_LEAF = canonicalPrimaryFilenameForKind("grammar-semio");
+const POLICY_PROTOCOL_SPEC_LEAF = canonicalPrimaryFilenameForKind("protocol-semio");
+const POLICY_RS_COMPONENT_LEAF = canonicalPrimaryFilenameForKind(loadTaxonomy().componentFileKinds["🦀️rust"]!, loadTaxonomy());
 const POLICY_FAMILY_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family";
 
 /** 🧹Normalizes grammar/protocol headers so distinctness compares body shape, not dialect names. */
@@ -24780,7 +27050,7 @@ function policySpecWiringBreaches(repoRoot: string): BreachRecord[] {
       kind: "handcrafted-grammar/spec-wiring-register",
       scope: artRel,
       priority: "high",
-      reason: "Artifacts that ship grammar/protocol specs must register the language with the shared DSL host (typically in ⚙️engine/🦀️component.rs).",
+      reason: ("Artifacts that ship grammar/protocol specs must register the language with the shared DSL host (typically in ⚙️engine/" + POLICY_RS_COMPONENT_LEAF_NAME + ")."),
       solution: `Call register_language from the artifact engine (or another artifact .rs), then remove ${artRel} from POLICY_SPEC_WIRING_REGISTER_EXEMPTIONS.`,
     });
   }
@@ -25019,114 +27289,60 @@ function policyLeadingEmojiPrefix(name: string): string {
   return idx > 0 ? name.slice(0, idx) : "";
 }
 
-/** 🔎️Mutation-specific dirs under `🧬️mutations/` (skips leaf files and reserved kind names). */
+/** 🔎️Mutation-specific direct-owner dirs under `🧬️mutations/` (skips infrastructure facets). */
 function policyListMutationDirs(repoRoot: string, mutationsRel: string): string[] {
-  // 💾️binary / 📝️text are the facet's CODEC dirs (OpBinary/OpText), siblings of the mutation
-  // triads rather than mutations themselves — they own no 🦠️mutation/🔺️diff/↩️inverse and never
-  // should. They were harmless while the callers walked a shallow path that matched nothing on
-  // disk; the moment the mutation rules were repointed at the real deep taxonomy they became 672
-  // false "missing triad kind" highs. Reserved here, once, so every caller inherits the exclusion.
-  const reserved = new Set<string>([...POLICY_MUTATION_TRIAD_DIRS, POLICY_MUTATION_PLAN_DIR, "📚️examples", "💾️binary", "📝️text"]);
+  const reserved = new Set<string>(["📚️examples", "💾️binary", "📝️text"]);
   return policyReaddirSafe(repoRoot, mutationsRel)
     .filter((e) => e.isDirectory && !reserved.has(e.name) && !e.name.startsWith("."))
     .map((e) => e.name)
     .sort();
 }
 
-/** 🧩️Whether a mutation dir declares itself COMPOSITE by owning a `🧩️plan` child. */
-function policyIsCompositeMutationDir(repoRoot: string, mutRel: string): boolean {
-  return existsSync(join(repoRoot, `${mutRel}/${POLICY_MUTATION_PLAN_DIR}`));
-}
-
-/**
- * 📏️Every artifact must own `🧬️mutations/`; each concrete mutation dir must carry EITHER the leaf
- * triad `🦠️mutation` / `🔺️diff` / `↩️inverse` OR the composite pair `🦠️mutation` / `🧩️plan` — never a
- * mix (leaves optional until fan-out — directory presence is the gate). A composite folds its diff
- * and inverse from its plan, so owning `🔺️diff` or `↩️inverse` next to `🧩️plan` means two competing
- * sources of the same semantics.
- */
-function policyMutationTriadCompletenessBreaches(repoRoot: string): BreachRecord[] {
+/** 📏️Every concrete mutation directory owns one authoritative direct Rust component. */
+function policyMutationDirectOwnerBreaches(repoRoot: string, mutationRoots: readonly string[] = policyFindAllMutationsDirs(repoRoot)): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  for (const mutationsRel of policyFindAllMutationsDirs(repoRoot)) {
+  for (const mutationsRel of mutationRoots) {
     const artRel = policyArtifactRootOfMutationsDir(mutationsRel);
-    const mutDirs = policyListMutationDirs(repoRoot, mutationsRel);
-    if (mutDirs.length === 0) {
-      breaches.push({
-        id: `mutation-dirs-empty-${artRel}`,
-        summary: `"${mutationsRel}" has no concrete mutation directories yet`,
-        kind: "mutation-migration/triad-completeness",
-        scope: artRel,
-        priority: "medium",
-        reason: "The 🧬️mutations facet must contain at least one emoji-prefixed mutation directory with the triad.",
-        solution: `Add mutation dirs under ${mutationsRel}/ each with 🦠️mutation/, 🔺️diff/, and ↩️inverse/.`,
-      });
-      continue;
-    }
-    for (const mutName of mutDirs) {
+    for (const mutName of policyListMutationDirs(repoRoot, mutationsRel)) {
       const mutRel = `${mutationsRel}/${mutName}`;
-      const composite = policyIsCompositeMutationDir(repoRoot, mutRel);
-      for (const kind of composite ? POLICY_MUTATION_COMPOSITE_DIRS : POLICY_MUTATION_TRIAD_DIRS) {
-        const kindRel = `${mutRel}/${kind}`;
-        if (existsSync(join(repoRoot, kindRel))) continue;
-        breaches.push({
-          id: `mutation-triad-missing-${kindRel}`,
-          summary: composite ? `"${mutRel}" is a composite but is missing ${kind}/` : `"${mutRel}" is missing triad kind ${kind}/`,
-          kind: "mutation-migration/triad-completeness",
-          scope: artRel,
-          priority: "high",
-          reason: composite
-            ? "A composite mutation must expose 🦠️mutation + 🧩️plan directories."
-            : "Each concrete leaf mutation must expose 🦠️mutation + 🔺️diff + ↩️inverse directories.",
-          solution: `Create ${kindRel}/ with 🦀️component.rs (and 🟦️component.ts stub if needed).`,
-        });
-      }
-      if (!composite) continue;
-      for (const derived of ["🔺️diff", "↩️inverse"] as const) {
-        const derivedRel = `${mutRel}/${derived}`;
-        if (!existsSync(join(repoRoot, derivedRel))) continue;
-        breaches.push({
-          id: `mutation-composite-derived-${derivedRel}`,
-          summary: `"${mutRel}" owns both 🧩️plan and ${derived}/`,
-          kind: "mutation-migration/triad-completeness",
-          scope: artRel,
-          priority: "high",
-          reason: "A composite folds its diff and inverse from its plan — a handwritten one is a second, competing source of the same semantics.",
-          solution: `Delete ${derivedRel}/ (composite) or delete ${mutRel}/${POLICY_MUTATION_PLAN_DIR}/ (leaf triad).`,
-        });
-      }
+      const directRel = `${mutRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+      if (existsSync(join(repoRoot, directRel))) continue;
+      breaches.push({
+        id: `mutation-direct-owner-${mutRel}`,
+        summary: `"${mutRel}" has no direct ${POLICY_RS_COMPONENT_LEAF_NAME}`,
+        kind: "mutation/direct-owner",
+        scope: artRel,
+        priority: "high",
+        reason: "Every concrete mutation is represented by exactly one direct semantic folder whose component is authoritative.",
+        solution: `Move the concrete implementation to ${directRel}; optional diff, inverse, plan, text, binary, and tests remain child facets.`,
+      });
     }
   }
   return breaches;
 }
 
 /**
- * 📏️When a `🦠️mutation/🦀️component.rs` exists, it should mention `impl`…`Mutation` (advisory while
- * Wave 3 pilot lands the first real impls).
+ * 📏️A direct mutation component owns its semantic descriptor and mutation implementation.
  */
 function policyMutationImplPresenceBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  const implPattern = /\bimpl\b[^\n{]*\bMutation\s*</;
-  const compositeImplPattern = /\bimpl\b[^\n{]*\bCompositeMutationKind\s*</;
   for (const mutationsRel of policyFindAllMutationsDirs(repoRoot)) {
     const artRel = policyArtifactRootOfMutationsDir(mutationsRel);
     for (const mutName of policyListMutationDirs(repoRoot, mutationsRel)) {
       const mutRel = `${mutationsRel}/${mutName}`;
-      const rsRel = `${mutRel}/🦠️mutation/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+      const rsRel = `${mutRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
       const abs = join(repoRoot, rsRel);
       if (!existsSync(abs)) continue;
       const content = readFileSync(abs, "utf8");
-      const composite = policyIsCompositeMutationDir(repoRoot, mutRel);
-      if (composite ? compositeImplPattern.test(content) : implPattern.test(content)) continue;
+      if (/\bimpl\b[^\n{]*\b(?:Mutation|MutationKind|CompositeMutationKind)\b/.test(content) && /\b(?:SEMANTICS|DESCRIPTOR)\b/.test(content)) continue;
       breaches.push({
         id: `mutation-impl-missing-${rsRel}`,
-        summary: composite ? `"${rsRel}" does not yet implement CompositeMutationKind<…>` : `"${rsRel}" does not yet implement Mutation<…>`,
-        kind: "mutation-migration/impl-presence",
+        summary: `"${rsRel}" does not own both mutation behavior and a semantic descriptor`,
+        kind: "mutation/behavior-ownership",
         scope: artRel,
-        priority: "medium",
-        reason: composite
-          ? "A composite mutation struct must implement CompositeMutationKind<Snapshot, Op> so its diff and inverse fold from its plan."
-          : "Each concrete mutation struct must implement Mutation<P> (or a helper the dispatch enum delegates to).",
-        solution: composite ? `Add impl CompositeMutationKind<Snapshot, Op> for the mutation struct in ${rsRel}.` : `Add impl Mutation<Snapshot> for the mutation struct in ${rsRel}.`,
+        priority: "high",
+        reason: "The direct leaf is the visible source of semantic identity and apply/diff/inverse participation.",
+        solution: `Define the leaf payload, descriptor, and MutationKind/Mutation implementation in ${rsRel}.`,
       });
     }
   }
@@ -25344,18 +27560,22 @@ function policyMutationEmojiUniquenessBreaches(repoRoot: string): BreachRecord[]
   return breaches;
 }
 
-/**
- * 🔍️Every `🧬️mutations` facet dir anywhere under `✏️s`. The real taxonomy nests it under
- * `<artifact>/🏅️standards/<slug>/🪆️subsets/<slug>/🧬️schema/🧬️mutations`, which is deeper than the
- * `<artifact>/🧬️mutations` shape `policyListPluginArtifactDirs` assumes — that shallower path matches
- * nothing on disk, so every rule driven by it was either firing bogus breaches or silently inert.
- * All mutation rules now share this walker.
- */
+/** 🔍️Every repository-owned `🧬️mutations` facet, with opaque/build/cache roots excluded before access. */
+function policyRepositoryOwnedRoots(): string[] {
+  const configured = Object.keys(loadTaxonomy().areas ?? {});
+  const candidates = [...new Set(["✏️s", "🧰️framework", "🌎️hub", "♻️mit-bestand", ...configured])]
+    .filter((candidate) => candidate !== "compose" && !candidate.startsWith("compose/"));
+  return candidates
+    .filter((candidate) => !candidates.some((other) => other !== candidate && candidate.startsWith(`${other}/`)))
+    .sort();
+}
+
 function policyFindAllMutationsDirs(repoRoot: string): string[] {
   const found: string[] = [];
+  const skipped = new Set(["compose", ".git", "node_modules", "target", ".nx", ".🧬semio", "dist", "build", "coverage", "📦️packages", "🧪️tests", "🧫️fixtures", "📚️examples", "🖼️assets", "🎯️targets", "🤖️generated", "🛂️manifest"]);
   const walk = (relDir: string): void => {
     for (const ent of policyReaddirSafe(repoRoot, relDir)) {
-      if (!ent.isDirectory || ent.name.startsWith(".")) continue;
+      if (!ent.isDirectory || skipped.has(ent.name) || ent.name.startsWith(".")) continue;
       const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
       if (ent.name === POLICY_MUTATIONS_FACET) {
         found.push(childRel);
@@ -25364,8 +27584,8 @@ function policyFindAllMutationsDirs(repoRoot: string): string[] {
       walk(childRel);
     }
   };
-  walk("✏️s");
-  return found.sort();
+  for (const root of policyRepositoryOwnedRoots()) walk(root);
+  return [...new Set(found)].sort();
 }
 
 /**
@@ -25382,30 +27602,18 @@ function policyArtifactRootOfMutationsDir(mutationsRel: string): string {
 }
 
 /**
- * 📏️SEMANTIC-MUTATIONS-OVERHAUL rule 1 (`POLICY_SEMANTIC_VOCABULARY_ALLOWLIST`): every `.rs` file under a
+ * 📏️SEMANTIC-MUTATIONS-OVERHAUL rule 1: every repository-owned `.rs` file under a
  * `🧬️mutations/` facet or a `🎮️commands/` app-command dir must not reference the banned generic mutation
  * vocabulary the new `SemanticDescriptor`/`MutationKind`/`#[derive(dsl_derive::Mutations)]` mechanism
  * (see `🧰️framework/…/📡️spr/🎮️command/🦀️component.rs`'s `🔖️Semantics` region) replaces: `SetSnapshot`
  * (the whole-document escape hatch), `NoMutation` (the sentinel sibling), and `CollectionMutation<`/`::`
  * (the generic collection wrapper, worst-offender count ~70 in one facet). `Set[A-Z]\w*` dispatch-enum
- * variant names are additionally flagged at `"medium"` (unallowlisted advisory — 562 of these exist
- * repo-wide today; only the three HIGH tokens above gate `bun policy`, so only those need seeding).
- * Seeded with the exact repo-wide census at ticket time (342 files) via
- * `grep -rlE "SetSnapshot|NoMutation|CollectionMutation(<|::)" ✏️s --include="*.rs" | grep -E "🧬️mutations|🎮️commands"`;
- * later waves' handcrafted `rename`/`change`/`move`/… mutations shrink this file-by-file (see
- * `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`).
+ * variant names are additionally flagged at `"medium"`; the generic escape hatches have no
+ * suppression or exception mechanism.
  */
-/**
- * 📏️Files this rule deliberately exempts. The ENTRIES are owned by the areas they describe and are
- * discovered from every `🔒️policy-allowlist.json` in the tree, so this router names no path of its
- * own and an area that is deleted takes its exemptions with it.
- */
-const POLICY_SEMANTIC_VOCABULARY_ALLOWLIST = policyDiscoveredAllowlist(WORKSPACE_ROOT, "semantic-vocabulary");
-
 /**
  * 🚫️High-priority banned generic-vocabulary tokens: the whole-document escape hatch, the sentinel, and the
- * generic collection wrapper — every real occurrence must either be handcrafted away or cited in
- * `POLICY_SEMANTIC_VOCABULARY_ALLOWLIST`. Deliberately substring (no `\b` word boundary) matching the
+ * generic collection wrapper. Deliberately substring (no `\b` word boundary) matching the
  * seeding grep exactly, so derived type names like `SetSnapshotDiff`/`SetSnapshotMutation` still count —
  * they're just as much banned vocabulary as the bare identifier.
  */
@@ -25417,7 +27625,7 @@ const POLICY_SEMANTIC_VOCABULARY_HIGH_TOKENS: readonly { label: string; re: RegE
 
 /** 🏷️Every `.rs` file under a `🧬️mutations/` facet or a `🎮️commands/` app-command dir, repo-wide. */
 function policyListSemanticVocabularyScanFiles(repoRoot: string): string[] {
-  return policyWalkRelFiles(repoRoot, ["✏️s"], (relPath, name) => {
+  return policyWalkRelFiles(repoRoot, policyRepositoryOwnedRoots(), (relPath, name) => {
     if (!name.endsWith(".rs")) return false;
     const norm = relPath.replaceAll("\\", "/");
     return norm.includes(`/${POLICY_MUTATIONS_FACET}/`) || norm.includes("/🎮️commands/");
@@ -25429,28 +27637,15 @@ function policySemanticVocabularyBreaches(repoRoot: string): BreachRecord[] {
   for (const relPath of policyListSemanticVocabularyScanFiles(repoRoot)) {
     const content = policyReadFileSafe(repoRoot, relPath);
     const hitTokens = POLICY_SEMANTIC_VOCABULARY_HIGH_TOKENS.filter((t) => t.re.test(content)).map((t) => t.label);
-    const allowlisted = POLICY_SEMANTIC_VOCABULARY_ALLOWLIST.has(relPath);
     if (hitTokens.length > 0) {
-      if (!allowlisted) {
-        breaches.push({
-          id: `semantic-vocabulary-banned-${relPath}`,
-          summary: `"${relPath}" references banned generic mutation vocabulary: ${hitTokens.join(", ")}`,
-          kind: "mutation-migration/semantic-vocabulary",
-          scope: relPath,
-          priority: "high",
-          reason: "SetSnapshot/NoMutation/CollectionMutation are the generic escape hatches the SemanticDescriptor/MutationKind/#[derive(dsl_derive::Mutations)] mechanism replaces with handcrafted rename/change/move/… mutations.",
-          solution: `Replace ${hitTokens.join(", ")} in ${relPath} with handcrafted semantic MutationKind payload(s), or if this facet hasn't been reached yet, add "${relPath}" to POLICY_SEMANTIC_VOCABULARY_ALLOWLIST citing this ticket.`,
-        });
-      }
-    } else if (allowlisted) {
       breaches.push({
-        id: `semantic-vocabulary-stale-${relPath}`,
-        summary: `"${relPath}" is allowlisted in POLICY_SEMANTIC_VOCABULARY_ALLOWLIST but no longer references banned vocabulary`,
+        id: `semantic-vocabulary-banned-${relPath}`,
+        summary: `"${relPath}" references banned generic mutation vocabulary: ${hitTokens.join(", ")}`,
         kind: "mutation-migration/semantic-vocabulary",
         scope: relPath,
-        priority: "low",
-        reason: "Shrink-only allowlists must be pruned as soon as the underlying file is fixed.",
-        solution: `Remove "${relPath}" from POLICY_SEMANTIC_VOCABULARY_ALLOWLIST.`,
+        priority: "high",
+        reason: "SetSnapshot/NoMutation/CollectionMutation are generic escape hatches replaced by explicit direct semantic mutations.",
+        solution: `Replace ${hitTokens.join(", ")} in ${relPath} with explicit semantic MutationKind payloads.`,
       });
     }
     const bareSetVariants = [...new Set([...content.matchAll(/\bSet[A-Z]\w*/g)].map((m) => m[0]))].filter((name) => name !== "SetSnapshot");
@@ -25481,21 +27676,7 @@ function policySemanticVocabularyBreaches(repoRoot: string): BreachRecord[] {
  * `policyMutationImplPresenceBreaches`'s own "advisory while Wave 3 pilot lands" graduation comment.
  */
 function policyMutationEnumVariantNames(content: string): string[] {
-  const enumMatch = content.match(/pub\s+enum\s+\w*Mutation\w*\s*\{/);
-  if (!enumMatch || enumMatch.index === undefined) return [];
-  let depth = 1;
-  let i = enumMatch.index + enumMatch[0].length;
-  for (; i < content.length && depth > 0; i++) {
-    if (content[i] === "{") depth++;
-    else if (content[i] === "}") depth--;
-  }
-  const body = content.slice(enumMatch.index + enumMatch[0].length, i - 1);
-  const names = new Set<string>();
-  for (const line of body.split("\n")) {
-    const variantMatch = line.match(/^\s{4}([A-Z]\w*)/);
-    if (variantMatch) names.add(variantMatch[1]!);
-  }
-  return [...names];
+  return inspectRustStructure(content).enums.filter((item) => item.name.includes("Mutation")).flatMap((item) => item.variants.map((variant) => variant.name));
 }
 
 /** 🐫Kebab (minus emoji) → PascalCase, for comparing a triad-dir stem against a dispatch-enum variant name. */
@@ -25554,7 +27735,7 @@ function policyMutationTsMirrorBreaches(repoRoot: string): BreachRecord[] {
       scope: relPath,
       priority: "low",
       reason: "A triad leaf's TS mirror should eventually re-export the same MutationKind payload shape as its Rust sibling, not stay an empty stub.",
-      solution: `Give ${relPath} real content mirroring its 🦀️component.rs sibling once the DSL TS codegen for this triad lands.`,
+      solution: `Give ${relPath} real content mirroring its ${POLICY_RS_COMPONENT_LEAF_NAME} sibling once the DSL TS codegen for this triad lands.`,
     });
   }
   for (const rsRel of policyWalkRelFiles(repoRoot, ["✏️s"], (relPath, name) => name === POLICY_RS_COMPONENT_LEAF_NAME && relPath.replaceAll("\\", "/").includes(`/${POLICY_MUTATIONS_FACET}/`))) {
@@ -25562,16 +27743,406 @@ function policyMutationTsMirrorBreaches(repoRoot: string): BreachRecord[] {
     if (existsSync(join(repoRoot, tsRel))) continue;
     breaches.push({
       id: `mutation-ts-mirror-absent-${tsRel}`,
-      summary: `"${rsRel}" has no 🟦️component.ts mirror beside it at all`,
+      summary: `"${rsRel}" has no ${POLICY_TS_COMPONENT_LEAF} mirror beside it at all`,
       kind: "mutation-migration/ts-mirror",
       scope: tsRel,
       priority: "low",
       reason: "An ABSENT mirror is invisible to the stub scan above, so a facet that never scaffolded its .ts leaves looked cleaner than one that did — this half closes that blind spot.",
-      solution: `Create ${tsRel} mirroring its 🦀️component.rs sibling's MutationKind payload shape.`,
+      solution: `Create ${tsRel} mirroring its ${POLICY_RS_COMPONENT_LEAF_NAME} sibling's MutationKind payload shape.`,
     });
   }
   return breaches;
 }
+
+//#region 🧬️DirectMutationPolicies
+export const MUTATION_STRUCTURAL_POLICY_KINDS = [
+  "mutation/direct-owner",
+  "mutation/root-purity",
+  "mutation/folder-variant-bijection",
+  "mutation/descriptor-bijection",
+  "mutation/reachability",
+  "mutation/behavior-ownership",
+  "mutation/codec-ownership",
+  "mutation/wire-identity",
+  "mutation/schema-parity",
+  "mutation/language-parity",
+  "mutation/catalog-parity",
+  "mutation/no-hidden-generation",
+  "mutation/no-sentinel",
+  "mutation/no-generic-snapshot-fallback",
+  "mutation/shared-helper-purity",
+  "mutation/test-presence",
+  "mutation/compose-exclusion",
+] as const;
+type MutationStructuralKind = typeof MUTATION_STRUCTURAL_POLICY_KINDS[number];
+
+type MutationLeafDescriptor = {
+  readonly schemaVersion: 1;
+  readonly owner: string;
+  readonly semanticKind: string;
+  readonly displayName: string;
+  readonly emoji: string;
+  readonly aggregateVariant: string;
+  readonly payloadSchema: string;
+  readonly textOpcode: string | null;
+  readonly binaryTag: number | null;
+  readonly invertibility: "self" | "explicit-mutation" | "plan" | "non-invertible";
+  readonly diffParticipation: "detect" | "apply-only" | "plan" | "none";
+  readonly outcomeClasses: readonly string[];
+  readonly composition: "atomic" | "composite";
+  readonly requiredLanguageSurfaces: readonly string[];
+};
+
+const MUTATION_DESCRIPTOR_SCHEMA_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️mutation-descriptor.schema.json";
+let mutationDescriptorSchema: unknown;
+
+//#region 🔣️JsonSchemaSubset
+function jsonSchemaSubsetObject(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : undefined;
+}
+
+function jsonSchemaSubsetValueEquals(left: unknown, right: unknown): boolean {
+  return canonicalJson(left) === canonicalJson(right);
+}
+
+function jsonSchemaSubsetTypeMatches(type: unknown, value: unknown): boolean {
+  if (type === "object") return jsonSchemaSubsetObject(value) !== undefined;
+  if (type === "array") return Array.isArray(value);
+  if (type === "string") return typeof value === "string";
+  if (type === "integer") return typeof value === "number" && Number.isInteger(value);
+  if (type === "number") return typeof value === "number" && Number.isFinite(value);
+  if (type === "boolean") return typeof value === "boolean";
+  if (type === "null") return value === null;
+  return true;
+}
+
+function jsonSchemaSubsetErrors(schema: unknown, value: unknown, path: string): string[] {
+  const contract = jsonSchemaSubsetObject(schema);
+  if (!contract) return [`${path} schema must be an object`];
+  const errors: string[] = [];
+  if ("const" in contract && !jsonSchemaSubsetValueEquals(value, contract.const)) errors.push(`${path} must equal its const`);
+  const enumValues = Array.isArray(contract.enum) ? contract.enum : undefined;
+  if (enumValues && !enumValues.some((candidate) => jsonSchemaSubsetValueEquals(value, candidate))) errors.push(`${path} must be an allowed enum value`);
+  const alternatives = Array.isArray(contract.anyOf) ? contract.anyOf : undefined;
+  if (alternatives && !alternatives.some((alternative) => jsonSchemaSubsetErrors(alternative, value, path).length === 0)) errors.push(`${path} must match one anyOf branch`);
+  if (!jsonSchemaSubsetTypeMatches(contract.type, value)) {
+    errors.push(`${path} must be ${String(contract.type)}`);
+    return errors;
+  }
+  if (typeof value === "string") {
+    if (typeof contract.minLength === "number" && value.length < contract.minLength) errors.push(`${path} must contain at least ${contract.minLength} character(s)`);
+    if (typeof contract.pattern === "string" && !new RegExp(contract.pattern, "u").test(value)) errors.push(`${path} must match ${contract.pattern}`);
+  }
+  if (typeof value === "number" && typeof contract.minimum === "number" && value < contract.minimum) errors.push(`${path} must be at least ${contract.minimum}`);
+  if (typeof value === "number" && typeof contract.maximum === "number" && value > contract.maximum) errors.push(`${path} must be at most ${contract.maximum}`);
+  if (Array.isArray(value)) {
+    if (typeof contract.minItems === "number" && value.length < contract.minItems) errors.push(`${path} must contain at least ${contract.minItems} item(s)`);
+    if (typeof contract.maxItems === "number" && value.length > contract.maxItems) errors.push(`${path} must contain at most ${contract.maxItems} item(s)`);
+    if (contract.uniqueItems === true && new Set(value.map((item) => canonicalJson(item))).size !== value.length) errors.push(`${path} items must be unique`);
+    if ("items" in contract) for (let index = 0; index < value.length; index++) errors.push(...jsonSchemaSubsetErrors(contract.items, value[index], `${path}/${index}`));
+    if ("contains" in contract && !value.some((item, index) => jsonSchemaSubsetErrors(contract.contains, item, `${path}/${index}`).length === 0)) errors.push(`${path} must contain a matching item`);
+  }
+  const object = jsonSchemaSubsetObject(value);
+  if (object) {
+    const required = Array.isArray(contract.required) ? contract.required.filter((key): key is string => typeof key === "string") : [];
+    for (const key of required) if (!(key in object)) errors.push(`${path}/${key} is required`);
+    const properties = jsonSchemaSubsetObject(contract.properties) ?? {};
+    for (const [key, childSchema] of Object.entries(properties)) if (key in object) errors.push(...jsonSchemaSubsetErrors(childSchema, object[key], `${path}/${key}`));
+    if (contract.additionalProperties === false) for (const key of Object.keys(object)) if (!(key in properties)) errors.push(`${path}/${key} is not allowed`);
+  }
+  return errors;
+}
+
+/** 🧭️ Validates the repository-owned Draft-07 subset without an external runtime dependency. */
+export function validateJsonSchemaSubset(schema: unknown, value: unknown): string[] {
+  return jsonSchemaSubsetErrors(schema, value, "");
+}
+//#endregion 🔣️JsonSchemaSubset
+
+/** 🪪️ Loads the one language-neutral direct-mutation descriptor schema. */
+function policyMutationDescriptorSchema(repoRoot: string): unknown {
+  const schemaRoot = existsSync(join(repoRoot, MUTATION_DESCRIPTOR_SCHEMA_REL)) ? repoRoot : WORKSPACE_ROOT;
+  if (!mutationDescriptorSchema) mutationDescriptorSchema = JSON.parse(policyReadFileSafe(schemaRoot, MUTATION_DESCRIPTOR_SCHEMA_REL));
+  return mutationDescriptorSchema;
+}
+
+function policyMutationDescriptor(repoRoot: string, descriptorRel: string): { descriptor?: MutationLeafDescriptor; problem?: string } {
+  try {
+    const descriptor = JSON.parse(policyReadFileSafe(repoRoot, descriptorRel)) as MutationLeafDescriptor;
+    const errors = validateJsonSchemaSubset(policyMutationDescriptorSchema(repoRoot), descriptor);
+    return errors.length === 0 ? { descriptor } : { problem: errors.join("; ") };
+  } catch (error) {
+    return { problem: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+function policyMutationStructuralBreach(kind: MutationStructuralKind, scope: string, summary: string, solution: string): BreachRecord {
+  return { id: `${kind.replaceAll("/", "-")}-${scope}`, summary, kind, scope, priority: "high", reason: "The direct-leaf mutation architecture requires a visible one-to-one owner, identity, behavior, surface, and test correspondence.", solution };
+}
+
+/** 🔢️ Resolves a literal Rust tag or unambiguous local constant chain without evaluating expressions. */
+function policyMutationBinaryTag(value: string, constants: readonly { readonly name: string; readonly value: string }[]): number | null {
+  const visited = new Set<string>();
+  while (/^[A-Za-z_][A-Za-z0-9_]*$/u.test(value)) {
+    if (visited.has(value)) return null;
+    visited.add(value);
+    const matches = constants.filter((constant) => constant.name === value);
+    if (matches.length !== 1) return null;
+    value = matches[0]!.value;
+  }
+  if (!/^(?:0x[0-9a-fA-F_]+|0b[01_]+|0o[0-7_]+|[0-9][0-9_]*)(?:u(?:8|16|32|64|128|size))?$/u.test(value)) return null;
+  const tag = Number(value.replace(/u(?:8|16|32|64|128|size)$/u, "").replaceAll("_", ""));
+  return Number.isSafeInteger(tag) ? tag : null;
+}
+
+function policyMutationRootPurityBreaches(mutationsRel: string, raw: string): BreachRecord[] {
+  const rootRel = `${mutationsRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+  const facts = inspectRustStructure(raw);
+  const forbidden: string[] = [];
+  if (!raw.trim()) forbidden.push("empty aggregate source");
+  if (facts.enums.filter((item) => item.name.includes("Mutation")).some((item) => item.variants.some((variant) => variant.fieldStyle !== "tuple" || variant.fieldTypes.length !== 1))) forbidden.push("aggregate variant without exactly one wrapped leaf");
+  if (facts.inlinePayloads.length > 0) forbidden.push("payload struct");
+  if (facts.matchArms.length > 0) forbidden.push("match behavior");
+  if (facts.constants.some((constant) => constant.name === "KINDS")) forbidden.push("hand-maintained KINDS");
+  if (facts.impls.some((implementation) => implementation.methods.some((method) => ["apply", "diff", "inverse", "between", "parse", "print", "encode", "decode", "transform"].includes(method)))) forbidden.push("mutation-specific method");
+  if (facts.includes.length > 0) forbidden.push("hidden/generated implementation");
+  return forbidden.length === 0 ? [] : [policyMutationStructuralBreach("mutation/root-purity", rootRel, `"${rootRel}" contains forbidden aggregate content: ${forbidden.join(", ")}`, "Move mutation-specific payloads, behavior, codecs, fixtures, and tests into their direct leaf owners; retain only visible aggregation and structural correspondence tests.")];
+}
+
+type MutationRootReachability = { readonly leafName: string; readonly variantName: string; readonly moduleName: string; readonly mounted: boolean; readonly wrapped: boolean; readonly reason: string | null };
+
+/** 🔗️ Proves each direct leaf from one public aggregate mount to one wrapped aggregate type. */
+function policyMutationRootReachability(repoRoot: string, mutationsRel: string, rootSource: string, leafNames: readonly string[], rustFilename: string): readonly MutationRootReachability[] {
+  const graph = inspectRustModuleGraphFacts(rootSource);
+  const publicTypes = new Set(inspectRustPublicTypeNames(rootSource));
+  const aggregate = inspectRustStructure(rootSource).enums.filter((item) => item.name.endsWith("Mutation") && publicTypes.has(item.name));
+  if (aggregate.length !== 1) return leafNames.map((leafName) => ({ leafName, variantName: policyKebabToPascal(policyStripEmoji(leafName)), moduleName: policyStripEmoji(leafName).replaceAll("-", "_"), mounted: false, wrapped: false, reason: "requires exactly one public top-level aggregate Mutation enum" }));
+  const variants = aggregate.flatMap((item) => item.variants);
+  return leafNames.map((leafName) => {
+    const moduleName = policyStripEmoji(leafName).replaceAll("-", "_");
+    const variantName = policyKebabToPascal(policyStripEmoji(leafName));
+    const namedMounts = graph.modules.filter((module) => module.modulePath.length === 1 && module.name === moduleName);
+    const mount = namedMounts.filter((module) => module.visibility === "pub" && !module.inline && module.pathTarget === `${leafName}/${rustFilename}`);
+    if (namedMounts.length !== 1 || mount.length !== 1) return { leafName, variantName, moduleName, mounted: false, wrapped: false, reason: "requires exactly one public canonical direct-leaf mount" };
+    const leafRel = `${mutationsRel}/${leafName}`;
+    let leafSource: string, types: readonly string[];
+    try { leafSource = policyReadFileSafe(repoRoot, `${leafRel}/${rustFilename}`); types = inspectRustPublicTypeNames(leafSource); }
+    catch { return { leafName, variantName, moduleName, mounted: true, wrapped: false, reason: "mounted direct leaf type source cannot be inspected" }; }
+    const leafGraph = inspectRustModuleGraphFacts(leafSource);
+    for (const use of leafGraph.uses.filter((entry) => entry.modulePath.length === 0 && entry.relation === "reexport" && entry.visibility === "pub")) {
+      const match = /^([A-Za-z_][A-Za-z0-9_]*)::([A-Za-z_][A-Za-z0-9_]*)(?:\s+as\s+([A-Za-z_][A-Za-z0-9_]*))?$/u.exec(use.specifier);
+      const children = match ? leafGraph.modules.filter((entry) => entry.modulePath.length === 1 && entry.name === match[1] && entry.visibility === "pub" && !entry.inline && entry.pathTarget !== null && !entry.pathTarget.startsWith("/") && !entry.pathTarget.split("/").includes("..")) : [];
+      const child = children.length === 1 ? children[0] : undefined;
+      if (!match || !child) continue;
+      try { if (inspectRustPublicTypeNames(policyReadFileSafe(repoRoot, `${leafRel}/${child.pathTarget}`)).includes(match[2]!)) types = [...types, match[3] ?? match[2]!]; } catch {}
+    }
+    const aliases = new Set(types.map((type) => `${moduleName}::${type}`));
+    for (const use of graph.uses.filter((entry) => entry.modulePath.length === 0 && entry.relation === "reexport" && entry.visibility === "pub")) {
+      const match = new RegExp(`^${moduleName}::([A-Za-z_][A-Za-z0-9_]*)(?:\\s+as\\s+([A-Za-z_][A-Za-z0-9_]*))?$`, "u").exec(use.specifier);
+      if (match && types.includes(match[1]!)) aliases.add(match[2] ?? match[1]!);
+    }
+    const named = variants.filter((variant) => variant.name === variantName);
+    const matching = named.filter((variant) => variant.fieldStyle === "tuple" && variant.fieldTypes.length === 1 && aliases.has(variant.fieldTypes[0]!));
+    return named.length === 1 && matching.length === 1 ? { leafName, variantName, moduleName, mounted: true, wrapped: true, reason: null } : { leafName, variantName, moduleName, mounted: true, wrapped: false, reason: "requires exactly one aggregate variant wrapping its mounted Mutation type or visible public alias" };
+  }).sort((left, right) => mutationTaxonomyCompare(left.leafName, right.leafName));
+}
+
+/** 🛡️ Rejects uninspectable explicit mutation scopes before any source read or symlink traversal. */
+function policyMutationValidatedRoots(repoRoot: string, mutationRoots: readonly string[]): string[] {
+  const roots = new Set<string>();
+  for (const candidate of mutationRoots) {
+    const root = candidate.normalize("NFC").replaceAll("\\", "/").replace(/^\.\//u, "");
+    const segments = root.split("/");
+    if (!root || root.startsWith("/") || /^[A-Za-z]:/u.test(root) || segments.some((segment) => !segment || segment === "." || segment === "..") || segments.at(-1) !== POLICY_MUTATIONS_FACET) throw new Error(`mutation scope must be a repository-relative ${POLICY_MUTATIONS_FACET} directory: ${JSON.stringify(candidate)}`);
+    if (segments[0] === "compose" || (segments[0] === "temp" && segments[1] === "compose") || taxonomyRelativePathIsExcluded(root)) throw new Error(`mutation scope is excluded: ${JSON.stringify(candidate)}`);
+    let current = resolve(repoRoot);
+    try {
+      for (const segment of segments) {
+        current = join(current, segment);
+        const entry = lstatSync(current);
+        if (entry.isSymbolicLink() || !entry.isDirectory()) throw new Error("expected a real directory, not a symlink");
+      }
+    } catch (error) {
+      throw new Error(`mutation scope cannot be inspected: ${JSON.stringify(candidate)}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    roots.add(root);
+  }
+  return [...roots].sort();
+}
+
+/** 🧪️ Reads one regular Rust source only when every path component remains owned by its direct leaf. */
+function policyMutationLeafOwnedRustSource(leafPath: string, sourcePath: string): string | null {
+  const owned = relative(leafPath, sourcePath);
+  if (!owned || isAbsolute(owned) || owned.split(sep).some((part) => !part || part === "." || part === "..")) return null;
+  try {
+    const leaf = lstatSync(leafPath);
+    if (leaf.isSymbolicLink() || !leaf.isDirectory()) return null;
+    let current = leafPath;
+    const parts = owned.split(sep);
+    for (const [index, part] of parts.entries()) {
+      current = join(current, part);
+      const entry = lstatSync(current);
+      if (entry.isSymbolicLink() || (index + 1 === parts.length ? !entry.isFile() : !entry.isDirectory())) return null;
+    }
+    return readFileSync(sourcePath, "utf8");
+  } catch {
+    return null;
+  }
+}
+
+/** 🧪️ Resolves an explicit Rust test-module mount without rewriting its filesystem spelling. */
+function policyMutationLeafTestModulePath(sourceModuleBase: string, leafPath: string, mountBase: readonly string[], target: string): string | null {
+  if (!target || target.includes("\0") || target.includes("\\") || isAbsolute(target) || /^[A-Za-z]:/u.test(target)) return null;
+  const segments = target.split("/");
+  if (segments.some((segment) => !segment || segment === "." || segment === "..") || mountBase.some((segment) => !segment || segment === "." || segment === ".." || segment.includes("\0") || segment.includes("\\") || /^[A-Za-z]:$/u.test(segment))) return null;
+  const candidate = resolve(sourceModuleBase, ...mountBase, ...segments);
+  const owned = relative(leafPath, candidate);
+  return owned && !isAbsolute(owned) && !owned.split(sep).some((part) => !part || part === "." || part === "..") ? candidate : null;
+}
+
+/** 🧪️ Proves one executable, enabled, non-ignored Rust test from direct leaf-owned source mounts. */
+function policyMutationLeafHasRunnableTest(repoRoot: string, leafRel: string, rustFilename: string): boolean {
+  const leafPath = join(repoRoot, leafRel);
+  const pending = [{ sourcePath: join(leafPath, rustFilename), moduleBase: leafPath }];
+  const visited = new Set<string>();
+  while (pending.length > 0) {
+    const { sourcePath, moduleBase } = pending.pop()!;
+    const source = policyMutationLeafOwnedRustSource(leafPath, sourcePath);
+    if (source === null || visited.has(sourcePath)) continue;
+    visited.add(sourcePath);
+    const facts = inspectRustRunnableTests(source);
+    if (facts.runnableTests.length > 0) return true;
+    for (const module of facts.mountedModules) {
+      if (module.configuration !== "enabled" || module.pathTarget === null) continue;
+      const target = policyMutationLeafTestModulePath(moduleBase, leafPath, module.mountBase, module.pathTarget);
+      if (target !== null && !visited.has(target)) pending.push({ sourcePath: target, moduleBase: dirname(target) });
+    }
+  }
+  return false;
+}
+
+/** 🧬️ Reports every mandatory direct-leaf structural invariant at high severity. */
+export function policyMutationStructuralBreaches(repoRoot: string, mutationRoots: readonly string[] = policyFindAllMutationsDirs(repoRoot)): BreachRecord[] {
+  const validatedRoots = policyMutationValidatedRoots(repoRoot, mutationRoots);
+  const breaches: BreachRecord[] = [...policyMutationDirectOwnerBreaches(repoRoot, validatedRoots)];
+  for (const mutationsRel of validatedRoots) {
+    const rootRel = `${mutationsRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+    let rootSource = "";
+    try {
+      const rootPath = join(repoRoot, rootRel);
+      const aggregate = lstatSync(rootPath);
+      if (aggregate.isSymbolicLink() || !aggregate.isFile()) throw new Error("expected a real aggregate source file");
+      rootSource = readFileSync(rootPath, "utf8");
+      breaches.push(...policyMutationRootPurityBreaches(mutationsRel, rootSource));
+    } catch (error) {
+      breaches.push(policyMutationStructuralBreach("mutation/reachability", rootRel, `"${rootRel}" cannot be inspected: ${error instanceof Error ? error.message : String(error)}`, "Provide a visible regular aggregate source file that reaches every direct leaf; do not hide its implementation behind a symlink."));
+    }
+    const rootFacts = inspectRustStructure(rootSource);
+    const inspectMutationInputs = createRustMutationInputInspector(rootSource);
+    const inspectMutationCodecOwnership = createRustMutationCodecOwnershipInspector(rootSource);
+    const variants = new Set(policyMutationEnumVariantNames(rootSource));
+    const leafNames = policyListMutationDirs(repoRoot, mutationsRel);
+    const taxonomy = loadTaxonomy();
+    const rustFilename = canonicalPrimaryFilenameForKind(taxonomy.componentFileKinds["🦀️rust"]!, taxonomy);
+    const reachability = policyMutationRootReachability(repoRoot, mutationsRel, rootSource, leafNames, rustFilename);
+    const folderVariants = new Set(leafNames.map((name) => policyKebabToPascal(policyStripEmoji(name))));
+    const missingFolders = [...variants].filter((name) => !folderVariants.has(name));
+    const missingVariants = [...folderVariants].filter((name) => !variants.has(name));
+    if (missingFolders.length > 0 || missingVariants.length > 0 || reachability.some((proof) => !proof.mounted || !proof.wrapped)) breaches.push(policyMutationStructuralBreach("mutation/folder-variant-bijection", mutationsRel, `"${mutationsRel}" lacks an exact public mount/wrapped-type/folder correspondence: ${reachability.filter((proof) => !proof.mounted || !proof.wrapped).map((proof) => `${proof.leafName}: ${proof.reason}`).join("; ") || `${missingFolders.length} orphan variant(s), ${missingVariants.length} orphan folder(s)`}`, "Make every aggregate variant a one-field wrapper of exactly one publicly mounted canonical direct leaf type, with matching semantic folder identity."));
+    if (variants.has("NoMutation")) breaches.push(policyMutationStructuralBreach("mutation/no-sentinel", rootRel, `"${rootRel}" declares NoMutation`, "Represent absence with Option, an empty plan, or the protocol's explicit no-change outcome."));
+    if (variants.has("SetSnapshot")) breaches.push(policyMutationStructuralBreach("mutation/no-generic-snapshot-fallback", rootRel, `"${rootRel}" declares SetSnapshot`, "Remove the fallback or replace a proven independent whole-snapshot operation with an explicitly reviewed replace-snapshot leaf."));
+    if (rootFacts.includes.length > 0) breaches.push(policyMutationStructuralBreach("mutation/no-hidden-generation", rootRel, `"${rootRel}" hides mutation implementation behind generated/include machinery`, "Keep all concrete variants, payload types, descriptors, and behavior visibly source-controlled in their direct leaves."));
+    const seenKinds = new Map<string, string>();
+    const seenTextOpcodes = new Map<string, string>();
+    const seenBinaryTags = new Map<number, string>();
+    const descriptorFilename = canonicalPrimaryFilenameForKind(taxonomy.mutationDescriptorFileKindId, taxonomy);
+    const surfaceSpecs = [
+      { id: "typescript", root: `${mutationsRel}/${POLICY_TS_COMPONENT_LEAF}`, leaf: POLICY_TS_COMPONENT_LEAF, policy: "mutation/language-parity" as const },
+      { id: "graphql", root: `${mutationsRel}/${canonicalPrimaryFilenameForKind(taxonomy.schemaFormats["🔗️graphql"].fileKindId, taxonomy)}`, leaf: canonicalPrimaryFilenameForKind(taxonomy.schemaFormats["🔗️graphql"].fileKindId, taxonomy), policy: "mutation/schema-parity" as const },
+      { id: "protobuf", root: `${mutationsRel}/${canonicalPrimaryFilenameForKind(taxonomy.schemaFormats["🛰️protobuf"].fileKindId, taxonomy)}`, leaf: canonicalPrimaryFilenameForKind(taxonomy.schemaFormats["🛰️protobuf"].fileKindId, taxonomy), policy: "mutation/schema-parity" as const },
+      { id: "json-schema", root: `${mutationsRel}/${canonicalPrimaryFilenameForKind(taxonomy.schemaFormats["🔣️jsonschema"].fileKindId, taxonomy)}`, leaf: mutationPayloadSchemaRelativePath(taxonomy), policy: "mutation/schema-parity" as const },
+      { id: "text", root: `${mutationsRel}/📝️text/${POLICY_RS_COMPONENT_LEAF_NAME}`, leaf: `📝️text/${POLICY_RS_COMPONENT_LEAF_NAME}`, policy: "mutation/language-parity" as const },
+      { id: "binary", root: `${mutationsRel}/💾️binary/${POLICY_RS_COMPONENT_LEAF_NAME}`, leaf: `💾️binary/${POLICY_RS_COMPONENT_LEAF_NAME}`, policy: "mutation/language-parity" as const },
+    ].map((surface) => {
+      const source = policyReadFileSafe(repoRoot, surface.root);
+      return { ...surface, source, identities: surface.id === "text" || surface.id === "binary" ? new Set(inspectRustSourceIdentities(source)) : null };
+    });
+    const subsetRoot = mutationsRel.endsWith("/🧬️schema/🧬️mutations") ? mutationsRel.slice(0, -"/🧬️schema/🧬️mutations".length) : null;
+    const catalogRel = subsetRoot ? `${subsetRoot}/🧪️oracle/${canonicalPrimaryFilenameForKind(taxonomy.testContributionFileKindId, taxonomy)}` : null;
+    const catalogSource = catalogRel ? policyReadFileSafe(repoRoot, catalogRel) : "";
+    for (const leafName of leafNames) {
+      const leafRel = `${mutationsRel}/${leafName}`;
+      const directRel = `${leafRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+      if (!existsSync(join(repoRoot, directRel))) continue;
+      const raw = policyReadFileSafe(repoRoot, directRel);
+      const facts = inspectRustStructure(raw);
+      const moduleName = policyStripEmoji(leafName).replaceAll("-", "_");
+      const variantName = policyKebabToPascal(policyStripEmoji(leafName));
+      const semanticKind = policyStripEmoji(leafName);
+      const descriptorRel = `${leafRel}/${descriptorFilename}`;
+      const descriptorResult = existsSync(join(repoRoot, descriptorRel)) ? policyMutationDescriptor(repoRoot, descriptorRel) : { problem: "descriptor is missing" };
+      const descriptor = descriptorResult.descriptor;
+      if (!descriptor) breaches.push(policyMutationStructuralBreach("mutation/descriptor-bijection", descriptorRel, `"${descriptorRel}" ${descriptorResult.problem}`, `Add one ${descriptorFilename} conforming to ${MUTATION_DESCRIPTOR_SCHEMA_REL}.`));
+      else {
+        const identityProblems: string[] = [];
+        if (descriptor.owner !== leafRel) identityProblems.push(`owner=${JSON.stringify(descriptor.owner)}`);
+        if (descriptor.semanticKind !== semanticKind) identityProblems.push(`semanticKind=${JSON.stringify(descriptor.semanticKind)}`);
+        if (descriptor.emoji !== policyLeadingEmojiPrefix(leafName)) identityProblems.push(`emoji=${JSON.stringify(descriptor.emoji)}`);
+        if (descriptor.aggregateVariant !== variantName) identityProblems.push(`aggregateVariant=${JSON.stringify(descriptor.aggregateVariant)}`);
+        const [payloadLeaf, payloadType, extraPayloadFragment] = descriptor.payloadSchema.split("#");
+        const payloadPointerCanonical = descriptor.requiredLanguageSurfaces.includes("json-schema") ? descriptor.payloadSchema === mutationPayloadSchemaRelativePath(taxonomy) : payloadLeaf === POLICY_RS_COMPONENT_LEAF_NAME && /^[A-Za-z_][A-Za-z0-9_]*$/u.test(payloadType ?? "") && extraPayloadFragment === undefined;
+        if (!payloadPointerCanonical) identityProblems.push(`payloadSchema=${JSON.stringify(descriptor.payloadSchema)}`);
+        if (identityProblems.length > 0) breaches.push(policyMutationStructuralBreach("mutation/descriptor-bijection", descriptorRel, `"${descriptorRel}" identity disagrees with its direct owner: ${identityProblems.join(", ")}`, "Make the language-neutral descriptor exactly identify its owner folder, aggregate variant, payload schema, and completed classifications."));
+        if (descriptor.textOpcode !== null) {
+          const prior = seenTextOpcodes.get(descriptor.textOpcode);
+          if (prior) breaches.push(policyMutationStructuralBreach("mutation/wire-identity", descriptorRel, `"${descriptorRel}" duplicates text opcode "${descriptor.textOpcode}" from "${prior}"`, "Give every text-capable leaf a unique stable opcode."));
+          else seenTextOpcodes.set(descriptor.textOpcode, descriptorRel);
+        }
+        if (descriptor.binaryTag !== null) {
+          const prior = seenBinaryTags.get(descriptor.binaryTag);
+          if (prior) breaches.push(policyMutationStructuralBreach("mutation/wire-identity", descriptorRel, `"${descriptorRel}" duplicates binary tag ${descriptor.binaryTag} from "${prior}"`, "Give every binary-capable leaf a unique stable tag."));
+          else seenBinaryTags.set(descriptor.binaryTag, descriptorRel);
+        }
+        for (const surface of surfaceSpecs) {
+          const rootExists = existsSync(join(repoRoot, surface.root));
+          const descriptorRequires = descriptor.requiredLanguageSurfaces.includes(surface.id);
+          if (!rootExists && !descriptorRequires) continue;
+          const leafSurfaceRel = `${leafRel}/${surface.leaf}`;
+          const leafSurfaceSource = policyReadFileSafe(repoRoot, leafSurfaceRel);
+          const names = [semanticKind, variantName, `${variantName}Mutation`, moduleName, ...facts.inlinePayloads.map((payload) => payload.name), ...facts.enums.map((item) => item.name)];
+          const leafIdentities = surface.identities === null ? null : new Set(inspectRustSourceIdentities(leafSurfaceSource));
+          const binaryConstants = surface.id === "binary" ? inspectRustStructure(leafSurfaceSource).constants : [];
+          const binaryTag = binaryConstants.find((constant) => constant.name === "BINARY_TAG");
+          const binaryTagMatches = binaryTag !== undefined && descriptor.binaryTag !== null && policyMutationBinaryTag(binaryTag.value, binaryConstants) === descriptor.binaryTag;
+          const leafHasIdentity = (leafIdentities ? names.some((name) => leafIdentities.has(name)) || binaryTagMatches : leafSurfaceSource.includes(semanticKind) || leafSurfaceSource.includes(variantName)) && (binaryTag === undefined || binaryTagMatches);
+          const rootHasIdentity = surface.identities ? names.some((name) => surface.identities!.has(name)) : surface.source.includes(semanticKind) || surface.source.includes(variantName);
+          if (binaryTag && !binaryTagMatches) breaches.push(policyMutationStructuralBreach("mutation/wire-identity", leafSurfaceRel, `"${leafSurfaceRel}" binary tag ${binaryTag.value} does not equal descriptor tag ${descriptor.binaryTag}`, "Use the same exact numeric tag in the direct binary contribution and its language-neutral descriptor."));
+          if (!rootExists || !descriptorRequires || !leafSurfaceSource || !leafHasIdentity) breaches.push(policyMutationStructuralBreach(surface.policy, leafSurfaceRel, `"${descriptorRel}" does not have a complete direct ${surface.id} counterpart`, `Declare ${surface.id} in requiredLanguageSurfaces and add visible descriptor-backed identities to ${surface.root} and ${leafSurfaceRel}.`));
+          if (!rootHasIdentity) breaches.push(policyMutationStructuralBreach(surface.policy, surface.root, `"${surface.root}" omits ${semanticKind}/${variantName}`, `Add the descriptor-backed ${surface.id} union, discriminator, opcode, or tag entry for ${semanticKind}.`));
+        }
+        if (catalogRel && catalogSource && !catalogSource.includes(semanticKind) && !catalogSource.includes(variantName)) breaches.push(policyMutationStructuralBreach("mutation/catalog-parity", catalogRel, `"${catalogRel}" omits direct mutation ${semanticKind}`, "Derive or verify the catalog/roster from the same direct leaf descriptor set."));
+      }
+      const proof = reachability.find((entry) => entry.leafName === leafName);
+      if (!proof?.mounted || !proof.wrapped) breaches.push(policyMutationStructuralBreach("mutation/reachability", directRel, `"${directRel}" is not proven reachable from its aggregate: ${proof?.reason ?? "missing reachability proof"}`, `Publicly mount ${moduleName} from ${leafName}/${rustFilename} and wrap its Mutation type in ${variantName}.`));
+      if (!facts.impls.some((implementation) => implementation.traitPath?.includes("Mutation"))) breaches.push(policyMutationStructuralBreach("mutation/behavior-ownership", directRel, `"${directRel}" does not visibly own mutation behavior`, "Move or mount apply, diff, inverse, validation, and typed-outcome behavior through this direct component."));
+      const inputCarriers = inspectMutationInputs(raw);
+      if (inputCarriers.length > 0) breaches.push(policyMutationStructuralBreach("mutation/no-generic-snapshot-fallback", directRel, `"${directRel}" accepts unrestricted aggregate state through ${inputCarriers.join("; ")}`, "Remove aggregate Diff/Snapshot payload carriers, including aliases and nested restore phases; return explicit semantic inverse mutations with operation-local prior values."));
+      if (!policyMutationLeafHasRunnableTest(repoRoot, leafRel, rustFilename)) breaches.push(policyMutationStructuralBreach("mutation/test-presence", directRel, `"${directRel}" has no enabled, reachable, non-ignored leaf-owned Rust test`, "Add an enabled #[test] function in the direct leaf or an explicitly mounted leaf-owned test module; do not rely on empty directories, comments, ignored tests, or unproven cfg conditions."));
+      const rustSemanticKind = facts.constants.find((constant) => constant.name === "SEMANTICS")?.identityFields.kind ?? facts.constants.find((constant) => constant.name === "SEMANTIC_KIND")?.stringValue ?? undefined;
+      if (!rustSemanticKind || rustSemanticKind !== descriptor?.semanticKind) breaches.push(policyMutationStructuralBreach("mutation/wire-identity", directRel, `"${directRel}" Rust semantic kind does not equal its language-neutral descriptor`, "Expose one stable Rust semantic kind that exactly mirrors the direct leaf descriptor."));
+      else if (seenKinds.has(rustSemanticKind)) breaches.push(policyMutationStructuralBreach("mutation/wire-identity", directRel, `"${directRel}" duplicates semantic kind "${rustSemanticKind}" from "${seenKinds.get(rustSemanticKind)}"`, "Give every direct leaf a unique stable semantic kind, opcode, and binary tag."));
+      else seenKinds.set(rustSemanticKind, directRel);
+    }
+    for (const codec of ["📝️text", "💾️binary"] as const) {
+      const codecRel = `${mutationsRel}/${codec}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+      const findings = inspectMutationCodecOwnership(policyReadFileSafe(repoRoot, codecRel));
+      for (const finding of findings) breaches.push(policyMutationStructuralBreach("mutation/codec-ownership", codecRel, `"${codecRel}" contains executable ${finding.kind.replaceAll("-", " ")}`, "Keep only framing/tokenization/registry lookup here and move every operation's parser/printer/encoder/decoder into its direct leaf."));
+    }
+    if (variants.has("NoMutation") || variants.has("SetSnapshot")) breaches.push(policyMutationStructuralBreach("mutation/shared-helper-purity", rootRel, `"${rootRel}" contains concrete fallback dispatch`, "Move shared generic helpers to the nearest approved module and keep them free of concrete names, tags, branches, and defaults."));
+  }
+  return breaches.sort((left, right) => left.scope.localeCompare(right.scope) || left.kind.localeCompare(right.kind));
+}
+//#endregion 🧬️DirectMutationPolicies
 
 /**
  * 🎮️App command folders must be one semantically named command (verb-noun kebab), matching
@@ -25627,13 +28198,10 @@ function policyCommandFolderSemanticBreaches(repoRoot: string): BreachRecord[] {
 /** ⚖️Aggregates Wave 2b mutation / ArtifactEngine / op-grammar scanners. */
 function policyMutationArtifactEngineBreaches(repoRoot: string): BreachRecord[] {
   return [
-    ...policyMutationTriadCompletenessBreaches(repoRoot),
-    ...policyMutationImplPresenceBreaches(repoRoot),
+    ...policyMutationStructuralBreaches(repoRoot),
     ...policyOpGrammarStartMutationBreaches(repoRoot),
     ...policyMutationEmojiUniquenessBreaches(repoRoot),
-    ...policyMutationDispatchCoverageBreaches(repoRoot),
     ...policySemanticVocabularyBreaches(repoRoot),
-    ...policyMutationTsMirrorBreaches(repoRoot),
     ...policyCommandFolderSemanticBreaches(repoRoot),
   ];
 }
@@ -25650,62 +28218,26 @@ function policyMutationArtifactEngineBreaches(repoRoot: string): BreachRecord[] 
 const POLICY_MUTATION_FROZEN_CODES = ["mutation.target-missing", "mutation.no-op", "mutation.partial", "mutation.clamped", "mutation.duplicate-id", "mutation.invariant", "mutation.cascade"] as const;
 const POLICY_MUTATION_FROZEN_CODE_SET = new Set<string>(POLICY_MUTATION_FROZEN_CODES);
 
-/** 🗄️The gltf legacy typed-sparse-operation architecture's owning root — see `POLICY_MUTATION_TOTAL_KIND_ALLOWLIST` entry (b). Exempts this tree from both `policyMutationOutcomeBreaches` (rule 1) and `policyMutationMessageCodeBreaches` (rule 2) — gltf's `GltfTopLevelMutationRejection` codes (e.g. `"mutation.rejected"`) are that separate architecture's own vocabulary, never the 7 frozen `MutationOutcome` codes. */
-const POLICY_MUTATION_GLTF_ROOT = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf";
-/** 🌐️Sentinel toggling allowlist entry (a) — see `POLICY_MUTATION_TOTAL_KIND_ALLOWLIST`'s doc comment. */
-const POLICY_MUTATION_TOTAL_KIND_SENTINEL = "🌐️root-scoped-total-kind";
-
-/**
- * 🎫️ `📋️contract-freeze.md` fan-out recipe: "Total kinds (root-scoped `clear-*`, root
- * `change-<artifact>-<field>`) may return message-free outcomes via a shrink-only allowlist." Seeded
- * with exactly the two documented entries this ticket froze:
- * (a) `POLICY_MUTATION_TOTAL_KIND_SENTINEL` — a structural toggle (not a literal path) for root-scoped
- *     total kinds: any mutation slug beginning `clear-` (clearing an artifact-level collection has no
- *     id to address, so it's inherently root-scoped) or `change-<artifactId>-` (the artifact's own root
- *     field, which always exists) may call bare `protocol::MutationOutcome::new(diff)` with no message —
- *     `policyMutationIsRootScopedTotalKind` below is the exact predicate. Remove this entry once total
- *     kinds are required to carry `mutation.no-op`/`mutation.cascade` like every other verb family.
- * (b) `POLICY_MUTATION_GLTF_ROOT` — 116 leaves under `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/**` are a
- *     SEPARATE typed-sparse-operation architecture (`derive`/`apply_diff`/`GltfTopLevelMutationRejection`,
- *     `Result<T, GltfTopLevelMutationRejection>` — never `protocol::MutationOutcome<..>`, never on the
- *     `Mutation::diff` path) owned by the live ticket
- *     `26/08/16/FULL-STDIO-ARTIFACT-STANDARDS-CODECS-INFERENCES-AND-MUTATIONS`. This same entry also
- *     exempts the tree from `policyMutationMessageCodeBreaches` (rule 2) — its `Mutation::diff` shim at
- *     `🔨️modules/🧭️mutation-dispatch/🦀️component.rs` legitimately builds a `protocol::MutationOutcome`
- *     to satisfy that trait, but reports the SEPARATE architecture's own rejection reason (a
- *     `GltfTopLevelMutationRejection`'s `Display`) as the message, which is never one of the 7 frozen
- *     codes by design. Remove this entry once that ticket either folds gltf onto `MutationOutcome` or
- *     the split architecture is formally frozen elsewhere.
- */
-const POLICY_MUTATION_TOTAL_KIND_ALLOWLIST = new Set<string>([POLICY_MUTATION_TOTAL_KIND_SENTINEL, POLICY_MUTATION_GLTF_ROOT]);
-
-/** 🔎️Root-scoped total kind per the fan-out recipe: bare `clear-*`, or `change-<artifactId>-*` addressing the artifact's own always-present root field. */
-function policyMutationIsRootScopedTotalKind(mutName: string, artifactId: string): boolean {
-  const stripped = policyStripEmoji(mutName);
-  if (stripped.startsWith("clear-")) return true;
-  return artifactId !== "" && stripped.startsWith(`change-${artifactId}-`);
+/** 🧩️ A direct mutation is composite exactly when it visibly owns an explicit plan facet. */
+function policyIsCompositeMutationDir(repoRoot: string, mutationRel: string): boolean {
+  return existsSync(join(repoRoot, mutationRel, POLICY_MUTATION_PLAN_DIR, POLICY_RS_COMPONENT_LEAF_NAME));
 }
 
 /**
  * 📏️Rule 1: every `🧬️mutations/<slug>/🔺️diff/🦀️component.rs` must return `protocol::MutationOutcome<`
- * and reference at least one of the 7 frozen codes, unless `POLICY_MUTATION_TOTAL_KIND_ALLOWLIST` exempts
- * it. Composite mutation dirs (own `🧩️plan`, not `🔺️diff`) are out of scope — their outcome folds from
+ * and reference at least one of the 7 frozen codes. Composite mutation dirs (own `🧩️plan`, not `🔺️diff`) are out of scope — their outcome folds from
  * the plan. A leaf whose `🔺️diff` doesn't exist yet is tracked by `policyMutationTriadCompletenessBreaches`
  * instead, not here.
  */
 export function policyMutationOutcomeBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  const gltfAllowlisted = POLICY_MUTATION_TOTAL_KIND_ALLOWLIST.has(POLICY_MUTATION_GLTF_ROOT);
-  const totalKindAllowlisted = POLICY_MUTATION_TOTAL_KIND_ALLOWLIST.has(POLICY_MUTATION_TOTAL_KIND_SENTINEL);
   for (const mutationsRel of policyFindAllMutationsDirs(repoRoot)) {
     const artRel = policyArtifactRootOfMutationsDir(mutationsRel);
-    const artifactId = policyStripEmoji(artRel.split("/").pop() ?? "");
     for (const mutName of policyListMutationDirs(repoRoot, mutationsRel)) {
       const mutRel = `${mutationsRel}/${mutName}`;
       if (policyIsCompositeMutationDir(repoRoot, mutRel)) continue;
       const diffRel = `${mutRel}/🔺️diff/${POLICY_RS_COMPONENT_LEAF_NAME}`;
       if (!existsSync(join(repoRoot, diffRel))) continue;
-      if (gltfAllowlisted && diffRel.startsWith(`${POLICY_MUTATION_GLTF_ROOT}/`)) continue;
       const content = policyReadFileSafe(repoRoot, diffRel);
       const returnsOutcome = /protocol::MutationOutcome\s*</.test(content);
       if (!returnsOutcome) {
@@ -25720,8 +28252,6 @@ export function policyMutationOutcomeBreaches(repoRoot: string): BreachRecord[] 
         });
         continue;
       }
-      const isTotalKind = totalKindAllowlisted && policyMutationIsRootScopedTotalKind(mutName, artifactId);
-      if (isTotalKind) continue;
       const hasCode = POLICY_MUTATION_FROZEN_CODES.some((code) => content.includes(code));
       if (hasCode) continue;
       breaches.push({
@@ -25730,8 +28260,8 @@ export function policyMutationOutcomeBreaches(repoRoot: string): BreachRecord[] 
         kind: "mutation-migration/outcome",
         scope: artRel,
         priority: "high",
-        reason: "The verb-family table (📋️contract-freeze.md fan-out recipe) requires real Error/Warning/Fatal/Info detection per verb family — a bare MutationOutcome::new(..) with no message is only legal for a root-scoped total kind.",
-        solution: `Add the real detection this verb family requires (target missing ⇒ ::error("mutation.target-missing", ..), idempotent ⇒ .warn("mutation.no-op", ..), duplicate id / invariant ⇒ ::fatal(..), cascade ⇒ .info("mutation.cascade", ..)), or if this genuinely is a root-scoped total kind, confirm POLICY_MUTATION_TOTAL_KIND_ALLOWLIST covers it.`,
+        reason: "The verb-family table requires real Error/Warning/Fatal/Info detection per verb family; no mutation architecture is exempt.",
+        solution: `Add the real detection this verb family requires (target missing ⇒ ::error("mutation.target-missing", ..), idempotent ⇒ .warn("mutation.no-op", ..), duplicate id / invariant ⇒ ::fatal(..), cascade ⇒ .info("mutation.cascade", ..)).`,
       });
     }
   }
@@ -25752,14 +28282,10 @@ const POLICY_FN_DECL_RE = /\bfn\s+[A-Za-z_]\w*/g;
  * builders are checked file-wide; the chainable `.info(..)`/`.warn(..)` shorthand is checked only
  * inside a `fn` body that itself references `MutationOutcome` — a plain `console.warn(..)` embedded as
  * a JS string literal inside a Rust file (never inside such a body) can never false-positive here.
- * Exempts `POLICY_MUTATION_GLTF_ROOT`, same allowlist entry (b) as `policyMutationOutcomeBreaches` —
- * gltf's separate typed-sparse-operation architecture owns its own rejection vocabulary.
  */
 export function policyMutationMessageCodeBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  const gltfAllowlisted = POLICY_MUTATION_TOTAL_KIND_ALLOWLIST.has(POLICY_MUTATION_GLTF_ROOT);
   for (const relPath of policyAllRustFiles(repoRoot)) {
-    if (gltfAllowlisted && relPath.startsWith(`${POLICY_MUTATION_GLTF_ROOT}/`)) continue;
     const content = policyReadFileSafe(repoRoot, relPath);
     if (!content) continue;
     const reportedLines = new Set<number>();
@@ -25888,10 +28414,10 @@ export function policyNoValidateOverrideBreaches(repoRoot: string): BreachRecord
   return breaches;
 }
 
-/** 🔎️Repo-relative paths that resolve to 📜️script.ts's own content — the root `script.ts` symlink (compat alias for tooling that can't glob the emoji filename) reads through to the identical bytes, so both names must be excluded from a self-scan. */
-const POLICY_MUTATION_LAW_SELF_PATHS = new Set<string>(["📜️script.ts", "script.ts"]);
+/** 🔎️The canonical root command router excludes only its own source from the policy scan. */
+const POLICY_MUTATION_LAW_SELF_PATHS = new Set<string>(["📜️script.ts"]);
 
-/** 🔎️Source files (`.rs`/`.ts`/`.tsx`) repo-wide, excluding 📜️script.ts (and its `script.ts` symlink alias) — this policy region's own code necessarily names the banned tokens as string/regex literals, so it must not scan itself. */
+/** 🔎️Source files (`.rs`/`.ts`/`.tsx`) repo-wide, excluding the canonical root router whose policy literals must not scan themselves. */
 function policyMutationLawSourceFiles(repoRoot: string): string[] {
   return policyWalkRelFiles(repoRoot, [""], (relPath, name) => (name.endsWith(".rs") || name.endsWith(".ts") || name.endsWith(".tsx")) && !POLICY_MUTATION_LAW_SELF_PATHS.has(relPath));
 }
@@ -26122,7 +28648,7 @@ function policyInferenceSlugLeafPresenceBreaches(repoRoot: string): BreachRecord
       if (!existsSync(join(repoRoot, rsRel))) {
         breaches.push({
           id: `inference-slug-rs-missing-${slugRel}`,
-          summary: `"${slugRel}" has no 🦀️component.rs`,
+          summary: `"${slugRel}" has no ${POLICY_RS_COMPONENT_LEAF_NAME}`,
           kind: "inference-migration/slug-leaf-presence",
           scope: artRel,
           priority: "medium",
@@ -26135,12 +28661,12 @@ function policyInferenceSlugLeafPresenceBreaches(repoRoot: string): BreachRecord
       if (!existsSync(tsAbs)) {
         breaches.push({
           id: `inference-slug-ts-missing-${slugRel}`,
-          summary: `"${slugRel}" has no 🟦️component.ts mirror at all`,
+          summary: `"${slugRel}" has no ${POLICY_TS_COMPONENT_LEAF} mirror at all`,
           kind: "inference-migration/slug-leaf-presence",
           scope: artRel,
           priority: "medium",
-          reason: "Every 💡️inferences/<slug> dir must carry a 🟦️component.ts mirror beside its 🦀️component.rs.",
-          solution: `Create ${tsRel} mirroring its 🦀️component.rs sibling.`,
+          reason: ("Every 💡️inferences/<slug> dir must carry a " + POLICY_TS_COMPONENT_LEAF + " mirror beside its " + POLICY_RS_COMPONENT_LEAF_NAME + "."),
+          solution: `Create ${tsRel} mirroring its ${POLICY_RS_COMPONENT_LEAF_NAME} sibling.`,
         });
         continue;
       }
@@ -26156,7 +28682,7 @@ function policyInferenceSlugLeafPresenceBreaches(repoRoot: string): BreachRecord
           scope: artRel,
           priority: "medium",
           reason: "A slug leaf's TS mirror must be real, not an empty export {} stub — unlike constitutional facet stubs, 💡️inferences carries no structural stub exemption.",
-          solution: `Give ${tsRel} real content mirroring its 🦀️component.rs sibling.`,
+          solution: `Give ${tsRel} real content mirroring its ${POLICY_RS_COMPONENT_LEAF_NAME} sibling.`,
         });
       }
     }
@@ -26912,7 +29438,7 @@ function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string): Breach
           scope: artRel,
           priority: "high",
           reason: "Every artifact must expose 🧬️schema, 📸️snapshot/🧬️schema, and 🔺️diff/🧬️schema facets.",
-          solution: `Create ${facetAbs}/ with all five schemaFormats leaves (and the normative 🔣️component.json).`,
+          solution: `Create ${facetAbs}/ with all five schemaFormats leaves (and the normative ${canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId)}).`,
         });
         continue;
       }
@@ -26941,7 +29467,7 @@ function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string): Breach
             kind: "artifact-schema/normative-leaf",
             scope: artRel,
             priority: "high",
-            reason: "Within a facet the 🔣️component.json JSON Schema leaf is normative; the other four mirror it.",
+            reason: ("Within a facet the " + canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId) + " JSON Schema leaf is normative; the other four mirror it."),
             solution: `Add ${normativeRel} as the source of truth for this facet's fields.`,
           });
         }
@@ -27049,7 +29575,7 @@ function policyArtifactSchemaStateParityBreaches(repoRoot: string): BreachRecord
           scope: artRel,
           priority: "high",
           reason: "XSnapshot must equal exactly the artifact-lane fields of XArtifact (equality, not subset).",
-          solution: `Add "${f.name}" to ${snapshotFacet}/🔣️component.json (and the other four leaves) matching the artifact facet.`,
+          solution: `Add "${f.name}" to ${snapshotFacet}/${canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId)} (and the other four leaves) matching the artifact facet.`,
         });
         continue;
       }
@@ -27061,7 +29587,7 @@ function policyArtifactSchemaStateParityBreaches(repoRoot: string): BreachRecord
           scope: artRel,
           priority: "high",
           reason: `Artifact-lane field "${f.name}" is optional=${f.optional}, cardinality=${f.cardinality}; snapshot has optional=${s.optional}, cardinality=${s.cardinality}.`,
-          solution: `Align "${f.name}" in ${snapshotFacet}/🔣️component.json with ${artifactFacet}/🔣️component.json.`,
+          solution: `Align "${f.name}" in ${snapshotFacet}/${canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId)} with ${artifactFacet}/${canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId)}.`,
         });
       }
     }
@@ -27074,7 +29600,7 @@ function policyArtifactSchemaStateParityBreaches(repoRoot: string): BreachRecord
         scope: artRel,
         priority: "high",
         reason: "XSnapshot may only contain the artifact-lane fields of XArtifact.",
-        solution: `Remove "${name}" from ${snapshotFacet}/🔣️component.json, or move it into the artifact lane on the artifact facet if it belongs there.`,
+        solution: `Remove "${name}" from ${snapshotFacet}/${canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId)}, or move it into the artifact lane on the artifact facet if it belongs there.`,
       });
     }
   }
@@ -27102,7 +29628,7 @@ function policyArtifactSchemaDiffCoverageBreaches(repoRoot: string): BreachRecor
         scope: artRel,
         priority: "high",
         reason: "XDiff must include `artifact: Option<Box<XArtifact>>` for whole-artifact replacement.",
-        solution: `Add field "artifact" to ${diffFacet}/🔣️component.json (and the other four leaves).`,
+        solution: `Add field "artifact" to ${diffFacet}/${canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId)} (and the other four leaves).`,
       });
     }
     for (const f of artJson.fields) {
@@ -27115,7 +29641,7 @@ function policyArtifactSchemaDiffCoverageBreaches(repoRoot: string): BreachRecor
             scope: artRel,
             priority: "high",
             reason: "Transient fields are ephemeral local-only UI state — never shared, never diffed — and must not appear in XDiff.",
-            solution: `Remove "${f.name}" from ${diffFacet}/🔣️component.json.`,
+            solution: `Remove "${f.name}" from ${diffFacet}/${canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId)}.`,
           });
         }
         continue;
@@ -27128,7 +29654,7 @@ function policyArtifactSchemaDiffCoverageBreaches(repoRoot: string): BreachRecor
           scope: artRel,
           priority: "high",
           reason: "Every artifact field whose state lane is not transient must have a same-named diff entry.",
-          solution: `Add sparse diff entry "${f.name}" to ${diffFacet}/🔣️component.json matching §7.3 cardinality rules.`,
+          solution: `Add sparse diff entry "${f.name}" to ${diffFacet}/${canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId)} matching §7.3 cardinality rules.`,
         });
       }
     }
@@ -27252,7 +29778,7 @@ export function policyDiscoverAppSchemaOwners(repoRoot: string): PolicyAppSchema
     if (!plugin.isDirectory) continue;
     const pluginRel = `${pluginsRoot}/${plugin.name}`;
     for (const surfaceRel of policySurfaceRoots(repoRoot, pluginRel, taxonomy)) {
-      const componentRel = `${surfaceRel}/🦀️component.rs`;
+      const componentRel = `${surfaceRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
       if (!existsSync(join(repoRoot, componentRel))) continue;
       const text = policyReadFileSafe(repoRoot, componentRel);
       const m = /\btype\s+Config\s*=\s*([A-Za-z_][A-Za-z0-9_]*)\s*;/.exec(text);
@@ -27267,7 +29793,7 @@ export function policyDiscoverAppSchemaOwners(repoRoot: string): PolicyAppSchema
       } else if (existsSync(join(repoRoot, legacyRel))) {
         ownerRel = legacyRel;
       } else {
-        const pluginCfgRs = `${pluginConfigRel}/🦀️component.rs`;
+        const pluginCfgRs = `${pluginConfigRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
         if (
           existsSync(join(repoRoot, pluginCfgRs)) &&
           new RegExp(`\\bpub\\s+struct\\s+${configType}\\b`).test(policyReadFileSafe(repoRoot, pluginCfgRs))
@@ -27368,7 +29894,7 @@ function policyAppSchemaFacetCompletenessBreaches(repoRoot: string): BreachRecor
           scope: owner.ownerRel,
           priority: "high",
           reason: "Every app-schema owner must expose 🎚️config/🧬️schema and 👥️presence/🧬️schema facets.",
-          solution: `Create ${facetAbs}/ with all five schemaFormats leaves (and the normative 🔣️component.json).`,
+          solution: `Create ${facetAbs}/ with all five schemaFormats leaves (and the normative ${canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId)}).`,
         });
         continue;
       }
@@ -27397,7 +29923,7 @@ function policyAppSchemaFacetCompletenessBreaches(repoRoot: string): BreachRecor
           kind: "app-schema/facet-completeness",
           scope: owner.ownerRel,
           priority: "high",
-          reason: "Within a facet the 🔣️component.json JSON Schema leaf is normative; the other four mirror it.",
+          reason: ("Within a facet the " + canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId) + " JSON Schema leaf is normative; the other four mirror it."),
           solution: `Add ${normativeRel} as the source of truth for this facet's fields.`,
         });
       }
@@ -27486,7 +30012,7 @@ function policyAppSchemaFieldParityBreaches(repoRoot: string): BreachRecord[] {
 function policyAppSchemaConfigFidelityBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const owner of policyDiscoverAppSchemaOwners(repoRoot)) {
-    const cfgRs = `${owner.ownerRel}/🦀️component.rs`;
+    const cfgRs = `${owner.ownerRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
     const facetAbs = `${owner.ownerRel}/${POLICY_APP_SCHEMA_FACET}`;
     if (!existsSync(join(repoRoot, cfgRs)) || !existsSync(join(repoRoot, facetAbs))) continue;
     const real = policyExtractRustSchemaFields(policyReadFileSafe(repoRoot, cfgRs), owner.configType);
@@ -27690,20 +30216,12 @@ const POLICY_STDIO_REPRESENTATION_FALLBACK = [POLICY_STDIO_FACET_TEXT, POLICY_ST
 const POLICY_STDIO_ARTIFACT_FACET_FALLBACK = ["🧬️schema", "⚙️engine", "🚪️io", POLICY_STDIO_FACET_DECOMPOSER] as const;
 const POLICY_STDIO_LEGACY_ARTIFACT_FACETS = new Set(["🗣️dsl", "🔧️op", "📡️spr", "🔺️diff", "📸️snapshot"]);
 const POLICY_STDIO_TEXT_SPEC_LEAVES = [
-  "📖️component.grammar.semio",
-  "🔤️component.ebnf",
-  "🅰️component.g4",
-  "🔗️component.graphql",
-  "🔣️component.json",
-  "🛰️component.proto",
+  ...["grammar-semio", "ebnf", "antlr", "graphql", "json", "protobuf"].map((kindId) => canonicalPrimaryFilenameForKind(kindId)),
   POLICY_RS_COMPONENT_LEAF,
   POLICY_TS_COMPONENT_LEAF,
 ] as const;
 const POLICY_STDIO_BINARY_SPEC_LEAVES = [
-  "📡️component.protocol.semio",
-  "🔠️component.abnf",
-  "🥋️component.ksy",
-  "🌶️component.spicy",
+  ...["protocol-semio", "abnf", "kaitai", "spicy"].map((kindId) => canonicalPrimaryFilenameForKind(kindId)),
   POLICY_RS_COMPONENT_LEAF,
   POLICY_TS_COMPONENT_LEAF,
 ] as const;
@@ -28286,7 +30804,7 @@ export function policyStandardSubsetVocabularyBreaches(repoRoot: string): Breach
         kind: "stdio-artifacts/standards-subset-vocabulary",
         scope: group.artRel,
         priority: "high",
-        reason: "Every standard declares its subset vocabulary in 🪆️subsets/🔣️component.json — the single source of truth policy checks on-disk dirs against.",
+        reason: ("Every standard declares its subset vocabulary in 🪆️subsets/" + canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId) + " — the single source of truth policy checks on-disk dirs against."),
         solution: `Create ${group.manifestRel} declaring {"${anyId}": {...}${isStdio ? ", plus each real subset this standard actually has" : ""}}.`,
       });
       continue;
@@ -28517,7 +31035,7 @@ export function policySchemaRepresentationBreaches(repoRoot: string): BreachReco
         kind: "stdio-artifacts/schema-representation",
         scope: artRel,
         priority: "high",
-        reason: "A delegating subset (validation-gated conformance stamp on an existing schema-owning subset, e.g. step ✳️cc1, pdf ✳️a, zip ✳️iso21320) carries ONLY 🦀️component.rs (`pub use …::any::schema::*;`) + 🟦️component.ts (a meta stamp) — no facet mirrors, grammar leaves, or diff/mutations trees.",
+        reason: ("A delegating subset (validation-gated conformance stamp on an existing schema-owning subset, e.g. step ✳️cc1, pdf ✳️a, zip ✳️iso21320) carries ONLY " + POLICY_RS_COMPONENT_LEAF_NAME + " (`pub use …::any::schema::*;`) + " + POLICY_TS_COMPONENT_LEAF + " (a meta stamp) — no facet mirrors, grammar leaves, or diff/mutations trees."),
         solution: `Replace ${schemaRoot}'s contents with exactly ${POLICY_RS_COMPONENT_LEAF} (re-exporting the standard's schema-owning subset) + ${POLICY_TS_COMPONENT_LEAF} (a meta stamp), or add its own 📸️snapshot/ to make it schema-owning and satisfy the full tree below instead.`,
       });
       continue;
@@ -29508,7 +32026,7 @@ const POLICY_DIFF_ALGEBRA_ALLOWLIST = new Set<string>([]);
 function policyDiffAlgebraBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const entry of policyListStdioSchemaOwningEntries(repoRoot)) {
-    const rustRel = `${entry.subsetRel}/🧬️schema/🔺️diff/🦀️component.rs`;
+    const rustRel = `${entry.subsetRel}/🧬️schema/🔺️diff/${POLICY_RS_COMPONENT_LEAF_NAME}`;
     if (!existsSync(join(repoRoot, rustRel))) continue;
     const content = policyReadFileSafe(repoRoot, rustRel);
     const hasImpl = policyRustFileHasRealTraitImpl(content, "DiffAlgebra");
@@ -29611,13 +32129,13 @@ function policyFieldSweepPresenceBreaches(repoRoot: string): BreachRecord[] {
  * earlier wave and are correctly NOT in this seed).
  */
 const POLICY_GRAMMAR_HONESTY_LEAF_MARKERS: Record<string, string> = {
-  "🅰️component.g4": "DOCUMENT: 'schema' [ ]+",
-  "🔤️component.ebnf": "header = 'schema', space,",
-  "📖️component.grammar.semio": "payload = *OCTET",
-  "🔠️component.abnf": "payload = *OCTET",
-  "📡️component.protocol.semio": "payload = *OCTET",
-  "🥋️component.ksy": "size-eos: true",
-  "🌶️component.spicy": "payload: bytes &eod;",
+  [canonicalPrimaryFilenameForKind("antlr")]: "DOCUMENT: 'schema' [ ]+",
+  [canonicalPrimaryFilenameForKind("ebnf")]: "header = 'schema', space,",
+  [canonicalPrimaryFilenameForKind("grammar-semio")]: "payload = *OCTET",
+  [canonicalPrimaryFilenameForKind("abnf")]: "payload = *OCTET",
+  [canonicalPrimaryFilenameForKind("protocol-semio")]: "payload = *OCTET",
+  [canonicalPrimaryFilenameForKind("kaitai")]: "size-eos: true",
+  [canonicalPrimaryFilenameForKind("spicy")]: "payload: bytes &eod;",
 };
 
 const POLICY_GRAMMAR_HONESTY_ALLOWLIST = new Set<string>([
@@ -30035,7 +32553,7 @@ function policyGrammarHonestyBreaches(repoRoot: string): BreachRecord[] {
  * zero as they rewrite each artifact's facets for real; this wave does NOT fix any facet itself.
  */
 const POLICY_FACET_MIRROR_DRIFT_FACETS = ["📸️snapshot", "🔺️diff", "🧬️mutations"] as const;
-const POLICY_FACET_MIRROR_DRIFT_SIBLINGS = ["🟦️component.ts", "🔗️component.graphql", "🔣️component.json", "🛰️component.proto"] as const;
+const POLICY_FACET_MIRROR_DRIFT_SIBLINGS = ["typescript-source", "graphql", "json", "protobuf"].map((kindId) => canonicalPrimaryFilenameForKind(kindId));
 const POLICY_FACET_MIRROR_DRIFT_FIELD_RE = /(?:^|[\s{,(])(?:pub\s+)?([a-z][a-z0-9_]*)\s*:\s*[A-Za-z_&\[<('"]/gm;
 const POLICY_FACET_MIRROR_DRIFT_KEYWORDS = new Set(["self", "where", "if", "else", "match", "for", "while", "let", "fn", "return", "in", "as", "dyn", "mut", "ref", "impl", "type"]);
 
@@ -30285,7 +32803,7 @@ function policyFacetMirrorDriftBreaches(repoRoot: string): BreachRecord[] {
   for (const entry of policyListStdioSchemaOwningEntries(repoRoot)) {
     for (const facet of POLICY_FACET_MIRROR_DRIFT_FACETS) {
       const facetRel = `${entry.subsetRel}/🧬️schema/${facet}`;
-      const rustRel = `${facetRel}/🦀️component.rs`;
+      const rustRel = `${facetRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
       if (!existsSync(join(repoRoot, rustRel))) continue;
       const rustContent = policyReadFileSafe(repoRoot, rustRel);
       const camelFields = policyFacetRustFieldNames(rustContent);
@@ -30598,7 +33116,7 @@ function policyProtocolParseabilityBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const entry of policyListStdioSchemaOwningEntries(repoRoot)) {
     for (const facet of POLICY_GRAMMAR_PARSEABILITY_FACETS) {
-      const rel = `${entry.subsetRel}/🧬️schema/${facet}/💾️binary/📡️component.protocol.semio`;
+      const rel = `${entry.subsetRel}/🧬️schema/${facet}/💾️binary/${POLICY_PROTOCOL_SPEC_LEAF}`;
       if (!existsSync(join(repoRoot, rel))) continue;
       const content = policyReadFileSafe(repoRoot, rel);
       const looksReal = policyLooksLikeRealGrammarOrProtocolDialect(content, "protocol");
@@ -30730,7 +33248,7 @@ function policyLanguageRegistrationBreaches(repoRoot: string): BreachRecord[] {
     const key = policyStdioStandardKey(entry.artifactId, entry.standardSlug);
     if (seenStandards.has(key)) continue; // 🔒 one check per (artifact, standard), not per schema-owning subset
     seenStandards.add(key);
-    const engineRel = `${standardRel}/⚙️engine/🦀️component.rs`;
+    const engineRel = `${standardRel}/⚙️engine/${POLICY_RS_COMPONENT_LEAF_NAME}`;
     const count = existsSync(join(repoRoot, engineRel)) ? (policyReadFileSafe(repoRoot, engineRel).match(/register_language/g) ?? []).length : 0;
     const allowlisted = POLICY_LANGUAGE_REGISTRATION_ALLOWLIST.has(key);
     const ok = count >= POLICY_LANGUAGE_REGISTRATION_MIN_CALLS;
@@ -31423,7 +33941,7 @@ function policyOwnerMountsChildrenBreaches(repoRoot: string): BreachRecord[] {
         kind: `${POLICY_CLEAN_MECHANISM_KIND}/owner-mounts-children`,
         scope: rel,
         priority: "medium",
-        reason: `design.md §1: every ${level} is one root component.rs that mounts its own children and exports one declaration function — this is the migration backlog counter.`,
+        reason: `design.md §1: every ${level} has one root ${POLICY_RS_COMPONENT_LEAF_NAME} that mounts its own children and exports one declaration function — this is the ownership backlog counter.`,
         solution: `bun ./📜️script.ts new ${level} … to scaffold the root skeleton, then hand-author its mounts and declaration fn per the recipe (design.md §5).`,
       });
       return;
@@ -31455,7 +33973,7 @@ function policyOwnerMountsChildrenBreaches(repoRoot: string): BreachRecord[] {
     const targets = policyExtractPathMountTargets(content);
     const outOfScope = targets.filter((t) => {
       if (t.includes("/🔨️modules/") || t.includes("/🎮️commands/")) return false;
-      if (/\/🗿️artifacts\/[^/]+\/🦀️component\.rs$/.test(t)) return false;
+      if (t.endsWith(`/${POLICY_RS_COMPONENT_LEAF_NAME}`) && /\/🗿️artifacts\/[^/]+$/u.test(t.slice(0, -POLICY_RS_COMPONENT_LEAF_NAME.length - 1))) return false;
       const isDeepMount = ["🗿️artifacts/", "🏅️standards/", "🪆️subsets/", "🧬️schema/", "🚪️io/", "👁️viewer/", "✏️editor/"].some((seg) => t.includes(seg));
       if (!isDeepMount && t.endsWith(POLICY_RS_COMPONENT_LEAF)) return false; // the plugin's own root mount
       return true;
@@ -31722,15 +34240,15 @@ function policyIoDeclarationBreaches(repoRoot: string): BreachRecord[] {
           solution: `Mount/reference "${leafName}" from ${ioRootFile}, or delete the leaf if it is genuinely unused.`,
         });
       }
-      if (!existsSync(join(repoRoot, leafDirRel, "🟦️component.ts"))) {
+      if (!existsSync(join(repoRoot, leafDirRel, (POLICY_TS_COMPONENT_LEAF)))) {
         breaches.push({
           id: `io-declaration-missing-ts-twin-${leafDirRel}`,
-          summary: `"${leafDirRel}" has no 🟦️component.ts twin`,
+          summary: `"${leafDirRel}" has no ${POLICY_TS_COMPONENT_LEAF} twin`,
           kind: `${POLICY_CLEAN_MECHANISM_KIND}/io-declaration`,
           scope: split.subsetRel,
           priority: "medium",
-          reason: "design.md §1: 🚪️io/🟦️component.ts exports the IoEntryDescriptor[] mirror — every Rust codec leaf needs its TS twin.",
-          solution: `Add ${leafDirRel}/🟦️component.ts mirroring the Rust leaf's IoEntryDescriptor row(s).`,
+          reason: ("design.md §1: 🚪️io/" + POLICY_TS_COMPONENT_LEAF + " exports the IoEntryDescriptor[] mirror — every Rust codec leaf needs its TS twin."),
+          solution: `Add ${leafDirRel}/${POLICY_TS_COMPONENT_LEAF} mirroring the Rust leaf's IoEntryDescriptor row(s).`,
         });
       }
     }
@@ -31823,7 +34341,7 @@ function policyDeclarationTreeBreaches(repoRoot: string): BreachRecord[] {
         kind: `${POLICY_CLEAN_MECHANISM_KIND}/declaration-tree`,
         scope: split.standardRel,
         priority: "medium",
-        reason: "design.md §1: standard() registers every subset it owns, matching 🪆️subsets/🔣️component.json.",
+        reason: ("design.md §1: standard() registers every subset it owns, matching 🪆️subsets/" + canonicalPrimaryFilenameForKind(loadTaxonomy().semanticManifestFileKindId) + "."),
         solution: `Add "${split.subsetSlug}"'s subset() to the standard()'s .subsets vec in ${stdFile}.`,
       });
     }

@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.png.mutation;
+// 🧬️ change-timestamp/ChangeTimestamp; complex fields follow the direct payload schema.
+message ChangeTimestampMutation { bytes time = 1; }

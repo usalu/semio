@@ -1,0 +1,13 @@
+{
+  "schema": "artifact-group-read-visibility/v1",
+  "maximumItems": 1,
+  "maximumBytes": 4096,
+  "old": { "snapshot": 0, "generation": 3, "revisionByte": 17, "appliedEditIds": ["initial"], "history": ["initial"] },
+  "prepared": { "snapshot": 42, "generation": 5, "revisionByte": 29, "appliedEditIds": ["initial", "member-a-first", "member-a-last"], "history": ["initial", "member-a-first", "member-a-last"] },
+  "cases": [
+    { "id": "pending-keeps-live-roots", "capture": "pending", "decision": "pending", "fresh": "old", "captured": "old", "oldLeaseCurrent": true, "preparedLeaseCurrent": false },
+    { "id": "commit-switches-fresh-readers", "capture": "pending", "decision": "committed", "fresh": "prepared", "captured": "old", "oldLeaseCurrent": false, "preparedLeaseCurrent": true },
+    { "id": "post-commit-capture-is-prepared", "capture": "committed", "decision": "committed", "fresh": "prepared", "captured": "prepared", "oldLeaseCurrent": false, "preparedLeaseCurrent": true },
+    { "id": "abort-keeps-live-roots", "capture": "pending", "decision": "aborted", "fresh": "old", "captured": "old", "oldLeaseCurrent": true, "preparedLeaseCurrent": false }
+  ]
+}

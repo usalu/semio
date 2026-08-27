@@ -5,7 +5,7 @@ use crate::artifacts::curate::diff::{CurateCuratedDelta, CurateCuratedPatchEntry
 use crate::artifacts::curate::CurateSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ChangeCuratedItemCount, base: &CurateSnapshot) -> protocol::MutationOutcome<CurateDiff> {
+pub fn diff(payload: &super::ChangeCuratedItemCount, base: &CurateSnapshot) -> protocol::MutationOutcome<CurateDiff> {
     let Some(existing) = base.curated.iter().find(|item| item.object_id == payload.object_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("\"{}\" is not curated.", payload.object_id), [payload.object_id.clone()]);
     };

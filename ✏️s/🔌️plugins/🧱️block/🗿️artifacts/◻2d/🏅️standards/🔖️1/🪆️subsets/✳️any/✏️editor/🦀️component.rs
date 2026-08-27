@@ -19,7 +19,7 @@ use crate::editor::block2d::modes::edit as edit_mode;
 use crate::editor::block2d::modes::edit::windows::board;
 use crate::editor::block2d::panels::{document as document_panel, inspection as inspection_panel};
 use crate::editor::block2d::terminology::block2d_labels;
-use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
+use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     ActionDescriptor, AppIo, ArtifactEditor, ArtifactKindSpec, ArtifactPresentation, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
@@ -333,6 +333,15 @@ pub fn create_block2d_app() -> semio_framework_plugin::AppDefinition {
             .mutation("removeCompatibilityRule", LocalizedLabel::native("Remove Compatibility Rule", "Kompatibilitätsregel entfernen"))
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
+            .action_interactive_job("patchNodeKind", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addHandleKind", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("removeHandleKind", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addHandle", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("removeHandle", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addCompatibilityRule", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("removeCompatibilityRule", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("edit", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .io(block2d_io())
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a
             // bare `AppDefinition`, not the old `App { definition, examples }` — there is no

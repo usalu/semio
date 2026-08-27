@@ -1,0 +1,10 @@
+[
+  { "target": null, "channel": null },
+  { "target": { "domain": "node", "id": "widget@name" }, "channel": null },
+  { "target": { "domain": "edge", "id": "wire@端口" }, "channel": null },
+  { "target": { "domain": "handle", "id": "柱@半径" }, "channel": { "nodeId": "柱", "portId": "半径" } },
+  { "target": { "domain": "handle", "id": "node@output@detail" }, "channel": { "nodeId": "node", "portId": "output@detail" } },
+  { "target": { "domain": "handle", "id": "@port" }, "channel": null },
+  { "target": { "domain": "handle", "id": "node@" }, "channel": null },
+  { "target": { "domain": "handle", "id": "node" }, "channel": null }
+]

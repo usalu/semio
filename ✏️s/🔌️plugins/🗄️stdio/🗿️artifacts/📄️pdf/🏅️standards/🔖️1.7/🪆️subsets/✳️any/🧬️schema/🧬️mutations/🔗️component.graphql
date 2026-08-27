@@ -1,37 +1,19 @@
-# 🧬️ PdfMutation (1.7) union — mirrors the Rust `#[serde(tag = "mutation")]` enum. Modeled as one
-# type with the discriminant + every variant's (optional) payload fields, per this codebase's
-# established discriminated-union-in-GraphQL convention (see ../🔺️diff/🔗️component.graphql).
-
-type PdfMutation {
-  mutation: PdfMutationKind!
-  snapshot: PdfSnapshot
-  index: Int
-  page: PdfPage
-  mediaBox: [Float!]
-  cropBox: [Float!]
-  hasCropBox: Boolean!
-  text: String
-  info: PdfInfo
-  id: ObjRef
-  value: PdfObject
-  path: [PdfPathSegment!]
-  key: String
-}
-
-enum PdfMutationKind {
-  NO_MUTATION
-  SET_SNAPSHOT
-  INSERT_PAGE
-  REMOVE_PAGE
-  SET_PAGE_MEDIA_BOX
-  SET_PAGE_CROP_BOX
-  APPEND_PAGE_CONTENT
-  SET_INFO
-  INSERT_OBJECT
-  REMOVE_OBJECT
-  SET_OBJECT_VALUE
-  SET_DICT_ENTRY
-  REMOVE_DICT_ENTRY
-  SET_TRAILER_ENTRY
-  REMOVE_TRAILER_ENTRY
+# 🧬️ PDF 1.7/Any direct mutation aggregate.
+input PdfMutationInput {
+  insertPage: InsertPageMutationInput
+  removePage: RemovePageMutationInput
+  setPageMediaBox: SetPageMediaBoxMutationInput
+  setPageCropBox: SetPageCropBoxMutationInput
+  appendPageContent: AppendPageContentMutationInput
+  setInfo: SetInfoMutationInput
+  insertObject: InsertObjectMutationInput
+  removeObject: RemoveObjectMutationInput
+  setObjectValue: SetObjectValueMutationInput
+  setDictEntry: SetDictEntryMutationInput
+  removeDictEntry: RemoveDictEntryMutationInput
+  setTrailerEntry: SetTrailerEntryMutationInput
+  removeTrailerEntry: RemoveTrailerEntryMutationInput
+  movePage: MovePageMutationInput
+  setPageContent: SetPageContentMutationInput
+  setPageRotation: SetPageRotationMutationInput
 }

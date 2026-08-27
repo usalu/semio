@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.tiff.mutation;
+// 🧬️ insert-ifd/InsertIfd; complex fields follow the direct payload schema.
+message InsertIfdMutation { uint64 index = 1; bytes ifd = 2; }

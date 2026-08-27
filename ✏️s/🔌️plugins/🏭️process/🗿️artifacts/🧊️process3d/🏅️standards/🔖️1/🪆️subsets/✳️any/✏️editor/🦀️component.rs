@@ -255,8 +255,18 @@ use world::{world_face_drag_end, world_pointer_down};
 pub struct Process3dPlayApp;
 
 //#region 🧵️RetainedCommands
-const PROCESS3D_BOUNDED_TOOL_IDS: &[&str] = &["setCursor", "stepCursor", "stepCursorBack", "stepCursorForward", "engagementAbort", "setCamera", "loadModelRequest"];
+const PROCESS3D_BOUNDED_TOOL_IDS: &[&str] = &["engagementAbort", "setCamera", "loadModelRequest"];
 const PROCESS3D_RESUMABLE_TOOL_IDS: &[&str] = &[
+    "setActiveUtility",
+    "engagementInput",
+    "toggleSun",
+    "setSunAzimuth",
+    "setSunElevation",
+    "setSunIntensity",
+    "setLocale",
+    "setContributions",
+];
+const PROCESS3D_BATCH_ONLY_TOOL_IDS: &[&str] = &[
     "setSnapshot",
     "setActiveExample",
     "addStep",
@@ -274,41 +284,30 @@ const PROCESS3D_RESUMABLE_TOOL_IDS: &[&str] = &[
     "worldPointerDown",
     "worldFaceDragEnd",
     "importModelFile",
-    "setActiveUtility",
-    "engagementInput",
-    "toggleSun",
-    "setSunAzimuth",
-    "setSunElevation",
-    "setSunIntensity",
-    "setLocale",
-    "setContributions",
     "exportModel",
+    "setCursor",
+    "stepCursor",
+    "stepCursorBack",
+    "stepCursorForward",
 ];
 const PROCESS3D_RETAINED_PAYLOAD_SCHEMA: &str = "process.3d.tool-command.v1";
 const PROCESS3D_RETAINED_RAW_BYTES: usize = 8_192;
 const PROCESS3D_RETAINED_WORK_ITEMS: usize = 64;
 const PROCESS3D_SCAN_BYTES: usize = 256;
+const PROCESS3D_CONFIG_STORE_MAXIMUM_BYTES: usize = 16_384;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Process3dCommandDisposition {
     Bounded,
-    Document,
-    Workshop,
-    Step,
-    Inspector,
     Config,
-    Media,
+    BatchOnly,
 }
 
 fn process3d_command_disposition(tool_id: &str) -> Option<Process3dCommandDisposition> {
     match tool_id {
-        "setCursor" | "stepCursor" | "stepCursorBack" | "stepCursorForward" | "engagementAbort" | "setCamera" | "loadModelRequest" => Some(Process3dCommandDisposition::Bounded),
-        "setSnapshot" | "setActiveExample" | "setStock" => Some(Process3dCommandDisposition::Document),
-        "addStep" | "addWorkshopMachine" | "removeWorkshopMachine" | "updateWorkshopMachine" | "worldPointerDown" | "worldFaceDragEnd" => Some(Process3dCommandDisposition::Workshop),
-        "removeStep" | "removeSelectedStep" | "moveStep" | "updateStep" | "setStepEnabled" => Some(Process3dCommandDisposition::Step),
-        "patchInspector" => Some(Process3dCommandDisposition::Inspector),
-        "engagementSubmit" | "setActiveUtility" | "engagementInput" | "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" | "setLocale" | "setContributions" => Some(Process3dCommandDisposition::Config),
-        "importModelFile" | "exportModel" => Some(Process3dCommandDisposition::Media),
+        "engagementAbort" | "setCamera" | "loadModelRequest" => Some(Process3dCommandDisposition::Bounded),
+        "setActiveUtility" | "engagementInput" | "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" | "setLocale" | "setContributions" => Some(Process3dCommandDisposition::Config),
+        tool_id if PROCESS3D_BATCH_ONLY_TOOL_IDS.contains(&tool_id) => Some(Process3dCommandDisposition::BatchOnly),
         _ => None,
     }
 }
@@ -325,85 +324,21 @@ fn process3d_bounded_extent(_command: &Process3dCommand, _snapshot: &Process3dSn
     Some(1)
 }
 
-fn process3d_checked_sum(parts: impl IntoIterator<Item = usize>) -> Option<usize> {
-    parts.into_iter().try_fold(0usize, usize::checked_add).map(|extent| extent.max(1))
-}
-
 fn process3d_string_units(value: &str) -> usize {
-    value.len().div_ceil(PROCESS3D_SCAN_BYTES)
+    value.len().div_ceil(PROCESS3D_SCAN_BYTES).max(1)
 }
 
-fn process3d_machine_units(machine: &crate::artifacts::process3d::WorkshopMachine) -> Option<usize> {
-    let strings =
-        [process3d_string_units(&machine.id), process3d_string_units(&machine.label), process3d_string_units(&machine.icon_id), machine.catalog_id.as_deref().map_or(0, process3d_string_units)].into_iter().try_fold(0usize, usize::checked_add)?;
-    let parameters = machine.capabilities.iter().try_fold(0usize, |total, capability| total.checked_add(capability.parameters.len()))?;
-    let rules = machine.capabilities.iter().try_fold(0usize, |total, capability| total.checked_add(capability.rules.len()))?;
-    process3d_checked_sum([usize::from(strings == 0), strings, machine.capabilities.len(), parameters, rules])
-}
-
-fn process3d_workshop_units(snapshot: &Process3dSnapshot) -> Option<usize> {
-    snapshot.workshop.machines.iter().try_fold(0usize, |total, machine| total.checked_add(process3d_machine_units(machine)?))
-}
-
-fn process3d_payload_units(command: &Process3dCommand) -> Option<usize> {
-    let strings: &[&str] = match command {
-        Process3dCommand::SetDocument(payload) => &[&payload.json],
-        Process3dCommand::SetActiveExample(payload) => &[&payload.example_id],
-        Process3dCommand::AddStep(payload) => &[payload.measure.as_deref().unwrap_or_default(), payload.machine_id.as_deref().unwrap_or_default(), payload.capability_id.as_deref().unwrap_or_default()],
-        Process3dCommand::AddWorkshopMachine(payload) => &[&payload.catalog_id, &payload.machine_id],
-        Process3dCommand::RemoveWorkshopMachine(payload) => &[&payload.id],
-        Process3dCommand::RemoveStep(payload) => &[&payload.id],
-        Process3dCommand::MoveStep(payload) => &[&payload.id],
-        Process3dCommand::UpdateStep(payload) => &[&payload.step_json],
-        Process3dCommand::SetStepEnabled(payload) => &[&payload.id],
-        Process3dCommand::SetStock(payload) => &[&payload.kind],
-        Process3dCommand::PatchInspector(payload) => &[&payload.target, &payload.field, payload.text.as_deref().unwrap_or_default()],
-        Process3dCommand::ImportModelFile(payload) => &[&payload.name, &payload.payload],
-        Process3dCommand::SetActiveUtility(payload) => &[&payload.utility_id],
-        Process3dCommand::EngagementInput(payload) => &[&payload.value],
-        Process3dCommand::SetLocale(payload) => &[&payload.value],
-        Process3dCommand::SetContributions(payload) => &[&payload.json],
-        Process3dCommand::ExportModel(payload) => &[&payload.format],
-        _ => &[],
+fn process3d_resumable_extent(command: &Process3dCommand, _snapshot: &Process3dSnapshot, config: &Process3dConfig, _interaction: &protocol::InteractionState) -> Option<usize> {
+    let value = match command {
+        Process3dCommand::SetActiveUtility(payload) => payload.utility_id.as_str(),
+        Process3dCommand::EngagementInput(payload) => payload.value.as_str(),
+        Process3dCommand::SetLocale(payload) => payload.value.as_str(),
+        Process3dCommand::SetContributions(payload) => payload.json.as_str(),
+        Process3dCommand::ToggleSun(_) | Process3dCommand::SetSunAzimuth(_) | Process3dCommand::SetSunElevation(_) | Process3dCommand::SetSunIntensity(_) => config.sun_color.as_str(),
+        _ => return None,
     };
-    let string_units = strings.iter().try_fold(0usize, |total, value| total.checked_add(process3d_string_units(value)))?;
-    match command {
-        Process3dCommand::UpdateWorkshopMachine(payload) => string_units.checked_add(process3d_machine_units(&payload.machine)?),
-        _ => Some(string_units),
-    }
-}
-
-fn process3d_config_units(command: &Process3dCommand, config: &Process3dConfig) -> usize {
-    match command {
-        Process3dCommand::AddWorkshopMachine(_) => process3d_string_units(&config.contributions_json),
-        Process3dCommand::EngagementSubmit(_) => process3d_string_units(&config.engagement_input),
-        Process3dCommand::SetStock(_) => process3d_string_units(&config.locale),
-        Process3dCommand::WorldPointerDown(_) => process3d_string_units(config.active_utility()),
-        Process3dCommand::WorldFaceDragEnd(_) => process3d_string_units(config.active_utility()).saturating_add(process3d_string_units(&config.locale)),
-        Process3dCommand::ToggleSun(_) | Process3dCommand::SetSunAzimuth(_) | Process3dCommand::SetSunElevation(_) | Process3dCommand::SetSunIntensity(_) => process3d_string_units(&config.sun_color),
-        _ => 0,
-    }
-}
-
-fn process3d_snapshot_units(command: &Process3dCommand, snapshot: &Process3dSnapshot) -> Option<usize> {
-    match command {
-        Process3dCommand::SetStock(_) => process3d_checked_sum([process3d_workshop_units(snapshot)?, process3d_string_units(&snapshot.stock_id)]),
-        Process3dCommand::ExportModel(_) => {
-            process3d_checked_sum([process3d_workshop_units(snapshot)?, snapshot.step_payloads.len(), snapshot.tool_solids.len(), process3d_string_units(&snapshot.stock_id), process3d_string_units(&snapshot.stock_label)])
-        }
-        Process3dCommand::AddStep(_) | Process3dCommand::AddWorkshopMachine(_) | Process3dCommand::RemoveWorkshopMachine(_) | Process3dCommand::UpdateWorkshopMachine(_) | Process3dCommand::WorldPointerDown(_) => process3d_workshop_units(snapshot),
-        Process3dCommand::PatchInspector(_) => process3d_checked_sum([process3d_workshop_units(snapshot)?, process3d_string_units(&snapshot.stock_id), process3d_string_units(&snapshot.stock_label)]),
-        _ => Some(0),
-    }
-}
-
-fn process3d_resumable_extent(command: &Process3dCommand, snapshot: &Process3dSnapshot, config: &Process3dConfig, interaction: &protocol::InteractionState) -> Option<usize> {
-    let disposition = process3d_command_disposition(command.command_id())?;
-    if disposition == Process3dCommandDisposition::Bounded {
-        return Some(1);
-    }
-    let selection = matches!(command, Process3dCommand::RemoveSelectedStep(_)).then(|| interaction.selection.get(PROCESS3D_INTERACTION_DOMAIN).map_or(0, |selection| selection.ids.len())).unwrap_or(0);
-    process3d_checked_sum([process3d_payload_units(command)?, process3d_snapshot_units(command, snapshot)?, process3d_config_units(command, config), selection])
+    let extent = process3d_string_units(value);
+    (extent <= PROCESS3D_RETAINED_WORK_ITEMS && value.len() <= PROCESS3D_RETAINED_RAW_BYTES).then_some(extent)
 }
 
 fn process3d_retained_reduce(
@@ -422,165 +357,15 @@ fn process3d_retained_reduce(
     command.dispatch(&doc, &cfg, &mut ctx)
 }
 
-fn process3d_string_chunk<'a>(value: &'a str, cursor: &mut usize) -> Option<&'a [u8]> {
-    let units = process3d_string_units(value);
-    if *cursor < units {
-        let start = cursor.saturating_mul(PROCESS3D_SCAN_BYTES).min(value.len());
-        let end = start.saturating_add(PROCESS3D_SCAN_BYTES).min(value.len());
-        return Some(&value.as_bytes()[start..end]);
-    }
-    *cursor = cursor.saturating_sub(units);
-    None
-}
-
-fn process3d_machine_chunk<'a>(machine: &'a crate::artifacts::process3d::WorkshopMachine, cursor: &mut usize) -> Option<&'a [u8]> {
-    for value in [machine.id.as_str(), machine.label.as_str(), machine.icon_id.as_str(), machine.catalog_id.as_deref().unwrap_or_default()] {
-        if let Some(chunk) = process3d_string_chunk(value, cursor) {
-            return Some(chunk);
-        }
-    }
-    if [machine.id.as_str(), machine.label.as_str(), machine.icon_id.as_str(), machine.catalog_id.as_deref().unwrap_or_default()].iter().all(|value| value.is_empty()) {
-        if *cursor == 0 {
-            return Some(machine.id.as_bytes());
-        }
-        *cursor -= 1;
-    }
-    for capability in &machine.capabilities {
-        if *cursor == 0 {
-            return Some(capability.id.as_bytes());
-        }
-        *cursor -= 1;
-    }
-    for capability in &machine.capabilities {
-        for parameter in &capability.parameters {
-            if *cursor == 0 {
-                return Some(parameter.id.as_bytes());
-            }
-            *cursor -= 1;
-        }
-    }
-    for capability in &machine.capabilities {
-        for rule in &capability.rules {
-            if *cursor == 0 {
-                return Some(match rule {
-                    crate::artifacts::process3d::CapabilityRule::Min { parameter, .. } | crate::artifacts::process3d::CapabilityRule::Max { parameter, .. } => parameter.as_bytes(),
-                });
-            }
-            *cursor -= 1;
-        }
-    }
-    None
-}
-
-fn process3d_workshop_chunk<'a>(snapshot: &'a Process3dSnapshot, cursor: &mut usize) -> Option<&'a [u8]> {
-    for machine in &snapshot.workshop.machines {
-        let units = process3d_machine_units(machine)?;
-        if *cursor < units {
-            return process3d_machine_chunk(machine, cursor);
-        }
-        *cursor -= units;
-    }
-    None
-}
-
-fn process3d_payload_chunk<'a>(command: &'a Process3dCommand, mut cursor: usize) -> Option<&'a [u8]> {
-    macro_rules! take {
-        ($value:expr) => {
-            if let Some(chunk) = process3d_string_chunk($value, &mut cursor) {
-                return Some(chunk);
-            }
-        };
-    }
+fn process3d_resumable_bytes<'a>(command: &'a Process3dCommand, config: &'a Process3dConfig) -> Option<&'a [u8]> {
     match command {
-        Process3dCommand::SetDocument(payload) => take!(&payload.json),
-        Process3dCommand::SetActiveExample(payload) => take!(&payload.example_id),
-        Process3dCommand::AddStep(payload) => {
-            take!(payload.measure.as_deref().unwrap_or_default());
-            take!(payload.machine_id.as_deref().unwrap_or_default());
-            take!(payload.capability_id.as_deref().unwrap_or_default());
-        }
-        Process3dCommand::AddWorkshopMachine(payload) => {
-            take!(&payload.catalog_id);
-            take!(&payload.machine_id);
-        }
-        Process3dCommand::RemoveWorkshopMachine(payload) => take!(&payload.id),
-        Process3dCommand::UpdateWorkshopMachine(payload) => return process3d_machine_chunk(&payload.machine, &mut cursor),
-        Process3dCommand::RemoveStep(payload) => take!(&payload.id),
-        Process3dCommand::MoveStep(payload) => take!(&payload.id),
-        Process3dCommand::UpdateStep(payload) => take!(&payload.step_json),
-        Process3dCommand::SetStepEnabled(payload) => take!(&payload.id),
-        Process3dCommand::SetStock(payload) => take!(&payload.kind),
-        Process3dCommand::PatchInspector(payload) => {
-            take!(&payload.target);
-            take!(&payload.field);
-            take!(payload.text.as_deref().unwrap_or_default());
-        }
-        Process3dCommand::ImportModelFile(payload) => {
-            take!(&payload.name);
-            take!(&payload.payload);
-        }
-        Process3dCommand::SetActiveUtility(payload) => take!(&payload.utility_id),
-        Process3dCommand::EngagementInput(payload) => take!(&payload.value),
-        Process3dCommand::SetLocale(payload) => take!(&payload.value),
-        Process3dCommand::SetContributions(payload) => take!(&payload.json),
-        Process3dCommand::ExportModel(payload) => take!(&payload.format),
-        _ => {}
+        Process3dCommand::SetActiveUtility(payload) => Some(payload.utility_id.as_bytes()),
+        Process3dCommand::EngagementInput(payload) => Some(payload.value.as_bytes()),
+        Process3dCommand::SetLocale(payload) => Some(payload.value.as_bytes()),
+        Process3dCommand::SetContributions(payload) => Some(payload.json.as_bytes()),
+        Process3dCommand::ToggleSun(_) | Process3dCommand::SetSunAzimuth(_) | Process3dCommand::SetSunElevation(_) | Process3dCommand::SetSunIntensity(_) => Some(config.sun_color.as_bytes()),
+        _ => None,
     }
-    None
-}
-
-fn process3d_snapshot_chunk<'a>(command: &Process3dCommand, snapshot: &'a Process3dSnapshot, mut cursor: usize) -> Option<&'a [u8]> {
-    let scans_workshop = matches!(
-        command,
-        Process3dCommand::SetStock(_)
-            | Process3dCommand::ExportModel(_)
-            | Process3dCommand::AddStep(_)
-            | Process3dCommand::AddWorkshopMachine(_)
-            | Process3dCommand::RemoveWorkshopMachine(_)
-            | Process3dCommand::UpdateWorkshopMachine(_)
-            | Process3dCommand::WorldPointerDown(_)
-            | Process3dCommand::PatchInspector(_)
-    );
-    if scans_workshop {
-        let units = process3d_workshop_units(snapshot)?;
-        if cursor < units {
-            return process3d_workshop_chunk(snapshot, &mut cursor);
-        }
-        cursor -= units;
-    }
-    if matches!(command, Process3dCommand::ExportModel(_)) {
-        if cursor < snapshot.step_payloads.len() {
-            return Some(snapshot.step_payloads[cursor].id.as_bytes());
-        }
-        cursor -= snapshot.step_payloads.len();
-        if cursor < snapshot.tool_solids.len() {
-            return Some(snapshot.tool_solids[cursor].child_id.as_bytes());
-        }
-        cursor -= snapshot.tool_solids.len();
-    }
-    if matches!(command, Process3dCommand::SetStock(_) | Process3dCommand::ExportModel(_) | Process3dCommand::PatchInspector(_)) {
-        if let Some(chunk) = process3d_string_chunk(&snapshot.stock_id, &mut cursor) {
-            return Some(chunk);
-        }
-    }
-    if matches!(command, Process3dCommand::ExportModel(_) | Process3dCommand::PatchInspector(_)) {
-        return process3d_string_chunk(&snapshot.stock_label, &mut cursor);
-    }
-    None
-}
-
-fn process3d_config_chunk<'a>(command: &Process3dCommand, config: &'a Process3dConfig, cursor: usize) -> Option<&'a [u8]> {
-    let mut cursor = cursor;
-    let values: &[&str] = match command {
-        Process3dCommand::AddWorkshopMachine(_) => &[&config.contributions_json],
-        Process3dCommand::EngagementSubmit(_) => &[&config.engagement_input],
-        Process3dCommand::SetStock(_) => &[&config.locale],
-        Process3dCommand::WorldPointerDown(_) => &[config.active_utility()],
-        Process3dCommand::WorldFaceDragEnd(_) => &[config.active_utility(), &config.locale],
-        Process3dCommand::ToggleSun(_) | Process3dCommand::SetSunAzimuth(_) | Process3dCommand::SetSunElevation(_) | Process3dCommand::SetSunIntensity(_) => &[&config.sun_color],
-        _ => return None,
-    };
-    values.iter().find_map(|value| process3d_string_chunk(value, &mut cursor))
 }
 
 fn process3d_tool_identity(tool_id: &str) -> u64 {
@@ -589,7 +374,6 @@ fn process3d_tool_identity(tool_id: &str) -> u64 {
 
 struct Process3dResumableCommandWork {
     tool_id: &'static str,
-    disposition: Process3dCommandDisposition,
     extent: usize,
     cursor: usize,
     digest: u64,
@@ -598,42 +382,37 @@ struct Process3dResumableCommandWork {
 }
 
 impl Process3dResumableCommandWork {
-    fn new(tool_id: &'static str, disposition: Process3dCommandDisposition, extent: usize) -> Self {
-        Self { tool_id, disposition, extent, cursor: 0, digest: 0xcbf2_9ce4_8422_2325, complete: false, closing: false }
+    fn new(tool_id: &'static str, extent: usize) -> Self {
+        Self { tool_id, extent, cursor: 0, digest: 0xcbf2_9ce4_8422_2325, complete: false, closing: false }
     }
 
     fn observe_bytes(&mut self, bytes: &[u8]) {
-        self.digest ^= bytes.len() as u64;
-        if let Some(first) = bytes.first() {
-            self.digest = self.digest.rotate_left(7) ^ u64::from(*first);
-        }
-        if let Some(last) = bytes.last() {
-            self.digest = self.digest.rotate_left(11) ^ u64::from(*last);
+        for byte in bytes {
+            self.digest = (self.digest ^ u64::from(*byte)).wrapping_mul(0x1000_0000_01b3);
         }
     }
 
-    fn observe_input(&mut self, command: &Process3dCommand, snapshot: &Process3dSnapshot, config: &Process3dConfig, interaction: &protocol::InteractionState) {
-        let mut cursor = self.cursor;
-        let payload_units = process3d_payload_units(command).unwrap_or_default();
-        let chunk = if cursor < payload_units {
-            process3d_payload_chunk(command, cursor)
-        } else {
-            cursor -= payload_units;
-            let snapshot_units = process3d_snapshot_units(command, snapshot).unwrap_or_default();
-            if cursor < snapshot_units {
-                process3d_snapshot_chunk(command, snapshot, cursor)
-            } else {
-                cursor -= snapshot_units;
-                let config_units = process3d_config_units(command, config);
-                if cursor < config_units {
-                    process3d_config_chunk(command, config, cursor)
-                } else {
-                    cursor -= config_units;
-                    interaction.selection.get(PROCESS3D_INTERACTION_DOMAIN).and_then(|selection| selection.ids.get(cursor)).map(|id| id.as_bytes())
-                }
-            }
+    fn observe_input(&mut self, command: &Process3dCommand, config: &Process3dConfig) -> Result<(), Fault> {
+        let bytes = process3d_resumable_bytes(command, config).ok_or_else(|| Fault::from("process3d-retained-route-not-resumable"))?;
+        let start = self.cursor.checked_mul(PROCESS3D_SCAN_BYTES).ok_or_else(|| Fault::from("process3d-retained-cursor-overflow"))?.min(bytes.len());
+        let end = start.saturating_add(PROCESS3D_SCAN_BYTES).min(bytes.len());
+        self.observe_bytes(&bytes[start..end]);
+        Ok(())
+    }
+
+    fn complete_emit(&self, command: &Process3dCommand, config: &Process3dConfig) -> Result<Emit<Process3dMutation, Process3dConfigMutation, NoDraftMutation>, Fault> {
+        let mutation = match command {
+            Process3dCommand::SetActiveUtility(payload) => Process3dConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() },
+            Process3dCommand::EngagementInput(payload) => Process3dConfigMutation::SetEngagementInput { value: payload.value.clone() },
+            Process3dCommand::ToggleSun(_) => Process3dConfigMutation::SetSun { enabled: !config.sun_enabled, azimuth: config.sun_azimuth, elevation: config.sun_elevation, intensity: config.sun_intensity, color: config.sun_color.clone() },
+            Process3dCommand::SetSunAzimuth(payload) => Process3dConfigMutation::SetSun { enabled: config.sun_enabled, azimuth: payload.value, elevation: config.sun_elevation, intensity: config.sun_intensity, color: config.sun_color.clone() },
+            Process3dCommand::SetSunElevation(payload) => Process3dConfigMutation::SetSun { enabled: config.sun_enabled, azimuth: config.sun_azimuth, elevation: payload.value, intensity: config.sun_intensity, color: config.sun_color.clone() },
+            Process3dCommand::SetSunIntensity(payload) => Process3dConfigMutation::SetSun { enabled: config.sun_enabled, azimuth: config.sun_azimuth, elevation: config.sun_elevation, intensity: payload.value, color: config.sun_color.clone() },
+            Process3dCommand::SetLocale(payload) => Process3dConfigMutation::SetLocale { value: payload.value.clone() },
+            Process3dCommand::SetContributions(payload) => Process3dConfigMutation::SetContributions { json: payload.json.clone() },
+            _ => return Err(Fault::from("process3d-retained-route-not-resumable")),
         };
-        self.observe_bytes(chunk.unwrap_or(command.command_id().as_bytes()));
+        Ok(Emit::config(vec![mutation]))
     }
 }
 
@@ -652,11 +431,11 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
         command: &Process3dCommand,
         snapshot: &Process3dSnapshot,
         config: &Process3dConfig,
-        history: &semio_framework_plugin::HistoryView,
+        _history: &semio_framework_plugin::HistoryView,
         interaction: &protocol::InteractionState,
-        hover: &semio_framework_plugin::app::InteractionHoverState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
         _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Process3dPlayApp>>>,
-        operation: &AppOperationContext,
+        _operation: &AppOperationContext,
     ) -> Result<ArtifactCommandWorkStep<EditorApp<Process3dPlayApp>>, Fault> {
         if self.complete {
             return Err(Fault::from("process3d-retained-work-repeated"));
@@ -669,12 +448,12 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
             return Err(Fault::from("process3d-retained-checkpoint-cursor-out-of-range"));
         }
         if self.cursor < extent {
-            self.observe_input(command, snapshot, config, interaction);
+            self.observe_input(command, config)?;
             self.cursor += 1;
-            return Ok(ArtifactCommandWorkStep::Progress { stage: "process3d-command-scan", preview: b"{\"en\":\"Scanning command inputs\",\"de\":\"Befehlseingaben werden gepr\xC3\xBCft\"}" });
+            return Ok(ArtifactCommandWorkStep::Progress { stage: "process3d-config-prepare", preview: b"{\"en\":\"Preparing configuration\",\"de\":\"Konfiguration wird vorbereitet\"}" });
         }
         self.complete = true;
-        process3d_retained_reduce(command, snapshot, config, history, interaction, hover, operation).map(ArtifactCommandWorkStep::Complete)
+        self.complete_emit(command, config).map(ArtifactCommandWorkStep::Complete)
     }
 
     fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
@@ -682,8 +461,8 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
             return Err(Fault::from("process3d-retained-checkpoint-capacity"));
         }
         target[..4].copy_from_slice(b"P3C1");
-        target[4] = self.disposition as u8;
-        target[5] = u8::from(self.complete);
+        target[4] = u8::from(self.complete);
+        target[5] = 0;
         target[8..16].copy_from_slice(&(self.cursor as u64).to_le_bytes());
         target[16..24].copy_from_slice(&self.digest.to_le_bytes());
         target[24..32].copy_from_slice(&process3d_tool_identity(self.tool_id).to_le_bytes());
@@ -692,7 +471,7 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
     }
 
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
-        if checkpoint.len() != 40 || &checkpoint[..4] != b"P3C1" || checkpoint[4] != self.disposition as u8 || checkpoint[5] > 1 {
+        if checkpoint.len() != 40 || &checkpoint[..4] != b"P3C1" || checkpoint[4] > 1 || checkpoint[5] != 0 {
             return Err(Fault::from("process3d-retained-checkpoint-invalid"));
         }
         let identity = u64::from_le_bytes(checkpoint[24..32].try_into().map_err(|_| Fault::from("process3d-retained-checkpoint-identity"))?);
@@ -709,7 +488,7 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
         }
         self.cursor = cursor as usize;
         self.digest = u64::from_le_bytes(checkpoint[16..24].try_into().map_err(|_| Fault::from("process3d-retained-checkpoint-digest"))?);
-        self.complete = checkpoint[5] == 1;
+        self.complete = checkpoint[4] == 1;
         Ok(())
     }
 
@@ -782,6 +561,11 @@ impl ArtifactOwnedToolJobFactory for Process3dBoundedCommandJobFactory {
     type Owner = EditorApp<Process3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = PROCESS3D_BOUNDED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::process3d::PROCESS_3D_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "loadModelRequest", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    ];
 }
 
 struct Process3dResumableCommandJobFactory {
@@ -839,8 +623,261 @@ impl ArtifactOwnedToolJobFactory for Process3dResumableCommandJobFactory {
     type Owner = EditorApp<Process3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = PROCESS3D_RESUMABLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::process3d::PROCESS_3D_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveUtility", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "toggleSun", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSunAzimuth", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSunElevation", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+    ];
 }
 //#endregion 🧵️RetainedCommands
+
+//#region 📬️ConfigStorePreparation
+struct Process3dConfigStorePreparationFactory;
+
+struct Process3dConfigStorePreparation {
+    base: Option<store::SnapshotRead<Process3dConfig>>,
+    mutation: Option<Process3dConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<Process3dConfig, Process3dConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn process3d_config_retained_bytes(config: &Process3dConfig) -> Option<usize> {
+    [config.engagement_input.len(), config.sun_color.len(), config.active_utility_id.len(), config.locale.len(), config.contributions_json.len()].into_iter().try_fold(0usize, usize::checked_add)
+}
+
+fn process3d_config_mutation_retained_bytes(mutation: &Process3dConfigMutation) -> usize {
+    match mutation {
+        Process3dConfigMutation::SetEngagementInput { value } | Process3dConfigMutation::SetActiveUtility { utility_id: value } | Process3dConfigMutation::SetLocale { value } => value.len(),
+        Process3dConfigMutation::SetSun { color, .. } => color.len(),
+        Process3dConfigMutation::SetContributions { json } => json.len(),
+        Process3dConfigMutation::SetCamera { .. } => 0,
+    }
+}
+
+fn admit_process3d_config_mutation(mutation: &Process3dConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let retained_bytes = process3d_config_mutation_retained_bytes(mutation);
+    if retained_bytes > PROCESS3D_RETAINED_RAW_BYTES {
+        return Err("Process3d config mutation exceeds its fixed retained preparation envelope".into());
+    }
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+}
+
+fn prepare_process3d_config(base: &Process3dConfig, mutation: Process3dConfigMutation) -> Result<(Process3dConfig, Vec<Process3dConfigMutation>, Process3dConfigMutation), String> {
+    admit_process3d_config_mutation(&mutation)?;
+    if process3d_config_retained_bytes(base).map_or(true, |bytes| bytes > PROCESS3D_CONFIG_STORE_MAXIMUM_BYTES) {
+        return Err("Process3d config base exceeds its fixed retained preparation envelope".into());
+    }
+    let inverse = match &mutation {
+        Process3dConfigMutation::SetEngagementInput { .. } => Process3dConfigMutation::SetEngagementInput { value: base.engagement_input.clone() },
+        Process3dConfigMutation::SetCamera { .. } => Process3dConfigMutation::SetCamera { position: base.camera_position, target: base.camera_target, fov: base.camera_fov },
+        Process3dConfigMutation::SetSun { .. } => Process3dConfigMutation::SetSun { enabled: base.sun_enabled, azimuth: base.sun_azimuth, elevation: base.sun_elevation, intensity: base.sun_intensity, color: base.sun_color.clone() },
+        Process3dConfigMutation::SetActiveUtility { .. } => Process3dConfigMutation::SetActiveUtility { utility_id: base.active_utility_id.clone() },
+        Process3dConfigMutation::SetLocale { .. } => Process3dConfigMutation::SetLocale { value: base.locale.clone() },
+        Process3dConfigMutation::SetContributions { .. } => Process3dConfigMutation::SetContributions { json: base.contributions_json.clone() },
+    };
+    let mut post = base.clone();
+    match &mutation {
+        Process3dConfigMutation::SetEngagementInput { value } => post.engagement_input = value.clone(),
+        Process3dConfigMutation::SetCamera { position, target, fov } => {
+            post.camera_position = *position;
+            post.camera_target = *target;
+            post.camera_fov = *fov;
+        }
+        Process3dConfigMutation::SetSun { enabled, azimuth, elevation, intensity, color } => {
+            post.sun_enabled = *enabled;
+            post.sun_azimuth = *azimuth;
+            post.sun_elevation = *elevation;
+            post.sun_intensity = *intensity;
+            post.sun_color = color.clone();
+        }
+        Process3dConfigMutation::SetActiveUtility { utility_id } => post.active_utility_id = utility_id.clone(),
+        Process3dConfigMutation::SetLocale { value } => post.locale = value.clone(),
+        Process3dConfigMutation::SetContributions { json } => post.contributions_json = json.clone(),
+    }
+    if process3d_config_retained_bytes(&post).map_or(true, |bytes| bytes > PROCESS3D_CONFIG_STORE_MAXIMUM_BYTES) {
+        return Err("Process3d config post-state exceeds its fixed retained preparation envelope".into());
+    }
+    Ok((post, vec![inverse], mutation))
+}
+
+fn process3d_config_store_edit(forward: Process3dConfigMutation, inverse: Vec<Process3dConfigMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Process3dConfigMutation> {
+    let id = format!("process3d-config-retained-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<Process3dConfig, Process3dConfigMutation> for Process3dConfigStorePreparationFactory {
+    fn preflight(&self, mutation: &Process3dConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Process3d config preparation rejected its lane or description envelope".into());
+        }
+        admit_process3d_config_mutation(mutation)
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<Process3dConfig, Process3dConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Process3dConfig, Process3dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Process3dConfig, Process3dConfigMutation>> {
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(Process3dConfigStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<Process3dConfig, Process3dConfigMutation> for Process3dConfigStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "Process3d config preparation lost its exact base root".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "Process3d config preparation lost its mutation owner".to_string())?;
+        let (post, inverse, forward) = prepare_process3d_config(base.get(), mutation)?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Process3d config preparation lost its Store authority".to_string())?;
+        let edit = process3d_config_store_edit(forward, inverse, self.description.take(), authority);
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Process3dConfig, Process3dConfigMutation>> {
+        self.prepared.as_ref()
+    }
+
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Process3dConfig, Process3dConfigMutation>> {
+        self.prepared.take()
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("Process3d config preparation could not return its exact base root".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️ConfigStorePreparation
+
+//#region 🧾️ProofCatalogs
+struct Process3dBoundedProofs;
+impl Process3dBoundedProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<Process3dPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.process.process3d@1/*#editor",
+        document_schema: "process.3d",
+        factory: "Process3dBoundedCommandJobFactory",
+        factory_type: Process3dBoundedCommandJobFactory,
+        tools: {
+            "engagementAbort" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setCamera" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "loadModelRequest" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+        }
+    }
+}
+
+struct Process3dResumableProofs;
+impl Process3dResumableProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<Process3dPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.process.process3d@1/*#editor",
+        document_schema: "process.3d",
+        factory: "Process3dResumableCommandJobFactory",
+        factory_type: Process3dResumableCommandJobFactory,
+        tools: {
+            "setActiveUtility" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "engagementInput" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "toggleSun" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "setSunAzimuth" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "setSunElevation" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "setSunIntensity" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "setLocale" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "setContributions" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+        }
+    }
+}
+//#endregion 🧾️ProofCatalogs
 
 impl ArtifactEditor for Process3dPlayApp {
     type Snapshot = Process3dSnapshot;
@@ -860,47 +897,12 @@ impl ArtifactEditor for Process3dPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::process3d::PROCESS_3D_SCHEMA;
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<Process3dPlayApp>,
-        owner_file: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-        controller: "s.process.process3d@1/*#editor",
-        document_schema: "process.3d",
-        factory: "BoundedFirstStepCommandJobFactory",
-        tools: {
-            "setSnapshot" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setActiveExample" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "addStep" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "addWorkshopMachine" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "removeWorkshopMachine" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "updateWorkshopMachine" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "removeStep" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "removeSelectedStep" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "moveStep" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "updateStep" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setStepEnabled" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setStock" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "patchInspector" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setCursor" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "stepCursor" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "stepCursorBack" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "stepCursorForward" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "engagementSubmit" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "worldPointerDown" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "worldFaceDragEnd" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "importModelFile" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setActiveUtility" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "engagementInput" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "engagementAbort" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setCamera" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "toggleSun" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setSunAzimuth" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setSunElevation" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setSunIntensity" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setLocale" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setContributions" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "exportModel" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "loadModelRequest" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-        }
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(Process3dConfigStorePreparationFactory))
+    }
+
+    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        Process3dBoundedProofs::bounded_first_step_tool_proofs().into_iter().chain(Process3dResumableProofs::bounded_first_step_tool_proofs()).collect()
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -913,14 +915,20 @@ impl ArtifactEditor for Process3dPlayApp {
         let Some(disposition) = process3d_command_disposition(&request.tool_id) else {
             return Ok(None);
         };
+        if disposition == Process3dCommandDisposition::BatchOnly {
+            return Ok(None);
+        }
         if request.command.command_id() != request.tool_id {
             return Err(Fault::from("process3d-command-tool-mismatch"));
         }
         let tool_id = request.command.command_id();
-        let extent = process3d_resumable_extent(&request.command, &request.snapshot, &request.config, &request.interaction_state).ok_or_else(|| Fault::from("process3d-retained-work-extent-overflow"))?;
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = match disposition {
             Process3dCommandDisposition::Bounded => Box::new(BoundedArtifactCommandWork::new(tool_id, process3d_retained_reduce, process3d_bounded_extent)),
-            _ => Box::new(Process3dResumableCommandWork::new(tool_id, disposition, extent)),
+            Process3dCommandDisposition::Config => {
+                let extent = process3d_resumable_extent(&request.command, &request.snapshot, &request.config, &request.interaction_state).ok_or_else(|| Fault::from("process3d-retained-work-extent-overflow"))?;
+                Box::new(Process3dResumableCommandWork::new(tool_id, extent))
+            }
+            Process3dCommandDisposition::BatchOnly => unreachable!("batch-only route returned before retained construction"),
         };
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
@@ -956,6 +964,10 @@ impl ArtifactEditor for Process3dPlayApp {
         Some(crate::artifacts::process3d::spr::process3d_document_store_owners())
     }
 
+    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
     fn build_document_store_initialization_job(
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
@@ -971,6 +983,10 @@ impl ArtifactEditor for Process3dPlayApp {
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
     fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
@@ -1339,27 +1355,27 @@ pub fn create_process3d_app() -> AppDefinition {
             // this packet's migration notes. The subset's own `📚️examples/🎬️demo` facet
             // (`crate::artifacts::process3d::examples::...`, real content, pre-existing) is the
             // modern, role-agnostic replacement surface for this.
-            .action_interactive_job("setSnapshot", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
-            .action_interactive_job("addStep", InteractiveJobClassification::Migrated)
-            .action_interactive_job("addWorkshopMachine", InteractiveJobClassification::Migrated)
-            .action_interactive_job("removeWorkshopMachine", InteractiveJobClassification::Migrated)
-            .action_interactive_job("updateWorkshopMachine", InteractiveJobClassification::Migrated)
-            .action_interactive_job("removeStep", InteractiveJobClassification::Migrated)
-            .action_interactive_job("removeSelectedStep", InteractiveJobClassification::Migrated)
-            .action_interactive_job("moveStep", InteractiveJobClassification::Migrated)
-            .action_interactive_job("updateStep", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setStepEnabled", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setStock", InteractiveJobClassification::Migrated)
-            .action_interactive_job("patchInspector", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setCursor", InteractiveJobClassification::Migrated)
-            .action_interactive_job("stepCursor", InteractiveJobClassification::Migrated)
-            .action_interactive_job("stepCursorBack", InteractiveJobClassification::Migrated)
-            .action_interactive_job("stepCursorForward", InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
-            .action_interactive_job("worldPointerDown", InteractiveJobClassification::Migrated)
-            .action_interactive_job("worldFaceDragEnd", InteractiveJobClassification::Migrated)
-            .action_interactive_job("importModelFile", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSnapshot", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addWorkshopMachine", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("removeWorkshopMachine", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("updateWorkshopMachine", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("removeStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("removeSelectedStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("moveStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("updateStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setStepEnabled", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setStock", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("patchInspector", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setCursor", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("stepCursor", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("stepCursorBack", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("stepCursorForward", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementSubmit", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("worldPointerDown", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("worldFaceDragEnd", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("importModelFile", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("setActiveUtility", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementAbort", InteractiveJobClassification::Migrated)
@@ -1369,7 +1385,7 @@ pub fn create_process3d_app() -> AppDefinition {
             .action_interactive_job("setSunElevation", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
             .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
-            .action_interactive_job("exportModel", InteractiveJobClassification::Migrated)
+            .action_interactive_job("exportModel", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("loadModelRequest", InteractiveJobClassification::Migrated)
             .build_definition()
 }
@@ -1933,12 +1949,6 @@ mod tests {
         snapshot
     }
 
-    fn retained_interaction(selection_count: usize) -> protocol::InteractionState {
-        let mut interaction = protocol::InteractionState::default();
-        interaction.selection.insert(PROCESS3D_INTERACTION_DOMAIN.into(), protocol::DomainSelection { granularity: "object".into(), ids: (0..selection_count).map(|index| format!("selected-{index}")).collect(), anchor_id: None });
-        interaction
-    }
-
     fn retained_operation() -> AppOperationContext {
         AppOperationContext { app_instance_id: 1, parent_document_id: "process3d-retained-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32] }
     }
@@ -1967,14 +1977,15 @@ mod tests {
     fn retained_route_dispositions_are_exact_and_exhaustive() {
         use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
 
-        let mut ids = PROCESS3D_BOUNDED_TOOL_IDS.iter().chain(PROCESS3D_RESUMABLE_TOOL_IDS).copied().collect::<Vec<_>>();
+        let mut ids = PROCESS3D_BOUNDED_TOOL_IDS.iter().chain(PROCESS3D_RESUMABLE_TOOL_IDS).chain(PROCESS3D_BATCH_ONLY_TOOL_IDS).copied().collect::<Vec<_>>();
         ids.sort_unstable();
         ids.dedup();
         assert_eq!(ids.len(), 33);
-        assert_eq!(PROCESS3D_BOUNDED_TOOL_IDS, &["setCursor", "stepCursor", "stepCursorBack", "stepCursorForward", "engagementAbort", "setCamera", "loadModelRequest"]);
-        assert_eq!(PROCESS3D_RESUMABLE_TOOL_IDS.len(), 26);
+        assert_eq!(PROCESS3D_BOUNDED_TOOL_IDS, &["engagementAbort", "setCamera", "loadModelRequest"]);
+        assert_eq!(PROCESS3D_RESUMABLE_TOOL_IDS.len(), 8);
+        assert_eq!(PROCESS3D_BATCH_ONLY_TOOL_IDS.len(), 22);
         assert!(ids.iter().all(|tool_id| process3d_command_disposition(tool_id).is_some()));
-        assert_eq!(<Process3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 33);
+        assert_eq!(<Process3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 11);
         assert_eq!(process3d_bounded_contract().shape, ToolExecutionShape::BoundedFirstStep);
         assert_eq!(process3d_resumable_contract().shape, ToolExecutionShape::Resumable);
         assert_eq!(process3d_resumable_contract().cancellation, ToolCancellationPolicy::PerOperation);
@@ -1983,43 +1994,45 @@ mod tests {
     }
 
     #[test]
-    fn retained_resumable_extent_accepts_exact_maximum_and_rejects_max_plus_one() {
-        let command = Process3dCommand::RemoveWorkshopMachine(remove_workshop_machine::RemoveWorkshopMachine { id: "absent".into() });
+    fn retained_resumable_extent_accepts_exact_byte_maximum_and_rejects_max_plus_one() {
         let config = Process3dConfig::default();
         let interaction = protocol::InteractionState::default();
-        let exact = retained_snapshot(PROCESS3D_RETAINED_WORK_ITEMS - 1);
-        let rejected = retained_snapshot(PROCESS3D_RETAINED_WORK_ITEMS);
-        assert_eq!(process3d_resumable_extent(&command, &exact, &config, &interaction), Some(PROCESS3D_RETAINED_WORK_ITEMS));
-        assert_eq!(process3d_resumable_extent(&command, &rejected, &config, &interaction), Some(PROCESS3D_RETAINED_WORK_ITEMS + 1));
+        let snapshot = retained_snapshot(0);
+        let exact = Process3dCommand::SetContributions(set_contributions::SetContributions { json: "x".repeat(PROCESS3D_RETAINED_RAW_BYTES) });
+        let rejected = Process3dCommand::SetContributions(set_contributions::SetContributions { json: "x".repeat(PROCESS3D_RETAINED_RAW_BYTES + 1) });
+        assert_eq!(process3d_resumable_extent(&exact, &snapshot, &config, &interaction), Some(PROCESS3D_RETAINED_RAW_BYTES.div_ceil(PROCESS3D_SCAN_BYTES)));
+        assert_eq!(process3d_resumable_extent(&rejected, &snapshot, &config, &interaction), None);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn retained_resumable_progress_checkpoint_identity_replay_and_close_are_exact() {
-        let command = Process3dCommand::RemoveWorkshopMachine(remove_workshop_machine::RemoveWorkshopMachine { id: "absent".into() });
-        let snapshot = retained_snapshot(PROCESS3D_RETAINED_WORK_ITEMS - 1);
+        let command = Process3dCommand::SetContributions(set_contributions::SetContributions { json: "x".repeat(4_096) });
+        let snapshot = retained_snapshot(0);
         let config = Process3dConfig::default();
         let interaction = protocol::InteractionState::default();
         let history = HistoryView::empty().await;
         let hover = semio_framework_plugin::InteractionHoverState::default();
         let operation = retained_operation();
         let extent = process3d_resumable_extent(&command, &snapshot, &config, &interaction).expect("extent");
-        let mut uninterrupted = Process3dResumableCommandWork::new("removeWorkshopMachine", Process3dCommandDisposition::Workshop, extent);
+        let mut uninterrupted = Process3dResumableCommandWork::new("setContributions", extent);
         for _ in 0..11 {
             assert!(matches!(uninterrupted.step(&command, &snapshot, &config, &history, &interaction, &hover, None, &operation).expect("checkpoint prefix"), ArtifactCommandWorkStep::Progress { .. }));
         }
         let mut checkpoint = [0u8; 40];
         assert_eq!(uninterrupted.checkpoint(&mut checkpoint).expect("checkpoint"), checkpoint.len());
-        let mut wrong_tool = Process3dResumableCommandWork::new("addStep", Process3dCommandDisposition::Workshop, extent);
-        assert!(wrong_tool.restore(&checkpoint).is_err(), "a same-category command must not accept another tool's checkpoint");
-        let mut replayed = Process3dResumableCommandWork::new("removeWorkshopMachine", Process3dCommandDisposition::Workshop, extent);
+        let mut wrong_tool = Process3dResumableCommandWork::new("setLocale", extent);
+        assert!(wrong_tool.restore(&checkpoint).is_err(), "a config command must not accept another tool's checkpoint");
+        let mut replayed = Process3dResumableCommandWork::new("setContributions", extent);
         replayed.restore(&checkpoint).expect("restore");
         assert_eq!((replayed.cursor, replayed.digest), (uninterrupted.cursor, uninterrupted.digest));
         let (uninterrupted_progress, uninterrupted_emit) = drive_resumable_work(&mut uninterrupted, &command, &snapshot, &config, &interaction, &history);
         let (replayed_progress, replayed_emit) = drive_resumable_work(&mut replayed, &command, &snapshot, &config, &interaction, &history);
-        assert_eq!(uninterrupted_progress, PROCESS3D_RETAINED_WORK_ITEMS - 11);
+        assert_eq!(uninterrupted_progress, extent - 11);
         assert_eq!(replayed_progress, uninterrupted_progress);
-        assert!(uninterrupted_emit.artifact_mutations.is_empty() && uninterrupted_emit.config_mutations.is_empty() && uninterrupted_emit.effects.is_empty());
-        assert!(replayed_emit.artifact_mutations.is_empty() && replayed_emit.config_mutations.is_empty() && replayed_emit.effects.is_empty());
+        assert!(uninterrupted_emit.artifact_mutations.is_empty() && uninterrupted_emit.effects.is_empty());
+        assert!(replayed_emit.artifact_mutations.is_empty() && replayed_emit.effects.is_empty());
+        assert_eq!(uninterrupted_emit.config_mutations, vec![Process3dConfigMutation::SetContributions { json: "x".repeat(4_096) }]);
+        assert_eq!(replayed_emit.config_mutations, uninterrupted_emit.config_mutations);
         assert_eq!(replayed.close_step(0, 0), InteractiveJobCloseStep::Blocked);
         replayed.begin_close();
         assert_eq!(replayed.close_step(0, 0), InteractiveJobCloseStep::Complete);
@@ -2035,10 +2048,6 @@ mod tests {
         let hover = semio_framework_plugin::InteractionHoverState::default();
         let operation = retained_operation();
         let bounded = [
-            Process3dCommand::SetCursor(set_cursor::SetCursor { value: Some(3) }),
-            Process3dCommand::StepCursor(step_cursor::StepCursor { delta: 1 }),
-            Process3dCommand::StepCursorBack(step_cursor_back::StepCursorBack {}),
-            Process3dCommand::StepCursorForward(step_cursor_forward::StepCursorForward {}),
             Process3dCommand::EngagementAbort(engagement_abort::EngagementAbort {}),
             Process3dCommand::SetCamera(set_camera::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 }),
             Process3dCommand::LoadModelRequest(load_model_request::LoadModelRequest {}),
@@ -2049,40 +2058,28 @@ mod tests {
             assert!(started.elapsed().as_micros() < 8_000, "bounded {} exceeded the interactive step ceiling", command.command_id());
         }
 
-        let document_snapshot = retained_snapshot(61);
-        let workshop_snapshot = retained_snapshot(63);
-        let inspector_snapshot = retained_snapshot(60);
-        let media_snapshot = retained_snapshot(61);
         let mut config_max = Process3dConfig::default();
-        config_max.engagement_input = "x".repeat(PROCESS3D_RETAINED_WORK_ITEMS * PROCESS3D_SCAN_BYTES);
+        config_max.sun_color = "x".repeat(PROCESS3D_RETAINED_RAW_BYTES);
+        let maximum = "x".repeat(PROCESS3D_RETAINED_RAW_BYTES);
         let fixtures = [
-            (Process3dCommand::SetStock(set_stock::SetStock { kind: "box".into() }), document_snapshot, Process3dConfig::default(), protocol::InteractionState::default(), Process3dCommandDisposition::Document),
-            (
-                Process3dCommand::RemoveWorkshopMachine(remove_workshop_machine::RemoveWorkshopMachine { id: "absent".into() }),
-                workshop_snapshot,
-                Process3dConfig::default(),
-                protocol::InteractionState::default(),
-                Process3dCommandDisposition::Workshop,
-            ),
-            (Process3dCommand::RemoveSelectedStep(remove_selected_step::RemoveSelectedStep {}), retained_snapshot(0), Process3dConfig::default(), retained_interaction(PROCESS3D_RETAINED_WORK_ITEMS), Process3dCommandDisposition::Step),
-            (
-                Process3dCommand::PatchInspector(patch_inspector::PatchInspector { target: "absent".into(), field: "label".into(), number: None, text: None }),
-                inspector_snapshot,
-                Process3dConfig::default(),
-                protocol::InteractionState::default(),
-                Process3dCommandDisposition::Inspector,
-            ),
-            (Process3dCommand::EngagementSubmit(engagement_submit::EngagementSubmit {}), retained_snapshot(0), config_max, protocol::InteractionState::default(), Process3dCommandDisposition::Config),
-            (Process3dCommand::ExportModel(export_model::ExportModel { format: "step".into() }), media_snapshot, Process3dConfig::default(), retained_interaction(0), Process3dCommandDisposition::Media),
+            (Process3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: maximum.clone() }), Process3dConfig::default()),
+            (Process3dCommand::EngagementInput(engagement_input::EngagementInput { value: maximum.clone() }), Process3dConfig::default()),
+            (Process3dCommand::ToggleSun(toggle_sun::ToggleSun {}), config_max.clone()),
+            (Process3dCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 1.0 }), config_max.clone()),
+            (Process3dCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: 1.0 }), config_max.clone()),
+            (Process3dCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: 1.0 }), config_max),
+            (Process3dCommand::SetLocale(set_locale::SetLocale { value: maximum.clone() }), Process3dConfig::default()),
+            (Process3dCommand::SetContributions(set_contributions::SetContributions { json: maximum }), Process3dConfig::default()),
         ];
-        for (command, snapshot, config, interaction, disposition) in fixtures {
-            let extent = process3d_resumable_extent(&command, &snapshot, &config, &interaction).expect("maximum extent");
+        for (command, config) in fixtures {
+            let interaction = protocol::InteractionState::default();
+            let extent = process3d_resumable_extent(&command, &empty, &config, &interaction).expect("maximum extent");
             assert!(extent <= PROCESS3D_RETAINED_WORK_ITEMS, "{} fixture exceeds admission: {extent}", command.command_id());
-            assert_eq!(extent, PROCESS3D_RETAINED_WORK_ITEMS, "{} fixture no longer exercises exact maximum admission", command.command_id());
-            let mut work = Process3dResumableCommandWork::new(command.command_id(), disposition, extent);
+            assert_eq!(extent, PROCESS3D_RETAINED_RAW_BYTES.div_ceil(PROCESS3D_SCAN_BYTES), "{} fixture no longer exercises exact maximum config admission", command.command_id());
+            let mut work = Process3dResumableCommandWork::new(command.command_id(), extent);
             loop {
                 let started = std::time::Instant::now();
-                let step = work.step(&command, &snapshot, &config, &history, &interaction, &hover, None, &operation).expect("maximum work step");
+                let step = work.step(&command, &empty, &config, &history, &interaction, &hover, None, &operation).expect("maximum work step");
                 assert!(started.elapsed().as_micros() < 8_000, "resumable {} exceeded the interactive step ceiling", command.command_id());
                 if matches!(step, ArtifactCommandWorkStep::Complete(_) | ArtifactCommandWorkStep::CompleteWithEphemeral { .. }) {
                     break;

@@ -1,5 +1,5 @@
 //! ↩️ Inverse for `RenameWriter` — reads the BASE id, never the diff.
-use super::mutation::RenameWriter;
+use super::RenameWriter;
 use crate::artifacts::writer::schema::mutations::WriterMutation;
 use crate::artifacts::writer::WriterSnapshot;
 

@@ -1,0 +1,3 @@
+# 🧬️ insert-text-chunk/InsertTextChunk
+scalar InsertTextChunkMutationValue
+input InsertTextChunkMutation { index: Int! chunk: InsertTextChunkMutationValue! }

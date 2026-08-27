@@ -1,9 +1,11 @@
-/** 🧬️ S Space index mutation vocabulary — TS twin of `🧬️mutations/🦀️component.rs`. */
-import type { SpaceArtifactRow } from "../📸️snapshot/🟦️component.ts";
+/** 🪐️ S Space direct-mutation discriminated union. */
+import type { CreateArtifact } from "./🌱create-artifact/🟦️component.ts";
+import type { DeleteArtifact } from "./🗑️delete-artifact/🟦️component.ts";
+import type { RenameArtifact } from "./🏷️rename-artifact/🟦️component.ts";
+import type { TouchArtifact } from "./🕒touch-artifact/🟦️component.ts";
 
-export interface CreateArtifact { mutation: "createArtifact"; artifact: SpaceArtifactRow }
-export interface DeleteArtifact { mutation: "deleteArtifact"; id: string }
-export interface RenameArtifact { mutation: "renameArtifact"; id: string; newName: string }
-export interface TouchArtifact { mutation: "touchArtifact"; id: string; updatedAtMs: number; updatedBy: string }
-
-export type SSpaceMutation = CreateArtifact | DeleteArtifact | RenameArtifact | TouchArtifact;
+export type SSpaceMutation =
+  | ({ mutation: "createArtifact" } & CreateArtifact)
+  | ({ mutation: "deleteArtifact" } & DeleteArtifact)
+  | ({ mutation: "renameArtifact" } & RenameArtifact)
+  | ({ mutation: "touchArtifact" } & TouchArtifact);

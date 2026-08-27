@@ -1122,6 +1122,8 @@ export interface DiagramProps {
   nodesFocusable?: boolean;
   edgesFocusable?: boolean;
   nodesDraggable?: boolean;
+  nodesConnectable?: boolean;
+  edgesReconnectable?: boolean;
   miniMapNodeComponent?: any;
   focusedItemId?: string;
   onFocusComplete?: () => void;
@@ -1188,6 +1190,8 @@ const DiagramInner: React.FC<DiagramProps> = ({
   nodesFocusable = false,
   edgesFocusable = false,
   nodesDraggable = true,
+  nodesConnectable = true,
+  edgesReconnectable = true,
   miniMapNodeComponent,
   focusedItemId,
   onFocusComplete,
@@ -1605,6 +1609,8 @@ const DiagramInner: React.FC<DiagramProps> = ({
         nodesFocusable={nodesFocusable}
         edgesFocusable={edgesFocusable}
         nodesDraggable={nodesDraggable}
+        nodesConnectable={nodesConnectable}
+        edgesReconnectable={edgesReconnectable}
         autoPanOnNodeDrag={autoPanOnNodeDrag}
         selectNodesOnDrag={selectNodesOnDrag}
         onlyRenderVisibleElements={true}

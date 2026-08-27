@@ -11,7 +11,7 @@ pub const FLOW_PLAY_BODY_DOCUMENT: &str = "flow.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -28,7 +28,7 @@ pub async fn definition() -> PanelTabDefinition {
 /// declares for the "graph" domain — the framework stamps this tree's selection/hover presence from
 /// that domain (`.interaction_domain`) and prunes stale ids through that same topology, so no per-item
 /// click action is declared here anymore (clicks are translated into `interactionSelect` generically)?.
-pub async fn render(fixture: &FlowSnapshot, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(fixture: &FlowSnapshot, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let live = fixture.to_fixture();
     let widget_items = crate::editor::flow::ui_node_list(live.widgets.iter().map(|widget| tree_item_desc(flow_graph_node_target_id(widget_id(widget)), Label::data(widget_tree_label(widget)), Some(widget_kind_label(widget).into()))))?;
     let synapse_items = crate::editor::flow::ui_node_list(

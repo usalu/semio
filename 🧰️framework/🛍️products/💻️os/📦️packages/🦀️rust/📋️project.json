@@ -9,10 +9,39 @@
     "family:os-kernel"
   ],
   "targets": {
+    "test-scalar-wire-source": {
+      "executor": "nx:run-commands",
+      "options": {"command":"bun ./📜️script.ts test-scalar-wire-source", "cwd":"{projectRoot}"}
+    },
+    "generate-jco-package-adapter": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts generate-jco-package-adapter",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      }
+    },
+    "preview-generated": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts preview-generated",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      }
+    },
+    "check-jco-package-adapter": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts check-jco-package-adapter",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      }
+    },
     "check": {
       "executor": "nx:run-commands",
       "options": {
         "command": "bun 📜️script.ts check",
+        "forwardAllArgs": true,
         "cwd": "{projectRoot}"
       }
     },
@@ -20,6 +49,7 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "bun 📜️script.ts test",
+        "forwardAllArgs": true,
         "cwd": "{projectRoot}"
       }
     }

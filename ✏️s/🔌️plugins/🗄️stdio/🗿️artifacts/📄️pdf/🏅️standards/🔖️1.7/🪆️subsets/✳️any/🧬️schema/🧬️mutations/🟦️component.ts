@@ -1,23 +1,36 @@
-/** 🧬️ PdfMutation (1.7) union — mirrors the Rust `PdfMutation` enum's `#[serde(tag = "mutation")]`
- *  shape 1:1. `path` on `setDictEntry`/`removeDictEntry` addresses nesting inside ONE object's
- *  `PdfObject` tree via `PdfPathSegment` steps (`../🔺️diff/🟦️component.ts`). */
+/** 🧬️ Transparent PDF mutation TypeScript union assembled from direct owners. */
 
-import type { ObjRef, PdfInfo, PdfObject, PdfPage, PdfSnapshot } from '../📸️snapshot/🟦️component.ts';
-import type { PdfPathSegment } from '../🔺️diff/🟦️component.ts';
+import type { InsertPageMutation } from './📥️insert-page/🟦️component.ts';
+import type { RemovePageMutation } from './🗑️remove-page/🟦️component.ts';
+import type { SetPageMediaBoxMutation } from './📐️set-page-media-box/🟦️component.ts';
+import type { SetPageCropBoxMutation } from './✂️set-page-crop-box/🟦️component.ts';
+import type { AppendPageContentMutation } from './➕️append-page-content/🟦️component.ts';
+import type { SetInfoMutation } from './ℹ️set-info/🟦️component.ts';
+import type { InsertObjectMutation } from './📦️insert-object/🟦️component.ts';
+import type { RemoveObjectMutation } from './🧹️remove-object/🟦️component.ts';
+import type { SetObjectValueMutation } from './🔧️set-object-value/🟦️component.ts';
+import type { SetDictEntryMutation } from './🔑️set-dict-entry/🟦️component.ts';
+import type { RemoveDictEntryMutation } from './🚫️remove-dict-entry/🟦️component.ts';
+import type { SetTrailerEntryMutation } from './🧳️set-trailer-entry/🟦️component.ts';
+import type { RemoveTrailerEntryMutation } from './🧽️remove-trailer-entry/🟦️component.ts';
+import type { MovePageMutation } from './🔀️move-page/🟦️component.ts';
+import type { SetPageContentMutation } from './✏️set-page-content/🟦️component.ts';
+import type { SetPageRotationMutation } from './🔄️set-page-rotation/🟦️component.ts';
 
 export type PdfMutation =
-  | { mutation: 'noMutation' }
-  | { mutation: 'setSnapshot'; snapshot: PdfSnapshot }
-  | { mutation: 'insertPage'; index: number; page: PdfPage }
-  | { mutation: 'removePage'; index: number }
-  | { mutation: 'setPageMediaBox'; index: number; mediaBox: [number, number, number, number] }
-  | { mutation: 'setPageCropBox'; index: number; cropBox: [number, number, number, number] | null }
-  | { mutation: 'appendPageContent'; index: number; text: string }
-  | { mutation: 'setInfo'; info: PdfInfo }
-  | { mutation: 'insertObject'; id: ObjRef; value: PdfObject }
-  | { mutation: 'removeObject'; id: ObjRef }
-  | { mutation: 'setObjectValue'; id: ObjRef; value: PdfObject }
-  | { mutation: 'setDictEntry'; id: ObjRef; path: PdfPathSegment[]; key: string; value: PdfObject }
-  | { mutation: 'removeDictEntry'; id: ObjRef; path: PdfPathSegment[]; key: string }
-  | { mutation: 'setTrailerEntry'; key: string; value: PdfObject }
-  | { mutation: 'removeTrailerEntry'; key: string };
+  | InsertPageMutation
+  | RemovePageMutation
+  | SetPageMediaBoxMutation
+  | SetPageCropBoxMutation
+  | AppendPageContentMutation
+  | SetInfoMutation
+  | InsertObjectMutation
+  | RemoveObjectMutation
+  | SetObjectValueMutation
+  | SetDictEntryMutation
+  | RemoveDictEntryMutation
+  | SetTrailerEntryMutation
+  | RemoveTrailerEntryMutation
+  | MovePageMutation
+  | SetPageContentMutation
+  | SetPageRotationMutation;

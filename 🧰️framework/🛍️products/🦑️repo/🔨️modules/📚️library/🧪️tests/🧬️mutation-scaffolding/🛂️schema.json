@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["schemaVersion", "mutationRoot", "name", "attributedAggregate", "malformedAggregate", "ambiguousAggregate", "wrongMountAggregate", "privateMountAggregate", "wrongVariantAggregate", "scopedAggregate", "unrelatedDocAggregate", "nestedAggregateDecoy", "nestedAggregateScopes", "unmatchedAggregate"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "mutationRoot": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "pattern": "^.+[a-z]+-[a-z]+$" },
+    "attributedAggregate": { "type": "string", "minLength": 1 },
+    "malformedAggregate": { "type": "string", "minLength": 1 },
+    "ambiguousAggregate": { "type": "string", "minLength": 1 },
+    "wrongMountAggregate": { "type": "string", "minLength": 1 },
+    "privateMountAggregate": { "type": "string", "minLength": 1 },
+    "wrongVariantAggregate": { "type": "string", "minLength": 1 },
+    "scopedAggregate": { "type": "string", "minLength": 1 },
+    "unrelatedDocAggregate": { "type": "string", "minLength": 1 },
+    "nestedAggregateDecoy": { "type": "string", "minLength": 1 },
+    "nestedAggregateScopes": { "type": "string", "minLength": 1 },
+    "unmatchedAggregate": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": false
+}

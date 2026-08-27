@@ -171,7 +171,7 @@ pub type Procedural2dStore = ArtifactStore<Procedural2dSnapshot, Procedural2dMut
 /// 🧬️ Applies a mutation to a projection — generic over every variant, so it never needs edits
 /// when the semantic vocabulary grows.
 pub fn apply_procedural2d_mutation(projection: &mut Procedural2dSnapshot, mutation: &Procedural2dMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _) = semio_framework::io::resolve_ready(vcs::apply_mutation(projection, mutation))?;
+    let (next, _) = vcs::apply_mutation(projection, mutation)?;
 
     *projection = next;
     Ok(())
@@ -375,14 +375,14 @@ mod tests {
     #[test]
     fn rename_generation_inverse_law() {
         let mut base = empty_procedural2d_snapshot();
-        base.generation.generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() });
+        base.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() });
         assert_mutation_inverse_law(&base, &rename_generation("generation-1".into(), "Renamed".into()));
     }
 
     #[test]
     fn change_generation_value_diff_absorb_law() {
         let mut base = empty_procedural2d_snapshot();
-        base.generation.generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() });
+        base.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() });
         let d1 = change_generation_value("generation-1".into(), "q1".into(), serde_json::json!(1)).diff(&base);
         let mid = d1.apply(&base).expect("valid mutation diff");
         let d2 = change_generation_value("generation-1".into(), "q1".into(), serde_json::json!(2)).diff(&mid);
@@ -404,7 +404,7 @@ mod tests {
     fn fixture_ops_widget_id_matches_every_widget_kind() {
         let widgets = vec![
             Widget::Neuron { id: "w-neuron".into(), neuron_kind: "math.add".into(), params: Default::default(), input_ports: vec![], output_ports: vec![], preview: true },
-            Widget::InputSlider { id: "w-slider".into(), value: 1.0, min: 0.0, max: 2.0, step: 0.5 },
+            Widget::InputSlider { id: "w-slider".into(), label: "Width".into(), value: 1.0, min: 0.0, max: 2.0, step: 0.5 },
             Widget::InputNote { id: "w-note".into(), text: String::new() },
             Widget::InputImage { id: "w-image".into(), src: String::new() },
             Widget::Variable { id: "w-variable".into(), name: "value".into(), schema: "dictionary".into() },

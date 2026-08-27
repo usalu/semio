@@ -1,8 +1,0 @@
-# reorder-morph-target-attributes inverse facet.
-input GltfReorderMorphTargetAttributesPayloadV1 {
-  mesh: Int!
-  primitive: Int!
-  target: Int!
-  order: [String!]!
-}
-type GltfReorderMorphTargetAttributesInverseV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

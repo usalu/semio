@@ -1,0 +1,4 @@
+# ✒️ Direct change-schema payload.
+input ChangeSchemaInput {
+  new_schema: String!
+}

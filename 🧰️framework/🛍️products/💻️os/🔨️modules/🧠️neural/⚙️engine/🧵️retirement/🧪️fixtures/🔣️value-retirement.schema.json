@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#", "$id": "semio.neural.value-retirement",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "grants", "cases", "ownership"],
+  "properties": {
+    "schema": {"const": "semio.neural.value-retirement"},
+    "grants": {"const": [1, 64, 4096]},
+    "cases": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "object", "additionalProperties": false, "required": ["id", "json", "expandedText", "expectedBytes"], "properties": {
+      "id": {"type": "string"}, "json": {"type": "string"},
+      "expandedText": {"type": "object", "additionalProperties": false, "required": ["text", "repetitions"], "properties": {"text": {"type": "string"}, "repetitions": {"type": "integer", "minimum": 0}}},
+      "expectedBytes": {"type": "integer", "minimum": 0}
+    }}},
+    "ownership": {"type": "object", "additionalProperties": false, "required": ["finalDrop", "sharedDrop", "coldBuilderDrop", "terminalOwners"], "properties": {
+      "finalDrop": {"const": "reject-without-recursive-destruction"}, "sharedDrop": {"const": "atomic-release"}, "coldBuilderDrop": {"const": "explicit-domain-drain"}, "terminalOwners": {"const": 0}
+    }}
+  }
+}

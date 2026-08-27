@@ -18,7 +18,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::
 /// `../../🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s own `KINDS` --
 /// duplicated rather than imported because the ORACLE-only build of this adapter must never link
 /// `semio-s-plugin-stdio` (see this file's own header).
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-declaration", "set-doctype", "insert-element", "remove-element", "set-element-name", "set-attribute", "set-text", "set-view-box", "set-transform"];
+const KINDS: &[&str] = &["set-declaration", "set-doctype", "insert-element", "remove-element", "set-element-name", "set-attribute", "set-text", "set-view-box", "set-transform"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -108,7 +108,11 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::any::schema::mutations::{apply_svg_mutation, SvgMutation};
+    use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::any::schema::mutations::{
+        apply_svg_mutation, InsertElementMutation, InsertElementPayload, RemoveElementMutation, RemoveElementPayload, SetAttributeMutation, SetAttributePayload, SetDeclarationMutation,
+        SetDeclarationPayload, SetDoctypeMutation, SetDoctypePayload, SetElementNameMutation, SetElementNamePayload, SetTextMutation, SetTextPayload, SetTransformMutation,
+        SetTransformPayload, SetViewBoxMutation, SetViewBoxPayload, SvgMutation,
+    };
     use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::{element_attr, node_at, parse_transform_list, parse_view_box, set_element_attr, view_box_to_string, NodePath, SvgSnapshot, TransformOp, ViewBox};
     use semio_s_plugin_stdio::artifacts::xml::standards::v1_0::subsets::any::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlNode};
     use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::any::project_svg_1_1;
@@ -182,38 +186,47 @@ mod subject {
         }
     }
 
-    /// 📄️ The scenario's `<id>`/`<params>` spec turned into the ONE typed `SvgMutation` this
-    /// subset declares for it. `set-snapshot` mirrors the oracle's own extension of "replace the
-    /// document" -- only `rootId`/`viewBoxWidth` are spec-driven, applied on top of the currently
-    /// decoded `base` snapshot so every other field (declaration, doctype, the rest of the tree)
-    /// survives untouched.
-    fn mutation_from_spec(spec: &Json, base: &SvgSnapshot) -> Result<SvgMutation, String> {
+    /// 📄️ The scenario's `<id>`/`<params>` spec turned into the one direct typed mutation this subset declares for it.
+    fn mutation_from_spec(spec: &Json, _base: &SvgSnapshot) -> Result<SvgMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         match spec.str("kind").as_str() {
-            "no-mutation" => Ok(SvgMutation::NoMutation),
-            "set-snapshot" => {
-                let mut snapshot = base.clone();
-                if let Some(root) = snapshot.doc.root.as_mut() {
-                    if let Some(id) = str_field(&params, "rootId") {
-                        set_element_attr(root, "id", Some(id));
-                    }
-                    if let Some(width) = match params.get("viewBoxWidth") { Some(Json::Number(n)) => Some(*n), _ => None } {
-                        let mut vb = element_attr(root, "viewBox").and_then(|s| parse_view_box(s).ok()).unwrap_or(ViewBox { min_x: 0.0, min_y: 0.0, width: 0.0, height: 0.0 });
-                        vb.width = width;
-                        set_element_attr(root, "viewBox", Some(view_box_to_string(&vb)));
-                    }
-                }
-                Ok(SvgMutation::SetSnapshot { snapshot })
-            }
-            "set-declaration" => Ok(SvgMutation::SetDeclaration { declaration: str_field(&params, "version").map(|version| XmlDeclaration { version, encoding: str_field(&params, "encoding"), standalone: match params.get("standalone") { Some(Json::Bool(b)) => Some(*b), _ => None } }) }),
-            "set-doctype" => Ok(SvgMutation::SetDoctype { doctype: str_field(&params, "doctype").map(|inner| XmlDoctype::from(format!("<!DOCTYPE {inner}>").as_str())) }),
-            "insert-element" => Ok(SvgMutation::InsertElement { parent: path_field(&params, "parent"), index: usize_field(&params, "index"), node: json_to_xml_node(params.get("node").unwrap_or(&Json::Null)) }),
-            "remove-element" => Ok(SvgMutation::RemoveElement { parent: path_field(&params, "parent"), index: usize_field(&params, "index") }),
-            "set-element-name" => Ok(SvgMutation::SetElementName { path: path_field(&params, "path"), name: params.str("name") }),
-            "set-attribute" => Ok(SvgMutation::SetAttribute { path: path_field(&params, "path"), name: params.str("name"), value: match params.get("value") { Some(Json::String(v)) => Some(v.clone()), _ => None } }),
-            "set-text" => Ok(SvgMutation::SetText { path: path_field(&params, "path"), text: params.str("text") }),
-            "set-view-box" => Ok(SvgMutation::SetViewBox { path: path_field(&params, "path"), view_box: view_box_field(&params, "viewBox") }),
-            "set-transform" => Ok(SvgMutation::SetTransform { path: path_field(&params, "path"), transform: transform_field(&params, "transform") }),
+            "set-declaration" => Ok(SvgMutation::SetDeclaration(SetDeclarationMutation::Apply(SetDeclarationPayload {
+                declaration: str_field(&params, "version").map(|version| XmlDeclaration {
+                    version,
+                    encoding: str_field(&params, "encoding"),
+                    standalone: match params.get("standalone") { Some(Json::Bool(b)) => Some(*b), _ => None },
+                }),
+            }))),
+            "set-doctype" => Ok(SvgMutation::SetDoctype(SetDoctypeMutation::Apply(SetDoctypePayload {
+                doctype: str_field(&params, "doctype").map(|inner| XmlDoctype::from(format!("<!DOCTYPE {inner}>").as_str())),
+            }))),
+            "insert-element" => Ok(SvgMutation::InsertElement(InsertElementMutation::Apply(InsertElementPayload {
+                parent: path_field(&params, "parent"),
+                index: usize_field(&params, "index"),
+                node: json_to_xml_node(params.get("node").unwrap_or(&Json::Null)),
+            }))),
+            "remove-element" => Ok(SvgMutation::RemoveElement(RemoveElementMutation::Apply(RemoveElementPayload {
+                parent: path_field(&params, "parent"),
+                index: usize_field(&params, "index"),
+            }))),
+            "set-element-name" => Ok(SvgMutation::SetElementName(SetElementNameMutation::Apply(SetElementNamePayload {
+                path: path_field(&params, "path"),
+                name: params.str("name"),
+            }))),
+            "set-attribute" => Ok(SvgMutation::SetAttribute(SetAttributeMutation::Apply(SetAttributePayload {
+                path: path_field(&params, "path"),
+                name: params.str("name"),
+                value: match params.get("value") { Some(Json::String(v)) => Some(v.clone()), _ => None },
+            }))),
+            "set-text" => Ok(SvgMutation::SetText(SetTextMutation::Apply(SetTextPayload { path: path_field(&params, "path"), text: params.str("text") }))),
+            "set-view-box" => Ok(SvgMutation::SetViewBox(SetViewBoxMutation::Apply(SetViewBoxPayload {
+                path: path_field(&params, "path"),
+                view_box: view_box_field(&params, "viewBox"),
+            }))),
+            "set-transform" => Ok(SvgMutation::SetTransform(SetTransformMutation::Apply(SetTransformPayload {
+                path: path_field(&params, "path"),
+                transform: transform_field(&params, "transform"),
+            }))),
             other => Err(format!("mutation kind {other:?} has no subject implementation")),
         }
     }
@@ -226,32 +239,43 @@ mod subject {
     /// `protocol` directly, only `semio-s-plugin-stdio` and `semio-s-plugin-stdio-test-oracle`.
     fn inverse_of(mutation: &SvgMutation, base: &SvgSnapshot) -> SvgMutation {
         match mutation {
-            SvgMutation::NoMutation => SvgMutation::NoMutation,
-            SvgMutation::SetSnapshot { .. } => SvgMutation::SetSnapshot { snapshot: base.clone() },
-            SvgMutation::SetDeclaration { .. } => SvgMutation::SetDeclaration { declaration: base.doc.declaration.clone() },
-            SvgMutation::SetDoctype { .. } => SvgMutation::SetDoctype { doctype: base.doc.doctype.clone() },
-            SvgMutation::InsertElement { parent, index, .. } => SvgMutation::RemoveElement { parent: parent.clone(), index: *index },
-            SvgMutation::RemoveElement { parent, index } => match node_at(&base.doc, parent) {
-                Ok(XmlNode::Element { children, .. }) => match children.get(*index) {
-                    Some(node) => SvgMutation::InsertElement { parent: parent.clone(), index: *index, node: node.clone() },
-                    None => SvgMutation::NoMutation,
+            SvgMutation::SetDeclaration(_) => SvgMutation::SetDeclaration(SetDeclarationMutation::Apply(SetDeclarationPayload { declaration: base.doc.declaration.clone() })),
+            SvgMutation::SetDoctype(_) => SvgMutation::SetDoctype(SetDoctypeMutation::Apply(SetDoctypePayload { doctype: base.doc.doctype.clone() })),
+            SvgMutation::InsertElement(InsertElementMutation::Apply(payload)) => {
+                SvgMutation::RemoveElement(RemoveElementMutation::Apply(RemoveElementPayload { parent: payload.parent.clone(), index: payload.index }))
+            }
+            SvgMutation::RemoveElement(RemoveElementMutation::Apply(payload)) => match node_at(&base.doc, &payload.parent) {
+                Ok(XmlNode::Element { children, .. }) => match children.get(payload.index) {
+                    Some(node) => SvgMutation::InsertElement(InsertElementMutation::Apply(InsertElementPayload { parent: payload.parent.clone(), index: payload.index, node: node.clone() })),
+                    None => SvgMutation::SetDeclaration(SetDeclarationMutation::Apply(SetDeclarationPayload { declaration: base.doc.declaration.clone() })),
                 },
-                _ => SvgMutation::NoMutation,
+                _ => SvgMutation::SetDeclaration(SetDeclarationMutation::Apply(SetDeclarationPayload { declaration: base.doc.declaration.clone() })),
             },
-            SvgMutation::SetElementName { path, .. } => match node_at(&base.doc, path) {
-                Ok(XmlNode::Element { name, .. }) => SvgMutation::SetElementName { path: path.clone(), name: name.clone() },
-                _ => SvgMutation::NoMutation,
+            SvgMutation::SetElementName(SetElementNameMutation::Apply(payload)) => match node_at(&base.doc, &payload.path) {
+                Ok(XmlNode::Element { name, .. }) => SvgMutation::SetElementName(SetElementNameMutation::Apply(SetElementNamePayload { path: payload.path.clone(), name: name.clone() })),
+                _ => SvgMutation::SetDeclaration(SetDeclarationMutation::Apply(SetDeclarationPayload { declaration: base.doc.declaration.clone() })),
             },
-            SvgMutation::SetAttribute { path, name, .. } => SvgMutation::SetAttribute { path: path.clone(), name: name.clone(), value: node_at(&base.doc, path).ok().and_then(|node| element_attr(node, name)).map(|s| s.to_string()) },
-            SvgMutation::SetText { path, .. } => {
-                let old = match node_at(&base.doc, path) {
+            SvgMutation::SetAttribute(SetAttributeMutation::Apply(payload)) => SvgMutation::SetAttribute(SetAttributeMutation::Apply(SetAttributePayload {
+                path: payload.path.clone(),
+                name: payload.name.clone(),
+                value: node_at(&base.doc, &payload.path).ok().and_then(|node| element_attr(node, &payload.name)).map(str::to_string),
+            })),
+            SvgMutation::SetText(SetTextMutation::Apply(payload)) => {
+                let old = match node_at(&base.doc, &payload.path) {
                     Ok(XmlNode::Text { text }) => text.clone(),
                     _ => String::new(),
                 };
-                SvgMutation::SetText { path: path.clone(), text: old }
+                SvgMutation::SetText(SetTextMutation::Apply(SetTextPayload { path: payload.path.clone(), text: old }))
             }
-            SvgMutation::SetViewBox { path, .. } => SvgMutation::SetViewBox { path: path.clone(), view_box: node_at(&base.doc, path).ok().and_then(|node| element_attr(node, "viewBox")).and_then(|v| parse_view_box(v).ok()) },
-            SvgMutation::SetTransform { path, .. } => SvgMutation::SetTransform { path: path.clone(), transform: node_at(&base.doc, path).ok().and_then(|node| element_attr(node, "transform")).and_then(|v| parse_transform_list(v).ok()) },
+            SvgMutation::SetViewBox(SetViewBoxMutation::Apply(payload)) => SvgMutation::SetViewBox(SetViewBoxMutation::Apply(SetViewBoxPayload {
+                path: payload.path.clone(),
+                view_box: node_at(&base.doc, &payload.path).ok().and_then(|node| element_attr(node, "viewBox")).and_then(|value| parse_view_box(value).ok()),
+            })),
+            SvgMutation::SetTransform(SetTransformMutation::Apply(payload)) => SvgMutation::SetTransform(SetTransformMutation::Apply(SetTransformPayload {
+                path: payload.path.clone(),
+                transform: node_at(&base.doc, &payload.path).ok().and_then(|node| element_attr(node, "transform")).and_then(|value| parse_transform_list(value).ok()),
+            })),
+            _ => SvgMutation::SetDeclaration(SetDeclarationMutation::Apply(SetDeclarationPayload { declaration: base.doc.declaration.clone() })),
         }
     }
     //#endregion 🔖️Inverse

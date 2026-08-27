@@ -1,8 +1,0 @@
-# bind-primitive-attribute diff facet.
-input GltfBindPrimitiveAttributePayloadV1 {
-  mesh: Int!
-  primitive: Int!
-  semantic: String!
-  accessor: Int!
-}
-type GltfBindPrimitiveAttributeDiffV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

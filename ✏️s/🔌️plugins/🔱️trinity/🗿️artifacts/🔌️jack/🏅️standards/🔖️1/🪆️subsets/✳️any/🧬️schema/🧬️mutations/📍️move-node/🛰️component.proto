@@ -1,0 +1,4 @@
+syntax = "proto3";
+package semio.s.trinity.jack.mutation.move_node;
+// move-node / MoveNode
+message MoveNode { string id = 1; double x = 2; double y = 3; }

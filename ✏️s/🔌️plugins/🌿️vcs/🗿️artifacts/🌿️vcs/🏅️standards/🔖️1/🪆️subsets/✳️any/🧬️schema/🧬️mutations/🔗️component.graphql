@@ -1,10 +1,9 @@
-# 🧬️ VCS mutation schema — artifact-lane fields only.
-
-type VcsMutation {
-  schema: String! @state(class: ARTIFACT)
-  title: String! @state(class: ARTIFACT)
-  counter: Long! @state(class: ARTIFACT)
-  notes: String! @state(class: ARTIFACT)
-  status: String! @state(class: ARTIFACT)
-  tags: [String!]! @state(class: ARTIFACT)
+# 🌿️ Transparent VCS mutation assembly.
+input VcsMutationInput {
+  renameVcs: RenameVcsInput
+  changeCounter: ChangeCounterInput
+  changeNotes: ChangeNotesInput
+  changeStatus: ChangeStatusInput
+  addTag: AddTagInput
+  removeTag: RemoveTagInput
 }

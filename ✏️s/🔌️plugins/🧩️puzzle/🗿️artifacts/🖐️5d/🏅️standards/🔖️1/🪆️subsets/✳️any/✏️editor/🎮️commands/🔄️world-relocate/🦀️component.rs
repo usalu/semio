@@ -1,6 +1,6 @@
 //! 🔄️ `world-relocate` command.
 
-use crate::editor::puzzle5d::next_fastener_id;
+use crate::editor::puzzle5d::Puzzle5dFreshIds;
 use crate::editor::puzzle5d::puzzle5d_grip_full_id;
 use crate::editor::puzzle5d::world_grip_position;
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
@@ -20,6 +20,7 @@ pub fn world_relocate(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let source_grip = part.grips.first().map(|grip| (puzzle5d_grip_full_id(&part.id, &grip.id), world_grip_position(part, grip)));
     if let Some((source_id, source_position)) = source_grip {
         let mut fresh: Vec<Puzzle5dFastener> = Vec::new();
+        let mut fresh_ids = Puzzle5dFreshIds::from_document(&ctx.scene.document);
         for other in &ctx.scene.document.parts {
             if other.id == object_id {
                 continue;
@@ -35,7 +36,7 @@ pub fn world_relocate(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
                 let dz = source_position[2] - target_position[2];
                 if (dx * dx + dy * dy + dz * dz).sqrt() <= PUZZLE5D_PROXIMITY_RADIUS && !ctx.scene.document.fasteners.iter().any(|entry| entry.source == source_id && entry.target == target_id || entry.source == target_id && entry.target == source_id)
                 {
-                    fresh.push(Puzzle5dFastener { id: next_fastener_id(), source: source_id.clone(), target: target_id, fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
+                    fresh.push(Puzzle5dFastener { id: fresh_ids.next_fastener(), source: source_id.clone(), target: target_id, fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
                 }
             }
         }

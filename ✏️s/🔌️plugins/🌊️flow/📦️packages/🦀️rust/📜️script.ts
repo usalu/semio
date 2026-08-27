@@ -1,14 +1,29 @@
 #!/usr/bin/env bun
 /** 🌊️ `@semio-tech/flow-plugin` router: `bun ./📜️script.ts test`. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runCargo, runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/📜️script.ts";
 
-class TestScript extends BundleScript {
-  run(_segments: string[]): void {
-    runCargoTestBudgeted(["semio-s-plugin-flow"], this.repoRoot);
+//#region 🧪️Validation
+class CheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    await runCargo(["check", "-p", "semio-s-plugin-flow", ...(segments.length ? segments : ["--lib"])], this.repoRoot);
   }
 }
+
+class TestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    await runCargoTestBudgeted(["semio-s-plugin-flow"], this.repoRoot, rest);
+  }
+}
+
+class SourceTestScript extends BundleScript {
+  async run(): Promise<void> {
+    await import("../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📜️script.ts");
+  }
+}
+//#endregion 🧪️Validation
 
 /** @emoji 🛂️ Builds this crate's `wasm32-wasip2` component and re-emits `🛂️descriptor.semio` +
  * `🔣️descriptor.json` at this plugin's own owner root (D0-descriptor-plumbing) — the command
@@ -19,6 +34,6 @@ class DescribeScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("describe", DescribeScript);
+const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("test-source", SourceTestScript).register("describe", DescribeScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

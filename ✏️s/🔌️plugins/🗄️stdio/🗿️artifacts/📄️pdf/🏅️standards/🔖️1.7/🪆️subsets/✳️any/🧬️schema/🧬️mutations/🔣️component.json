@@ -1,53 +1,55 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s.stdio.pdf.1.7/mutation.json",
   "title": "PdfMutation",
-  "$defs": {
-    "ObjRef": { "type": "object", "required": ["num", "gen"], "properties": { "num": { "type": "integer" }, "gen": { "type": "integer" } } },
-    "PdfObject": { "type": "object", "required": ["kind"] },
-    "PdfInfo": {
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" }, "author": { "type": "string" }, "subject": { "type": "string" },
-        "keywords": { "type": "string" }, "creator": { "type": "string" }, "producer": { "type": "string" }
-      }
+  "oneOf": [
+    {
+      "$ref": "./📥️insert-page/🔣️payload.schema.json"
     },
-    "PdfPage": {
-      "type": "object",
-      "properties": {
-        "mediaBox": { "type": "array", "items": { "type": "number" } },
-        "cropBox": { "type": "array", "items": { "type": "number" } },
-        "rotate": { "type": "integer" },
-        "text": { "type": "string" }
-      }
+    {
+      "$ref": "./🗑️remove-page/🔣️payload.schema.json"
     },
-    "PdfSnapshot": { "type": "object" },
-    "PdfPathSegment": {
-      "type": "object",
-      "required": ["kind"],
-      "properties": { "kind": { "type": "string", "enum": ["arrayIndex", "dictKey"] }, "index": { "type": "integer" }, "key": { "type": "string" } }
+    {
+      "$ref": "./📐️set-page-media-box/🔣️payload.schema.json"
+    },
+    {
+      "$ref": "./✂️set-page-crop-box/🔣️payload.schema.json"
+    },
+    {
+      "$ref": "./➕️append-page-content/🔣️payload.schema.json"
+    },
+    {
+      "$ref": "./ℹ️set-info/🔣️payload.schema.json"
+    },
+    {
+      "$ref": "./📦️insert-object/🔣️payload.schema.json"
+    },
+    {
+      "$ref": "./🧹️remove-object/🔣️payload.schema.json"
+    },
+    {
+      "$ref": "./🔧️set-object-value/🔣️payload.schema.json"
+    },
+    {
+      "$ref": "./🔑️set-dict-entry/🔣️payload.schema.json"
+    },
+    {
+      "$ref": "./🚫️remove-dict-entry/🔣️payload.schema.json"
+    },
+    {
+      "$ref": "./🧳️set-trailer-entry/🔣️payload.schema.json"
+    },
+    {
+      "$ref": "./🧽️remove-trailer-entry/🔣️payload.schema.json"
+    },
+    {
+      "$ref": "./🔀️move-page/🔣️payload.schema.json"
+    },
+    {
+      "$ref": "./✏️set-page-content/🔣️payload.schema.json"
+    },
+    {
+      "$ref": "./🔄️set-page-rotation/🔣️payload.schema.json"
     }
-  },
-  "type": "object",
-  "required": ["mutation"],
-  "properties": {
-    "mutation": {
-      "type": "string",
-      "enum": [
-        "noMutation", "setSnapshot", "insertPage", "removePage", "setPageMediaBox", "setPageCropBox",
-        "appendPageContent", "setInfo", "insertObject", "removeObject", "setObjectValue",
-        "setDictEntry", "removeDictEntry", "setTrailerEntry", "removeTrailerEntry"
-      ]
-    },
-    "snapshot": { "$ref": "#/$defs/PdfSnapshot" },
-    "index": { "type": "integer" },
-    "page": { "$ref": "#/$defs/PdfPage" },
-    "mediaBox": { "type": "array", "items": { "type": "number" } },
-    "cropBox": { "type": ["array", "null"], "items": { "type": "number" } },
-    "text": { "type": "string" },
-    "info": { "$ref": "#/$defs/PdfInfo" },
-    "id": { "$ref": "#/$defs/ObjRef" },
-    "value": { "$ref": "#/$defs/PdfObject" },
-    "path": { "type": "array", "items": { "$ref": "#/$defs/PdfPathSegment" } },
-    "key": { "type": "string" }
-  }
+  ]
 }

@@ -127,7 +127,7 @@ impl ImperativeHost {
     /// called after every mutating method so `document` never drifts from `path`. `seed` never
     /// changes through this host's own methods, so `document.text` is left as-is.
     fn sync_document(&mut self) {
-        self.document.flow = crate::artifacts::imperative::imperative_flow_child_handle_and_cache(&self.path);
+        self.document.flow = crate::artifacts::imperative::imperative_flow_child_with_owner(&self.path);
     }
 
     fn resolve_path_mut<'a>(&'a mut self, path_ref: &PathRef) -> Result<&'a mut Path, ImperativeCoreError> {

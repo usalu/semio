@@ -1,0 +1,3 @@
+# 🧬️ insert-other-segment/InsertOtherSegment
+scalar InsertOtherSegmentMutationValue
+input InsertOtherSegmentMutation { index: Int! segment: InsertOtherSegmentMutationValue! }

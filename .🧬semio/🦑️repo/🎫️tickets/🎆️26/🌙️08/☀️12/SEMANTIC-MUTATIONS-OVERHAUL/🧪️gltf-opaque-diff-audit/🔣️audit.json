@@ -1,0 +1,4316 @@
+{
+  "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+  "counts": {
+    "leaves": 120,
+    "arbitraryRestore": 120,
+    "inversesBuildRestore": 120,
+    "directTextCodecs": 0,
+    "directBinaryCodecs": 0,
+    "nullTextOpcodes": 120,
+    "nullBinaryTags": 120,
+    "payloadSchemasWithoutPhase": 120,
+    "declaredDetect": 120,
+    "explicitDetectMethods": 0,
+    "retainedTestFiles": 130,
+    "testPathMounts": 0,
+    "originalInverseFiles": 116,
+    "originalArbitraryDiffTypes": 45,
+    "originalStaleGuards": 10
+  },
+  "verbs": {
+    "add": 2,
+    "bind": 10,
+    "change": 23,
+    "create": 15,
+    "delete": 15,
+    "move": 22,
+    "remove": 2,
+    "reorder": 21,
+    "unbind": 10
+  },
+  "counterexamples": [
+    {
+      "name": "declared direct payload",
+      "value": {
+        "node": 0,
+        "value": "Renamed"
+      },
+      "schemaAccepts": true,
+      "errors": null
+    },
+    {
+      "name": "Rust Apply wire payload",
+      "value": {
+        "phase": "apply",
+        "value": {
+          "node": 0,
+          "value": "Renamed"
+        }
+      },
+      "schemaAccepts": false,
+      "errors": [
+        {
+          "instancePath": "",
+          "schemaPath": "#/required",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "node"
+          },
+          "message": "must have required property 'node'"
+        },
+        {
+          "instancePath": "",
+          "schemaPath": "#/additionalProperties",
+          "keyword": "additionalProperties",
+          "params": {
+            "additionalProperty": "phase"
+          },
+          "message": "must NOT have additional properties"
+        },
+        {
+          "instancePath": "/value",
+          "schemaPath": "#/properties/value/type",
+          "keyword": "type",
+          "params": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "message": "must be string,null"
+        }
+      ]
+    },
+    {
+      "name": "Rust arbitrary Restore wire payload",
+      "value": {
+        "phase": "restore",
+        "value": {
+          "sourceForm": "glb"
+        }
+      },
+      "schemaAccepts": false,
+      "errors": [
+        {
+          "instancePath": "",
+          "schemaPath": "#/required",
+          "keyword": "required",
+          "params": {
+            "missingProperty": "node"
+          },
+          "message": "must have required property 'node'"
+        },
+        {
+          "instancePath": "",
+          "schemaPath": "#/additionalProperties",
+          "keyword": "additionalProperties",
+          "params": {
+            "additionalProperty": "phase"
+          },
+          "message": "must NOT have additional properties"
+        },
+        {
+          "instancePath": "/value",
+          "schemaPath": "#/properties/value/type",
+          "keyword": "type",
+          "params": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "message": "must be string,null"
+        }
+      ]
+    }
+  ],
+  "leaves": [
+    {
+      "kind": "add-required-extension",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✅️🧩️add-required-extension",
+      "mutationType": "AddRequiredExtensionMutation",
+      "payloadType": "GltfRequireExtensionPayload",
+      "restore": true,
+      "restoreLine": 20,
+      "inverseLine": 50,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "add"
+    },
+    {
+      "kind": "add-used-extension",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📣️🧩️add-used-extension",
+      "mutationType": "AddUsedExtensionMutation",
+      "payloadType": "GltfDeclareUsedExtensionPayload",
+      "restore": true,
+      "restoreLine": 20,
+      "inverseLine": 50,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "add"
+    },
+    {
+      "kind": "bind-default-scene",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🎬️bind-default-scene",
+      "mutationType": "BindDefaultSceneMutation",
+      "payloadType": "GltfBindDefaultScenePayload",
+      "restore": true,
+      "restoreLine": 20,
+      "inverseLine": 50,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "bind"
+    },
+    {
+      "kind": "bind-morph-target-attribute",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🧬️bind-morph-target-attribute",
+      "mutationType": "BindMorphTargetAttributeMutation",
+      "payloadType": "GltfBindMorphTargetAttributePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "bind"
+    },
+    {
+      "kind": "bind-node-camera",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🔘️bind-node-camera",
+      "mutationType": "BindNodeCameraMutation",
+      "payloadType": "GltfBindNodeCameraPayload",
+      "restore": true,
+      "restoreLine": 22,
+      "inverseLine": 52,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "bind"
+    },
+    {
+      "kind": "bind-node-child",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🔘️bind-node-child",
+      "mutationType": "BindNodeChildMutation",
+      "payloadType": "GltfBindNodeChildPayload",
+      "restore": true,
+      "restoreLine": 50,
+      "inverseLine": 80,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 2,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "bind"
+    },
+    {
+      "kind": "bind-node-mesh",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🔘️bind-node-mesh",
+      "mutationType": "BindNodeMeshMutation",
+      "payloadType": "GltfBindNodeMeshPayload",
+      "restore": true,
+      "restoreLine": 22,
+      "inverseLine": 52,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "bind"
+    },
+    {
+      "kind": "bind-node-skin",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🔘️bind-node-skin",
+      "mutationType": "BindNodeSkinMutation",
+      "payloadType": "GltfBindNodeSkinPayload",
+      "restore": true,
+      "restoreLine": 22,
+      "inverseLine": 52,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "bind"
+    },
+    {
+      "kind": "bind-primitive-attribute",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🔺️bind-primitive-attribute",
+      "mutationType": "BindPrimitiveAttributeMutation",
+      "payloadType": "GltfBindPrimitiveAttributePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "bind"
+    },
+    {
+      "kind": "bind-primitive-indices",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🔺️bind-primitive-indices",
+      "mutationType": "BindPrimitiveIndicesMutation",
+      "payloadType": "GltfBindPrimitiveIndicesPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "bind"
+    },
+    {
+      "kind": "bind-primitive-material",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🔺️bind-primitive-material",
+      "mutationType": "BindPrimitiveMaterialMutation",
+      "payloadType": "GltfBindPrimitiveMaterialPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "bind"
+    },
+    {
+      "kind": "bind-scene-root-node",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️🎬️bind-scene-root-node",
+      "mutationType": "BindSceneRootNodeMutation",
+      "payloadType": "GltfBindSceneRootNodePayload",
+      "restore": true,
+      "restoreLine": 39,
+      "inverseLine": 69,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 2,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "bind"
+    },
+    {
+      "kind": "change-asset-descriptive-metadata",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️📦️change-asset-descriptive-metadata",
+      "mutationType": "ChangeAssetDescriptiveMetadataMutation",
+      "payloadType": "GltfChangeAssetDescriptiveMetadataPayload",
+      "restore": true,
+      "restoreLine": 20,
+      "inverseLine": 50,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-asset-extension-data",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️📦️change-asset-extension-data",
+      "mutationType": "ChangeAssetExtensionDataMutation",
+      "payloadType": "GltfChangeAssetExtensionDataPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-asset-extra-data",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️📦️change-asset-extra-data",
+      "mutationType": "ChangeAssetExtraDataMutation",
+      "payloadType": "GltfChangeAssetExtraDataPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-asset-version",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️📦️change-asset-version",
+      "mutationType": "ChangeAssetVersionMutation",
+      "payloadType": "GltfChangeAssetVersionPayload",
+      "restore": true,
+      "restoreLine": 20,
+      "inverseLine": 50,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-document-extension-data",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️📄️change-document-extension-data",
+      "mutationType": "ChangeDocumentExtensionDataMutation",
+      "payloadType": "GltfChangeDocumentExtensionDataPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-document-extra-data",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️📄️change-document-extra-data",
+      "mutationType": "ChangeDocumentExtraDataMutation",
+      "payloadType": "GltfChangeDocumentExtraDataPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-material-alpha-mode",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️💎️change-material-alpha-mode",
+      "mutationType": "ChangeMaterialAlphaModeMutation",
+      "payloadType": "GltfChangeMaterialAlphaModePayload",
+      "restore": true,
+      "restoreLine": 64,
+      "inverseLine": 94,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 2,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-material-double-sided",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️💎️change-material-double-sided",
+      "mutationType": "ChangeMaterialDoubleSidedMutation",
+      "payloadType": "GltfChangeMaterialDoubleSidedPayload",
+      "restore": true,
+      "restoreLine": 62,
+      "inverseLine": 92,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 2,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-mesh-extension-data",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🕸️change-mesh-extension-data",
+      "mutationType": "ChangeMeshExtensionDataMutation",
+      "payloadType": "GltfChangeMeshExtensionDataPayload",
+      "restore": true,
+      "restoreLine": 24,
+      "inverseLine": 54,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-mesh-extra-data",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🕸️change-mesh-extra-data",
+      "mutationType": "ChangeMeshExtraDataMutation",
+      "payloadType": "GltfChangeMeshExtraDataPayload",
+      "restore": true,
+      "restoreLine": 24,
+      "inverseLine": 54,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-mesh-morph-weights",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🕸️change-mesh-morph-weights",
+      "mutationType": "ChangeMeshMorphWeightsMutation",
+      "payloadType": "GltfChangeMeshMorphWeightsPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-mesh-name",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🕸️change-mesh-name",
+      "mutationType": "ChangeMeshNameMutation",
+      "payloadType": "GltfChangeMeshNamePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-node-extension-data",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔘️change-node-extension-data",
+      "mutationType": "ChangeNodeExtensionDataMutation",
+      "payloadType": "GltfChangeNodeExtensionDataPayload",
+      "restore": true,
+      "restoreLine": 25,
+      "inverseLine": 55,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-node-extra-data",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔘️change-node-extra-data",
+      "mutationType": "ChangeNodeExtraDataMutation",
+      "payloadType": "GltfChangeNodeExtraDataPayload",
+      "restore": true,
+      "restoreLine": 24,
+      "inverseLine": 54,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 2,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-node-morph-weights",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔘️change-node-morph-weights",
+      "mutationType": "ChangeNodeMorphWeightsMutation",
+      "payloadType": "GltfChangeNodeMorphWeightsPayload",
+      "restore": true,
+      "restoreLine": 22,
+      "inverseLine": 52,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-node-name",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔘️change-node-name",
+      "mutationType": "ChangeNodeNameMutation",
+      "payloadType": "GltfChangeNodeNamePayload",
+      "restore": true,
+      "restoreLine": 20,
+      "inverseLine": 50,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 2,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-node-transform",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️🔘️change-node-transform",
+      "mutationType": "ChangeNodeTransformMutation",
+      "payloadType": "GltfTransformNodePayload",
+      "restore": true,
+      "restoreLine": 25,
+      "inverseLine": 55,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-primitive-extension-data",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔺️change-primitive-extension-data",
+      "mutationType": "ChangePrimitiveExtensionDataMutation",
+      "payloadType": "GltfChangePrimitiveExtensionDataPayload",
+      "restore": true,
+      "restoreLine": 24,
+      "inverseLine": 54,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-primitive-extra-data",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔺️change-primitive-extra-data",
+      "mutationType": "ChangePrimitiveExtraDataMutation",
+      "payloadType": "GltfChangePrimitiveExtraDataPayload",
+      "restore": true,
+      "restoreLine": 24,
+      "inverseLine": 54,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-primitive-topology-mode",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔺️change-primitive-topology-mode",
+      "mutationType": "ChangePrimitiveTopologyModeMutation",
+      "payloadType": "GltfChangePrimitiveTopologyModePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-scene-extension-data",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🎬️change-scene-extension-data",
+      "mutationType": "ChangeSceneExtensionDataMutation",
+      "payloadType": "GltfChangeSceneExtensionDataPayload",
+      "restore": true,
+      "restoreLine": 25,
+      "inverseLine": 55,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-scene-extra-data",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🎬️change-scene-extra-data",
+      "mutationType": "ChangeSceneExtraDataMutation",
+      "payloadType": "GltfChangeSceneExtraDataPayload",
+      "restore": true,
+      "restoreLine": 25,
+      "inverseLine": 55,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "change-scene-name",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🎬️change-scene-name",
+      "mutationType": "ChangeSceneNameMutation",
+      "payloadType": "GltfChangeSceneNamePayload",
+      "restore": true,
+      "restoreLine": 22,
+      "inverseLine": 52,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "change"
+    },
+    {
+      "kind": "create-accessor",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️📐️create-accessor",
+      "mutationType": "CreateAccessorMutation",
+      "payloadType": "GltfCreateAccessorPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Accessors",
+      "verb": "create"
+    },
+    {
+      "kind": "create-animation",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🎞️create-animation",
+      "mutationType": "CreateAnimationMutation",
+      "payloadType": "GltfCreateAnimationPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Animations",
+      "verb": "create"
+    },
+    {
+      "kind": "create-buffer",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️💾️create-buffer",
+      "mutationType": "CreateBufferMutation",
+      "payloadType": "GltfCreateBufferPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Buffers",
+      "verb": "create"
+    },
+    {
+      "kind": "create-buffer-view",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️👁️create-buffer-view",
+      "mutationType": "CreateBufferViewMutation",
+      "payloadType": "GltfCreateBufferViewPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "BufferViews",
+      "verb": "create"
+    },
+    {
+      "kind": "create-camera",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🎥️create-camera",
+      "mutationType": "CreateCameraMutation",
+      "payloadType": "GltfCreateCameraPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Cameras",
+      "verb": "create"
+    },
+    {
+      "kind": "create-image",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🖼️create-image",
+      "mutationType": "CreateImageMutation",
+      "payloadType": "GltfCreateImagePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Images",
+      "verb": "create"
+    },
+    {
+      "kind": "create-material",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️💎️create-material",
+      "mutationType": "CreateMaterialMutation",
+      "payloadType": "GltfCreateMaterialPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Materials",
+      "verb": "create"
+    },
+    {
+      "kind": "create-mesh",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🕸️create-mesh",
+      "mutationType": "CreateMeshMutation",
+      "payloadType": "GltfCreateMeshPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Meshes",
+      "verb": "create"
+    },
+    {
+      "kind": "create-morph-target",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🧬️create-morph-target",
+      "mutationType": "CreateMorphTargetMutation",
+      "payloadType": "GltfCreateMorphTargetPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "create"
+    },
+    {
+      "kind": "create-node",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🔘️create-node",
+      "mutationType": "CreateNodeMutation",
+      "payloadType": "GltfCreateNodePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Nodes",
+      "verb": "create"
+    },
+    {
+      "kind": "create-primitive",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🔺️create-primitive",
+      "mutationType": "CreatePrimitiveMutation",
+      "payloadType": "GltfCreatePrimitivePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "create"
+    },
+    {
+      "kind": "create-sampler",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🎛️create-sampler",
+      "mutationType": "CreateSamplerMutation",
+      "payloadType": "GltfCreateSamplerPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Samplers",
+      "verb": "create"
+    },
+    {
+      "kind": "create-scene",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🎬️create-scene",
+      "mutationType": "CreateSceneMutation",
+      "payloadType": "GltfCreateScenePayload",
+      "restore": true,
+      "restoreLine": 33,
+      "inverseLine": 63,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 2,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "create"
+    },
+    {
+      "kind": "create-skin",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🧥️create-skin",
+      "mutationType": "CreateSkinMutation",
+      "payloadType": "GltfCreateSkinPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Skins",
+      "verb": "create"
+    },
+    {
+      "kind": "create-texture",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️🎨️create-texture",
+      "mutationType": "CreateTextureMutation",
+      "payloadType": "GltfCreateTexturePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Textures",
+      "verb": "create"
+    },
+    {
+      "kind": "delete-accessor",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️📐️delete-accessor",
+      "mutationType": "DeleteAccessorMutation",
+      "payloadType": "GltfDeleteAccessorPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Accessors",
+      "verb": "delete"
+    },
+    {
+      "kind": "delete-animation",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🎞️delete-animation",
+      "mutationType": "DeleteAnimationMutation",
+      "payloadType": "GltfDeleteAnimationPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Animations",
+      "verb": "delete"
+    },
+    {
+      "kind": "delete-buffer",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️💾️delete-buffer",
+      "mutationType": "DeleteBufferMutation",
+      "payloadType": "GltfDeleteBufferPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Buffers",
+      "verb": "delete"
+    },
+    {
+      "kind": "delete-buffer-view",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️👁️delete-buffer-view",
+      "mutationType": "DeleteBufferViewMutation",
+      "payloadType": "GltfDeleteBufferViewPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "BufferViews",
+      "verb": "delete"
+    },
+    {
+      "kind": "delete-camera",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🎥️delete-camera",
+      "mutationType": "DeleteCameraMutation",
+      "payloadType": "GltfDeleteCameraPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Cameras",
+      "verb": "delete"
+    },
+    {
+      "kind": "delete-image",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🖼️delete-image",
+      "mutationType": "DeleteImageMutation",
+      "payloadType": "GltfDeleteImagePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Images",
+      "verb": "delete"
+    },
+    {
+      "kind": "delete-material",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️💎️delete-material",
+      "mutationType": "DeleteMaterialMutation",
+      "payloadType": "GltfDeleteMaterialPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Materials",
+      "verb": "delete"
+    },
+    {
+      "kind": "delete-mesh",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🕸️delete-mesh",
+      "mutationType": "DeleteMeshMutation",
+      "payloadType": "GltfDeleteMeshPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Meshes",
+      "verb": "delete"
+    },
+    {
+      "kind": "delete-morph-target",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🧬️delete-morph-target",
+      "mutationType": "DeleteMorphTargetMutation",
+      "payloadType": "GltfDeleteMorphTargetPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "delete"
+    },
+    {
+      "kind": "delete-node",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🔘️delete-node",
+      "mutationType": "DeleteNodeMutation",
+      "payloadType": "GltfDeleteNodePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Nodes",
+      "verb": "delete"
+    },
+    {
+      "kind": "delete-primitive",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🔺️delete-primitive",
+      "mutationType": "DeletePrimitiveMutation",
+      "payloadType": "GltfDeletePrimitivePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "delete"
+    },
+    {
+      "kind": "delete-sampler",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🎛️delete-sampler",
+      "mutationType": "DeleteSamplerMutation",
+      "payloadType": "GltfDeleteSamplerPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Samplers",
+      "verb": "delete"
+    },
+    {
+      "kind": "delete-scene",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🎬️delete-scene",
+      "mutationType": "DeleteSceneMutation",
+      "payloadType": "GltfDeleteScenePayload",
+      "restore": true,
+      "restoreLine": 34,
+      "inverseLine": 64,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 2,
+      "sourceMountsTests": false,
+      "family": "Scenes",
+      "verb": "delete"
+    },
+    {
+      "kind": "delete-skin",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🧥️delete-skin",
+      "mutationType": "DeleteSkinMutation",
+      "payloadType": "GltfDeleteSkinPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Skins",
+      "verb": "delete"
+    },
+    {
+      "kind": "delete-texture",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️🎨️delete-texture",
+      "mutationType": "DeleteTextureMutation",
+      "payloadType": "GltfDeleteTexturePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Textures",
+      "verb": "delete"
+    },
+    {
+      "kind": "move-accessor",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️📐️move-accessor",
+      "mutationType": "MoveAccessorMutation",
+      "payloadType": "GltfMoveAccessorPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Accessors",
+      "verb": "move"
+    },
+    {
+      "kind": "move-animation",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🎞️move-animation",
+      "mutationType": "MoveAnimationMutation",
+      "payloadType": "GltfMoveAnimationPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Animations",
+      "verb": "move"
+    },
+    {
+      "kind": "move-buffer",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️💾️move-buffer",
+      "mutationType": "MoveBufferMutation",
+      "payloadType": "GltfMoveBufferPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Buffers",
+      "verb": "move"
+    },
+    {
+      "kind": "move-buffer-view",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️👁️move-buffer-view",
+      "mutationType": "MoveBufferViewMutation",
+      "payloadType": "GltfMoveBufferViewPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "BufferViews",
+      "verb": "move"
+    },
+    {
+      "kind": "move-camera",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🎥️move-camera",
+      "mutationType": "MoveCameraMutation",
+      "payloadType": "GltfMoveCameraPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Cameras",
+      "verb": "move"
+    },
+    {
+      "kind": "move-image",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🖼️move-image",
+      "mutationType": "MoveImageMutation",
+      "payloadType": "GltfMoveImagePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Images",
+      "verb": "move"
+    },
+    {
+      "kind": "move-material",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️💎️move-material",
+      "mutationType": "MoveMaterialMutation",
+      "payloadType": "GltfMoveMaterialPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Materials",
+      "verb": "move"
+    },
+    {
+      "kind": "move-mesh",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🕸️move-mesh",
+      "mutationType": "MoveMeshMutation",
+      "payloadType": "GltfMoveMeshPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Meshes",
+      "verb": "move"
+    },
+    {
+      "kind": "move-morph-target",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🧬️move-morph-target",
+      "mutationType": "MoveMorphTargetMutation",
+      "payloadType": "GltfMoveMorphTargetPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "move"
+    },
+    {
+      "kind": "move-morph-target-attribute",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🧬️move-morph-target-attribute",
+      "mutationType": "MoveMorphTargetAttributeMutation",
+      "payloadType": "GltfMoveMorphTargetAttributePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "move"
+    },
+    {
+      "kind": "move-node",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🔘️move-node",
+      "mutationType": "MoveNodeMutation",
+      "payloadType": "GltfMoveNodePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Nodes",
+      "verb": "move"
+    },
+    {
+      "kind": "move-node-child",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🔘️move-node-child",
+      "mutationType": "MoveNodeChildMutation",
+      "payloadType": "GltfMoveNodeChildPayload",
+      "restore": true,
+      "restoreLine": 22,
+      "inverseLine": 52,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "move"
+    },
+    {
+      "kind": "move-node-parent",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👪️🔘️move-node-parent",
+      "mutationType": "MoveNodeParentMutation",
+      "payloadType": "GltfReparentNodePayload",
+      "restore": true,
+      "restoreLine": 22,
+      "inverseLine": 52,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "move"
+    },
+    {
+      "kind": "move-primitive",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🔺️move-primitive",
+      "mutationType": "MovePrimitiveMutation",
+      "payloadType": "GltfMovePrimitivePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "move"
+    },
+    {
+      "kind": "move-primitive-attribute",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🔺️move-primitive-attribute",
+      "mutationType": "MovePrimitiveAttributeMutation",
+      "payloadType": "GltfMovePrimitiveAttributePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "move"
+    },
+    {
+      "kind": "move-required-extension",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🧩️move-required-extension",
+      "mutationType": "MoveRequiredExtensionMutation",
+      "payloadType": "GltfMoveRequiredExtensionPayload",
+      "restore": true,
+      "restoreLine": 20,
+      "inverseLine": 50,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "move"
+    },
+    {
+      "kind": "move-sampler",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🎛️move-sampler",
+      "mutationType": "MoveSamplerMutation",
+      "payloadType": "GltfMoveSamplerPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Samplers",
+      "verb": "move"
+    },
+    {
+      "kind": "move-scene",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🎬️move-scene",
+      "mutationType": "MoveSceneMutation",
+      "payloadType": "GltfMoveScenePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Scenes",
+      "verb": "move"
+    },
+    {
+      "kind": "move-scene-root-node",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🎬️move-scene-root-node",
+      "mutationType": "MoveSceneRootNodeMutation",
+      "payloadType": "GltfMoveSceneRootNodePayload",
+      "restore": true,
+      "restoreLine": 22,
+      "inverseLine": 52,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "move"
+    },
+    {
+      "kind": "move-skin",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🧥️move-skin",
+      "mutationType": "MoveSkinMutation",
+      "payloadType": "GltfMoveSkinPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Skins",
+      "verb": "move"
+    },
+    {
+      "kind": "move-texture",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🎨️move-texture",
+      "mutationType": "MoveTextureMutation",
+      "payloadType": "GltfMoveTexturePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Textures",
+      "verb": "move"
+    },
+    {
+      "kind": "move-used-extension",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️🧩️move-used-extension",
+      "mutationType": "MoveUsedExtensionMutation",
+      "payloadType": "GltfMoveUsedExtensionPayload",
+      "restore": true,
+      "restoreLine": 20,
+      "inverseLine": 50,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "move"
+    },
+    {
+      "kind": "remove-required-extension",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️🧩️remove-required-extension",
+      "mutationType": "RemoveRequiredExtensionMutation",
+      "payloadType": "GltfUnrequireExtensionPayload",
+      "restore": true,
+      "restoreLine": 20,
+      "inverseLine": 50,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "remove"
+    },
+    {
+      "kind": "remove-used-extension",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔙️🧩️remove-used-extension",
+      "mutationType": "RemoveUsedExtensionMutation",
+      "payloadType": "GltfWithdrawUsedExtensionPayload",
+      "restore": true,
+      "restoreLine": 20,
+      "inverseLine": 50,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "remove"
+    },
+    {
+      "kind": "reorder-accessors",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️📐️reorder-accessors",
+      "mutationType": "ReorderAccessorsMutation",
+      "payloadType": "GltfReorderAccessorsPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Accessors",
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-animations",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🎞️reorder-animations",
+      "mutationType": "ReorderAnimationsMutation",
+      "payloadType": "GltfReorderAnimationsPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Animations",
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-buffer-views",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️👁️reorder-buffer-views",
+      "mutationType": "ReorderBufferViewsMutation",
+      "payloadType": "GltfReorderBufferViewsPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "BufferViews",
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-buffers",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️💾️reorder-buffers",
+      "mutationType": "ReorderBuffersMutation",
+      "payloadType": "GltfReorderBuffersPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Buffers",
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-cameras",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🎥️reorder-cameras",
+      "mutationType": "ReorderCamerasMutation",
+      "payloadType": "GltfReorderCamerasPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Cameras",
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-images",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🖼️reorder-images",
+      "mutationType": "ReorderImagesMutation",
+      "payloadType": "GltfReorderImagesPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Images",
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-materials",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️💎️reorder-materials",
+      "mutationType": "ReorderMaterialsMutation",
+      "payloadType": "GltfReorderMaterialsPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Materials",
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-meshs",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🕸️reorder-meshs",
+      "mutationType": "ReorderMeshsMutation",
+      "payloadType": "GltfReorderMeshsPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Meshes",
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-morph-target-attributes",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🧬️reorder-morph-target-attributes",
+      "mutationType": "ReorderMorphTargetAttributesMutation",
+      "payloadType": "GltfReorderMorphTargetAttributesPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-morph-targets",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🧬️reorder-morph-targets",
+      "mutationType": "ReorderMorphTargetsMutation",
+      "payloadType": "GltfReorderMorphTargetsPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-node-children",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🔘️reorder-node-children",
+      "mutationType": "ReorderNodeChildrenMutation",
+      "payloadType": "GltfReorderNodeChildrenPayload",
+      "restore": true,
+      "restoreLine": 22,
+      "inverseLine": 52,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-nodes",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🔘️reorder-nodes",
+      "mutationType": "ReorderNodesMutation",
+      "payloadType": "GltfReorderNodesPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Nodes",
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-primitive-attributes",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🔺️reorder-primitive-attributes",
+      "mutationType": "ReorderPrimitiveAttributesMutation",
+      "payloadType": "GltfReorderPrimitiveAttributesPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-primitives",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🔺️reorder-primitives",
+      "mutationType": "ReorderPrimitivesMutation",
+      "payloadType": "GltfReorderPrimitivesPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-required-extensions",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🧩️reorder-required-extensions",
+      "mutationType": "ReorderRequiredExtensionsMutation",
+      "payloadType": "GltfReorderRequiredExtensionsPayload",
+      "restore": true,
+      "restoreLine": 20,
+      "inverseLine": 50,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-samplers",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🎛️reorder-samplers",
+      "mutationType": "ReorderSamplersMutation",
+      "payloadType": "GltfReorderSamplersPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Samplers",
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-scene-root-nodes",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🎬️reorder-scene-root-nodes",
+      "mutationType": "ReorderSceneRootNodesMutation",
+      "payloadType": "GltfReorderSceneRootNodesPayload",
+      "restore": true,
+      "restoreLine": 22,
+      "inverseLine": 52,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-scenes",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🎬️reorder-scenes",
+      "mutationType": "ReorderScenesMutation",
+      "payloadType": "GltfReorderScenesPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Scenes",
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-skins",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🧥️reorder-skins",
+      "mutationType": "ReorderSkinsMutation",
+      "payloadType": "GltfReorderSkinsPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Skins",
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-textures",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🎨️reorder-textures",
+      "mutationType": "ReorderTexturesMutation",
+      "payloadType": "GltfReorderTexturesPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": "Textures",
+      "verb": "reorder"
+    },
+    {
+      "kind": "reorder-used-extensions",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🧩️reorder-used-extensions",
+      "mutationType": "ReorderUsedExtensionsMutation",
+      "payloadType": "GltfReorderUsedExtensionsPayload",
+      "restore": true,
+      "restoreLine": 20,
+      "inverseLine": 50,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "reorder"
+    },
+    {
+      "kind": "unbind-default-scene",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🎬️unbind-default-scene",
+      "mutationType": "UnbindDefaultSceneMutation",
+      "payloadType": "GltfUnbindDefaultScenePayload",
+      "restore": true,
+      "restoreLine": 20,
+      "inverseLine": 50,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "unbind"
+    },
+    {
+      "kind": "unbind-morph-target-attribute",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🧬️unbind-morph-target-attribute",
+      "mutationType": "UnbindMorphTargetAttributeMutation",
+      "payloadType": "GltfUnbindMorphTargetAttributePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "unbind"
+    },
+    {
+      "kind": "unbind-node-camera",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🔘️unbind-node-camera",
+      "mutationType": "UnbindNodeCameraMutation",
+      "payloadType": "GltfUnbindNodeCameraPayload",
+      "restore": true,
+      "restoreLine": 22,
+      "inverseLine": 52,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "unbind"
+    },
+    {
+      "kind": "unbind-node-child",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🔘️unbind-node-child",
+      "mutationType": "UnbindNodeChildMutation",
+      "payloadType": "GltfUnbindNodeChildPayload",
+      "restore": true,
+      "restoreLine": 37,
+      "inverseLine": 67,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 2,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "unbind"
+    },
+    {
+      "kind": "unbind-node-mesh",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🔘️unbind-node-mesh",
+      "mutationType": "UnbindNodeMeshMutation",
+      "payloadType": "GltfUnbindNodeMeshPayload",
+      "restore": true,
+      "restoreLine": 22,
+      "inverseLine": 52,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "unbind"
+    },
+    {
+      "kind": "unbind-node-skin",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🔘️unbind-node-skin",
+      "mutationType": "UnbindNodeSkinMutation",
+      "payloadType": "GltfUnbindNodeSkinPayload",
+      "restore": true,
+      "restoreLine": 22,
+      "inverseLine": 52,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "unbind"
+    },
+    {
+      "kind": "unbind-primitive-attribute",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🔺️unbind-primitive-attribute",
+      "mutationType": "UnbindPrimitiveAttributeMutation",
+      "payloadType": "GltfUnbindPrimitiveAttributePayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "unbind"
+    },
+    {
+      "kind": "unbind-primitive-indices",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🔺️unbind-primitive-indices",
+      "mutationType": "UnbindPrimitiveIndicesMutation",
+      "payloadType": "GltfUnbindPrimitiveIndicesPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "unbind"
+    },
+    {
+      "kind": "unbind-primitive-material",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🔺️unbind-primitive-material",
+      "mutationType": "UnbindPrimitiveMaterialMutation",
+      "payloadType": "GltfUnbindPrimitiveMaterialPayload",
+      "restore": true,
+      "restoreLine": 21,
+      "inverseLine": 51,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 1,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "unbind"
+    },
+    {
+      "kind": "unbind-scene-root-node",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️🎬️unbind-scene-root-node",
+      "mutationType": "UnbindSceneRootNodeMutation",
+      "payloadType": "GltfUnbindSceneRootNodePayload",
+      "restore": true,
+      "restoreLine": 37,
+      "inverseLine": 67,
+      "inverseBuildsRestore": true,
+      "directDiffDetection": false,
+      "declaredDetection": "detect",
+      "textOpcode": null,
+      "binaryTag": null,
+      "textFacet": false,
+      "binaryFacet": false,
+      "payloadSchemaHasPhase": false,
+      "declaredTestFiles": 2,
+      "sourceMountsTests": false,
+      "family": null,
+      "verb": "unbind"
+    }
+  ],
+  "originalInverses": [
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-default-scene/↩️inverse/🦀️component.rs",
+      "kind": "bind-default-scene",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-morph-target-attribute/↩️inverse/🦀️component.rs",
+      "kind": "bind-morph-target-attribute",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-node-camera/↩️inverse/🦀️component.rs",
+      "kind": "bind-node-camera",
+      "types": [
+        "GltfBindNodeCameraInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive",
+        "apply",
+        "encode"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-node-child/↩️inverse/🦀️component.rs",
+      "kind": "bind-node-child",
+      "types": [
+        "GltfBindNodeChildInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": true,
+      "typedOperation": false,
+      "methods": [
+        "derive",
+        "apply",
+        "encode"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-node-mesh/↩️inverse/🦀️component.rs",
+      "kind": "bind-node-mesh",
+      "types": [
+        "GltfBindNodeMeshInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive",
+        "apply",
+        "encode"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-node-skin/↩️inverse/🦀️component.rs",
+      "kind": "bind-node-skin",
+      "types": [
+        "GltfBindNodeSkinInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive",
+        "apply",
+        "encode"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-primitive-attribute/↩️inverse/🦀️component.rs",
+      "kind": "bind-primitive-attribute",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-primitive-indices/↩️inverse/🦀️component.rs",
+      "kind": "bind-primitive-indices",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-primitive-material/↩️inverse/🦀️component.rs",
+      "kind": "bind-primitive-material",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-scene-root-node/↩️inverse/🦀️component.rs",
+      "kind": "bind-scene-root-node",
+      "types": [
+        "GltfBindSceneRootNodeInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": true,
+      "typedOperation": false,
+      "methods": [
+        "derive",
+        "apply",
+        "encode"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-asset-descriptive-metadata/↩️inverse/🦀️component.rs",
+      "kind": "change-asset-descriptive-metadata",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-asset-extension-data/↩️inverse/🦀️component.rs",
+      "kind": "change-asset-extension-data",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-asset-extra-data/↩️inverse/🦀️component.rs",
+      "kind": "change-asset-extra-data",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-asset-version/↩️inverse/🦀️component.rs",
+      "kind": "change-asset-version",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-document-extension-data/↩️inverse/🦀️component.rs",
+      "kind": "change-document-extension-data",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-document-extra-data/↩️inverse/🦀️component.rs",
+      "kind": "change-document-extra-data",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-material-alpha-mode/↩️inverse/🦀️component.rs",
+      "kind": "change-material-alpha-mode",
+      "types": [
+        "GltfChangeMaterialAlphaModeInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": true,
+      "typedOperation": false,
+      "methods": [
+        "expected_touched_paths",
+        "apply",
+        "reconstruct"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-material-double-sided/↩️inverse/🦀️component.rs",
+      "kind": "change-material-double-sided",
+      "types": [
+        "GltfChangeMaterialDoubleSidedInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": true,
+      "typedOperation": false,
+      "methods": [
+        "expected_touched_paths",
+        "apply",
+        "reconstruct"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-mesh-extension-data/↩️inverse/🦀️component.rs",
+      "kind": "change-mesh-extension-data",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-mesh-extra-data/↩️inverse/🦀️component.rs",
+      "kind": "change-mesh-extra-data",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-mesh-morph-weights/↩️inverse/🦀️component.rs",
+      "kind": "change-mesh-morph-weights",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-mesh-name/↩️inverse/🦀️component.rs",
+      "kind": "change-mesh-name",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-node-extension-data/↩️inverse/🦀️component.rs",
+      "kind": "change-node-extension-data",
+      "types": [
+        "GltfChangeNodeExtensionDataInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive",
+        "apply",
+        "encode"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-node-extra-data/↩️inverse/🦀️component.rs",
+      "kind": "change-node-extra-data",
+      "types": [
+        "GltfChangeNodeExtraDataInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": true,
+      "typedOperation": false,
+      "methods": [
+        "derive",
+        "apply",
+        "encode"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-node-morph-weights/↩️inverse/🦀️component.rs",
+      "kind": "change-node-morph-weights",
+      "types": [
+        "GltfChangeNodeMorphWeightsInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive",
+        "apply",
+        "encode"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-node-name/↩️inverse/🦀️component.rs",
+      "kind": "change-node-name",
+      "types": [
+        "GltfChangeNodeNameInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": true,
+      "typedOperation": false,
+      "methods": [
+        "derive",
+        "apply",
+        "encode"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-primitive-extension-data/↩️inverse/🦀️component.rs",
+      "kind": "change-primitive-extension-data",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-primitive-extra-data/↩️inverse/🦀️component.rs",
+      "kind": "change-primitive-extra-data",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-primitive-topology-mode/↩️inverse/🦀️component.rs",
+      "kind": "change-primitive-topology-mode",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-scene-extension-data/↩️inverse/🦀️component.rs",
+      "kind": "change-scene-extension-data",
+      "types": [
+        "GltfChangeSceneExtensionDataInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive",
+        "apply",
+        "encode"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-scene-extra-data/↩️inverse/🦀️component.rs",
+      "kind": "change-scene-extra-data",
+      "types": [
+        "GltfChangeSceneExtraDataInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive",
+        "apply",
+        "encode"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-scene-name/↩️inverse/🦀️component.rs",
+      "kind": "change-scene-name",
+      "types": [
+        "GltfChangeSceneNameInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive",
+        "apply",
+        "encode"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-accessor/↩️inverse/🦀️component.rs",
+      "kind": "create-accessor",
+      "types": [
+        "GltfCreateAccessorInverseOperation",
+        "GltfCreateAccessorInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-animation/↩️inverse/🦀️component.rs",
+      "kind": "create-animation",
+      "types": [
+        "GltfCreateAnimationInverseOperation",
+        "GltfCreateAnimationInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-buffer-view/↩️inverse/🦀️component.rs",
+      "kind": "create-buffer-view",
+      "types": [
+        "GltfCreateBufferViewInverseOperation",
+        "GltfCreateBufferViewInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-buffer/↩️inverse/🦀️component.rs",
+      "kind": "create-buffer",
+      "types": [
+        "GltfCreateBufferInverseOperation",
+        "GltfCreateBufferInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-camera/↩️inverse/🦀️component.rs",
+      "kind": "create-camera",
+      "types": [
+        "GltfCreateCameraInverseOperation",
+        "GltfCreateCameraInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-image/↩️inverse/🦀️component.rs",
+      "kind": "create-image",
+      "types": [
+        "GltfCreateImageInverseOperation",
+        "GltfCreateImageInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-material/↩️inverse/🦀️component.rs",
+      "kind": "create-material",
+      "types": [
+        "GltfCreateMaterialInverseOperation",
+        "GltfCreateMaterialInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-mesh/↩️inverse/🦀️component.rs",
+      "kind": "create-mesh",
+      "types": [
+        "GltfCreateMeshInverseOperation",
+        "GltfCreateMeshInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-morph-target/↩️inverse/🦀️component.rs",
+      "kind": "create-morph-target",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-node/↩️inverse/🦀️component.rs",
+      "kind": "create-node",
+      "types": [
+        "GltfCreateNodeInverseOperation",
+        "GltfCreateNodeInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-primitive/↩️inverse/🦀️component.rs",
+      "kind": "create-primitive",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-sampler/↩️inverse/🦀️component.rs",
+      "kind": "create-sampler",
+      "types": [
+        "GltfCreateSamplerInverseOperation",
+        "GltfCreateSamplerInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-scene/↩️inverse/🦀️component.rs",
+      "kind": "create-scene",
+      "types": [
+        "GltfCreateSceneInversePhase",
+        "GltfCreateSceneInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": true,
+      "typedOperation": false,
+      "methods": [
+        "touched_paths",
+        "validate",
+        "apply",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-skin/↩️inverse/🦀️component.rs",
+      "kind": "create-skin",
+      "types": [
+        "GltfCreateSkinInverseOperation",
+        "GltfCreateSkinInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-texture/↩️inverse/🦀️component.rs",
+      "kind": "create-texture",
+      "types": [
+        "GltfCreateTextureInverseOperation",
+        "GltfCreateTextureInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/declare-used-extension/↩️inverse/🦀️component.rs",
+      "kind": "declare-used-extension",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-accessor/↩️inverse/🦀️component.rs",
+      "kind": "delete-accessor",
+      "types": [
+        "GltfDeleteAccessorInverseOperation",
+        "GltfDeleteAccessorInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-animation/↩️inverse/🦀️component.rs",
+      "kind": "delete-animation",
+      "types": [
+        "GltfDeleteAnimationInverseOperation",
+        "GltfDeleteAnimationInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-buffer-view/↩️inverse/🦀️component.rs",
+      "kind": "delete-buffer-view",
+      "types": [
+        "GltfDeleteBufferViewInverseOperation",
+        "GltfDeleteBufferViewInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-buffer/↩️inverse/🦀️component.rs",
+      "kind": "delete-buffer",
+      "types": [
+        "GltfDeleteBufferInverseOperation",
+        "GltfDeleteBufferInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-camera/↩️inverse/🦀️component.rs",
+      "kind": "delete-camera",
+      "types": [
+        "GltfDeleteCameraInverseOperation",
+        "GltfDeleteCameraInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-image/↩️inverse/🦀️component.rs",
+      "kind": "delete-image",
+      "types": [
+        "GltfDeleteImageInverseOperation",
+        "GltfDeleteImageInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-material/↩️inverse/🦀️component.rs",
+      "kind": "delete-material",
+      "types": [
+        "GltfDeleteMaterialInverseOperation",
+        "GltfDeleteMaterialInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-mesh/↩️inverse/🦀️component.rs",
+      "kind": "delete-mesh",
+      "types": [
+        "GltfDeleteMeshInverseOperation",
+        "GltfDeleteMeshInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-morph-target/↩️inverse/🦀️component.rs",
+      "kind": "delete-morph-target",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-node/↩️inverse/🦀️component.rs",
+      "kind": "delete-node",
+      "types": [
+        "GltfDeleteNodeInverseOperation",
+        "GltfDeleteNodeInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-primitive/↩️inverse/🦀️component.rs",
+      "kind": "delete-primitive",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-sampler/↩️inverse/🦀️component.rs",
+      "kind": "delete-sampler",
+      "types": [
+        "GltfDeleteSamplerInverseOperation",
+        "GltfDeleteSamplerInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-scene/↩️inverse/🦀️component.rs",
+      "kind": "delete-scene",
+      "types": [
+        "GltfDeleteSceneInversePhase",
+        "GltfDeleteSceneInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": true,
+      "typedOperation": false,
+      "methods": [
+        "validate",
+        "apply",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-skin/↩️inverse/🦀️component.rs",
+      "kind": "delete-skin",
+      "types": [
+        "GltfDeleteSkinInverseOperation",
+        "GltfDeleteSkinInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-texture/↩️inverse/🦀️component.rs",
+      "kind": "delete-texture",
+      "types": [
+        "GltfDeleteTextureInverseOperation",
+        "GltfDeleteTextureInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-accessor/↩️inverse/🦀️component.rs",
+      "kind": "move-accessor",
+      "types": [
+        "GltfMoveAccessorInverseOperation",
+        "GltfMoveAccessorInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-animation/↩️inverse/🦀️component.rs",
+      "kind": "move-animation",
+      "types": [
+        "GltfMoveAnimationInverseOperation",
+        "GltfMoveAnimationInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-buffer-view/↩️inverse/🦀️component.rs",
+      "kind": "move-buffer-view",
+      "types": [
+        "GltfMoveBufferViewInverseOperation",
+        "GltfMoveBufferViewInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-buffer/↩️inverse/🦀️component.rs",
+      "kind": "move-buffer",
+      "types": [
+        "GltfMoveBufferInverseOperation",
+        "GltfMoveBufferInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-camera/↩️inverse/🦀️component.rs",
+      "kind": "move-camera",
+      "types": [
+        "GltfMoveCameraInverseOperation",
+        "GltfMoveCameraInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-image/↩️inverse/🦀️component.rs",
+      "kind": "move-image",
+      "types": [
+        "GltfMoveImageInverseOperation",
+        "GltfMoveImageInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-material/↩️inverse/🦀️component.rs",
+      "kind": "move-material",
+      "types": [
+        "GltfMoveMaterialInverseOperation",
+        "GltfMoveMaterialInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-mesh/↩️inverse/🦀️component.rs",
+      "kind": "move-mesh",
+      "types": [
+        "GltfMoveMeshInverseOperation",
+        "GltfMoveMeshInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-morph-target-attribute/↩️inverse/🦀️component.rs",
+      "kind": "move-morph-target-attribute",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-morph-target/↩️inverse/🦀️component.rs",
+      "kind": "move-morph-target",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-node/↩️inverse/🦀️component.rs",
+      "kind": "move-node",
+      "types": [
+        "GltfMoveNodeInverseOperation",
+        "GltfMoveNodeInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-primitive-attribute/↩️inverse/🦀️component.rs",
+      "kind": "move-primitive-attribute",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-primitive/↩️inverse/🦀️component.rs",
+      "kind": "move-primitive",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-required-extension/↩️inverse/🦀️component.rs",
+      "kind": "move-required-extension",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-sampler/↩️inverse/🦀️component.rs",
+      "kind": "move-sampler",
+      "types": [
+        "GltfMoveSamplerInverseOperation",
+        "GltfMoveSamplerInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-scene/↩️inverse/🦀️component.rs",
+      "kind": "move-scene",
+      "types": [
+        "GltfMoveSceneInverseOperation",
+        "GltfMoveSceneInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-skin/↩️inverse/🦀️component.rs",
+      "kind": "move-skin",
+      "types": [
+        "GltfMoveSkinInverseOperation",
+        "GltfMoveSkinInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-texture/↩️inverse/🦀️component.rs",
+      "kind": "move-texture",
+      "types": [
+        "GltfMoveTextureInverseOperation",
+        "GltfMoveTextureInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-used-extension/↩️inverse/🦀️component.rs",
+      "kind": "move-used-extension",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-accessors/↩️inverse/🦀️component.rs",
+      "kind": "reorder-accessors",
+      "types": [
+        "GltfReorderAccessorsInverseOperation",
+        "GltfReorderAccessorsInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-animations/↩️inverse/🦀️component.rs",
+      "kind": "reorder-animations",
+      "types": [
+        "GltfReorderAnimationsInverseOperation",
+        "GltfReorderAnimationsInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-buffer-views/↩️inverse/🦀️component.rs",
+      "kind": "reorder-buffer-views",
+      "types": [
+        "GltfReorderBufferViewsInverseOperation",
+        "GltfReorderBufferViewsInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-buffers/↩️inverse/🦀️component.rs",
+      "kind": "reorder-buffers",
+      "types": [
+        "GltfReorderBuffersInverseOperation",
+        "GltfReorderBuffersInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-cameras/↩️inverse/🦀️component.rs",
+      "kind": "reorder-cameras",
+      "types": [
+        "GltfReorderCamerasInverseOperation",
+        "GltfReorderCamerasInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-images/↩️inverse/🦀️component.rs",
+      "kind": "reorder-images",
+      "types": [
+        "GltfReorderImagesInverseOperation",
+        "GltfReorderImagesInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-materials/↩️inverse/🦀️component.rs",
+      "kind": "reorder-materials",
+      "types": [
+        "GltfReorderMaterialsInverseOperation",
+        "GltfReorderMaterialsInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-meshs/↩️inverse/🦀️component.rs",
+      "kind": "reorder-meshs",
+      "types": [
+        "GltfReorderMeshsInverseOperation",
+        "GltfReorderMeshsInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-morph-target-attributes/↩️inverse/🦀️component.rs",
+      "kind": "reorder-morph-target-attributes",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-morph-targets/↩️inverse/🦀️component.rs",
+      "kind": "reorder-morph-targets",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-nodes/↩️inverse/🦀️component.rs",
+      "kind": "reorder-nodes",
+      "types": [
+        "GltfReorderNodesInverseOperation",
+        "GltfReorderNodesInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-primitive-attributes/↩️inverse/🦀️component.rs",
+      "kind": "reorder-primitive-attributes",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-primitives/↩️inverse/🦀️component.rs",
+      "kind": "reorder-primitives",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-required-extensions/↩️inverse/🦀️component.rs",
+      "kind": "reorder-required-extensions",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-samplers/↩️inverse/🦀️component.rs",
+      "kind": "reorder-samplers",
+      "types": [
+        "GltfReorderSamplersInverseOperation",
+        "GltfReorderSamplersInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-scenes/↩️inverse/🦀️component.rs",
+      "kind": "reorder-scenes",
+      "types": [
+        "GltfReorderScenesInverseOperation",
+        "GltfReorderScenesInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-skins/↩️inverse/🦀️component.rs",
+      "kind": "reorder-skins",
+      "types": [
+        "GltfReorderSkinsInverseOperation",
+        "GltfReorderSkinsInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-textures/↩️inverse/🦀️component.rs",
+      "kind": "reorder-textures",
+      "types": [
+        "GltfReorderTexturesInverseOperation",
+        "GltfReorderTexturesInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": true,
+      "methods": [
+        "validate_inverse",
+        "apply_inverse",
+        "encode",
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-used-extensions/↩️inverse/🦀️component.rs",
+      "kind": "reorder-used-extensions",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reparent-node/↩️inverse/🦀️component.rs",
+      "kind": "reparent-node",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/require-extension/↩️inverse/🦀️component.rs",
+      "kind": "require-extension",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/transform-node/↩️inverse/🦀️component.rs",
+      "kind": "transform-node",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-default-scene/↩️inverse/🦀️component.rs",
+      "kind": "unbind-default-scene",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-morph-target-attribute/↩️inverse/🦀️component.rs",
+      "kind": "unbind-morph-target-attribute",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-node-camera/↩️inverse/🦀️component.rs",
+      "kind": "unbind-node-camera",
+      "types": [
+        "GltfUnbindNodeCameraInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive",
+        "apply",
+        "encode"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-node-child/↩️inverse/🦀️component.rs",
+      "kind": "unbind-node-child",
+      "types": [
+        "GltfUnbindNodeChildInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": true,
+      "typedOperation": false,
+      "methods": [
+        "derive",
+        "apply",
+        "encode"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-node-mesh/↩️inverse/🦀️component.rs",
+      "kind": "unbind-node-mesh",
+      "types": [
+        "GltfUnbindNodeMeshInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive",
+        "apply",
+        "encode"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-node-skin/↩️inverse/🦀️component.rs",
+      "kind": "unbind-node-skin",
+      "types": [
+        "GltfUnbindNodeSkinInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive",
+        "apply",
+        "encode"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-primitive-attribute/↩️inverse/🦀️component.rs",
+      "kind": "unbind-primitive-attribute",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-primitive-indices/↩️inverse/🦀️component.rs",
+      "kind": "unbind-primitive-indices",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-primitive-material/↩️inverse/🦀️component.rs",
+      "kind": "unbind-primitive-material",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-scene-root-node/↩️inverse/🦀️component.rs",
+      "kind": "unbind-scene-root-node",
+      "types": [
+        "GltfUnbindSceneRootNodeInverse"
+      ],
+      "arbitraryGltfDiff": false,
+      "staleGuard": true,
+      "typedOperation": false,
+      "methods": [
+        "derive",
+        "apply",
+        "encode"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unrequire-extension/↩️inverse/🦀️component.rs",
+      "kind": "unrequire-extension",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/withdraw-used-extension/↩️inverse/🦀️component.rs",
+      "kind": "withdraw-used-extension",
+      "types": [],
+      "arbitraryGltfDiff": true,
+      "staleGuard": false,
+      "typedOperation": false,
+      "methods": [
+        "derive"
+      ]
+    }
+  ]
+}

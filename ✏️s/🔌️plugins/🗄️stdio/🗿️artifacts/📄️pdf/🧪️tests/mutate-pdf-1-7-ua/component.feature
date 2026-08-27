@@ -73,8 +73,6 @@ Feature: Apply every typed ISO 14289-1 (PDF/UA-1) conformance-class mutation to 
     Then the oracle and the subject agree on the conformance-class projection
     Examples:
       | id                       | params                                                            |
-      | no-mutation              | {}                                                                |
-      | set-snapshot             | {"conformance": "stamped"}                                        |
       | set-mark-info            | {"marked": true}                                                  |
       | remove-mark-info         | {}                                                                |
       | set-struct-tree-root     | {}                                                                |
@@ -100,8 +98,6 @@ Feature: Apply every typed ISO 14289-1 (PDF/UA-1) conformance-class mutation to 
     Then the conformance-class projection is the one the document started from
     Examples:
       | id                       | params                                                            |
-      | no-mutation              | {}                                                                |
-      | set-snapshot             | {"conformance": "stamped"}                                        |
       | set-mark-info            | {"marked": true}                                                  |
       | remove-mark-info         | {}                                                                |
       | set-struct-tree-root     | {}                                                                |

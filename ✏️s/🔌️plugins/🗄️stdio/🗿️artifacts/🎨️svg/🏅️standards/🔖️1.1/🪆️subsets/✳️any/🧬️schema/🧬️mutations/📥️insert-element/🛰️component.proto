@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.svg.mutation;
+// insert-element/InsertElement
+message InsertElementPayload { bytes parent = 1; uint64 index = 2; bytes node = 3; }

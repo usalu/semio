@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧬️schema/🧬️mutations/🧽️remove-output-intent",
+  "semanticKind": "remove-output-intent",
+  "displayName": "Remove Output Intent",
+  "emoji": "🧽️",
+  "aggregateVariant": "RemoveOutputIntent",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "remove-output-intent",
+  "binaryTag": 3,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

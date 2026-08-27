@@ -2,6 +2,14 @@
   "name": "@semio-tech/framework-rs",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "test-wire-retirement-source": {
+      "executor": "nx:run-commands",
+      "options": {"cwd":"🧰️framework/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-wire-retirement-source"}
+    },
+    "test-wire-retirement-native": {
+      "executor": "nx:run-commands",
+      "options": {"cwd":"🧰️framework/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-wire-retirement-native","forwardAllArgs":true}
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

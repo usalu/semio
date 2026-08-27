@@ -191,6 +191,335 @@ pub struct SemanticDescriptor {
     pub record: &'static str,
 }
 
+//#region 🪪️MutationLeafDescriptor
+/// 🧷️ Schema vocabulary for one direct mutation's inversion behavior.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[repr(u8)]
+#[serde(rename_all = "kebab-case")]
+pub enum MutationInvertibility {
+    #[serde(rename = "self")]
+    SelfInvertible,
+    ExplicitMutation,
+    Plan,
+    NonInvertible,
+}
+
+/// 🧷️ Schema vocabulary for one direct mutation's diff participation.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[repr(u8)]
+#[serde(rename_all = "kebab-case")]
+pub enum MutationDiffParticipation {
+    Detect,
+    ApplyOnly,
+    Plan,
+    None,
+}
+
+/// 🧷️ Schema vocabulary for one direct mutation's observable outcomes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[repr(u8)]
+#[serde(rename_all = "kebab-case")]
+pub enum MutationOutcomeClass {
+    Applied,
+    Info,
+    Warning,
+    Error,
+    Fatal,
+}
+
+/// 🧷️ Schema vocabulary for one direct mutation's composition form.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[repr(u8)]
+#[serde(rename_all = "kebab-case")]
+pub enum MutationComposition {
+    Atomic,
+    Composite,
+}
+
+/// 🧷️ Schema vocabulary for a direct mutation's required language surfaces.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[repr(u8)]
+#[serde(rename_all = "kebab-case")]
+pub enum MutationLanguageSurface {
+    Rust,
+    Typescript,
+    Graphql,
+    Protobuf,
+    JsonSchema,
+    Text,
+    Binary,
+}
+
+/// 🧷️ Exact fourteen-field static metadata contract for one direct mutation leaf.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MutationLeafDescriptor {
+    pub schema_version: u32,
+    pub owner: &'static str,
+    pub semantic_kind: &'static str,
+    pub display_name: &'static str,
+    pub emoji: &'static str,
+    pub aggregate_variant: &'static str,
+    pub payload_schema: &'static str,
+    pub text_opcode: Option<&'static str>,
+    pub binary_tag: Option<u32>,
+    pub invertibility: MutationInvertibility,
+    pub diff_participation: MutationDiffParticipation,
+    pub outcome_classes: &'static [MutationOutcomeClass],
+    pub composition: MutationComposition,
+    pub required_language_surfaces: &'static [MutationLanguageSurface],
+}
+
+/// 🧷️ Identifies a static descriptor field that violates the language-neutral schema contract.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct MutationLeafDescriptorValidationError {
+    pub field: &'static str,
+    pub requirement: &'static str,
+}
+
+/// 🧷️ Identifies a same-owner static roster violation and its duplicate positions.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct MutationLeafDescriptorRosterValidationError {
+    pub owner: &'static str,
+    pub field: &'static str,
+    pub first_index: usize,
+    pub index: usize,
+}
+
+impl MutationLeafDescriptor {
+    /// 🧷️ Validates this exact static descriptor against the fourteen-field schema contract.
+    pub const fn validate(&self) -> Result<(), MutationLeafDescriptorValidationError> {
+        validate_mutation_leaf_descriptor(self)
+    }
+}
+
+/// 🧷️ Validates one static descriptor without introducing defaults or partial metadata.
+pub const fn validate_mutation_leaf_descriptor(descriptor: &MutationLeafDescriptor) -> Result<(), MutationLeafDescriptorValidationError> {
+    if descriptor.schema_version != 1 {
+        return Err(MutationLeafDescriptorValidationError { field: "schemaVersion", requirement: "must equal 1" });
+    }
+    if !mutation_leaf_descriptor_owner(descriptor.owner) {
+        return Err(MutationLeafDescriptorValidationError { field: "owner", requirement: "must name a non-compose direct mutation leaf" });
+    }
+    if !mutation_leaf_descriptor_kebab(descriptor.semantic_kind) {
+        return Err(MutationLeafDescriptorValidationError { field: "semanticKind", requirement: "must be a two-or-more-segment kebab identifier" });
+    }
+    if descriptor.display_name.is_empty() {
+        return Err(MutationLeafDescriptorValidationError { field: "displayName", requirement: "must be non-empty" });
+    }
+    if descriptor.emoji.is_empty() {
+        return Err(MutationLeafDescriptorValidationError { field: "emoji", requirement: "must be non-empty" });
+    }
+    if !mutation_leaf_descriptor_pascal(descriptor.aggregate_variant) {
+        return Err(MutationLeafDescriptorValidationError { field: "aggregateVariant", requirement: "must be an ASCII Pascal identifier" });
+    }
+    if descriptor.payload_schema.is_empty() {
+        return Err(MutationLeafDescriptorValidationError { field: "payloadSchema", requirement: "must be non-empty" });
+    }
+    if let Some(opcode) = descriptor.text_opcode {
+        if !mutation_leaf_descriptor_kebab(opcode) {
+            return Err(MutationLeafDescriptorValidationError { field: "textOpcode", requirement: "must be null or a two-or-more-segment kebab identifier" });
+        }
+    }
+    if descriptor.outcome_classes.is_empty() || !mutation_leaf_descriptor_outcomes_unique(descriptor.outcome_classes) {
+        return Err(MutationLeafDescriptorValidationError { field: "outcomeClasses", requirement: "must be a non-empty unique array" });
+    }
+    if descriptor.required_language_surfaces.is_empty() || !mutation_leaf_descriptor_surfaces_unique(descriptor.required_language_surfaces) || !mutation_leaf_descriptor_has_rust(descriptor.required_language_surfaces) {
+        return Err(MutationLeafDescriptorValidationError { field: "requiredLanguageSurfaces", requirement: "must be a non-empty unique array containing rust" });
+    }
+    Ok(())
+}
+
+/// 🧷️ Validates exact descriptor uniqueness within one explicit owner roster.
+pub const fn validate_mutation_leaf_descriptor_roster(mutation_root: &'static str, descriptors: &'static [MutationLeafDescriptor]) -> Result<(), MutationLeafDescriptorRosterValidationError> {
+    if !mutation_leaf_descriptor_root(mutation_root) {
+        return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: "owner", first_index: 0, index: 0 });
+    }
+    let mut index = 0;
+    while index < descriptors.len() {
+        let descriptor = &descriptors[index];
+        if let Err(error) = validate_mutation_leaf_descriptor(descriptor) {
+            return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: error.field, first_index: index, index });
+        }
+        if !mutation_leaf_descriptor_direct_child(mutation_root, descriptor.owner) {
+            return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: "owner", first_index: index, index });
+        }
+        index += 1;
+    }
+    let mut index = 0;
+    while index < descriptors.len() {
+        let descriptor = &descriptors[index];
+        let mut duplicate = index + 1;
+        while duplicate < descriptors.len() {
+            let other = &descriptors[duplicate];
+            if mutation_leaf_descriptor_str_eq(descriptor.semantic_kind, other.semantic_kind) {
+                return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: "semanticKind", first_index: index, index: duplicate });
+            }
+            if mutation_leaf_descriptor_str_eq(descriptor.owner, other.owner) {
+                return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: "owner", first_index: index, index: duplicate });
+            }
+            if let (Some(left), Some(right)) = (descriptor.text_opcode, other.text_opcode) {
+                if mutation_leaf_descriptor_str_eq(left, right) {
+                    return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: "textOpcode", first_index: index, index: duplicate });
+                }
+            }
+            if let (Some(left), Some(right)) = (descriptor.binary_tag, other.binary_tag) {
+                if left == right {
+                    return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: "binaryTag", first_index: index, index: duplicate });
+                }
+            }
+            duplicate += 1;
+        }
+        index += 1;
+    }
+    Ok(())
+}
+
+const MUTATION_ROOT_MARKER: &[u8] = "/🧬️mutations/".as_bytes();
+const MUTATION_ROOT_SUFFIX: &[u8] = "/🧬️mutations".as_bytes();
+
+const fn mutation_leaf_descriptor_owner(value: &str) -> bool {
+    let bytes = value.as_bytes();
+    if bytes.is_empty() { return false; }
+    let mut index = 0;
+    let mut marker = false;
+    while index < bytes.len() {
+        if bytes[index] == b'\n' || bytes[index] == b'\r' || (index + 2 < bytes.len() && bytes[index] == 0xe2 && bytes[index + 1] == 0x80 && (bytes[index + 2] == 0xa8 || bytes[index + 2] == 0xa9)) { return false; }
+        if (index == 0 || bytes[index - 1] == b'/') && mutation_leaf_descriptor_bytes_at(bytes, index, b"compose") && (index + 7 == bytes.len() || bytes[index + 7] == b'/') { return false; }
+        if mutation_leaf_descriptor_bytes_at(bytes, index, MUTATION_ROOT_MARKER) && index > 0 && index + MUTATION_ROOT_MARKER.len() < bytes.len() { marker = true; }
+        index += 1;
+    }
+    marker
+}
+
+const fn mutation_leaf_descriptor_root(value: &str) -> bool {
+    let bytes = value.as_bytes();
+    mutation_leaf_descriptor_relative_path(bytes) && mutation_leaf_descriptor_path_safe(bytes) && bytes.len() > MUTATION_ROOT_SUFFIX.len() && mutation_leaf_descriptor_bytes_at(bytes, bytes.len() - MUTATION_ROOT_SUFFIX.len(), MUTATION_ROOT_SUFFIX)
+}
+
+const fn mutation_leaf_descriptor_direct_child(root: &str, owner: &str) -> bool {
+    let root = root.as_bytes();
+    let owner = owner.as_bytes();
+    if owner.len() <= root.len() + 1 || !mutation_leaf_descriptor_bytes_at(owner, 0, root) || owner[root.len()] != b'/' { return false; }
+    let start = root.len() + 1;
+    let mut index = start;
+    while index < owner.len() {
+        if owner[index] == b'/' || owner[index] == b'\\' || owner[index] == 0 { return false; }
+        index += 1;
+    }
+    !(owner.len() == start + 1 && owner[start] == b'.') && !(owner.len() == start + 2 && owner[start] == b'.' && owner[start + 1] == b'.')
+}
+
+const fn mutation_leaf_descriptor_relative_path(bytes: &[u8]) -> bool {
+    if bytes.is_empty() || bytes[0] == b'/' || bytes[0] == b'\\' { return false; }
+    let mut start = 0;
+    let mut index = 0;
+    while index <= bytes.len() {
+        if index == bytes.len() || bytes[index] == b'/' {
+            let length = index - start;
+            if length == 0 || (length == 1 && bytes[start] == b'.') || (length == 2 && bytes[start] == b'.' && bytes[start + 1] == b'.') { return false; }
+            start = index + 1;
+        } else if bytes[index] == b'\\' || bytes[index] == b':' || bytes[index] == 0 { return false; }
+        index += 1;
+    }
+    true
+}
+
+const fn mutation_leaf_descriptor_path_safe(bytes: &[u8]) -> bool {
+    let mut index = 0;
+    while index < bytes.len() {
+        if bytes[index] == b'\n' || bytes[index] == b'\r' || (index + 2 < bytes.len() && bytes[index] == 0xe2 && bytes[index + 1] == 0x80 && (bytes[index + 2] == 0xa8 || bytes[index + 2] == 0xa9)) { return false; }
+        if (index == 0 || bytes[index - 1] == b'/') && mutation_leaf_descriptor_bytes_at(bytes, index, b"compose") && (index + 7 == bytes.len() || bytes[index + 7] == b'/') { return false; }
+        index += 1;
+    }
+    true
+}
+
+const fn mutation_leaf_descriptor_kebab(value: &str) -> bool {
+    let bytes = value.as_bytes();
+    if bytes.len() < 3 || !mutation_leaf_descriptor_ascii_lower(bytes[0]) { return false; }
+    let mut index = 1;
+    let mut hyphen = false;
+    while index < bytes.len() {
+        let byte = bytes[index];
+        if byte == b'-' {
+            if index + 1 == bytes.len() || bytes[index + 1] == b'-' { return false; }
+            hyphen = true;
+        } else if !mutation_leaf_descriptor_ascii_lower(byte) && !mutation_leaf_descriptor_ascii_digit(byte) { return false; }
+        index += 1;
+    }
+    hyphen
+}
+
+const fn mutation_leaf_descriptor_pascal(value: &str) -> bool {
+    let bytes = value.as_bytes();
+    if bytes.is_empty() || !mutation_leaf_descriptor_ascii_upper(bytes[0]) { return false; }
+    let mut index = 1;
+    while index < bytes.len() {
+        let byte = bytes[index];
+        if !mutation_leaf_descriptor_ascii_upper(byte) && !mutation_leaf_descriptor_ascii_lower(byte) && !mutation_leaf_descriptor_ascii_digit(byte) { return false; }
+        index += 1;
+    }
+    true
+}
+
+const fn mutation_leaf_descriptor_outcomes_unique(values: &[MutationOutcomeClass]) -> bool {
+    let mut index = 0;
+    while index < values.len() {
+        let mut duplicate = index + 1;
+        while duplicate < values.len() {
+            if values[index] as u8 == values[duplicate] as u8 { return false; }
+            duplicate += 1;
+        }
+        index += 1;
+    }
+    true
+}
+
+const fn mutation_leaf_descriptor_surfaces_unique(values: &[MutationLanguageSurface]) -> bool {
+    let mut index = 0;
+    while index < values.len() {
+        let mut duplicate = index + 1;
+        while duplicate < values.len() {
+            if values[index] as u8 == values[duplicate] as u8 { return false; }
+            duplicate += 1;
+        }
+        index += 1;
+    }
+    true
+}
+
+const fn mutation_leaf_descriptor_has_rust(values: &[MutationLanguageSurface]) -> bool {
+    let mut index = 0;
+    while index < values.len() {
+        if values[index] as u8 == MutationLanguageSurface::Rust as u8 { return true; }
+        index += 1;
+    }
+    false
+}
+
+const fn mutation_leaf_descriptor_bytes_at(bytes: &[u8], index: usize, needle: &[u8]) -> bool {
+    if index + needle.len() > bytes.len() { return false; }
+    let mut offset = 0;
+    while offset < needle.len() {
+        if bytes[index + offset] != needle[offset] { return false; }
+        offset += 1;
+    }
+    true
+}
+
+const fn mutation_leaf_descriptor_str_eq(left: &str, right: &str) -> bool {
+    let left = left.as_bytes();
+    let right = right.as_bytes();
+    if left.len() != right.len() { return false; }
+    mutation_leaf_descriptor_bytes_at(left, 0, right)
+}
+
+const fn mutation_leaf_descriptor_ascii_lower(byte: u8) -> bool { byte >= b'a' && byte <= b'z' }
+const fn mutation_leaf_descriptor_ascii_upper(byte: u8) -> bool { byte >= b'A' && byte <= b'Z' }
+const fn mutation_leaf_descriptor_ascii_digit(byte: u8) -> bool { byte >= b'0' && byte <= b'9' }
+//#endregion 🪪️MutationLeafDescriptor
+
 /// @emoji 🦠️ One handcrafted mutation kind — implemented once by the payload struct declared in a
 /// `🧬️mutations/<kind>/🦠️mutation/🦀️component.rs` leaf. `Op` is the artifact's dispatch enum
 /// (`Op: Mutation<P>`); `inverse` returns `Vec<Op>` (not `Vec<Self>`) because a kind's true inverse
@@ -1313,6 +1642,186 @@ mod tests {
         assert_eq!(hex, "334fc1a502f10a879eec47edbbd526249432f67f4ccee1daa10a1f40821c8bdd");
     }
     //#endregion 🧪️DescriptorLaws
+
+    //#region 🧪️MutationLeafDescriptorLaws
+    fn mutation_leaf_descriptor_fixture() -> MutationLeafDescriptor {
+        MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page",
+            semantic_kind: "insert-page",
+            display_name: "Insert Page",
+            emoji: "➕️",
+            aggregate_variant: "InsertPage",
+            payload_schema: "🦀️.rs#InsertPage",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: MutationInvertibility::ExplicitMutation,
+            diff_participation: MutationDiffParticipation::ApplyOnly,
+            outcome_classes: &[MutationOutcomeClass::Applied],
+            composition: MutationComposition::Atomic,
+            required_language_surfaces: &[MutationLanguageSurface::Rust],
+        }
+    }
+
+    fn mutation_leaf_descriptor_fixture_json() -> serde_json::Value {
+        serde_json::from_str(include_str!("🧪️tests/🧬️mutation-leaf-descriptor/🧫️fixtures/🔣️.json")).expect("valid neutral descriptor fixture")
+    }
+
+    static MUTATION_LEAF_DESCRIPTOR_DUPLICATE_OUTCOMES: [MutationOutcomeClass; 2] = [MutationOutcomeClass::Applied, MutationOutcomeClass::Applied];
+    static MUTATION_LEAF_DESCRIPTOR_NON_RUST_SURFACES: [MutationLanguageSurface; 1] = [MutationLanguageSurface::Text];
+    static MUTATION_LEAF_DESCRIPTOR_DUPLICATE_SURFACES: [MutationLanguageSurface; 2] = [MutationLanguageSurface::Rust, MutationLanguageSurface::Rust];
+    static MUTATION_LEAF_DESCRIPTOR_OWNER_BOUNDARIES: [(&str, &str, bool); 5] = [
+        ("unicode-line-separator", "prefix\u{2028}/🧬️mutations/➕️insert-page", false),
+        ("unicode-paragraph-separator", "prefix\u{2029}/🧬️mutations/➕️insert-page", false),
+        ("multiple-markers-later-valid", "/🧬️mutations/first/🧬️mutations/second", true),
+        ("multiple-markers-prefixed", "prefix/🧬️mutations/second/🧬️mutations/third", true),
+        ("marker-without-suffix", "prefix/🧬️mutations/", false),
+    ];
+    static MUTATION_LEAF_DESCRIPTOR_OUTCOMES: [MutationOutcomeClass; 1] = [MutationOutcomeClass::Applied];
+    static MUTATION_LEAF_DESCRIPTOR_SURFACES: [MutationLanguageSurface; 1] = [MutationLanguageSurface::Rust];
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_ROOT: &str = "✏️s/🔌️plugins/🧪️probe/🧬️mutations";
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT: MutationLeafDescriptor = MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page", semantic_kind: "insert-page", display_name: "Insert Page", emoji: "➕️", aggregate_variant: "InsertPage", payload_schema: "🦀️.rs#InsertPage", text_opcode: Some("insert-page"), binary_tag: Some(1), invertibility: MutationInvertibility::ExplicitMutation, diff_participation: MutationDiffParticipation::ApplyOnly, outcome_classes: &MUTATION_LEAF_DESCRIPTOR_OUTCOMES, composition: MutationComposition::Atomic, required_language_surfaces: &MUTATION_LEAF_DESCRIPTOR_SURFACES };
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE: MutationLeafDescriptor = MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➖️remove-page", semantic_kind: "remove-page", display_name: "Remove Page", emoji: "➖️", aggregate_variant: "RemovePage", payload_schema: "🦀️.rs#RemovePage", text_opcode: Some("remove-page"), binary_tag: Some(2), invertibility: MutationInvertibility::ExplicitMutation, diff_participation: MutationDiffParticipation::ApplyOnly, outcome_classes: &MUTATION_LEAF_DESCRIPTOR_OUTCOMES, composition: MutationComposition::Atomic, required_language_surfaces: &MUTATION_LEAF_DESCRIPTOR_SURFACES };
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_NULLABLE: MutationLeafDescriptor = MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/♻️replace-page", semantic_kind: "replace-page", display_name: "Replace Page", emoji: "♻️", aggregate_variant: "ReplacePage", payload_schema: "🦀️.rs#ReplacePage", text_opcode: None, binary_tag: None, invertibility: MutationInvertibility::ExplicitMutation, diff_participation: MutationDiffParticipation::ApplyOnly, outcome_classes: &MUTATION_LEAF_DESCRIPTOR_OUTCOMES, composition: MutationComposition::Atomic, required_language_surfaces: &MUTATION_LEAF_DESCRIPTOR_SURFACES };
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_OTHER_OWNER: MutationLeafDescriptor = MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧪️other/🧬️mutations/➕️insert-page", semantic_kind: "insert-page", display_name: "Insert Page", emoji: "➕️", aggregate_variant: "InsertPage", payload_schema: "🦀️.rs#InsertPage", text_opcode: Some("insert-page"), binary_tag: Some(1), invertibility: MutationInvertibility::ExplicitMutation, diff_participation: MutationDiffParticipation::ApplyOnly, outcome_classes: &MUTATION_LEAF_DESCRIPTOR_OUTCOMES, composition: MutationComposition::Atomic, required_language_surfaces: &MUTATION_LEAF_DESCRIPTOR_SURFACES };
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_UNIQUE: [MutationLeafDescriptor; 2] = [MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT, MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE];
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_SEMANTIC: [MutationLeafDescriptor; 2] = [MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT, MutationLeafDescriptor { semantic_kind: "insert-page", ..MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE }];
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_OPCODE: [MutationLeafDescriptor; 2] = [MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT, MutationLeafDescriptor { text_opcode: Some("insert-page"), ..MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE }];
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_TAG: [MutationLeafDescriptor; 2] = [MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT, MutationLeafDescriptor { binary_tag: Some(1), ..MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE }];
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_NULLABLE_REPEAT: [MutationLeafDescriptor; 2] = [MUTATION_LEAF_DESCRIPTOR_ROSTER_NULLABLE, MutationLeafDescriptor { owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/🗄️archive-page", semantic_kind: "archive-page", display_name: "Archive Page", emoji: "🗄️", aggregate_variant: "ArchivePage", payload_schema: "🦀️.rs#ArchivePage", ..MUTATION_LEAF_DESCRIPTOR_ROSTER_NULLABLE }];
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_OWNER_MISMATCH: [MutationLeafDescriptor; 2] = [MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT, MUTATION_LEAF_DESCRIPTOR_ROSTER_OTHER_OWNER];
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_OWNER: [MutationLeafDescriptor; 2] = [MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT, MutationLeafDescriptor { semantic_kind: "restore-page", display_name: "Restore Page", emoji: "↩️", aggregate_variant: "RestorePage", payload_schema: "🦀️.rs#RestorePage", text_opcode: Some("restore-page"), binary_tag: Some(3), ..MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT }];
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_NESTED_OWNER: [MutationLeafDescriptor; 1] = [MutationLeafDescriptor { owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➖️remove-page/🧪️tests", ..MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE }];
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_PARENT_CHILD: [MutationLeafDescriptor; 1] = [MutationLeafDescriptor { owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/..", ..MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE }];
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_BACKSLASH_CHILD: [MutationLeafDescriptor; 1] = [MutationLeafDescriptor { owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➖️remove-page\\🧪️tests", ..MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE }];
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_NUL_CHILD: [MutationLeafDescriptor; 1] = [MutationLeafDescriptor { owner: "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➖️remove-page\0", ..MUTATION_LEAF_DESCRIPTOR_ROSTER_REMOVE }];
+    static MUTATION_LEAF_DESCRIPTOR_ROSTER_OTHER_OWNER_SINGLE: [MutationLeafDescriptor; 1] = [MUTATION_LEAF_DESCRIPTOR_ROSTER_OTHER_OWNER];
+    const MUTATION_LEAF_DESCRIPTOR_CONST_VALID: Result<(), MutationLeafDescriptorValidationError> = validate_mutation_leaf_descriptor(&MUTATION_LEAF_DESCRIPTOR_ROSTER_INSERT);
+    const MUTATION_LEAF_DESCRIPTOR_CONST_ROSTER_VALID: Result<(), MutationLeafDescriptorRosterValidationError> = validate_mutation_leaf_descriptor_roster(MUTATION_LEAF_DESCRIPTOR_ROSTER_ROOT, &MUTATION_LEAF_DESCRIPTOR_ROSTER_UNIQUE);
+
+    #[test]
+    fn mutation_leaf_descriptor_serializes_all_schema_fields() {
+        let descriptor = mutation_leaf_descriptor_fixture();
+        let fixture = mutation_leaf_descriptor_fixture_json();
+        assert_eq!(validate_mutation_leaf_descriptor(&descriptor), Ok(()));
+        let serialized = serde_json::to_value(descriptor).expect("serialize descriptor");
+        assert_eq!(serialized, fixture["descriptor"]);
+        assert_eq!(serialized.as_object().expect("descriptor object").len(), 14);
+        assert!(serialized.get("textOpcode").expect("required nullable text opcode").is_null());
+        assert!(serialized.get("binaryTag").expect("required nullable binary tag").is_null());
+    }
+
+    #[test]
+    fn mutation_leaf_descriptor_enum_wires_match_neutral_fixture() {
+        let fixture = mutation_leaf_descriptor_fixture_json();
+        let wires = serde_json::json!({
+            "invertibility": [MutationInvertibility::SelfInvertible, MutationInvertibility::ExplicitMutation, MutationInvertibility::Plan, MutationInvertibility::NonInvertible],
+            "diffParticipation": [MutationDiffParticipation::Detect, MutationDiffParticipation::ApplyOnly, MutationDiffParticipation::Plan, MutationDiffParticipation::None],
+            "outcomeClasses": [MutationOutcomeClass::Applied, MutationOutcomeClass::Info, MutationOutcomeClass::Warning, MutationOutcomeClass::Error, MutationOutcomeClass::Fatal],
+            "composition": [MutationComposition::Atomic, MutationComposition::Composite],
+            "requiredLanguageSurfaces": [MutationLanguageSurface::Rust, MutationLanguageSurface::Typescript, MutationLanguageSurface::Graphql, MutationLanguageSurface::Protobuf, MutationLanguageSurface::JsonSchema, MutationLanguageSurface::Text, MutationLanguageSurface::Binary],
+        });
+        assert_eq!(wires, fixture["enumWireValues"]);
+    }
+
+    #[test]
+    fn mutation_leaf_descriptor_validates_static_schema_boundaries() {
+        let fixture = mutation_leaf_descriptor_fixture_json();
+        for vector in fixture["binaryTagVectors"].as_array().expect("vector array") {
+            let expected = vector["expected"].as_bool().expect("expected boolean");
+            let actual = match vector.get("value") {
+                Some(serde_json::Value::Null) => Some(None),
+                Some(serde_json::Value::Number(value)) => value.as_u64().and_then(|value| u32::try_from(value).ok()).map(Some),
+                _ => None,
+            };
+            assert_eq!(actual.is_some(), expected, "{}", vector["name"]);
+            if let Some(binary_tag) = actual {
+                let mut descriptor = mutation_leaf_descriptor_fixture();
+                descriptor.binary_tag = binary_tag;
+                assert_eq!(descriptor.validate(), Ok(()), "{}", vector["name"]);
+            }
+        }
+        let descriptor = mutation_leaf_descriptor_fixture();
+        assert!(serde_json::to_value(descriptor).expect("serialize descriptor").get("binaryTag").is_some(), "binaryTag cannot be omitted from the static descriptor shape");
+
+        let mut invalid = descriptor;
+        invalid.schema_version = 2;
+        assert_eq!(invalid.validate().expect_err("schema version must be one").field, "schemaVersion");
+        invalid = descriptor;
+        invalid.owner = "compose/🧬️mutations/➕️insert-page";
+        assert_eq!(invalid.validate().expect_err("compose owner is excluded").field, "owner");
+        invalid = descriptor;
+        invalid.owner = "owner-without-mutation-root";
+        assert_eq!(invalid.validate().expect_err("owner must name a direct mutation leaf").field, "owner");
+        invalid = descriptor;
+        invalid.semantic_kind = "insert";
+        assert_eq!(invalid.validate().expect_err("semantic kind needs two kebab segments").field, "semanticKind");
+        invalid = descriptor;
+        invalid.display_name = "";
+        assert_eq!(invalid.validate().expect_err("display name is required").field, "displayName");
+        invalid = descriptor;
+        invalid.emoji = "";
+        assert_eq!(invalid.validate().expect_err("emoji is required").field, "emoji");
+        invalid = descriptor;
+        invalid.aggregate_variant = "insert_page";
+        assert_eq!(invalid.validate().expect_err("aggregate variant is Pascal identifier").field, "aggregateVariant");
+        invalid = descriptor;
+        invalid.payload_schema = "";
+        assert_eq!(invalid.validate().expect_err("payload schema is required").field, "payloadSchema");
+        invalid = descriptor;
+        invalid.text_opcode = Some("insert");
+        assert_eq!(invalid.validate().expect_err("text opcode is kebab semantic kind").field, "textOpcode");
+        invalid = descriptor;
+        invalid.outcome_classes = &[];
+        assert_eq!(invalid.validate().expect_err("outcome classes are required").field, "outcomeClasses");
+        invalid.outcome_classes = &MUTATION_LEAF_DESCRIPTOR_DUPLICATE_OUTCOMES;
+        assert_eq!(invalid.validate().expect_err("outcome classes are unique").field, "outcomeClasses");
+        invalid = descriptor;
+        invalid.required_language_surfaces = &[];
+        assert_eq!(invalid.validate().expect_err("language surfaces are required").field, "requiredLanguageSurfaces");
+        invalid.required_language_surfaces = &MUTATION_LEAF_DESCRIPTOR_NON_RUST_SURFACES;
+        assert_eq!(invalid.validate().expect_err("rust surface is required").field, "requiredLanguageSurfaces");
+        invalid.required_language_surfaces = &MUTATION_LEAF_DESCRIPTOR_DUPLICATE_SURFACES;
+        assert_eq!(invalid.validate().expect_err("language surfaces are unique").field, "requiredLanguageSurfaces");
+    }
+
+    #[test]
+    fn mutation_leaf_descriptor_owner_boundaries_match_neutral_vectors() {
+        let fixture = mutation_leaf_descriptor_fixture_json();
+        let neutral: Vec<(&str, &str, bool)> = fixture["ownerBoundaryVectors"].as_array().expect("owner boundary vectors").iter().map(|vector| (vector["name"].as_str().expect("name"), vector["owner"].as_str().expect("owner"), vector["expected"].as_bool().expect("expected"))).collect();
+        assert_eq!(neutral, MUTATION_LEAF_DESCRIPTOR_OWNER_BOUNDARIES);
+        for (name, owner, expected) in MUTATION_LEAF_DESCRIPTOR_OWNER_BOUNDARIES {
+            let mut descriptor = mutation_leaf_descriptor_fixture();
+            descriptor.owner = owner;
+            assert_eq!(descriptor.validate().is_ok(), expected, "{name}");
+        }
+    }
+
+    #[test]
+    fn mutation_leaf_descriptor_const_roster_boundaries_match_neutral_vectors() {
+        assert_eq!(MUTATION_LEAF_DESCRIPTOR_CONST_VALID, Ok(()));
+        assert_eq!(MUTATION_LEAF_DESCRIPTOR_CONST_ROSTER_VALID, Ok(()));
+        let fixture = mutation_leaf_descriptor_fixture_json();
+        let names: Vec<(&str, bool)> = fixture["rosterVectors"].as_array().expect("roster vectors").iter().map(|vector| (vector["name"].as_str().expect("name"), vector["expected"].as_bool().expect("expected"))).collect();
+        assert_eq!(names, [("same-owner-unique", true), ("duplicate-semantic-kind", false), ("duplicate-text-opcode", false), ("duplicate-binary-tag", false), ("nullable-identities-repeat", true), ("unrelated-owner", false), ("duplicate-owner", false), ("nested-child", false), ("parent-child", false), ("backslash-child", false), ("absolute-root", false), ("windows-root", false), ("windows-slash-drive-root", false), ("windows-relative-drive-root", false), ("empty-segment-root", false), ("dot-root", false), ("parent-root", false), ("nul-root", false), ("nul-child", false), ("distinct-owner-same-identities", true)]);
+        let root = MUTATION_LEAF_DESCRIPTOR_ROSTER_ROOT;
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_UNIQUE), Ok(()));
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_SEMANTIC).expect_err("duplicate semantic kind").field, "semanticKind");
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_OPCODE).expect_err("duplicate text opcode").field, "textOpcode");
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_TAG).expect_err("duplicate binary tag").field, "binaryTag");
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_NULLABLE_REPEAT), Ok(()));
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_OWNER_MISMATCH).expect_err("unrelated owner").field, "owner");
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_DUPLICATE_OWNER).expect_err("duplicate owner").field, "owner");
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_NESTED_OWNER).expect_err("nested child").field, "owner");
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_PARENT_CHILD).expect_err("parent child").field, "owner");
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_BACKSLASH_CHILD).expect_err("backslash child").field, "owner");
+        assert_eq!(validate_mutation_leaf_descriptor_roster(root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_NUL_CHILD).expect_err("nul child").field, "owner");
+        for unsafe_root in ["/✏️s/🔌️plugins/🧪️probe/🧬️mutations", "C:\\✏️s\\🔌️plugins\\🧪️probe\\🧬️mutations", "C:/✏️s/🔌️plugins/🧪️probe/🧬️mutations", "C:✏️s/🔌️plugins/🧪️probe/🧬️mutations", "✏️s//🔌️plugins/🧪️probe/🧬️mutations", "./✏️s/🔌️plugins/🧪️probe/🧬️mutations", "../✏️s/🔌️plugins/🧪️probe/🧬️mutations", "✏️s/\0🔌️plugins/🧪️probe/🧬️mutations"] {
+            assert_eq!(validate_mutation_leaf_descriptor_roster(unsafe_root, &MUTATION_LEAF_DESCRIPTOR_ROSTER_UNIQUE).expect_err("unsafe root").field, "owner");
+        }
+        assert_eq!(validate_mutation_leaf_descriptor_roster("✏️s/🔌️plugins/🧪️other/🧬️mutations", &MUTATION_LEAF_DESCRIPTOR_ROSTER_OTHER_OWNER_SINGLE), Ok(()));
+    }
+    //#endregion 🧪️MutationLeafDescriptorLaws
 
     //#region 🧪️UpcastLaws
     // Clamp-to-floor is the simplest genuinely idempotent upcaster: `upcast(upcast(x)) ==

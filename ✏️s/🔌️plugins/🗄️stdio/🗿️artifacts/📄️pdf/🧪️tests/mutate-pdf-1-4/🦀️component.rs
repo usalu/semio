@@ -26,7 +26,7 @@
 //! the real input's own page tree from bytes that differ from the input. Nothing is exempt.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::any::{oracle_apply_mutation, oracle_inverse_spec, project_pdf_1_4, KINDS};
+use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::any::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_pdf_1_4, KINDS};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
 
 //#region 🔖️Input
@@ -48,10 +48,7 @@ const PDF_TOLERANCE: f64 = 0.0001;
 //#endregion 🔖️Profile
 
 //#region 🔖️Oracle
-/// 🦠️ The forward half, with the OBSERVABILITY law asserted in role: `set-snapshot` has to move the
-/// projection this case is compared through, or its scenario would pass whether or not the
-/// mutation ran. No kind is exempt — `no-mutation` is the law's own base case, not a carve-out —
-/// and the base is the COMMITTED DOCUMENT's own projection, not a rebuild of it.
+/// 🦠️ Forward observability against the real document projection.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
@@ -61,10 +58,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// ↩️ Applies the forward mutation, then its algebraic inverse, and ASSERTS the law: the restored
-/// document must project onto exactly what the un-mutated document projects onto. `SetSnapshot`'s
-/// inverse carries the base document's OWN page tree, read out of the real input by the
-/// independent reader before the forward mutation ever runs; `NoMutation`'s inverse is itself.
+/// ↩️ Independently restores the real document using the concrete inverse spec.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
@@ -82,7 +76,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// the input, so nothing can pass by copying.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
-    let bytes = oracle_apply_mutation(&input, &Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(vec![]))]))?;
+    let bytes = oracle_round_trip(&input)?;
     reparsed_not_copied(&bytes, &input)?;
     let projection = project_pdf_1_4(&bytes)?;
     round_trip_preserves_within(&projection, &project_pdf_1_4(&input)?, PDF_WRITER_FREEDOM, PDF_TOLERANCE)?;
@@ -96,78 +90,80 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::any::io::{decode_pdf, encode_pdf};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::{apply_pdf_mutation, PdfMutation};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::{PageDoc, PdfSnapshot};
-    use semio_s_plugin_stdio::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA;
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::{apply_pdf_mutation, inverse_pdf_mutation, InsertPage, MovePage, PdfMutation, RemovePage, ReplacePageText, ResizePage};
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PageDoc;
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::any::project_pdf_1_4;
 
-    /// 📄️ The scenario's `<id>`/`<params>` spec turned into the ONE typed mutation this subset
-    /// declares for it. `no-mutation` ignores `params`; `set-snapshot` reads the whole target page
-    /// TREE — the same `params.snapshot.pages` list the oracle half reads, so the two halves are
-    /// driven by one row and not by two readings of it.
     fn mutation_from_spec(spec: &Json) -> Result<PdfMutation, String> {
-        match spec.str("kind").as_str() {
-            "no-mutation" => Ok(PdfMutation::NoMutation),
-            "set-snapshot" => {
-                let pages = match spec.get("params").and_then(|params| params.get("snapshot")).and_then(|snapshot| snapshot.get("pages")) {
-                    Some(Json::Array(items)) => items,
-                    _ => return Err("set-snapshot: `params.snapshot.pages` must be a list of pages".to_string()),
-                };
-                if pages.is_empty() {
-                    return Err("set-snapshot: `params.snapshot.pages` is empty, and a page tree has a lower bound of one page".to_string());
-                }
-                let number = |page: &Json, key: &str, fallback: f64| match page.get(key) {
-                    Some(Json::Number(value)) => *value,
-                    _ => fallback,
-                };
-                let pages = pages.iter().map(|page| PageDoc { width: number(page, "width", PageDoc::DEFAULT_WIDTH), height: number(page, "height", PageDoc::DEFAULT_HEIGHT), text: page.str("text") }).collect();
-                Ok(PdfMutation::SetSnapshot { snapshot: PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), pages } })
+        let params = spec.get("params").ok_or("Missing mutation parameters")?;
+        let number = |key| match params.get(key) {
+            Some(Json::Number(value)) if value.is_finite() => Ok(*value),
+            _ => Err(format!("{key} must be finite")),
+        };
+        let index = |key| {
+            let value = number(key)?;
+            if value < 0.0 || value.fract() != 0.0 || value >= usize::MAX as f64 {
+                Err(format!("{key} must be an index"))
+            } else {
+                Ok(value as usize)
             }
-            other => Err(format!("mutation kind {:?} has no subject implementation", other)),
-        }
+        };
+        Ok(match spec.str("kind").as_str() {
+            "insert-page" => {
+                let page = params.get("page").ok_or("Missing inserted page")?;
+                let dimension = |key| match page.get(key) {
+                    Some(Json::Number(value)) if value.is_finite() => Ok(*value),
+                    _ => Err(format!("{key} must be finite")),
+                };
+                PdfMutation::InsertPage(InsertPage { index: index("index")?, page: PageDoc { width: dimension("width")?, height: dimension("height")?, text: page.str("text") } })
+            }
+            "remove-page" => PdfMutation::RemovePage(RemovePage { index: index("index")? }),
+            "move-page" => PdfMutation::MovePage(MovePage { from: index("from")?, to: index("to")? }),
+            "resize-page" => PdfMutation::ResizePage(ResizePage { index: index("index")?, width: number("width")?, height: number("height")? }),
+            "replace-page-text" => PdfMutation::ReplacePageText(ReplacePageText { index: index("index")?, text: params.str("text") }),
+            other => return Err(format!("Unknown subject mutation {other:?}")),
+        })
     }
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
-        let mut snapshot = decode_pdf(&mutable_input(ctx)?).map_err(|error| format!("decode_pdf failed: {error}"))?;
+        let mut snapshot = decode_pdf(&mutable_input(ctx)?).map_err(|error| error.to_string())?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        apply_pdf_mutation(&mut snapshot, &mutation);
-        let bytes = encode_pdf(&snapshot).map_err(|error| format!("encode_pdf failed: {error}"))?;
-        let projection = project_pdf_1_4(&bytes)?;
-        Ok(Outcome::with_raw(bytes, projection))
-    }
-
-    /// 🔁️ `PdfMutation::inverse` in closed form (`../../../../🏅️standards/🔖️1.4/🪆️subsets/✳️any/
-    /// 🧬️schema/🧬️mutations/🦀️component.rs`'s own `impl Mutation<PdfSnapshot>`): `NoMutation`'s
-    /// inverse is itself; `SetSnapshot`'s inverse restores the ORIGINAL base. Written out here
-    /// rather than calling the trait method so this adapter crate needs no `protocol` dependency.
-    fn inverse_of(mutation: &PdfMutation, base: &PdfSnapshot) -> PdfMutation {
-        match mutation {
-            PdfMutation::NoMutation => PdfMutation::NoMutation,
-            PdfMutation::SetSnapshot { .. } => PdfMutation::SetSnapshot { snapshot: base.clone() },
+        let outcome = apply_pdf_mutation(&mut snapshot, &mutation);
+        if !outcome.messages().is_empty() {
+            return Err(format!("Mutation refused: {:?}", outcome.messages()));
         }
+        let output = encode_pdf(&snapshot).map_err(|error| error.to_string())?;
+        let projection = project_pdf_1_4(&output)?;
+        Ok(Outcome::with_raw(output, projection))
     }
 
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
-        let base = decode_pdf(&mutable_input(ctx)?).map_err(|error| format!("decode_pdf failed: {error}"))?;
+        let base = decode_pdf(&mutable_input(ctx)?).map_err(|error| error.to_string())?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
+        let inverse = inverse_pdf_mutation(&mutation, &base);
         let mut snapshot = base.clone();
-        apply_pdf_mutation(&mut snapshot, &mutation);
-        apply_pdf_mutation(&mut snapshot, &inverse_of(&mutation, &base));
-        let bytes = encode_pdf(&snapshot).map_err(|error| format!("encode_pdf failed: {error}"))?;
-        let projection = project_pdf_1_4(&bytes)?;
-        Ok(Outcome::with_raw(bytes, projection))
+        if !apply_pdf_mutation(&mut snapshot, &mutation).messages().is_empty() {
+            return Err("Forward mutation refused".into());
+        }
+        for step in inverse {
+            if !apply_pdf_mutation(&mut snapshot, &step).messages().is_empty() {
+                return Err("Inverse mutation refused".into());
+            }
+        }
+        if snapshot != base {
+            return Err("Concrete inverse did not restore the complete snapshot".into());
+        }
+        let output = encode_pdf(&snapshot).map_err(|error| error.to_string())?;
+        let projection = project_pdf_1_4(&output)?;
+        Ok(Outcome::with_raw(output, projection))
     }
 
-    /// 🔒️ The no-byte-pass-through rule: the subject must fully parse the real artifact into its
-    /// typed snapshot and re-serialize from the model alone — decode_pdf/encode_pdf are this
-    /// subset's ONLY channel from input to output (it has no separate text-DSL layer beyond
-    /// wrapping the same codec, see `PdfSnapshot`'s `ArtifactDsl` impl).
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
-        let snapshot = decode_pdf(&input).map_err(|error| format!("decode_pdf failed: {error}"))?;
-        let output = encode_pdf(&snapshot).map_err(|error| format!("encode_pdf failed: {error}"))?;
+        let snapshot = decode_pdf(&input).map_err(|error| error.to_string())?;
+        let output = encode_pdf(&snapshot).map_err(|error| error.to_string())?;
         if output == input {
-            return Err("byte pass-through: output is bit-identical to the input".to_string());
+            return Err("Byte pass-through instead of reconstruction".into());
         }
         let projection = project_pdf_1_4(&output)?;
         Ok(Outcome::with_raw(output, projection))

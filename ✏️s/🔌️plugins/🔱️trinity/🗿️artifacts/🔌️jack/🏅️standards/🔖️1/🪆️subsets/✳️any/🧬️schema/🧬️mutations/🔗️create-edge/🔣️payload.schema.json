@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateEdge",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "edge"
+  ],
+  "properties": {
+    "edge": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "CreateEdgeEdge",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "source",
+        "target",
+        "properties"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

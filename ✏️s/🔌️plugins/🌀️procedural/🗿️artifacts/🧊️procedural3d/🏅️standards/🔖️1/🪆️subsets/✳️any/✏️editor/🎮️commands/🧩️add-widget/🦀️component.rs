@@ -21,7 +21,9 @@ pub struct AddWidget {
 /// directly anymore (the framework owns it exclusively; ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.fixture;
-    let descriptor = if let Some((base, neuron)) = payload.kind.split_once('|') {
+    let descriptor = if payload.kind == "inputSlider" {
+        json!({ "kind": "inputSlider", "label": "" }).to_string()
+    } else if let Some((base, neuron)) = payload.kind.split_once('|') {
         if base == "neuron" {
             json!({ "kind": "neuron", "neuronKind": neuron }).to_string()
         } else {

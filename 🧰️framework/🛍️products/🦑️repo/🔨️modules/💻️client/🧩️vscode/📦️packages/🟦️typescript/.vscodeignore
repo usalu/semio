@@ -1,5 +1,7 @@
 .vscode/**
 .vscode-test/**
+.vscode-test.mjs
+out/test/**
 src/**
 .gitignore
 .yarnrc
@@ -11,13 +13,12 @@ eslint.config.mjs
 node_modules/**
 package-lock.json
 .nx/**
-vite.config.ts
-vite.test.config.ts
 codegen/
 generated/
 ../**
 activation.log
 *.md
 !LICENSE.md
+*.vsix
 *.json
 !package.json

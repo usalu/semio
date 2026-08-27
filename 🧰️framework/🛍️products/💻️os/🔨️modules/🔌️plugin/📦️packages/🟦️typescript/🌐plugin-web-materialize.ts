@@ -11,6 +11,7 @@
 import { spawn } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
+import ts from "typescript";
 import { buildBudgetMs, resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
 export const PLUGIN_HOST_SHIM_FILE = "🟨️host-shim.js";
@@ -462,13 +463,63 @@ function optimizePluginCoreModules(outDir: string, componentBase: string, ctx: P
 //#region 🧬️JcoAsyncResultLifting
 const JCO_INDIRECT_RESULT_MEMORY_GUARD = "if (!ctx.memory) {\n      _debugLog('missing memory despite indirect param usage'";
 const JCO_RESOLVED_RESULT_MEMORY_GUARD = "if (!memory) {\n      _debugLog('missing memory despite indirect param usage'";
-const JCO_DIRECT_RESULT_CONTEXT = /useDirectParams: true,(\r?\n\s*getMemoryFn: \(\) => memory\d+,)/g;
+const JCO_TASK_RETURN_DIRECT_VALUES = 16;
 
-/** @emoji 🧬️ Corrects jco 1.27's async-export callback adapter to follow the canonical ABI emitted by wit-bindgen: non-empty task results arrive as one indirect return pointer, including results whose flattened shape would otherwise fit jco's four-value direct threshold. The generated generic adapter also checks `ctx.memory`, a field its own context never defines, instead of the resolved `memory` returned by `getMemoryFn`. */
+function jcoResultField(node: ts.Node | undefined, name: string): ts.Expression {
+  if (node && ts.isObjectLiteralExpression(node)) {
+    for (const field of node.properties) {
+      if (ts.isPropertyAssignment(field) && ((ts.isIdentifier(field.name) || ts.isStringLiteral(field.name)) && field.name.text === name)) return field.initializer;
+    }
+  }
+  throw new Error(`jco task-return metadata is missing ${name}`);
+}
+
+function jcoResultEntries(node: ts.Node | undefined): readonly ts.Expression[] {
+  if (node && ts.isArrayLiteralExpression(node)) return node.elements;
+  throw new Error("jco task-return metadata must be an array");
+}
+
+function jcoResultFlatCount(node: ts.Expression): number {
+  if (node.kind === ts.SyntaxKind.NullKeyword) return 0;
+  if (ts.isIdentifier(node)) {
+    if (/^_liftFlatString/.test(node.text)) return 2;
+    if (/^_liftFlat(Bool|Char|[SU](8|16|32|64)|Float(32|64))$/.test(node.text)) return 1;
+  }
+  if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
+    const meta = node.arguments[0];
+    switch (node.expression.text) {
+      case "_liftFlatList": return 2;
+      case "_liftFlatEnum":
+      case "_liftFlatOwn":
+      case "_liftFlatBorrow": return 1;
+      case "_liftFlatFlags": return Math.ceil(Number(jcoResultField(meta, "size32").getText()) / 4);
+      case "_liftFlatRecord": return jcoResultEntries(jcoResultField(meta, "fieldMetas")).reduce((sum, field) => sum + jcoResultFlatCount(jcoResultEntries(field)[1]!), 0);
+      case "_liftFlatTuple": return jcoResultEntries(jcoResultField(meta, "elemLiftFns")).reduce((sum, field) => sum + jcoResultFlatCount(jcoResultEntries(field)[0]!), 0);
+      case "_liftFlatVariant":
+      case "_liftFlatOption":
+      case "_liftFlatResult": return 1 + Math.max(0, ...jcoResultEntries(jcoResultField(meta, "caseMetas")).map((field) => jcoResultFlatCount(jcoResultEntries(field)[1]!)));
+    }
+  }
+  throw new Error(`unsupported jco task-return lift: ${node.getText()}`);
+}
+
+/** 🧬️ Derives callback directness from each generated result's canonical flattened shape; memory presence alone does not distinguish direct pointer/length values from an indirect return record. */
 export function rewriteJcoAsyncResultLifting(source: string): string {
-  return source
-    .replace(JCO_INDIRECT_RESULT_MEMORY_GUARD, JCO_RESOLVED_RESULT_MEMORY_GUARD)
-    .replace(JCO_DIRECT_RESULT_CONTEXT, "useDirectParams: false,$1");
+  source = source.replace(JCO_INDIRECT_RESULT_MEMORY_GUARD, JCO_RESOLVED_RESULT_MEMORY_GUARD);
+  const parsed = ts.createSourceFile("component.js", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  const edits: { start: number; end: number; value: string }[] = [];
+  const visit = (node: ts.Node): void => {
+    if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && ts.isIdentifier(node.expression.expression) && node.expression.expression.text === "taskReturn" && node.expression.name.text === "bind") {
+      const context = node.arguments[node.arguments.length - 1];
+      const count = jcoResultEntries(jcoResultField(context, "liftFns")).reduce((sum, field) => sum + jcoResultFlatCount(field), 0);
+      const direct = jcoResultField(context, "useDirectParams");
+      edits.push({ start: direct.getStart(parsed), end: direct.end, value: String(count <= JCO_TASK_RETURN_DIRECT_VALUES) });
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(parsed);
+  for (const edit of edits.sort((left, right) => right.start - left.start)) source = source.slice(0, edit.start) + edit.value + source.slice(edit.end);
+  return source;
 }
 
 /** @emoji 💾️ Applies {@link rewriteJcoAsyncResultLifting} to one freshly transpiled jco module. */

@@ -36,7 +36,7 @@ pub fn flow_widget_drag_json(descriptor: &Value) -> Value {
 //#endregion 🔖️WidgetDescriptors
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -48,7 +48,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let host = host_from_snapshot(fixture, config, session);
     let raw = host.catalogue_json().map_err(|error| PluginAssemblyError::new("ui.catalogue", error.to_string()))?;
     let catalogue: Value = serde_json::from_str(&raw).map_err(|error| PluginAssemblyError::new("ui.catalogue", error.to_string()))?;

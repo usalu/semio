@@ -48,7 +48,7 @@ impl Operator for Get {
         if indices.is_empty() {
             return Err(EvalError::InvalidInput("empty list".into()));
         }
-        let mut out = Dictionary::new();
+        let mut out = neural_engine::ColdDictionaryBuilder::new();
         for offset in 0..count {
             let resolved = if wrap { indices[(index + offset) % indices.len()] } else { indices.get(index + offset).copied().ok_or_else(|| EvalError::InvalidInput("index out of range".into()))? };
             let value = list.get(&resolved.to_string()).cloned().ok_or_else(|| EvalError::MissingInput(resolved.to_string()))?;
@@ -56,9 +56,9 @@ impl Operator for Get {
                 Value::Dictionary(dict) => Value::Dictionary(dict),
                 other => Value::Dictionary(Dictionary::new().insert("value", other)),
             };
-            out = out.insert(offset.to_string(), payload);
+            out.insert(offset.to_string(), payload);
         }
-        Ok(out)
+        Ok(out.finish())
     }
 }
 // #endregion 🔖️Get
@@ -72,7 +72,7 @@ impl Operator for Set {
         let list = read_list(input, "list")?;
         let index = read_number(input, "index")? as usize;
         let value = input.get("value").cloned().ok_or_else(|| EvalError::MissingInput("value".into()))?;
-        Ok(channel_output("list", list.insert(index.to_string(), value)))
+        Ok(channel_output("list", list.clone().insert(index.to_string(), value)))
     }
 }
 // #endregion 🔖️Set
@@ -86,7 +86,7 @@ impl Operator for Append {
         let list = read_list(input, "list")?;
         let value = input.get("value").cloned().ok_or_else(|| EvalError::MissingInput("value".into()))?;
         let next = list_indices(&list).len();
-        Ok(channel_output("list", list.insert(next.to_string(), value)))
+        Ok(channel_output("list", list.clone().insert(next.to_string(), value)))
     }
 }
 // #endregion 🔖️Append
@@ -158,8 +158,8 @@ fn number_dictionary(value: f64) -> Dictionary {
     Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
 }
 
-fn read_list(input: &Dictionary, key: &str) -> Result<Dictionary, EvalError> {
-    input.get(key).and_then(|value| value.as_dictionary()).filter(|dict| dict.schema() == Some("list")).cloned().ok_or_else(|| EvalError::MissingInput(key.into()))
+fn read_list<'a>(input: &'a Dictionary, key: &str) -> Result<&'a Dictionary, EvalError> {
+    input.get(key).and_then(|value| value.as_dictionary()).filter(|dict| dict.schema() == Some("list")).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
 fn read_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
@@ -274,7 +274,7 @@ pub fn register(registry: &mut Registry) {
 /// 📦️ Flow extension manifest JSON contributed to host catalogues.
 pub fn extension_manifest_json() -> String {
     use flow_extension_sdk::{build_manifest_json, FlowExtensionCommand};
-    build_manifest_json("list", "List", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "list.test".into(), title: "Test".into() }], vec![])
+    build_manifest_json("list", "List", "0.1.0", &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "list.test".into(), title: "Test".into() }], vec![])
 }
 
 /// 🌊️ Builds an in-process operator registry for this extension.
@@ -440,7 +440,7 @@ mod extension_guest {
         let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
         semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
             let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string()))?;
-            Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
+            Ok(evaluate_json(&neural_engine::ColdOwner::new(module_registry()), &request.operator_id, &request.input_json).into_bytes())
         }))
     }
 

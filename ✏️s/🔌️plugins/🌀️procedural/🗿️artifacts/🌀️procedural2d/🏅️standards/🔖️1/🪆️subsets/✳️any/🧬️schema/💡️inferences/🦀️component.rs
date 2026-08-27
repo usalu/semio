@@ -83,7 +83,7 @@ mod tests {
             schema: "flow.fixture".into(),
             camera: flow::CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             widgets: vec![
-                Widget::InputSlider { id: "a".into(), value: 1.0, min: 0.0, max: 10.0, step: 1.0 },
+                Widget::InputSlider { id: "a".into(), label: "A".into(), value: 1.0, min: 0.0, max: 10.0, step: 1.0 },
                 Widget::Neuron { id: "b".into(), neuron_kind: "math.add".into(), params: Default::default(), input_ports: vec![], output_ports: vec![], preview: false },
                 Widget::OutputPreview { id: "c".into(), preview: Default::default(), expanded: Default::default() },
             ],

@@ -9,6 +9,13 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::text::SSpaceMutation;
 use protocol::OpBinary;
 
+pub const BINARY_TAG_REGISTRY: &[(&str, u8)] = &[
+    ("create-artifact", super::create_artifact::binary::BINARY_TAG),
+    ("delete-artifact", super::delete_artifact::binary::BINARY_TAG),
+    ("rename-artifact", super::rename_artifact::binary::BINARY_TAG),
+    ("touch-artifact", super::touch_artifact::binary::BINARY_TAG),
+];
+
 /// 📦️ Encodes an `SSpaceMutation` to its binary command form.
 pub async fn encode_op(operation: &SSpaceMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()

@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7_x.mutation.remove_trim_box;
+
+// 🧽️ Direct remove-trim-box protobuf payload.
+message RemoveTrimBoxMutation {
+  uint64 page_index = 1;
+}

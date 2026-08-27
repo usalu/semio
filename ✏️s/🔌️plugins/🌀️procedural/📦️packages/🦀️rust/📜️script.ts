@@ -5,8 +5,8 @@ import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted }
 import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/📜️script.ts";
 
 class TestScript extends BundleScript {
-  run(_segments: string[]): void {
-    runCargoTestBudgeted(["semio-s-plugin-procedural"], this.repoRoot);
+  async run(segments: string[]): Promise<void> {
+    await runCargoTestBudgeted(["semio-s-plugin-procedural"], this.repoRoot, segments);
   }
 }
 

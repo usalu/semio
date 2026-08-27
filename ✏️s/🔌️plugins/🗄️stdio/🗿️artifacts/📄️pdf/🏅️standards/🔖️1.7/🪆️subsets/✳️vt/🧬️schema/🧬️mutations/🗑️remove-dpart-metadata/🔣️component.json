@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧬️schema/🧬️mutations/🗑️remove-dpart-metadata",
+  "semanticKind": "remove-dpart-metadata",
+  "displayName": "Remove Dpart Metadata",
+  "emoji": "🗑️",
+  "aggregateVariant": "RemoveDpartMetadata",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "remove-dpart-metadata",
+  "binaryTag": 17,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

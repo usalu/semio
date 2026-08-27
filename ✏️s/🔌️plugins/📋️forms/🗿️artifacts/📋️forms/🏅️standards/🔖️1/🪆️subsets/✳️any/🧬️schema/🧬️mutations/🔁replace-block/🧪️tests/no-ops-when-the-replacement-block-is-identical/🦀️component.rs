@@ -20,7 +20,7 @@
 //! byte for byte; only the step's `title` is this case's own fixture value.
 
 use crate::artifacts::forms::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::artifacts::forms::{cache_forms_steps, forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::artifacts::forms::{materialize_forms_steps, forms_steps, FormStep, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -39,11 +39,11 @@ fn expected_after() -> FormsSnapshot {
 /// holds exactly the block the committed payload asks to install — the structural identity the
 /// guard tests.
 fn before() -> FormsSnapshot {
-    let snapshot: FormsSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FormsSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let FormMutation::ReplaceBlock(payload) = mutation() else {
         panic!("no-ops-when-the-replacement-block-is-identical's committed mutation must be a replace-block");
     };
-    cache_forms_steps(&snapshot.structure.child_id, vec![FormStep { id: payload.step_id.clone(), title: "Basics".into(), description: None, blocks: vec![payload.block.clone()] }]);
+    materialize_forms_steps(&mut snapshot.structure, vec![FormStep { id: payload.step_id.clone(), title: "Basics".into(), description: None, blocks: vec![payload.block.clone()] }]);
     snapshot
 }
 
@@ -54,7 +54,7 @@ async fn applies_to_committed_after() {
     let base = before();
     let snapshot = apply_form_edit_mutation(&base, &mutation()).expect("an identity diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "replace-block/no-ops-when-the-replacement-block-is-identical: applied state differs from committed after-snapshot");
-    assert_eq!((&snapshot.structure.child_id, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a refused replace must not re-mint the structure/results handles");
+    assert_eq!((&mut snapshot.structure, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a refused replace must not re-mint the structure/results handles");
     assert_eq!(forms_steps(&snapshot).first().map(|step| step.blocks.len()), Some(1), "the step still holds exactly the one block it started with");
 }
 

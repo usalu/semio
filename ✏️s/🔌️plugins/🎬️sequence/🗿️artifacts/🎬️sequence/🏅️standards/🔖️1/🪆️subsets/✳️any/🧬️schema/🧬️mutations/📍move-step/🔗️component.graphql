@@ -1,0 +1,6 @@
+# 📍 move-step direct payload.
+input MoveStepInput {
+  id: String!
+  x: Float!
+  y: Float!
+}

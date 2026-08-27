@@ -5,12 +5,9 @@ version 1
 schema stdio.gltf.mutations
 start op
 
-# Canonical generic envelope: format, marker, phase, UTF-8 command-id length/data, command
-# version, and canonical typed payload length/data. Command-specific payload bytes remain opaque
-# here and are validated only by the registered descriptor.
+# Generic aggregate framing: format, marker, then canonical aggregate JSON length/data.
 framing record
-header fixed 3
+header fixed 2
 field format u8
 field marker u8
-field phase u8
-chain envelope bytes
+chain payload bytes

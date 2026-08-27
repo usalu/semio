@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7.mutation.set_page_rotation;
+
+// 🔄️ Direct set-page-rotation protobuf payload.
+message SetPageRotationMutation {
+  uint64 index = 1;
+  uint64 rotation = 2;
+}

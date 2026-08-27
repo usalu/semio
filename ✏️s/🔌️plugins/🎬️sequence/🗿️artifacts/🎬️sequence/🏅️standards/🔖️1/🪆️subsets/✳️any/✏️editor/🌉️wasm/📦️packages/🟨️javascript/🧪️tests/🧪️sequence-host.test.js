@@ -224,9 +224,11 @@ function MockBridge(targetMemory, options = {}) {
   this.rejectMessage = (length) => length > SEQUENCE_MAX_ENCODED_MESSAGE_BYTES ? "pre-admission" : "ok";
   this.cancelHeld = () => { if (held) { queue.push(reply(held.id, held.generation, 2, new Uint8Array(), 12, "cancelled")); held = undefined; } };
   this.exports = {
+    sequence_bridge_create() { return 1; },
+    sequence_bridge_destroy() { return 1; },
     sequence_bridge_allocate(length) { const pointer = cursor; cursor += Math.max(length, 1); return pointer; },
     sequence_bridge_release() {},
-    sequence_bridge_send: (pointer, length) => {
+    sequence_bridge_send: (_owner, pointer, length) => {
       const bytes = new Uint8Array(targetMemory.buffer, pointer, length).slice();
       const reader = new Reader(bytes);
       equal(reader.u8(), 1, "mock-version");
@@ -280,7 +282,7 @@ function MockBridge(targetMemory, options = {}) {
       }
       return 1;
     },
-    sequence_bridge_poll: (pointer, capacity) => {
+    sequence_bridge_poll: (_owner, pointer, capacity) => {
       retained ??= queue[0];
       if (!retained) return this.closed ? -1 : 0;
       if (retained.length > capacity) { this.shortPolls += 1; return retained.length; }

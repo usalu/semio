@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🧬️mutations/✒️insert-signature-field",
+  "semanticKind": "insert-signature-field",
+  "displayName": "Insert Signature Field",
+  "emoji": "✒️",
+  "aggregateVariant": "InsertSignatureField",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "insert-signature-field",
+  "binaryTag": 6,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": ["applied"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]
+}

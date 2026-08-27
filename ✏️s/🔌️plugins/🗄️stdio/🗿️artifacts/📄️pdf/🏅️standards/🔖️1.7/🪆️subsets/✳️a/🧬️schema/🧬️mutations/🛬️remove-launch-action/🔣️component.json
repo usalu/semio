@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧬️schema/🧬️mutations/🛬️remove-launch-action",
+  "semanticKind": "remove-launch-action",
+  "displayName": "Remove Launch Action",
+  "emoji": "🛬️",
+  "aggregateVariant": "RemoveLaunchAction",
+  "payloadSchema": "s.stdio.pdf.1.7.a#remove-launch-action",
+  "textOpcode": null,
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust"
+  ]
+}

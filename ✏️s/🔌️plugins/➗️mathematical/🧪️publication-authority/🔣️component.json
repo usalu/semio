@@ -1,0 +1,16 @@
+{
+  "schema": "semio.app.publication-authority.v1",
+  "owner": "MathematicalPlayApp",
+  "source": "🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+  "routes": [
+    { "id": "setDocument", "lane": "Artifact" },
+    { "id": "setAlgorithm", "lane": "Artifact" },
+    { "id": "setDirected", "lane": "Artifact" },
+    { "id": "nodeGraphEdit", "lane": "Artifact" },
+    { "id": "nodeGraphViewport", "lane": "Config" },
+    { "id": "setPoints", "lane": "Artifact" },
+    { "id": "setLocale", "lane": "Config" }
+  ],
+  "laws": { "bounded": true, "cancel": true, "replay": true, "freshness": true, "ack": true, "incrementalClose": true },
+  "ui": { "locales": ["en", "de"], "accessibleLabels": true, "customizableUi": true }
+}

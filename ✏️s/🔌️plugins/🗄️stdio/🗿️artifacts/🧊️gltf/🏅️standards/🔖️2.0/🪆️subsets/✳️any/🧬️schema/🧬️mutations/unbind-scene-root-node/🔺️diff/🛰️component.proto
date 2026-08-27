@@ -1,1 +1,0 @@
-syntax = "proto3"; package stdio.gltf.mutation; message GltfUnbindSceneRootNodeDiffV1 { uint32 scene = 1; uint32 node = 2; uint32 position = 3; repeated string touched_paths = 4; }

@@ -2896,9 +2896,9 @@ mod tests {
         roster.try_push(vec![1; 17]).unwrap();
         roster.try_push(vec![2; PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES]).unwrap();
         let mut cursor = PresenceCommandCursor::admit_page(77, Some(4), 2, FixedCommandPage::try_copy_from(&[1; 17]).unwrap()).map_err(|(error, _)| error).unwrap();
-        assert_eq!(cursor.take_next().unwrap().unwrap().as_ref(), &[1; 17]);
+        assert_eq!(cursor.take_next().unwrap().unwrap().as_slice(), &[1; 17]);
         cursor.push_page(1, FixedCommandPage::try_copy_from(&[2; PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES]).unwrap()).map_err(|(error, _)| error).unwrap();
-        assert_eq!(cursor.take_next().unwrap().unwrap().as_ref(), &[2; PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES]);
+        assert_eq!(cursor.take_next().unwrap().unwrap().as_slice(), &[2; PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES]);
         assert!(cursor.take_next().unwrap().is_none());
         assert!(cursor.terminal_is_empty());
     }
@@ -3194,7 +3194,7 @@ mod tests {
                 if peers.is_empty() {
                     while !cursor.close_release(PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES).0 {}
                 }
-                assert!(entries.iter().map(Vec::as_slice).eq(peers.iter()), "Presence retained cursor must preserve exact entry order");
+                assert!(entries.iter().map(FixedCommandPage::as_slice).eq(peers.iter()), "Presence retained cursor must preserve exact entry order");
                 while !cursor.close_release(PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES).0 {}
                 assert!(cursor.terminal_is_empty());
                 continue;

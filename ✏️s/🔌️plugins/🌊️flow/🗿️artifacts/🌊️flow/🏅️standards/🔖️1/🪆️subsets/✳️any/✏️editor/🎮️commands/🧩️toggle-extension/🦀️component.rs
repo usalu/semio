@@ -12,7 +12,7 @@ pub struct ToggleExtension {
     pub enabled: bool,
 }
 
-pub async fn handle(payload: &ToggleExtension, _doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub fn handle(payload: &ToggleExtension, _doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     let mut map = cfg.snapshot.automation_enabled();
     map.insert(payload.id.clone(), payload.enabled);
     Ok(Emit::config(vec![FlowConfigMutation::SetAutomationEnabled { json: serde_json::to_string(&map).unwrap_or_default() }]))

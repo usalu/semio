@@ -1,2 +1,0 @@
-# change-document-extension-data inverse facet.
-type GltfChangeDocumentExtensionDataInverseV1 { id: ID!, version: Int!, touchedPaths: [String!]!, accepted: Boolean!, rejectionCode: String }

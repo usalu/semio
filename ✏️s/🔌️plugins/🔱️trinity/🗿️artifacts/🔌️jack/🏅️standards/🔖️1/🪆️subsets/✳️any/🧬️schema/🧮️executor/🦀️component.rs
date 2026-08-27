@@ -1,7 +1,8 @@
 //! 🧮️ Trinity jack query executor.
 #![allow(dead_code)]
 
-use crate::artifacts::jack::mutations::{apply_trinity_graph_mutations, change_data_property, create_edge, create_node, delete_node, move_node, rename_node, TrinityGraphMutation};
+use crate::artifacts::jack::mutations::{change_data_property, create_edge, create_node, delete_node, move_node, rename_node, TrinityGraphMutation};
+use crate::artifacts::jack::apply_trinity_graph_mutations;
 use crate::artifacts::jack::{port_key, Edge, EntityRef, Graph, JackSnapshot, Node, Port, PortDirection, PropertyBag, PropertyValue};
 use std::collections::{BTreeMap, BTreeSet};
 

@@ -802,12 +802,12 @@ if (import.meta.vitest) {
   //#region 🧪️DemonstratorPaneBootTests
   describe("scheduleDemonstratorIdle", () => {
     it("never enters the idle queue before the minimum delay", () => {
-      let delayed: (() => void) | null = null;
+      const delayed: (() => void)[] = [];
       let idleCalls = 0;
       let callbackCalls = 0;
       const scheduler: DemonstratorIdleScheduler = {
         setTimeout: (callback) => {
-          delayed = callback;
+          delayed.push(callback);
           return 1;
         },
         clearTimeout: () => undefined,
@@ -821,7 +821,7 @@ if (import.meta.vitest) {
         callbackCalls += 1;
       }, 1_500, scheduler);
       expect({ idleCalls, callbackCalls }).toEqual({ idleCalls: 0, callbackCalls: 0 });
-      delayed?.();
+      delayed.shift()?.();
       expect({ idleCalls, callbackCalls }).toEqual({ idleCalls: 1, callbackCalls: 1 });
     });
   });

@@ -1,4 +1,4 @@
 ; Structured logical mutation frame: format tag, mutation tag, then variant-specific typed fields.
 pdf-mutation = format mutation-tag *OCTET
 format = %x01
-mutation-tag = %x00-0E
+mutation-tag = %x00-0F

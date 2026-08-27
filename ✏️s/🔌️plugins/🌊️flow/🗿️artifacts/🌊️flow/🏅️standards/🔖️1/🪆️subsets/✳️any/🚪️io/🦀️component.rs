@@ -1,17 +1,17 @@
 //! 🚪️ IO s.flow (1/✳️any) — the artifact declaration owns this composer table.
-pub async fn import_stdio_kinds() -> &'static [&'static str] {
+pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.csv", "stdio.json", "stdio.md", "stdio.txt"]
 }
-pub async fn export_stdio_kinds() -> &'static [&'static str] {
+pub fn export_stdio_kinds() -> &'static [&'static str] {
     &["stdio.csv", "stdio.json", "stdio.md", "stdio.txt"]
 }
-pub async fn flow_to_wire(from: &crate::artifacts::flow::FlowSnapshot) -> Vec<u8> {
+pub fn flow_to_wire(from: &crate::artifacts::flow::FlowSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(from)
 }
-pub async fn flow_from_wire(bytes: &[u8]) -> Result<crate::artifacts::flow::FlowSnapshot, store::PackError> {
+pub fn flow_from_wire(bytes: &[u8]) -> Result<crate::artifacts::flow::FlowSnapshot, store::PackError> {
     <crate::artifacts::flow::FlowSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
-pub async fn pack_err_as_text(err: store::PackError) -> store::TextError {
+pub fn pack_err_as_text(err: store::PackError) -> store::TextError {
     store::TextError::new(err.to_string(), dsl::TextSpan::at(1, 1))
 }
 //#region 🎹️DerivedComposition
@@ -31,11 +31,11 @@ pub mod derived_composition {
         type Snapshot = FlowSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_JSON, DEP_MD, DEP_TXT]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
@@ -109,7 +109,7 @@ pub mod io_registry {
     const FLOW_DIALECT: Dialect = Dialect { artifact_kind: "s.flow", standard: StandardId("1"), subset: SubsetId("*") };
     const FLOW_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    async fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::flow::FlowSnapshot, ComposeError> {
+    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::flow::FlowSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == FLOW_DIALECT) {
             let builder = match &source.payload {
                 IoPayload::Text(t) => FlowAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
@@ -131,7 +131,7 @@ pub mod io_registry {
     }
 
     const EXPORT_MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
-    async fn compose_export_md(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_md(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let text = crate::artifacts::flow::io::export::serializers::artifacts::md::v_commonmark::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -139,7 +139,7 @@ pub mod io_registry {
         })
     }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    async fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let text = crate::artifacts::flow::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -148,7 +148,7 @@ pub mod io_registry {
     }
     //#endregion 🔖️ExportEntries
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES
             .get_or_init(|| {
                 vec![

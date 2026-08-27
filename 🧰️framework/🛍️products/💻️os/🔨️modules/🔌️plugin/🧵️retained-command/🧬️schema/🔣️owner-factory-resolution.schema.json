@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.tool-job.owner-factory-resolution.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "ownerFile",
+    "factoryFile",
+    "factoryType",
+    "glueFile",
+    "ownerSource",
+    "factorySource",
+    "glueSource",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.tool-job.owner-factory-resolution.v1"
+    },
+    "ownerFile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "factoryFile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "factoryType": { "const": "ExactFactory" },
+    "glueFile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ownerSource": {
+      "type": "string",
+      "minLength": 1
+    },
+    "factorySource": {
+      "type": "string",
+      "minLength": 1
+    },
+    "glueSource": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "target",
+          "from",
+          "to",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "enum": [
+              "ownerSource",
+              "factorySource",
+              "glueSource"
+            ]
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

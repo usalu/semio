@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7.mutation.set_page_media_box;
+
+// 📐️ Direct set-page-media-box protobuf payload.
+message SetPageMediaBoxMutation {
+  uint64 index = 1;
+  repeated string media_box = 2;
+}

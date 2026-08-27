@@ -25,13 +25,8 @@ pub use component::*;
 #[path = "../../🧪️schema-parity/🦀️component.rs"]
 mod schema_parity;
 
-/// 🎚️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §4/§3: `OpeningResolver`
-/// (above, in `component.rs`) consumes `OpeningPreferences` by type, so this facet — authored by
-/// lane 0-C, left unwired by design ("out of this lease's scope", see its own module doc) — is
-/// mounted here, the one crate that actually needs it. WIRING ONLY, mirrors the `✏️s/🔌️plugins/📕️norm`
-/// plugin's `config`/`mutations` nesting idiom exactly: `#[path = "."]` on every inline grouping mod
-/// so its own name is not spliced into the base directory Rust would otherwise derive from the mod
-/// identifier (every real dir here is emoji-named, never matching the plain-ASCII mod identifier).
+/// 🎚️ Mounts the OS config schema and every direct semantic mutation leaf. `#[path = "."]` keeps
+/// Rust's synthetic module names from changing the base directory for emoji-named source folders.
 #[path = "."]
 pub mod opening_config {
     #[path = "../../../../../🎚️config/🧬️schema/🦀️component.rs"]
@@ -44,30 +39,15 @@ pub mod opening_config {
         mod component;
         pub use component::*;
 
-        #[path = "."]
-        pub mod set_default_app {
-            #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🔺️diff/🦀️component.rs"]
-            pub mod diff;
-            #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/↩️inverse/🦀️component.rs"]
-            pub mod inverse;
-            #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🦠️mutation/🦀️component.rs"]
-            pub mod mutation;
-            #[cfg(test)]
-            #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧪️tests/repins-the-cad-editor-to-the-drafting-app/🦀️component.rs"]
-            mod tests_repins_the_cad_editor_to_the_drafting_app;
-        }
-
-        #[path = "."]
-        pub mod clear_default_app {
-            #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🔺️diff/🦀️component.rs"]
-            pub mod diff;
-            #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/↩️inverse/🦀️component.rs"]
-            pub mod inverse;
-            #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🦠️mutation/🦀️component.rs"]
-            pub mod mutation;
-            #[cfg(test)]
-            #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧪️tests/unpins-the-cad-editor-and-keeps-the-viewer-pin/🦀️component.rs"]
-            mod tests_unpins_the_cad_editor_and_keeps_the_viewer_pin;
-        }
+        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🦀️component.rs"]
+        pub mod set_default_app;
+        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🦀️component.rs"]
+        pub mod clear_default_app;
+        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🦀️component.rs"]
+        pub mod change_merge_policy;
+        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🦀️component.rs"]
+        pub mod sign_in;
+        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🦀️component.rs"]
+        pub mod sign_out;
     }
 }

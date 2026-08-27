@@ -1,7 +1,0 @@
-# change-primitive-extension-data inverse facet.
-input GltfChangePrimitiveExtensionDataPayloadV1 {
-  mesh: Int!
-  primitive: Int!
-  data: GltfDataPresenceInput!
-}
-type GltfChangePrimitiveExtensionDataInverseV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

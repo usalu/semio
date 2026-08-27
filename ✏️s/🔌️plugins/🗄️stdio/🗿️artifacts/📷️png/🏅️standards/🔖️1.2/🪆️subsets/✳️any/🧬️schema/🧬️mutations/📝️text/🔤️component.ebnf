@@ -1,15 +1,6 @@
-(* PngMutation's wire text IS its JSON serialization (protocol::OpText — serde_json,
-   #[serde(tag = "mutation")]); this names the real 17 variant tags, not RFC 8259's own
-   JSON grammar. *)
-mutation = "{", '"mutation"', ":", variant tag, { ",", member }, "}" ;
-variant tag = '"noMutation"' | '"setSnapshot"' | '"setHeader"' | '"setPalette"'
-            | '"setTransparency"' | '"setGamma"' | '"setChromaticities"'
-            | '"setSrgbIntent"' | '"setPhysicalDims"' | '"setTimestamp"'
-            | '"setBackground"' | '"insertTextChunk"' | '"removeTextChunk"'
-            | '"setTextChunk"' | '"setPixels"' | '"insertUnknownChunk"'
-            | '"removeUnknownChunk"' ;
-member = string, ":", json value ;
-json value = "{", [ member, { ",", member } ], "}"
-           | "[", { json value }, "]"
-           | string | integer | bool | "null" ;
-bool = "true" | "false" ;
+(* Direct text registry; payload productions are owned by each leaf. *)
+mutation = opcode, { " ", argument } ;
+opcode = "change-header" | "replace-palette" | "change-transparency" | "change-gamma" | "change-chromaticities" | "change-srgb-intent" | "change-physical-dims" | "change-timestamp" | "change-background" | "insert-text-chunk" | "remove-text-chunk" | "replace-text-chunk" | "replace-pixels" | "insert-unknown-chunk" | "remove-unknown-chunk" ;
+argument = name, "=", value ;
+name = letter, { letter | digit | "-" } ;
+value = character, { character } ;

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-parameter-binding",
+  "semanticKind": "change-parameter-binding",
+  "displayName": "Change Parameter Binding",
+  "emoji": "🔧️",
+  "aggregateVariant": "ChangeParameterBinding",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "change-parameter-binding",
+  "binaryTag": 3,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

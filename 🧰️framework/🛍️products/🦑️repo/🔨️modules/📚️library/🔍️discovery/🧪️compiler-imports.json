@@ -1,0 +1,9 @@
+{
+  "cases": [
+    { "name": "static-and-reexport", "source": "import { a } from './a'; export { b } from './b'; export * from './c';", "expected": ["./a", "./b", "./c"] },
+    { "name": "dynamic-and-comment-excluded", "source": "// import './comment';\nimport('./dynamic'); const x = require('./require'); import './static';", "expected": ["./static"] },
+    { "name": "unicode-and-duplicates", "source": "import './🌊️根'; export * from './🌊️根'; import './ä';", "expected": ["./ä", "./🌊️根"] },
+    { "name": "typescript-jsx-and-shebang", "source": "#!/usr/bin/env bun\nimport type { Model } from './model'; import './side'; export const view = <div />;", "expected": ["./side"] },
+    { "name": "empty", "source": "export const value = 3;", "expected": [] }
+  ]
+}

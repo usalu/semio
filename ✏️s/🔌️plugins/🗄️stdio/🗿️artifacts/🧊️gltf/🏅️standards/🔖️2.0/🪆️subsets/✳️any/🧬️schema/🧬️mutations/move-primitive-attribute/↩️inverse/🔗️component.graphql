@@ -1,8 +1,0 @@
-# move-primitive-attribute inverse facet.
-input GltfMovePrimitiveAttributePayloadV1 {
-  mesh: Int!
-  primitive: Int!
-  semantic: String!
-  position: Int!
-}
-type GltfMovePrimitiveAttributeInverseV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "ticketRoot": "🧪️tests/🧪️ticket",
+  "generatorRoots": ["🧪️tests/🧪️generator/🤖️generated", "🧪️tests/🧪️other-generator/🤖️generated"],
+  "files": {
+    "🧪️tests/🧪️subject/📝️.md": "ordinary scoped leaf\n",
+    "🧪️tests/🧪️ticket/🧪️subject/📝️.md": "explicit ignored ticket leaf\n",
+    "🧪️tests/🧪️ticket/🧪️outside/📝️.md": "unrelated ticket evidence\n",
+    "🧪️tests/🧪️generator/🤖️generated/🧪️subject/📝️.md": "owned ignored generated leaf\n",
+    "🧪️tests/🧪️generator/🤖️generated/🧪️outside/📝️.md": "unrelated generated leaf\n",
+    "🧪️tests/🧪️other-generator/🤖️generated/📝️.md": "unrelated generator owner\n"
+  },
+  "cases": [
+    {
+      "id": "disjoint-authorities",
+      "scope": "🧪️tests/🧪️subject",
+      "forbidden": ["🧪️tests/🧪️ticket", "🧪️tests/🧪️generator/🤖️generated", "🧪️tests/🧪️other-generator/🤖️generated"]
+    },
+    {
+      "id": "nested-ticket-authority",
+      "scope": "🧪️tests/🧪️ticket/🧪️subject",
+      "forbidden": ["🧪️tests/🧪️ticket/🧪️outside", "🧪️tests/🧪️generator/🤖️generated", "🧪️tests/🧪️other-generator/🤖️generated"]
+    },
+    {
+      "id": "nested-generator-authority",
+      "scope": "🧪️tests/🧪️generator/🤖️generated/🧪️subject",
+      "forbidden": ["🧪️tests/🧪️ticket", "🧪️tests/🧪️generator/🤖️generated/🧪️outside", "🧪️tests/🧪️other-generator/🤖️generated"]
+    }
+  ]
+}

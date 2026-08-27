@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/mit-bestand-demonstrator` task router: `bun ./📜️script.ts <dev|build> [args…]`. */
-import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCmdStatus, runViteBunxDev, runVitest, withViteConfigLoader } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { buildEngineWasm, buildPlugins, ensurePluginRegistry } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts";
@@ -11,6 +10,11 @@ import { DEMONSTRATOR_PANES, demonstratorPaneRuntimeVariant } from "./🟦️bra
 const demonstratorRoot = import.meta.dir;
 
 //#region 🎪️DemonstratorPluginBuild
+/** 🆕 Builds current plugin inputs unless the caller explicitly requests staged artifacts. */
+function demonstratorShouldBuildPlugins(skipPluginBuild: string | undefined): boolean {
+  return skipPluginBuild !== "1";
+}
+
 /** @emoji 🎯️ Builds only the primary crate behind a runtime variant; its contributed extensions are
  * already included by the demonstrator crate's own consumer closure. */
 async function buildRuntimePlugin(variant: string): Promise<void> {
@@ -93,22 +97,12 @@ export function demonstratorRuntimeModuleLayout(rootPluginIds: readonly string[]
  * though they now share a `pluginId`. */
 async function buildDemonstratorPlugins(): Promise<void> {
   const primaryVariant = DEMONSTRATOR_PANES[0]?.variant;
+  const buildCurrentPlugins = demonstratorShouldBuildPlugins(process.env.SKIP_PLUGIN_BUILD);
   if (primaryVariant) {
-    const stagedCore = join(import.meta.dir, "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/demonstrator/semio_s_plugin_demonstrator_component.core.wasm");
-    const hasStaged = existsSync(stagedCore);
-    if (process.env.SKIP_PLUGIN_BUILD === "1" || (hasStaged && process.env.FORCE_PLUGIN_BUILD !== "1")) {
-      if (hasStaged && process.env.SKIP_PLUGIN_BUILD !== "1") {
-        console.log("[DEBUG] reusing staged demonstrator plugin-modules (set FORCE_PLUGIN_BUILD=1 to rebuild)");
-      }
-      await ensurePluginRegistry(primaryVariant);
-      if (process.env.SKIP_ENGINE_BUILD !== "0" && process.env.FORCE_ENGINE_BUILD !== "1") {
-        process.env.SKIP_ENGINE_BUILD = "1";
-      }
-    } else {
-      await buildPlugins(primaryVariant);
-    }
+    if (buildCurrentPlugins) await buildPlugins(primaryVariant);
+    else await ensurePluginRegistry(primaryVariant);
   }
-  if (process.env.SKIP_PLUGIN_BUILD !== "1") {
+  if (buildCurrentPlugins) {
     for (const variant of demonstratorRuntimeBuildVariants(primaryVariant ?? "generator")) await buildRuntimePlugin(variant);
   }
   if (primaryVariant) await ensurePluginRegistry(primaryVariant);
@@ -156,6 +150,12 @@ if (import.meta.vitest) {
 
   //#region 🧪️DemonstratorPluginBuildTests
   describe("demonstratorRuntimeBuildVariants", () => {
+    it("requires fresh plugin builds unless explicitly skipped", () => {
+      expect(demonstratorShouldBuildPlugins(undefined)).toBe(true);
+      expect(demonstratorShouldBuildPlugins("0")).toBe(true);
+      expect(demonstratorShouldBuildPlugins("1")).toBe(false);
+    });
+
     it("builds one additional artifact for six pane runtime variants", () => {
       expect(demonstratorRuntimeBuildVariants("generator")).toEqual(["procedural3d"]);
     });

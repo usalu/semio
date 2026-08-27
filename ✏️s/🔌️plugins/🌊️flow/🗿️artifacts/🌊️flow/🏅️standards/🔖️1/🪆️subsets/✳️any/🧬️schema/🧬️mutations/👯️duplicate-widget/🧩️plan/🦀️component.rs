@@ -11,14 +11,14 @@ use protocol::{Identified, PlanError, Planner};
 use super::mutation::DuplicateWidget;
 
 //#region 🧩️Plan
-pub async fn plan(payload: &DuplicateWidget, base: &FlowSnapshot, planner: &mut Planner<FlowSnapshot, FlowMutation>) -> Result<(), PlanError> {
-    precondition(payload, base).await.map_err(PlanError::Invalid)?;
-    let scene = flow_working_scene(base).await;
+pub fn plan(payload: &DuplicateWidget, base: &FlowSnapshot, planner: &mut Planner<FlowSnapshot, FlowMutation>) -> Result<(), PlanError> {
+    precondition(payload, base).map_err(PlanError::Invalid)?;
+    let scene = flow_working_scene(base);
     let source = scene.widgets.iter().find(|widget| widget.id() == &payload.source_id).expect("precondition confirmed source_id is present");
     let copy = widget_with_id(source, payload.new_id.clone());
     planner.call(FlowMutation::CreateWidget(CreateWidget { index: scene.widgets.len(), widget: copy }))?;
 
-    let wired = flow_working_scene(planner.base()).await;
+    let wired = flow_working_scene(planner.base());
     planner.call(FlowMutation::ConnectWidgets(ConnectWidgets {
         index: wired.synapses.len(),
         id: payload.synapse_id.clone(),
@@ -33,11 +33,11 @@ pub async fn plan(payload: &DuplicateWidget, base: &FlowSnapshot, planner: &mut 
 /// ✅️ Shared by `plan` (mapped to a typed `PlanError`, so a direct `Planner::call`/`plan_of` caller
 /// never panics on bad input) and `CompositeMutationKind::validate` (the `ArtifactStore::dispatch`
 /// pre-check every mutation gets before it is even encoded).
-pub async fn precondition(payload: &DuplicateWidget, base: &FlowSnapshot) -> Result<(), String> {
+pub fn precondition(payload: &DuplicateWidget, base: &FlowSnapshot) -> Result<(), String> {
     if payload.source_id == payload.new_id {
         return Err("duplicate-widget: new_id must differ from source_id".into());
     }
-    let scene = flow_working_scene(base).await;
+    let scene = flow_working_scene(base);
     if !scene.widgets.iter().any(|widget| widget.id() == &payload.source_id) {
         return Err(format!("duplicate-widget: source widget \"{}\" not found", payload.source_id));
     }

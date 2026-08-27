@@ -17,16 +17,17 @@ import {
   gumballHandleKindToTransformMode,
   useCanvasAppearanceSync,
   Icon,
+  type IconName,
   type GumballConfig,
   type GumballPlaneId,
   type GumballPose,
-  type ReactNode,
   type ThreeEvent,
   type TreeDataItem,
 } from "@semio-tech/ui-react";
 import { clearColorResolveCache, resolveColorHex, resolveSpatialAxisColors, resolveThreeColor, semanticVar, themeColorVar, tokenHex, tokenVar } from "@semio-tech/ui-styling";
-import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactElement } from "react";
+import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactElement, type ReactNode } from "react";
 import { OrbitControls as ThreeOrbitControls } from "three/addons/controls/OrbitControls.js";
+import type { NormalBufferAttributes } from "three";
 import { MeshBVH, type HitPointInfo } from "three-mesh-bvh";
 
 const Canvas = sceneHostPort.fiber.canvas;
@@ -67,7 +68,18 @@ const {
   Vector3,
   WebGLRenderTarget,
 } = sceneHostPort.three;
-type Camera = import("three").Camera;
+type Camera = InstanceType<typeof sceneHostPort.three.Camera>;
+type Box3 = InstanceType<typeof Box3>;
+type BufferGeometry = InstanceType<typeof BufferGeometry<NormalBufferAttributes>>;
+type Matrix4 = InstanceType<typeof Matrix4>;
+type Vector3 = InstanceType<typeof Vector3>;
+type Quaternion = InstanceType<typeof Quaternion>;
+type Object3D = InstanceType<typeof Object3D>;
+type Mesh = InstanceType<typeof Mesh>;
+type LineSegments = InstanceType<typeof LineSegments>;
+type Vector2 = InstanceType<typeof Vector2>;
+type Group = InstanceType<typeof Group>;
+type ThreePerspectiveCamera = InstanceType<typeof ThreePerspectiveCamera>;
 // #endregion 🔌️Adapters
 
 // #region 🔖️Types
@@ -878,7 +890,8 @@ export function cameraGridFadeDistance(camera: Camera, planeZ: number, stepWorld
   const target = Math.max(stepWorld * WORLD_LOD_GRID_MIN_FADE_CELLS, coverage);
   const cells = 2 ** Math.ceil(Math.log2(Math.max(target / stepWorld, 1)));
   const fade = stepWorld * cells;
-  const farCap = Number.isFinite(camera.far) && camera.far > 0 ? camera.far * 0.25 : fade;
+  const far = "far" in camera && typeof camera.far === "number" ? camera.far : undefined;
+  const farCap = far !== undefined && Number.isFinite(far) && far > 0 ? far * 0.25 : fade;
   return Math.max(coverage, Math.min(fade, Math.max(farCap, coverage)));
 }
 
@@ -1594,7 +1607,7 @@ function WorldProjectionGizmoViewport(props: WorldProjectionGizmoViewportProps):
   };
   const faceHit = (axis: "x" | "y" | "z", sign: 1 | -1): ProjectionGizmoHit => ({ type: "face", axis, sign });
   // 🧭️ Upper corners keep prominent heads; lower corners match negative-axis ends — less relevant under-views.
-  const cornerHits: readonly { readonly position: [number, number, number]; readonly hit: ProjectionGizmoHit; readonly prominent?: boolean }[] = [
+  const cornerHits: readonly { readonly position: [number, number, number]; readonly hit: Extract<ProjectionGizmoHit, { type: "corner" }>; readonly prominent?: boolean }[] = [
     { position: [0.72, 0.72, 0.72], hit: { type: "corner", quadrant: "ne", hemisphere: "upper" }, prominent: true },
     { position: [-0.72, 0.72, 0.72], hit: { type: "corner", quadrant: "nw", hemisphere: "upper" }, prominent: true },
     { position: [0.72, -0.72, 0.72], hit: { type: "corner", quadrant: "se", hemisphere: "upper" }, prominent: true },
@@ -1798,7 +1811,7 @@ export interface WorldOrbitViewSnapDriverProps {
 }
 
 /** @emoji 🎞️ Interpolates the orbit camera to a named view when `pendingView` is set. */
-export function WorldOrbitViewSnapDriver(props: WorldOrbitViewSnapDriverProps): null {
+export function WorldOrbitViewSnapDriver(props: WorldOrbitViewSnapDriverProps): ReactElement {
   const pendingViewRef = reactHostPort.useRef<OrbitCameraViewId | null>(null);
   reactHostPort.useEffect(() => {
     if (props.pendingView) {
@@ -1880,7 +1893,8 @@ export interface WorldProjectionModeOption {
 /** @emoji 🔀️ Non-spatial mode variants that sit beside the template tree (kept for callers that still want a flat list).
  * Prefer {@link createWorldProjectionTemplates} / {@link WorldProjectionKindSwitch} for the canonical taxonomy. */
 export function worldProjectionModeOptions(spec: WorldProjectionSpec): readonly WorldProjectionModeOption[] {
-  switch (spec.mode.kind) {
+  const mode = spec.mode;
+  switch (mode.kind) {
     case "axonometric": {
       const variants: readonly { readonly variant: WorldAxonometricVariant; readonly label: string; readonly angleA: number; readonly angleB: number }[] = [
         { variant: "isometric", label: "Iso", angleA: 30, angleB: 30 },
@@ -1891,7 +1905,7 @@ export function worldProjectionModeOptions(spec: WorldProjectionSpec): readonly 
         id: `axonometric-${row.variant}`,
         label: row.label,
         spec: { mode: { kind: "axonometric", variant: row.variant, angleA: row.angleA, angleB: row.angleB }, orientation: spec.orientation },
-        active: spec.mode.variant === row.variant,
+        active: mode.variant === row.variant,
       }));
     }
     case "oblique": {
@@ -1903,16 +1917,16 @@ export function worldProjectionModeOptions(spec: WorldProjectionSpec): readonly 
       return variants.map((row) => ({
         id: `oblique-${row.variant}`,
         label: row.label,
-        spec: { mode: { kind: "oblique", variant: row.variant, angle: spec.mode.angle, depthScale: row.depthScale }, orientation: spec.orientation },
-        active: spec.mode.variant === row.variant,
+        spec: { mode: { kind: "oblique", variant: row.variant, angle: mode.angle, depthScale: row.depthScale }, orientation: spec.orientation },
+        active: mode.variant === row.variant,
       }));
     }
     case "curvilinear":
       return (["fisheye", "panini"] as const).map((mapping) => ({
         id: `curvilinear-${mapping}`,
         label: mapping === "fisheye" ? "Fish" : "Pan",
-        spec: { mode: { kind: "curvilinear", fov: spec.mode.fov, strength: spec.mode.strength, mapping }, orientation: spec.orientation },
-        active: spec.mode.mapping === mapping,
+        spec: { mode: { kind: "curvilinear", fov: mode.fov, strength: mode.strength, mapping }, orientation: spec.orientation },
+        active: mode.mapping === mapping,
       }));
     default:
       return [];
@@ -2972,7 +2986,7 @@ export const WORLD_CURVILINEAR_CAPTURE_TARGET_OPTIONS = {
 function WorldCurvilinearPass(props: { readonly mode: Extract<WorldProjectionMode, { kind: "curvilinear" }> }): null {
   const { gl, camera, scene, size, invalidate } = useThree();
   const { morphRef } = useWorldOrbitViewSnapGate();
-  const targetRef = reactHostPort.useRef<InstanceType<typeof WebGLRenderTarget> | null>(null);
+  const targetRef = reactHostPort.useRef<InstanceType<typeof WebGLRenderTarget<InstanceType<typeof sceneHostPort.three.Texture>>> | null>(null);
   const quadRef = reactHostPort.useRef<{ readonly scene: InstanceType<typeof Scene>; readonly camera: InstanceType<typeof ThreeOrthographicCamera>; readonly material: InstanceType<typeof ShaderMaterial> } | null>(null);
 
   useFrame(() => {
@@ -3043,7 +3057,7 @@ function WorldCurvilinearPass(props: { readonly mode: Extract<WorldProjectionMod
 export interface WorldProjectionTemplateDescriptor {
   readonly id: string;
   readonly label: string;
-  readonly iconId: string;
+  readonly iconId: IconName;
   readonly controllerId: string;
   readonly command: string;
   readonly args: { readonly spec: WorldProjectionSpec };
@@ -3055,11 +3069,11 @@ export interface CreateWorldProjectionTemplatesConfig {
   readonly command?: string;
 }
 
-function worldProjectionTemplateLeaf(controllerId: string, command: string, id: string, label: string, iconId: string, spec: WorldProjectionSpec): WorldProjectionTemplateDescriptor {
+function worldProjectionTemplateLeaf(controllerId: string, command: string, id: string, label: string, iconId: IconName, spec: WorldProjectionSpec): WorldProjectionTemplateDescriptor {
   return { id, label, iconId, controllerId, command, args: { spec } };
 }
 
-function worldProjectionTemplateBranch(controllerId: string, command: string, id: string, label: string, iconId: string, spec: WorldProjectionSpec, children: readonly WorldProjectionTemplateDescriptor[]): WorldProjectionTemplateDescriptor {
+function worldProjectionTemplateBranch(controllerId: string, command: string, id: string, label: string, iconId: IconName, spec: WorldProjectionSpec, children: readonly WorldProjectionTemplateDescriptor[]): WorldProjectionTemplateDescriptor {
   return { id, label, iconId, controllerId, command, args: { spec }, children };
 }
 
@@ -3069,12 +3083,12 @@ function worldProjectionTemplateBranch(controllerId: string, command: string, id
 export function createWorldProjectionTemplates(config: CreateWorldProjectionTemplatesConfig): readonly WorldProjectionTemplateDescriptor[] {
   const { controllerId } = config;
   const command = config.command ?? WORLD_PROJECTION_COMMAND;
-  const leaf = (id: string, label: string, iconId: string, spec: WorldProjectionSpec) => worldProjectionTemplateLeaf(controllerId, command, id, label, iconId, spec);
-  const branch = (id: string, label: string, iconId: string, spec: WorldProjectionSpec, children: readonly WorldProjectionTemplateDescriptor[]) => worldProjectionTemplateBranch(controllerId, command, id, label, iconId, spec, children);
+  const leaf = (id: string, label: string, iconId: IconName, spec: WorldProjectionSpec) => worldProjectionTemplateLeaf(controllerId, command, id, label, iconId, spec);
+  const branch = (id: string, label: string, iconId: IconName, spec: WorldProjectionSpec, children: readonly WorldProjectionTemplateDescriptor[]) => worldProjectionTemplateBranch(controllerId, command, id, label, iconId, spec, children);
 
   const orthographic = leaf("orthographic", "Orthographic", "projection-orthographic", worldProjectionDefaults("orthographic"));
 
-  const axonometricVariants: readonly [WorldAxonometricVariant, string, string][] = [
+  const axonometricVariants: readonly [WorldAxonometricVariant, string, IconName][] = [
     ["isometric", "Isometric", "projection-isometric"],
     ["dimetric", "Dimetric", "projection-dimetric"],
     ["trimetric", "Trimetric", "projection-trimetric"],
@@ -3092,7 +3106,7 @@ export function createWorldProjectionTemplates(config: CreateWorldProjectionTemp
     ),
   );
 
-  const obliqueVariants: readonly [WorldObliqueVariant, string, string][] = [
+  const obliqueVariants: readonly [WorldObliqueVariant, string, IconName][] = [
     ["cabinet", "Cabinet", "projection-oblique-cabinet"],
     ["cavalier", "Cavalier", "projection-oblique-cavalier"],
     ["military", "Military", "projection-oblique-military"],
@@ -3226,7 +3240,8 @@ export function worldProjectionSpecIconId(spec: WorldProjectionSpec): string {
 // #region 🖱️OrbitMouseBindings
 /** @emoji 🖱️ Orbit-controls instance with mutable mouse button map. */
 export type WorldOrbitControlsBinding = {
-  readonly mouseButtons: { LEFT: number | null; MIDDLE: number; RIGHT: number | null };
+  readonly mouseButtons: { LEFT?: number | null; MIDDLE?: number | null; RIGHT?: number | null };
+  readonly target?: Vector3;
   readonly enabled?: boolean;
   readonly update?: () => void;
 };
@@ -3404,7 +3419,7 @@ export interface WorldOrbitGatedProps {
   readonly onNavigationGestures?: (gestures: readonly WorldNavigationGesture[]) => void;
 }
 
-const WORLD_ORBIT_CONSTRAINTS_DEFAULT = { rotate: true } as const;
+const WORLD_ORBIT_CONSTRAINTS_DEFAULT: NonNullable<WorldOrbitGatedProps["constraints"]> = { rotate: true };
 
 /** @emoji 🛰️ Canvas-local Three orbit-control binding that never crosses the optional Drei runtime boundary. */
 function WorldOrbitControlsBridge({
@@ -3607,8 +3622,7 @@ export function WorldCanvas(props: WorldCanvasProps): ReactElement {
     (element: HTMLDivElement | null) => {
       const external = props.rootRef;
       if (!external) return;
-      if (typeof external === "function") external(element);
-      else external.current = element;
+      external.current = element;
     },
     [props.rootRef],
   );
@@ -3645,7 +3659,7 @@ export function WorldCanvas(props: WorldCanvasProps): ReactElement {
         onPointerLeave={(event) => props.onPointerLeave?.(event.nativeEvent)}
         onPointerCancel={(event) => props.onPointerCancel?.(event.nativeEvent)}
         onWheel={(event) => props.onWheel?.(event.nativeEvent)}
-        onContextMenu={(event) => props.onContextMenu?.(event.nativeEvent)}
+        onContextMenu={props.onContextMenu}
         onDoubleClick={(event) => props.onDoubleClick?.(event.nativeEvent)}
         onLostPointerCapture={(event) => props.onLostPointerCapture?.(event.nativeEvent)}
         onPointerMissed={props.onPointerMissed}
@@ -3808,7 +3822,7 @@ export function worldEulerDegreesToQuat(euler: readonly [number, number, number]
 
 /** @emoji 🖼️ Applies a declarative inspector patch to one reference plane. */
 export function patchWorldReferenceProps(reference: WorldReferenceProps, field: "origin" | "rotation" | "scale" | "scaleUniform" | "widthWorld" | "opacity", value: unknown): WorldReferenceProps | null {
-  const patch: Partial<Omit<WorldReferenceProps, "id">> = {};
+  const patch: { -readonly [K in keyof Omit<WorldReferenceProps, "id">]?: WorldReferenceProps[K] } = {};
   if (field === "origin" && Array.isArray(value) && value.length === 3) {
     patch.origin = [Number(value[0]), Number(value[1]), Number(value[2])];
   } else if (field === "rotation" && Array.isArray(value) && value.length === 3) {

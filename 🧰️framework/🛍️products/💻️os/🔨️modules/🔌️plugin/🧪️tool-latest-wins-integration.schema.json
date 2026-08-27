@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "maximumItems", "maximumBytes", "cases", "rebase", "keyRetirement", "lostReservations", "deferredFinish", "slotReservation", "reclamation", "fairness"],
+  "properties": {
+    "schema": { "const": "artifact-tool-latest-wins-integration/v1" },
+    "maximumItems": { "const": 1 }, "maximumBytes": { "const": 4096 },
+    "cases": { "type": "array", "minItems": 2, "maxItems": 2, "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "firstTarget", "nextTarget", "firstValue", "nextValue", "firstCancelled"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 }, "firstTarget": { "type": "string", "minLength": 1 }, "nextTarget": { "type": "string", "minLength": 1 },
+        "firstValue": { "type": "integer" }, "nextValue": { "type": "integer" }, "firstCancelled": { "type": "boolean" }
+      }
+    } },
+    "rebase": { "const": { "beforeGeneration": 0, "afterGeneration": 1, "cancelOldKey": false, "cancelFreshKey": true, "retainedPublicationAfterColdEdit": true } },
+    "keyRetirement": { "const": { "text": "aä🧵", "utf8Bytes": 7, "scalarBytes": [4, 2, 1], "zeroItemProgress": 0, "subscalarProgress": 0 } },
+    "lostReservations": { "const": [
+      { "id": "lost-vacant-slot", "foreignReservation": false, "rejectionAfterVacancy": true },
+      { "id": "foreign-slot-preserved", "foreignReservation": true, "rejectionAfterVacancy": true }
+    ] },
+    "deferredFinish": { "const": { "mutexHeld": true, "activeBeforeSweep": 1, "activeAfterSweep": 0, "replacementPreserved": true } },
+    "slotReservation": { "const": { "capacity": 64, "firstOperation": 1, "collidingOperation": 65, "collisionAdmitted": false } },
+    "reclamation": { "const": { "capacity": 64, "sequentialCompletedTargets": 65, "acceptedTargets": 65 } },
+    "fairness": { "const": { "firstOperation": 1, "secondOperation": 2, "firstStage": "Worker", "secondStage": "Publishing", "secondPublishesWithinMetadataVisits": 64 } }
+  }
+}

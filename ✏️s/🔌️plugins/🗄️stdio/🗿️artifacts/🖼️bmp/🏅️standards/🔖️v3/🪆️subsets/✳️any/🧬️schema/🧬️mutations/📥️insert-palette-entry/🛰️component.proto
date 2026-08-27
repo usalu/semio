@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.bmp.mutation;
+// 🧬️ insert-palette-entry/InsertPaletteEntry; complex fields follow the direct payload schema.
+message InsertPaletteEntryMutation { uint64 index = 1; bytes entry = 2; }

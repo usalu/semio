@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "authority": "semantic-implementation-beside-package-boundary",
+  "decisionState": "projection-only",
+  "pathBudgetBytes": 240,
+  "protectedOpaqueRoots": ["compose", "temp/compose"],
+  "baseStructuralGolden": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️fixtures/🧪️nested-cargo-package-authority/🔣️.json",
+    "sha256": "88619870710263fe4e968714a903dace8c2dc79c619fdc5df87950cf21653972",
+    "mappingCount": 36,
+    "referenceOwnership": "carry-forward-exactly-unless-overridden-below"
+  },
+  "counts": { "structuralMappings": 36, "purityDecisions": 27, "wgpuImplementation": 24, "wgpuAuthorityResolved": 2, "jcoImplementation": 1, "structuralOnlyRemainder": 9, "derivedThinAdapters": 5, "ambiguous": 0 },
+  "roots": {
+    "wgpuSource": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",
+    "wgpuOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu",
+    "wgpuPackage": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
+    "jcoSource": "🧰️framework/🛍️products/💻️os/🧪️fixtures/🔌️jcoprobe/👽️guest",
+    "jcoPackage": "🧰️framework/🛍️products/💻️os/🧪️fixtures/🔌️jcoprobe/👽️guest/📦️packages/🦀️rust"
+  },
+  "mappingFields": ["packageId", "sourceRelativePath", "sourceBytes", "sourceSha256", "initialRole", "disposition", "destinationPath", "destinationPathBytes", "ownership"],
+  "mappings": [
+    ["wgpu-renderer", "build.rs", 2035, "a10c448a9e5e2c4adb2f6af79fd02784e39af311c88fd2bac63a5ef5391218e8", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🏗️builder/🦀️.rs", 150, "authored"],
+    ["wgpu-renderer", "🎠️runtime.rs", 13328, "fc14b444b223abec34322d044cf9aa8049edae4f3164e619bb2edadfd663a9b2", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🎠️runtime/🦀️.rs", 150, "authored"],
+    ["wgpu-renderer", "📦️bin.rs", 2392, "62b6aa8b178da95417b967b0582e6443300c65d75d688a3ef84ad5905640ca1f", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs", 159, "authored"],
+    ["wgpu-renderer", "📦️glue.rs", 828737, "b4869021b74b86466fbeef3798547bb2cb40381482f03d47f8fd14acf00a7790", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs", 151, "authored"],
+    ["wgpu-renderer", "📦️index.ts", 7738, "4a8234a6f1cf7781ab4abc394e5e9dc6cb125f7a9c5b7f3a5f8735b2861049e0", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer-boot/🟦️.ts", 156, "authored"],
+    ["wgpu-renderer", "🟦️typescript/🐚️plugin-bridge.ts", 25226, "46963d8345ab343daaca9be0d867c7a1d8045ecb5ff5cf8d1beae43c8a787435", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts", 156, "authored"],
+    ["wgpu-renderer", "🟦️typescript/🟦️boot.ts", 10707, "738d3b968cf387047fa1632af9ffe6796fac746e5d0b178c173962ab5c0a80a5", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️browser-boot/🟦️.ts", 155, "authored"],
+    ["wgpu-renderer", "🟦️typescript/🟨️frame-worker.js", 647557, "e9aacb469938553608d11e6083843e7ddd185e568bc17de1a0b501451b608f8b", "implementation", "regenerate", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️frame-worker/🤖️generated/🟨️.js", 172, "generated"],
+    ["wgpu-renderer", "🟦️typescript/🧵️browser-frame-transport.ts", 22571, "a68a520f148a0df381796169f5331a28631ef0f0a3c1eb276db6463632483d94", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️browser-frame-transport/🟦️.ts", 166, "authored"],
+    ["wgpu-renderer", "🟦️typescript/🧵️browser-interactive-job-port.ts", 16336, "aec57ac8b31e82aecddc5f5ca0c065a8796e6893ea42fd79a08856bdb986383c", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️browser-interactive-job-port/🟦️.ts", 171, "authored"],
+    ["wgpu-renderer", "🟦️typescript/🧵️frame-worker.ts", 15541, "9825bbb3d88322efbc90e9389d2d6626bd50bdc455ca76262b8c5b8ac372251e", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️frame-worker/🟦️.ts", 155, "authored"],
+    ["wgpu-renderer", "🟦️typescript/🧵️interactive-job-registry.ts", 15079, "bfef4a80f6c8c7c66c446f0d777851820188ffbec4c5980987a8a1c15f3e17bb", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️interactive-job-registry/🟦️.ts", 167, "authored"],
+    ["wgpu-renderer", "🦀️browser_worker.rs", 34990, "11640ee30d7058910a373cbd6712a1eebaf763eab040bb066651165c57570174", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️browser-worker/🦀️.rs", 157, "authored"],
+    ["wgpu-renderer", "🦀️deadlines.rs", 11126, "8e65e0d283ba6d5067dbda03cdeedf81f3eb11963ad31c9f35b11f61c97de42e", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/⏰️deadlines/🦀️.rs", 151, "authored"],
+    ["wgpu-renderer", "🦀️frame_job.rs", 34039, "4c0602df7cab3a8a912605a221a730006cb613d07b208060556fd76ae195d23f", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs", 152, "authored"],
+    ["wgpu-renderer", "🦀️kernel_seam.rs", 12739, "7221dbebddf2d3097b2fba08b5fef1e0ca4aea38fe630d48b4fbcb82836aec47", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🪢️kernel-seam/🦀️.rs", 154, "authored"],
+    ["wgpu-renderer", "🦀️lib.rs", 679, "eb1a9c90ea4a687c6d5d3dbb77415ed8a2851bd8b31b471822bede955662cc8b", "unresolved", "rewrite-thin-adapter", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📚️library/🦀️.rs", 178, "authored"],
+    ["wgpu-renderer", "🦀️os_host.rs", 31590, "5d6331d940fb7b3897b002c3b4f0a561f946bc220ee3303177025c4df7ccb9d9", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs", 150, "authored"],
+    ["wgpu-renderer", "🦀️render_snapshot.rs", 11528, "79b276f26372f81fec9c484e7e8f45366bc14f20ff43427f6976738304d1aca1", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📸️render-snapshot/🦀️.rs", 158, "authored"],
+    ["wgpu-renderer", "🦀️runtime_mailbox_core.rs", 4194, "47d51061c3adbe9b1e3fd0804ece8411d013b0737f3c2d3a7b85d527fd92fbf9", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📮️runtime-mailbox-core/🦀️.rs", 163, "authored"],
+    ["wgpu-renderer", "🦀️surface_lane.rs", 22434, "d6131ff4d56d636a30ebe586e698449799e8391a49a240cb8df9c4b9e2daf3e7", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📐️surface-lane/🦀️.rs", 155, "authored"],
+    ["wgpu-renderer", "🦀️winit_app.rs", 45750, "ea46cdbf206cc743a98c29556fe6978cf6e4da9cb26ccc61e9690ed660856ce3", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs", 152, "authored"],
+    ["wgpu-renderer", "🧪️browser-frame-transport.test.ts", 15004, "65b94ae37128fa193b4ce4c465564ba819a520dc73d89fbf73a2f30b054650e5", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🧪️browser-frame-transport/🟦️.ts", 179, "authored"],
+    ["wgpu-renderer", "🧪️browser-interactive-job-port.test.ts", 21297, "f2946f61609c69d0dd3b49cdbb15aa2ade7ccb956057bf973b849a550d13c5a7", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🧪️browser-interactive-job-port/🟦️.ts", 184, "authored"],
+    ["wgpu-renderer", "🧪️index.test.ts", 4979, "8385b349365381fb6ef40fe2c1f1fcf9a98185abae10107c06a56703c608bd8c", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧪️tests/🧪️package-integration/🟦️.ts", 175, "authored"],
+    ["wgpu-renderer", "🧪️vitest.config.ts", 211, "c1b2fbb4b08d67a1b0ccd86d4913ad92b1692ee4d2cd21ecdf8556643139a4b8", "unresolved", "move-tool-metadata", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🧪️tests/🟦️.ts", 194, "authored"],
+    ["jcoprobe-guest", "🦀️component.rs", 2383, "4181cae50df16ea732298a1fdfa8e37889d05f8721cf67af9605d3a94738f571", "implementation", "move-edit", "🧰️framework/🛍️products/💻️os/🧪️fixtures/🔌️jcoprobe/👽️guest/🧩️component/🦀️.rs", 115, "authored"]
+  ],
+  "retainedStructuralLeaves": {
+    "wgpu-renderer": ["Cargo.toml", "Trunk.toml", "package.json", "🌐️index.html", "📋️project.json", "📜️script.ts"],
+    "jcoprobe-guest": ["Cargo.lock", "Cargo.toml", "🧬️schema/📜️world.wit"]
+  },
+  "adapterFields": ["id", "path", "language", "expectedRole", "targetPaths", "content"],
+  "adapters": [
+    ["wgpu-build", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🏗️builder/🦀️.rs", "rust", "declaration", ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🏗️builder/🦀️.rs"], "//! 🏗️ Renderer build package adapter.\n\ninclude!(\"../../../🏗️builder/🦀️.rs\");\n"],
+    ["wgpu-library", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📚️library/🦀️.rs", "rust", "declaration", ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📮️runtime-mailbox-core/🦀️.rs"], "//! 🧊️ Renderer library package adapter.\n\n#[cfg(not(target_os = \"wasi\"))]\ninclude!(\"../../../🧊️renderer/🦀️.rs\");\n\n#[cfg(target_os = \"wasi\")]\n#[path = \"../../../📮️runtime-mailbox-core/🦀️.rs\"]\npub mod runtime_mailbox_core;\n"],
+    ["wgpu-binary", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/💾️binary/🦀️.rs", "rust", "declaration", ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs"], "//! ⌨️ Native renderer binary package adapter.\n\ninclude!(\"../../../⌨️native-entrypoint/🦀️.rs\");\n"],
+    ["wgpu-node-library", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/📚️library/🟦️.ts", "typescript", "declaration", ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/🧊️renderer-boot/🟦️.ts"], "/** 🧊️ Renderer package adapter. */\nexport * from \"../../../../🧊️renderer-boot/🟦️.ts\";\n"],
+    ["jco-library", "🧰️framework/🛍️products/💻️os/🧪️fixtures/🔌️jcoprobe/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs", "rust", "declaration", ["🧰️framework/🛍️products/💻️os/🧪️fixtures/🔌️jcoprobe/👽️guest/🧩️component/🦀️.rs"], "//! 🧩️ JCO probe guest package adapter.\n\ninclude!(\"../../../🧩️component/🦀️.rs\");\n"]
+  ],
+  "manifestEdits": [
+    ["cargo", "wgpu", "package.build", "🏗️builder/🦀️.rs"],
+    ["cargo", "wgpu", "lib.path", "📚️library/🦀️.rs"],
+    ["cargo", "wgpu", "bin[name=semio-wgpu-native].path", "💾️binary/🦀️.rs"],
+    ["node", "wgpu", "exports['.']", "./🟦️typescript/📚️library/🟦️.ts"],
+    ["cargo", "jco", "lib.path", "📚️library/🦀️.rs"]
+  ],
+  "schemaPrerequisites": {
+    "wgpuMemberNames": ["⌨️native-entrypoint", "⏰️deadlines", "🎠️runtime", "🏗️builder", "🏠️os-host", "🐚️plugin-bridge", "📐️surface-lane", "📸️render-snapshot", "📮️runtime-mailbox-core", "🧵️browser-boot", "🧵️browser-frame-transport", "🧵️browser-interactive-job-port", "🧵️browser-worker", "🧵️frame-job", "🧵️frame-worker", "🧵️interactive-job-registry", "🧊️renderer", "🧊️renderer-boot", "🧪️tests", "🪢️kernel-seam", "🪟️winit-app"],
+    "jcoGuestMemberNames": ["🧩️component"],
+    "configurableEntryContracts": [
+      ["rust-build-entry", "🦀️.rs", "Cargo.toml:package.build", "builder"],
+      ["vitest-config-entry", "🟦️.ts", "📜️script.ts runVitest --config argument", "tool-metadata"]
+    ],
+    "rustPackageBoundaryAllowedDirectoryKindIdsToAdd": ["binary", "builder", "tests"]
+  },
+  "referenceOwners": {
+    "cargo": ["wgpu-package/Cargo.toml", "jco-package/Cargo.toml"],
+    "nx": ["wgpu-package/📋️project.json"],
+    "rustAuthored": ["wgpu-owner/🧊️renderer/🦀️.rs", "jco-source/🧩️component/🦀️.rs"],
+    "authoredConfigurationAndGenerators": ["wgpu-package/📜️script.ts", "wgpu-package/Trunk.toml", "repo/🔣️taxonomy.json", ".vscode/🧩️launch.seed.jsonc", "root/📜️script.ts", "root/package.json", "root/Cargo.toml"],
+    "generated": [".vscode/launch.json", "bun.lock", "🔒️dependencies.json", "wgpu-owner/🧵️frame-worker/🤖️generated/🟨️.js"]
+  },
+  "referenceRules": [
+    "renderer Rust path/include_str/include_bytes operands are recomputed from the renderer destination and must resolve to exact semantic/Cargo leaves",
+    "JCO wit_bindgen path and prose marker become ../📦️packages/🦀️rust/🧬️schema/📜️world.wit",
+    "Nx sourceRoot and cwd remain package-owned while namedInputs.default also covers the semantic WGPU owner",
+    "the package script uses ../.. as WGPU owner and keeps Vitest config package-owned",
+    "Trunk watch/copy sources target owner/generated leaves while public 🟨️boot.js remains a distribution URL",
+    "base golden authored/generated consumer ownership is unchanged; exact implementation leaf tokens override structural prefix transforms"
+  ],
+  "generatedContracts": [
+    ["wgpu-frame-worker", "wgpu-package", "wgpu-owner/🧵️frame-worker/🟦️.ts", "wgpu-owner/🧵️frame-worker/🤖️generated/🟨️.js", "tracked"],
+    ["wgpu-browser-boot", "wgpu-package", "wgpu-owner/🧵️browser-boot/🟦️.ts", "wgpu-owner/🧵️browser-boot/🤖️generated/🟨️.js", "ignored-not-an-admitted-structural-mapping"]
+  ],
+  "collisionPolicy": { "unicodeNormalization": "NFC", "caseFold": "lower", "variationSelector": "ignore", "sameKindSibling": "reject" },
+  "rejectWhen": ["base-structural-golden-hash-drift", "source-byte-or-hash-drift", "source-role-drift", "source-missing-before-projection", "destination-preexists-before-projection", "semantic-owner-registration-missing", "package-boundary-contract-missing", "destination-collision", "unicode-or-casefold-collision", "path-budget-exceeded", "generated-owner-input-or-output-mismatch", "unexpected-implementation-beneath-package-root", "opaque-root-access"],
+  "ambiguities": []
+}

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "descriptor": {
+    "schemaVersion": 1,
+    "owner": "✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page",
+    "semanticKind": "insert-page",
+    "displayName": "Insert Page",
+    "emoji": "➕️",
+    "aggregateVariant": "InsertPage",
+    "payloadSchema": "🦀️.rs#InsertPage",
+    "textOpcode": null,
+    "binaryTag": null,
+    "invertibility": "explicit-mutation",
+    "diffParticipation": "apply-only",
+    "outcomeClasses": ["applied"],
+    "composition": "atomic",
+    "requiredLanguageSurfaces": ["rust"]
+  },
+  "enumWireValues": {
+    "invertibility": ["self", "explicit-mutation", "plan", "non-invertible"],
+    "diffParticipation": ["detect", "apply-only", "plan", "none"],
+    "outcomeClasses": ["applied", "info", "warning", "error", "fatal"],
+    "composition": ["atomic", "composite"],
+    "requiredLanguageSurfaces": ["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]
+  },
+  "binaryTagVectors": [
+    { "name": "null-tag", "value": null, "expected": true },
+    { "name": "zero-tag", "value": 0, "expected": true },
+    { "name": "maximum-u32-tag", "value": 4294967295, "expected": true },
+    { "name": "overflow-u32-tag", "value": 4294967296, "expected": false },
+    { "name": "negative-tag", "value": -1, "expected": false },
+    { "name": "fractional-tag", "value": 1.5, "expected": false },
+    { "name": "string-tag", "value": "1", "expected": false },
+    { "name": "missing-tag", "missing": true, "expected": false }
+  ],
+  "ownerBoundaryVectors": [
+    { "name": "unicode-line-separator", "owner": "prefix\u2028/🧬️mutations/➕️insert-page", "expected": false },
+    { "name": "unicode-paragraph-separator", "owner": "prefix\u2029/🧬️mutations/➕️insert-page", "expected": false },
+    { "name": "multiple-markers-later-valid", "owner": "/🧬️mutations/first/🧬️mutations/second", "expected": true },
+    { "name": "multiple-markers-prefixed", "owner": "prefix/🧬️mutations/second/🧬️mutations/third", "expected": true },
+    { "name": "marker-without-suffix", "owner": "prefix/🧬️mutations/", "expected": false }
+  ],
+  "rosterVectors": [
+    { "name": "same-owner-unique", "expected": true },
+    { "name": "duplicate-semantic-kind", "expected": false, "field": "semanticKind" },
+    { "name": "duplicate-text-opcode", "expected": false, "field": "textOpcode" },
+    { "name": "duplicate-binary-tag", "expected": false, "field": "binaryTag" },
+    { "name": "nullable-identities-repeat", "expected": true },
+    { "name": "unrelated-owner", "expected": false, "field": "owner" },
+    { "name": "duplicate-owner", "expected": false, "field": "owner" },
+    { "name": "nested-child", "expected": false, "field": "owner" },
+    { "name": "parent-child", "expected": false, "field": "owner" },
+    { "name": "backslash-child", "expected": false, "field": "owner" },
+    { "name": "absolute-root", "expected": false, "field": "owner" },
+    { "name": "windows-root", "expected": false, "field": "owner" },
+    { "name": "windows-slash-drive-root", "expected": false, "field": "owner" },
+    { "name": "windows-relative-drive-root", "expected": false, "field": "owner" },
+    { "name": "empty-segment-root", "expected": false, "field": "owner" },
+    { "name": "dot-root", "expected": false, "field": "owner" },
+    { "name": "parent-root", "expected": false, "field": "owner" },
+    { "name": "nul-root", "expected": false, "field": "owner" },
+    { "name": "nul-child", "expected": false, "field": "owner" },
+    { "name": "distinct-owner-same-identities", "expected": true }
+  ]
+}

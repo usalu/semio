@@ -14,14 +14,14 @@ pub struct FocusSelection {}
 /// shape (no `interaction` slot), so it still requires a `handle` of this signature to exist even though
 /// it is reachable only through that macro-generated path (`FlowPlayApp::handle` always routes this
 /// command through `apply` below instead) — degrades to a no-op, mirroring `delete_selection::handle`.
-pub async fn handle(_payload: &FocusSelection, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub fn handle(_payload: &FocusSelection, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     Ok(Emit::default())
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: reads the "graph" domain's live node
 /// selection instead of the deleted `FlowConfig.selected_node_ids` — see `delete_selection::apply`'s
 /// doc comment for why this is dispatched through `apply` directly rather than the macro-generated path.
-pub async fn apply(_payload: &FocusSelection, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession, interaction: &InteractionView<'_>) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub fn apply(_payload: &FocusSelection, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession, interaction: &InteractionView<'_>) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     let (nodes, _edges) = flow_graph_selection_domains(&interaction.selection(FLOW_INTERACTION_GRAPH).ids);
     match focus_selection_camera(doc.snapshot, cfg.snapshot, session, &nodes) {
         Some(camera) => Ok(Emit::config(vec![FlowConfigMutation::SetCamera { camera }])),

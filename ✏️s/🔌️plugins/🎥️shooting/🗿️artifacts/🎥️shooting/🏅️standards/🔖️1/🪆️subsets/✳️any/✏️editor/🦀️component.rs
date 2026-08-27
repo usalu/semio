@@ -18,11 +18,13 @@ use crate::editor::shooting::modes::edit::windows::scene as scene_window;
 use crate::editor::shooting::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::shooting::presence::{ShootingPresence, ShootingPresenceMutation};
 use crate::editor::shooting::terminology::shooting_play_labels;
+use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, DslValue, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider,
-    HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec,
-    UiNode, UiTreeItemNode, UtilityDefinition, WindowEngagement, WindowMeasure,
+    tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView,
+    DslValue, Editor, EditorApp, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError,
+    MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, UtilityDefinition, WindowEngagement, WindowMeasure,
 };
 use std::collections::HashMap;
 use store::EngineHandles;
@@ -263,6 +265,108 @@ use shot::{add_shot, patch_shots, set_active_shot, set_active_shot_format, set_a
 #[derive(Default)]
 pub struct ShootingPlayApp;
 
+//#region 🧵️RetainedCommands
+const SHOOTING_BOUNDED_TOOL_IDS: &[&str] = &["loadRequest", "importAssetRequest"];
+const SHOOTING_RETAINED_PAYLOAD_SCHEMA: &str = "shooting.shooting.tool-command.v1";
+const SHOOTING_BOUNDED_RAW_BYTES: usize = 65_536;
+const SHOOTING_BOUNDED_WORK_ITEMS: usize = 1;
+
+fn shooting_command_id(command: &ShootingCommand) -> &'static str {
+    match command {
+        ShootingCommand::ExportShots(export_shots::ExportShots { all }) => {
+            if *all {
+                "exportAllShots"
+            } else {
+                "exportActiveShot"
+            }
+        }
+        other => other.command_id(),
+    }
+}
+
+fn shooting_bounded_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(SHOOTING_BOUNDED_RAW_BYTES, 64, SHOOTING_BOUNDED_WORK_ITEMS, 262_144, 7_500)
+}
+
+fn shooting_bounded_extent(command: &ShootingCommand, _snapshot: &ShootingSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    SHOOTING_BOUNDED_TOOL_IDS.contains(&shooting_command_id(command)).then_some(SHOOTING_BOUNDED_WORK_ITEMS)
+}
+
+fn shooting_bounded_reduce(
+    command: &ShootingCommand,
+    snapshot: &ShootingSnapshot,
+    config: &ShootingConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> Result<Emit<ShootingMutation, ShootingConfigMutation, NoDraftMutation>, Fault> {
+    if !SHOOTING_BOUNDED_TOOL_IDS.contains(&shooting_command_id(command)) {
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("shooting.retained.route"), "the bounded Shooting reducer rejects resumable routes"));
+    }
+    let mut ctx = ShootingDispatchCtx::default();
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config }, &mut ctx)
+}
+
+struct ShootingCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl ShootingCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: SHOOTING_BOUNDED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for ShootingCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<ShootingPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<ShootingPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        SHOOTING_RETAINED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        shooting_bounded_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > SHOOTING_BOUNDED_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("bounded Shooting command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for ShootingCommandJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<ShootingPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = SHOOTING_BOUNDED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "loadRequest", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importAssetRequest", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    ];
+}
+//#endregion 🧵️RetainedCommands
+
 impl ArtifactEditor for ShootingPlayApp {
     type Snapshot = ShootingSnapshot;
     type Mutation = ShootingMutation;
@@ -279,6 +383,61 @@ impl ArtifactEditor for ShootingPlayApp {
 
     const DIALECT: Dialect = crate::artifacts::shooting::SHOOTING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<ShootingPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.shooting.shooting@1/*#editor",
+        document_schema: "shooting.shooting",
+        factory: "ShootingCommandJobFactory",
+        factory_type: ShootingCommandJobFactory,
+        tools: {
+            "loadRequest" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "importAssetRequest" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+        }
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(ShootingCommandJobFactory::new(&controller))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !SHOOTING_BOUNDED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if shooting_command_id(&request.command) != request.tool_id {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("shooting.retained.tool-mismatch"), "Shooting command does not match its exact registered tool"));
+        }
+        if shooting_bounded_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("shooting.retained.extent"), "Shooting bounded route exceeded its declared work extent"));
+        }
+        let tool_id = shooting_command_id(&request.command);
+        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, shooting_bounded_reduce, shooting_bounded_extent));
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id,
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            request.context,
+            operation_context,
+            request.completion,
+            shooting_command_id,
+            SHOOTING_BOUNDED_RAW_BYTES,
+            SHOOTING_BOUNDED_WORK_ITEMS,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
 
     async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::shooting::config::schema::app_schema_descriptor())
@@ -332,16 +491,7 @@ impl ArtifactEditor for ShootingPlayApp {
     /// static 1:1 row→literal mapping with no per-payload escape hatch, so this is the one case that
     /// needs a manual override.
     async fn command_id(command: &ShootingCommand) -> &'static str {
-        match command {
-            ShootingCommand::ExportShots(export_shots::ExportShots { all }) => {
-                if *all {
-                    "exportAllShots"
-                } else {
-                    "exportActiveShot"
-                }
-            }
-            other => other.command_id(),
-        }
+        shooting_command_id(command)
     }
 
     async fn handle(
@@ -521,6 +671,11 @@ pub async fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .shell_action("importAssetRequest", LocalizedLabel::native("Import Asset Request", "Objekt-Importanfrage"))
             .shell_action("exportActiveShot", LocalizedLabel::native("Export Active Shot", "Aktive Aufnahme exportieren"))
             .shell_action("exportAllShots", LocalizedLabel::native("Export All Shots", "Alle Aufnahmen exportieren"))
+            // 🧵️ These two reducers emit exactly one fixed host file-open request. Every document,
+            // config, codec, renderer, selection, and placeholder route remains fail-closed until its
+            // completion lane has an installed bounded preparation owner or a real resumable cursor.
+            .action_interactive_job("loadRequest", InteractiveJobClassification::Migrated)
+            .action_interactive_job("importAssetRequest", InteractiveJobClassification::Migrated)
             // 📝️ Staged argument forms for the panel-visible create actions (defaults materialized host-side).
             .action_args("addShot", vec![
                 ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![ActionArgOption::new("svg", LocalizedLabel::native("SVG", "SVG")), ActionArgOption::new("png", LocalizedLabel::native("PNG", "PNG"))]).default_value("png"),
@@ -623,6 +778,108 @@ mod tests {
         crate::artifacts::shooting::ShootingCamera { position, target: [0.0, 0.0, 0.0], zoom: 1.0, fov: 50.0, up: None, projection: None }
     }
 
+    //#region 🧵️RetainedCatalogOracle
+    #[derive(Debug, PartialEq, Eq)]
+    struct ShootingRetainedCatalogSummary {
+        routes: usize,
+        bounded: usize,
+        resumable: usize,
+        migrated: usize,
+        fail_closed: usize,
+        unique: bool,
+        route_ids: std::collections::BTreeSet<String>,
+        bounded_ids: std::collections::BTreeSet<String>,
+        host_only_ids: std::collections::BTreeSet<String>,
+    }
+
+    trait ShootingRetainedCatalogOracle {
+        fn summarize(&self, fixture: &str) -> ShootingRetainedCatalogSummary;
+    }
+
+    struct SerdeJsonShootingRetainedCatalogOracle;
+
+    impl ShootingRetainedCatalogOracle for SerdeJsonShootingRetainedCatalogOracle {
+        fn summarize(&self, fixture: &str) -> ShootingRetainedCatalogSummary {
+            let document: serde_json::Value = serde_json::from_str(fixture).expect("language-neutral retained catalog fixture");
+            let routes = document.get("routes").and_then(serde_json::Value::as_array).expect("routes array");
+            let bounded = routes.iter().filter(|route| route.get("execution").and_then(serde_json::Value::as_str) == Some("bounded")).count();
+            let resumable = routes.iter().filter(|route| route.get("execution").and_then(serde_json::Value::as_str) == Some("resumable")).count();
+            let migrated = routes.iter().filter(|route| route.get("admission").and_then(serde_json::Value::as_str) == Some("migrated")).count();
+            let fail_closed = routes.iter().filter(|route| route.get("admission").and_then(serde_json::Value::as_str) == Some("failClosed")).count();
+            let route_ids = routes
+                .iter()
+                .filter_map(|route| route.get("id").and_then(serde_json::Value::as_str).map(str::to_string))
+                .collect::<std::collections::BTreeSet<_>>();
+            let bounded_ids = routes
+                .iter()
+                .filter(|route| route.get("execution").and_then(serde_json::Value::as_str) == Some("bounded"))
+                .filter_map(|route| route.get("id").and_then(serde_json::Value::as_str).map(str::to_string))
+                .collect::<std::collections::BTreeSet<_>>();
+            let host_only_ids = document
+                .get("publicationContracts")
+                .and_then(serde_json::Value::as_array)
+                .expect("publication contracts array")
+                .iter()
+                .filter(|contract| contract.get("lanes").and_then(serde_json::Value::as_array).is_some_and(|lanes| lanes.as_slice() == [serde_json::Value::String("hostOnly".into())]))
+                .filter_map(|contract| contract.get("toolId").and_then(serde_json::Value::as_str).map(str::to_string))
+                .collect::<std::collections::BTreeSet<_>>();
+            ShootingRetainedCatalogSummary { routes: routes.len(), bounded, resumable, migrated, fail_closed, unique: route_ids.len() == routes.len(), route_ids, bounded_ids, host_only_ids }
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_command_catalog_matches_the_serde_json_oracle() {
+        let oracle = SerdeJsonShootingRetainedCatalogOracle.summarize(include_str!("🧪️fixtures/🎯️retained-command-limits.json"));
+        let mut command_ids = every_command()
+            .iter()
+            .map(|command| shooting_command_id(command).to_string())
+            .collect::<std::collections::BTreeSet<_>>();
+        command_ids.insert("exportActiveShot".to_string());
+        let bounded_ids = SHOOTING_BOUNDED_TOOL_IDS.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
+        let host_only_ids = <ShootingCommandJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
+            .iter()
+            .filter(|contract| contract.lanes == [semio_framework_plugin::ArtifactToolPublicationLane::HostOnly])
+            .map(|contract| contract.tool_id.to_string())
+            .collect::<std::collections::BTreeSet<_>>();
+        let subject = ShootingRetainedCatalogSummary {
+            routes: command_ids.len(),
+            bounded: bounded_ids.len(),
+            resumable: command_ids.difference(&bounded_ids).count(),
+            migrated: bounded_ids.len(),
+            fail_closed: command_ids.difference(&bounded_ids).count(),
+            unique: bounded_ids.len() == SHOOTING_BOUNDED_TOOL_IDS.len() && bounded_ids.is_subset(&command_ids),
+            route_ids: command_ids.clone(),
+            bounded_ids: bounded_ids.clone(),
+            host_only_ids,
+        };
+        assert_eq!(
+            oracle,
+            ShootingRetainedCatalogSummary {
+                routes: 39,
+                bounded: 2,
+                resumable: 37,
+                migrated: 2,
+                fail_closed: 37,
+                unique: true,
+                route_ids: command_ids,
+                bounded_ids: bounded_ids.clone(),
+                host_only_ids: bounded_ids,
+            }
+        );
+        assert_eq!(subject, oracle);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
+        let fixture = include_str!("🧪️fixtures/🎯️retained-command-limits.json");
+        let expected = SHOOTING_BOUNDED_TOOL_IDS.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
+        let wrong_lane = fixture.replacen("\"hostOnly\"", "\"artifact\"", 1);
+        let wrong_tool = fixture.replacen("\"loadRequest\"", "\"forgedRequest\"", 1);
+        assert_ne!(SerdeJsonShootingRetainedCatalogOracle.summarize(&wrong_lane).host_only_ids, expected);
+        assert_ne!(SerdeJsonShootingRetainedCatalogOracle.summarize(&wrong_tool).host_only_ids, expected);
+    }
+    //#endregion 🧵️RetainedCatalogOracle
+
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every
     /// row's wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to
@@ -630,7 +887,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_across_every_row() {
         let app = ShootingPlayApp;
-        let ids: Vec<&str> = every_command().iter().map(|command| ShootingPlayApp::command_id(command)).collect();
+        let ids: Vec<&str> = every_command().iter().map(shooting_command_id).collect();
         let mut sorted = ids.clone();
         sorted.sort_unstable();
         sorted.dedup();

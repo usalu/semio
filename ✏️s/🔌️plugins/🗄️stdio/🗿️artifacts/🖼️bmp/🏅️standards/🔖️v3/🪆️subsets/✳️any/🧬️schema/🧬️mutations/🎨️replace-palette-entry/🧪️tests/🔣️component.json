@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "semanticKind": "replace-palette-entry",
+  "before": {
+    "schema": "stdio.bmp",
+    "headerSize": 40,
+    "width": 2,
+    "height": 2,
+    "rowOrder": "bottomUp",
+    "planes": 1,
+    "bitsPerPixel": 8,
+    "compression": 0,
+    "imageSize": 16,
+    "xPixelsPerMeter": 2835,
+    "yPixelsPerMeter": 2835,
+    "colorsUsed": 2,
+    "colorsImportant": 2,
+    "palette": [
+      {
+        "b": 0,
+        "g": 0,
+        "r": 255,
+        "reserved": 0
+      },
+      {
+        "b": 0,
+        "g": 255,
+        "r": 0,
+        "reserved": 0
+      }
+    ],
+    "pixels": [
+      255,
+      0,
+      0,
+      255,
+      0,
+      255,
+      0,
+      255,
+      0,
+      255,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255
+    ]
+  },
+  "mutation": {
+    "mutation": "replace-palette-entry",
+    "payload": {
+      "index": 1,
+      "entry": {
+        "b": 255,
+        "g": 0,
+        "r": 255,
+        "reserved": 0
+      }
+    }
+  },
+  "after": {
+    "schema": "stdio.bmp",
+    "headerSize": 40,
+    "width": 2,
+    "height": 2,
+    "rowOrder": "bottomUp",
+    "planes": 1,
+    "bitsPerPixel": 8,
+    "compression": 0,
+    "imageSize": 16,
+    "xPixelsPerMeter": 2835,
+    "yPixelsPerMeter": 2835,
+    "colorsUsed": 2,
+    "colorsImportant": 2,
+    "palette": [
+      {
+        "b": 0,
+        "g": 0,
+        "r": 255,
+        "reserved": 0
+      },
+      {
+        "b": 255,
+        "g": 0,
+        "r": 255,
+        "reserved": 0
+      }
+    ],
+    "pixels": [
+      255,
+      0,
+      0,
+      255,
+      0,
+      255,
+      0,
+      255,
+      0,
+      255,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255
+    ]
+  }
+}

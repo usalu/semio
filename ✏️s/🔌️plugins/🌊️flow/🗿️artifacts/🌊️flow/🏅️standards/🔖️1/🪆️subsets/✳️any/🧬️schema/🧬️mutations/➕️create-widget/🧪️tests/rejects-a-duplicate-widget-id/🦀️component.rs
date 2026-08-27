@@ -7,7 +7,7 @@
 //! ⚠️ Why this leaf pins a REJECTION branch: `FlowSnapshot` persists its widgets/synapses/layout in
 //! an opaque composed `s.stdio.semio.flow` CHILD (`🔖️ContentBridge`/`🔖️WorkingScene`), and every
 //! APPLIED flow diff goes through `diff_replace_content`, which mints a fresh handle whose
-//! `child_id` is a `DefaultHasher` digest of the child content. Hand-authoring such an `➡️after`
+//! `child_id` is a domain-separated SHA-256 digest of the child content. Hand-authoring such an `➡️after`
 //! would mean hand-forging a value from `std`'s deliberately unspecified default hasher.
 //! `create-widget` is the one flow verb with NO no-op guard, so its `mutation.duplicate-id` Fatal —
 //! the single branch that mints no handle at all — is what this tree pins until child resolution
@@ -19,7 +19,7 @@
 
 use crate::artifacts::flow::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, FlowMutation};
 use crate::artifacts::flow::{cache_flow_content, flow_working_scene, FlowDiff, FlowSnapshot};
-use std::collections::BTreeMap;
+use flow::OrderedMap;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -41,7 +41,7 @@ fn before() -> FlowSnapshot {
     let FlowMutation::CreateWidget(payload) = mutation() else {
         panic!("rejects-a-duplicate-widget-id's committed mutation must be a create-widget");
     };
-    cache_flow_content(&mut snapshot.content, vec![payload.widget.clone()], Vec::new(), BTreeMap::new());
+    cache_flow_content(&mut snapshot.content, vec![payload.widget.clone()], Vec::new(), OrderedMap::new());
     snapshot
 }
 

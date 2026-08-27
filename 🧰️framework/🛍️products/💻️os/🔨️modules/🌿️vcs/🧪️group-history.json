@@ -1,0 +1,7 @@
+{
+  "schema": "artifact-group-history-visibility/v1",
+  "maximumItems": 1,
+  "members": [{ "id": "a", "before": [0], "after": [0, 17, 42] }, { "id": "b", "before": [-1], "after": [-1, -23] }],
+  "ordered": [{ "member": "a", "value": 17 }, { "member": "b", "value": -23 }, { "member": "a", "value": 42 }],
+  "laws": ["staged-history-is-invisible-to-every-reader", "single-decision-switches-every-ledger", "wrong-decision-cannot-append-or-abort", "ordinary-writes-cannot-cross-a-staged-suffix", "abort-transfers-one-exact-owner", "adoption-does-not-republish"]
+}

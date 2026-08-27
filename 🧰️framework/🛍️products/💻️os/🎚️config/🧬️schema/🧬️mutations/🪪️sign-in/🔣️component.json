@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in",
+  "semanticKind": "sign-in",
+  "displayName": "Sign In",
+  "emoji": "🪪️",
+  "aggregateVariant": "SignIn",
+  "payloadSchema": "os.config.identity#sign-in",
+  "textOpcode": null,
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": ["applied"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "typescript"]
+}

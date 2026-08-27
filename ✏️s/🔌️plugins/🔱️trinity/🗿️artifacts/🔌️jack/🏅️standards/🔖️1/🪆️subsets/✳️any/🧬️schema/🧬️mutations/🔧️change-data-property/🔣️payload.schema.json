@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeDataProperty",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entity",
+    "key",
+    "new_value"
+  ],
+  "properties": {
+    "entity": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity",
+            "id"
+          ],
+          "properties": {
+            "entity": {
+              "const": "node"
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity",
+            "id"
+          ],
+          "properties": {
+            "entity": {
+              "const": "edge"
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "key": {
+      "type": "string"
+    },
+    "new_value": {}
+  }
+}

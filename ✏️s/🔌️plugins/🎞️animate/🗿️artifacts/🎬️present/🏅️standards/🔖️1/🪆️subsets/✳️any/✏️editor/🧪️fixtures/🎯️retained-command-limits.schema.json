@@ -1,0 +1,570 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:animate-present:retained-command-limits:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "controller",
+    "documentSchema",
+    "factory",
+    "limits",
+    "routes",
+    "boundaryCases",
+    "oracle"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "const": "AnimatePresentPlayApp"
+    },
+    "controller": {
+      "const": "s.animate.present@1/*#editor"
+    },
+    "documentSchema": {
+      "const": "animate.present"
+    },
+    "factory": {
+      "const": "AnimatePresentRetainedCommandJobFactory"
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rawBytes",
+        "checkpointBytes",
+        "configValueBytes",
+        "configBaseBytes",
+        "commandStepBytes",
+        "storeStepBytes",
+        "workItems",
+        "preparationPhases"
+      ],
+      "properties": {
+        "rawBytes": {
+          "const": 8192
+        },
+        "checkpointBytes": {
+          "const": 512
+        },
+        "configValueBytes": {
+          "const": 512
+        },
+        "configBaseBytes": {
+          "const": 512
+        },
+        "commandStepBytes": {
+          "const": 65536
+        },
+        "storeStepBytes": {
+          "const": 4096
+        },
+        "workItems": {
+          "const": 1
+        },
+        "preparationPhases": {
+          "const": 3
+        }
+      }
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 18,
+      "maxItems": 18,
+      "prefixItems": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "seedGrid"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Grid dimensions drive whole tile-vector generation and artifact inverse/root preparation without a checkpointed tile cursor."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "addTile"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Working-scene extraction and artifact inverse/root preparation clone tile content without a retained cursor."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "deleteTile"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Tile lookup and artifact inverse/root preparation scan or clone whole tile vectors."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "deleteSelection"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Selection validation and per-tile deletion scan the whole scene and assemble an unbounded mutation batch."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "renameTiles"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Selection validation and rename output scan tile vectors and assemble an unbounded mutation batch."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "patchTileCrops"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Patch parsing, tile validation, and batch construction lack per-tile retained cursors."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "setSource"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "The route may generate a replacement tile grid and requires unbounded artifact inverse/root preparation."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "setFrame"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "The reducer is scalar but artifact publication clones the complete presentation root; no bounded root-scalar preparation exists."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "setActiveExample"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "HostOnly"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "clearTiles"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Replacing the tile list requires a whole-list inverse and root clone without a retained preparation cursor."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "engagementSubmit"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Mixed keyword branches scan, generate, rename, delete, or serialize the complete tile scene in one dispatch."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "resetGrid"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Builds a complete default tile grid and requires whole-list inverse/root preparation."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "engagementInput"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "Config"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "canvasPointerDown"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Hit testing extracts and scans the whole tile scene before publishing selection effects."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "setLocale"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "Config"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "noMutation"
+            },
+            "disposition": {
+              "const": "Migrated"
+            },
+            "lanes": {
+              "const": [
+                "HostOnly"
+              ]
+            },
+            "blocker": {
+              "const": ""
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "copyPrompt"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Builds a complete tile-morph prompt by extracting and serializing all tile content in one dispatch."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "disposition",
+            "lanes",
+            "blocker"
+          ],
+          "properties": {
+            "id": {
+              "const": "exportVideoFromDeck"
+            },
+            "disposition": {
+              "const": "BatchOnlyPendingRewrite"
+            },
+            "lanes": {
+              "const": []
+            },
+            "blocker": {
+              "const": "Headless video rendering and whole-output export do not expose a resumable frame/encoder owner to the command job."
+            }
+          }
+        }
+      ],
+      "items": false
+    },
+    "boundaryCases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "bytes",
+          "accepted"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 513
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "oracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "library",
+        "scope",
+        "runtimeDependency"
+      ],
+      "properties": {
+        "library": {
+          "const": "serde_json"
+        },
+        "scope": {
+          "const": "test-only-existing-dependency"
+        },
+        "runtimeDependency": {
+          "const": false
+        }
+      }
+    }
+  }
+}

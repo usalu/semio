@@ -40,7 +40,7 @@ mod tests {
         let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = NoteConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
-        let mut ctx = crate::editor::note::NoteDispatchCtx { selected_block_ids: Vec::new() };
+        let mut ctx = crate::editor::note::NoteDispatchCtx { selected_block_ids: Vec::new(), id_owner: crate::artifacts::note::schema::NoteIdOwner::new("active-example-test", 0) };
         let emit = set_fixture_json::handle(&set_fixture_json::SetFixtureJson { json: crate::artifacts::note::schema::semio_example_json() }, &doc, &cfg, &mut ctx).expect("handle");
         assert!(emit.artifact_mutations.is_empty(), "whole-document load must not go through the Mutation enum");
         let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setFixtureJson must emit a LoadDocument effect") else {
@@ -56,7 +56,7 @@ mod tests {
         let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = NoteConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
-        let mut ctx = crate::editor::note::NoteDispatchCtx { selected_block_ids: Vec::new() };
+        let mut ctx = crate::editor::note::NoteDispatchCtx { selected_block_ids: Vec::new(), id_owner: crate::artifacts::note::schema::NoteIdOwner::new("active-example-test", 0) };
 
         let emit = handle(&SetActiveExample { example_id: "semio".into() }, &doc, &cfg, &mut ctx).expect("handle");
         let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {

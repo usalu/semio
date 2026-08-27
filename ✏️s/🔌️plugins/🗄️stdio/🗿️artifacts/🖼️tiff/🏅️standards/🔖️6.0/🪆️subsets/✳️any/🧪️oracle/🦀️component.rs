@@ -201,7 +201,7 @@ impl OracleValue {
         }
     }
     /// 🔁️ Inverse of [`to_json`] given the field's type code — parses a mutation spec's
-    /// `values` array for `set-tag`/`insert-ifd`/`set-snapshot` params.
+    /// `values` array for `replace-tag`/`insert-ifd` params.
     fn from_json(type_code: u16, values: &Json) -> Result<OracleValue, String> {
         let items = j_arr(values).ok_or("tiff oracle: tag values must be a JSON array")?;
         let nums = || -> Result<Vec<f64>, String> { items.iter().map(|v| j_num(v).ok_or_else(|| "tiff oracle: expected a number in tag values".to_string())).collect() };
@@ -592,8 +592,8 @@ pub fn project_tiff(input: &[u8]) -> Result<Json, String> {
 
 //#region 🔖️MutationParams
 /// 🧩️ Parses one `{"entries":[{"tag":n,"type":n,"values":[...]}],"pixels":"<hex>"}` JSON object
-/// into an [`OracleIfd`] — the shared shape `insert-ifd`'s `ifd` param and `set-snapshot`'s `ifds[]`
-/// entries both use. `StripOffsets`/`StripByteCounts` are never accepted from a caller (they are
+/// into an [`OracleIfd`] — the shared shape `insert-ifd`'s `ifd` param
+/// uses. `StripOffsets`/`StripByteCounts` are never accepted from a caller (they are
 /// always layout-computed at [`write_tiff`] time) — a caller wanting a raster IFD supplies `pixels`
 /// (raw strip bytes, hex, already in the sample layout its own `SamplesPerPixel` tag declares).
 fn parse_ifd_json(v: &Json) -> Result<OracleIfd, String> {
@@ -619,15 +619,7 @@ fn parse_ifd_json(v: &Json) -> Result<OracleIfd, String> {
     Ok(OracleIfd { entries, strip })
 }
 
-fn parse_doc_json(v: &Json) -> Result<OracleDoc, String> {
-    let little_endian = match j_get(v, "byteOrder").and_then(j_str) {
-        Some("big-endian") => false,
-        _ => true,
-    };
-    let ifds = j_get(v, "ifds").and_then(j_arr).ok_or("tiff oracle: set-snapshot needs an `ifds` array")?;
-    let ifds = ifds.iter().map(parse_ifd_json).collect::<Result<Vec<_>, String>>()?;
-    Ok(OracleDoc { little_endian, ifds })
-}
+
 //#endregion 🔖️MutationParams
 
 //#region 🔖️Dispatch
@@ -642,15 +634,11 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     let p_num = |key: &str| -> Option<f64> { params.and_then(|p| j_get(p, key)).and_then(j_num) };
     let p_str = |key: &str| -> Option<&str> { params.and_then(|p| j_get(p, key)).and_then(j_str) };
 
-    if kind == "set-snapshot" {
-        let params = params.ok_or("tiff oracle: set-snapshot needs `params`")?;
-        return Ok(write_tiff(&parse_doc_json(params)?));
-    }
+
 
     let mut doc = read_tiff(input)?;
     match kind.as_str() {
-        "no-mutation" => {}
-        "set-byte-order" => {
+        "change-byte-order" => {
             doc.little_endian = p_str("byteOrder") != Some("big-endian");
         }
         "insert-ifd" => {
@@ -664,11 +652,11 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
                 doc.ifds.remove(index);
             }
         }
-        "set-tag" => {
-            let ifd_index = p_num("ifdIndex").ok_or("tiff oracle: set-tag needs `ifdIndex`")? as usize;
-            let tag = p_num("tag").ok_or("tiff oracle: set-tag needs `tag`")? as u16;
-            let type_code = p_num("type").ok_or("tiff oracle: set-tag needs `type`")? as u16;
-            let values = params.and_then(|p| j_get(p, "values")).ok_or("tiff oracle: set-tag needs `values`")?;
+        "replace-tag" => {
+            let ifd_index = p_num("ifdIndex").ok_or("tiff oracle: replace-tag needs `ifdIndex`")? as usize;
+            let tag = p_num("tag").ok_or("tiff oracle: replace-tag needs `tag`")? as u16;
+            let type_code = p_num("type").ok_or("tiff oracle: replace-tag needs `type`")? as u16;
+            let values = params.and_then(|p| j_get(p, "values")).ok_or("tiff oracle: replace-tag needs `values`")?;
             if let Some(ifd) = doc.ifds.get_mut(ifd_index) {
                 ifd.set(tag, OracleValue::from_json(type_code, values)?);
             }
@@ -680,15 +668,15 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
                 ifd.entries.retain(|t| t.tag != tag);
             }
         }
-        "set-pixels" => {
-            let hex = p_str("pixels").ok_or("tiff oracle: set-pixels needs `pixels` (hex RGBA8)")?;
+        "replace-pixels" => {
+            let hex = p_str("pixels").ok_or("tiff oracle: replace-pixels needs `pixels` (hex RGBA8)")?;
             let rgba = hex_decode(hex)?;
-            let ifd0 = doc.ifds.first_mut().ok_or("tiff oracle: set-pixels needs an existing IFD 0")?;
+            let ifd0 = doc.ifds.first_mut().ok_or("tiff oracle: replace-pixels needs an existing IFD 0")?;
             let width = ifd0.get(TAG_IMAGE_WIDTH).and_then(|t| t.value.first_u32()).ok_or("tiff oracle: IFD 0 has no ImageWidth")?;
             let height = ifd0.get(TAG_IMAGE_LENGTH).and_then(|t| t.value.first_u32()).ok_or("tiff oracle: IFD 0 has no ImageLength")?;
             let expected = width as usize * height as usize * 4;
             if rgba.len() != expected {
-                return Err(format!("tiff oracle: set-pixels payload is {} byte(s), expected {} ({width}x{height} RGBA8)", rgba.len(), expected));
+                return Err(format!("tiff oracle: replace-pixels payload is {} byte(s), expected {} ({width}x{height} RGBA8)", rgba.len(), expected));
             }
             let rgb: Vec<u8> = rgba.chunks_exact(4).flat_map(|px| [px[0], px[1], px[2]]).collect();
             // 🎨 TIFF6 §Baseline Fields (p.29): BitsPerSample's COUNT is SamplesPerPixel — one entry
@@ -712,8 +700,8 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 /// the PRE-mutation document (`original_input`) exactly the way `TiffMutation::inverse`
 /// (`../🧬️schema/🧬️mutations/🦀️component.rs`) reasons over `TiffSnapshot` — "restore `base`'s own
 /// value for the facet this kind touched" — reimplemented here over [`OracleDoc`] rather than
-/// called through that trait. `set-pixels` restores IFD 0 wholesale because this oracle's own
-/// forward `set-pixels` rewrites IFD 0's strip AND the five layout tags that describe it, so
+/// called through that trait. `replace-pixels` restores IFD 0 wholesale because this oracle's own
+/// forward `replace-pixels` rewrites IFD 0's strip AND the five layout tags that describe it, so
 /// restoring only the raster would not be its inverse.
 #[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
@@ -724,13 +712,10 @@ pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated
     let params = spec.get("params");
     let p_num = |key: &str| -> Option<f64> { params.and_then(|p| j_get(p, key)).and_then(j_num) };
     let original = read_tiff(original_input)?;
-    if kind == "set-snapshot" {
-        return Ok(write_tiff(&original));
-    }
+
     let mut doc = read_tiff(mutated)?;
     match kind.as_str() {
-        "no-mutation" => {}
-        "set-byte-order" => doc.little_endian = original.little_endian,
+        "change-byte-order" => doc.little_endian = original.little_endian,
         "insert-ifd" => {
             let index = (p_num("index").ok_or("tiff oracle: insert-ifd needs `index`")? as usize).min(original.ifds.len());
             if index < doc.ifds.len() {
@@ -744,9 +729,9 @@ pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated
                 doc.ifds.insert(at, ifd.clone());
             }
         }
-        "set-tag" | "remove-tag" => {
-            let ifd_index = p_num("ifdIndex").ok_or("tiff oracle: set-tag/remove-tag inverse needs `ifdIndex`")? as usize;
-            let tag = p_num("tag").ok_or("tiff oracle: set-tag/remove-tag inverse needs `tag`")? as u16;
+        "replace-tag" | "remove-tag" => {
+            let ifd_index = p_num("ifdIndex").ok_or("tiff oracle: replace-tag/remove-tag inverse needs `ifdIndex`")? as usize;
+            let tag = p_num("tag").ok_or("tiff oracle: replace-tag/remove-tag inverse needs `tag`")? as u16;
             let restored = original.ifds.get(ifd_index).and_then(|ifd| ifd.get(tag)).cloned();
             if let Some(ifd) = doc.ifds.get_mut(ifd_index) {
                 match restored {
@@ -755,9 +740,9 @@ pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated
                 }
             }
         }
-        "set-pixels" => {
-            let source = original.ifds.first().ok_or("tiff oracle: set-pixels inverse needs an original IFD 0")?.clone();
-            let target = doc.ifds.first_mut().ok_or("tiff oracle: set-pixels inverse needs a mutated IFD 0")?;
+        "replace-pixels" => {
+            let source = original.ifds.first().ok_or("tiff oracle: replace-pixels inverse needs an original IFD 0")?.clone();
+            let target = doc.ifds.first_mut().ok_or("tiff oracle: replace-pixels inverse needs a mutated IFD 0")?;
             *target = source;
         }
         other => return Err(format!("mutation kind {other:?} has no oracle inverse ({} mutated byte(s))", mutated.len())),
@@ -880,15 +865,15 @@ mod fixture_derivation {
         eprintln!("wrote {} ({} bytes)", out_path.display(), bytes.len());
 
         // A SMALL real thumbnail (8x8, genuine decoded+downsampled rathaus pixels — not
-        // synthetic) reused inline as `insert-ifd`/`set-snapshot`'s real embedded-IFD content in
+        // synthetic) reused inline as `insert-ifd`'s real embedded-IFD content in
         // the feature file's Examples table: printed as hex here rather than committed, since it's
         // small enough to live directly in the feature text (192 bytes = 384 hex chars).
         let tiny = image::imageops::thumbnail(&full, 8, 8);
         let tiny_rgb = image::DynamicImage::ImageRgba8(tiny).to_rgb8();
         let tiny_hex: String = tiny_rgb.as_raw().iter().map(|b| format!("{b:02x}")).collect();
-        eprintln!("inline 8x8 real thumbnail hex (insert-ifd/set-snapshot pixels): {tiny_hex}");
+        eprintln!("inline 8x8 real thumbnail hex (insert-ifd pixels): {tiny_hex}");
 
-        // A committed `local://` binary fixture for `set-pixels`: the SAME real photo's own
+        // A committed `local://` binary fixture for `replace-pixels`: the SAME real photo's own
         // pixels, horizontally flipped (still 100% real content, but a genuinely different,
         // provable raster) — full IFD 0 resolution, so it can only reasonably live as a binary
         // fixture, not inline JSON hex.
@@ -903,8 +888,15 @@ mod fixture_derivation {
         let case_fixture_dir = repo_root.join("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🧪️tests/mutate-tiff-6-0/🧫️fixtures");
         std::fs::create_dir_all(&case_fixture_dir).expect("create case fixtures dir");
         let flipped_path = case_fixture_dir.join("🔄️flipped-scan.rgba");
-        std::fs::write(&flipped_path, &flipped_rgba).expect("write local:// set-pixels fixture");
+        std::fs::write(&flipped_path, &flipped_rgba).expect("write local:// replace-pixels fixture");
         eprintln!("wrote {} ({} bytes, {w}x{h} RGBA8)", flipped_path.display(), flipped_rgba.len());
     }
 }
 //#endregion 🔖️FixtureDerivation
+
+//#region RoundTrip
+#[cfg(feature = "oracles")]
+pub fn oracle_identity_round_trip(input: &[u8]) -> Result<Vec<u8>, String> { Ok(write_tiff(&read_tiff(input)?)) }
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_identity_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> { Err("the oracles feature is disabled".into()) }
+//#endregion RoundTrip

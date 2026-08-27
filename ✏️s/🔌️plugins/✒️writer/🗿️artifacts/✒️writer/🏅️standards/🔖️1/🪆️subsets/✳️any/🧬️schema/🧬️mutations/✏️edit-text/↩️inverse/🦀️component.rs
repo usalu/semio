@@ -1,5 +1,5 @@
 //! ↩️ Inverse for `EditText` — reads the BASE text, never the diff.
-use super::mutation::EditText;
+use super::EditText;
 use crate::artifacts::writer::schema::mutations::WriterMutation;
 use crate::artifacts::writer::WriterSnapshot;
 

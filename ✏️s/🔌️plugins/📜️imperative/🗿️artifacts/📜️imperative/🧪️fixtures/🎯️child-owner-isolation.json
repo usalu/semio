@@ -1,0 +1,8 @@
+{
+  "ownedFlowHasPayload": true,
+  "ownedTextHasPayload": true,
+  "flowWireIdentityMatches": true,
+  "textWireIdentityMatches": true,
+  "flowWireHasPayload": false,
+  "textWireHasPayload": false
+}

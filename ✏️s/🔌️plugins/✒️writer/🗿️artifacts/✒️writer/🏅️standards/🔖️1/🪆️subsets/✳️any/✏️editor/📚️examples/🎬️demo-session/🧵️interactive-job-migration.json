@@ -2,12 +2,34 @@
   "schema": "writer.interactive-job-migration/v1",
   "payloadSchema": "writer.writer.tool-command.v1",
   "maxRawWireBytes": 4096,
-  "maxCurrentTextBytes": 4096,
-  "maxOpenDocumentUriBytes": 1024,
   "maxWorkUnitsPerStep": 1,
+  "storePreparation": {
+    "publicationLane": "Config",
+    "historyLane": "Document",
+    "maxRetainedBytes": 8192,
+    "workItemsPerAdvance": 1,
+    "freshnessAuthority": "ArtifactStoreOneItemLiveAuthority",
+    "sealedByStore": true
+  },
+  "artifactPreparation": {
+    "publicationLane": "Artifact",
+    "historyLane": "Document",
+    "maxBaseBytes": 32768,
+    "maxEditTextBytes": 4096,
+    "workItemsPerAdvance": 1,
+    "freshnessAuthority": "ArtifactStoreOneItemLiveAuthority",
+    "sealedByStore": true
+  },
   "migrated": [
-    { "action": "textEdit", "variants": ["text-edit"] },
-    { "action": "setText", "variants": ["set-text"] },
+    { "action": "textEdit", "variants": ["text-edit"], "publication": ["Artifact"] },
+    { "action": "setText", "variants": ["set-text"], "publication": ["Artifact"] },
+    { "action": "setActiveExample", "variants": ["active-example"], "publication": ["HostOnly"] },
+    { "action": "setSnapshot", "variants": ["set-snapshot"], "publication": ["HostOnly"] },
+    { "action": "openDocument", "variants": ["open-document"], "publication": ["HostOnly"] },
+    { "action": "setSnapshotJson", "variants": ["document-json"], "publication": ["HostOnly"] },
+    { "action": "setFixtureJson", "variants": ["fixture-json"], "publication": ["HostOnly"] },
+    { "action": "formatDocument", "variants": ["format-document"], "publication": ["Artifact", "Config"] },
+    { "action": "commitRename", "variants": ["commit-rename"], "publication": ["Artifact"] },
     { "action": "setCamera", "variants": ["camera"] },
     { "action": "requestCompletions", "variants": ["request-completions"] },
     { "action": "lintDocument", "variants": ["lint-document"] },
@@ -15,29 +37,13 @@
     { "action": "toggleLineNumbers", "variants": ["toggle-line-numbers"] },
     { "action": "setEditorSetting", "variants": ["font-px", "line-height", "tab-size"] },
     { "action": "engagementInput", "variants": ["engagement-input"] },
-    { "action": "setActiveExample", "variants": ["active-example"] },
-    { "action": "setSnapshot", "variants": ["set-snapshot"] },
-    { "action": "openDocument", "variants": ["open-document"] },
-    { "action": "setSnapshotJson", "variants": ["document-json"] },
-    { "action": "setFixtureJson", "variants": ["fixture-json"] },
-    { "action": "formatDocument", "variants": ["format-document"] },
-    { "action": "commitRename", "variants": ["commit-rename"] },
-    { "action": "engagementSubmit", "variants": ["engagement-submit"] },
-    { "action": "setLocale", "variants": ["locale"] },
-    { "action": "recordTutorial", "variants": ["record-tutorial"] }
+    { "action": "engagementSubmit", "variants": ["engagement-submit"], "publication": ["Artifact", "Config"] },
+    { "action": "setLocale", "variants": ["locale"] }
   ],
-  "textAdmissionCases": [
-    { "textBytes": 4096, "accepted": true, "fuelDelta": 1, "cursorDelta": 0, "ownersPreserved": true },
-    { "textBytes": 4097, "accepted": false, "fuelDelta": 0, "cursorDelta": 0, "ownersPreserved": true }
-  ],
+  "batchOnly": [],
   "localeAdmissionCases": [
     { "localeBytes": 64, "accepted": true, "fuelDelta": 1, "cursorDelta": 0, "ownersPreserved": true },
     { "localeBytes": 65, "accepted": false, "fuelDelta": 0, "cursorDelta": 0, "ownersPreserved": true }
-  ],
-  "openDocumentAdmissionCases": [
-    { "textBytes": 4096, "uriBytes": 1024, "accepted": true, "fuelDelta": 1, "cursorDelta": 0, "ownersPreserved": true },
-    { "textBytes": 4097, "uriBytes": 1024, "accepted": false, "fuelDelta": 0, "cursorDelta": 0, "ownersPreserved": true },
-    { "textBytes": 4096, "uriBytes": 1025, "accepted": false, "fuelDelta": 0, "cursorDelta": 0, "ownersPreserved": true }
   ],
   "requiredLifecycle": [
     "exact-wire-admission",

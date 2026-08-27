@@ -1,5 +1,5 @@
 //! ↩️ Inverse for `ChangeLanguage` — reads the BASE language, never the diff.
-use super::mutation::ChangeLanguage;
+use super::ChangeLanguage;
 use crate::artifacts::writer::schema::mutations::WriterMutation;
 use crate::artifacts::writer::WriterSnapshot;
 

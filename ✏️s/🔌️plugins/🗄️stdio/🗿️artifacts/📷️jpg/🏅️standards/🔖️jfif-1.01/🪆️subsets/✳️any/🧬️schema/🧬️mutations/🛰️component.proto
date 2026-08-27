@@ -1,40 +1,13 @@
 syntax = "proto3";
-package semio.s_stdio_jpg.mutations;
-import "snapshot.proto";
-import "diff.proto";
-
-message JpgMutation {
-  oneof mutation {
-    NoMutation no_mutation = 1;
-    SetSnapshot set_snapshot = 2;
-    SetJfifHeader set_jfif_header = 3;
-    SetQuantTable set_quant_table = 4;
-    RemoveQuantTable remove_quant_table = 5;
-    SetHuffmanTable set_huffman_table = 6;
-    RemoveHuffmanTable remove_huffman_table = 7;
-    SetRestartInterval set_restart_interval = 8;
-    InsertOtherSegment insert_other_segment = 9;
-    RemoveOtherSegment remove_other_segment = 10;
-    SetPixels set_pixels = 11;
-    SetReEncodeQuality set_re_encode_quality = 12;
-  }
-  message NoMutation {}
-  message SetSnapshot { semio.s_stdio_jpg.snapshot.JpgSnapshot snapshot = 1; }
-  message SetJfifHeader {
-    uint32 version_major = 1;
-    uint32 version_minor = 2;
-    semio.s_stdio_jpg.snapshot.JfifDensityUnits density_units = 3;
-    uint32 x_density = 4;
-    uint32 y_density = 5;
-    semio.s_stdio_jpg.snapshot.JfifThumbnail thumbnail = 6;
-  }
-  message SetQuantTable { semio.s_stdio_jpg.snapshot.JpgQuantTable table = 1; }
-  message RemoveQuantTable { uint32 id = 1; }
-  message SetHuffmanTable { semio.s_stdio_jpg.snapshot.JpgHuffmanTable table = 1; }
-  message RemoveHuffmanTable { semio.s_stdio_jpg.diff.JpgHuffmanTableKey key = 1; }
-  message SetRestartInterval { optional uint32 restart_interval = 1; }
-  message InsertOtherSegment { uint32 index = 1; semio.s_stdio_jpg.snapshot.JpgSegment segment = 2; }
-  message RemoveOtherSegment { uint32 index = 1; }
-  message SetPixels { bytes pixels = 1; }
-  message SetReEncodeQuality { optional uint32 quality = 1; }
-}
+package stdio.jpg.mutation;
+import "📐️change-jfif-header/🛰️component.proto";
+import "📊️replace-quant-table/🛰️component.proto";
+import "📤️remove-quant-table/🛰️component.proto";
+import "🌳️replace-huffman-table/🛰️component.proto";
+import "🪓️remove-huffman-table/🛰️component.proto";
+import "🔁️change-restart-interval/🛰️component.proto";
+import "📥️insert-other-segment/🛰️component.proto";
+import "🗑️remove-other-segment/🛰️component.proto";
+import "🟪️replace-pixels/🛰️component.proto";
+import "🎚️change-re-encode-quality/🛰️component.proto";
+message JpgMutation { oneof mutation { ChangeJfifHeaderMutation change_jfif_header = 2; ReplaceQuantTableMutation replace_quant_table = 3; RemoveQuantTableMutation remove_quant_table = 4; ReplaceHuffmanTableMutation replace_huffman_table = 5; RemoveHuffmanTableMutation remove_huffman_table = 6; ChangeRestartIntervalMutation change_restart_interval = 7; InsertOtherSegmentMutation insert_other_segment = 8; RemoveOtherSegmentMutation remove_other_segment = 9; ReplacePixelsMutation replace_pixels = 10; ChangeReEncodeQualityMutation change_re_encode_quality = 11; } }

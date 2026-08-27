@@ -56,7 +56,7 @@ pub type AssemblyStore = store::ArtifactStore<AssemblySnapshot, AssemblyMutation
 
 /// 🧬️ Applies a mutation to a projection — generic over every variant.
 pub fn apply_assembly_mutation(projection: &mut AssemblySnapshot, mutation: &AssemblyMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _) = semio_framework::io::resolve_ready(vcs::apply_mutation(projection, mutation))?;
+    let (next, _) = vcs::apply_mutation(projection, mutation)?;
 
     *projection = next;
     Ok(())

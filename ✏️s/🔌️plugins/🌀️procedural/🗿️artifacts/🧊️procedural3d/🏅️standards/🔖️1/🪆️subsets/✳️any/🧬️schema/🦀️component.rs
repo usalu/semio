@@ -5,6 +5,7 @@ use crate::artifacts::procedural3d::dsl::{
     PROCEDURAL3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT, PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT,
 };
 use crate::artifacts::procedural3d::snapshot::schema::Procedural3dSnapshot;
+use flow::playbook::GenerationPlayRoot;
 use crate::artifacts::procedural3d::widget_id;
 use flow::dag::DagFixture;
 use flow::forms_bridge::apply_generation_values_to_fixture;
@@ -28,7 +29,7 @@ pub struct Procedural3dArtifact {
     #[state(artifact)]
     pub fixture: FlowFixture,
     #[state(artifact)]
-    pub generation: GenerationPlayState,
+    pub generation: GenerationPlayRoot,
     #[state(presence)]
     pub selected_node_ids: Vec<String>,
     #[state(config)]
@@ -81,7 +82,7 @@ impl Default for Procedural3dArtifact {
     fn default() -> Self {
         Self {
             fixture: FlowFixture::default(),
-            generation: GenerationPlayState::default(),
+            generation: GenerationPlayState::default().into(),
             selected_node_ids: Vec::new(),
             lod_mode: String::new(),
             show_mode: "shaded".into(),
@@ -112,7 +113,7 @@ impl Procedural3dArtifact {
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: Procedural3dSnapshot) {
         self.fixture = snapshot.fixture;
-        self.generation = snapshot.generation;
+        std::mem::replace(&mut self.generation, snapshot.generation).retire_cold();
     }
 }
 

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-edge",
+  "semanticKind": "delete-edge",
+  "displayName": "Delete Edge",
+  "emoji": "✂️",
+  "aggregateVariant": "DeleteEdge",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "delete-edge",
+  "binaryTag": 3,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

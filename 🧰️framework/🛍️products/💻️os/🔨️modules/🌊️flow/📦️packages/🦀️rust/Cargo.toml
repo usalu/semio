@@ -22,6 +22,7 @@ semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", 
 semio-framework-os-infinite = { path = "../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-job = { workspace = true }
+semio-framework-replication = { workspace = true }
 neural_engine = { path = "../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 math = { path = "../../../../../../🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 graph = { path = "../../../../../../🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
@@ -36,6 +37,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
 [dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-s-plugin-flow-extension-brep = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust", default-features = false }
 semio-s-plugin-flow-extension-primitive = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust", default-features = false }
 semio-s-plugin-flow-extension-math = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust", default-features = false }

@@ -10,6 +10,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::artifact::*;
 use crate::host::*;
+use crate::retained::{FlowOwner, FlowRetirement};
+use protocol::value::ordered::{Grant as LayoutGrant, UpdateCursor as LayoutUpdate};
 
 // #region 🔖️ArtifactVcs
 // 🧾️ `create_document_envelope`/`ArtifactCommand` are unconditional (not test/wasm-only)
@@ -358,14 +360,14 @@ fn option_dsl_map_to_dictionary(entries: Option<BTreeMap<String, ValueDsl>>) -> 
     entries.map(|entries| value_dsl_map_to_dictionary(&entries)).unwrap_or_default()
 }
 
-/// 🔢️ `BTreeSet<String>` has no blanket `crate::os_dsl::DslField` impl (only `Vec`/`BTreeMap`/arrays do) — a
+/// 🔢️ Ordered string membership uses the native DSL array representation — a
 /// sorted `Vec<String>` is a lossless, order-independent stand-in at the DSL-text boundary since the
 /// real field is reconstructed as a set on the way back in.
-fn btree_set_to_vec(set: &BTreeSet<String>) -> Vec<String> {
+fn ordered_set_to_vec(set: &crate::OrderedSet) -> Vec<String> {
     set.iter().cloned().collect()
 }
 
-fn vec_to_btree_set(items: Vec<String>) -> BTreeSet<String> {
+fn vec_to_ordered_set(items: Vec<String>) -> crate::OrderedSet {
     items.into_iter().collect()
 }
 
@@ -469,6 +471,7 @@ enum WidgetDsl {
     },
     InputSlider {
         id: String,
+        label: String,
         value: f64,
         min: f64,
         max: f64,
@@ -535,11 +538,11 @@ fn widget_to_widget_dsl(widget: &Widget) -> WidgetDsl {
         Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, preview } => {
             WidgetDsl::Neuron { id: id.clone(), neuron_kind: neuron_kind.clone(), params: dictionary_to_option_dsl_map(params), input_ports: input_ports.clone(), output_ports: output_ports.clone(), preview: *preview }
         }
-        Widget::InputSlider { id, value, min, max, step } => WidgetDsl::InputSlider { id: id.clone(), value: *value, min: *min, max: *max, step: *step },
+        Widget::InputSlider { id, label, value, min, max, step } => WidgetDsl::InputSlider { id: id.clone(), label: label.clone(), value: *value, min: *min, max: *max, step: *step },
         Widget::InputNote { id, text } => WidgetDsl::InputNote { id: id.clone(), text: text.clone() },
         Widget::InputImage { id, src } => WidgetDsl::InputImage { id: id.clone(), src: src.clone() },
         Widget::Variable { id, name, schema } => WidgetDsl::Variable { id: id.clone(), name: name.clone(), schema: schema.clone() },
-        Widget::OutputPreview { id, preview, expanded } => WidgetDsl::OutputPreview { id: id.clone(), preview: dictionary_to_option_dsl_map(preview), expanded: btree_set_to_vec(expanded) },
+        Widget::OutputPreview { id, preview, expanded } => WidgetDsl::OutputPreview { id: id.clone(), preview: dictionary_to_option_dsl_map(preview), expanded: ordered_set_to_vec(expanded) },
         Widget::OutputAction { id, action } => WidgetDsl::OutputAction { id: id.clone(), action: action.clone() },
         Widget::OutputExport { id, format } => WidgetDsl::OutputExport { id: id.clone(), format: format.clone() },
         Widget::Cluster { id, name, tree, flow } => WidgetDsl::Cluster { id: id.clone(), name: name.clone(), tree: tree_to_tree_dsl(tree), flow: crate::os_dsl::to_dsl_value(flow).unwrap_or(crate::os_dsl::DslValue::Null) },
@@ -549,11 +552,11 @@ fn widget_to_widget_dsl(widget: &Widget) -> WidgetDsl {
 fn widget_dsl_to_widget(widget: WidgetDsl) -> Result<Widget, String> {
     Ok(match widget {
         WidgetDsl::Neuron { id, neuron_kind, params, input_ports, output_ports, preview } => Widget::Neuron { id, neuron_kind, params: option_dsl_map_to_dictionary(params), input_ports, output_ports, preview },
-        WidgetDsl::InputSlider { id, value, min, max, step } => Widget::InputSlider { id, value, min, max, step },
+        WidgetDsl::InputSlider { id, label, value, min, max, step } => Widget::InputSlider { id, label, value, min, max, step },
         WidgetDsl::InputNote { id, text } => Widget::InputNote { id, text },
         WidgetDsl::InputImage { id, src } => Widget::InputImage { id, src },
         WidgetDsl::Variable { id, name, schema } => Widget::Variable { id, name, schema },
-        WidgetDsl::OutputPreview { id, preview, expanded } => Widget::OutputPreview { id, preview: option_dsl_map_to_dictionary(preview), expanded: vec_to_btree_set(expanded) },
+        WidgetDsl::OutputPreview { id, preview, expanded } => Widget::OutputPreview { id, preview: option_dsl_map_to_dictionary(preview), expanded: vec_to_ordered_set(expanded) },
         WidgetDsl::OutputAction { id, action } => Widget::OutputAction { id, action },
         WidgetDsl::OutputExport { id, format } => Widget::OutputExport { id, format },
         WidgetDsl::Cluster { id, name, tree, flow } => Widget::Cluster { id, name, tree: tree_dsl_to_tree(tree)?, flow: crate::os_dsl::from_dsl_value(flow).unwrap_or_default() },
@@ -585,7 +588,7 @@ fn flow_fixture_to_dsl(fixture: &FlowFixture) -> FlowFixtureDsl {
         camera: fixture.camera.clone(),
         widgets: fixture.widgets.iter().map(widget_to_widget_dsl).collect(),
         synapses: fixture.synapses.iter().map(synapse_to_dsl).collect(),
-        layout: fixture.layout.clone(),
+        layout: fixture.layout.iter().map(|(key, value)| (key.clone(), value.clone())).collect(),
     }
 }
 
@@ -595,7 +598,7 @@ fn flow_fixture_dsl_to_fixture(fixture: FlowFixtureDsl) -> Result<FlowFixture, S
         camera: fixture.camera,
         widgets: fixture.widgets.into_iter().map(widget_dsl_to_widget).collect::<Result<Vec<_>, _>>()?,
         synapses: fixture.synapses.into_iter().map(synapse_from_dsl).collect::<Result<Vec<_>, _>>()?,
-        layout: fixture.layout,
+        layout: fixture.layout.into_iter().collect(),
     })
 }
 /// 📜️ Handcrafted ArtifactDsl (P6): derive no longer emits ArtifactDsl/ArtifactPack.
@@ -822,32 +825,24 @@ pub type FlowEnvelope = ArtifactEnvelope<FlowFixture, FlowMutation>;
 pub type FlowStore = ArtifactStore<FlowFixture, FlowMutation>;
 
 struct FlowFixtureRetirement {
-    fixture: Option<FlowFixture>,
+    retirement: FlowRetirement,
 }
 
 impl FlowFixtureRetirement {
     fn new(fixture: FlowFixture) -> Self {
-        Self { fixture: Some(fixture) }
+        let mut retirement = FlowRetirement::default();
+        retirement.push(FlowOwner::Fixture(fixture));
+        Self { retirement }
     }
 }
 
 impl ErasedSnapshotRetirement for FlowFixtureRetirement {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
-        if maximum_items == 0 {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        let Some(fixture) = self.fixture.as_mut() else {
-            return Ok(SnapshotRetirementStep::Complete);
-        };
-        if fixture.widgets.pop().is_some() || fixture.synapses.pop().is_some() || fixture.layout.pop_last().is_some() || fixture.schema.pop().is_some() {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        self.fixture = None;
-        Ok(SnapshotRetirementStep::Complete)
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        self.retirement.close_step(maximum_items, maximum_bytes)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.fixture.is_none()
+        self.retirement.is_empty()
     }
 }
 
@@ -1200,7 +1195,7 @@ enum FlowVcsAction {
     MoveSynapse { id: String, index: usize },
     PatchSynapse { id: String, item: SynapseSpec },
     SetLayout(FlowLayoutEntry),
-    RemoveLayoutAtWidget { index: usize },
+    LayoutRoot(crate::OrderedMap<WidgetLayout>),
     ReplaceDocument(FlowFixture),
     ActivateDocument { index: usize },
     Undo,
@@ -1293,7 +1288,8 @@ impl FlowVcsCursor {
             FlowVcsAction::RemoveSynapse { .. } | FlowVcsAction::RemoveSynapseAt { .. } => (FlowVcsCursorPhase::Scan, FlowVcsCursorKind::RemoveSynapse, 0),
             FlowVcsAction::MoveSynapse { index, .. } => (FlowVcsCursorPhase::Scan, FlowVcsCursorKind::MoveSynapse, *index),
             FlowVcsAction::PatchSynapse { .. } => (FlowVcsCursorPhase::Scan, FlowVcsCursorKind::PatchSynapse, 0),
-            FlowVcsAction::SetLayout(_) | FlowVcsAction::RemoveLayoutAtWidget { .. } => (FlowVcsCursorPhase::Scan, FlowVcsCursorKind::Layout, 0),
+            FlowVcsAction::SetLayout(_) => (FlowVcsCursorPhase::Scan, FlowVcsCursorKind::Layout, 0),
+            FlowVcsAction::LayoutRoot(_) => (FlowVcsCursorPhase::Mutate, FlowVcsCursorKind::Layout, 0),
             FlowVcsAction::ActivateDocument { index } => (FlowVcsCursorPhase::Mutate, FlowVcsCursorKind::ReplaceDocument, *index),
         };
         let history_mode = match action {
@@ -1329,6 +1325,8 @@ struct FlowVcsOperation {
     source: FlowVcsCensus,
     action: Option<FlowVcsAction>,
     rollback_owner: Option<FlowVcsAction>,
+    layout_update: Option<LayoutUpdate<WidgetLayout>>,
+    retirement: FlowRetirement,
     cursor: FlowVcsCursor,
     page: Option<FlowVcsPage>,
     page_leased: bool,
@@ -1433,6 +1431,7 @@ pub struct FlowRetainedVcs {
     redo: FlowFixedOwners<FlowVcsAction, FLOW_VCS_MAX_HISTORY>,
     retired_actions: FlowFixedOwners<FlowVcsAction, FLOW_VCS_MAX_HISTORY>,
     retired_surfaces: FlowFixedOwners<FlowSurfaceOwner, FLOW_VCS_MAX_HISTORY>,
+    retirement: FlowRetirement,
     closing: bool,
 }
 
@@ -1450,6 +1449,7 @@ impl FlowRetainedVcs {
             redo: FlowFixedOwners::new(),
             retired_actions: FlowFixedOwners::new(),
             retired_surfaces: FlowFixedOwners::new(),
+            retirement: FlowRetirement::default(),
             closing: false,
         }
     }
@@ -1748,6 +1748,16 @@ impl FlowRetainedVcs {
         }
         let operation = self.operations[slot].as_mut().expect("validated Flow VCS operation");
         operation.stage = FlowVcsStage::Closing;
+        if let Some(update) = operation.layout_update.as_mut() {
+            update.begin_close();
+            update.close_step(LayoutGrant { maximum_items: 1, maximum_bytes: grant.bytes });
+            if update.terminal_is_empty() { operation.layout_update = None; }
+            return Ok(false);
+        }
+        if !operation.retirement.is_empty() {
+            operation.retirement.close_step(1, grant.bytes).map_err(|_| FlowVcsFault::ClosePending)?;
+            return Ok(false);
+        }
         if operation.cursor.phase == FlowVcsCursorPhase::Rollback {
             if operation.cursor.visibility_published {
                 let document = self.document.as_mut().ok_or(FlowVcsFault::Closed)?;
@@ -1831,6 +1841,10 @@ impl FlowRetainedVcs {
                 Ok(false)
             }
             _ => {
+                if let Some(action) = operation.rollback_owner.take() {
+                    flow_vcs_retire_action(action, &mut operation.retirement);
+                    return Ok(false);
+                }
                 let operation = self.operations[slot].take().expect("validated Flow VCS operation");
                 self.hand_back(operation.source, operation.delivery_held);
                 self.slot_generations[slot] = self.slot_generations[slot].checked_add(1).ok_or(FlowVcsFault::Limit)?;
@@ -1849,20 +1863,25 @@ impl FlowRetainedVcs {
         if self.credits.operations > 0 {
             return Err(FlowVcsFault::ClosePending);
         }
+        if !self.retirement.is_empty() {
+            self.retirement.close_step(1, grant.bytes).map_err(|_| FlowVcsFault::ClosePending)?;
+            return Ok(false);
+        }
         if let Some(surface) = self.retired_surfaces.last_mut() {
             if surface.close_one() {
                 self.retired_surfaces.pop();
             }
             return Ok(false);
         }
-        if let Some(action) = self.retired_actions.last_mut() {
-            if flow_vcs_retire_action_step(action) {
-                self.retired_actions.pop();
-            }
+        if let Some(action) = self.retired_actions.pop() {
+            flow_vcs_retire_action(action, &mut self.retirement);
             return Ok(false);
         }
-        if self.closing && (self.undo.pop().is_some() || self.redo.pop().is_some()) {
-            return Ok(false);
+        if self.closing {
+            if let Some(action) = self.undo.pop().or_else(|| self.redo.pop()) {
+                flow_vcs_retire_action(action, &mut self.retirement);
+                return Ok(false);
+            }
         }
         if self.closing && self.credits.operations == 0 {
             let document = self.document.as_mut().ok_or(FlowVcsFault::Closed)?;
@@ -1873,11 +1892,8 @@ impl FlowRetainedVcs {
                 })?;
                 return Ok(false);
             }
-            if let Some(fixture) = document.versions.last_mut() {
-                if fixture.widgets.pop().is_some() || fixture.synapses.pop().is_some() || fixture.layout.pop_last().is_some() || fixture.schema.pop().is_some() {
-                    return Ok(false);
-                }
-                document.versions.pop();
+            if let Some(fixture) = document.versions.pop() {
+                self.retirement.push(FlowOwner::Fixture(fixture));
                 return Ok(false);
             }
             self.document = None;
@@ -1890,7 +1906,7 @@ impl FlowRetainedVcs {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.closing && self.document.is_none() && self.credits.operations == 0 && self.credits == FlowVcsCredits::default() && self.undo.is_empty() && self.redo.is_empty() && self.retired_actions.is_empty() && self.retired_surfaces.is_empty()
+        self.closing && self.document.is_none() && self.credits.operations == 0 && self.credits == FlowVcsCredits::default() && self.undo.is_empty() && self.redo.is_empty() && self.retired_actions.is_empty() && self.retired_surfaces.is_empty() && self.retirement.is_empty()
     }
 
     fn preflight(&self, census: FlowVcsCensus) -> Result<(), FlowVcsFault> {
@@ -1927,7 +1943,7 @@ impl FlowRetainedVcs {
         let handle = FlowVcsHandle { operation: self.next_operation, slot: slot as u8, generation: self.slot_generations[slot] };
         self.charge(source);
         let cursor = FlowVcsCursor::new(&action);
-        self.operations[slot] = Some(FlowVcsOperation { handle, authority, source, action: Some(action), rollback_owner: None, cursor, page: None, page_leased: false, delivery_held: true, stage: FlowVcsStage::Admitted, close_phase: 0 });
+        self.operations[slot] = Some(FlowVcsOperation { handle, authority, source, action: Some(action), rollback_owner: None, layout_update: None, retirement: FlowRetirement::default(), cursor, page: None, page_leased: false, delivery_held: true, stage: FlowVcsStage::Admitted, close_phase: 0 });
         self.next_operation += 1;
         Ok(handle)
     }
@@ -2048,7 +2064,7 @@ impl FlowRetainedVcs {
         }
         let document = self.document.as_mut().ok_or(FlowVcsFault::Closed)?;
         let operation = self.operations[slot].as_mut().expect("validated Flow VCS operation");
-        flow_vcs_step_cursor(document, operation)?;
+        flow_vcs_step_cursor(document, operation, grant)?;
         if operation.cursor.phase == FlowVcsCursorPhase::TransferHistory && operation.cursor.history_mode == 0 && !self.redo.is_empty() {
             operation.cursor.phase = FlowVcsCursorPhase::RetireRedo;
         }
@@ -2187,10 +2203,10 @@ fn flow_vcs_cursor_requires_edit(phase: FlowVcsCursorPhase) -> bool {
     )
 }
 
-fn flow_vcs_step_cursor(document: &mut FlowVcsDocument, operation: &mut FlowVcsOperation) -> Result<(), FlowVcsFault> {
+fn flow_vcs_step_cursor(document: &mut FlowVcsDocument, operation: &mut FlowVcsOperation, grant: FlowVcsGrant) -> Result<(), FlowVcsFault> {
     match operation.cursor.phase {
         FlowVcsCursorPhase::Scan => flow_vcs_step_scan(document.fixture(), operation),
-        FlowVcsCursorPhase::Mutate => flow_vcs_step_mutation(document, operation),
+        FlowVcsCursorPhase::Mutate => flow_vcs_step_mutation(document, operation, grant),
         FlowVcsCursorPhase::Shift => flow_vcs_step_shift(document.fixture_mut(), operation),
         FlowVcsCursorPhase::ReserveReplacement
         | FlowVcsCursorPhase::ReplaceSchema
@@ -2284,15 +2300,6 @@ fn flow_vcs_step_scan(fixture: &FlowFixture, operation: &mut FlowVcsOperation) -
                 return Ok(());
             }
         }
-        FlowVcsAction::RemoveLayoutAtWidget { index: target } => {
-            let widget = fixture.widgets.get(*target).ok_or(FlowVcsFault::InvalidMutation)?;
-            if !fixture.layout.contains_key(widget_id_for(widget)) {
-                return Err(FlowVcsFault::InvalidMutation);
-            }
-            operation.cursor.origin = *target;
-            operation.cursor.phase = FlowVcsCursorPhase::Mutate;
-            return Ok(());
-        }
         _ => return Err(FlowVcsFault::InvalidMutation),
     }
     operation.cursor.scan += 1;
@@ -2354,7 +2361,17 @@ fn flow_vcs_step_shift(fixture: &mut FlowFixture, operation: &mut FlowVcsOperati
     Ok(())
 }
 
-fn flow_vcs_step_mutation(document: &mut FlowVcsDocument, operation: &mut FlowVcsOperation) -> Result<(), FlowVcsFault> {
+fn flow_vcs_step_mutation(document: &mut FlowVcsDocument, operation: &mut FlowVcsOperation, grant: FlowVcsGrant) -> Result<(), FlowVcsFault> {
+    if let Some(update) = operation.layout_update.as_mut() {
+        update.advance(LayoutGrant { maximum_items: 1, maximum_bytes: grant.bytes });
+        if let Some(layout) = update.take_result() {
+            let previous = std::mem::replace(&mut document.fixture_mut().layout, layout);
+            operation.action = Some(FlowVcsAction::LayoutRoot(previous));
+            operation.cursor.mutated = true;
+            operation.cursor.phase = FlowVcsCursorPhase::TransferHistory;
+        }
+        return Ok(());
+    }
     let action = operation.action.take().ok_or(FlowVcsFault::InvalidMutation)?;
     let fixture = document.fixture_mut();
     operation.action = Some(match action {
@@ -2400,31 +2417,16 @@ fn flow_vcs_step_mutation(document: &mut FlowVcsDocument, operation: &mut FlowVc
             operation.cursor.mutated = true;
             FlowVcsAction::PatchSynapse { id, item }
         }
-        FlowVcsAction::SetLayout(mut entry) => {
-            let previous = match entry.layout.take() {
-                Some(mut layout) => {
-                    if let Some(current) = fixture.layout.get_mut(&entry.id) {
-                        std::mem::swap(current, &mut layout);
-                        Some(layout)
-                    } else {
-                        fixture.layout.insert(entry.id, layout);
-                        operation.cursor.mutated = true;
-                        operation.cursor.phase = FlowVcsCursorPhase::TransferHistory;
-                        operation.action = Some(FlowVcsAction::RemoveLayoutAtWidget { index: operation.cursor.origin });
-                        return Ok(());
-                    }
-                }
-                None => fixture.layout.remove(&entry.id),
-            };
-            operation.cursor.mutated = true;
-            FlowVcsAction::SetLayout(FlowLayoutEntry { id: entry.id, layout: previous })
+        FlowVcsAction::SetLayout(entry) => {
+            operation.layout_update = Some(match entry.layout {
+                Some(layout) => fixture.layout.begin_set(entry.id, layout),
+                None => fixture.layout.begin_remove(entry.id),
+            });
+            return Ok(());
         }
-        FlowVcsAction::RemoveLayoutAtWidget { index } => {
-            let id = widget_id_for(&fixture.widgets[index]);
-            let (id, layout) = fixture.layout.remove_entry(id).ok_or(FlowVcsFault::InvalidMutation)?;
-            operation.rollback_owner = Some(FlowVcsAction::RemoveLayoutAtWidget { index });
+        FlowVcsAction::LayoutRoot(layout) => {
             operation.cursor.mutated = true;
-            FlowVcsAction::SetLayout(FlowLayoutEntry { id, layout: Some(layout) })
+            FlowVcsAction::LayoutRoot(std::mem::replace(&mut fixture.layout, layout))
         }
         FlowVcsAction::ActivateDocument { index } => {
             if document.versions.get(index).is_none() {
@@ -2456,7 +2458,7 @@ fn flow_vcs_step_document_replacement(document: &mut FlowVcsDocument, operation:
             if document.versions.is_full() {
                 return Err(FlowVcsFault::Full);
             }
-            let empty = FlowFixture { schema: String::new(), camera: CameraJson { x: 0.0, y: 0.0, zoom: 0.0 }, widgets: Vec::new(), synapses: Vec::new(), layout: BTreeMap::new() };
+            let empty = FlowFixture { schema: String::new(), camera: CameraJson { x: 0.0, y: 0.0, zoom: 0.0 }, widgets: Vec::new(), synapses: Vec::new(), layout: crate::OrderedMap::new() };
             document.versions.push(empty).map_err(|_| FlowVcsFault::Full)?;
             operation.cursor.target = document.versions.len() - 1;
             operation.cursor.mutated = true;
@@ -2518,15 +2520,13 @@ fn flow_vcs_step_document_replacement(document: &mut FlowVcsDocument, operation:
             }
         }
         FlowVcsCursorPhase::ReplaceLayout => {
-            if let Some((id, layout)) = source.layout.pop_first() {
-                document.versions.get_mut(operation.cursor.target).expect("retained replacement slot").layout.insert(id, layout);
-            } else {
-                let previous = document.active;
-                document.active = operation.cursor.target;
-                operation.action = Some(FlowVcsAction::ActivateDocument { index: previous });
-                operation.cursor.mutated = true;
-                operation.cursor.phase = FlowVcsCursorPhase::TransferHistory;
-            }
+            let target = document.versions.get_mut(operation.cursor.target).expect("retained replacement slot");
+            std::mem::swap(&mut target.layout, &mut source.layout);
+            let previous = document.active;
+            document.active = operation.cursor.target;
+            operation.action = Some(FlowVcsAction::ActivateDocument { index: previous });
+            operation.cursor.mutated = true;
+            operation.cursor.phase = FlowVcsCursorPhase::TransferHistory;
         }
         _ => return Err(FlowVcsFault::InvalidMutation),
     }
@@ -2648,26 +2648,8 @@ fn flow_vcs_step_rollback(document: &mut FlowVcsDocument, operation: &mut FlowVc
         FlowVcsCursorKind::Layout => {
             let action = operation.action.take().ok_or(FlowVcsFault::InvalidMutation)?;
             match action {
-                FlowVcsAction::SetLayout(mut entry) => {
-                    let fixture = document.fixture_mut();
-                    if let Some(mut layout) = entry.layout.take() {
-                        if let Some(current) = fixture.layout.get_mut(&entry.id) {
-                            std::mem::swap(current, &mut layout);
-                            operation.action = Some(FlowVcsAction::SetLayout(FlowLayoutEntry { id: entry.id, layout: Some(layout) }));
-                        } else {
-                            fixture.layout.insert(entry.id, layout);
-                            operation.action = Some(FlowVcsAction::RemoveLayoutAtWidget { index: cursor.origin });
-                        }
-                    } else {
-                        let layout = fixture.layout.remove(&entry.id);
-                        operation.action = Some(FlowVcsAction::SetLayout(FlowLayoutEntry { id: entry.id, layout }));
-                    }
-                }
-                FlowVcsAction::RemoveLayoutAtWidget { index } => {
-                    let fixture = document.fixture_mut();
-                    let id = widget_id_for(&fixture.widgets[index]);
-                    let (id, layout) = fixture.layout.remove_entry(id).ok_or(FlowVcsFault::InvalidMutation)?;
-                    operation.action = Some(FlowVcsAction::SetLayout(FlowLayoutEntry { id, layout: Some(layout) }));
+                FlowVcsAction::LayoutRoot(layout) => {
+                    operation.action = Some(FlowVcsAction::LayoutRoot(std::mem::replace(&mut document.fixture_mut().layout, layout)));
                 }
                 _ => return Err(FlowVcsFault::InvalidMutation),
             }
@@ -2680,14 +2662,11 @@ fn flow_vcs_step_rollback(document: &mut FlowVcsDocument, operation: &mut FlowVc
                     return Ok(false);
                 }
             }
-            let candidate = document.versions.get_mut(cursor.target).ok_or(FlowVcsFault::InvalidMutation)?;
-            if candidate.widgets.pop().is_some() || candidate.synapses.pop().is_some() || candidate.layout.pop_last().is_some() || candidate.schema.pop().is_some() {
-                return Ok(false);
-            }
             if cursor.target + 1 != document.versions.len() {
                 return Err(FlowVcsFault::ClosePending);
             }
-            document.versions.pop();
+            let candidate = document.versions.pop().ok_or(FlowVcsFault::InvalidMutation)?;
+            operation.retirement.push(FlowOwner::Fixture(candidate));
         }
         FlowVcsCursorKind::None => {}
     }
@@ -2699,11 +2678,25 @@ fn flow_vcs_step_rollback(document: &mut FlowVcsDocument, operation: &mut FlowVc
 }
 //#endregion 🌊️RetainedActionCursor
 
-fn flow_vcs_retire_action_step(action: &mut FlowVcsAction) -> bool {
-    if let FlowVcsAction::ReplaceDocument(fixture) = action {
-        return !(fixture.widgets.pop().is_some() || fixture.synapses.pop().is_some() || fixture.layout.pop_last().is_some() || fixture.schema.pop().is_some());
+fn flow_vcs_retire_action(action: FlowVcsAction, retirement: &mut FlowRetirement) {
+    match action {
+        FlowVcsAction::ReplaceDocument(fixture) => retirement.push(FlowOwner::Fixture(fixture)),
+        FlowVcsAction::LayoutRoot(layout) => retirement.push(FlowOwner::Layouts(layout)),
+        FlowVcsAction::SetLayout(entry) => retirement.text(entry.id),
+        FlowVcsAction::InsertWidget { item, .. } => retirement.push(FlowOwner::Widget(item)),
+        FlowVcsAction::PatchWidget { id, item } => {
+            retirement.text(id);
+            retirement.push(FlowOwner::Widget(item));
+        }
+        FlowVcsAction::InsertSynapse { item, .. } => retirement.push(FlowOwner::Specs(vec![item])),
+        FlowVcsAction::PatchSynapse { id, item } => {
+            retirement.text(id);
+            retirement.push(FlowOwner::Specs(vec![item]));
+        }
+        FlowVcsAction::RemoveWidget { id } | FlowVcsAction::MoveWidget { id, .. }
+        | FlowVcsAction::RemoveSynapse { id } | FlowVcsAction::MoveSynapse { id, .. } => retirement.text(id),
+        _ => {}
     }
-    true
 }
 
 fn flow_vcs_fixture_census(fixture: &FlowFixture) -> FlowVcsCensus {
@@ -2734,7 +2727,7 @@ fn flow_vcs_widget_census(widget: &Widget) -> FlowVcsCensus {
             .saturating_add(tree.synapses.len().saturating_mul(std::mem::size_of::<Synapse>()))
             .saturating_add(flow.nodes.len().saturating_mul(std::mem::size_of::<(String, FlowNodeGui)>()))
             .saturating_add(flow.previews.len().saturating_mul(std::mem::size_of::<FlowPreviewGui>())),
-        Widget::InputSlider { .. } => std::mem::size_of::<Widget>(),
+        Widget::InputSlider { label, .. } => label.len(),
     };
     FlowVcsCensus { items: 1, bytes: std::mem::size_of::<Widget>().saturating_add(widget_id_for(widget).len()).saturating_add(payload_bytes), depth }
 }
@@ -2810,9 +2803,9 @@ pub mod forms_bridge {
 
     fn widget_to_playbook_block(widget: &Widget) -> Option<PlaybookBlock> {
         match widget {
-            Widget::InputSlider { id, value, min, max, step, .. } => Some(PlaybookBlock {
+            Widget::InputSlider { id, label, value, min, max, step } => Some(PlaybookBlock {
                 id: id.clone(),
-                label: humanize_widget_label(id),
+                label: label.clone(),
                 kind: "slider".into(),
                 description: None,
                 required: None,
@@ -3835,7 +3828,7 @@ mod flow_vcs_tests {
     fn retained_fixture() -> FlowFixture {
         let mut fixture = FlowFixture::default();
         fixture.widgets.push(Widget::InputNote { id: "source".into(), text: "retained".into() });
-        fixture.widgets.push(Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new(), expanded: BTreeSet::from(["value".into()]) });
+        fixture.widgets.push(Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new(), expanded: crate::OrderedSet::from(["value".into()]) });
         fixture.synapses.push(SynapseSpec { id: "source-preview".into(), from: "source".into(), to: "preview".into(), from_port: "text".into(), to_port: String::new() });
         fixture.layout.insert("source".into(), WidgetLayout { x: 1.0, y: 2.0 });
         fixture.layout.insert("preview".into(), WidgetLayout { x: 4.0, y: 5.0 });
@@ -3859,6 +3852,91 @@ mod flow_vcs_tests {
         while !session.close_operation_step(handle, retained_grant()).expect("published operation close") {}
         page
     }
+
+    //#region 📍️OrderedLayoutLaws
+    #[test]
+    fn retained_vcs_shared_snapshot_readers_retire_without_waiting_on_each_other() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🪞️fixtures/📍️ordered-layout.json")).unwrap();
+        let snapshot = Arc::new(serde_json::from_value::<FlowFixture>(fixture["initial"].clone()).unwrap());
+        let mut readers = [
+            std::mem::ManuallyDrop::new(FlowSnapshotRetirementFactory.retire(Arc::clone(&snapshot))),
+            std::mem::ManuallyDrop::new(FlowSnapshotRetirementFactory.retire(snapshot)),
+        ];
+        for _ in 0..4096 {
+            for reader in &mut readers {
+                if !reader.terminal_is_empty() { reader.close_step(1, 256).unwrap(); }
+            }
+            if readers.iter().all(|reader| reader.terminal_is_empty()) {
+                for reader in &mut readers { unsafe { std::mem::ManuallyDrop::drop(reader); } }
+                return;
+            }
+        }
+        panic!("shared snapshot readers retained each other's final-owner claim");
+    }
+
+    fn close_layout_session(session: &mut FlowRetainedVcs) {
+        session.begin_close();
+        for _ in 0..4096 {
+            if session.close_retired_step(retained_grant()).expect("layout session retirement") {
+                assert!(session.terminal_is_empty());
+                return;
+            }
+        }
+        panic!("layout session did not retire within its fixture bound");
+    }
+
+    #[test]
+    fn retained_vcs_ordered_layout_edits_undo_redo_match_json_oracle() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🪞️fixtures/📍️ordered-layout.json")).unwrap();
+        let mut expected = fixture["initial"]["layout"].clone();
+        let mut session = FlowRetainedVcs::new(serde_json::from_value(fixture["initial"].clone()).unwrap(), 1, 0, 0);
+        for edit in fixture["edits"].as_array().unwrap() {
+            let previous = expected.clone();
+            let key = edit["id"].as_str().unwrap();
+            if edit["layout"].is_null() { expected.as_object_mut().unwrap().remove(key); }
+            else { expected.as_object_mut().unwrap().insert(key.into(), edit["layout"].clone()); }
+            let mut source = FlowVcsSource::new(serde_json::from_value::<FlowLayoutEntry>(edit.clone()).unwrap());
+            let handle = session.begin_set_layout(session.authority(), &mut source).unwrap();
+            publish_and_close(&mut session, handle);
+            assert_eq!(serde_json::to_value(&session.document.as_ref().unwrap().fixture().layout).unwrap(), expected);
+            let undo = session.begin_undo(session.authority()).unwrap();
+            publish_and_close(&mut session, undo);
+            assert_eq!(serde_json::to_value(&session.document.as_ref().unwrap().fixture().layout).unwrap(), previous);
+            let redo = session.begin_redo(session.authority()).unwrap();
+            publish_and_close(&mut session, redo);
+            assert_eq!(serde_json::to_value(&session.document.as_ref().unwrap().fixture().layout).unwrap(), expected);
+            while !session.close_retired_step(retained_grant()).unwrap() {}
+        }
+        close_layout_session(&mut session);
+    }
+
+    #[test]
+    fn retained_vcs_ordered_layout_cancel_at_each_unpublished_boundary_retires_exactly() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🪞️fixtures/📍️ordered-layout.json")).unwrap();
+        for edit in fixture["edits"].as_array().unwrap() {
+            for boundary in 0..64 {
+                let mut session = FlowRetainedVcs::new(serde_json::from_value(fixture["initial"].clone()).unwrap(), 1, 0, 0);
+                let mut source = FlowVcsSource::new(serde_json::from_value::<FlowLayoutEntry>(edit.clone()).unwrap());
+                let handle = session.begin_set_layout(session.authority(), &mut source).unwrap();
+                let mut published = false;
+                for _ in 0..boundary {
+                    if matches!(session.poll(handle, retained_grant()).unwrap(), FlowVcsPoll::Preview { .. }) { published = true; break; }
+                }
+                if published {
+                    let page = session.take_page(handle).unwrap();
+                    session.acknowledge_page(handle, page.sequence).unwrap();
+                } else { session.cancel(handle, retained_grant()).unwrap(); }
+                while !session.close_operation_step(handle, retained_grant()).unwrap() {}
+                if !published {
+                    assert_eq!(serde_json::to_value(&session.document.as_ref().unwrap().fixture().layout).unwrap(), fixture["initial"]["layout"], "cancel boundary {boundary}");
+                    assert_eq!(session.credits(), FlowVcsCredits::default());
+                }
+                close_layout_session(&mut session);
+                if published { break; }
+            }
+        }
+    }
+    //#endregion 📍️OrderedLayoutLaws
 
     #[test]
     fn retained_vcs_repeated_rejection_preserves_source_and_credits_then_valid_control_progresses() {
@@ -3920,6 +3998,7 @@ mod flow_vcs_tests {
             actual.push(flow_oracle_actual_case(feature, &session, page));
         }
         assert_eq!(actual, independently_evaluated);
+        close_layout_session(&mut session);
     }
 
     #[test]
@@ -4570,13 +4649,16 @@ mod flow_vcs_tests {
     }
 
     fn round_trip(fixture: &FlowFixture, operation: &FlowMutation) -> FlowFixture {
-        let forward = vcs::apply_mutation(fixture, operation).expect("valid flow diff").0;
+        let forward = operation.diff(fixture).diff().apply(fixture).expect("valid flow diff");
         let inverse = operation.inverse(fixture);
         let mut restored = forward.clone();
         for back in &inverse {
-            restored = vcs::apply_mutation(&restored, back).expect("valid inverse flow diff").0;
+            let next = back.diff(&restored).diff().apply(&restored).expect("valid inverse flow diff");
+            restored.retire_cold();
+            restored = next;
         }
         assert_eq!(&restored, fixture, "inverse() must exactly restore the pre-operation fixture");
+        restored.retire_cold();
         forward
     }
 
@@ -4612,7 +4694,7 @@ mod flow_vcs_tests {
         after.widgets.push(sample_widget("c"));
         after.layout.insert("c".into(), WidgetLayout { x: 1.0, y: 2.0 });
         let operations = flow_fixture_operations(&before, &after);
-        let materialized = operations.iter().fold(before.clone(), |acc, operation| vcs::apply_mutation(&acc, operation).expect("valid flow replay diff").0);
+        let materialized = operations.iter().fold(before.clone(), |acc, operation| { let next = operation.diff(&acc).diff().apply(&acc).expect("valid flow replay diff"); acc.retire_cold(); next });
         assert_eq!(materialized.widgets.len(), 2);
         assert!(materialized.widgets.iter().any(|widget| Identified::id(widget) == "c"));
         assert!(materialized.widgets.iter().all(|widget| Identified::id(widget) != "a"));
@@ -4628,8 +4710,10 @@ mod flow_vcs_tests {
                 .await
                 .expect("drag tick");
         }
-        assert_eq!(store.envelope().await.vcs.edits.len(), 1, "coalesced drag must produce exactly one edit");
-        assert_eq!(store.snapshot().await.expect("projection").layout.get("slider"), Some(&WidgetLayout { x: 0.0, y: 30.0 }));
+        assert_eq!(store.envelope().vcs.edits.len(), 1, "coalesced drag must produce exactly one edit");
+        let snapshot = store.snapshot().expect("projection");
+        assert_eq!(snapshot.layout.get("slider"), Some(&WidgetLayout { x: 0.0, y: 30.0 }));
+        snapshot.retire_cold();
     }
 
     /// 📜️ Exercises every `Widget` variant (including `Cluster`'s nested `Tree`/`flow` payload,
@@ -4653,9 +4737,9 @@ mod flow_vcs_tests {
                 ],
                 synapses: vec![Synapse { id: "inner-s1".into(), from: "inner-in".into(), to: "inner-add".into(), from_port: "number".into(), to_port: "a".into() }],
             },
-            flow: FlowGui { camera: CameraJson { x: 1.0, y: 2.0, zoom: 1.5 }, nodes: BTreeMap::new(), previews: Vec::new() },
+            flow: FlowGui { camera: CameraJson { x: 1.0, y: 2.0, zoom: 1.5 }, nodes: crate::OrderedMap::new(), previews: Vec::new() },
         });
-        fixture.widgets.push(Widget::OutputPreview { id: "preview2".into(), preview: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(3.5))), expanded: BTreeSet::from(["a".to_string(), "b".to_string()]) });
+        fixture.widgets.push(Widget::OutputPreview { id: "preview2".into(), preview: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(3.5))), expanded: crate::OrderedSet::from(["a".to_string(), "b".to_string()]) });
         crate::os_store::test_support::assert_dsl_round_trip(&fixture);
         crate::os_store::test_support::assert_dsl_pack_equivalence(&fixture);
     }
@@ -4709,20 +4793,19 @@ mod flow_vcs_tests {
         let mut store = ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
         let operation = FlowMutation::Widgets(CollectionMutation::Add { index: 0, item: sample_widget("w1") });
         store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], description: None }).await.expect("apply");
-        let envelope = store.envelope().await;
+        let envelope = store.envelope();
         let edit: &Edit<FlowMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
         crate::os_store::test_support::assert_command_envelope_round_trip::<FlowFixture, FlowMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone()));
     }
 
-    /// 📜️ `flow/example/🌊️default.flow` is the handcrafted `.flow` DSL-text migration of what used to
-    /// be `🌊️default.flow.json` (see this crate's ticket history) — this is the permanent proof that
-    /// the checked-in fixture still parses and round trips, not a one-time migration script.
+    /// 📜️ The handcrafted default Flow DSL preserves typed slider content, both synapses, and canonical pack parity.
     #[test]
     fn default_flow_example_dsl_round_trips() {
-        let text = include_str!("../../../📚️examples/🌊️default.flow");
+        let text = include_str!("../📚️examples/🌊️default.flow.dsl.semio");
         let fixture = <FlowFixture as crate::os_store::ArtifactDsl>::parse_dsl(text).expect("🌊️default.flow must parse");
         crate::os_store::test_support::assert_dsl_round_trip(&fixture);
         crate::os_store::test_support::assert_dsl_pack_equivalence(&fixture);
+        fixture.retire_cold();
     }
 }
 // #endregion 🔖️ArtifactVcs

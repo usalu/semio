@@ -18,8 +18,9 @@
 //! so a node that exists but already carries the requested name lands here and not on the Error path.
 
 use crate::artifacts::jack::diff::JackDiff;
-use crate::artifacts::jack::mutations::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation, TrinityGraphMutation};
-use crate::artifacts::jack::{cache_jack_content, jack_working_scene, JackSnapshot, Node, PropertyBag};
+use crate::artifacts::jack::mutations::TrinityGraphMutation;
+use crate::artifacts::jack::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation};
+use crate::artifacts::jack::{materialize_jack_content, jack_working_scene, JackSnapshot, Node, PropertyBag};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -38,12 +39,12 @@ fn mutation() -> TrinityGraphMutation {
 /// ALREADY carries the payload's requested name. Both the id and the name are read straight off the
 /// committed mutation payload; the node's kind and geometry are inert for this verb.
 fn before() -> JackSnapshot {
-    let snapshot: JackSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: JackSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let TrinityGraphMutation::RenameNode(payload) = mutation() else {
         panic!("keeps-the-name-a-node-already-carries's committed mutation must be a rename-node");
     };
     let seeded = Node { id: payload.id.clone(), kind: "Piece".into(), name: payload.new_name.clone(), x: 0.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: Vec::new() };
-    cache_jack_content(&snapshot.content.child_id, vec![seeded], Vec::new());
+    materialize_jack_content(&mut snapshot.content, vec![seeded], Vec::new());
     snapshot
 }
 

@@ -37,30 +37,127 @@
       "subsetDirectoryName": "✳️any",
       "vectors": [
         {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📄set-snapshot",
-          "mutationDirectoryName": "📄set-snapshot",
+          "mutationId": "change-jfif-header",
+          "sourceMutationDirectoryName": "📐️change-jfif-header",
+          "mutationDirectoryName": "📐️change-jfif-header",
           "scenarios": [
             {
-              "id": "records-jfif-print-density-and-a-restart-interval",
-              "directoryName": "🧪️records-jfif-print-density-and-a-restart-interval"
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-quant-table",
+          "sourceMutationDirectoryName": "📊️replace-quant-table",
+          "mutationDirectoryName": "📊️replace-quant-table",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-quant-table",
+          "sourceMutationDirectoryName": "📤️remove-quant-table",
+          "mutationDirectoryName": "📤️remove-quant-table",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-huffman-table",
+          "sourceMutationDirectoryName": "🌳️replace-huffman-table",
+          "mutationDirectoryName": "🌳️replace-huffman-table",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-huffman-table",
+          "sourceMutationDirectoryName": "🪓️remove-huffman-table",
+          "mutationDirectoryName": "🪓️remove-huffman-table",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-restart-interval",
+          "sourceMutationDirectoryName": "🔁️change-restart-interval",
+          "mutationDirectoryName": "🔁️change-restart-interval",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-other-segment",
+          "sourceMutationDirectoryName": "📥️insert-other-segment",
+          "mutationDirectoryName": "📥️insert-other-segment",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-other-segment",
+          "sourceMutationDirectoryName": "🗑️remove-other-segment",
+          "mutationDirectoryName": "🗑️remove-other-segment",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-pixels",
+          "sourceMutationDirectoryName": "🟪️replace-pixels",
+          "mutationDirectoryName": "🟪️replace-pixels",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-re-encode-quality",
+          "sourceMutationDirectoryName": "🎚️change-re-encode-quality",
+          "mutationDirectoryName": "🎚️change-re-encode-quality",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
             }
           ]
         }
       ],
       "kinds": [
-        "no-mutation",
-        "set-snapshot",
-        "set-jfif-header",
-        "set-quant-table",
+        "change-jfif-header",
+        "replace-quant-table",
         "remove-quant-table",
-        "set-huffman-table",
+        "replace-huffman-table",
         "remove-huffman-table",
-        "set-restart-interval",
+        "change-restart-interval",
         "insert-other-segment",
         "remove-other-segment",
-        "set-pixels",
-        "set-re-encode-quality"
+        "replace-pixels",
+        "change-re-encode-quality"
       ]
     }
   ],

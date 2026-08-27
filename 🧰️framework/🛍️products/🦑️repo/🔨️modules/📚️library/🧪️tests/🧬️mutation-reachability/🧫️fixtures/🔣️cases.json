@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "public-canonical",
+      "source": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "accepted": true
+    },
+    {
+      "name": "semantic-type-alias",
+      "leafSource": "pub struct InsertPageMutation;\n",
+      "source": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub use insert_page::InsertPageMutation as InsertPageAlias;\npub enum ProbeMutation { InsertPage(InsertPageAlias) }\n",
+      "accepted": true
+    },
+    {
+      "name": "child-facet-reexport",
+      "leafSource": "#[path = \"🧩️payload/🦀️.rs\"] pub mod payload;\npub use payload::InsertPage;\n",
+      "extraFiles": [
+        {
+          "path": "🧩️payload/🦀️.rs",
+          "source": "pub struct InsertPage;\n"
+        }
+      ],
+      "source": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::InsertPage) }\n",
+      "accepted": true
+    },
+    {
+      "name": "comment-decoy",
+      "source": "// #[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "accepted": false
+    },
+    {
+      "name": "private-mount",
+      "source": "#[path = \"➕️insert-page/🦀️.rs\"] mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "accepted": false
+    },
+    {
+      "name": "wrong-target",
+      "source": "#[path = \"➕️other/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "accepted": false
+    },
+    {
+      "name": "primitive-alias",
+      "leafSource": "pub type Mutation = u32;\n",
+      "source": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "accepted": false
+    },
+    {
+      "name": "foreign-alias",
+      "leafSource": "pub type Mutation = crate::other::Mutation;\n",
+      "source": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "accepted": false
+    },
+    {
+      "name": "private-aggregate",
+      "source": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\nenum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "accepted": false
+    },
+    {
+      "name": "nested-aggregate",
+      "source": "mod hidden { pub enum ProbeMutation { InsertPage(super::insert_page::Mutation) } }\n#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\n",
+      "accepted": false
+    },
+    {
+      "name": "duplicate-mount",
+      "source": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\n#[path = \"➕️other/🦀️.rs\"] mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "accepted": false
+    },
+    {
+      "name": "duplicate-variant",
+      "source": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation), InsertPage(insert_page::Mutation) }\n",
+      "accepted": false
+    },
+    {
+      "name": "orphan-variant",
+      "source": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation), RemovePage(insert_page::Mutation) }\n",
+      "accepted": false
+    },
+    {
+      "name": "nested-mount-decoy",
+      "source": "mod helper { #[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page; }\n#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "accepted": true
+    },
+    {
+      "name": "wrong-type",
+      "source": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Other) }\n",
+      "accepted": false
+    },
+    {
+      "name": "restricted-root-alias",
+      "source": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub(crate) use insert_page::Mutation as Alias;\npub enum ProbeMutation { InsertPage(Alias) }\n",
+      "accepted": false
+    },
+    {
+      "name": "restricted-child-alias",
+      "leafSource": "#[path = \"🧩️payload/🦀️.rs\"] pub mod payload;\npub(crate) use payload::InsertPage;\n",
+      "extraFiles": [
+        {
+          "path": "🧩️payload/🦀️.rs",
+          "source": "pub struct InsertPage;\n"
+        }
+      ],
+      "source": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::InsertPage) }\n",
+      "accepted": false
+    },
+    {
+      "name": "duplicate-child-mount",
+      "leafSource": "#[path = \"🧩️payload/🦀️.rs\"] pub mod payload;\n#[path = \"🧩️other/🦀️.rs\"] pub mod payload;\npub use payload::InsertPage;\n",
+      "extraFiles": [
+        {
+          "path": "🧩️payload/🦀️.rs",
+          "source": "pub struct InsertPage;\n"
+        },
+        {
+          "path": "🧩️other/🦀️.rs",
+          "source": "pub struct InsertPage;\n"
+        }
+      ],
+      "source": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::InsertPage) }\n",
+      "accepted": false
+    },
+    {
+      "name": "escaping-child-mount",
+      "leafSource": "#[path = \"../foreign/🦀️.rs\"] pub mod payload;\npub use payload::InsertPage;\n",
+      "extraFiles": [
+        {
+          "path": "../foreign/🦀️.rs",
+          "source": "pub struct InsertPage;\n"
+        }
+      ],
+      "source": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::InsertPage) }\n",
+      "accepted": false
+    }
+  ]
+}

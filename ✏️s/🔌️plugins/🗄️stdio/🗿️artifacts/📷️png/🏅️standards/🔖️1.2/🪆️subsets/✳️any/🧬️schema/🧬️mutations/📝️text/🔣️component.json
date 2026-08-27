@@ -1,5 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/stdio.png/mutations/text.json",
-  "title": "PngMutationsText",
-  "type": "object"
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PngMutationText",
+  "type": "string",
+  "pattern": "^(?:change-header|replace-palette|change-transparency|change-gamma|change-chromaticities|change-srgb-intent|change-physical-dims|change-timestamp|change-background|insert-text-chunk|remove-text-chunk|replace-text-chunk|replace-pixels|insert-unknown-chunk|remove-unknown-chunk)(?: |$)"
 }

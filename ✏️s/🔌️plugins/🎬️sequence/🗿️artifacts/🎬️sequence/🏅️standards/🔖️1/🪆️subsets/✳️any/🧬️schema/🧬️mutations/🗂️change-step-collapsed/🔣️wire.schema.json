@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/sequence/sequence/mutation/change-step-collapsed.json",
+  "title": "ChangeStepCollapsedMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "collapsed"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeStepCollapsed"
+    },
+    "id": {
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/change-step-collapsed/payload.json#/properties/id"
+    },
+    "collapsed": {
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/change-step-collapsed/payload.json#/properties/collapsed"
+    }
+  }
+}

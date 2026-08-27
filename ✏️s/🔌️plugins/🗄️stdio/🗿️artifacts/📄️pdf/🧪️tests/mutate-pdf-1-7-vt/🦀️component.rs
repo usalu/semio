@@ -22,7 +22,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::
 /// this loop registers handlers for both roles from one list. A mismatch is caught structurally: the
 /// contract phase fails with `mutation-kind-uncovered`/`mutation-kind-undeclared` if this list omits
 /// or invents a kind, and the runner fails every unregistered scenario id outright.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-encryption-dictionary", "remove-encryption-dictionary", "set-output-intent", "remove-output-intent", "set-trim-box", "remove-trim-box", "embed-font-file", "remove-font-file", "insert-javascript-action", "remove-javascript-action", "insert-launch-action", "remove-launch-action", "insert-media-annotation", "remove-media-annotation", "set-dpart-root", "remove-dpart-root", "set-dpart-metadata", "remove-dpart-metadata"];
+const KINDS: &[&str] = &["insert-encryption-dictionary", "remove-encryption-dictionary", "set-output-intent", "remove-output-intent", "set-trim-box", "remove-trim-box", "embed-font-file", "remove-font-file", "insert-javascript-action", "remove-javascript-action", "insert-launch-action", "remove-launch-action", "insert-media-annotation", "remove-media-annotation", "set-dpart-root", "remove-dpart-root", "set-dpart-metadata", "remove-dpart-metadata"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -94,7 +94,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let base = arranged_input(ctx, &spec)?;
     let output = oracle_apply_mutation(&base, &spec)?;
     let projection = project_conformance(&output)?;
-    if spec.str("kind") != "no-mutation" && projection == project_conformance(&base)? {
+    if projection == project_conformance(&base)? {
         return Err(format!("mutate-{}: the mutation left the conformance-class projection unchanged — a mutation that is not observable proves nothing", spec.str("kind")));
     }
     Ok(Outcome::with_raw(output, projection))
@@ -142,9 +142,9 @@ mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::io::{decode_pdf, encode_pdf};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::conformance_support as support;
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::conformance_support as support;
     use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfSnapshot};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::vt::schema::mutations::{apply_vt_conformance_mutation, stamp_conformance, PdfVtMutation};
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::vt::schema::mutations::{apply_vt_conformance_mutation, PdfVtMutation, InsertEncryptionDictionary, RemoveEncryptionDictionary, SetOutputIntent, RemoveOutputIntent, SetTrimBox, RemoveTrimBox, EmbedFontFile, RemoveFontFile, InsertJavascriptAction, RemoveJavascriptAction, InsertLaunchAction, RemoveLaunchAction, InsertMediaAnnotation, RemoveMediaAnnotation, SetDpartRoot, RemoveDpartRoot, SetDpartMetadata, RemoveDpartMetadata};
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::vt::{oracle_inverse_spec, project_conformance};
 
     fn decode(bytes: &[u8]) -> Result<PdfSnapshot, String> {
@@ -189,26 +189,24 @@ mod subject {
     fn mutation_from_spec(base: &PdfSnapshot, spec: &Json) -> Result<PdfVtMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => PdfVtMutation::NoMutation,
-            "set-snapshot" => PdfVtMutation::SetSnapshot { snapshot: stamp_conformance(base.clone(), params.str("conformance") == "stamped") },
-            "insert-encryption-dictionary" => PdfVtMutation::InsertEncryptionDictionary { version: params.get("version").and_then(number).unwrap_or(2.0) as i64, revision: params.get("revision").and_then(number).unwrap_or(3.0) as i64 },
-            "remove-encryption-dictionary" => PdfVtMutation::RemoveEncryptionDictionary { version: params.get("version").and_then(number).unwrap_or(2.0) as i64, revision: params.get("revision").and_then(number).unwrap_or(3.0) as i64 },
-            "set-output-intent" => PdfVtMutation::SetOutputIntent { identifier: params.str("identifier") },
-            "remove-output-intent" => PdfVtMutation::RemoveOutputIntent,
-            "set-trim-box" => PdfVtMutation::SetTrimBox { page_index: params.get("pageIndex").and_then(number).unwrap_or(0.0) as usize, trim_box: four_numbers(&params, "trimBox")? },
-            "remove-trim-box" => PdfVtMutation::RemoveTrimBox { page_index: params.get("pageIndex").and_then(number).unwrap_or(0.0) as usize },
-            "embed-font-file" => PdfVtMutation::EmbedFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize, key: params.str("key"), program: program_reference(base, &params)? },
-            "remove-font-file" => PdfVtMutation::RemoveFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize },
-            "insert-javascript-action" => PdfVtMutation::InsertJavaScriptAction { script: params.str("script") },
-            "remove-javascript-action" => PdfVtMutation::RemoveJavaScriptAction { script: params.str("script") },
-            "insert-launch-action" => PdfVtMutation::InsertLaunchAction { target: params.str("target") },
-            "remove-launch-action" => PdfVtMutation::RemoveLaunchAction { target: params.str("target") },
-            "insert-media-annotation" => PdfVtMutation::InsertMediaAnnotation { subtype: params.str("subtype"), title: params.str("title") },
-            "remove-media-annotation" => PdfVtMutation::RemoveMediaAnnotation { subtype: params.str("subtype"), title: params.str("title") },
-            "set-dpart-root" => PdfVtMutation::SetDpartRoot { job: params.str("job") },
-            "remove-dpart-root" => PdfVtMutation::RemoveDpartRoot,
-            "set-dpart-metadata" => PdfVtMutation::SetDpartMetadata { job: params.str("job") },
-            "remove-dpart-metadata" => PdfVtMutation::RemoveDpartMetadata,
+            "insert-encryption-dictionary" => PdfVtMutation::InsertEncryptionDictionary(InsertEncryptionDictionary { version: params.get("version").and_then(number).unwrap_or(2.0) as i64, revision: params.get("revision").and_then(number).unwrap_or(3.0) as i64 }),
+            "remove-encryption-dictionary" => PdfVtMutation::RemoveEncryptionDictionary(RemoveEncryptionDictionary { version: params.get("version").and_then(number).unwrap_or(2.0) as i64, revision: params.get("revision").and_then(number).unwrap_or(3.0) as i64 }),
+            "set-output-intent" => PdfVtMutation::SetOutputIntent(SetOutputIntent { identifier: params.str("identifier") }),
+            "remove-output-intent" => PdfVtMutation::RemoveOutputIntent(RemoveOutputIntent {}),
+            "set-trim-box" => PdfVtMutation::SetTrimBox(SetTrimBox { page_index: params.get("pageIndex").and_then(number).unwrap_or(0.0) as usize, trim_box: four_numbers(&params, "trimBox")? }),
+            "remove-trim-box" => PdfVtMutation::RemoveTrimBox(RemoveTrimBox { page_index: params.get("pageIndex").and_then(number).unwrap_or(0.0) as usize }),
+            "embed-font-file" => PdfVtMutation::EmbedFontFile(EmbedFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize, key: params.str("key"), program: program_reference(base, &params)? }),
+            "remove-font-file" => PdfVtMutation::RemoveFontFile(RemoveFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize }),
+            "insert-javascript-action" => PdfVtMutation::InsertJavascriptAction(InsertJavascriptAction { script: params.str("script") }),
+            "remove-javascript-action" => PdfVtMutation::RemoveJavascriptAction(RemoveJavascriptAction { script: params.str("script") }),
+            "insert-launch-action" => PdfVtMutation::InsertLaunchAction(InsertLaunchAction { target: params.str("target") }),
+            "remove-launch-action" => PdfVtMutation::RemoveLaunchAction(RemoveLaunchAction { target: params.str("target") }),
+            "insert-media-annotation" => PdfVtMutation::InsertMediaAnnotation(InsertMediaAnnotation { subtype: params.str("subtype"), title: params.str("title") }),
+            "remove-media-annotation" => PdfVtMutation::RemoveMediaAnnotation(RemoveMediaAnnotation { subtype: params.str("subtype"), title: params.str("title") }),
+            "set-dpart-root" => PdfVtMutation::SetDpartRoot(SetDpartRoot { job: params.str("job") }),
+            "remove-dpart-root" => PdfVtMutation::RemoveDpartRoot(RemoveDpartRoot {}),
+            "set-dpart-metadata" => PdfVtMutation::SetDpartMetadata(SetDpartMetadata { job: params.str("job") }),
+            "remove-dpart-metadata" => PdfVtMutation::RemoveDpartMetadata(RemoveDpartMetadata {}),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

@@ -808,6 +808,36 @@ pub enum GltfCameraProjection {
     Orthographic(GltfOrthographic),
 }
 
+impl Serialize for GltfCameraProjection {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        #[derive(Serialize)]
+        #[serde(tag = "type", rename_all = "lowercase")]
+        enum Wire<'a> {
+            Perspective { perspective: &'a GltfPerspective },
+            Orthographic { orthographic: &'a GltfOrthographic },
+        }
+        match self {
+            Self::Perspective(perspective) => Wire::Perspective { perspective }.serialize(serializer),
+            Self::Orthographic(orthographic) => Wire::Orthographic { orthographic }.serialize(serializer),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for GltfCameraProjection {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        #[derive(Deserialize)]
+        #[serde(tag = "type", rename_all = "lowercase")]
+        enum Wire {
+            Perspective { perspective: GltfPerspective },
+            Orthographic { orthographic: GltfOrthographic },
+        }
+        Ok(match Wire::deserialize(deserializer)? {
+            Wire::Perspective { perspective } => Self::Perspective(perspective),
+            Wire::Orthographic { orthographic } => Self::Orthographic(orthographic),
+        })
+    }
+}
+
 /// 📷️ `cameras[i]` (§5.10).
 #[derive(Clone, Debug, PartialEq)]
 pub struct GltfCamera {

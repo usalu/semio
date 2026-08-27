@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+  "fullSchemaExpression": "taxonomy.discoverySchema",
+  "consumers": [
+    "artifactPathProjectionCatalogRoots",
+    "renderArtifactPathProjectionRoot",
+    "semanticArtifactEmptyFacetProjectionAuthority",
+    "semanticExactOwnedFileCatalog",
+    "semanticOwnedFileHistoryProjectionAuthority",
+    "semanticOwnedFileProjectionAuthority",
+    "semanticOwnedPrimaryFileProjectionAuthority",
+    "semanticPackageProjectionAuthority",
+    "semanticPackageProjectionCatalog",
+    "semanticPathProjectionAuthority",
+    "semanticPathProjectionReferenceConsumers"
+  ]
+}

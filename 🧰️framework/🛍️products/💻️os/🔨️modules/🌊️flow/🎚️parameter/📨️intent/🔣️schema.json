@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.flow.command.set-graph-parameter",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["widgetId", "value"],
+  "properties": {
+    "widgetId": {"type": "string", "minLength": 1},
+    "value": {"type": "number"},
+    "surfaceId": {"type": "string", "minLength": 1}
+  }
+}

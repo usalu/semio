@@ -60,9 +60,9 @@ Feature: Apply every typed FLOW mutation to the real committed widget graph
 
   ⚖️ The projection is `(schema, camera, widgets, synapses, layout)` read back through
   `flow_working_scene`. The content handle is deliberately NOT projected: `flow_content_child_handle`
-  content-addresses exactly that triple with `std`'s deliberately unspecified `DefaultHasher`, so
-  projecting the handle would compare the same content twice and pin a value the standard library does
-  not promise.
+  content-addresses exactly that triple with domain-separated SHA-256. Dedicated cross-language
+  identity fixtures pin canonical bytes and digests; this mutation projection measures semantic
+  behavior without comparing the same content twice.
 
   @id-mutate
   @level-exhaustive

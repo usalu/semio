@@ -1,3 +1,12 @@
-; abnf stdio.pdf mutations
-document = payload
-payload = *OCTET
+; 💾️ PDF 1.4 format=1, tag=0..4, native little-endian payload.
+op = insert-page / remove-page / move-page / resize-page / replace-page-text
+insert-page = %x01.00 u64le f64le f64le text
+remove-page = %x01.01 u64le
+move-page = %x01.02 u64le u64le
+resize-page = %x01.03 u64le f64le f64le
+replace-page-text = %x01.04 u64le text
+u64le = 8OCTET
+f64le = 8OCTET
+text = u64le *OCTET
+; Text consumes exactly its length prefix; geometry must be finite; trailing bytes are invalid.
+OCTET = %x00-FF

@@ -1,2 +1,0 @@
-# change-node-morph-weights inverse typed facet.
-input GltfChangeNodeMorphWeightsInverseV1 { operation: GltfChangeNodeMorphWeightsPayloadV1!, before: [Float!]!, touchedPaths: [String!]! }

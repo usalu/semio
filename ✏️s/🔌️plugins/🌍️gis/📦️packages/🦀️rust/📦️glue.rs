@@ -79,6 +79,8 @@ pub mod artifacts {
                                 #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️component.rs"]
                                 pub mod binary;
                             }
+                            #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🦀️component.rs"]
+                            pub mod operations;
                             #[path = "."]
                             pub mod mutations {
                                 #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
@@ -90,27 +92,37 @@ pub mod artifacts {
                                 pub mod text;
                                 #[path = "."]
                                 pub mod change_exaggeration {
+                                    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚change-exaggeration/🦀️component.rs"]
+                                    mod component;
                                     #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚change-exaggeration/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚change-exaggeration/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚change-exaggeration/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
+                                    pub use component::*;
+                                    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚change-exaggeration/💾️binary/🦀️component.rs"]
+                                    pub mod binary;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚change-exaggeration/🧪️tests/raises-the-exaggeration-from-one-to-two-and-a-half/🦀️component.rs"]
                                     mod tests_raises_the_exaggeration_from_one_to_two_and_a_half;
+                                    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚change-exaggeration/📝️text/🦀️component.rs"]
+                                    pub mod text;
                                 }
                                 #[path = "."]
                                 pub mod change_imported_features {
+                                    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🦀️component.rs"]
+                                    mod component;
                                     #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
+                                    pub use component::*;
+                                    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/💾️binary/🦀️component.rs"]
+                                    pub mod binary;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/imports-a-single-harbor-position-descriptor/🦀️component.rs"]
                                     mod tests_imports_a_single_harbor_position_descriptor;
+                                    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/📝️text/🦀️component.rs"]
+                                    pub mod text;
                                 }
                             }
                         }

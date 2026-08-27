@@ -5,6 +5,8 @@ use flow::FlowFixture;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
+pub use flow::playbook::GenerationPlayRoot;
+
 //#region 🔖️Procedural3dSnapshot
 /// 🧬️ Procedural3dSnapshot facet type.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
@@ -15,12 +17,12 @@ pub struct Procedural3dSnapshot {
     #[state(artifact)]
     pub fixture: FlowFixture,
     #[state(artifact)]
-    pub generation: GenerationPlayState,
+    pub generation: GenerationPlayRoot,
 }
 //#endregion 🔖️Procedural3dSnapshot
 
 impl Default for Procedural3dSnapshot {
     fn default() -> Self {
-        Self { fixture: FlowFixture::default(), generation: GenerationPlayState::default() }
+        Self { fixture: FlowFixture::default(), generation: GenerationPlayState::default().into() }
     }
 }

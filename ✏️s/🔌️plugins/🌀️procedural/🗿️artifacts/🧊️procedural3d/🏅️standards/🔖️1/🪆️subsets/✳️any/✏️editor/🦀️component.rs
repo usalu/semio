@@ -18,7 +18,7 @@ use crate::editor::procedural3d::modes::generate::windows::{form, generations, p
 use crate::editor::procedural3d::modes::{edit, generate};
 use crate::editor::procedural3d::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::procedural3d::terminology::procedural3d_labels;
-use flow::{with_process_flow_eval_session, FlowEvalSession};
+use flow::FlowEvalSession;
 // 🚧️ SDK note (ticket 26/08/16 contract §2.1/§2.4): `ArtifactEditor`/`Editor`/`Dialect` are curated at
 // `semio_framework_plugin`'s crate root as of W0-F/W2-FIX — imported bare here, no `app::` prefix
 // needed (unlike the earlier cad pilot, written before that gap closed). `app::InteractionView` is a
@@ -146,6 +146,10 @@ impl ArtifactEditor for Procedural3dPlayApp {
         Some(crate::artifacts::procedural3d::spr::procedural3d_document_store_owners())
     }
 
+    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
     fn build_document_store_initialization_job(
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
@@ -163,6 +167,10 @@ impl ArtifactEditor for Procedural3dPlayApp {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
     const DIALECT: Dialect = crate::artifacts::procedural3d::PROCEDURAL3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PROCEDURAL_3D_SCHEMA;
 
@@ -174,7 +182,6 @@ impl ArtifactEditor for Procedural3dPlayApp {
         factory: "BoundedFirstStepCommandJobFactory",
         tools: {
             "setActiveExample" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "nodeGraphEdit" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "deleteSelection" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "removeWidget" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "moveMediaNode" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
@@ -184,10 +191,6 @@ impl ArtifactEditor for Procedural3dPlayApp {
             "translateSelection" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "rotateSelection" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "scaleSelection" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "addGeneration" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "removeGeneration" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "renameGeneration" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "updateGenerationValues" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "nodeGraphViewport" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "worldPointerDown" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "graphPointerDown" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
@@ -198,7 +201,6 @@ impl ArtifactEditor for Procedural3dPlayApp {
             "setSunElevation" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "setSunIntensity" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "setCamera" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "selectGeneration" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "setActiveUtility" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "setLocale" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "flowEvalTick" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
@@ -251,9 +253,9 @@ impl ArtifactEditor for Procedural3dPlayApp {
                 for (target_id, value) in &object {
                     let Some(number) = value.as_f64() else { continue };
                     let Some((_index, widget)) = fixture.widgets.iter().enumerate().find(|(_, widget)| crate::artifacts::procedural3d::widget_id(widget) == target_id) else { continue };
-                    if let flow::Widget::InputSlider { id, min, max, step, .. } = widget {
+                    if let flow::Widget::InputSlider { id, label, min, max, step, .. } = widget {
                         operations.push(Procedural3dMutation::UpdateWidget(crate::artifacts::procedural3d::schema::mutations::update_widget::mutation::UpdateWidget {
-                            widget: flow::Widget::InputSlider { id: id.clone(), value: number, min: *min, max: *max, step: *step },
+                            widget: flow::Widget::InputSlider { id: id.clone(), label: label.clone(), value: number, min: *min, max: *max, step: *step },
                         }));
                     }
                 }
@@ -376,14 +378,15 @@ impl ArtifactEditor for Procedural3dPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation, Self::DraftMutation>, Fault> {
-        with_process_flow_eval_session(|session| match command {
-            Procedural3dCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction, session),
-            Procedural3dCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction, session),
-            Procedural3dCommand::TranslateSelection(payload) => translate_selection::apply(payload, doc, cfg, interaction, session),
-            Procedural3dCommand::RotateSelection(payload) => rotate_selection::apply(payload, doc, cfg, interaction, session),
-            Procedural3dCommand::ScaleSelection(payload) => scale_selection::apply(payload, doc, cfg, interaction, session),
-            _ => command.dispatch(doc, cfg, session),
-        })
+        let mut session = FlowEvalSession::new();
+        match command {
+            Procedural3dCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction, &mut session),
+            Procedural3dCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction, &mut session),
+            Procedural3dCommand::TranslateSelection(payload) => translate_selection::apply(payload, doc, cfg, interaction, &mut session),
+            Procedural3dCommand::RotateSelection(payload) => rotate_selection::apply(payload, doc, cfg, interaction, &mut session),
+            Procedural3dCommand::ScaleSelection(payload) => scale_selection::apply(payload, doc, cfg, interaction, &mut session),
+            _ => command.dispatch(doc, cfg, &mut session),
+        }
     }
 
     /// 🕹️ `graph`'s `HierarchyProvider::Topology` — every top-level widget is a "node" (root unless
@@ -421,14 +424,13 @@ impl ArtifactEditor for Procedural3dPlayApp {
 
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes.
     fn pending_effects(doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>) -> Vec<Effect> {
-        with_process_flow_eval_session(|session| {
-            let host = flow::flow_host_with_session(&doc.snapshot.fixture, session);
-            if session.sync(&host) {
-                vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(104), action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
-            } else {
-                Vec::new()
-            }
-        })
+        let mut session = FlowEvalSession::new();
+        let host = flow::flow_host_with_session(&doc.snapshot.fixture, &session);
+        if session.sync(&host) {
+            vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(104), action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
+        } else {
+            Vec::new()
+        }
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
@@ -436,9 +438,10 @@ impl ArtifactEditor for Procedural3dPlayApp {
         let config = cfg.snapshot;
         let labels = procedural3d_labels(config);
         let active_utility = config.active_utility_id.as_str();
-        let node = with_process_flow_eval_session(|session| match body_key {
-            flow_window::PROCEDURAL_3D_PLAY_BODY_MAIN => flow_window::render(document, config, session),
-            edit_preview::PROCEDURAL_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, session, active_utility),
+        let session = FlowEvalSession::new();
+        let node = match body_key {
+            flow_window::PROCEDURAL_3D_PLAY_BODY_MAIN => flow_window::render(document, config, &session),
+            edit_preview::PROCEDURAL_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, &session, active_utility),
             generations::PROCEDURAL_3D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, semio_framework_plugin::locale_from_str(&config.locale), semio_framework_plugin::Terminology::default()),
             form::PROCEDURAL_3D_PLAY_BODY_GENERATE_FORM => form::render(&document.fixture, &document.generation, labels),
             generate_preview::PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(&document.fixture, &document.generation, config, labels, active_utility),
@@ -450,7 +453,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
             // interaction into render. Flagged as a discovered framework gap, not worked around here.
             inspection_panel::PROCEDURAL_3D_PLAY_BODY_INSPECTION => inspection_panel::render(&document.fixture, &[], labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
-        })?;
+        }?;
         Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 
@@ -556,7 +559,7 @@ pub fn create_procedural3d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("selectGeneration", LocalizedLabel::native("Set Generation", "Generation auswählen"))
             .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
-            .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::Migrated)
+            .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("deleteSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("removeWidget", InteractiveJobClassification::Migrated)
             .action_interactive_job("moveMediaNode", InteractiveJobClassification::Migrated)
@@ -566,10 +569,10 @@ pub fn create_procedural3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
-            .action_interactive_job("addGeneration", InteractiveJobClassification::Migrated)
-            .action_interactive_job("removeGeneration", InteractiveJobClassification::Migrated)
-            .action_interactive_job("renameGeneration", InteractiveJobClassification::Migrated)
-            .action_interactive_job("updateGenerationValues", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addGeneration", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("removeGeneration", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("renameGeneration", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("updateGenerationValues", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
             .action_interactive_job("worldPointerDown", InteractiveJobClassification::Migrated)
             .action_interactive_job("graphPointerDown", InteractiveJobClassification::Migrated)
@@ -580,7 +583,7 @@ pub fn create_procedural3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setSunElevation", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
-            .action_interactive_job("selectGeneration", InteractiveJobClassification::Migrated)
+            .action_interactive_job("selectGeneration", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("setActiveUtility", InteractiveJobClassification::Migrated)
             .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
             .action_interactive_job("flowEvalTick", InteractiveJobClassification::Migrated)
@@ -1125,9 +1128,9 @@ mod tests {
         snapshot.fixture.layout.insert("move-target".into(), flow::WidgetLayout { x: 1.0, y: 2.0 });
         snapshot.fixture.layout.insert("clear-target".into(), flow::WidgetLayout { x: 3.0, y: 4.0 });
         for (id, name) in [("delete-generation", "Delete"), ("rename-generation", "Before Rename"), ("change-generation", "Change Value")] {
-            snapshot.generation.generations.push(flow::playbook::FormGeneration { id: id.into(), name: name.into(), values: serde_json::Map::new() });
+            snapshot.generation.cold_builder_mut().unwrap().generations.push(flow::playbook::FormGeneration { id: id.into(), name: name.into(), values: serde_json::Map::new() });
         }
-        snapshot.generation.selected_generation_id = Some("rename-generation".into());
+        snapshot.generation.cold_builder_mut().unwrap().selected_generation_id = Some("rename-generation".into());
         snapshot
     }
 
@@ -1499,6 +1502,27 @@ mod tests {
         assert!(catalogue.contains("\"Elemente\""));
         let inspector = testkit::render(&mut app, inspection_panel::PROCEDURAL_3D_PLAY_BODY_INSPECTION);
         assert!(inspector.contains("Elemente:"));
+    }
+
+    /// 🕹️ The runtime graph-selection route persists through an exactly owned interaction store.
+    #[test]
+    fn procedural3d_interaction_selection_owns_its_persisted_history() {
+        let _serial = test_support::lock();
+        let mut app = app_with_registry();
+        let node_id = app
+            .snapshot()
+            .expect("snapshot")
+            .fixture
+            .widgets
+            .first()
+            .map(crate::artifacts::procedural3d::widget_id)
+            .expect("default fixture node")
+            .to_string();
+        let targets = serde_json::to_string(&vec![semio_framework_plugin::InteractionTarget { granularity: "node".into(), id: node_id.clone() }]).expect("selection targets");
+        let args = serde_json::json!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" });
+        app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&args), &semio_framework_plugin::testkit::meta("local"))
+            .expect("interaction selection persists");
+        assert_eq!(app.interaction_state().selection.get("graph").map(|selection| selection.ids.as_slice()), Some([node_id].as_slice()));
     }
 
     /// 🕹️ `context_menu` carries no `InteractionView` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM,

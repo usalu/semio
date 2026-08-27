@@ -827,7 +827,6 @@ mod tests {
     #[test]
     fn every_puzzle_factory_validates_and_adopts_the_exact_checkpoint_owner() {
         for source in [
-            include_str!("../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"),
             include_str!("../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"),
             include_str!("../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"),
         ] {
@@ -835,6 +834,9 @@ mod tests {
             assert!(source.contains("RetainedPuzzleCommandJob::from_validated_wire_checkpoint(operation, payload, input, checkpoint)"));
             assert!(!source.contains("if checkpoint.is_some() || input.declared_bytes()"));
         }
+        let puzzle2d = include_str!("../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
+        assert!(!puzzle2d.contains("impl semio_framework_plugin::ArtifactOwnedToolJobFactory for BoundedFirstStepCommandJobFactory"));
+        assert!(!puzzle2d.contains("registry.register(BoundedFirstStepCommandJobFactory"));
     }
 
     #[derive(Debug, PartialEq, Eq)]
@@ -843,6 +845,7 @@ mod tests {
         document_schema: String,
         payload_schema: String,
         tool_ids: Vec<String>,
+        evidence_tool_ids: Vec<String>,
         capacities: [u64; 6],
         locales: Vec<String>,
         vector_ids: Vec<String>,
@@ -888,6 +891,7 @@ mod tests {
                 document_schema: text("documentSchema")?,
                 payload_schema: text("payloadSchema")?,
                 tool_ids: strings("toolIds")?,
+                evidence_tool_ids: strings("evidenceToolIds")?,
                 capacities: [cap("rawBytes")?, cap("decodedItems")?, cap("workItems")?, cap("outputBytes")?, cap("stepMicros")?, cap("semanticUnitsPerGrant")?],
                 locales,
                 vector_ids,
@@ -902,6 +906,7 @@ mod tests {
             document_schema: document_schema.into(),
             payload_schema: format!("{document_schema}.tool-command.v1"),
             tool_ids: tools.iter().map(|tool| (*tool).to_string()).collect(),
+            evidence_tool_ids: Vec::new(),
             capacities: [PUZZLE_COMMAND_RAW_BYTES as u64, PUZZLE_COMMAND_DECODED_ITEMS as u64, PUZZLE_COMMAND_WORK_ITEMS as u64, PUZZLE_COMMAND_OUTPUT_BYTES as u64, PUZZLE_COMMAND_STEP_MICROS as u64, 1],
             locales: vec!["de".into(), "en".into()],
             vector_ids: VECTOR_IDS.iter().map(|vector| (*vector).to_string()).collect(),
@@ -941,7 +946,7 @@ mod tests {
         assert_eq!(interrupted.pointer("/closeGrant/bytes").and_then(Value::as_u64), Some(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES as u64));
         assert_eq!(interrupted.get("boundary").and_then(Value::as_str), Some("workProgress"));
         assert_eq!(checkpoint_vector("checkpointCorrupt").get("mutation").and_then(Value::as_str), Some("magic"));
-        let tool_ids = actual.tool_ids.iter().map(String::as_str).collect::<std::collections::BTreeSet<_>>();
+        let tool_ids = actual.evidence_tool_ids.iter().map(String::as_str).collect::<std::collections::BTreeSet<_>>();
         assert_eq!(root.pointer("/capacities/checkpointBytes").and_then(Value::as_u64), Some(PUZZLE_COMMAND_CHECKPOINT_BYTES as u64));
         assert!(root.pointer("/locales/en/cancel").and_then(Value::as_str).is_some());
         assert!(root.pointer("/locales/de/cancel").and_then(Value::as_str).is_some());

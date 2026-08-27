@@ -1,2 +1,0 @@
-enum GltfCreateSceneInversePhaseV1 { INVERSE }
-type GltfCreateSceneInverseV1 { id: ID!, version: GltfCreateSceneU32!, phase: GltfCreateSceneInversePhaseV1!, touchedPaths: [String!]!, position: GltfCreateSceneU32!, expectedSceneCountAfter: GltfCreateSceneU32!, expectedScene: GltfCreateSceneValueV1!, expectedScenesAfter: [GltfCreateSceneAnchorV1!]!, defaultSceneBefore: GltfCreateSceneU32, expectedDefaultSceneAfter: GltfCreateSceneU32 }

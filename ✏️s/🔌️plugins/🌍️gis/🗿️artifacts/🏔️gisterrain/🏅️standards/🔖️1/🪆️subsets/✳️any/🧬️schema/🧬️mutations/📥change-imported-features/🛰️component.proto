@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.gis.gisterrain.mutation;
+
+message ChangeImportedFeatures {
+  string new_imported_features_json = 1;
+}

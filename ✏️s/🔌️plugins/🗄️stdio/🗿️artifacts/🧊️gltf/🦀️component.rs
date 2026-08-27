@@ -6,7 +6,7 @@ use semio_framework_plugin::{
 };
 
 pub use crate::artifacts::gltf::schema::diff::GltfDiff;
-pub use crate::artifacts::gltf::schema::modules::mutation_dispatch::{GltfDiffEnvelope, GltfMutation, GltfMutationDiff, GltfMutationEnvelope, GltfMutationPhase, GltfMutationRegistryError};
+pub use crate::artifacts::gltf::schema::mutations::GltfMutation;
 pub use crate::artifacts::gltf::schema::snapshot::GltfSnapshot;
 pub use crate::artifacts::gltf::schema::GltfArtifact;
 

@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.json.mutation;
+// insert-array-element/InsertArrayElement
+message InsertArrayElementPayload { bytes path = 1; uint64 index = 2; bytes value = 3; }

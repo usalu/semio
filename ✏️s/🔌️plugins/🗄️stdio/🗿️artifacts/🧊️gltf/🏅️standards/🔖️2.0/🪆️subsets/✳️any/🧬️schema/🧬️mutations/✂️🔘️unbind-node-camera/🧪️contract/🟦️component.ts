@@ -1,0 +1,6 @@
+/** 🧪️ Mutation-law probe for unbind-node-camera. */
+import type { GltfSnapshot } from '../../../📸️snapshot/🟦️component.ts';
+import { applyGltfUnbindNodeCamera, type GltfUnbindNodeCameraPayload } from '../../unbind-node-camera/🟦️component.ts';
+import { deriveGltfUnbindNodeCameraDiff } from '../../unbind-node-camera/🔺️diff/🟦️component.ts';
+import { deriveGltfUnbindNodeCameraInverse } from '../../unbind-node-camera/↩️inverse/🟦️component.ts';
+export const assertGltfUnbindNodeCameraLaws = (base: GltfSnapshot, payload: GltfUnbindNodeCameraPayload) => { const first = applyGltfUnbindNodeCamera(base, payload); if (!first.accepted) return first; const replay = applyGltfUnbindNodeCamera(base, payload); if (!replay.accepted || JSON.stringify(first.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(first.diff) !== JSON.stringify(replay.diff)) throw new Error('unbind-node-camera replay is non-deterministic'); const direct = deriveGltfUnbindNodeCameraDiff(base, payload); const inverse = deriveGltfUnbindNodeCameraInverse(base, payload); if (!direct.accepted || !inverse.accepted || JSON.stringify(direct.touchedPaths) !== JSON.stringify(first.touchedPaths) || JSON.stringify(inverse.touchedPaths) !== JSON.stringify(first.touchedPaths)) throw new Error('unbind-node-camera diff or inverse law failed'); return { first, direct, inverse }; };

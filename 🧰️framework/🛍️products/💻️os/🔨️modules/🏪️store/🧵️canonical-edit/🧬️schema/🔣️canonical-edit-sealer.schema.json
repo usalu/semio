@@ -1,0 +1,321 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.store.canonical-edit-sealer.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "grants",
+    "textPattern",
+    "repeat",
+    "edit",
+    "expectedJson",
+    "expectedDigest",
+    "hostile",
+    "largeTextBytes",
+    "origins"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.store.canonical-edit-sealer.v1"
+    },
+    "grants": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 6
+    },
+    "textPattern": {
+      "type": "string"
+    },
+    "repeat": {
+      "type": "integer",
+      "minimum": 4097
+    },
+    "edit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "actor",
+        "forwards",
+        "inverse",
+        "mutationMeta",
+        "description",
+        "sequenceNumber",
+        "startedAt"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string"
+        },
+        "forwards": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "$ref": "#/definitions/mutation"
+          }
+        },
+        "inverse": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/mutation"
+          }
+        },
+        "mutationMeta": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "$ref": "#/definitions/meta"
+          }
+        },
+        "description": {
+          "type": "string"
+        },
+        "sequenceNumber": {
+          "type": "integer"
+        },
+        "startedAt": {
+          "type": "string"
+        }
+      }
+    },
+    "expectedJson": {
+      "type": "string",
+      "minLength": 4097
+    },
+    "expectedDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "hostile": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "wrong-operation",
+          "wrong-generation",
+          "wrong-base",
+          "wrong-group",
+          "forged-digest",
+          "rebound-edit",
+          "rebound-post",
+          "forged-prefix",
+          "cancel-before-seal"
+        ]
+      },
+      "uniqueItems": true,
+      "minItems": 9
+    },
+    "largeTextBytes": {
+      "type": "array",
+      "items": {
+        "enum": [
+          16384,
+          65536
+        ]
+      },
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true
+    },
+    "origins": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "owner"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "plugin_id",
+              "mutation_id",
+              "payload_hash"
+            ],
+            "properties": {
+              "kind": {
+                "const": "contributed"
+              },
+              "plugin_id": {
+                "type": "string"
+              },
+              "mutation_id": {
+                "type": "string"
+              },
+              "payload_hash": {
+                "type": "array",
+                "minItems": 32,
+                "maxItems": 32,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "initiator"
+            ],
+            "properties": {
+              "kind": {
+                "const": "transaction"
+              },
+              "initiator": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "artifactId",
+                  "artifactKind",
+                  "dialect"
+                ],
+                "properties": {
+                  "artifactId": {
+                    "type": "string"
+                  },
+                  "artifactKind": {
+                    "type": "string"
+                  },
+                  "dialect": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "mutation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "Replace"
+      ],
+      "properties": {
+        "Replace": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text",
+            "nested",
+            "enabled",
+            "amount"
+          ],
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "nested": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "amount": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation_id",
+        "dependencies",
+        "base_version",
+        "author_id",
+        "timestamp",
+        "undo_policy",
+        "label",
+        "group_id"
+      ],
+      "properties": {
+        "mutation_id": {
+          "type": "string"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "base_version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "author_id": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "actor",
+            "physical_ms",
+            "logical"
+          ],
+          "properties": {
+            "actor": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "physical_ms": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "logical": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "undo_policy": {
+          "enum": [
+            "ExactBaseOnly",
+            "TransformAgainstConcurrent",
+            "SemanticUndo",
+            "CompensatingAction"
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "group_id": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

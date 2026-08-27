@@ -1,2 +1,4 @@
-/** 🧩 energy-model mutations facade. */
-export type EnergyModelMutation = { mutation: "replace-model"; newModelJson: string };
+/** 🧬 Transparent energy-model mutation aggregate. */
+import type { ReplaceModel } from "./♻️replace-model/🟦️component";
+
+export type EnergyModelMutation = ReplaceModel;

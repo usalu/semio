@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useMemo, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
+import { useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import {
   App,
   Button,
@@ -219,9 +219,8 @@ function buildDisplayLayoutTree(host: DisplayHostApi): TreePanelConfig {
             id: "framework.display.layout.save.action",
             label: shellLabel("ui.common.save"),
             control: (
-              <Button
+              <Button icon="save"
                 id="framework.display.save"
-                size="sm"
                 text={shellLabel("ui.display.saveCurrentLayout")}
                 disabled={!host.layoutSaveLabel.trim()}
                 onClick={() => {
@@ -374,8 +373,8 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
                   id: "framework.settings.appearance",
                   label: shellLabel("ui.settings.tab.appearance"),
                   control: (
-                    <Select value={host.appearance} onValueChange={(value) => host.setAppearance(value)}>
-                      <SelectTrigger id="framework.settings.appearance" className="h-small w-32" size="sm">
+                    <Select id="framework.settings.appearance" value={host.appearance} onValueChange={(value) => host.setAppearance(value)}>
+                <SelectTrigger id="framework.settings.appearance" className="h-small w-32" size="sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -393,7 +392,7 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
             control: host.mobileActive ? (
               <span className="text-sm text-muted-foreground">{shellLabel("settings.layout.mobile")}</span>
             ) : (
-              <Select value={host.layout} onValueChange={(value) => host.setLayout(value === "tablet" ? "tablet" : "desktop")}>
+              <Select id="framework.settings.layout" value={host.layout} onValueChange={(value) => host.setLayout(value === "tablet" ? "tablet" : "desktop")}>
                 <SelectTrigger id="framework.settings.layout" className="h-small w-32" size="sm">
                   <SelectValue />
                 </SelectTrigger>
@@ -408,7 +407,7 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
             id: "framework.settings.driver",
             label: shellLabel("ui.settings.tab.driver"),
             control: (
-              <Select value={host.driverId} onValueChange={(value) => host.setDriverId(value)}>
+              <Select id="framework.settings.driver" value={host.driverId} onValueChange={(value) => host.setDriverId(value)}>
                 <SelectTrigger id="framework.settings.driver" className="h-small w-32" size="sm">
                   <SelectValue />
                 </SelectTrigger>
@@ -429,8 +428,8 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
                   id: "framework.settings.language",
                   label: shellLabel("ui.settings.tab.language"),
                   control: (
-                    <Select value={host.locale} onValueChange={(value) => host.setLocale(value === "de" ? "de" : "en")}>
-                      <SelectTrigger id="framework.settings.language" className="h-small w-32" size="sm">
+                    <Select id="framework.settings.language" value={host.locale} onValueChange={(value) => host.setLocale(value === "de" ? "de" : "en")}>
+                <SelectTrigger id="framework.settings.language" className="h-small w-32" size="sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -448,8 +447,8 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
                   id: "framework.settings.terminology",
                   label: shellLabel("ui.settings.tab.terminology"),
                   control: (
-                    <Select value={host.terminology} onValueChange={(value) => host.setTerminology(value)}>
-                      <SelectTrigger id="framework.settings.terminology" className="h-small w-32" size="sm">
+                    <Select id="framework.settings.terminology" value={host.terminology} onValueChange={(value) => host.setTerminology(value)}>
+                <SelectTrigger id="framework.settings.terminology" className="h-small w-32" size="sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -469,8 +468,8 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
                   id: "framework.settings.mergePolicy",
                   label: shellLabel("ui.mutation.policy.setting.label"),
                   control: (
-                    <Select value={host.mergePolicy} onValueChange={(value) => host.setMergePolicy?.(value as MergePolicy)}>
-                      <SelectTrigger id="framework.settings.mergePolicy" className="h-small w-32" size="sm">
+                    <Select id="framework.settings.mergePolicy" value={host.mergePolicy} onValueChange={(value) => host.setMergePolicy?.(value as MergePolicy)}>
+                <SelectTrigger id="framework.settings.mergePolicy" className="h-small w-32" size="sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -490,7 +489,7 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
                 {
                   id: "framework.settings.resetDock.action",
                   label: shellLabel("ui.settings.resetDock"),
-                  control: <Button id="framework.settings.resetDock" size="sm" icon="rotate-ccw" text={shellLabel("ui.settings.resetDock")} onClick={() => host.onResetDock?.()} />,
+                  control: <Button id="framework.settings.resetDock" icon="rotate-ccw" text={shellLabel("ui.settings.resetDock")} onClick={() => host.onResetDock?.()} />,
                 },
               ]
             : []),
@@ -548,9 +547,8 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
             id: "framework.settings.driver.save.action",
             label: shellLabel("settings.driver.save"),
             control: (
-              <Button
+              <Button icon="save"
                 id="framework.settings.driver.save"
-                size="sm"
                 text={shellLabel("settings.driver.save")}
                 disabled={!host.driverSaveLabel.trim()}
                 onClick={() => {
@@ -567,7 +565,7 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
                 {
                   id: "framework.settings.driver.delete.action",
                   label: shellLabel("settings.driver.delete"),
-                  control: <Button id="framework.settings.driver.delete" size="sm" text={shellLabel("settings.driver.delete")} onClick={() => host.deleteDriver(host.driverId)} />,
+                  control: <Button icon="trash-2" id="framework.settings.driver.delete" text={shellLabel("settings.driver.delete")} onClick={() => host.deleteDriver(host.driverId)} />,
                 },
               ]
             : []),
@@ -588,8 +586,8 @@ function driverAxisSelectRow<K extends keyof Omit<UiDriver, "id" | "label">>(
     id: `framework.settings.driver.${key}`,
     label,
     control: (
-      <Select value={value as string} onValueChange={onChange}>
-        <SelectTrigger id={`framework.settings.driver.${key}`} className="h-small w-32" size="sm">
+      <Select id={`framework.settings.driver.${key}`} value={value as string} onValueChange={onChange}>
+                <SelectTrigger id={`framework.settings.driver.${key}`} className="h-small w-32" size="sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -752,7 +750,7 @@ function buildSettingsThemeTree(host: SettingsHostApi): TreePanelConfig {
             id: "framework.settings.theme.select.picker",
             label: shellLabel("ui.settings.theme.select"),
             control: (
-              <Select value={host.themeId} onValueChange={(value) => host.setThemeId(value)}>
+              <Select id="framework.settings.theme.select" value={host.themeId} onValueChange={(value) => host.setThemeId(value)}>
                 <SelectTrigger id="framework.settings.theme.select" className="h-small w-32" size="sm">
                   <SelectValue />
                 </SelectTrigger>
@@ -777,9 +775,8 @@ function buildSettingsThemeTree(host: SettingsHostApi): TreePanelConfig {
             id: "framework.settings.theme.save.action",
             label: shellLabel("ui.settings.theme.save"),
             control: (
-              <Button
+              <Button icon="save"
                 id="framework.settings.theme.save"
-                size="sm"
                 text={shellLabel("ui.settings.theme.save")}
                 disabled={!host.themeSaveLabel.trim()}
                 onClick={() => {
@@ -794,24 +791,24 @@ function buildSettingsThemeTree(host: SettingsHostApi): TreePanelConfig {
           {
             id: "framework.settings.theme.reset.action",
             label: shellLabel("ui.settings.theme.reset"),
-            control: <Button id="framework.settings.theme.reset" size="sm" text={shellLabel("ui.settings.theme.reset")} disabled={!host.themeDirty && host.themeId === "semio"} onClick={() => host.resetTheme()} />,
+            control: <Button icon="rotate-ccw" id="framework.settings.theme.reset" text={shellLabel("ui.settings.theme.reset")} disabled={!host.themeDirty && host.themeId === "semio"} onClick={() => host.resetTheme()} />,
           },
           {
             id: "framework.settings.theme.export.action",
             label: shellLabel("ui.settings.theme.export"),
-            control: <Button id="framework.settings.theme.export" size="sm" text={shellLabel("ui.settings.theme.export")} onClick={() => host.exportTheme()} />,
+            control: <Button icon="export" id="framework.settings.theme.export" text={shellLabel("ui.settings.theme.export")} onClick={() => host.exportTheme()} />,
           },
           {
             id: "framework.settings.theme.import.action",
             label: shellLabel("ui.settings.theme.import"),
-            control: <Button id="framework.settings.theme.import" size="sm" text={shellLabel("ui.settings.theme.import")} onClick={() => host.importTheme()} />,
+            control: <Button icon="import" id="framework.settings.theme.import" text={shellLabel("ui.settings.theme.import")} onClick={() => host.importTheme()} />,
           },
           ...(host.themeId.startsWith("custom.")
             ? [
                 {
                   id: "framework.settings.theme.delete.action",
                   label: shellLabel("ui.settings.theme.delete"),
-                  control: <Button id="framework.settings.theme.delete" size="sm" text={shellLabel("ui.settings.theme.delete")} onClick={() => host.deleteTheme(host.themeId)} />,
+                  control: <Button icon="trash-2" id="framework.settings.theme.delete" text={shellLabel("ui.settings.theme.delete")} onClick={() => host.deleteTheme(host.themeId)} />,
                 },
               ]
             : []),
@@ -829,7 +826,7 @@ function buildSettingsThemeTree(host: SettingsHostApi): TreePanelConfig {
   };
 }
 
-function chordFromKeyboardEvent(event: KeyboardEvent): string | null {
+function chordFromKeyboardEvent(event: globalThis.KeyboardEvent): string | null {
   if (event.key === "Escape") return null;
   const parts: string[] = [];
   if (event.ctrlKey) parts.push("ctrl");
@@ -869,8 +866,7 @@ function buildSettingsKeybindingsTree(host: SettingsHostApi): TreePanelConfig {
                 <span className="min-w-[5rem] font-mono text-xs text-muted-foreground">{formatKeybindingShortcut(keys)}</span>
                 <Button
                   id={`framework.settings.keybindings.capture.${controlId}`}
-                  size="sm"
-                  icon="keyboard"
+                  icon={{ kind: "emoji", emoji: "⌨️" }}
                   text={capturing ? shellLabel("settings.keybindings.pressKeys") : shellLabel("settings.keybindings.capture")}
                   data-keybinding-capture={controlId}
                   onClick={() => host.setKeybindingCaptureControlId(capturing ? null : controlId)}
@@ -887,7 +883,7 @@ function buildSettingsKeybindingsTree(host: SettingsHostApi): TreePanelConfig {
                     host.setKeybindingCaptureControlId(null);
                   }}
                 />
-                <Button id={`framework.settings.keybindings.reset.${controlId}`} size="sm" variant="ghost" icon="rotate-ccw" text={shellLabel("settings.keybindings.reset")} onClick={() => host.resetKeybindingOverride(controlId)} />
+                <Button id={`framework.settings.keybindings.reset.${controlId}`} variant="ghost" icon="rotate-ccw" text={shellLabel("settings.keybindings.reset")} onClick={() => host.resetKeybindingOverride(controlId)} />
               </div>
             ),
           };
@@ -944,7 +940,7 @@ function buildSettingsDefaultAppsTree(host: DefaultAppsHostApi): TreePanelConfig
             id: rowId,
             label: `${dialectCoordinate(row.dialect)} — ${surfaceRoleChipText(row.role, host.locale)}`,
             control: (
-              <Select
+              <Select id={rowId}
                 value={row.value}
                 onValueChange={(value) => {
                   if (value === DEFAULT_APP_NONE_VALUE) {
@@ -1015,8 +1011,8 @@ function buildConflictsTree(host: ConflictsHostApi): TreePanelConfig {
             control: (
               <div className="flex flex-col gap-single">
                 <div className="flex items-center gap-single">
-                  <Button id={`${rowId}.accept`} size="sm" text={shellLabel("ui.conflict.accept")} onClick={() => host.onResolve(conflict.id, "accept")} />
-                  <Button id={`${rowId}.discard`} size="sm" text={shellLabel("ui.conflict.discard")} onClick={() => host.onResolve(conflict.id, "discard")} />
+                  <Button icon="check" id={`${rowId}.accept`} text={shellLabel("ui.conflict.accept")} onClick={() => host.onResolve(conflict.id, "accept")} />
+                  <Button icon="x" id={`${rowId}.discard`} text={shellLabel("ui.conflict.discard")} onClick={() => host.onResolve(conflict.id, "discard")} />
                 </div>
                 {diff ? (
                   <div className="max-h-40 max-w-96 overflow-auto rounded-sm border border-border">
@@ -1167,7 +1163,7 @@ export function ShellRouteNotFoundPage({ path, onHome }: { readonly path: string
   return (
     <div className="flex h-full min-h-0 flex-col items-center justify-center gap-double p-double" role="alert" data-shell-route-not-found={path}>
       <p className="text-sm text-muted-foreground">{uiDataLabel(`Route not found: ${path}`)}</p>
-      <Button size="sm" text={shellLabel("ui.common.home")} onClick={onHome} />
+      <Button icon="home" text={shellLabel("ui.common.home")} onClick={onHome} />
     </div>
   );
 }
@@ -1190,8 +1186,8 @@ export function PluginRecoveryPanel({
       <p className="text-sm font-medium">{uiDataLabel("Plugin Recovery")}</p>
       <p className="text-sm text-muted-foreground">{message}</p>
       <div className="flex flex-wrap gap-single">
-        <Button size="sm" text={uiDataLabel("Restart App")} onClick={onRestart} />
-        <Button size="sm" text={uiDataLabel("Disable Plugin")} onClick={onDisable} />
+        <Button icon="rotate-ccw" text={uiDataLabel("Restart App")} onClick={onRestart} />
+        <Button icon="eye-off" text={uiDataLabel("Disable Plugin")} onClick={onDisable} />
       </div>
     </div>
   );
@@ -1248,16 +1244,14 @@ function marketplaceExtensionItem(entry: MarketplaceExtensionEntry, host: Market
     loading: entry.status === "installing" || entry.status === "reloading",
     control: (
       <div className="flex items-center gap-1">
-        <Button
+        <Button icon={entry.enabled ? "eye-off" : "eye"}
           id={`framework.marketplace.extension.${entry.extensionId}.enable`}
-          size="sm"
           text={entry.enabled ? uiDataLabel("Disable") : uiDataLabel("Enable")}
           disabled={entry.status !== "loaded" && entry.status !== "available"}
           onClick={() => host.setExtensionEnabled(entry.extensionId, !entry.enabled)}
         />
-        <Button
+        <Button icon="trash-2"
           id={`framework.marketplace.extension.${entry.extensionId}.uninstall`}
-          size="sm"
           text={uiDataLabel("Uninstall")}
           disabled={entry.status === "installing" || entry.status === "reloading"}
           onClick={() => host.uninstallExtension(entry.extensionId)}
@@ -1276,19 +1270,17 @@ function marketplacePluginItem(entry: MarketplacePluginEntry, extensions: readon
     ...(extensions.length > 0 ? { items: extensions.map((extension) => marketplaceExtensionItem(extension, host)) } : {}),
     control:
       entry.status === "available" || entry.status === "failed" ? (
-        <Button id={`framework.marketplace.plugin.${entry.pluginId}.install`} size="sm" text={shellLabel("ui.plugins.action.install")} onClick={() => host.installPlugin(entry.pluginId)} />
+        <Button icon="download" id={`framework.marketplace.plugin.${entry.pluginId}.install`} text={shellLabel("ui.plugins.action.install")} onClick={() => host.installPlugin(entry.pluginId)} />
       ) : (
         <div className="flex items-center gap-1">
-          <Button
+          <Button icon="rotate-ccw"
             id={`framework.marketplace.plugin.${entry.pluginId}.reload`}
-            size="sm"
             text={shellLabel("ui.plugins.action.reload")}
             disabled={entry.status !== "loaded"}
             onClick={() => host.reloadPlugin(entry.pluginId)}
           />
-          <Button
+          <Button icon="trash-2"
             id={`framework.marketplace.plugin.${entry.pluginId}.uninstall`}
-            size="sm"
             text={shellLabel("ui.plugins.action.uninstall")}
             disabled={!entry.canUninstall || entry.status !== "loaded"}
             onClick={() => host.uninstallPlugin(entry.pluginId)}
@@ -1324,9 +1316,8 @@ function buildMarketplaceTree(host: MarketplaceHostApi): TreePanelConfig {
           id: "framework.marketplace.extensions.install.url",
           label: uiDataLabel("From URL"),
           control: (
-            <Button
+            <Button icon="download"
               id="framework.marketplace.extensions.install.url"
-              size="sm"
               text={uiDataLabel("Install from URL")}
               onClick={() => {
                 const sourceUri = typeof window !== "undefined" ? window.prompt("Extension package URL") : null;
@@ -1351,7 +1342,7 @@ function buildMarketplaceTree(host: MarketplaceHostApi): TreePanelConfig {
                   event.target.value = "";
                 }}
               />
-              <Button id="framework.marketplace.extensions.install.file.trigger" size="sm" text={uiDataLabel("Install from file")} />
+              <Button icon="download" id="framework.marketplace.extensions.install.file.trigger" text={uiDataLabel("Install from file")} />
             </label>
           ),
         },

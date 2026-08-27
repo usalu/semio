@@ -37,7 +37,7 @@
 //! full, and repeated in this case's feature description.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_pdf_1_7, regenerates_page_content, without_content_operators, KINDS, UNOBSERVABLE};
+use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_pdf_1_7, regenerates_page_content, without_content_operators, KINDS, UNOBSERVABLE};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
 
 //#region 🔖️Input
@@ -49,11 +49,6 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 
-/// 🈳️ The `no-mutation` spec, which is how the identity round trip asks the reference to parse and
-/// re-serialize the real document without changing anything.
-fn no_mutation() -> Json {
-    Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(vec![]))])
-}
 //#endregion 🔖️Input
 
 //#region 🔖️Profile
@@ -99,13 +94,13 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 }
 
 /// 🔒️ The ORACLE side of the identity law, both halves asserted: `lopdf` fully parses the real
-/// document and re-serializes it from its own object graph alone (the same `no-mutation` routing
-/// every other kind goes through), the re-serialized bytes must differ from the input — our
+/// document and re-serializes it from its own object graph alone, the re-serialized bytes must
+/// differ from the input — our
 /// encoder cannot reproduce another writer's object layout, so bit-identical output would mean the
 /// input was smuggled rather than parsed — and the projection must survive intact.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
-    let bytes = oracle_apply_mutation(&input, &no_mutation())?;
+    let bytes = oracle_round_trip(&input)?;
     reparsed_not_copied(&bytes, &input)?;
     let projection = project_pdf_1_7(&bytes)?;
     round_trip_preserves_within(&projection, &project_pdf_1_7(&input)?, PDF_WRITER_FREEDOM, PDF_TOLERANCE)?;
@@ -122,7 +117,7 @@ mod subject {
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::any::UNOBSERVABLE;
     use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::io::{decode_pdf, encode_pdf};
     use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfPathSegment;
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, PdfMutation};
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::*;
     use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::any::project_pdf_1_7;
 
@@ -198,125 +193,35 @@ mod subject {
         PdfPage { media_box: media_box_field(value, "mediaBox").unwrap_or([0.0, 0.0, 612.0, 792.0]), crop_box: media_box_field(value, "cropBox"), rotate: number_field(value, "rotate") as i32, text: value.str("text") }
     }
 
-    /// 📄️ The scenario's `<id>`/`<params>` spec turned into the ONE typed `PdfMutation` this subset
-    /// declares for it. `set-snapshot` mirrors the oracle's own extension of "replace metadata" --
-    /// only `declaredVersion`/`title` are spec-driven, applied on top of the currently decoded
-    /// `base` snapshot so every OTHER field (pages, objects, trailer) survives untouched.
-    fn mutation_from_spec(spec: &Json, base: &PdfSnapshot) -> Result<PdfMutation, String> {
+    /// 📄️ The scenario's `<id>`/`<params>` spec turned into the one typed direct mutation it owns.
+    fn mutation_from_spec(spec: &Json) -> Result<PdfMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         match spec.str("kind").as_str() {
-            "no-mutation" => Ok(PdfMutation::NoMutation),
-            "set-snapshot" => {
-                let mut snapshot = base.clone();
-                if let Some(version) = str_field(&params, "declaredVersion") {
-                    snapshot.declared_version = version;
-                }
-                if let Some(title) = str_field(&params, "title") {
-                    snapshot.info.title = Some(title);
-                }
-                Ok(PdfMutation::SetSnapshot { snapshot })
-            }
-            "insert-page" => Ok(PdfMutation::InsertPage { index: usize_field(&params, "index"), page: json_to_pdf_page(&params.get("page").cloned().unwrap_or(Json::Null)) }),
-            "remove-page" => Ok(PdfMutation::RemovePage { index: usize_field(&params, "index") }),
-            "set-page-media-box" => Ok(PdfMutation::SetPageMediaBox { index: usize_field(&params, "index"), media_box: media_box_field(&params, "mediaBox").unwrap_or([0.0, 0.0, 612.0, 792.0]) }),
-            "set-page-crop-box" => Ok(PdfMutation::SetPageCropBox { index: usize_field(&params, "index"), crop_box: media_box_field(&params, "cropBox") }),
-            "append-page-content" => Ok(PdfMutation::AppendPageContent { index: usize_field(&params, "index"), text: params.str("text") }),
-            "set-info" => Ok(PdfMutation::SetInfo { info: PdfInfo { title: str_field(&params, "title"), author: str_field(&params, "author"), ..Default::default() } }),
-            "insert-object" => Ok(PdfMutation::InsertObject { id: object_id_field(&params), value: json_to_pdf_object(&params.get("value").cloned().unwrap_or(Json::Null)) }),
-            "remove-object" => Ok(PdfMutation::RemoveObject { id: object_id_field(&params) }),
-            "set-object-value" => Ok(PdfMutation::SetObjectValue { id: object_id_field(&params), value: json_to_pdf_object(&params.get("value").cloned().unwrap_or(Json::Null)) }),
-            "set-dict-entry" => Ok(PdfMutation::SetDictEntry { id: object_id_field(&params), path: path_field(params.array("path")), key: params.str("key"), value: json_to_pdf_object(&params.get("value").cloned().unwrap_or(Json::Null)) }),
-            "remove-dict-entry" => Ok(PdfMutation::RemoveDictEntry { id: object_id_field(&params), path: path_field(params.array("path")), key: params.str("key") }),
-            "set-trailer-entry" => Ok(PdfMutation::SetTrailerEntry { key: params.str("key"), value: json_to_pdf_object(&params.get("value").cloned().unwrap_or(Json::Null)) }),
-            "remove-trailer-entry" => Ok(PdfMutation::RemoveTrailerEntry { key: params.str("key") }),
-            "move-page" => Ok(PdfMutation::MovePage { from: usize_field(&params, "from"), to: usize_field(&params, "to") }),
-            "set-page-content" => Ok(PdfMutation::SetPageContent { index: usize_field(&params, "index"), text: params.str("text") }),
-            "set-page-rotation" => Ok(PdfMutation::SetPageRotation { index: usize_field(&params, "index"), rotation: number_field(&params, "rotation") as u16 }),
+            "insert-page" => Ok(PdfMutation::InsertPage(InsertPage { index: usize_field(&params, "index"), page: json_to_pdf_page(&params.get("page").cloned().unwrap_or(Json::Null)) })),
+            "remove-page" => Ok(PdfMutation::RemovePage(RemovePage { index: usize_field(&params, "index") })),
+            "set-page-media-box" => Ok(PdfMutation::SetPageMediaBox(SetPageMediaBox { index: usize_field(&params, "index"), media_box: media_box_field(&params, "mediaBox").unwrap_or([0.0, 0.0, 612.0, 792.0]) })),
+            "set-page-crop-box" => Ok(PdfMutation::SetPageCropBox(SetPageCropBox { index: usize_field(&params, "index"), crop_box: media_box_field(&params, "cropBox") })),
+            "append-page-content" => Ok(PdfMutation::AppendPageContent(AppendPageContent { index: usize_field(&params, "index"), text: params.str("text") })),
+            "set-info" => Ok(PdfMutation::SetInfo(SetInfo { info: PdfInfo { title: str_field(&params, "title"), author: str_field(&params, "author"), ..Default::default() } })),
+            "insert-object" => Ok(PdfMutation::InsertObject(InsertObject { id: object_id_field(&params), value: json_to_pdf_object(&params.get("value").cloned().unwrap_or(Json::Null)) })),
+            "remove-object" => Ok(PdfMutation::RemoveObject(RemoveObject { id: object_id_field(&params) })),
+            "set-object-value" => Ok(PdfMutation::SetObjectValue(SetObjectValue { id: object_id_field(&params), value: json_to_pdf_object(&params.get("value").cloned().unwrap_or(Json::Null)) })),
+            "set-dict-entry" => Ok(PdfMutation::SetDictEntry(SetDictEntry { id: object_id_field(&params), path: path_field(params.array("path")), key: params.str("key"), value: json_to_pdf_object(&params.get("value").cloned().unwrap_or(Json::Null)) })),
+            "remove-dict-entry" => Ok(PdfMutation::RemoveDictEntry(RemoveDictEntry { id: object_id_field(&params), path: path_field(params.array("path")), key: params.str("key") })),
+            "set-trailer-entry" => Ok(PdfMutation::SetTrailerEntry(SetTrailerEntry { key: params.str("key"), value: json_to_pdf_object(&params.get("value").cloned().unwrap_or(Json::Null)) })),
+            "remove-trailer-entry" => Ok(PdfMutation::RemoveTrailerEntry(RemoveTrailerEntry { key: params.str("key") })),
+            "move-page" => Ok(PdfMutation::MovePage(MovePage { from: usize_field(&params, "from"), to: usize_field(&params, "to") })),
+            "set-page-content" => Ok(PdfMutation::SetPageContent(SetPageContent { index: usize_field(&params, "index"), text: params.str("text") })),
+            "set-page-rotation" => Ok(PdfMutation::SetPageRotation(SetPageRotation { index: usize_field(&params, "index"), rotation: number_field(&params, "rotation") as u16 })),
             other => Err(format!("mutation kind {other:?} has no subject implementation")),
         }
     }
     //#endregion 🔖️SpecCodec
 
-    //#region 🔖️Inverse
-    /// 🔍️ Read-only lookup of the CURRENT value at `key` inside object `id`'s value tree at `path` --
-    /// verbatim copy of `../../🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s
-    /// own private `original_dict_value`, duplicated here (not imported) for the same reason
-    /// `mutate-pdf-1-4`'s own `inverse_of` gives: written in closed form so this adapter needs no
-    /// extra crate dependency beyond `semio-s-plugin-stdio` itself.
-    fn original_dict_value(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegment], key: &str) -> Option<PdfObject> {
-        let obj = base.objects.iter().find(|o| o.id == id)?;
-        let mut current = &obj.value;
-        for seg in path {
-            current = match (seg, current) {
-                (PdfPathSegment::ArrayIndex { index }, PdfObject::Array(items)) => items.get(*index)?,
-                (PdfPathSegment::DictKey { key }, PdfObject::Dict(entries)) => &entries.iter().find(|e| &e.key == key)?.value,
-                (PdfPathSegment::DictKey { key }, PdfObject::Stream { dict, .. }) => &dict.iter().find(|e| &e.key == key)?.value,
-                _ => return None,
-            };
-        }
-        let entries: &[PdfDictEntry] = match current {
-            PdfObject::Dict(d) => d.as_slice(),
-            PdfObject::Stream { dict, .. } => dict.as_slice(),
-            _ => return None,
-        };
-        entries.iter().find(|e| e.key == key).map(|e| e.value.clone())
-    }
-
-    /// ↩️ `PdfMutation::inverse` in closed form (same source as `original_dict_value` above) --
-    /// every variant's own `Mutation::inverse` arm, transplanted rather than called through the
-    /// trait.
-    fn inverse_of(mutation: &PdfMutation, base: &PdfSnapshot) -> PdfMutation {
-        match mutation {
-            PdfMutation::NoMutation => PdfMutation::NoMutation,
-            PdfMutation::SetSnapshot { .. } => PdfMutation::SetSnapshot { snapshot: base.clone() },
-            PdfMutation::InsertPage { index, .. } => PdfMutation::RemovePage { index: *index },
-            PdfMutation::RemovePage { index } => match base.pages.get(*index) {
-                Some(page) => PdfMutation::InsertPage { index: *index, page: page.clone() },
-                None => PdfMutation::NoMutation,
-            },
-            PdfMutation::SetPageMediaBox { index, .. } => PdfMutation::SetPageMediaBox { index: *index, media_box: base.pages.get(*index).map(|page| page.media_box).unwrap_or([0.0, 0.0, 612.0, 792.0]) },
-            PdfMutation::SetPageCropBox { index, .. } => PdfMutation::SetPageCropBox { index: *index, crop_box: base.pages.get(*index).and_then(|page| page.crop_box) },
-            PdfMutation::AppendPageContent { index, .. } => PdfMutation::SetPageContent { index: *index, text: base.pages.get(*index).map(|page| page.text.clone()).unwrap_or_default() },
-            PdfMutation::SetInfo { .. } => PdfMutation::SetInfo { info: base.info.clone() },
-            PdfMutation::InsertObject { id, .. } => PdfMutation::RemoveObject { id: *id },
-            PdfMutation::RemoveObject { id } => match base.objects.iter().find(|o| o.id == *id) {
-                Some(o) => PdfMutation::InsertObject { id: *id, value: o.value.clone() },
-                None => PdfMutation::NoMutation,
-            },
-            PdfMutation::SetObjectValue { id, .. } => match base.objects.iter().find(|o| o.id == *id) {
-                Some(o) => PdfMutation::SetObjectValue { id: *id, value: o.value.clone() },
-                None => PdfMutation::RemoveObject { id: *id },
-            },
-            PdfMutation::SetDictEntry { id, path, key, .. } => match original_dict_value(base, *id, path, key) {
-                Some(value) => PdfMutation::SetDictEntry { id: *id, path: path.clone(), key: key.clone(), value },
-                None => PdfMutation::RemoveDictEntry { id: *id, path: path.clone(), key: key.clone() },
-            },
-            PdfMutation::RemoveDictEntry { id, path, key } => match original_dict_value(base, *id, path, key) {
-                Some(value) => PdfMutation::SetDictEntry { id: *id, path: path.clone(), key: key.clone(), value },
-                None => PdfMutation::NoMutation,
-            },
-            PdfMutation::SetTrailerEntry { key, .. } => match base.trailer.iter().find(|e| e.key == *key) {
-                Some(e) => PdfMutation::SetTrailerEntry { key: key.clone(), value: e.value.clone() },
-                None => PdfMutation::RemoveTrailerEntry { key: key.clone() },
-            },
-            PdfMutation::RemoveTrailerEntry { key } => match base.trailer.iter().find(|e| e.key == *key) {
-                Some(e) => PdfMutation::SetTrailerEntry { key: key.clone(), value: e.value.clone() },
-                None => PdfMutation::NoMutation,
-            },
-            PdfMutation::MovePage { from, to } => match base.pages.get(*from) {
-                Some(_) => PdfMutation::MovePage { from: (*to).min(base.pages.len().saturating_sub(1)), to: *from },
-                None => PdfMutation::NoMutation,
-            },
-            PdfMutation::SetPageContent { index, .. } => PdfMutation::SetPageContent { index: *index, text: base.pages.get(*index).map(|page| page.text.clone()).unwrap_or_default() },
-            PdfMutation::SetPageRotation { index, .. } => PdfMutation::SetPageRotation { index: *index, rotation: base.pages.get(*index).map(|page| page.rotate).unwrap_or(0).rem_euclid(360) as u16 },
-        }
-    }
-    //#endregion 🔖️Inverse
-
     //#region 🔖️Handlers
     /// 🦠️ The forward half with the OBSERVABILITY law asserted IN THE SUBJECT ROLE, against the
     /// untouched real document and under the same profile the oracle half uses. Until this wave
-    /// every one of these eighteen rows returned its projection uncompared, which is exactly how
+    /// every one of these sixteen rows returned its projection uncompared, which is exactly how
     /// ten of them could report green while `encode_pdf` was dropping the whole authored page and
     /// metadata lane on the floor (@see the reconciler in
     /// ../../🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs). The one exemption is the
@@ -325,7 +230,7 @@ mod subject {
         let input = mutable_input(ctx)?;
         let base = decode_pdf(&input).map_err(|error| format!("decode_pdf failed: {error:?}"))?;
         let spec = ctx.doc_json()?;
-        let mutation = mutation_from_spec(&spec, &base)?;
+        let mutation = mutation_from_spec(&spec)?;
         let mut snapshot = base;
         apply_pdf_mutation(&mut snapshot, &mutation);
         let bytes = encode_pdf(&snapshot).map_err(|error| format!("encode_pdf failed: {error:?}"))?;
@@ -345,11 +250,13 @@ mod subject {
         let input = mutable_input(ctx)?;
         let base = decode_pdf(&input).map_err(|error| format!("decode_pdf failed: {error:?}"))?;
         let spec = ctx.doc_json()?;
-        let mutation = mutation_from_spec(&spec, &base)?;
-        let undo = inverse_of(&mutation, &base);
+        let mutation = mutation_from_spec(&spec)?;
+        let undo = protocol::Mutation::inverse(&mutation, &base);
         let mut snapshot = base;
         apply_pdf_mutation(&mut snapshot, &mutation);
-        apply_pdf_mutation(&mut snapshot, &undo);
+        for operation in undo {
+            apply_pdf_mutation(&mut snapshot, &operation);
+        }
         let bytes = encode_pdf(&snapshot).map_err(|error| format!("encode_pdf failed: {error:?}"))?;
         let projection = project_pdf_1_7(&bytes)?;
         inverse_restores_within(&spec.str("kind"), &projection, &project_pdf_1_7(&input)?, PDF_WRITER_FREEDOM, PDF_TOLERANCE)?;
@@ -371,7 +278,7 @@ mod subject {
     }
     //#endregion 🔖️Handlers
 
-    /// 🧭️ Re-exported so `super::adapter()` can register the same 18-kind sweep for the subject role
+    /// 🧭️ Re-exported so `super::adapter()` can register the same 16-kind sweep for the subject role
     /// without duplicating `KINDS` a third time.
     pub const SUBJECT_KINDS: &[&str] = KINDS;
 }
@@ -379,7 +286,7 @@ mod subject {
 
 //#region 🔖️Registration
 /// 🧭️ Registration entry point the generated host calls. `mutate-<kind>`/`inverse-<kind>` share ONE
-/// handler per role across all 18 kinds -- the scenario id only selects which fixture row's
+/// handler per role across all 16 kinds -- the scenario id only selects which fixture row's
 /// `<id>`/`<params>` doc string the shared handler reads, per `Adapter::oracle`/`subject`'s own
 /// per-scenario dispatch table.
 pub fn adapter() -> Adapter {

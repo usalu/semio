@@ -2,7 +2,7 @@
 
 use crate::artifacts::procedural3d::schema::Procedural3dArtifact;
 use crate::artifacts::procedural3d::schema::Procedural3dPreviewCamera;
-use flow::playbook::GenerationPlayState;
+use flow::playbook::GenerationPlayRoot;
 use flow::CameraJson;
 use flow::FlowFixture;
 use schema::ArtifactSchema;
@@ -20,7 +20,7 @@ pub struct Procedural3dDiff {
     #[state(artifact)]
     pub fixture: Option<FlowFixture>,
     #[state(artifact)]
-    pub generation: Option<GenerationPlayState>,
+    pub generation: Option<GenerationPlayRoot>,
     #[state(presence)]
     pub selected_node_ids: Option<Procedural3dStringList>,
     #[state(config)]

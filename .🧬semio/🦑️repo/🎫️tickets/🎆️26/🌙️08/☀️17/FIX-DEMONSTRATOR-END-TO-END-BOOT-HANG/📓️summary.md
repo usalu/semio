@@ -1,5 +1,7 @@
 # Fix Demonstrator End to End Boot Hang — Summary
 
+> Historical boot-chrome observation only. This is not end-to-end completion: visible authored content, panels, interactions, and console cleanliness for all six apps remain pending in `📓️browser-proof-2026-08-27.md`.
+
 ## Verdict
 Demonstrator panes leave the loading state and show live app chrome (e.g. cad editor windows). Confirmed via Playwright against `http://127.0.0.1:6029/` (`🧪️playwright-boot-4.txt`): `bootFailed=0`, `workers≥9` including `cad`/`gis`/`puzzle`/`process`/`sourcing`, `canvas=4`, German UI body with “Entwerfen mit Bestand · cad”.
 

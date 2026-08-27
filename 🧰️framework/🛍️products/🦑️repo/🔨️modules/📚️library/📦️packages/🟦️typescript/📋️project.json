@@ -15,7 +15,8 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test"
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
       }
     },
     "test-quick": {
@@ -23,6 +24,13 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test quick"
+      }
+    },
+    "test-transaction-v2": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test transaction-v2"
       }
     },
     "test-long": {
@@ -37,6 +45,30 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test exhaustive"
+      }
+    },
+    "generate-ticket-important-fem-handoff": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts generate-ticket-important-fem-handoff"
+      }
+    },
+    "preview-generated": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts preview-generated"
+      }
+    },
+    "check-ticket-important-fem-handoff": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check-ticket-important-fem-handoff"
       }
     },
     "workspaces-check": {

@@ -134,16 +134,17 @@ async fn temp_catalog_port_concrete() -> Arc<BackbonePorts> {
     PORT.get_or_init(|| Arc::new(BackbonePorts::Memory(MemoryBackbonePort::default()))).clone()
 }
 
-/// ⚠️️ `dyn OsBackbonePort` — NOT converted, deliberately. `register_studio_port`'s two real callers
+/// 🚧️ BLOCKER — this process-global mutable payload registry violates the retained-interaction
+/// instance-ownership invariant and keeps Space global-state closure red. `register_studio_port`'s two real callers
 /// (`create_folder_studio`/`bind_studio_file` in the Home editor's `create-studio`/`bind-space-file`
 /// commands) source `port` from `semio_framework_os::open_folder_space_backbone`/
 /// `open_file_space_backbone` — both declared in `🖥️host/🦀️component.rs` (out of this packet's owned
 /// path) as returning `Arc<dyn OsBackbonePort>` directly, already type-erased before this file ever
 /// sees the value; there is no concrete type left to recover into a closed enum variant, and no `Any`
-/// bound on `OsBackbonePort` to downcast through even if there were. This registry is consequently a
-/// genuinely heterogeneous, open-set collection from this file's perspective — see
-/// `📓️terra-dedyn-fleet-space-report.md` §Residue for the lease-request that would close it (making
-/// those two host functions return a concrete/enum type instead of erasing at their own boundary).
+/// bound on `OsBackbonePort` to downcast through even if there were. The correct fix is a host-created,
+/// instance-scoped port-catalog service threaded into Home and Studio operation context; moving the
+/// same map behind another static would remain invalid. This source-only packet cannot install that
+/// host seam, so every route traversing this registry remains fail-closed and the residue is reported.
 async fn shared_studio_ports() -> Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>> {
     static REGISTRY: OnceLock<Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>>> = OnceLock::new();
     REGISTRY.get_or_init(|| Arc::new(Mutex::new(HashMap::new()))).clone()

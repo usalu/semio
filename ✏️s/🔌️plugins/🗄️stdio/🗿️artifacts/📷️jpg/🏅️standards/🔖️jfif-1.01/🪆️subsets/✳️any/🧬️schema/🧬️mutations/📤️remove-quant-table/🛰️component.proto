@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.jpg.mutation;
+// 🧬️ remove-quant-table/RemoveQuantTable; complex fields follow the direct payload schema.
+message RemoveQuantTableMutation { uint64 id = 1; }

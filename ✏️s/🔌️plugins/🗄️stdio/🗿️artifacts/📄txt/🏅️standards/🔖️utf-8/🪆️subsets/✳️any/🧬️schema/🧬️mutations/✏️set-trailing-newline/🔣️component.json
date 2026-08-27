@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️set-trailing-newline",
+  "semanticKind": "set-trailing-newline",
+  "displayName": "Set Trailing Newline",
+  "emoji": "✏️",
+  "aggregateVariant": "SetTrailingNewline",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "set-trailing-newline",
+  "binaryTag": 1,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

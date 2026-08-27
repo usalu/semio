@@ -1,0 +1,3 @@
+# 🧬️ change-gamma/ChangeGamma
+scalar ChangeGammaMutationValue
+input ChangeGammaMutation { gama: ChangeGammaMutationValue }

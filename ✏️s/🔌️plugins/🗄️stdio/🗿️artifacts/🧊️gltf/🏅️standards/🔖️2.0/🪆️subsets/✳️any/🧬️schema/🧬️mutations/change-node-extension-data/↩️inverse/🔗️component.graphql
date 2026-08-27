@@ -1,2 +1,0 @@
-# change-node-extension-data inverse typed facet.
-input GltfChangeNodeExtensionDataInverseV1 { operation: GltfChangeNodeExtensionDataPayloadV1!, before: GltfJson, touchedPaths: [String!]! }

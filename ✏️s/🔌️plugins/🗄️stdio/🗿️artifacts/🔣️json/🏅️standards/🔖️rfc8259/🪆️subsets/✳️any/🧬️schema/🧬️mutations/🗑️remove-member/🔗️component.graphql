@@ -1,0 +1,2 @@
+# 🧬 remove-member/RemoveMember
+input RemoveMemberPayload { path: [MutationPathSegment!]! key: String! }

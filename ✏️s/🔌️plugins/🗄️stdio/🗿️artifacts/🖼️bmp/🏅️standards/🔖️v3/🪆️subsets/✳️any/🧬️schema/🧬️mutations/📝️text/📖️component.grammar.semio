@@ -1,43 +1,16 @@
+# Direct identities: change-header-fields, insert-palette-entry, remove-palette-entry, replace-palette-entry, replace-pixel-data
 dialect grammar
 grammar stdio.bmp.mutations
 start op
 
-# P2-FG2: real one-line `OpText` grammar matching `BmpMutation`'s GENERIC `dsl::DslOps`-derived
-# `print_op`/`parse_op` (../🦀️component.rs `OpCodecs` region: `dsl::DslVariants::to_named_record`
-# + `dsl::print(..., dsl::JoinMode::Inline)` -- no per-artifact custom printer). Same mechanism,
-# same conventions, as `stdio.txt`/`stdio.zip`'s own already-real mutations grammar. This file
-# used to (wrongly) document the wire text as a bare JSON serialization -- replaced here after
-# tracing the real function via a [DEBUG] probe against real `BmpMutation` values, not guessed,
-# per this ticket's own recipe §4 checklist item. Keyword = kebab-case of the Rust variant name
-# (`to_kebab`); field keys likewise kebab-case of the Rust field ident, printed `key=value` in
-# `keyed_field_rank` order (rank 0 scalar before rank 1 composite/block, ties broken by
-# declaration order). Verified variant ordinals + printed shapes against real
-# `BmpMutation::print_op()`/`dsl::DslVariants::variants()` calls:
-# `no-mutation`=0, `set-snapshot`=1, `set-header-fields`=2, `insert-palette-entry`=3,
-# `remove-palette-entry`=4, `set-palette-entry`=5, `set-pixel-data`=6.
 comment none
 
-op = no-mutation | set-snapshot | set-header-fields | insert-palette-entry | remove-palette-entry | set-palette-entry | set-pixel-data
+op = change-header-fields | insert-palette-entry | remove-palette-entry | replace-palette-entry | replace-pixel-data
 
-# `scalar_to_text` (🗣️dsl/🧬️schema/🦀️component.rs) prints a `String` field bare (`IDENT`) when it
-# lexes back as exactly one identifier (`is_bare_ident` — the lexer's ident alphabet includes
-# `.`/`-`/`_`/`/`, so e.g. `stdio.bmp` prints bare), quoted+escaped (`TEXT`) otherwise -- base64
-# payloads (`#[dsl(base64)]` fields, below) always fall to the quoted `TEXT` form in practice
-# (base64's own alphabet routinely includes `+`/`/`/`=`, which `is_bare_ident` rejects).
 text-value = IDENT | TEXT
 row-order-value = "bottom-up" | "top-down"
 
-no-mutation = "no-mutation"
 
-# `SetSnapshot`'s whole `BmpSnapshot` payload is `#[dsl(block)]` -- printed as
-# `snapshot { ... }` (`Shape::Block(Shape::Record(...))`). Field order inside, verified against a
-# real `BmpMutation::SetSnapshot{..}.print_op()` call: `schema` (rank 0), the 11 real
-# BITMAPINFOHEADER scalar fields (rank 0, declaration order), `pixels` (rank 0 — `#[dsl(base64)]`
-# on the bare, non-`Option` `Vec<u8>` classifies as `Shape::Bytes64`, a SCALAR shape, unlike the
-# sibling diff facet's `Option<Vec<u8>>` which cannot reach the attribute — see the diff
-# grammar's own doc comment), THEN `palette` (rank 1 — `#[dsl(block)]` on `Vec<BmpPaletteEntry>`,
-# printed `palette { [ <entries...> ] }`, a Block wrapping a List of records, no separators).
-set-snapshot = "set-snapshot" "snapshot" "{" snapshot-fields "}"
 snapshot-fields = schema-field header-size-field width-field height-field row-order-field planes-field bits-per-pixel-field compression-field image-size-field x-ppm-field y-ppm-field colors-used-field colors-important-field snapshot-pixels-field snapshot-palette-field
 schema-field = "schema" "=" text-value
 header-size-field = "header-size" "=" INT
@@ -56,19 +29,12 @@ snapshot-pixels-field = "pixels" "=" text-value
 snapshot-palette-field = "palette" "{" "[" palette-entry* "]" "}"
 palette-entry = "b" "=" INT "g" "=" INT "r" "=" INT "reserved" "=" INT
 
-# Every field is `Option<T>` — only the ones actually set print, in the SAME declaration order
-# as the diff facet's own scalar header fields.
-set-header-fields = "set-header-fields" header-size-field? width-field? height-field? row-order-field? planes-field? bits-per-pixel-field? compression-field? image-size-field? x-ppm-field? y-ppm-field? colors-used-field? colors-important-field?
+change-header-fields = "change-header-fields" header-size-field? width-field? height-field? row-order-field? planes-field? bits-per-pixel-field? compression-field? image-size-field? x-ppm-field? y-ppm-field? colors-used-field? colors-important-field?
 
-# `index` (rank 0 scalar `usize`) then `entry` (rank 1 block, `BmpPaletteEntry`'s own 4 scalar
-# fields) — verified against real `insert-palette-entry index=1 entry { b=9 g=9 r=9 reserved=0 }`
-# output.
 insert-palette-entry = "insert-palette-entry" "index" "=" INT "entry" "{" palette-entry "}"
 
 remove-palette-entry = "remove-palette-entry" "index" "=" INT
 
-set-palette-entry = "set-palette-entry" "index" "=" INT "entry" "{" palette-entry "}"
+replace-palette-entry = "replace-palette-entry" "index" "=" INT "entry" "{" palette-entry "}"
 
-# `pixels: Vec<u8>` is `#[dsl(base64)]` (non-`Option`) — prints as one quoted base64 `TEXT` atom,
-# verified against real `set-pixel-data pixels="BwgJ"` output.
-set-pixel-data = "set-pixel-data" "pixels" "=" text-value
+replace-pixel-data = "replace-pixel-data" "pixels" "=" text-value

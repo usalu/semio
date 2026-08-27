@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.tiff.mutation;
+// 🧬️ replace-tag/ReplaceTag; complex fields follow the direct payload schema.
+message ReplaceTagMutation { uint64 ifd_index = 1; uint64 tag = 2; bytes kind = 3; bytes values = 4; }

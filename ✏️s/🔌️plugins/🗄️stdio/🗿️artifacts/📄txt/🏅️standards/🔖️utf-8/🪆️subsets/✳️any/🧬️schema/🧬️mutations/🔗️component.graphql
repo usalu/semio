@@ -1,10 +1,22 @@
-# 🧬️ TxtMutation — imperative content mutation for `stdio.txt`. Discriminated on `mutation`;
-# only the fields relevant to that variant are set (mirrors the Rust `#[serde(tag = "mutation")]`
-# enum and the TS discriminated union, not a flat "every field always present" object).
-type TxtMutation {
-  mutation: String!
-  snapshot: TxtSnapshot
-  value: String
-  index: Int
-  text: String
+# 🧬 Transparent TxtMutation descriptor roster.
+# set-trailing-newline/SetTrailingNewline
+# set-line-ending/SetLineEnding
+# insert-line/InsertLine
+# remove-line/RemoveLine
+# set-line/SetLine
+enum TxtMutationTag {
+  SET_TRAILING_NEWLINE
+  SET_LINE_ENDING
+  INSERT_LINE
+  REMOVE_LINE
+  SET_LINE
+}
+
+input TxtMutationInput {
+  mutation: TxtMutationTag!
+  setTrailingNewline: SetTrailingNewlinePayload
+  setLineEnding: SetLineEndingPayload
+  insertLine: InsertLinePayload
+  removeLine: RemoveLinePayload
+  setLine: SetLinePayload
 }

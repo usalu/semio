@@ -5,7 +5,7 @@
 //! node is a documented no-op (`SetAttribute`/`InsertElement`/`RemoveElement` stay unreachable
 //! through this first-pass window).
 
-use crate::artifacts::xml::schema::mutations::XmlNodePath;
+use crate::artifacts::xml::schema::mutations::{SetTextMutation, SetTextPayload, XmlNodePath};
 use crate::artifacts::xml::schema::snapshot::XmlNode;
 use crate::artifacts::xml::{XmlMutation, XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
 use crate::editor::xml_any::modes::edit;
@@ -122,7 +122,7 @@ impl ArtifactEditor for XmlAnyEditor {
         let Ok(path) = decode_node_id(node_id) else { return Ok(Emit::default()) };
         let Some(root) = &doc.snapshot.doc.root else { return Ok(Emit::default()) };
         let Some(XmlNode::Text { .. }) = resolve_node(root, &path) else { return Ok(Emit::default()) };
-        Ok(Emit { artifact_mutations: vec![XmlMutation::SetText { path: XmlNodePath(path), text: value.clone() }], description: Some(format!("Set node {node_id}")), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![XmlMutation::SetText(SetTextMutation::Apply(SetTextPayload { path: XmlNodePath(path), text: value.clone() }))], description: Some(format!("Set node {node_id}")), ..Default::default() })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

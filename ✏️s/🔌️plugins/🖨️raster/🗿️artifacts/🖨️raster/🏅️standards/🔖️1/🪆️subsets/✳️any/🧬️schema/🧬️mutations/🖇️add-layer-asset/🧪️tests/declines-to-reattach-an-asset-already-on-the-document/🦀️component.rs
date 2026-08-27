@@ -5,7 +5,7 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate`.
 //!
 //! ⚠️ Why this tree pins the NO-OP APPLIED branch rather than a real attachment: an applied
-//! `add-layer-asset` runs the payload's bytes through `crate::artifacts::raster::mint_and_stash_asset`,
+//! `add-layer-asset` runs the payload's bytes through `crate::artifacts::raster::mint_raster_asset_child`,
 //! which mints the composed child handle as `format!("raster-asset-{hash:016x}")` from a
 //! `std::collections::hash_map::DefaultHasher` digest of the decoded `SemioImageSnapshot`'s pack
 //! bytes. A hand-authored `➡️after` would therefore have to forge a value from `std`'s deliberately

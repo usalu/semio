@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/imperative/1/any/mutations/create-step",
+  "title": "CreateStep",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pathRef", "step"],
+  "properties": {
+    "pathRef": {"$ref": "#/$defs/PathRef"},
+    "step": {"$ref": "#/$defs/Step"}
+  },
+  "$defs": {
+    "PathRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {"owner": {"type": "string"}, "slot": {"type": "string"}}
+    },
+    "Path": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["steps"],
+      "properties": {"steps": {"type": "array", "items": {"$ref": "#/$defs/Step"}}}
+    },
+    "Step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "params", "bodies"],
+      "properties": {
+        "id": {"type": "string"},
+        "kind": {"type": "string"},
+        "params": {"type": "object"},
+        "bodies": {"type": "object", "additionalProperties": {"$ref": "#/$defs/Path"}}
+      }
+    }
+  }
+}

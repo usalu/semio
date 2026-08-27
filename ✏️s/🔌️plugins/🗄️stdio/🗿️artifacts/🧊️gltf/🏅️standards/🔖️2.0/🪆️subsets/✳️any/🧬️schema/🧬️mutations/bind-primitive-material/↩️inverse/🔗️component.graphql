@@ -1,7 +1,0 @@
-# bind-primitive-material inverse facet.
-input GltfBindPrimitiveMaterialPayloadV1 {
-  mesh: Int!
-  primitive: Int!
-  material: Int!
-}
-type GltfBindPrimitiveMaterialInverseV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

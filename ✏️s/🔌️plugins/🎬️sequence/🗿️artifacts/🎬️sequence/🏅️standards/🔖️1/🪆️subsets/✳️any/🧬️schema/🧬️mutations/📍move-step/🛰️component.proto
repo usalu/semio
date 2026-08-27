@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.s.sequence.sequence.mutation;
+
+message MoveStep {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+}

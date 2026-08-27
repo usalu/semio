@@ -1,3 +1,2 @@
-# stdio.pdf mutations text grammar schema
-scalar Bytes
-type Document { schema: String! payload: String! }
+# 📝️ A canonical opcode followed by payload= and hexadecimal direct-payload JSON.
+scalar PdfMutationText

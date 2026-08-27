@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.png.mutation;
+// 🧬️ replace-pixels/ReplacePixels; complex fields follow the direct payload schema.
+message ReplacePixelsMutation { bytes pixels = 1; }

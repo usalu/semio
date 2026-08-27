@@ -31,8 +31,8 @@ use semio_repo_test_host::Json;
 //#region 🔖️Vocabulary
 /// 🧾️ Kebab-case spelling of every variant this subset's `PdfAMutation` declares, in
 /// declaration order. The catalog `pdf-1-7-a` is measured against this exact list, and the
-/// subject-side `KINDS` carries the test that proves enum, constant and manifest never drift apart.
-pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-encryption-dictionary", "remove-encryption-dictionary", "insert-javascript-action", "remove-javascript-action", "insert-launch-action", "remove-launch-action", "insert-embedded-file", "remove-embedded-file", "set-af-relationship", "remove-af-relationship", "set-output-intent", "remove-output-intent", "embed-font-file", "remove-font-file"];
+/// subject-side derived catalog test proves aggregate, direct descriptors, and manifest never drift apart.
+pub const KINDS: &[&str] = &["insert-encryption-dictionary", "remove-encryption-dictionary", "insert-javascript-action", "remove-javascript-action", "insert-launch-action", "remove-launch-action", "insert-embedded-file", "remove-embedded-file", "set-af-relationship", "remove-af-relationship", "set-output-intent", "remove-output-intent", "embed-font-file", "remove-font-file"];
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Profile
@@ -136,8 +136,6 @@ mod tests {
     /// carries, so a failure here and a failure there have the same cause.
     fn params_for(kind: &str) -> Json {
         match kind {
-            "no-mutation" => json_object(vec![]),
-            "set-snapshot" => json_object(vec![("conformance", Json::String("stamped".to_string()))]),
             "insert-encryption-dictionary" => json_object(vec![("version", Json::Number(2.0)), ("revision", Json::Number(3.0))]),
             "remove-encryption-dictionary" => json_object(vec![("version", Json::Number(2.0)), ("revision", Json::Number(3.0))]),
             "insert-javascript-action" => json_object(vec![("script", Json::String("app.alert('this document phones home');".to_string()))]),
@@ -173,9 +171,7 @@ mod tests {
             let base_projection = project_conformance(&base).unwrap_or_else(|error| panic!("{kind}: projecting the base failed: {error}"));
             let mutated = oracle_apply_mutation(&base, &forward).unwrap_or_else(|error| panic!("{kind}: {error}"));
             let mutated_projection = project_conformance(&mutated).unwrap_or_else(|error| panic!("{kind}: projecting the result failed: {error}"));
-            if *kind != "no-mutation" {
-                assert_ne!(mutated_projection, base_projection, "{kind} must be observable in the conformance-class projection");
-            }
+            assert_ne!(mutated_projection, base_projection, "{kind} must be observable in the conformance-class projection");
             let undo = oracle_inverse_spec(&base, &forward).unwrap_or_else(|error| panic!("{kind}: inverse spec: {error}"));
             let restored = oracle_apply_mutation(&mutated, &undo).unwrap_or_else(|error| panic!("{kind}: inverse: {error}"));
             let restored_projection = project_conformance(&restored).unwrap_or_else(|error| panic!("{kind}: projecting the restored document failed: {error}"));

@@ -1,0 +1,4 @@
+# Direct insert-signature-field GraphQL payload.
+input InsertSignatureFieldMutationInput {
+  name: String!
+}

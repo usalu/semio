@@ -1,0 +1,5 @@
+# 📦️ Direct insert-object GraphQL payload.
+input InsertObjectMutationInput {
+  id: String
+  value: String
+}

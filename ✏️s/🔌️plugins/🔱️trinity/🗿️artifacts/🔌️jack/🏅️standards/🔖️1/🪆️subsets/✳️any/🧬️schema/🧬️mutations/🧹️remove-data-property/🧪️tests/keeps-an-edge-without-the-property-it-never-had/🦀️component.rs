@@ -20,8 +20,9 @@
 //! port-qualified endpoints are inert here: this verb reads only `properties`.
 
 use crate::artifacts::jack::diff::JackDiff;
-use crate::artifacts::jack::mutations::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation, TrinityGraphMutation};
-use crate::artifacts::jack::{cache_jack_content, jack_working_scene, Edge, EntityRef, JackSnapshot, PropertyBag};
+use crate::artifacts::jack::mutations::TrinityGraphMutation;
+use crate::artifacts::jack::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation};
+use crate::artifacts::jack::{materialize_jack_content, jack_working_scene, Edge, EntityRef, JackSnapshot, PropertyBag};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -40,7 +41,7 @@ fn mutation() -> TrinityGraphMutation {
 /// property bag is EMPTY — so the payload's key really is absent. The edge id is read straight off the
 /// committed mutation payload's `EntityRef`.
 fn before() -> JackSnapshot {
-    let snapshot: JackSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: JackSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let TrinityGraphMutation::RemoveDataProperty(payload) = mutation() else {
         panic!("keeps-an-edge-without-the-property-it-never-had's committed mutation must be a remove-data-property");
     };
@@ -48,7 +49,7 @@ fn before() -> JackSnapshot {
         panic!("this case pins remove-data-property's EntityRef::Edge arm");
     };
     let seeded = Edge { id: edge_id, kind: "Connection".into(), source: "shaft@out-a".into(), target: "capsule-a@in-a".into(), properties: PropertyBag::new() };
-    cache_jack_content(&snapshot.content.child_id, Vec::new(), vec![seeded]);
+    materialize_jack_content(&mut snapshot.content, Vec::new(), vec![seeded]);
     snapshot
 }
 

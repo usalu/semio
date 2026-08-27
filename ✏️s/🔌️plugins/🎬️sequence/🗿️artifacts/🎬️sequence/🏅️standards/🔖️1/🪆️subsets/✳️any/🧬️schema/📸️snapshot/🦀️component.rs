@@ -1,6 +1,6 @@
 //! 🧬️ Sequence snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::sequence::{sequence_content_child_handle_and_cache, sequence_working_scene, SequenceContentChild, SequenceEdge, SequenceStep, SEQUENCE_DOCUMENT_SCHEMA};
+use crate::artifacts::sequence::{sequence_content_child_with_owner, sequence_working_scene, SequenceContentChild, SequenceEdge, SequenceStep, SEQUENCE_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -28,7 +28,7 @@ impl Default for SequenceSnapshot {
 }
 
 /// 🌱 Canonical default document used by the play app and examples.
-pub async fn default_snapshot() -> SequenceSnapshot {
+pub fn default_snapshot() -> SequenceSnapshot {
     SequenceSnapshot::from_fixture(SequenceFixture {
         schema: SEQUENCE_DOCUMENT_SCHEMA.into(),
         steps: vec![
@@ -70,16 +70,14 @@ pub struct SequenceFixture {
 }
 
 impl SequenceSnapshot {
-    /// 🌱 Builds a persisted snapshot from a plain fixture — mints and caches a fresh
-    /// content-addressed handle for the fixture's steps/edges.
-    pub async fn from_fixture(fixture: SequenceFixture) -> Self {
-        Self { schema: fixture.schema, content: sequence_content_child_handle_and_cache(fixture.steps, fixture.edges) }
+    /// 🌱 Builds a persisted snapshot from a plain fixture and transfers its scene to the exact
+    /// composed child owner.
+    pub fn from_fixture(fixture: SequenceFixture) -> Self {
+        Self { schema: fixture.schema, content: sequence_content_child_with_owner(fixture.steps, fixture.edges) }
     }
 
-    /// 🌱 Converts this snapshot into the plain fixture shape — reads the live steps/edges off the
-    /// working-scene cache (see `sequence_working_scene`'s doc comment for the staleness gap this
-    /// bridges).
-    pub async fn to_fixture(&self) -> SequenceFixture {
+    /// 🌱 Converts this snapshot into the plain fixture shape from its exact child-owned scene.
+    pub fn to_fixture(&self) -> SequenceFixture {
         let scene = sequence_working_scene(self);
         SequenceFixture { schema: self.schema.clone(), steps: scene.steps, edges: scene.edges }
     }

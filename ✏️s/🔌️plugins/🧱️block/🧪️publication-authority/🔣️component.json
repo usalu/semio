@@ -1,0 +1,16 @@
+{
+  "schema": "semio.app.publication-authority.v1",
+  "owner": "Block5dPlayApp",
+  "source": "🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+  "routes": [
+    { "id": "patchPartKind", "lane": "Artifact" },
+    { "id": "addGripKind", "lane": "Artifact" },
+    { "id": "removeGripKind", "lane": "Artifact" },
+    { "id": "addGrip", "lane": "Artifact" },
+    { "id": "removeGrip", "lane": "Artifact" },
+    { "id": "setActiveExample", "lane": "Artifact" },
+    { "id": "edit", "lane": "Artifact" }
+  ],
+  "laws": { "bounded": true, "cancel": true, "replay": true, "freshness": true, "ack": true, "incrementalClose": true },
+  "ui": { "locales": ["en", "de"], "accessibleLabels": true, "customizableUi": true }
+}

@@ -180,7 +180,7 @@ fn parse_jack_snapshot_body(body: &str) -> Result<JackSnapshot, String> {
     let nodes = nodes.ok_or_else(|| "jack snapshot: missing nodes line".to_string())?;
     let edges = edges.ok_or_else(|| "jack snapshot: missing edges line".to_string())?;
     let root_node_id = root_node_id.ok_or_else(|| "jack snapshot: missing rootNodeId line".to_string())?;
-    let content = crate::artifacts::jack::jack_content_child_handle_and_cache(nodes, edges);
+    let content = crate::artifacts::jack::jack_content_child_with_owner(nodes, edges);
     let mut fixture = JackSnapshot { schema, name, manifest_id, manifest: crate::artifacts::jack::Manifest::default(), camera, content, root_node_id };
     fixture.resolve_manifest().map_err(|error| error.to_string())?;
     Ok(fixture)
@@ -274,7 +274,7 @@ impl store::ArtifactPack for JackSnapshot {
         let root_node_id_raw = read_str_lp(&mut reader).map_err(PackError::Schema)?;
         let root_node_id_present: bool = read_str_lp(&mut reader).map_err(PackError::Schema)?.parse().unwrap_or(false);
         let root_node_id = root_node_id_present.then_some(root_node_id_raw);
-        let content = crate::artifacts::jack::jack_content_child_handle_and_cache(nodes, edges);
+        let content = crate::artifacts::jack::jack_content_child_with_owner(nodes, edges);
         let mut fixture = JackSnapshot { schema, name, manifest_id, manifest: crate::artifacts::jack::Manifest::default(), camera, content, root_node_id };
         fixture.resolve_manifest().map_err(|error| store::text_error_to_pack_error(TextError::new(error.to_string(), TextSpan::at(1, 1))))?;
         Ok(fixture)

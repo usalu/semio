@@ -1,0 +1,4 @@
+# 📝 Direct change-notes payload.
+input ChangeNotesInput {
+  newNotes: String!
+}

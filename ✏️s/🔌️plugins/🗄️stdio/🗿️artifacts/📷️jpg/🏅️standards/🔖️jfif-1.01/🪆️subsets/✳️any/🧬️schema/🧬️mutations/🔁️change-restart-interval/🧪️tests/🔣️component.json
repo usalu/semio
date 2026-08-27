@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "semanticKind": "change-restart-interval",
+  "before": {
+    "schema": "stdio.jpg",
+    "width": 1,
+    "height": 1,
+    "pixels": [
+      18,
+      52,
+      86,
+      255
+    ],
+    "reEncodeQuality": 90,
+    "jfifVersion": [
+      1,
+      1
+    ],
+    "jfifDensityUnits": "aspect",
+    "jfifXDensity": 1,
+    "jfifYDensity": 1,
+    "jfifThumbnail": null,
+    "frame": null,
+    "sofMarker": 0,
+    "arithmetic": false,
+    "quantTables": [],
+    "huffmanTables": [],
+    "restartInterval": null,
+    "otherSegments": [
+      {
+        "marker": 254,
+        "data": [
+          83,
+          119,
+          97,
+          116,
+          99,
+          104
+        ]
+      }
+    ]
+  },
+  "mutation": {
+    "mutation": "change-restart-interval",
+    "payload": {
+      "restartInterval": 8
+    }
+  },
+  "after": {
+    "schema": "stdio.jpg",
+    "width": 1,
+    "height": 1,
+    "pixels": [
+      18,
+      52,
+      86,
+      255
+    ],
+    "reEncodeQuality": 90,
+    "jfifVersion": [
+      1,
+      1
+    ],
+    "jfifDensityUnits": "aspect",
+    "jfifXDensity": 1,
+    "jfifYDensity": 1,
+    "jfifThumbnail": null,
+    "frame": null,
+    "sofMarker": 0,
+    "arithmetic": false,
+    "quantTables": [],
+    "huffmanTables": [],
+    "restartInterval": 8,
+    "otherSegments": [
+      {
+        "marker": 254,
+        "data": [
+          83,
+          119,
+          97,
+          116,
+          99,
+          104
+        ]
+      }
+    ]
+  }
+}

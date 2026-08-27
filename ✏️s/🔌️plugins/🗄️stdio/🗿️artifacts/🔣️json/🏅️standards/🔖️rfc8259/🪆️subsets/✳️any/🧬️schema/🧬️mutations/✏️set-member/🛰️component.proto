@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.json.mutation;
+// set-member/SetMember
+message SetMemberPayload { bytes path = 1; string key = 2; bytes value = 3; }

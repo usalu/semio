@@ -122,8 +122,7 @@ function noopPaint2dSession(): RasterWasmSession {
     setActiveUtility: () => {},
     setBrushSize: () => {},
     setBrushOpacity: () => {},
-    setHoveredIdSilent: () => {},
-    setSelectionIdsJson: () => {},
+    syncInteraction: () => {},
     setCanvasThemeJson: () => {},
     cameraJson: () => '{"x":0,"y":0,"zoom":1}',
     setViewMode: () => {},
@@ -259,8 +258,7 @@ function Paint2dCanvasSurface({
     session.setActiveUtility(scene.activeUtility);
     session.setBrushSize(scene.brushSize);
     session.setBrushOpacity(scene.brushOpacity);
-    session.setSelectionIdsJson(scene.selectionJson);
-    session.setHoveredIdSilent(scene.hoveredId ?? null);
+    session.syncInteraction(scene.selectionJson, scene.hoveredId ?? null);
     session.setViewMode(scene.viewMode);
     if (isNavigator) {
       const rect = containerRef.current?.getBoundingClientRect();
@@ -359,7 +357,7 @@ function Paint2dCanvasSurface({
       const session = sessionRef.current;
       if (!session) return;
       const id = focus.target?.id ?? null;
-      session.setHoveredIdSilent(id);
+      session.syncInteraction(scene.selectionJson, id);
       session.renderFrame();
       dispatch("setHover", { id });
     },
@@ -370,7 +368,7 @@ function Paint2dCanvasSurface({
           ctrlKey: request.modifiers?.ctrl === true,
           metaKey: request.modifiers?.meta === true,
         },
-        shellScope?.selection.get(),
+        paint2dCanvasSurfaceShellScope?.selection.get(),
       );
       dispatch("setSelection", { ids: selectionMergeIds(mergeMode, parsePaint2dSelection(scene.selectionJson), [target.id]) });
     },
@@ -494,7 +492,7 @@ function Paint2dCanvasSurface({
       const marquee = marqueeRef.current;
       if (marquee.tracking) {
         if (marquee.active) {
-          const mergeMode = marqueeModeFromModifiers({ shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey }, shellScope?.selection.get());
+          const mergeMode = marqueeModeFromModifiers({ shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey }, paint2dCanvasSurfaceShellScope?.selection.get());
           commitMarqueeSelection(point, mergeMode);
         }
         marqueeRef.current = { tracking: false, active: false, start: point, points: [] };
@@ -554,7 +552,7 @@ function Paint2dCanvasSurface({
         const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
-            menu: { id: "paint2d" },
+            menu: { id: "paint2d", args: null },
             surface: {
               surfaceId: node.surfaceId,
               kind: "paint2d",

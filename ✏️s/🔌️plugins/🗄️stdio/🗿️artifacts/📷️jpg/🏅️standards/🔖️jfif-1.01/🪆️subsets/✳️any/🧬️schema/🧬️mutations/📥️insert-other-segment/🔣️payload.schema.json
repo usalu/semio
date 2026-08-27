@@ -1,0 +1,180 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "segment"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "segment": {
+      "$ref": "#/$defs/jpgSegment"
+    }
+  },
+  "$defs": {
+    "jfifThumbnail": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "integer"
+        },
+        "height": {
+          "type": "integer"
+        },
+        "rgbData": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "jpgFrameComponent": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "hSampling": {
+          "type": "integer"
+        },
+        "vSampling": {
+          "type": "integer"
+        },
+        "quantTableId": {
+          "type": "integer"
+        }
+      }
+    },
+    "jpgFrameHeader": {
+      "type": "object",
+      "properties": {
+        "precision": {
+          "type": "integer"
+        },
+        "width": {
+          "type": "integer"
+        },
+        "height": {
+          "type": "integer"
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/jpgFrameComponent"
+          }
+        }
+      }
+    },
+    "jpgQuantTable": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "precision": {
+          "type": "integer"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 64,
+          "maxItems": 64
+        }
+      },
+      "required": [
+        "id",
+        "precision",
+        "values"
+      ]
+    },
+    "jpgHuffmanTable": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "class": {
+          "type": "string",
+          "enum": [
+            "dc",
+            "ac"
+          ]
+        },
+        "bits": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 16,
+          "maxItems": 16
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "class",
+        "bits",
+        "values"
+      ]
+    },
+    "jpgSegment": {
+      "type": "object",
+      "properties": {
+        "marker": {
+          "type": "integer"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "required": [
+        "marker",
+        "data"
+      ]
+    },
+    "JfifDensityUnits": {
+      "enum": [
+        "aspect",
+        "pixelsPerInch",
+        "pixelsPerCm"
+      ]
+    },
+    "JpgHuffmanTableKey": {
+      "type": "object",
+      "required": [
+        "class",
+        "id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "class": {
+          "enum": [
+            "dc",
+            "ac"
+          ]
+        },
+        "id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    }
+  },
+  "title": "InsertOtherSegmentMutation"
+}

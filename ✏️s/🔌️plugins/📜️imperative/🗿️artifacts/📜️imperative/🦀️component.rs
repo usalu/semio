@@ -12,8 +12,7 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use serde::{Deserialize, Serialize};
-use std::cell::RefCell;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 //#region 🔖️Types
 pub use imperative_engine::{Path, Step};
@@ -181,50 +180,37 @@ pub fn imperative_text_child_handle(seed: &BTreeMap<String, Value>) -> Imperativ
 //#endregion 🔖️ContentBridge
 
 //#region 🔖️WorkingScene
-/// 🌱 Ephemeral, session-side working representation of BOTH composed children's live content —
-/// NEVER persisted, NEVER a durable field on [`ImperativeSnapshot`] itself (matches the `EngineRep`
-/// contract: wholly derived, droppable at any instant, rebuilt from base). Exists because no
-/// `LinkResolver`/child-dispatch seam is wired into `ArtifactApp::handle` yet (checked directly
-/// against `🔌️plugin/🦀️component.rs`, W1-owned — the same standing gap `writer`'s/`flow`'s own
-/// reports document) — until one exists, the only way a persisted content-addressed HANDLE can
-/// round-trip to real `Path`/seed content within one process is this cache, keyed by each child's
-/// own `child_id`, mirroring `WriterWorkingScene`/`FlowWorkingScene`.
-///
-/// ⚠️ Same documented gap as writer's/flow's own working scenes: store-level undo/redo bypasses
-/// `ArtifactApp::handle` entirely, and a bare `parse_dsl`/`decode_pack` of persisted bytes in a
-/// FRESH process recovers only the opaque handles, never the content (no resolver exists yet). Every
-/// accessor here fails soft (an empty `Path`/`BTreeMap`), never panics.
+/// 🌱 Ephemeral combined view of the two exact child owners. It is reconstructed on demand and
+/// is never persisted or process-global.
 pub struct ImperativeWorkingScene {
     pub path: Path,
     pub seed: BTreeMap<String, Value>,
 }
 
-thread_local! {
-    static IMPERATIVE_FLOW_SCRATCH: RefCell<HashMap<String, Path>> = RefCell::new(HashMap::new());
-    static IMPERATIVE_SEED_SCRATCH: RefCell<HashMap<String, BTreeMap<String, Value>>> = RefCell::new(HashMap::new());
+#[derive(Clone)]
+pub struct ImperativeFlowWorkingData {
+    pub path: Path,
 }
 
-/// 📝 Seeds the `flow` scratch cache for a handle — call whenever new `Path` content is about to
-/// become a document's `flow` field (every mutation-diff/fixture builder in this plugin does, via
-/// [`imperative_flow_child_handle_and_cache`]).
-pub fn cache_imperative_flow(child_id: &str, path: &Path) {
-    IMPERATIVE_FLOW_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), path.clone()));
+#[derive(Clone)]
+pub struct ImperativeTextWorkingData {
+    pub seed: BTreeMap<String, Value>,
 }
 
-/// 📝 `seed`-side twin of [`cache_imperative_flow`].
-pub fn cache_imperative_seed(child_id: &str, seed: &BTreeMap<String, Value>) {
-    IMPERATIVE_SEED_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), seed.clone()));
+/// 📝 Transfers a decoded or test-provided program into one exact flow-child owner.
+pub fn materialize_imperative_flow(handle: &mut ImperativeFlowChild, path: &Path) {
+    handle.set_local_owner(std::sync::Arc::new(ImperativeFlowWorkingData { path: path.clone() }));
 }
 
-/// 🔎 Reads the cached live `Path` for a `flow` child handle — an empty `Path` (never a panic) when
-/// nothing has cached it yet (see [`ImperativeWorkingScene`]'s doc comment for why that can happen).
+/// 🔎 Reads only the addressed flow child's owner. A wire-only handle fails soft until the
+/// host materializes its child document.
 pub fn imperative_flow_for_handle(handle: &ImperativeFlowChild) -> Path {
-    IMPERATIVE_FLOW_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned().unwrap_or_default())
+    handle.local_owner::<ImperativeFlowWorkingData>().map(|data| data.path.clone()).unwrap_or_default()
 }
 
 /// 🔎 `seed`-side twin of [`imperative_flow_for_handle`].
 pub fn imperative_seed_for_handle(handle: &ImperativeTextChild) -> BTreeMap<String, Value> {
-    IMPERATIVE_SEED_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned().unwrap_or_default())
+    handle.local_owner::<ImperativeTextWorkingData>().map(|data| data.seed.clone()).unwrap_or_default()
 }
 
 /// 🔎 Reads BOTH composed children's live content off a snapshot's two handles — the single read
@@ -234,28 +220,23 @@ pub fn imperative_working_scene(snapshot: &ImperativeSnapshot) -> ImperativeWork
     ImperativeWorkingScene { path: imperative_flow_for_handle(&snapshot.flow), seed: imperative_seed_for_handle(&snapshot.text) }
 }
 
-/// 🏗️ Mints a new content-addressed `flow` handle AND seeds the scratch cache with its `Path` in
-/// one call — the standard way every mutation-diff/fixture builder in this plugin creates a `flow`
-/// field value; never construct a handle without also caching, or [`imperative_flow_for_handle`]
-/// will read back empty.
-pub fn imperative_flow_child_handle_and_cache(path: &Path) -> ImperativeFlowChild {
+/// 🏗️ Mints a flow child and transfers its program into that exact owner.
+pub fn imperative_flow_child_with_owner(path: &Path) -> ImperativeFlowChild {
     let handle = imperative_flow_child_handle(path);
-    cache_imperative_flow(&handle.child_id, path);
-    handle
+    handle.with_local_owner(std::sync::Arc::new(ImperativeFlowWorkingData { path: path.clone() }))
 }
 
-/// 🏗️ `seed`-side twin of [`imperative_flow_child_handle_and_cache`].
-pub fn imperative_text_child_handle_and_cache(seed: &BTreeMap<String, Value>) -> ImperativeTextChild {
+/// 🏗️ `seed`-side twin of [`imperative_flow_child_with_owner`].
+pub fn imperative_text_child_with_owner(seed: &BTreeMap<String, Value>) -> ImperativeTextChild {
     let handle = imperative_text_child_handle(seed);
-    cache_imperative_seed(&handle.child_id, seed);
-    handle
+    handle.with_local_owner(std::sync::Arc::new(ImperativeTextWorkingData { seed: seed.clone() }))
 }
 
 /// 🏗️ Builds a full [`ImperativeSnapshot`] from literal `Path`/seed content — the standard fixture/
 /// import constructor replacing the old 3-field `ImperativeSnapshot { schema, path, seed }` struct
 /// literal now that `flow`/`text` are composed child handles, not plain fields.
 pub fn imperative_snapshot_with_content(schema: &str, path: &Path, seed: &BTreeMap<String, Value>) -> ImperativeSnapshot {
-    ImperativeSnapshot { schema: schema.into(), flow: imperative_flow_child_handle_and_cache(path), text: imperative_text_child_handle_and_cache(seed) }
+    ImperativeSnapshot { schema: schema.into(), flow: imperative_flow_child_with_owner(path), text: imperative_text_child_with_owner(seed) }
 }
 
 /// 📸️ A sparse `ImperativeDiff` that whole-handle-replaces `flow` from a fully computed `Path` —
@@ -264,7 +245,7 @@ pub fn imperative_snapshot_with_content(schema: &str, path: &Path, seed: &BTreeM
 /// `flow`'s `diff_replace_content` both establish). `text`/`seed` is left untouched (`None`) since
 /// no mutation triad in this plugin edits `seed` — it is write-once at document construction.
 pub fn diff_replace_flow(path: &Path) -> ImperativeDiff {
-    ImperativeDiff { flow: Some(imperative_flow_child_handle_and_cache(path)), ..Default::default() }
+    ImperativeDiff { flow: Some(imperative_flow_child_with_owner(path)), ..Default::default() }
 }
 //#endregion 🔖️WorkingScene
 
@@ -425,6 +406,18 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 mod tests {
     use super::*;
 
+    trait ImperativeChildOwnerOracle {
+        fn expected() -> serde_json::Value;
+    }
+
+    struct SerdeJsonImperativeChildOwnerOracle;
+
+    impl ImperativeChildOwnerOracle for SerdeJsonImperativeChildOwnerOracle {
+        fn expected() -> serde_json::Value {
+            serde_json::from_str(include_str!("🧪️fixtures/🎯️child-owner-isolation.json")).expect("language-neutral Imperative child-owner fixture")
+        }
+    }
+
     /// 🗂️ The manifest-facing `ArtifactKindSpec.schema` ("imperative.document") is deliberately NOT
     /// `IMPERATIVE_DOCUMENT_SCHEMA` ("imperative.document/v1") — the former names the artifact kind in
     /// the OS media catalogue, the latter keys the store envelope. Pinned so a future edit can't silently
@@ -442,6 +435,26 @@ mod tests {
         let scene = imperative_working_scene(&snapshot);
         assert!(scene.path.steps.is_empty());
         assert!(scene.seed.keys().next().is_none());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn working_content_is_owned_by_each_exact_child() {
+        let flow = imperative_flow_child_with_owner(&Path::new());
+        let text = imperative_text_child_with_owner(&BTreeMap::new());
+        let flow_wire = serde_json::to_vec(&flow).expect("Imperative flow child wire identity");
+        let text_wire = serde_json::to_vec(&text).expect("Imperative text child wire identity");
+        let reconstructed_flow: ImperativeFlowChild = serde_json::from_slice(&flow_wire).expect("Imperative flow child wire roundtrip");
+        let reconstructed_text: ImperativeTextChild = serde_json::from_slice(&text_wire).expect("Imperative text child wire roundtrip");
+        let observed = serde_json::json!({
+            "ownedFlowHasPayload": flow.local_owner::<ImperativeFlowWorkingData>().is_some(),
+            "ownedTextHasPayload": text.local_owner::<ImperativeTextWorkingData>().is_some(),
+            "flowWireIdentityMatches": flow == reconstructed_flow,
+            "textWireIdentityMatches": text == reconstructed_text,
+            "flowWireHasPayload": reconstructed_flow.local_owner::<ImperativeFlowWorkingData>().is_some(),
+            "textWireHasPayload": reconstructed_text.local_owner::<ImperativeTextWorkingData>().is_some(),
+        });
+
+        assert_eq!(observed, SerdeJsonImperativeChildOwnerOracle::expected());
     }
 }
 //#endregion 🧪️Tests

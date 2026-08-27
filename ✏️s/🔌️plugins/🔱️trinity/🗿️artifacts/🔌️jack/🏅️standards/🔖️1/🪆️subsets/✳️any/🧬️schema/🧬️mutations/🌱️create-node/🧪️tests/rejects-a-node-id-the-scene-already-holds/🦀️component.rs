@@ -16,8 +16,9 @@
 //! with the very node the committed mutation payload carries, so the id collision the Fatal guards
 //! against is reachable. Nothing here is invented: the seeded node IS the mutation JSON's own `node`.
 
-use crate::artifacts::jack::mutations::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation, TrinityGraphMutation};
-use crate::artifacts::jack::{cache_jack_content, jack_working_scene, JackDiff, JackSnapshot};
+use crate::artifacts::jack::mutations::TrinityGraphMutation;
+use crate::artifacts::jack::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation};
+use crate::artifacts::jack::{materialize_jack_content, jack_working_scene, JackDiff, JackSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -34,11 +35,11 @@ fn mutation() -> TrinityGraphMutation {
 /// 🌱️ The committed `⬅️before`, with its composed child resolved to a scene holding exactly the node
 /// the committed payload tries to create.
 fn before() -> JackSnapshot {
-    let snapshot: JackSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: JackSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let TrinityGraphMutation::CreateNode(payload) = mutation() else {
         panic!("rejects-a-node-id-the-scene-already-holds's committed mutation must be a create-node");
     };
-    cache_jack_content(&snapshot.content.child_id, vec![payload.node.clone()], Vec::new());
+    materialize_jack_content(&mut snapshot.content, vec![payload.node.clone()], Vec::new());
     snapshot
 }
 

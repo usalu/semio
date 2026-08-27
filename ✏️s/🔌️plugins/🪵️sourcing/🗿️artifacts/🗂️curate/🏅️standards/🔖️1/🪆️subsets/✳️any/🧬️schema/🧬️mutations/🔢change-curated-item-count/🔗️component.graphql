@@ -1,0 +1,5 @@
+"""🔢 Direct change-curated-item-count payload."""
+input ChangeCuratedItemCountInput {
+  objectId: String!
+  newCount: Int!
+}

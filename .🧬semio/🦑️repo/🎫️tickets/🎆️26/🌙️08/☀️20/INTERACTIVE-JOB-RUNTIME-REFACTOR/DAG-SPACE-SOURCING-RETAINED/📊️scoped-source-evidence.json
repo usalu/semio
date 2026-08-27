@@ -1,0 +1,195 @@
+{
+  "rows": 68,
+  "proofs": 17,
+  "appOwned": [
+    {
+      "ownerFile": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "factoryFile": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "ownerTypeName": "DagPlayApp",
+      "factory": "DagConfigCommandJobFactory",
+      "toolId": "nodeGraphViewport",
+      "publicationLanes": [
+        "Config"
+      ],
+      "publicationReady": true
+    },
+    {
+      "ownerFile": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "factoryFile": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "ownerTypeName": "DagPlayApp",
+      "factory": "DagConfigCommandJobFactory",
+      "toolId": "setLocale",
+      "publicationLanes": [
+        "Config"
+      ],
+      "publicationReady": true
+    },
+    {
+      "ownerFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "factoryFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "ownerTypeName": "SpaceApp",
+      "factory": "SpaceCommandJobFactory",
+      "toolId": "closeFocusedInstance",
+      "publicationLanes": [
+        "Config"
+      ],
+      "publicationReady": true
+    },
+    {
+      "ownerFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "factoryFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "ownerTypeName": "SpaceApp",
+      "factory": "SpaceCommandJobFactory",
+      "toolId": "compiledDagEngagementInput",
+      "publicationLanes": [
+        "Config"
+      ],
+      "publicationReady": true
+    },
+    {
+      "ownerFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "factoryFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "ownerTypeName": "SpaceApp",
+      "factory": "SpaceCommandJobFactory",
+      "toolId": "goHome",
+      "publicationLanes": [
+        "HostOnly"
+      ],
+      "publicationReady": true
+    },
+    {
+      "ownerFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "factoryFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "ownerTypeName": "SpaceApp",
+      "factory": "SpaceCommandJobFactory",
+      "toolId": "importSpacePack",
+      "publicationLanes": [
+        "HostOnly"
+      ],
+      "publicationReady": true
+    },
+    {
+      "ownerFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "factoryFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "ownerTypeName": "SpaceApp",
+      "factory": "SpaceCommandJobFactory",
+      "toolId": "navigateVirtualFileSystemNode",
+      "publicationLanes": [
+        "HostOnly"
+      ],
+      "publicationReady": true
+    },
+    {
+      "ownerFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "factoryFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "ownerTypeName": "SpaceApp",
+      "factory": "SpaceCommandJobFactory",
+      "toolId": "nodeGraphViewport",
+      "publicationLanes": [
+        "Config"
+      ],
+      "publicationReady": true
+    },
+    {
+      "ownerFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "factoryFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "ownerTypeName": "SpaceApp",
+      "factory": "SpaceCommandJobFactory",
+      "toolId": "presenceHeartbeat",
+      "publicationLanes": [
+        "Config"
+      ],
+      "publicationReady": true
+    },
+    {
+      "ownerFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "factoryFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "ownerTypeName": "SpaceApp",
+      "factory": "SpaceCommandJobFactory",
+      "toolId": "setActiveExample",
+      "publicationLanes": [
+        "HostOnly"
+      ],
+      "publicationReady": true
+    },
+    {
+      "ownerFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "factoryFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "ownerTypeName": "SpaceApp",
+      "factory": "SpaceCommandJobFactory",
+      "toolId": "setActivePanelTab",
+      "publicationLanes": [
+        "Config"
+      ],
+      "publicationReady": true
+    },
+    {
+      "ownerFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "factoryFile": "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+      "ownerTypeName": "SpaceApp",
+      "factory": "SpaceCommandJobFactory",
+      "toolId": "workflowEngagementInput",
+      "publicationLanes": [
+        "Config"
+      ],
+      "publicationReady": true
+    },
+    {
+      "ownerFile": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "factoryFile": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "ownerTypeName": "SourcingCurateApp",
+      "factory": "SourcingCurateBoundedCommandJobFactory",
+      "toolId": "setContributions",
+      "publicationLanes": [
+        "Config"
+      ],
+      "publicationReady": true
+    },
+    {
+      "ownerFile": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "factoryFile": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "ownerTypeName": "SourcingCurateApp",
+      "factory": "SourcingCurateBoundedCommandJobFactory",
+      "toolId": "setFilterMinAvailability",
+      "publicationLanes": [
+        "Config"
+      ],
+      "publicationReady": true
+    },
+    {
+      "ownerFile": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "factoryFile": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "ownerTypeName": "SourcingCurateApp",
+      "factory": "SourcingCurateBoundedCommandJobFactory",
+      "toolId": "setFilterQuery",
+      "publicationLanes": [
+        "Config"
+      ],
+      "publicationReady": true
+    },
+    {
+      "ownerFile": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "factoryFile": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "ownerTypeName": "SourcingCurateApp",
+      "factory": "SourcingCurateBoundedCommandJobFactory",
+      "toolId": "setFilterTypology",
+      "publicationLanes": [
+        "Config"
+      ],
+      "publicationReady": true
+    },
+    {
+      "ownerFile": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "factoryFile": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "ownerTypeName": "SourcingCurateApp",
+      "factory": "SourcingCurateBoundedCommandJobFactory",
+      "toolId": "sortTable",
+      "publicationLanes": [
+        "Config"
+      ],
+      "publicationReady": true
+    }
+  ],
+  "scanThenMonolith": [],
+  "failures": []
+}

@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import { useCallback, useContext, useMemo, useState } from "react";
-import { Button, ContextMenuController, Icon, Input, Table, useLabel, useShellScopeOptional, type ContextMenuItem, type IconName, type TableColumn } from "@semio-tech/ui-react";
+import { Button, ContextMenuController, Icon, Input, Table, uiDataLabel, useLabel, useShellScopeOptional, type ContextMenuItem, type IconName, type TableColumn } from "@semio-tech/ui-react";
 import { type ActionDescriptor, type ComponentSceneHostProps } from "@semio-tech/framework";
 import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../Interpreter/🟦️component.tsx";
 import { WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
@@ -47,7 +47,7 @@ function tableRowMenuPlacementItems(row: TableRowRecord, onAction: (action: Acti
       if ((button.placement ?? "row") !== "menu") continue;
       items.push({
         id: `table-row-action-${button.iconId}-${index}`,
-        label: button.label,
+        label: button.label === undefined ? undefined : uiDataLabel(button.label),
         icon: button.iconId,
         onSelect: () => dispatchCellAction(onAction, button.action, {}),
       });
@@ -56,7 +56,7 @@ function tableRowMenuPlacementItems(row: TableRowRecord, onAction: (action: Acti
   return items;
 }
 
-function renderTableCell(cell: TableCellRecord, onAction: (action: ActionDescriptor) => void): React.ReactNode {
+function renderTableCell(cell: TableCellRecord, id: string, onAction: (action: ActionDescriptor) => void): React.ReactNode {
   switch (cell.kind) {
     case "text":
       return cell.value;
@@ -65,11 +65,11 @@ function renderTableCell(cell: TableCellRecord, onAction: (action: ActionDescrip
     case "stepper":
       return (
         <div className="flex min-w-0 items-center gap-1" onClick={(event) => event.stopPropagation()}>
-          <Button className="h-medium shrink-0 px-2" onClick={() => dispatchCellAction(onAction, cell.action, { delta: -cell.step })} disabled={cell.value <= cell.min} type="button" variant="outline">
+          <Button icon="minus" className="h-medium shrink-0 px-2" onClick={() => dispatchCellAction(onAction, cell.action, { delta: -cell.step })} disabled={cell.value <= cell.min} type="button" variant="outline">
             −
           </Button>
-          <Input className="h-medium w-14 min-w-0 text-center font-mono text-xs" readOnly value={String(cell.value)} />
-          <Button className="h-medium shrink-0 px-2" onClick={() => dispatchCellAction(onAction, cell.action, { delta: cell.step })} disabled={cell.value >= cell.max} type="button" variant="outline">
+          <Input id={id} className="h-medium w-14 min-w-0 text-center font-mono text-xs" readOnly value={String(cell.value)} />
+          <Button icon="plus" className="h-medium shrink-0 px-2" onClick={() => dispatchCellAction(onAction, cell.action, { delta: cell.step })} disabled={cell.value >= cell.max} type="button" variant="outline">
             +
           </Button>
         </div>
@@ -80,7 +80,7 @@ function renderTableCell(cell: TableCellRecord, onAction: (action: ActionDescrip
           {cell.buttons
             .filter((button) => (button.placement ?? "row") === "row")
             .map((button, index) => (
-            <Button key={index} className="h-medium shrink-0 px-2" onClick={() => dispatchCellAction(onAction, button.action, {})} title={button.label} type="button" variant="outline">
+            <Button icon={button.iconId} key={index} className="h-medium shrink-0 px-2" onClick={() => dispatchCellAction(onAction, button.action, {})} title={button.label} type="button" variant="outline">
               <Icon icon={button.iconId} size="small" />
             </Button>
           ))}
@@ -123,6 +123,12 @@ export function TableHost({ node, onAction, requestContextMenu }: ComponentScene
       return [];
     }
   }, [scene]);
+  const rowIds = useMemo(() => new Map(rows.map((row, index) => [row, String(row.id ?? row.pluginId ?? index)])), [rows]);
+  const getRowId = useCallback((row: TableRowRecord): string => {
+    const id = rowIds.get(row);
+    if (id === undefined) throw new Error("table row is not part of the captured scene");
+    return id;
+  }, [rowIds]);
   const selectedRows = useMemo(() => {
     if (!scene?.selectionJson) return undefined;
     try {
@@ -148,11 +154,11 @@ export function TableHost({ node, onAction, requestContextMenu }: ComponentScene
         sortable: column.sortable,
         accessor: (row) => {
           const value = row[column.id];
-          if (isTableCellRecord(value)) return renderTableCell(value, onAction);
+          if (isTableCellRecord(value)) return renderTableCell(value, `${node.surfaceId}.${getRowId(row)}.${column.id}`, onAction);
           return String(value ?? "");
         },
       })),
-    [columns, onAction],
+    [columns, getRowId, node.surfaceId, onAction],
   );
 
   if (!scene) return <div className="semio-table-empty">{emptySceneLabel}</div>;
@@ -191,7 +197,7 @@ export function TableHost({ node, onAction, requestContextMenu }: ComponentScene
         className="h-full w-full"
         columns={tableColumns}
         data={rows}
-        getRowId={(row, index) => String(row.id ?? row.pluginId ?? index)}
+        getRowId={getRowId}
         selectedRows={selectedRows}
         sortColumn={sort?.columnId}
         sortDirection={sort?.direction}
@@ -232,7 +238,7 @@ export function TableHost({ node, onAction, requestContextMenu }: ComponentScene
             const menu = await openSurfaceContextMenu(
               requestContextMenu,
               {
-                menu: { id: "table" },
+                menu: { id: "table", args: null },
                 surface: {
                   surfaceId: node.surfaceId,
                   kind: "table",

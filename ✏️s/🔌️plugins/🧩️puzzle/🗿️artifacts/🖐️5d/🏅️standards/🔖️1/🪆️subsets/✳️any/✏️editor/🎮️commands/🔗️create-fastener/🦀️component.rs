@@ -1,6 +1,6 @@
 //! 🔗️ `create-fastener` command.
 
-use crate::editor::puzzle5d::{find_part_by_grip_full_id, next_fastener_id, Puzzle5dActionCtx, Puzzle5dDocument, Puzzle5dFastener};
+use crate::editor::puzzle5d::{find_part_by_grip_full_id, Puzzle5dActionCtx, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dFreshIds};
 use serde_json::Value;
 
 fn arg_str<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a str> {
@@ -77,6 +77,6 @@ pub fn create_fastener(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     if !compatible {
         return;
     }
-    let id = arg_str(args, "id").or_else(|| arg_str(args, "fastenerId")).map(str::to_string).unwrap_or_else(next_fastener_id);
+    let id = arg_str(args, "id").or_else(|| arg_str(args, "fastenerId")).map(str::to_string).unwrap_or_else(|| Puzzle5dFreshIds::from_document(&ctx.scene.document).next_fastener());
     ctx.scene.document.fasteners.push(fastener_from_args(id, source, target, args));
 }

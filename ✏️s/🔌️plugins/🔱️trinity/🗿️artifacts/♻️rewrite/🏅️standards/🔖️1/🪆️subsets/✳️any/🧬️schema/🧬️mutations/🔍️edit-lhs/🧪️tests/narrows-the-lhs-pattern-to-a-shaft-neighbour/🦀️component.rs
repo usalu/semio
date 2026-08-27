@@ -16,8 +16,9 @@
 //! whole-body string replacement with a single `mutation.no-op` guard and no addressable target.
 
 use crate::artifacts::rewrite::diff::RewriteDiff;
-use crate::artifacts::rewrite::mutations::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation, RewriteRuleMutation};
+use crate::artifacts::rewrite::mutations::RewriteRuleMutation;
 use crate::artifacts::rewrite::RewriteSnapshot;
+use crate::artifacts::rewrite::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");

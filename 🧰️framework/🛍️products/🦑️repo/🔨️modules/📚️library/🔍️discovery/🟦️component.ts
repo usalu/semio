@@ -6,8 +6,8 @@
 //#region 🔌️Adapters
 import { ephemeralMap, ephemeralBox } from "@semio-tech/framework";
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
-import { basename, dirname, extname, join, relative, resolve } from "node:path";
+import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
+import { basename, dirname, extname, join, posix, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 //#endregion 🔌️Adapters
 
@@ -245,6 +245,7 @@ export type SemanticCatalogCategoryRule =
 export interface SemanticDistributedJsonManifestCatalogContract {
   readonly contractKind: "distributed-json-manifest-catalog";
   readonly ownerArtifactMemberName: string;
+  readonly profileVectors: readonly Readonly<{ artifactId: string; standardVersion: string; subsetId: string }>[];
   readonly modelManifestSchema: string;
   readonly modelManifestSourceFilename: string;
   readonly modelIdentityField: "id";
@@ -283,8 +284,8 @@ export interface SemanticPathProjectionContract {
   readonly rationaleRule: "artifact-mutation-test-projection-v1" | "artifact-example-model-catalog-projection-v1" | "artifact-editor-command-projection-v1";
 }
 
-/** 📌️ One owner-and-sibling-manifest governed semantic leaf projection. */
-export interface SemanticOwnedFileProjectionContract {
+/** 📌️ One active owner-and-sibling-manifest governed semantic leaf projection. */
+export interface SemanticLifecycleOwnedFileProjectionContract {
   readonly contractKind: "owner-sibling-manifest-file";
   readonly ownerFixedDirectoryContractId: string;
   readonly requiredSiblingFixedFilenameContractId: string;
@@ -299,6 +300,110 @@ export interface SemanticOwnedFileProjectionContract {
   readonly emptyContentRule: "zero-byte";
   readonly statusDispositions: Readonly<{ readonly open: "project"; readonly "closed-empty": "remove"; readonly "closed-nonempty": "problem"; readonly invalid: "problem" }>;
   readonly rationaleRule: "ticket-important-markdown-projection-v1";
+}
+
+/** 📓️ One ticket-owner governed historical semantic leaf projection. */
+export interface SemanticHistoryOwnedFileProjectionContract {
+  readonly contractKind: "owner-optional-sibling-manifest-file";
+  readonly ownerFixedDirectoryContractId: string;
+  readonly optionalSiblingFixedFilenameContractId: string;
+  readonly manifestAdapter: "json";
+  readonly manifestStatusLocation: "status";
+  readonly sourceFileKindId: string;
+  readonly sourceFilename: string;
+  readonly destinationDirectoryKindId: string;
+  readonly destinationDirectoryName: string;
+  readonly destinationFilename: string;
+  readonly admittedDispositions: readonly ["closed-nonzero", "invalid-manifest", "missing-manifest"];
+  readonly rationaleRule: "ticket-important-history-markdown-v1";
+}
+
+/** 🖋️ Exact authored documentation splices activated only by a frozen owner-leaf move. */
+export interface SemanticOwnedDocumentCorrection {
+  readonly contractKind: "exact-owner-content-splices";
+  readonly activation: "owner-leaf-move";
+  readonly sourcePath: string;
+  readonly destinationPath: string;
+  readonly preimage: Readonly<{ sha256: string; mode: "0644"; size: number }>;
+  readonly postimage: Readonly<{ sha256: string; size: number }>;
+  readonly replacementFixedFilenameContractId: "root-script";
+  readonly splices: readonly Readonly<{ line: number; startByte: number; endByte: number; oldValue: string; newValue: string; linePreimage: string }>[];
+  readonly rationaleRule: "owner-script-filename-documentation-v1";
+}
+
+/** 📚️ One digest-locked exact owner-file catalog with no basename-wide inference. */
+export interface SemanticExactOwnedFileProjectionContract {
+  readonly contractKind: "exact-owner-path-catalog";
+  readonly authorityCatalogPath: string;
+  readonly authorityCatalogSha256: string;
+  readonly sourceFileKindId: string;
+  readonly sourceBasenames: readonly ["LICENSE.md", "README.md"];
+  readonly destinationDirectoryKinds: Readonly<{
+    readonly license: Readonly<{ readonly directoryKindId: string; readonly directoryName: "⚖️license"; readonly filename: "📝️.md" }>;
+    readonly readme: Readonly<{ readonly directoryKindId: string; readonly directoryName: "📃️readme"; readonly filename: "📝️.md" }>;
+  }>;
+  readonly allowedDispositions: readonly ["attribution-relocate", "configurable-owner-license-relocate", "fixed", "generated-evidence-relocate", "owner-documentation-relocate"];
+  readonly ownerEvidenceKinds: readonly ["configurable-owner-license", "ordinary-owner-doc", "package-publication", "third-party-attribution", "ticket-evidence", "ticket-scratch"];
+  readonly referenceOwnerIds: readonly ["asset-distribution-owner", "bun-package-publisher", "commonmark-scratch-rust-reader", "markdown-relative-reference-adapter", "repo-cli-dev-docs-go", "vscode-package-ignore"];
+  readonly generatorOwnerIds: readonly ["assets-build"];
+  readonly expectedCounts: Readonly<{ readonly fixed: 4; readonly license: 8; readonly projected: 36; readonly readme: 32; readonly referenceBindings: 62; readonly total: 40 }>;
+  readonly authoredDocumentCorrections: Readonly<Record<string, SemanticOwnedDocumentCorrection>>;
+  readonly rationaleRule: "readme-license-owner-projection-v1";
+}
+
+/** 📄️ One primary physical leaf governed directly by its semantic owner. */
+export interface SemanticPrimaryOwnedFileProjectionContract {
+  readonly contractKind: "owner-primary-file";
+  readonly ownerFixedDirectoryContractId: string;
+  readonly sourceFileKindId: string;
+  readonly sourceFilename: string;
+  readonly destinationFilename: string;
+  readonly rationaleRule: "ticket-document-primary-markdown-v1";
+}
+
+/** 🫙️ A primary facet leaf whose complete semantic owner path is registered. */
+export interface SemanticFacetPrimaryFileProjectionContract {
+  readonly contractKind: "semantic-facet-primary-file";
+  readonly sourceRoot: string;
+  readonly sourceFilename: string;
+  readonly fileKindAuthority: "windowEmptyFacetFileKindId";
+  readonly sourceDisposition: "authored";
+  readonly directoryCaptures: Readonly<Record<string, Readonly<{ kindIds: readonly string[]; names?: readonly string[] }>>>;
+  readonly ownerPathPatterns: Readonly<Record<string, string>>;
+  readonly authoringCommand: Readonly<{ scriptPath: string; command: readonly ["new", "surface"]; writeDisposition: "create-if-absent" }>;
+  readonly referenceConsumer: Readonly<{ path: string; ownerRoot: string; adapter: "rust"; region: "✏️👁️Surfaces"; lineTemplate: string }>;
+  readonly rationaleRule: "artifact-empty-facet-primary-markdown-v1";
+}
+
+export type SemanticOwnedFileProjectionContract = SemanticExactOwnedFileProjectionContract | SemanticFacetPrimaryFileProjectionContract | SemanticHistoryOwnedFileProjectionContract | SemanticLifecycleOwnedFileProjectionContract | SemanticPrimaryOwnedFileProjectionContract;
+
+/** 📦️ Exact nested Cargo source authority, composed with semantic package purity. */
+export interface SemanticPackageProjectionContract {
+  readonly contractKind: "exact-nested-cargo-package-catalog";
+  readonly authorityCatalogPath: string;
+  readonly authorityCatalogSha256: string;
+  readonly packageIds: readonly ["wgpu-renderer", "jcoprobe-guest"];
+  readonly sourceLeafCounts: readonly [32, 4];
+  readonly purityCount: 27;
+  readonly adapterCount: 5;
+  readonly derivedLeafCount: 1;
+  readonly joinedPathBindingCounts: readonly [1, 0];
+  readonly generatedSourceRetirementCounts: readonly [1, 0];
+  readonly rationaleRule: "nested-cargo-package-projection-v1";
+}
+
+/** 🔒️ Exact manifest-user coordinates in authoritative dependency approval state. */
+export interface SemanticPolicyStateCoordinateContract {
+  readonly contractKind: "dependency-freeze-user-coordinates";
+  readonly statePath: "🔒️dependencies.json";
+  readonly stateSchemaVersion: 2;
+  readonly sourceDisposition: "authored-policy-state";
+  readonly ownerProjectionContractId: "nested-cargo-packages-v1";
+  readonly packageIds: readonly ["jcoprobe-guest"];
+  readonly manifestFilename: "Cargo.toml";
+  readonly dependencyEvidenceField: "witDependency";
+  readonly coordinatePointer: "/entries/*/users/*";
+  readonly preserveNonCoordinateBytes: true;
 }
 
 export type SemanticPathProjectionReferenceConsumerForm = "path-reference" | "artifact-catalog-glob" | "artifact-catalog-prose:root-marker" | "artifact-catalog-prose:relative-root" | "artifact-catalog-prose:interaction-glob" | "artifact-catalog-prose:catalog-grammar";
@@ -395,7 +500,7 @@ export interface PackageGlueGrammarSpec {
 export interface PackageSourceDisposition {
   readonly contractKind: "fixed" | "configurable";
   readonly disposition: "adapter-source" | "tool-metadata";
-  readonly validator: "package-glue" | "command-router";
+  readonly validator: "package-glue" | "command-router" | "vitest-configuration";
   readonly authority: string;
   readonly verification: string;
 }
@@ -422,6 +527,26 @@ export interface GeneratorOutputRoot {
   readonly inclusion: "tracked" | "ignored";
 }
 
+/** 📇️ Catalog content, membership and implementation dependency authority. */
+export interface RegistryCatalogInputDiscovery {
+  readonly kind: "registry-catalog";
+  readonly previewInput: { readonly protocol: "registry-projected-inputs-v1"; readonly maxBytes: 67108864; readonly maxOperations: 200000 };
+  readonly descriptorRelativePath: string;
+  readonly exampleDirectoryName: string;
+  readonly exampleFileKindId: string;
+  readonly implementationEntryPaths: readonly string[];
+  readonly workspaceImports: Readonly<Record<string, { readonly manifestPath: string; readonly entryPath: string }>>;
+}
+
+/** 🚦️ First generation requires exact package projection or complete canonical package authority. */
+export interface GeneratorProjectionActivation {
+  readonly kind: "canonical-or-planned-package";
+  readonly projectionContractId: "nested-cargo-packages-v1";
+  readonly packageId: "jcoprobe-guest";
+  readonly sourceManifestPath: string;
+  readonly destinationManifestPath: string;
+}
+
 /** ⚙️ Schema-owned generator identity; runnable commands derive only from exact Nx targets. */
 export interface GeneratorContract {
   readonly ownership: GeneratorOwnership;
@@ -430,6 +555,8 @@ export interface GeneratorContract {
   readonly previewTarget?: string;
   readonly checkTarget?: string;
   readonly inputPatterns: readonly string[];
+  readonly inputDiscovery?: RegistryCatalogInputDiscovery;
+  readonly projectionActivation?: GeneratorProjectionActivation;
   readonly outputRoots: readonly GeneratorOutputRoot[];
   readonly reason: string;
 }
@@ -459,6 +586,49 @@ export interface RustEntryPathRules {
   readonly conventions: readonly RustEntryPathConvention[];
 }
 
+//#region 🔒️Frozen Coordinate Evidence
+/** 🔐️ Exact immutable JSON evidence with explicitly typed physical-coordinate value locations. */
+export interface FrozenCoordinateEvidenceContract {
+  readonly path: string;
+  readonly sha256: string;
+  readonly schemaVersion: number | null;
+  readonly coordinates: readonly (Readonly<{ pointer: string; kind: "source" | "destination" }> | Readonly<{ pointer: string; kind: "source" | "destination"; representation: "recorded-repository-absolute"; recordedRepositoryRoot: string }>)[];
+}
+
+/** 🧾️ Validates explicit evidence authority without discovering or reading any document. */
+export function validateFrozenCoordinateEvidenceContracts(value: unknown): string[] {
+  const problems: string[] = [], paths = new Set<string>();
+  const object = (candidate: unknown): candidate is Record<string, unknown> => candidate !== null && typeof candidate === "object" && !Array.isArray(candidate);
+  if (!object(value)) return ["frozenCoordinateEvidenceContracts must be an object."];
+  for (const [id, row] of Object.entries(value)) {
+    const label = `frozenCoordinateEvidenceContracts.${id}`;
+    if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(id)) problems.push(`${label} has an invalid contract id.`);
+    if (!object(row)) { problems.push(`${label} must be an object.`); continue; }
+    if (Object.keys(row).sort().join("\0") !== "coordinates\0path\0schemaVersion\0sha256") problems.push(`${label} must contain only path, sha256, schemaVersion, and coordinates.`);
+    const path = row.path;
+    if (typeof path !== "string" || !path.endsWith(".json") || /[\\:*?"<>|\u0000-\u001f]/u.test(path) || path.split("/").some((part) => !part || part === "." || part === "..") || /^(?:compose|temp\/compose)(?:\/|$)/u.test(path)) problems.push(`${label}.path must be one exact non-opaque repository-relative JSON document.`);
+    else { if (paths.has(path)) problems.push(`${label}.path duplicates another evidence owner.`); paths.add(path); }
+    if (typeof row.sha256 !== "string" || !/^[a-f0-9]{64}$/u.test(row.sha256)) problems.push(`${label}.sha256 must bind exact document bytes.`);
+    if (row.schemaVersion !== null && (!Number.isSafeInteger(row.schemaVersion) || Number(row.schemaVersion) < 1)) problems.push(`${label}.schemaVersion must be a positive integer or explicit absent-property null authority.`);
+    if (!Array.isArray(row.coordinates) || row.coordinates.length === 0) { problems.push(`${label}.coordinates must be a nonempty array.`); continue; }
+    const pointers = new Set<string>();
+    for (const [index, coordinate] of row.coordinates.entries()) {
+      if (!object(coordinate)) { problems.push(`${label}.coordinates[${index}] must be an object.`); continue; }
+      const recorded = Object.hasOwn(coordinate, "representation");
+      if (Object.keys(coordinate).sort().join("\0") !== (recorded ? "kind\0pointer\0recordedRepositoryRoot\0representation" : "kind\0pointer")) { problems.push(`${label}.coordinates[${index}] must contain pointer and kind, plus exact representation and recordedRepositoryRoot for recorded absolute facts.`); continue; }
+      if (recorded) {
+        const root = coordinate.recordedRepositoryRoot;
+        if (coordinate.representation !== "recorded-repository-absolute" || typeof root !== "string" || !/^(?:\/(?!\/)|[A-Za-z]:\/).+/u.test(root) || /[\\*?"<>|\u0000-\u001f]/u.test(root) || root.replace(/^[A-Za-z]:/u, "").slice(1).split("/").some((part) => !part || part === "." || part === ".." || part.includes(":"))) problems.push(`${label}.coordinates[${index}] requires one exact lexical POSIX or drive-qualified recorded repository root.`);
+      }
+      if (typeof coordinate.pointer !== "string" || !/^(?:\/(?:\*|(?:[^/~*]|~[01])+))+$/u.test(coordinate.pointer) || /[\u0000-\u001f]/u.test(coordinate.pointer)) problems.push(`${label}.coordinates[${index}].pointer must use exact JSON-pointer segments or array-index wildcards.`);
+      else { if (pointers.has(coordinate.pointer)) problems.push(`${label}.coordinates[${index}].pointer duplicates another declaration.`); pointers.add(coordinate.pointer); }
+      if (coordinate.kind !== "source" && coordinate.kind !== "destination") problems.push(`${label}.coordinates[${index}].kind must be source or destination.`);
+    }
+  }
+  return problems;
+}
+//#endregion 🔒️Frozen Coordinate Evidence
+
 /**
  * 🔣️ Shape of `🔣️taxonomy.json` — the single source of truth for taxonomy directory-name/role/lang
  * vocabulary and the package-discovery contract, replacing the two independently hand-maintained copies in
@@ -480,6 +650,8 @@ export interface Taxonomy {
   readonly semanticPathProjectionCatalogContracts: Readonly<Record<string, SemanticPathProjectionCatalogContract>>;
   readonly semanticPathProjectionContracts: Readonly<Record<string, SemanticPathProjectionContract>>;
   readonly semanticOwnedFileProjectionContracts: Readonly<Record<string, SemanticOwnedFileProjectionContract>>;
+  readonly semanticPackageProjectionContracts: Readonly<Record<string, SemanticPackageProjectionContract>>;
+  readonly semanticPolicyStateCoordinateContracts: Readonly<Record<string, SemanticPolicyStateCoordinateContract>>;
   readonly semanticPathProjectionReferenceConsumerContracts: Readonly<Record<string, SemanticPathProjectionReferenceConsumerContract>>;
   readonly mutationCatalogProjection: MutationCatalogProjectionContractIds;
   readonly fixedFilenameContracts: Readonly<Record<string, FixedFilenameContract>>;
@@ -576,10 +748,16 @@ export interface Taxonomy {
   readonly subsetArchetypes?: readonly string[];
   /** ⚖️ Allowed IO fidelity class names a subset may declare. */
   readonly ioFidelityClasses?: readonly string[];
-  /** 🧬️ Required children of each LEAF `🧬️mutations/<mutation>/` dir: mutation struct, per-mutation diff, inverse. */
-  readonly mutationChildDirs: readonly string[];
-  /** 🧩️ Required children of each COMPOSITE `🧬️mutations/<mutation>/` dir: mutation struct plus its plan. A composite derives its diff and inverse by folding the plan, so it owns neither `🔺️diff` nor `↩️inverse`. */
-  readonly compositeMutationChildDirs?: readonly string[];
+  /** 🧬️ Full-match pattern for one direct `<emoji><verb>-<noun>` mutation owner directory. */
+  readonly mutationDirectoryPattern: string;
+  /** 🦀️ File kind of the mandatory direct `<mutation>/🦀️component.rs` owner leaf. */
+  readonly mutationComponentFileKindId: string;
+  /** 🪪️ Language-neutral descriptor file kind owned beside every direct mutation component. */
+  readonly mutationDescriptorFileKindId: string;
+  readonly mutationPayloadSchemaLocation: Readonly<{ directoryKindId: "schema"; directoryName: "🧬️schema"; fileKindId: "json" }>;
+  readonly mutationPayloadSchemaProjection: Readonly<{ contractKind: "descriptor-linked-mutation-payload-schema"; ownerPathPattern: string; sourceFilename: string; descriptorSourceFilename: string; descriptorField: "payloadSchema"; descriptorSchemaVersion: 1; descriptorOwnerField: "owner"; descriptorIdentityField: "semanticKind"; jsonSchemaDialect: string; destinationAuthority: "mutationPayloadSchemaLocation"; rationaleRule: "mutation-payload-schema-owner-projection-v1" }>;
+  /** 🧩️ Optional organizational facets below a direct mutation owner; none is a completeness requirement. */
+  readonly mutationOptionalFacetDirs: readonly string[];
   /** 🧬️ Required children of each `🧬️schema/` facet: snapshot, diff, mutations. */
   readonly schemaChildDirs: readonly string[];
   /** 📝️ Representation nodes under schema snapshot/diff/mutations. */
@@ -644,6 +822,26 @@ export interface Taxonomy {
   readonly taxonomyLeafParentDirs: readonly string[];
   /** 🍃️ Component file-kind identity, keyed by target or language. */
   readonly componentFileKinds: Readonly<Record<string, string>>;
+  readonly physicalLeafRendering: Readonly<{
+    direction: "forward-only";
+    filename: "file-kind-emoji-and-extension-chain";
+    sourceExtension: "longest-registered-chain";
+    authoringExtension: "schema-ordered-primary";
+    runtimeLookup: "canonical-only";
+  }>;
+  readonly referenceClosure: Readonly<{
+    scope: "repository-incoming-and-moved-outgoing";
+    candidateSource: "git-tracked-and-untracked-plus-explicit-ticket";
+    candidateAdmission: "opaque-first-no-follow";
+    coordinateRoots: "verified-repository-ownership";
+    unsupportedPathBearingForms: "error";
+    frozenSourceCoordinates: "exact-digest-and-token-authority";
+    frozenPlanCoordinates: "canonical-schema-v2-digest-and-typed-token-authority";
+    preimageDrift: "reject";
+    newIncomingReferences: "reject-or-rollback";
+    ordering: "utf8-byte";
+  }>;
+  readonly frozenCoordinateEvidenceContracts: Readonly<Record<string, FrozenCoordinateEvidenceContract>>;
   readonly storyFileKindId: string;
   readonly testFeatureFileKindId: string;
   readonly testAdapterFileKinds: Readonly<Record<string, string>>;
@@ -677,24 +875,152 @@ export interface Taxonomy {
 }
 
 const cachedTaxonomy = ephemeralBox<Taxonomy | undefined>("framework.products.repo.modules.lib.discovery.component.ts.cachedTaxonomy", undefined);
+const cachedCatalogTaxonomy = ephemeralBox<Taxonomy | undefined>("framework.products.repo.modules.lib.discovery.component.ts.cachedCatalogTaxonomy", undefined);
+
+//#region 🧭️WorkspaceTaxonomyAuthority
+/** 🧭️ No-follow workspace authority for the taxonomy named by root project metadata. */
+export interface WorkspaceTaxonomyAuthority {
+  readonly workspaceRoot: string;
+  readonly manifestPath: string;
+  readonly relativePath: string;
+  readonly taxonomyPath: string;
+}
+
+function noFollowStat(path: string, expectation: "directory" | "file", subject: string): void {
+  let stat: ReturnType<typeof lstatSync>;
+  try {
+    stat = lstatSync(path);
+  } catch {
+    throw new Error(`Workspace taxonomy ${subject} is missing at ${JSON.stringify(path)}.`);
+  }
+  if (stat.isSymbolicLink()) throw new Error(`Workspace taxonomy ${subject} must not be a symlink at ${JSON.stringify(path)}.`);
+  if (expectation === "directory" ? !stat.isDirectory() : !stat.isFile()) throw new Error(`Workspace taxonomy ${subject} must be a ${expectation} at ${JSON.stringify(path)}.`);
+}
+
+function noFollowNodeKind(path: string): "missing" | "file" | "directory" | "symlink" | "other" {
+  try {
+    const stat = lstatSync(path);
+    if (stat.isSymbolicLink()) return "symlink";
+    if (stat.isFile()) return "file";
+    if (stat.isDirectory()) return "directory";
+    return "other";
+  } catch {
+    return "missing";
+  }
+}
+
+function workspaceAuthorityPath(path: string, subject: string): string {
+  const segments = path.split(/[\\/]/u);
+  if (path.includes("\0")) throw new Error(`Workspace taxonomy ${subject} contains a NUL path character at ${JSON.stringify(path)}.`);
+  if (/^[A-Za-z]:(?:$|[^\\/])/u.test(path)) throw new Error(`Workspace taxonomy ${subject} contains a drive-relative path at ${JSON.stringify(path)}.`);
+  if (segments.some((segment) => segment.toLowerCase() === "compose")) throw new Error(`Workspace taxonomy ${subject} enters excluded compose content at ${JSON.stringify(path)}.`);
+  if (segments.includes(".") || segments.includes("..")) throw new Error(`Workspace taxonomy ${subject} contains a dot or parent path segment at ${JSON.stringify(path)}.`);
+  return resolve(path);
+}
+
+function noFollowDirectoryAncestry(path: string, subject: string): void {
+  const ancestry: string[] = [];
+  for (let candidate = path; ; candidate = dirname(candidate)) {
+    ancestry.push(candidate);
+    if (dirname(candidate) === candidate) break;
+  }
+  for (const candidate of ancestry.reverse()) noFollowStat(candidate, "directory", subject);
+}
+
+function workspaceTaxonomyLocator(manifest: unknown): string {
+  const metadata = typeof manifest === "object" && manifest !== null && !Array.isArray(manifest) ? (manifest as { metadata?: unknown }).metadata : undefined;
+  const semio = typeof metadata === "object" && metadata !== null && !Array.isArray(metadata) ? (metadata as { semio?: unknown }).semio : undefined;
+  const locator = typeof semio === "object" && semio !== null && !Array.isArray(semio) ? (semio as { taxonomy?: unknown }).taxonomy : undefined;
+  if (typeof locator !== "string") throw new Error("Workspace taxonomy locator metadata.semio.taxonomy must be a string.");
+  if (locator.length === 0 || locator.includes("\0") || locator.includes("\\") || locator.startsWith("/") || /^[A-Za-z]:/u.test(locator)) throw new Error(`Workspace taxonomy locator ${JSON.stringify(locator)} must be a safe repository-relative slash path.`);
+  const segments = locator.split("/");
+  if (segments.some((segment) => segment.length === 0 || segment === "." || segment === "..")) throw new Error(`Workspace taxonomy locator ${JSON.stringify(locator)} contains an unsafe path segment.`);
+  if (segments.some((segment) => segment.toLowerCase() === "compose")) throw new Error(`Workspace taxonomy locator ${JSON.stringify(locator)} enters excluded compose content.`);
+  return locator;
+}
+
+/** 🧭️ Resolves root metadata.semio.taxonomy only after lexical and no-follow checks. */
+export function resolveWorkspaceTaxonomyAuthority(workspaceRoot: string): WorkspaceTaxonomyAuthority {
+  const root = workspaceAuthorityPath(workspaceRoot, "root");
+  noFollowDirectoryAncestry(root, "workspace root ancestry");
+  noFollowStat(join(root, "nx.json"), "file", "nx manifest");
+  const manifestPath = join(root, "📋️project.json");
+  noFollowStat(manifestPath, "file", "project manifest");
+  let manifest: unknown;
+  try {
+    manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  } catch (error) {
+    throw new Error(`Workspace taxonomy project manifest is not valid JSON: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  const relativePath = workspaceTaxonomyLocator(manifest);
+  const segments = relativePath.split("/");
+  let current = root;
+  for (const [index, segment] of segments.entries()) {
+    current = join(current, segment);
+    noFollowStat(current, index === segments.length - 1 ? "file" : "directory", index === segments.length - 1 ? "taxonomy file" : "taxonomy path component");
+  }
+  return { workspaceRoot: root, manifestPath, relativePath, taxonomyPath: current };
+}
 
 function readTaxonomyUnchecked(): Taxonomy {
-  return JSON.parse(readFileSync(join(__dirname, "../🔣️taxonomy.json"), "utf8")) as Taxonomy;
+  const authority = resolveWorkspaceTaxonomyAuthorityFromDirectory(__dirname);
+  return JSON.parse(readFileSync(authority.taxonomyPath, "utf8")) as Taxonomy;
 }
 
 function taxonomyWorkspaceRoot(): string | null {
-  for (let candidate = __dirname; dirname(candidate) !== candidate; candidate = dirname(candidate)) {
-    if (existsSync(join(candidate, "nx.json")) && existsSync(join(candidate, "📋️project.json"))) return candidate;
+  return taxonomyWorkspaceRootFromDirectory(__dirname);
+}
+
+function taxonomyWorkspaceRootFromDirectory(startDirectory: string): string | null {
+  let start: string;
+  try {
+    start = workspaceAuthorityPath(startDirectory, "start directory");
+    noFollowDirectoryAncestry(start, "workspace start directory ancestry");
+  } catch {
+    return null;
+  }
+  for (let candidate = start; dirname(candidate) !== candidate; candidate = dirname(candidate)) {
+    const nxPath = join(candidate, "nx.json");
+    const nxKind = noFollowNodeKind(nxPath);
+    if (nxKind === "missing") continue;
+    if (nxKind === "symlink") throw new Error(`Workspace taxonomy nx manifest must not be a symlink at ${JSON.stringify(nxPath)}.`);
+    if (nxKind !== "file") throw new Error(`Workspace taxonomy nx manifest must be a file at ${JSON.stringify(nxPath)}.`);
+    const projectPath = join(candidate, "📋️project.json");
+    const projectKind = noFollowNodeKind(projectPath);
+    if (projectKind === "missing") throw new Error(`Workspace taxonomy project manifest is missing at ${JSON.stringify(projectPath)}.`);
+    if (projectKind === "symlink") throw new Error(`Workspace taxonomy project manifest must not be a symlink at ${JSON.stringify(projectPath)}.`);
+    if (projectKind !== "file") throw new Error(`Workspace taxonomy project manifest must be a file at ${JSON.stringify(projectPath)}.`);
+    return candidate;
   }
   return null;
 }
 
-/** 📖️ Reads, strictly validates, and caches the incompatible version-7 taxonomy contract. */
+/** 🧭️ Finds the marker-paired workspace from a no-follow, non-compose discovery directory. */
+export function resolveWorkspaceTaxonomyAuthorityFromDirectory(startDirectory: string): WorkspaceTaxonomyAuthority {
+  const start = workspaceAuthorityPath(startDirectory, "start directory");
+  noFollowDirectoryAncestry(start, "workspace start directory ancestry");
+  const workspaceRoot = taxonomyWorkspaceRootFromDirectory(start);
+  if (!workspaceRoot) throw new Error("Workspace taxonomy root containing exact nx.json and 📋️project.json markers could not be resolved.");
+  return resolveWorkspaceTaxonomyAuthority(workspaceRoot);
+}
+//#endregion 🧭️WorkspaceTaxonomyAuthority
+
+/** 📇️ Validates catalog vocabulary without reading unrelated generator outputs or workspace diagnostics. */
+export function loadCatalogTaxonomy(): Taxonomy {
+  if (cachedCatalogTaxonomy.current) return cachedCatalogTaxonomy.current;
+  const taxonomy = readTaxonomyUnchecked();
+  const problems = validateTaxonomy(taxonomy);
+  if (problems.length > 0) throw new Error(`Invalid taxonomy schema:\n${problems.map((problem) => `- ${problem}`).join("\n")}`);
+  cachedCatalogTaxonomy.current = taxonomy;
+  return taxonomy;
+}
+
+/** 📖️ Reads, strictly validates, and caches the incompatible version-7 taxonomy and workspace contracts. */
 export function loadTaxonomy(): Taxonomy {
   if (cachedTaxonomy.current) return cachedTaxonomy.current;
-  const taxonomy = readTaxonomyUnchecked();
+  const taxonomy = loadCatalogTaxonomy();
   const workspaceRoot = taxonomyWorkspaceRoot();
-  const problems = [...validateTaxonomy(taxonomy), ...(workspaceRoot ? validateGeneratorContractsAgainstWorkspace(workspaceRoot, taxonomy) : ["generatorContracts workspace root could not be resolved."])];
+  const problems = workspaceRoot ? validateGeneratorContractsAgainstWorkspace(workspaceRoot, taxonomy) : ["generatorContracts workspace root could not be resolved."];
   if (problems.length > 0) throw new Error(`Invalid taxonomy schema:\n${problems.map((problem) => `- ${problem}`).join("\n")}`);
   cachedTaxonomy.current = taxonomy;
   return cachedTaxonomy.current;
@@ -713,6 +1039,29 @@ export function canonicalFilenameForKind(kindId: string, taxonomy: Taxonomy = lo
   const names = canonicalFilenamesForKind(kindId, taxonomy);
   if (names.length !== 1) throw new Error(`File kind ${JSON.stringify(kindId)} must have exactly one extension chain, got ${names.length}.`);
   return names[0]!;
+}
+
+/** 🍃️ Renders the schema-ordered primary physical leaf for new authored content. */
+export function canonicalPrimaryFilenameForKind(kindId: string, taxonomy: Taxonomy = loadTaxonomy()): string {
+  const filename = canonicalFilenamesForKind(kindId, taxonomy)[0];
+  if (!filename) throw new Error(`File kind ${JSON.stringify(kindId)} must declare a primary extension chain.`);
+  return filename;
+}
+
+/** 🍃️ Renders a source's exact longest-chain format; this does not authorize its owner or move. */
+export function canonicalLeafFilenameForSourcePath(path: string, taxonomy: Taxonomy = loadTaxonomy()): string | null {
+  const kindId = fileKindIdForSourcePath(path, taxonomy);
+  if (!kindId) return null;
+  const kind = taxonomy.fileKinds[kindId]!;
+  const filename = path.replaceAll("\\", "/").split("/").pop()!.toLowerCase();
+  const extension = [...kind.extensionChains].sort((left, right) => right.length - left.length).find((chain) => filename.endsWith(chain));
+  return extension ? `${kind.emoji}${extension}` : null;
+}
+
+/** 🧬️ Renders the separate semantic owner for a mutation's optional JSON payload schema. */
+export function mutationPayloadSchemaRelativePath(taxonomy: Taxonomy = loadTaxonomy()): string {
+  const location = taxonomy.mutationPayloadSchemaLocation;
+  return `${location.directoryName}/${canonicalPrimaryFilenameForKind(location.fileKindId, taxonomy)}`;
 }
 
 /** 🧷️ Returns a semantic leaf filename using the file kind's schema-ordered primary extension. */
@@ -990,9 +1339,9 @@ export interface SemanticOwnedFileProjectionAuthority {
 /** 🧭️ Resolves one semantic leaf only through its exact owner and sibling-manifest contract. */
 export function semanticOwnedFileProjectionAuthority(facts: SemanticOwnedFileProjectionFacts, taxonomy: Taxonomy = loadTaxonomy()): SemanticOwnedFileProjectionAuthority {
   if (!Number.isSafeInteger(facts.sourceByteLength) || facts.sourceByteLength < 0) throw new Error("sourceByteLength must be a non-negative safe integer.");
-  const entries = Object.entries(taxonomy.semanticOwnedFileProjectionContracts);
-  if (entries.length !== 1) throw new Error("Exactly one semantic owned-file projection contract is required.");
-  const [contractId, contract] = entries[0]!;
+  const contractId = "ticket-important-markdown-v1";
+  const contract = taxonomy.semanticOwnedFileProjectionContracts[contractId];
+  if (!contract || contract.contractKind !== "owner-sibling-manifest-file") throw new Error("The active ticket important projection contract is required.");
   const contentState = facts.sourceByteLength === 0 ? "zero-byte" : "nonzero";
   const core = { contractId, ownerPath: facts.ownerPath, manifestPath: facts.manifestPath, manifestContentHash: createHash("sha256").update(facts.manifestContent).digest("hex"), sourcePath: facts.sourcePath, contentState } as const;
   const manifestContract = taxonomy.fixedFilenameContracts[contract.requiredSiblingFixedFilenameContractId];
@@ -1018,6 +1367,134 @@ export function semanticOwnedFileProjectionAuthority(facts: SemanticOwnedFilePro
   if (status === "open") return { ...core, destinationPath, status, disposition: "project", problems: [] };
   if (contentState === "zero-byte") return { ...core, status, disposition: "remove", problems: [] };
   return { ...core, destinationPath, status, disposition: "problem", problems: ["Closed ticket important document must be exactly zero bytes."] };
+}
+
+/** 📓️ Filesystem-independent admitted facts for one historical ticket note. */
+export interface SemanticOwnedFileHistoryProjectionFacts {
+  readonly ownerPath: string;
+  readonly ownerFixedDirectoryContractIds: readonly string[];
+  readonly manifestPath?: string;
+  readonly manifestFixedFilenameContractIds: readonly string[];
+  readonly manifestContent?: string;
+  readonly sourcePath: string;
+  readonly sourceFileKindId: string;
+  readonly sourceByteLength: number;
+}
+
+/** 📓️ Exact authority decision for one historical ticket note. */
+export interface SemanticOwnedFileHistoryProjectionAuthority {
+  readonly contractId: "ticket-important-history-markdown-v1";
+  readonly ownerPath: string;
+  readonly manifestPath?: string;
+  readonly manifestContentHash?: string;
+  readonly manifestState: "closed" | "invalid" | "missing" | "open";
+  readonly sourcePath: string;
+  readonly destinationPath?: string;
+  readonly contentState: "nonzero" | "zero-byte";
+  readonly disposition: "project" | "unclaimed";
+  readonly problems: readonly string[];
+}
+
+/** 🧭️ Resolves one historical note only through its exact ticket owner and residual lifecycle state. */
+export function semanticOwnedFileHistoryProjectionAuthority(facts: SemanticOwnedFileHistoryProjectionFacts, taxonomy: Taxonomy = loadTaxonomy()): SemanticOwnedFileHistoryProjectionAuthority {
+  if (!Number.isSafeInteger(facts.sourceByteLength) || facts.sourceByteLength < 0) throw new Error("sourceByteLength must be a non-negative safe integer.");
+  const contractId = "ticket-important-history-markdown-v1" as const;
+  const contract = taxonomy.semanticOwnedFileProjectionContracts[contractId];
+  if (!contract || contract.contractKind !== "owner-optional-sibling-manifest-file") throw new Error("The ticket important history projection contract is required.");
+  const contentState = facts.sourceByteLength === 0 ? "zero-byte" : "nonzero";
+  const manifestContract = taxonomy.fixedFilenameContracts[contract.optionalSiblingFixedFilenameContractId];
+  const manifestClaimed = facts.manifestPath !== undefined
+    && facts.manifestContent !== undefined
+    && facts.manifestFixedFilenameContractIds.includes(contract.optionalSiblingFixedFilenameContractId)
+    && dirname(facts.manifestPath) === facts.ownerPath
+    && manifestContract !== undefined
+    && basename(facts.manifestPath) === fixedContractFilename(manifestContract);
+  let manifestState: SemanticOwnedFileHistoryProjectionAuthority["manifestState"] = "missing";
+  if (facts.manifestPath !== undefined || facts.manifestContent !== undefined || facts.manifestFixedFilenameContractIds.length > 0) manifestState = "invalid";
+  if (manifestClaimed) {
+    try {
+      const manifest = JSON.parse(facts.manifestContent!) as unknown;
+      const candidate = typeof manifest === "object" && manifest !== null && !Array.isArray(manifest) ? (manifest as Record<string, unknown>)[contract.manifestStatusLocation] : undefined;
+      manifestState = candidate === "closed" || candidate === "open" ? candidate : "invalid";
+    } catch { manifestState = "invalid"; }
+  }
+  const core = {
+    contractId,
+    ownerPath: facts.ownerPath,
+    ...(facts.manifestPath === undefined ? {} : { manifestPath: facts.manifestPath }),
+    ...(facts.manifestContent === undefined ? {} : { manifestContentHash: createHash("sha256").update(facts.manifestContent).digest("hex") }),
+    manifestState,
+    sourcePath: facts.sourcePath,
+    contentState,
+  } as const;
+  const claimed = facts.ownerFixedDirectoryContractIds.includes(contract.ownerFixedDirectoryContractId)
+    && dirname(facts.sourcePath) === facts.ownerPath
+    && basename(facts.sourcePath) === contract.sourceFilename
+    && facts.sourceFileKindId === contract.sourceFileKindId;
+  const admitted = manifestState === "missing" || manifestState === "invalid" || manifestState === "closed" && contentState === "nonzero";
+  if (!claimed || !admitted) return { ...core, disposition: "unclaimed", problems: [] };
+  return { ...core, destinationPath: `${facts.ownerPath}/${contract.destinationDirectoryName}/${contract.destinationFilename}`, disposition: "project", problems: [] };
+}
+
+/** 📄️ Filesystem-independent facts for a primary owner leaf. */
+export interface SemanticOwnedPrimaryFileProjectionFacts {
+  readonly ownerPath: string;
+  readonly ownerFixedDirectoryContractIds: readonly string[];
+  readonly sourcePath: string;
+  readonly sourceFileKindId: string;
+}
+
+/** 📑️ A direct physical-leaf projection that does not depend on ticket lifecycle. */
+export interface SemanticOwnedPrimaryFileProjectionAuthority {
+  readonly contractId: "ticket-document-primary-markdown-v1";
+  readonly ownerPath: string;
+  readonly sourcePath: string;
+  readonly destinationPath?: string;
+  readonly disposition: "project" | "unclaimed";
+  readonly problems: readonly string[];
+}
+
+/** 🧭️ Drops the exact ticket document convention only under its registered semantic owner. */
+export function semanticOwnedPrimaryFileProjectionAuthority(facts: SemanticOwnedPrimaryFileProjectionFacts, taxonomy: Taxonomy = loadTaxonomy()): SemanticOwnedPrimaryFileProjectionAuthority {
+  const contractId = "ticket-document-primary-markdown-v1" as const;
+  const contract = taxonomy.semanticOwnedFileProjectionContracts[contractId];
+  if (!contract || contract.contractKind !== "owner-primary-file") throw new Error("The ticket document primary leaf projection contract is required.");
+  const core = { contractId, ownerPath: facts.ownerPath, sourcePath: facts.sourcePath };
+  const claimed = facts.ownerFixedDirectoryContractIds.includes(contract.ownerFixedDirectoryContractId)
+    && dirname(facts.sourcePath) === facts.ownerPath
+    && basename(facts.sourcePath) === contract.sourceFilename
+    && facts.sourceFileKindId === contract.sourceFileKindId;
+  if (!claimed) return { ...core, disposition: "unclaimed", problems: [] };
+  return { ...core, destinationPath: `${facts.ownerPath}/${contract.destinationFilename}`, disposition: "project", problems: [] };
+}
+
+/** 🧭️ Resolves an empty-facet marker only through a complete registered semantic owner chain. */
+export function semanticArtifactEmptyFacetProjectionAuthority(facts: Readonly<{ sourcePath: string; sourceFileKindId: string }>, taxonomy: Taxonomy = loadTaxonomy()): Readonly<{ contractId: "artifact-empty-facet-primary-markdown-v1"; sourcePath: string; ownerForm?: string; destinationPath?: string; disposition: "project" | "unclaimed" }> {
+  const contractId = "artifact-empty-facet-primary-markdown-v1" as const;
+  const contract = taxonomy.semanticOwnedFileProjectionContracts[contractId];
+  if (!contract || contract.contractKind !== "semantic-facet-primary-file") throw new Error("The artifact empty-facet primary-leaf contract is required.");
+  const core = { contractId, sourcePath: facts.sourcePath };
+  const kindId = taxonomy[contract.fileKindAuthority];
+  const segments = facts.sourcePath.split("/");
+  if (segments.some((segment) => !segment || segment === "." || segment === ".." || /[\\\0]/u.test(segment)) || !facts.sourcePath.startsWith(`${contract.sourceRoot}/`) || basename(facts.sourcePath) !== contract.sourceFilename || facts.sourceFileKindId !== kindId) return { ...core, disposition: "unclaimed" };
+  const owners = dirname(facts.sourcePath).slice(contract.sourceRoot.length + 1).split("/");
+  const matches = Object.entries(contract.ownerPathPatterns).filter(([, pattern]) => {
+    const expected = pattern.split("/");
+    if (expected.length !== owners.length) return false;
+    let parentKindId = "plugins";
+    return expected.every((segment, index) => {
+      const name = owners[index]!;
+      const kind = semanticDirectoryKindId(name, taxonomy, { parentKindId });
+      if (!kind) return false;
+      parentKindId = kind;
+      const capture = /^\{([a-zA-Z]+)\}$/u.exec(segment)?.[1];
+      if (!capture) return canonicalSemanticDirectoryName(name, taxonomy) === segment;
+      const rule = contract.directoryCaptures[capture];
+      return rule !== undefined && rule.kindIds.includes(kind) && (!rule.names || rule.names.includes(canonicalSemanticDirectoryName(name, taxonomy)));
+    });
+  });
+  if (matches.length !== 1) return { ...core, disposition: "unclaimed" };
+  return { ...core, ownerForm: matches[0]![0], destinationPath: `${dirname(facts.sourcePath)}/${canonicalFilenameForKind(kindId, taxonomy)}`, disposition: "project" };
 }
 
 /** 📚️ One exact physical scenario registration owned by a MutationCatalog vector. */
@@ -1198,6 +1675,7 @@ export interface SemanticPathProjectionAuthorityOptions {
   readonly sourceRoot: string;
   readonly nodes: readonly SemanticProjectionAuthorityNode[];
   readonly occupiedPaths?: readonly string[];
+  readonly layout?: "source" | "destination";
 }
 
 /** 🛤️ One deterministic existing-file projection pair. */
@@ -1350,6 +1828,23 @@ export function renderArtifactPathProjectionRoot(options: Pick<SemanticPathProje
   return { captures, destinationRoot: problems.length === 0 ? `${options.artifactRoot}/${destinationNames.join("/")}` : "", problems };
 }
 
+/** 🗺️ Enumerates exact artifact roots by forward-rendering registered profile tuples. */
+export function artifactPathProjectionCatalogRoots(artifactRoot: string, contractId: string, taxonomy: Taxonomy = loadTaxonomy()): readonly Readonly<{ sourceRoot: string; destinationRoot: string }>[] {
+  const contract = taxonomy.semanticPathProjectionContracts[contractId];
+  const catalog = contract && taxonomy.semanticPathProjectionCatalogContracts[contract.catalogContractId];
+  if (!contract?.sourceArtifactMemberName || !catalog || !("contractKind" in catalog)) return [];
+  const vectors = catalog.contractKind === "distributed-json-manifest-catalog" ? catalog.profileVectors : catalog.vectors;
+  const roots = vectors.filter((vector) => vector.artifactId === basename(artifactRoot)).map((vector) => {
+    const captures = vector as Readonly<Record<string, string>>;
+    const sourceRoot = `${artifactRoot}/${contract.sourceSegments.map((segment) => "literal" in segment ? segment.literal : "projectedMemberKindId" in segment ? captures[segment.capture] : `${taxonomy.semanticDirectoryKinds[segment.kindId]?.emoji ?? ""}${captures[segment.capture] ?? ""}`).join("/")}`;
+    const rendered = renderArtifactPathProjectionRoot({ artifactRoot, contractId, sourceRoot }, taxonomy);
+    if (rendered.problems.length > 0) throw new Error(`Invalid forward profile vector for ${contractId}: ${rendered.problems.join(" | ")}`);
+    return { sourceRoot, destinationRoot: rendered.destinationRoot };
+  }).sort((left, right) => projectionByteCompare(left.destinationRoot, right.destinationRoot));
+  for (const comparison of ["nfc", "case-fold", "vs16-fold"] as const) if (new Set(roots.map(({ destinationRoot }) => projectionCanonicalKey(destinationRoot, comparison))).size !== roots.length) throw new Error(`Forward profile vectors collide for ${contractId} under ${comparison}`);
+  return roots;
+}
+
 function projectionJsonManifest(node: SemanticProjectionAuthorityNode, scope: string, problems: string[]): Record<string, unknown> | null {
   if (node.nodeKind !== "file" || typeof node.content !== "string") {
     problems.push(`${scope} must be a readable JSON file.`);
@@ -1396,17 +1891,19 @@ export function semanticPathProjectionAuthority(options: SemanticPathProjectionA
   const root = renderArtifactPathProjectionRoot(options, taxonomy);
   const problems = [...root.problems];
   const contract = taxonomy.semanticPathProjectionContracts[options.contractId];
+  const destinationLayout = options.layout === "destination";
+  const physicalRoot = destinationLayout ? root.destinationRoot : options.sourceRoot;
   const pathOwners = new Map<string, SemanticProjectionAuthorityNode>();
   for (const node of options.nodes) {
     if (node.path !== node.path.normalize("NFC") || /\uFE0E/u.test(node.path)) problems.push(`Projection node ${JSON.stringify(node.path)} must be NFC and must not contain VS15.`);
-    if (!(node.path === options.sourceRoot || node.path.startsWith(`${options.sourceRoot}/`))) problems.push(`Projection node ${JSON.stringify(node.path)} is outside sourceRoot.`);
+    if (!(node.path === physicalRoot || node.path.startsWith(`${physicalRoot}/`))) problems.push(`Projection node ${JSON.stringify(node.path)} is outside its exact ${destinationLayout ? "destination" : "source"} root.`);
     if (pathOwners.has(node.path)) problems.push(`Projection node ${JSON.stringify(node.path)} is duplicated.`);
     pathOwners.set(node.path, node);
     if (node.nodeKind === "symlink") problems.push(`Projection source contains forbidden symlink ${JSON.stringify(node.path)}.`);
   }
-  if (pathOwners.get(options.sourceRoot)?.nodeKind !== "directory") problems.push("Projection sourceRoot must be present as a directory node.");
+  if (pathOwners.get(physicalRoot)?.nodeKind !== "directory") problems.push("Projection physical root must be present as a directory node.");
   const actualFiles = options.nodes.filter((node) => node.nodeKind === "file").map((node) => node.path).sort(projectionByteCompare);
-  const expectedSourceDirectories = projectionDirectories(options.sourceRoot, actualFiles);
+  const expectedSourceDirectories = projectionDirectories(physicalRoot, actualFiles);
   const actualSourceDirectories = options.nodes.filter((node) => node.nodeKind === "directory").map((node) => node.path).sort(projectionByteCompare);
   if (expectedSourceDirectories.join("\0") !== actualSourceDirectories.join("\0")) problems.push("Projection source directories must be exactly those owned by source files.");
   const candidateMappings: SemanticPathProjectionMapping[] = [];
@@ -1414,11 +1911,13 @@ export function semanticPathProjectionAuthority(options: SemanticPathProjectionA
   if (contract && root.destinationRoot) {
     const catalog = taxonomy.semanticPathProjectionCatalogContracts[contract.catalogContractId];
     if (catalog && "contractKind" in catalog && catalog.contractKind === "distributed-json-manifest-catalog") {
+      if (catalog.profileVectors.filter((vector) => vector.artifactId === basename(options.artifactRoot) && vector.standardVersion === root.captures.standardVersion && vector.subsetId === root.captures.subsetId).length !== 1) problems.push("CAD catalog must match exactly one forward owner profile vector.");
       const modelIds = new Set<string>();
       const memberIds = new Set<string>();
-      const modelDirectories = actualSourceDirectories.filter((path) => dirname(path) === options.sourceRoot).map((path) => basename(path));
+      const modelDirectories = actualSourceDirectories.filter((path) => dirname(path) === physicalRoot).map((path) => basename(path));
+      if (modelDirectories.length === 0) problems.push("CAD catalog must contain at least one manifest-owned model.");
       for (const modelDirectoryName of modelDirectories) {
-        const manifestPath = `${options.sourceRoot}/${modelDirectoryName}/${catalog.modelManifestSourceFilename}`;
+        const manifestPath = `${physicalRoot}/${modelDirectoryName}/${destinationLayout ? canonicalFilenameForKind("json", taxonomy) : catalog.modelManifestSourceFilename}`;
         const manifestNode = pathOwners.get(manifestPath);
         const manifest = manifestNode ? projectionJsonManifest(manifestNode, `Model manifest ${JSON.stringify(manifestPath)}`, problems) : null;
         if (!manifestNode) problems.push(`Model manifest is missing for ${JSON.stringify(modelDirectoryName)}.`);
@@ -1431,9 +1930,20 @@ export function semanticPathProjectionAuthority(options: SemanticPathProjectionA
           modelIds.add(id);
         }
       }
-      for (const sourcePath of actualFiles) {
-        const relativePath = sourcePath.slice(options.sourceRoot.length + 1);
-        const segments = relativePath.split("/");
+      for (const physicalPath of actualFiles) {
+        const relativePath = physicalPath.slice(physicalRoot.length + 1);
+        let segments = relativePath.split("/");
+        if (destinationLayout) {
+          if (segments.length === 2 && segments[1] === canonicalFilenameForKind("json", taxonomy)) segments = [segments[0]!, catalog.modelManifestSourceFilename];
+          else {
+            const rule = catalog.categoryRules.find((candidate) => candidate.sourceDirectoryName === segments[1]);
+            if (segments.length !== 4 || segments[3] !== canonicalFilenameForKind("json", taxonomy) || !rule) problems.push(`Canonical CAD category member ${JSON.stringify(physicalPath)} does not match its exact category rule.`);
+            else if (rule.sourceShape === "direct-semantic-json" && segments[2]!.startsWith(rule.memberDirectoryEmoji) && segments[2]!.length > rule.memberDirectoryEmoji.length) segments = [segments[0]!, segments[1]!, `🔣️${segments[2]!.slice(rule.memberDirectoryEmoji.length)}.json`];
+            else if (rule.sourceShape === "nested-fixed-json") segments = [segments[0]!, segments[1]!, segments[2]!, rule.fixedSourceFilename];
+            else problems.push(`Canonical CAD member ${JSON.stringify(physicalPath)} has no exact semantic directory identity.`);
+          }
+        }
+        const sourcePath = `${options.sourceRoot}/${segments.join("/")}`;
         const modelDirectoryName = segments[0] ?? "";
         let destinationRelativePath = "";
         let expectedSchema = catalog.modelManifestSchema;
@@ -1451,7 +1961,7 @@ export function semanticPathProjectionAuthority(options: SemanticPathProjectionA
             expectedSchema = rule.manifestSchema;
           } else problems.push(`CAD category member ${JSON.stringify(sourcePath)} does not match its exact category rule.`);
         }
-        const node = pathOwners.get(sourcePath)!;
+        const node = pathOwners.get(physicalPath)!;
         const manifest = projectionJsonManifest(node, `Catalog manifest ${JSON.stringify(sourcePath)}`, problems);
         if (manifest && (manifest.schema !== expectedSchema || manifest[catalog.memberVersionField] !== catalog.requiredMemberVersion || typeof manifest[catalog.memberIdentityField] !== "string" || manifest[catalog.memberIdentityField] === "")) problems.push(`Catalog manifest ${JSON.stringify(sourcePath)} has an invalid manifest schema, identity, or version.`);
         if (manifest && typeof manifest[catalog.memberIdentityField] === "string") {
@@ -1459,7 +1969,11 @@ export function semanticPathProjectionAuthority(options: SemanticPathProjectionA
           if (memberIds.has(key)) problems.push(`Distributed catalog member identity ${JSON.stringify(key)} is duplicated.`);
           memberIds.add(key);
         }
-        if (destinationRelativePath) candidateMappings.push({ sourcePath, destinationPath: `${root.destinationRoot}/${destinationRelativePath}` });
+        if (destinationRelativePath) {
+          const destinationPath = `${root.destinationRoot}/${destinationRelativePath}`;
+          if (destinationLayout && destinationPath !== physicalPath) problems.push(`Canonical CAD member ${JSON.stringify(physicalPath)} does not equal its forward-rendered catalog path.`);
+          candidateMappings.push({ sourcePath, destinationPath });
+        }
       }
     } else if (catalog && "contractKind" in catalog && catalog.contractKind === "exact-owner-vectors") {
       const capture = root.captures.commandDirectoryName;
@@ -1483,8 +1997,9 @@ export function semanticPathProjectionAuthority(options: SemanticPathProjectionA
             candidateMappings.push(mapping);
             if ("configurableEntry" in node) configurableEntries.push({ ...mapping, configurationReferences: node.configurableEntry.configurationReferences });
           }
-          expectedSourceNodes.add(sourceRelativePath ? `${options.sourceRoot}/${sourceRelativePath}` : options.sourceRoot);
+          expectedSourceNodes.add(destinationLayout ? destinationRelativePath ? `${root.destinationRoot}/${destinationRelativePath}` : root.destinationRoot : sourceRelativePath ? `${options.sourceRoot}/${sourceRelativePath}` : options.sourceRoot);
         }
+        if (destinationLayout) for (const directory of projectionDirectories(root.destinationRoot, candidateMappings.map(({ destinationPath }) => destinationPath))) expectedSourceNodes.add(directory);
         const actualSourceNodes = new Set(options.nodes.filter((node) => node.nodeKind !== "symlink").map((node) => node.path));
         if (expectedSourceNodes.size !== actualSourceNodes.size || [...expectedSourceNodes].some((path) => !actualSourceNodes.has(path))) problems.push("Draw source does not contain the exact command bundle.");
       }
@@ -1497,7 +2012,7 @@ export function semanticPathProjectionAuthority(options: SemanticPathProjectionA
     const manifestFilename = fixedContract && fixedContractFilename(fixedContract);
     const sourceManifestPath = manifestFilename ? `${entry.sourcePath.slice(0, entry.sourcePath.lastIndexOf("/"))}/${manifestFilename}` : "";
     const manifestMapping = candidateMappings.find(({ sourcePath }) => sourcePath === sourceManifestPath);
-    const manifestNode = pathOwners.get(sourceManifestPath);
+    const manifestNode = pathOwners.get(destinationLayout ? manifestMapping?.destinationPath ?? "" : sourceManifestPath);
     if (!fixedContract || !manifestMapping || manifestNode?.nodeKind !== "file" || manifestNode.content === undefined) {
       problems.push(`Configurable entry ${JSON.stringify(entry.sourcePath)} is missing its exact configuration manifest mapping.`);
       continue;
@@ -1510,10 +2025,11 @@ export function semanticPathProjectionAuthority(options: SemanticPathProjectionA
     } catch {
       actualValue = undefined;
     }
-    if (actualValue !== oldValue) {
-      problems.push(`Configuration reference ${JSON.stringify(`${sourceManifestPath}:${reference.structuredLocation}`)} must resolve exactly to ${JSON.stringify(oldValue)}.`);
+    if (actualValue !== (destinationLayout ? newValue : oldValue)) {
+      problems.push(`Configuration reference ${JSON.stringify(`${destinationLayout ? manifestMapping.destinationPath : sourceManifestPath}:${reference.structuredLocation}`)} must resolve exactly to ${JSON.stringify(destinationLayout ? newValue : oldValue)}.`);
       continue;
     }
+    if (destinationLayout) continue;
     candidateReferenceEdits.push({
       path: manifestMapping.destinationPath,
       adapter: reference.adapter,
@@ -1668,11 +2184,11 @@ function exactContractFilename(contractId: string | null, taxonomy: Taxonomy): s
 }
 
 function componentFilenames(taxonomy: Taxonomy): string[] {
-  return [...new Set(Object.values(taxonomy.componentFileKinds).map((kindId) => canonicalStemmedFilenameForKind(kindId, "component", taxonomy)))];
+  return [...new Set(Object.values(taxonomy.componentFileKinds).flatMap((kindId) => canonicalFilenamesForKind(kindId, taxonomy)))];
 }
 
 function semanticManifestFilename(taxonomy: Taxonomy): string {
-  return canonicalStemmedFilenameForKind(taxonomy.semanticManifestFileKindId, "component", taxonomy);
+  return canonicalPrimaryFilenameForKind(taxonomy.semanticManifestFileKindId, taxonomy);
 }
 
 /** 🧬️ Resolves a schema facet's kind from its normative leaf on disk (`schemaFacetKinds`). */
@@ -1718,6 +2234,11 @@ function isEmojiPrefixedSlugDir(name: string, taxonomy: Taxonomy): boolean {
   return semanticDirectoryKindId(name, taxonomy) !== null;
 }
 
+/** 🧬️ Whether one direct mutation owner has the configured emoji + semantic verb-noun identity. */
+export function mutationDirectoryNameIsValid(name: string, taxonomy: Taxonomy = loadTaxonomy()): boolean {
+  return name === name.normalize("NFC") && new RegExp(taxonomy.mutationDirectoryPattern, "u").test(name);
+}
+
 /** 🌳️ Declared child level of a path under an artifact root (parents are `/`-segments already accepted). */
 function artifactFacetChildLevel(parents: readonly string[], taxonomy: Taxonomy): ArtifactFacetLevel {
   if (parents.length === 0) return { kind: "fixed", dirs: taxonomy.artifactComponentDirs };
@@ -1738,7 +2259,7 @@ function artifactFacetChildLevel(parents: readonly string[], taxonomy: Taxonomy)
     }
     if (parents.length === 3 && a === "🧬️mutations") {
       if ((taxonomy.representationDirs ?? []).includes(b!)) return { kind: "none" };
-      return { kind: "fixed", dirs: [...new Set([...(taxonomy.mutationChildDirs ?? []), ...(taxonomy.compositeMutationChildDirs ?? [])])] };
+      return { kind: "fixed", dirs: taxonomy.mutationOptionalFacetDirs ?? [] };
     }
     if (parents.length === 3 && a === "💡️inferences") return { kind: "none" };
     if (parents.length === 3 && (taxonomy.representationDirs ?? []).includes(b!)) return { kind: "none" };
@@ -1781,13 +2302,15 @@ export function artifactFacetPathIsDeclared(facetPath: string, taxonomy: Taxonom
     if (parents.length === 2 && parents[0] === "🧬️schema" && (parents[1] === "💡️inferences" || parents[1] === "🧬️mutations") && (taxonomy.representationDirs ?? []).includes(segment)) return false;
     const level = artifactFacetChildLevel(parents, taxonomy);
     if (level.kind === "none") return false;
+    const directMutationOwner = parents.length === 2 && parents[0] === "🧬️schema" && parents[1] === "🧬️mutations";
+    const wildcardAccepted = directMutationOwner ? mutationDirectoryNameIsValid(segment, taxonomy) : isEmojiPrefixedSlugDir(segment, taxonomy);
     if (level.kind === "wildcard") {
-      if (!isEmojiPrefixedSlugDir(segment, taxonomy)) return false;
+      if (!wildcardAccepted) return false;
     } else {
       const dirs = level.dirs;
       const allowWildcard = dirs.includes("*");
       const fixed = dirs.filter((d) => d !== "*");
-      if (!(fixed.includes(segment) || (allowWildcard && isEmojiPrefixedSlugDir(segment, taxonomy)))) return false;
+      if (!(fixed.includes(segment) || (allowWildcard && wildcardAccepted))) return false;
     }
     parents.push(segment);
   }
@@ -1796,7 +2319,7 @@ export function artifactFacetPathIsDeclared(facetPath: string, taxonomy: Taxonom
 
 /**
  * 🚦️ Internal-consistency audit of the vocabulary itself: the completeness/structural artifact lists must
- * stay in their superset relation, `mutationChildDirs` must be declared and covered by `taxonomyLeafParentDirs`,
+ * stay in their superset relation, direct mutation ownership must name one Rust component kind and only optional facets,
  * every registry, kind mapping, exact contract, package grammar, and clean area must agree. Returns human
  * readable problems (empty = healthy) so a vocabulary edit can never silently blind or flood the rules that
  * consume it.
@@ -1812,16 +2335,25 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     "rootDocFileNames", "areaStates", "pluginTaxonomyStates", "repoWideFiles", "testFeatureFilename", "testAdapterFilenames",
     "testContributionFilename", "testOutputMarkerFilename", "testExcludedPathPrefixes", "testOracleRegistryPath", "testSchemaPath",
     "layeringGeneratedInventories", "semanticProjectionContracts", "projectedMemberKinds", "projectionContracts", "profileRenderers",
-    "descendantContracts", "mutationCatalogProjectionContractId", "mutationCatalogKindBijection",
+    "descendantContracts", "mutationCatalogProjectionContractId", "mutationCatalogKindBijection", "mutationChildDirs", "compositeMutationChildDirs",
   ];
   for (const key of removedKeys) if (key in document) problems.push(`${key} was removed by schema version 7; use kind IDs or exact contracts.`);
   if (taxonomy.schemaVersion !== 7) problems.push(`schemaVersion must be exactly 7, got ${JSON.stringify(taxonomy.schemaVersion)}.`);
+  problems.push(...validateFrozenCoordinateEvidenceContracts(taxonomy.frozenCoordinateEvidenceContracts));
 
   const record = (value: unknown, key: string): value is Record<string, unknown> => {
     const valid = typeof value === "object" && value !== null && !Array.isArray(value);
     if (!valid || Object.keys(value as Record<string, unknown>).length === 0) problems.push(`${key} must be a non-empty object.`);
     return valid;
   };
+  if (record(taxonomy.physicalLeafRendering, "physicalLeafRendering")) {
+    const expected = { direction: "forward-only", filename: "file-kind-emoji-and-extension-chain", sourceExtension: "longest-registered-chain", authoringExtension: "schema-ordered-primary", runtimeLookup: "canonical-only" };
+    if (Object.keys(taxonomy.physicalLeafRendering).sort().join("\0") !== Object.keys(expected).sort().join("\0") || Object.entries(expected).some(([key, value]) => (taxonomy.physicalLeafRendering as unknown as Record<string, unknown>)[key] !== value)) problems.push("physicalLeafRendering must declare exact forward-only kind-only rendering, longest source extension, primary authoring extension, and canonical-only runtime lookup.");
+  }
+  if (record(taxonomy.referenceClosure, "referenceClosure")) {
+    const expected = { scope: "repository-incoming-and-moved-outgoing", candidateSource: "git-tracked-and-untracked-plus-explicit-ticket", candidateAdmission: "opaque-first-no-follow", coordinateRoots: "verified-repository-ownership", unsupportedPathBearingForms: "error", frozenSourceCoordinates: "exact-digest-and-token-authority", frozenPlanCoordinates: "canonical-schema-v2-digest-and-typed-token-authority", preimageDrift: "reject", newIncomingReferences: "reject-or-rollback", ordering: "utf8-byte" };
+    if (Object.keys(taxonomy.referenceClosure).sort().join("\0") !== Object.keys(expected).sort().join("\0") || Object.entries(expected).some(([key, value]) => (taxonomy.referenceClosure as unknown as Record<string, unknown>)[key] !== value)) problems.push("referenceClosure must declare repository-wide incoming and moved outgoing closure with opaque-first no-follow candidates, exact frozen coordinate authority, drift rejection, and byte ordering.");
+  }
   const ids = (values: readonly string[] | undefined, registry: Readonly<Record<string, unknown>>, key: string): void => {
     if (!Array.isArray(values)) {
       problems.push(`${key} must be an array.`);
@@ -1933,7 +2465,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     if (typeof spec.allowEmojiOnly !== "boolean") problems.push(`semanticDirectoryKinds[${JSON.stringify(id)}].allowEmojiOnly must be boolean.`);
     if (spec.inferWithoutEmoji !== undefined && typeof spec.inferWithoutEmoji !== "boolean") problems.push(`semanticDirectoryKinds[${JSON.stringify(id)}].inferWithoutEmoji must be boolean when present.`);
     if (spec.projectionOnly !== undefined && typeof spec.projectionOnly !== "boolean") problems.push(`semanticDirectoryKinds[${JSON.stringify(id)}].projectionOnly must be boolean when present.`);
-    ids(spec.parentKindIds ?? [], { ...taxonomy.semanticDirectoryKinds, ...taxonomy.semanticDirectoryMemberKinds, ...taxonomy.semanticProjectedMemberKinds }, `semanticDirectoryKinds[${JSON.stringify(id)}].parentKindIds`);
+    ids(spec.parentKindIds ?? [], { ...taxonomy.semanticDirectoryKinds, ...taxonomy.semanticDirectoryMemberKinds, ...taxonomy.semanticProjectedMemberKinds, ...taxonomy.fixedDirectoryContracts }, `semanticDirectoryKinds[${JSON.stringify(id)}].parentKindIds`);
   }
   const taxonomyCliArtifactDirectoryKinds: Readonly<Record<string, Readonly<{ name: string; emoji: string; slugPattern: string; parentKindIds?: readonly string[] }>>> = {
     "taxonomy-transaction": { name: "🧾️taxonomy-transaction", emoji: "🧾️", slugPattern: "^taxonomy-transaction$" },
@@ -2173,8 +2705,17 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   if (record(taxonomy.semanticPathProjectionCatalogContracts, "semanticPathProjectionCatalogContracts")) for (const [id, contract] of Object.entries(taxonomy.semanticPathProjectionCatalogContracts)) {
     kebabId(id, `semanticPathProjectionCatalogContracts id ${JSON.stringify(id)}`);
     if ("contractKind" in contract && contract.contractKind === "distributed-json-manifest-catalog") {
-      exactKeys(contract, ["contractKind", "ownerArtifactMemberName", "modelManifestSchema", "modelManifestSourceFilename", "modelIdentityField", "memberIdentityField", "memberVersionField", "requiredMemberVersion", "requiredModelManifest", "categoryRules", "coverage", "unknownCategoryPolicy", "unownedModelPolicy"], `semanticPathProjectionCatalogContracts[${JSON.stringify(id)}]`);
+      exactKeys(contract, ["contractKind", "ownerArtifactMemberName", "profileVectors", "modelManifestSchema", "modelManifestSourceFilename", "modelIdentityField", "memberIdentityField", "memberVersionField", "requiredMemberVersion", "requiredModelManifest", "categoryRules", "coverage", "unknownCategoryPolicy", "unownedModelPolicy"], `semanticPathProjectionCatalogContracts[${JSON.stringify(id)}]`);
       if (!contract.ownerArtifactMemberName || !contract.modelManifestSchema || !contract.modelManifestSourceFilename || contract.modelIdentityField !== "id" || contract.memberIdentityField !== "id" || contract.memberVersionField !== "version" || !contract.requiredMemberVersion || contract.requiredModelManifest !== true) problems.push(`semanticPathProjectionCatalogContracts[${JSON.stringify(id)}] must declare exact non-empty manifest authority fields.`);
+      if (!Array.isArray(contract.profileVectors) || contract.profileVectors.length === 0) problems.push(`semanticPathProjectionCatalogContracts[${JSON.stringify(id)}].profileVectors must be non-empty.`);
+      const profiles = new Set<string>();
+      for (const [index, vector] of (contract.profileVectors ?? []).entries()) {
+        const scope = `semanticPathProjectionCatalogContracts[${JSON.stringify(id)}].profileVectors[${index}]`;
+        exactKeys(vector, ["artifactId", "standardVersion", "subsetId"], scope);
+        const key = [vector.artifactId, vector.standardVersion, vector.subsetId].join("\0");
+        if (vector.artifactId !== contract.ownerArtifactMemberName || !vector.standardVersion || !vector.subsetId || profiles.has(key) || [vector.standardVersion, vector.subsetId].some((value) => value !== value.normalize("NFC") || /[\\/]/u.test(value))) problems.push(`${scope} must be one unique NFC owner profile tuple.`);
+        profiles.add(key);
+      }
       if (!Array.isArray(contract.categoryRules) || contract.categoryRules.length === 0) problems.push(`semanticPathProjectionCatalogContracts[${JSON.stringify(id)}].categoryRules must be non-empty.`);
       const categoryNames = new Set<string>();
       for (const [index, rule] of (contract.categoryRules ?? []).entries()) {
@@ -2269,6 +2810,26 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       const references = projectedReferences.filter((candidate) => candidate === projectedId).length;
       if (projected.projectionContractId === id && references !== 2) problems.push(`semanticPathProjectionContracts[${JSON.stringify(id)}] must reference projected member ${JSON.stringify(projectedId)} exactly once in source and destination.`);
     }
+    if (artifactProjection && contract.sourceArtifactMemberName) {
+      try {
+        if (artifactPathProjectionCatalogRoots(`🗿️artifacts/${contract.sourceArtifactMemberName}`, id, taxonomy).length === 0) problems.push(`semanticPathProjectionContracts[${JSON.stringify(id)}] must render at least one exact forward owner profile.`);
+      } catch (error) { problems.push(`semanticPathProjectionContracts[${JSON.stringify(id)}] has invalid forward profile authority: ${error instanceof Error ? error.message : String(error)}`); }
+    }
+  }
+
+  if (record(taxonomy.semanticPolicyStateCoordinateContracts, "semanticPolicyStateCoordinateContracts")) {
+    if (Object.keys(taxonomy.semanticPolicyStateCoordinateContracts).join("\0") !== "dependency-freeze-users-v1") problems.push("semanticPolicyStateCoordinateContracts requires the exact dependency policy-state contract.");
+    for (const [id, contract] of Object.entries(taxonomy.semanticPolicyStateCoordinateContracts)) {
+      exactKeys(contract, ["contractKind", "statePath", "stateSchemaVersion", "sourceDisposition", "ownerProjectionContractId", "packageIds", "manifestFilename", "dependencyEvidenceField", "coordinatePointer", "preserveNonCoordinateBytes"], `semanticPolicyStateCoordinateContracts.${id}`);
+      if (contract.contractKind !== "dependency-freeze-user-coordinates" || contract.statePath !== "🔒️dependencies.json" || contract.stateSchemaVersion !== 2 || contract.sourceDisposition !== "authored-policy-state" || contract.ownerProjectionContractId !== "nested-cargo-packages-v1" || !taxonomy.semanticPackageProjectionContracts[contract.ownerProjectionContractId] || JSON.stringify(contract.packageIds) !== JSON.stringify(["jcoprobe-guest"]) || contract.manifestFilename !== "Cargo.toml" || contract.dependencyEvidenceField !== "witDependency" || contract.coordinatePointer !== "/entries/*/users/*" || contract.preserveNonCoordinateBytes !== true) problems.push(`semanticPolicyStateCoordinateContracts.${id} has invalid exact user-coordinate authority.`);
+    }
+  }
+  if (record(taxonomy.semanticPackageProjectionContracts, "semanticPackageProjectionContracts")) {
+    if (Object.keys(taxonomy.semanticPackageProjectionContracts).join("\0") !== "nested-cargo-packages-v1") problems.push("semanticPackageProjectionContracts requires the exact nested Cargo contract.");
+    for (const [id, contract] of Object.entries(taxonomy.semanticPackageProjectionContracts)) {
+      exactKeys(contract, ["contractKind", "authorityCatalogPath", "authorityCatalogSha256", "packageIds", "sourceLeafCounts", "purityCount", "adapterCount", "derivedLeafCount", "joinedPathBindingCounts", "generatedSourceRetirementCounts", "rationaleRule"], `semanticPackageProjectionContracts.${id}`);
+      if (contract.contractKind !== "exact-nested-cargo-package-catalog" || !exactOwnerPath(contract.authorityCatalogPath) || !/^[0-9a-f]{64}$/u.test(contract.authorityCatalogSha256) || JSON.stringify(contract.packageIds) !== JSON.stringify(["wgpu-renderer", "jcoprobe-guest"]) || JSON.stringify(contract.sourceLeafCounts) !== JSON.stringify([32, 4]) || contract.purityCount !== 27 || contract.adapterCount !== 5 || contract.derivedLeafCount !== 1 || JSON.stringify(contract.joinedPathBindingCounts) !== JSON.stringify([1, 0]) || JSON.stringify(contract.generatedSourceRetirementCounts) !== JSON.stringify([1, 0]) || contract.rationaleRule !== "nested-cargo-package-projection-v1") problems.push(`semanticPackageProjectionContracts.${id} has invalid exact authority.`);
+    }
   }
 
   if (record(taxonomy.semanticOwnedFileProjectionContracts, "semanticOwnedFileProjectionContracts")) {
@@ -2280,24 +2841,112 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
         problems.push(`${scope} must be an object.`);
         continue;
       }
-      exactKeys(contract, ["contractKind", "ownerFixedDirectoryContractId", "requiredSiblingFixedFilenameContractId", "manifestAdapter", "manifestStatusLocation", "allowedStatuses", "sourceFileKindId", "sourceFilename", "destinationDirectoryKindId", "destinationDirectoryName", "destinationFilename", "emptyContentRule", "statusDispositions", "rationaleRule"], scope);
-      if (contract.contractKind !== "owner-sibling-manifest-file" || contract.manifestAdapter !== "json" || contract.manifestStatusLocation !== "status" || contract.emptyContentRule !== "zero-byte" || contract.rationaleRule !== "ticket-important-markdown-projection-v1") problems.push(`${scope} must use the exact ticket important owner-file grammar.`);
-      if (!Array.isArray(contract.allowedStatuses) || contract.allowedStatuses.join("\0") !== "closed\0open") problems.push(`${scope}.allowedStatuses must be exactly closed, open.`);
-      if (contract.statusDispositions && typeof contract.statusDispositions === "object" && !Array.isArray(contract.statusDispositions)) exactKeys(contract.statusDispositions, ["open", "closed-empty", "closed-nonempty", "invalid"], `${scope}.statusDispositions`);
-      else problems.push(`${scope}.statusDispositions must be an object.`);
-      if (JSON.stringify(contract.statusDispositions) !== JSON.stringify({ open: "project", "closed-empty": "remove", "closed-nonempty": "problem", invalid: "problem" })) problems.push(`${scope}.statusDispositions must be the exact lifecycle mapping.`);
+      if (contract.contractKind === "exact-owner-path-catalog") {
+        exactKeys(contract, ["contractKind", "authorityCatalogPath", "authorityCatalogSha256", "sourceFileKindId", "sourceBasenames", "destinationDirectoryKinds", "allowedDispositions", "ownerEvidenceKinds", "referenceOwnerIds", "generatorOwnerIds", "expectedCounts", "authoredDocumentCorrections", "rationaleRule"], scope);
+        if (id !== "readme-license-owner-leaves-v1" || contract.rationaleRule !== "readme-license-owner-projection-v1") problems.push(scope + " must be the exact README/LICENSE owner projection contract.");
+        if (!exactOwnerPath(contract.authorityCatalogPath)) problems.push(scope + ".authorityCatalogPath must be one repository-local non-opaque NFC path.");
+        if (typeof contract.authorityCatalogSha256 !== "string" || !/^[a-f0-9]{64}$/u.test(contract.authorityCatalogSha256)) problems.push(scope + ".authorityCatalogSha256 must be one SHA-256 digest.");
+        if (!taxonomy.fileKinds[contract.sourceFileKindId] || contract.sourceFileKindId !== "markdown") problems.push(scope + ".sourceFileKindId must be markdown.");
+        if (!Array.isArray(contract.sourceBasenames) || contract.sourceBasenames.join("\0") !== "LICENSE.md\0README.md") problems.push(scope + ".sourceBasenames must be exactly LICENSE.md and README.md.");
+        if (!contract.destinationDirectoryKinds || typeof contract.destinationDirectoryKinds !== "object" || Array.isArray(contract.destinationDirectoryKinds)) problems.push(scope + ".destinationDirectoryKinds must be an object.");
+        else {
+          exactKeys(contract.destinationDirectoryKinds, ["license", "readme"], scope + ".destinationDirectoryKinds");
+          const expectedDestinations = {
+            license: { directoryKindId: "owner-license", directoryName: "⚖️license", filename: "📝️.md" },
+            readme: { directoryKindId: "owner-readme", directoryName: "📃️readme", filename: "📝️.md" },
+          } as const;
+          for (const kind of ["license", "readme"] as const) {
+            const destination = contract.destinationDirectoryKinds[kind];
+            exactKeys(destination, ["directoryKindId", "directoryName", "filename"], scope + ".destinationDirectoryKinds." + kind);
+            if (JSON.stringify(destination) !== JSON.stringify(expectedDestinations[kind])) problems.push(scope + ".destinationDirectoryKinds." + kind + " is not canonical.");
+            const directory = taxonomy.semanticDirectoryKinds[destination.directoryKindId];
+            if (!directory || directory.projectionOnly !== true || semanticDirectoryKindId(destination.directoryName, taxonomy) !== destination.directoryKindId || fileKindIdForSourcePath(destination.filename, taxonomy) !== contract.sourceFileKindId) problems.push(scope + ".destinationDirectoryKinds." + kind + " does not resolve through the registered projection-only directory and Markdown leaf kinds.");
+          }
+        }
+        const exactArrays = [
+          [contract.allowedDispositions, "attribution-relocate\0configurable-owner-license-relocate\0fixed\0generated-evidence-relocate\0owner-documentation-relocate", "allowedDispositions"],
+          [contract.ownerEvidenceKinds, "configurable-owner-license\0ordinary-owner-doc\0package-publication\0third-party-attribution\0ticket-evidence\0ticket-scratch", "ownerEvidenceKinds"],
+          [contract.referenceOwnerIds, "asset-distribution-owner\0bun-package-publisher\0commonmark-scratch-rust-reader\0markdown-relative-reference-adapter\0repo-cli-dev-docs-go\0vscode-package-ignore", "referenceOwnerIds"],
+          [contract.generatorOwnerIds, "assets-build", "generatorOwnerIds"],
+        ] as const;
+        for (const [values, expected, field] of exactArrays) if (!Array.isArray(values) || values.join("\0") !== expected) problems.push(scope + "." + field + " is not the exact frozen registry.");
+        if (!contract.expectedCounts || typeof contract.expectedCounts !== "object" || Array.isArray(contract.expectedCounts)) problems.push(scope + ".expectedCounts must be an object.");
+        else {
+          exactKeys(contract.expectedCounts, ["fixed", "license", "projected", "readme", "referenceBindings", "total"], scope + ".expectedCounts");
+          if (JSON.stringify(contract.expectedCounts) !== JSON.stringify({ fixed: 4, license: 8, projected: 36, readme: 32, referenceBindings: 62, total: 40 })) problems.push(scope + ".expectedCounts must freeze the 40-leaf authority.");
+        }
+        if (!taxonomy.generatorContracts["assets-build"]) problems.push(scope + " requires the assets-build generator owner.");
+        try { parseSemanticOwnedDocumentCorrections(contract.authoredDocumentCorrections); } catch (error) { problems.push(scope + ".authoredDocumentCorrections: " + (error instanceof Error ? error.message : String(error))); }
+        if (taxonomy.fixedFilenameContracts["root-script"]?.pathPattern !== "**/📜️script.ts") problems.push(scope + ".authoredDocumentCorrections requires the canonical root-script filename contract.");
+        continue;
+      }
+      if (contract.contractKind === "semantic-facet-primary-file") {
+        exactKeys(contract, ["contractKind", "sourceRoot", "sourceFilename", "fileKindAuthority", "sourceDisposition", "directoryCaptures", "ownerPathPatterns", "authoringCommand", "referenceConsumer", "rationaleRule"], scope);
+        if (id !== "artifact-empty-facet-primary-markdown-v1" || contract.rationaleRule !== id || contract.sourceRoot !== "✏️s/🔌️plugins" || contract.sourceFilename !== "📌️empty.md" || contract.fileKindAuthority !== "windowEmptyFacetFileKindId" || contract.sourceDisposition !== "authored" || taxonomy.windowEmptyFacetFileKindId !== "markdown") problems.push(`${scope} must use the exact authored empty-facet primary-leaf grammar.`);
+        if (record(contract.directoryCaptures, `${scope}.directoryCaptures`)) for (const [capture, spec] of Object.entries(contract.directoryCaptures)) {
+          if (!record(spec, `${scope}.directoryCaptures.${capture}`)) continue;
+          exactKeys(spec, ["kindIds", ...(spec.names ? ["names"] : [])], `${scope}.directoryCaptures.${capture}`);
+          if (!/^[a-zA-Z]+$/u.test(capture) || !Array.isArray(spec.kindIds) || spec.kindIds.length === 0 || new Set(spec.kindIds).size !== spec.kindIds.length || spec.kindIds.some((kindId) => !taxonomy.semanticDirectoryKinds[kindId] && !taxonomy.semanticDirectoryMemberKinds[kindId])) problems.push(`${scope}.directoryCaptures.${capture} must resolve registered semantic directory kinds.`);
+          if (spec.names && (!Array.isArray(spec.names) || spec.names.length === 0 || new Set(spec.names).size !== spec.names.length || spec.names.some((name) => typeof name !== "string" || name !== name.normalize("NFC") || /[\\/]/u.test(name)))) problems.push(`${scope}.directoryCaptures.${capture}.names must be exact NFC directory names.`);
+        }
+        if (record(contract.ownerPathPatterns, `${scope}.ownerPathPatterns`)) {
+          if (Object.keys(contract.ownerPathPatterns).join("\0") !== "plugin-commands\0artifact-surface\0artifact-mode\0artifact-window\0engine-mode\0engine-window\0extension-window") problems.push(`${scope}.ownerPathPatterns must contain the seven semantic owner contexts.`);
+          const patterns = new Set<string>();
+          for (const [form, pattern] of Object.entries(contract.ownerPathPatterns)) {
+            if (typeof pattern !== "string" || pattern !== pattern.normalize("NFC") || !pattern.startsWith("{plugin}/") || patterns.has(pattern)) { problems.push(`${scope}.ownerPathPatterns.${form} is not a unique rooted owner grammar.`); continue; }
+            patterns.add(pattern);
+            for (const segment of pattern.split("/")) {
+              const capture = /^\{([a-zA-Z]+)\}$/u.exec(segment)?.[1];
+              if (capture ? !contract.directoryCaptures?.[capture] : !segment || /[\\*?{}\0]/u.test(segment) || !semanticDirectoryKindId(segment, taxonomy)) problems.push(`${scope}.ownerPathPatterns.${form} has an unregistered directory segment.`);
+            }
+          }
+        }
+        if (record(contract.authoringCommand, `${scope}.authoringCommand`)) {
+          exactKeys(contract.authoringCommand, ["scriptPath", "command", "writeDisposition"], `${scope}.authoringCommand`);
+          if (contract.authoringCommand.scriptPath !== "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts" || !Array.isArray(contract.authoringCommand.command) || contract.authoringCommand.command.join("\0") !== "new\0surface" || contract.authoringCommand.writeDisposition !== "create-if-absent") problems.push(`${scope}.authoringCommand must be the create-if-absent surface author.`);
+        }
+        if (record(contract.referenceConsumer, `${scope}.referenceConsumer`)) {
+          exactKeys(contract.referenceConsumer, ["path", "ownerRoot", "adapter", "region", "lineTemplate"], `${scope}.referenceConsumer`);
+          if (contract.referenceConsumer.path !== "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/📦️glue.rs" || contract.referenceConsumer.ownerRoot !== "✏️s/🔌️plugins/🔋️energy" || contract.referenceConsumer.adapter !== "rust" || contract.referenceConsumer.region !== "✏️👁️Surfaces" || contract.referenceConsumer.lineTemplate !== "// `{filename}` (`🎚️config`/`🎮️commands`/`👥️presence`/`🫧️transient` at every surface/mode level) need") problems.push(`${scope}.referenceConsumer must be the exact energy surface-region prose form.`);
+        }
+        continue;
+      }
+      if (contract.contractKind === "owner-primary-file") {
+        exactKeys(contract, ["contractKind", "ownerFixedDirectoryContractId", "sourceFileKindId", "sourceFilename", "destinationFilename", "rationaleRule"], scope);
+        if (id !== "ticket-document-primary-markdown-v1" || contract.ownerFixedDirectoryContractId !== "ticket-slug" || contract.sourceFileKindId !== "markdown" || contract.sourceFilename !== "ticket.md" || contract.rationaleRule !== id) problems.push(`${scope} must use the exact ticket document primary-leaf grammar.`);
+        if (!taxonomy.fixedDirectoryContracts[contract.ownerFixedDirectoryContractId]) problems.push(`${scope}.ownerFixedDirectoryContractId is missing.`);
+        if (!taxonomy.fileKinds[contract.sourceFileKindId] || fileKindIdForSourcePath(contract.sourceFilename, taxonomy) !== contract.sourceFileKindId || contract.destinationFilename !== canonicalFilenameForKind(contract.sourceFileKindId, taxonomy)) problems.push(`${scope}.destinationFilename must be the registered primary file-kind leaf.`);
+        const tuple = [contract.ownerFixedDirectoryContractId, contract.sourceFilename, contract.contractKind].join("\0");
+        if (ownerTuples.has(tuple)) problems.push(`${scope} overlaps another owned-file projection contract.`);
+        ownerTuples.add(tuple);
+        continue;
+      }
+      if (contract.contractKind === "owner-sibling-manifest-file") {
+        exactKeys(contract, ["contractKind", "ownerFixedDirectoryContractId", "requiredSiblingFixedFilenameContractId", "manifestAdapter", "manifestStatusLocation", "allowedStatuses", "sourceFileKindId", "sourceFilename", "destinationDirectoryKindId", "destinationDirectoryName", "destinationFilename", "emptyContentRule", "statusDispositions", "rationaleRule"], scope);
+        if (contract.manifestAdapter !== "json" || contract.manifestStatusLocation !== "status" || contract.emptyContentRule !== "zero-byte" || contract.rationaleRule !== "ticket-important-markdown-projection-v1") problems.push(`${scope} must use the exact active ticket important owner-file grammar.`);
+        if (!Array.isArray(contract.allowedStatuses) || contract.allowedStatuses.join("\0") !== "closed\0open") problems.push(`${scope}.allowedStatuses must be exactly closed, open.`);
+        if (contract.statusDispositions && typeof contract.statusDispositions === "object" && !Array.isArray(contract.statusDispositions)) exactKeys(contract.statusDispositions, ["open", "closed-empty", "closed-nonempty", "invalid"], `${scope}.statusDispositions`);
+        else problems.push(`${scope}.statusDispositions must be an object.`);
+        if (JSON.stringify(contract.statusDispositions) !== JSON.stringify({ open: "project", "closed-empty": "remove", "closed-nonempty": "problem", invalid: "problem" })) problems.push(`${scope}.statusDispositions must be the exact lifecycle mapping.`);
+        if (!taxonomy.fixedFilenameContracts[contract.requiredSiblingFixedFilenameContractId]) problems.push(`${scope}.requiredSiblingFixedFilenameContractId is missing.`);
+      } else if (contract.contractKind === "owner-optional-sibling-manifest-file") {
+        exactKeys(contract, ["contractKind", "ownerFixedDirectoryContractId", "optionalSiblingFixedFilenameContractId", "manifestAdapter", "manifestStatusLocation", "sourceFileKindId", "sourceFilename", "destinationDirectoryKindId", "destinationDirectoryName", "destinationFilename", "admittedDispositions", "rationaleRule"], scope);
+        if (contract.manifestAdapter !== "json" || contract.manifestStatusLocation !== "status" || contract.rationaleRule !== "ticket-important-history-markdown-v1") problems.push(`${scope} must use the exact ticket important history grammar.`);
+        if (!Array.isArray(contract.admittedDispositions) || contract.admittedDispositions.join("\0") !== "closed-nonzero\0invalid-manifest\0missing-manifest") problems.push(`${scope}.admittedDispositions must be the exact history mapping.`);
+        if (!taxonomy.fixedFilenameContracts[contract.optionalSiblingFixedFilenameContractId]) problems.push(`${scope}.optionalSiblingFixedFilenameContractId is missing.`);
+      } else problems.push(`${scope}.contractKind is invalid.`);
       if (!taxonomy.fixedDirectoryContracts[contract.ownerFixedDirectoryContractId]) problems.push(`${scope}.ownerFixedDirectoryContractId is missing.`);
-      if (!taxonomy.fixedFilenameContracts[contract.requiredSiblingFixedFilenameContractId]) problems.push(`${scope}.requiredSiblingFixedFilenameContractId is missing.`);
       if (typeof contract.sourceFilename !== "string" || !taxonomy.fileKinds[contract.sourceFileKindId] || fileKindIdForSourcePath(contract.sourceFilename, taxonomy) !== contract.sourceFileKindId) problems.push(`${scope}.sourceFilename must resolve to sourceFileKindId.`);
       const destinationKind = taxonomy.semanticDirectoryKinds[contract.destinationDirectoryKindId];
-      if (!destinationKind || destinationKind.projectionOnly !== true || typeof contract.destinationDirectoryName !== "string" || semanticDirectoryKindId(contract.destinationDirectoryName, taxonomy) !== contract.destinationDirectoryKindId) problems.push(`${scope}.destination directory must resolve to one projectionOnly kind.`);
+      if (!destinationKind || destinationKind.projectionOnly !== true || typeof contract.destinationDirectoryName !== "string" || semanticDirectoryKindId(contract.destinationDirectoryName, taxonomy, { parentKindId: "ticket-slug" }) !== contract.destinationDirectoryKindId) problems.push(`${scope}.destination directory must resolve to one ticket-scoped projectionOnly kind.`);
       if (contract.destinationFilename !== "📝️.md" || typeof contract.destinationFilename !== "string" || fileKindIdForSourcePath(contract.destinationFilename, taxonomy) !== contract.sourceFileKindId) problems.push(`${scope}.destinationFilename must be the exact Markdown physical leaf.`);
       for (const [field, value] of [["sourceFilename", contract.sourceFilename], ["destinationDirectoryName", contract.destinationDirectoryName], ["destinationFilename", contract.destinationFilename]] as const) if (typeof value !== "string" || !value || value !== value.normalize("NFC") || /[\\/]/u.test(value)) problems.push(`${scope}.${field} must be one non-empty NFC name.`);
-      const tuple = [contract.ownerFixedDirectoryContractId, contract.requiredSiblingFixedFilenameContractId, contract.sourceFilename].join("\0");
+      const siblingContractId = contract.contractKind === "owner-sibling-manifest-file" ? contract.requiredSiblingFixedFilenameContractId : contract.optionalSiblingFixedFilenameContractId;
+      const tuple = [contract.ownerFixedDirectoryContractId, siblingContractId, contract.sourceFilename, contract.contractKind].join("\0");
       if (ownerTuples.has(tuple)) problems.push(`${scope} overlaps another owned-file projection contract.`);
       ownerTuples.add(tuple);
     }
-    if (Object.keys(taxonomy.semanticOwnedFileProjectionContracts).join("\0") !== "ticket-important-markdown-v1") problems.push("semanticOwnedFileProjectionContracts must contain only ticket-important-markdown-v1.");
+    if (Object.keys(taxonomy.semanticOwnedFileProjectionContracts).join("\0") !== "artifact-empty-facet-primary-markdown-v1\0readme-license-owner-leaves-v1\0ticket-document-primary-markdown-v1\0ticket-important-history-markdown-v1\0ticket-important-markdown-v1") problems.push("semanticOwnedFileProjectionContracts must contain the exact artifact-facet, README/LICENSE, ticket-document, active ticket-important, and history ticket-important contracts.");
   }
 
   if (record(taxonomy.semanticPathProjectionReferenceConsumerContracts, "semanticPathProjectionReferenceConsumerContracts")) {
@@ -2329,8 +2978,8 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       if (!Array.isArray(contract.staleMarkers) || contract.staleMarkers.length === 0 || contract.staleMarkers.some((marker) => !marker || marker !== marker.normalize("NFC") || /\uFE0E/u.test(marker)) || new Set(contract.staleMarkers).size !== contract.staleMarkers.length) problems.push(`${scope}.staleMarkers must be unique non-empty NFC markers without VS15.`);
       if (contract.supportedForms.some((form) => form.startsWith("artifact-catalog-")) && (projection?.rationaleRule !== "artifact-example-model-catalog-projection-v1" || !contract.adapters.some((adapter) => adapter === "rust" || adapter === "typescript"))) problems.push(`${scope} artifact-catalog forms require the CAD projection and a Rust or TypeScript adapter.`);
     }
-    const required = ["cad-spatial-kernel-geometry", "draw-dependency-registry", "draw-workspace-cargo", "draw-workspace-script"];
-    if ([...identities].sort().join("\0") !== required.join("\0")) problems.push("semanticPathProjectionReferenceConsumerContracts must encode the four exact current external CAD/Draw consumers.");
+    const required = ["cad-editor-interaction", "cad-editor-runtime", "cad-interaction-spec", "cad-spatial-kernel-geometry", "draw-dependency-registry", "draw-package-cargo", "draw-package-library", "draw-workspace-cargo", "draw-workspace-script"];
+    if ([...identities].sort().join("\0") !== required.join("\0")) problems.push("semanticPathProjectionReferenceConsumerContracts must encode the nine exact current external CAD/Draw consumers.");
     const rows = Object.values(taxonomy.semanticPathProjectionReferenceConsumerContracts);
     for (const [index, left] of rows.entries()) for (const right of rows.slice(index + 1)) {
       if (left.projectionContractId !== right.projectionContractId || !left.supportedForms.some((form) => right.supportedForms.includes(form))) continue;
@@ -2495,7 +3144,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       if (!expected.has(id)) problems.push(`packageSourceDispositions[${JSON.stringify(id)}] does not name a source-format fixed/configurable contract.`);
       else if (expected.get(id) !== disposition.contractKind) problems.push(`packageSourceDispositions[${JSON.stringify(id)}].contractKind does not match its registry.`);
       if (!["adapter-source", "tool-metadata"].includes(disposition.disposition)) problems.push(`packageSourceDispositions[${JSON.stringify(id)}].disposition is invalid.`);
-      if (!["package-glue", "command-router"].includes(disposition.validator) || (disposition.disposition === "adapter-source") !== (disposition.validator === "package-glue")) problems.push(`packageSourceDispositions[${JSON.stringify(id)}] disposition/validator pair is invalid.`);
+      if (!["package-glue", "command-router", "vitest-configuration"].includes(disposition.validator) || (disposition.disposition === "adapter-source") !== (disposition.validator === "package-glue") || disposition.validator === "vitest-configuration" && id !== "vitest-config-entry") problems.push(`packageSourceDispositions[${JSON.stringify(id)}] disposition/validator pair is invalid.`);
       if (!disposition.authority || !disposition.verification) problems.push(`packageSourceDispositions[${JSON.stringify(id)}] must declare authority and verification.`);
     }
   }
@@ -2518,7 +3167,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     const targets = new Map<string, string>();
     for (const [id, contract] of Object.entries(taxonomy.generatorContracts)) {
       if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(id)) problems.push(`generatorContracts id ${JSON.stringify(id)} must be kebab-case.`);
-      const allowedKeys = new Set(["ownership", "ownerPath", "target", "previewTarget", "checkTarget", "inputPatterns", "outputRoots", "reason"]);
+      const allowedKeys = new Set(["ownership", "ownerPath", "target", "previewTarget", "checkTarget", "inputPatterns", "inputDiscovery", "projectionActivation", "outputRoots", "reason"]);
       for (const key of Object.keys(contract)) if (!allowedKeys.has(key)) problems.push(`generatorContracts[${JSON.stringify(id)}].${key} is forbidden.`);
       const ownership = contract.ownership as string;
       if (!["owned", "external"].includes(ownership)) problems.push(`generatorContracts[${JSON.stringify(id)}].ownership must be owned or external.`);
@@ -2546,6 +3195,27 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       if (contract.checkTarget !== undefined) {
         if (!targetKnown || !nxTarget(contract.checkTarget, `generatorContracts[${JSON.stringify(id)}].checkTarget`)) problems.push(`generatorContracts[${JSON.stringify(id)}].checkTarget requires a known target.`);
         else if (typeof contract.target === "string" && contract.checkTarget.slice(0, contract.checkTarget.lastIndexOf(":")) !== contract.target.slice(0, contract.target.lastIndexOf(":"))) problems.push(`generatorContracts[${JSON.stringify(id)}].checkTarget must belong to the target project.`);
+      }
+      if (id === "jco-package-adapter" && contract.projectionActivation === undefined) problems.push("generatorContracts.jco-package-adapter requires explicit package projection activation.");
+      if (contract.projectionActivation !== undefined) {
+        const activation = contract.projectionActivation;
+        exactKeys(activation, ["kind", "projectionContractId", "packageId", "sourceManifestPath", "destinationManifestPath"], `generatorContracts.${id}.projectionActivation`);
+        if (!runnable || id !== "jco-package-adapter" || activation.kind !== "canonical-or-planned-package" || activation.projectionContractId !== "nested-cargo-packages-v1" || activation.packageId !== "jcoprobe-guest" || !exactOwnerPath(activation.sourceManifestPath) || !exactOwnerPath(activation.destinationManifestPath) || activation.sourceManifestPath === activation.destinationManifestPath) problems.push(`generatorContracts.${id}.projectionActivation has no exact package authority.`);
+      }
+      if (contract.inputDiscovery !== undefined) {
+        const input = contract.inputDiscovery;
+        exactKeys(input, ["kind", "previewInput", "descriptorRelativePath", "exampleDirectoryName", "exampleFileKindId", "implementationEntryPaths", "workspaceImports"], `generatorContracts[${JSON.stringify(id)}].inputDiscovery`);
+        if (!runnable || id !== "plugin-registry" || input.kind !== "registry-catalog") problems.push(`generatorContracts[${JSON.stringify(id)}].inputDiscovery requires the owned registry-catalog authority.`);
+        if (!input.previewInput || JSON.stringify(Object.keys(input.previewInput).sort()) !== JSON.stringify(["maxBytes", "maxOperations", "protocol"]) || input.previewInput.protocol !== "registry-projected-inputs-v1" || input.previewInput.maxBytes !== 67108864 || input.previewInput.maxOperations !== 200000) problems.push(`generatorContracts[${JSON.stringify(id)}].inputDiscovery requires the bounded registry-projected-inputs-v1 preview protocol.`);
+        if (input.descriptorRelativePath !== "../../🔣️descriptor.json" || input.exampleDirectoryName !== "📚️examples" || !taxonomy.artifactChildDirs.includes(input.exampleDirectoryName) || input.exampleFileKindId !== taxonomy.exampleFileKinds["🦀️rust"]) problems.push(`generatorContracts[${JSON.stringify(id)}].inputDiscovery must preserve the exact descriptor and example vocabulary.`);
+        if (!Array.isArray(input.implementationEntryPaths) || input.implementationEntryPaths.length === 0 || input.implementationEntryPaths.join("\0") !== [...new Set(input.implementationEntryPaths)].sort().join("\0")) problems.push(`generatorContracts[${JSON.stringify(id)}].inputDiscovery implementation entries must be nonempty, unique and ordered.`);
+        else for (const path of input.implementationEntryPaths) if (!workspacePath(path, `generatorContracts[${JSON.stringify(id)}].inputDiscovery entry`) || exactTouchesOpaque(path)) problems.push(`generatorContracts[${JSON.stringify(id)}].inputDiscovery entry crosses an opaque boundary.`);
+        if (!input.workspaceImports || typeof input.workspaceImports !== "object" || Array.isArray(input.workspaceImports)) problems.push(`generatorContracts[${JSON.stringify(id)}].inputDiscovery.workspaceImports must be an object.`);
+        else for (const [name, binding] of Object.entries(input.workspaceImports)) {
+          exactKeys(binding, ["manifestPath", "entryPath"], `generatorContracts[${JSON.stringify(id)}].inputDiscovery.workspaceImports[${JSON.stringify(name)}]`);
+          if (!/^@[a-z0-9-]+\/[a-z0-9-]+$/u.test(name)) problems.push(`generatorContracts[${JSON.stringify(id)}].inputDiscovery workspace import must be an exact package name.`);
+          for (const path of [binding.manifestPath, binding.entryPath]) if (!workspacePath(path, `generatorContracts[${JSON.stringify(id)}].inputDiscovery workspace binding`) || exactTouchesOpaque(path)) problems.push(`generatorContracts[${JSON.stringify(id)}].inputDiscovery workspace binding crosses an opaque boundary.`);
+        }
       }
       if (!Array.isArray(contract.inputPatterns) || (runnable && contract.inputPatterns.length === 0) || (!runnable && contract.inputPatterns.length > 0)) problems.push(`generatorContracts[${JSON.stringify(id)}].inputPatterns must be non-empty only for owned contracts.`);
       if (Array.isArray(contract.inputPatterns)) {
@@ -2671,7 +3341,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     ["semanticManifestFileKindId", taxonomy.semanticManifestFileKindId], ["subsetsManifestFileKindId", taxonomy.subsetsManifestFileKindId],
     ["storyFileKindId", taxonomy.storyFileKindId], ["testFeatureFileKindId", taxonomy.testFeatureFileKindId],
     ["testContributionFileKindId", taxonomy.testContributionFileKindId], ["testOutputMarkerFileKindId", taxonomy.testOutputMarkerFileKindId],
-    ["windowEmptyFacetFileKindId", taxonomy.windowEmptyFacetFileKindId], ["testOracleRegistryLocation.fileKindId", taxonomy.testOracleRegistryLocation?.fileKindId],
+    ["windowEmptyFacetFileKindId", taxonomy.windowEmptyFacetFileKindId], ["mutationComponentFileKindId", taxonomy.mutationComponentFileKindId], ["mutationDescriptorFileKindId", taxonomy.mutationDescriptorFileKindId], ["testOracleRegistryLocation.fileKindId", taxonomy.testOracleRegistryLocation?.fileKindId],
     ["testSchemaLocation.fileKindId", taxonomy.testSchemaLocation?.fileKindId],
   ] as const) if (!kindId || !taxonomy.fileKinds[kindId]) problems.push(`${key} references a missing file kind.`);
   ids(taxonomy.textSpecFileKinds, taxonomy.fileKinds, "textSpecFileKinds");
@@ -2692,6 +3362,24 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     for (const formatId of kind.formats) if (!taxonomy.schemaFormats[formatId]) problems.push(`schemaFacetKinds[${JSON.stringify(kindId)}] references missing format ${JSON.stringify(formatId)}.`);
   }
 
+  fullPattern(taxonomy.mutationDirectoryPattern, "mutationDirectoryPattern");
+  const mutationOptionalFacetDirs = ["🔺️diff", "↩️inverse", "🧩️plan", "📝️text", "💾️binary", "🧬️schema"];
+  if (taxonomy.mutationOptionalFacetDirs?.join("\0") !== mutationOptionalFacetDirs.join("\0")) problems.push(`mutationOptionalFacetDirs must contain exactly ${mutationOptionalFacetDirs.join(", ")} in canonical order.`);
+  for (const dir of taxonomy.mutationOptionalFacetDirs ?? []) if (!taxonomy.taxonomyLeafParentDirs.includes(dir)) problems.push(`taxonomyLeafParentDirs must include optional mutation facet ${JSON.stringify(dir)}.`);
+  if (taxonomy.taxonomyLeafParentDirs.includes("🦠️mutation")) problems.push('taxonomyLeafParentDirs must not admit the legacy nested "🦠️mutation" implementation owner.');
+  if (taxonomy.mutationComponentFileKindId !== "rust-source") problems.push('mutationComponentFileKindId must select the direct owner "rust-source" kind.');
+  if (taxonomy.mutationDescriptorFileKindId !== "json") problems.push('mutationDescriptorFileKindId must select the language-neutral "json" kind.');
+  if (record(taxonomy.mutationPayloadSchemaLocation, "mutationPayloadSchemaLocation")) {
+    const location = taxonomy.mutationPayloadSchemaLocation;
+    if (Object.keys(location).sort().join("\0") !== "directoryKindId\0directoryName\0fileKindId" || location.directoryKindId !== "schema" || location.directoryName !== "🧬️schema" || location.fileKindId !== "json" || semanticDirectoryKindId(location.directoryName, taxonomy) !== location.directoryKindId) problems.push("mutationPayloadSchemaLocation must select the registered schema directory and JSON physical leaf.");
+  }
+
+  if (record(taxonomy.mutationPayloadSchemaProjection, "mutationPayloadSchemaProjection")) {
+    const expected = { contractKind: "descriptor-linked-mutation-payload-schema", ownerPathPattern: "✏️s/🔌️plugins/*/🗿️artifacts/*/🏅️standards/*/🪆️subsets/*/🧬️schema/🧬️mutations/*", sourceFilename: "🔣️payload.schema.json", descriptorSourceFilename: "🔣️component.json", descriptorField: "payloadSchema", descriptorSchemaVersion: 1, descriptorOwnerField: "owner", descriptorIdentityField: "semanticKind", jsonSchemaDialect: "http://json-schema.org/draft-07/schema#", destinationAuthority: "mutationPayloadSchemaLocation", rationaleRule: "mutation-payload-schema-owner-projection-v1" };
+    const projection = taxonomy.mutationPayloadSchemaProjection;
+    if (Object.keys(projection).length !== Object.keys(expected).length || Object.entries(expected).some(([key, value]) => projection[key as keyof typeof projection] !== value)) problems.push("mutationPayloadSchemaProjection must bind exact mutation-owner descriptor and JSON Schema source semantics.");
+  }
+
   const directoryValues = [
     taxonomy.packagesDirName, taxonomy.targetsDirName, taxonomy.elementsDirName, taxonomy.artifactsDirName, taxonomy.modesDirName,
     taxonomy.windowsDirName, taxonomy.standardsDirName, taxonomy.subsetsDirName, taxonomy.viewerDirName, taxonomy.editorDirName,
@@ -2699,7 +3387,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     ...taxonomy.standardChildDirs, ...taxonomy.subsetChildDirs, ...taxonomy.surfaceChildDirs, ...taxonomy.modeChildDirs,
     ...taxonomy.windowChildDirs, ...taxonomy.taxonomyLeafParentDirs, ...taxonomy.pluginChildDirs, ...taxonomy.osChildDirs,
     ...taxonomy.rootDataDirNames, ...taxonomy.schemaChildDirs, ...taxonomy.representationDirs, ...taxonomy.ioDirectionDirs,
-    ...taxonomy.ioSemanticCollectionDirNames, ...Object.values(taxonomy.ioDirectionChildDirs),
+    ...taxonomy.ioSemanticCollectionDirNames, ...Object.values(taxonomy.ioDirectionChildDirs), ...taxonomy.mutationOptionalFacetDirs,
   ];
   for (const directory of new Set(directoryValues)) if (!semanticDirectoryKindId(directory, taxonomy)) problems.push(`Semantic directory ${JSON.stringify(directory)} is not uniquely registered.`);
   for (const dir of taxonomy.artifactComponentDirs) if (!taxonomy.artifactChildDirs.includes(dir)) problems.push(`artifactChildDirs must include ${JSON.stringify(dir)}.`);
@@ -2709,9 +3397,514 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
 }
 
 /** 🏗️ Verifies known Nx identities and required tracked outputs against live workspace metadata. */
+/** 🧾️ Frozen leaf ownership and byte preimage, independent of implementation language. */
+export interface SemanticExactOwnedFileCase {
+  readonly sourcePath: string;
+  readonly destinationPath: string;
+  readonly ownerEvidenceId: string;
+  readonly disposition: "attribution-relocate" | "configurable-owner-license-relocate" | "fixed" | "generated-evidence-relocate" | "owner-documentation-relocate";
+  readonly fixedContractId: "bun-package-license" | "bun-package-readme" | null;
+  readonly projectionContractId: "exact-owner-license-projection" | "exact-owner-readme-projection" | null;
+  readonly referenceOwnerIds: readonly string[];
+  readonly generatorOwnerId: "assets-build" | null;
+  readonly preimage: Readonly<{ sha256: string; mode: string; size: number }>;
+}
+
+/** 📚️ One digest-locked owner catalog, including its concrete consumers and owner evidence. */
+export interface SemanticExactOwnedFileCatalog {
+  readonly cases: readonly SemanticExactOwnedFileCase[];
+  readonly ownerEvidence: Readonly<Record<string, Readonly<{ kind: string; evidencePaths: readonly string[]; expectedPackageName?: string; private?: boolean }>>>;
+  readonly referenceOwners: Readonly<Record<string, Readonly<{ kind: string; ownerPath: string }>>>;
+  readonly generatorOwners: Readonly<Record<string, Readonly<{ ownerPath: string; target: string; currentOutputPath: string; requiredOutputPath: string }>>>;
+}
+
+//#region 📦️Nested Cargo Package Authority
+/** 🧷️ One exact admitted Cargo-package source leaf and its semantic destination. */
+export interface SemanticPackageProjectionMapping {
+  readonly sourcePath: string;
+  readonly destinationPath: string;
+  readonly sourceHash: string;
+  readonly sourceSize: number;
+  readonly disposition: "metadata" | "implementation" | "adapter" | "generated" | "tool-metadata";
+  readonly sourceRole: "implementation" | "unresolved" | null;
+}
+
+/** 🔌️ Deterministic package entry derived from its externally configured semantic target. */
+export interface SemanticPackageAdapter {
+  readonly id: string;
+  readonly path: string;
+  readonly language: "rust" | "typescript";
+  readonly expectedRole: "declaration";
+  readonly targetPaths: readonly string[];
+  readonly content: string;
+}
+
+/** 🧷️ Exact source-owned replacement or registration merge, never a generated-output overwrite. */
+export interface SemanticPackageSourceSplice {
+  readonly id: "library-adapter-replacement" | "renderer-registration-merge";
+  readonly sourcePath: string;
+  readonly destinationPath: string;
+  readonly oldValue: string;
+  readonly newValue: string;
+}
+
+/** 📇️ Source-hash-bound semantic registration output outside every package boundary. */
+export interface SemanticPackageDerivedLeaf {
+  readonly id: "wgpu-renderer-registration";
+  readonly path: string;
+  readonly originSourcePath: string;
+  readonly originSourceHash: string;
+  readonly language: "rust";
+  readonly expectedRole: "implementation";
+  readonly content: string;
+}
+
+/** ♻️ Exact obsolete generated source; canonical bytes are owned independently by its preview. */
+export interface SemanticPackageGeneratedSourceRetirement {
+  readonly sourcePath: string;
+  readonly destinationPath: string;
+  readonly generatorContractId: "wgpu-frame-worker";
+  readonly sourceMode: 420;
+}
+
+/** 🏠️ One exact Cargo identity; standalone fixtures are not inferred from directory basenames. */
+export interface SemanticPackageProjectionCase {
+  readonly id: "wgpu-renderer" | "jcoprobe-guest";
+  readonly sourceRoot: string;
+  readonly destinationRoot: string;
+  readonly semanticOwnerRoot: string;
+  readonly workspaceKind: "repository" | "standalone";
+  readonly identity: Readonly<{ cargoPackageName: string; nodePackageName?: string; nxProjectName?: string }>;
+  readonly requiredManifestEvidence: Readonly<Record<string, unknown>>;
+  readonly ignoredSourcePatterns: readonly string[];
+  readonly mappings: readonly SemanticPackageProjectionMapping[];
+  readonly adapters: readonly SemanticPackageAdapter[];
+  readonly sourceSplices: readonly SemanticPackageSourceSplice[];
+  readonly derivedLeaves: readonly SemanticPackageDerivedLeaf[];
+  readonly joinedPathBindings: readonly SemanticPackageJoinedPathBinding[];
+  readonly generatedSourceRetirements: readonly SemanticPackageGeneratedSourceRetirement[];
+}
+
+//#region 🧵️Source-Owned Joined Paths
+/** 🧵️ Exact local directory binding and its source-owned file reads. */
+export interface SemanticPackageJoinedPathBinding {
+  readonly kind: "source-owned-joined-path-bindings";
+  readonly id: string;
+  readonly consumerRelativePath: string;
+  readonly sourceDirectoryRelativePath: string;
+  readonly destinationDirectory: "semantic-owner";
+  readonly rootBinding: string;
+  readonly directoryBinding: string;
+  readonly reads: readonly Readonly<{ binding: string; relativePath: string }>[];
+}
+
+/** 🧷️ One exact literal operand; executable source bytes are never synthesized. */
+export interface SemanticPackageJoinedPathReference {
+  readonly start: number;
+  readonly end: number;
+  readonly oldValue: string;
+  readonly newValue: string;
+  readonly targetSourcePath: string;
+}
+
+function semanticPackageJoinedPathBindingRecords(contract: SemanticPackageJoinedPathBinding, owner: SemanticPackageProjectionCase) {
+  const reject = (message: string): never => { throw new Error("Nested Cargo joined-path authority: " + message); };
+  const keys = (value: object, expected: readonly string[]) => JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...expected].sort());
+  const identifier = (value: unknown): value is string => typeof value === "string" && /^[A-Za-z_$][\w$]*$/u.test(value);
+  if (!contract || !keys(contract, ["kind", "id", "consumerRelativePath", "sourceDirectoryRelativePath", "destinationDirectory", "rootBinding", "directoryBinding", "reads"]) || contract.kind !== "source-owned-joined-path-bindings" || typeof contract.id !== "string" || !/^[a-z][a-z0-9-]*$/u.test(contract.id) || contract.destinationDirectory !== "semantic-owner" || !identifier(contract.rootBinding) || !identifier(contract.directoryBinding) || !exactOwnerPath(contract.consumerRelativePath) || !exactOwnerPath(contract.sourceDirectoryRelativePath) || !Array.isArray(contract.reads) || contract.reads.length !== 2) return reject("invalid binding contract");
+  if (contract.reads.some((entry) => !entry || !keys(entry, ["binding", "relativePath"]) || !identifier(entry.binding) || !exactOwnerPath(entry.relativePath)) || new Set([contract.rootBinding, contract.directoryBinding, ...contract.reads.map((entry) => entry.binding)]).size !== 4) return reject("ambiguous read binding");
+  const consumers = owner.mappings.filter((mapping) => mapping.sourcePath === owner.sourceRoot + "/" + contract.consumerRelativePath);
+  if (consumers.length !== 1) return reject("consumer must have one exact mapped owner");
+  const consumer = consumers[0]!, sourceDirectory = owner.sourceRoot + "/" + contract.sourceDirectoryRelativePath;
+  const reads = contract.reads.map((entry) => owner.mappings.filter((mapping) => mapping.sourcePath === sourceDirectory + "/" + entry.relativePath));
+  if (reads.some((mappings) => mappings.length !== 1 || mappings[0]!.sourceRole !== "implementation" || !mappings[0]!.destinationPath.startsWith(owner.semanticOwnerRoot + "/")) || new Set(reads.map((mappings) => mappings[0]!.sourcePath)).size !== 2) return reject("read target must have one exact implementation owner");
+  return { consumer, sourceDirectory, reads };
+}
+
+/** 🔐️ Proves three reviewed literal operands using a complete catalog source preimage. */
+export function semanticPackageJoinedPathReferenceAuthority(
+  facts: Readonly<{ path: string; content: string; layout: "source" | "destination" }>,
+  contract: SemanticPackageJoinedPathBinding,
+  owner: SemanticPackageProjectionCase,
+): Readonly<{ references: readonly SemanticPackageJoinedPathReference[]; problems: readonly string[] }> {
+  const reject = (message: string) => ({ references: [], problems: ["Nested Cargo joined-path authority: " + message] });
+  let records: ReturnType<typeof semanticPackageJoinedPathBindingRecords>;
+  try { records = semanticPackageJoinedPathBindingRecords(contract, owner); } catch (error) { return { references: [], problems: [String(error)] }; }
+  const { consumer, sourceDirectory, reads } = records;
+  if (facts.layout !== "source" && facts.layout !== "destination" || facts.path !== (facts.layout === "source" ? consumer.sourcePath : consumer.destinationPath)) return reject("consumer path or phase mismatch");
+  if (facts.layout === "source" && (createHash("sha256").update(facts.content).digest("hex") !== consumer.sourceHash || Buffer.byteLength(facts.content) !== consumer.sourceSize)) return reject("complete source preimage changed");
+  const imports = ['import { readFileSync } from "node:fs";', 'import { dirname, join } from "node:path";', 'import { fileURLToPath } from "node:url";'];
+  if (!facts.content.startsWith(imports.join("\n") + "\n") || imports.some((statement) => facts.content.split(statement).length !== 2)) return reject("binding imports changed");
+  const oldValues = [posix.relative(posix.dirname(consumer.sourcePath), sourceDirectory), ...contract.reads.map((entry) => entry.relativePath)];
+  const newValues = [posix.relative(posix.dirname(consumer.destinationPath), owner.semanticOwnerRoot) || ".", ...reads.map((mappings) => posix.relative(owner.semanticOwnerRoot, mappings[0]!.destinationPath))];
+  const values = facts.layout === "source" ? oldValues : newValues;
+  const statements = [
+    `const ${contract.rootBinding} = dirname(fileURLToPath(import.meta.url));`,
+    `const ${contract.directoryBinding} = join(${contract.rootBinding}, ${JSON.stringify(values[0])});`,
+    ...contract.reads.map((entry, index) => `const ${entry.binding} = readFileSync(join(${contract.directoryBinding}, ${JSON.stringify(values[index + 1])}), "utf8");`),
+  ];
+  const fragment = statements.join("\n    "), fragmentStart = facts.content.indexOf(fragment);
+  if (fragmentStart < 0 || facts.content.indexOf(fragment, fragmentStart + fragment.length) >= 0 || statements.some((statement) => facts.content.split(statement).length !== 2)) return reject("reviewed consecutive binding statements changed");
+  if (facts.layout === "destination") return { references: [], problems: [] };
+  const references = statements.slice(1).map((statement, index) => {
+    const start = fragmentStart + fragment.indexOf(statement) + statement.indexOf(JSON.stringify(oldValues[index])) + 1;
+    return { start, end: start + oldValues[index]!.length, oldValue: oldValues[index]!, newValue: newValues[index]!, targetSourcePath: reads[Math.max(0, index - 1)]![0]!.sourcePath };
+  });
+  return { references, problems: [] };
+}
+//#endregion 🧵️Source-Owned Joined Paths
+
+/** 📚️ Digest-locked nested package catalog and exact live reference owners. */
+export interface SemanticPackageProjectionCatalog {
+  readonly schemaVersion: 1;
+  readonly contractKind: "exact-nested-cargo-package-catalog";
+  readonly packages: readonly SemanticPackageProjectionCase[];
+  readonly referenceConsumers: readonly Readonly<{ packageId: string; path: string; destinationPath?: string; transformId: string; occurrenceCount: number; ownership: "authored" | "generated"; generatorOwnerPaths?: readonly string[] }>[];
+  readonly referenceTokenTransforms: Readonly<Record<string, Readonly<{ sourceToken: string; destinationToken: string }>>>;
+}
+
+/** 🔐️ Loads the exact package catalog without following any parent or leaf symlink. */
+export function semanticPackageProjectionCatalog(repoRoot: string, taxonomy: Taxonomy): SemanticPackageProjectionCatalog | null {
+  const contract = taxonomy.semanticPackageProjectionContracts["nested-cargo-packages-v1"];
+  const state = exactOwnerRegularFile(repoRoot, contract.authorityCatalogPath);
+  if (state === "absent") return null;
+  if (state !== "file") throw new Error("Nested Cargo catalog must be a no-follow regular file");
+  const bytes = readFileSync(join(repoRoot, contract.authorityCatalogPath));
+  if (createHash("sha256").update(bytes).digest("hex") !== contract.authorityCatalogSha256) throw new Error("Nested Cargo catalog digest drift");
+  const catalog = JSON.parse(bytes.toString("utf8")) as SemanticPackageProjectionCatalog;
+  if (catalog.schemaVersion !== 1 || catalog.contractKind !== contract.contractKind || JSON.stringify(catalog.packages.map((row) => row.id)) !== JSON.stringify(contract.packageIds)) throw new Error("Nested Cargo catalog identity drift");
+  const sources = new Set<string>(), destinations = new Set<string>();
+  for (const [index, row] of catalog.packages.entries()) {
+    if (!exactOwnerPath(row.sourceRoot) || !exactOwnerPath(row.destinationRoot) || !exactOwnerPath(row.semanticOwnerRoot) || row.destinationRoot !== `${row.semanticOwnerRoot}/📦️packages/🦀️rust` || row.mappings.length !== contract.sourceLeafCounts[index]) throw new Error("Nested Cargo catalog boundary drift");
+    for (const mapping of row.mappings) {
+      const key = mapping.destinationPath.normalize("NFC").toLocaleLowerCase("und").replaceAll("\ufe0f", "");
+      if (!exactOwnerPath(mapping.sourcePath) || !exactOwnerPath(mapping.destinationPath) || !mapping.sourcePath.startsWith(row.sourceRoot + "/") || !mapping.destinationPath.startsWith(row.semanticOwnerRoot + "/") || !/^[0-9a-f]{64}$/u.test(mapping.sourceHash) || !Number.isSafeInteger(mapping.sourceSize) || mapping.sourceSize < 0 || sources.has(mapping.sourcePath) || destinations.has(key) || Buffer.byteLength(mapping.destinationPath) > taxonomy.collisionPolicy.maxPathBytes) throw new Error("Nested Cargo catalog leaf authority drift");
+      sources.add(mapping.sourcePath);
+      destinations.add(key);
+    }
+    if (!Array.isArray(row.joinedPathBindings) || row.joinedPathBindings.length !== contract.joinedPathBindingCounts[index] || new Set(row.joinedPathBindings.map((binding) => binding.id)).size !== row.joinedPathBindings.length) throw new Error("Nested Cargo joined-path binding census drift");
+    for (const binding of row.joinedPathBindings) semanticPackageJoinedPathBindingRecords(binding, row);
+    if (!Array.isArray(row.generatedSourceRetirements) || row.generatedSourceRetirements.length !== contract.generatedSourceRetirementCounts[index] || new Set(row.generatedSourceRetirements.map((retirement) => retirement.sourcePath)).size !== row.generatedSourceRetirements.length || row.mappings.filter((mapping) => mapping.disposition === "generated").length !== row.generatedSourceRetirements.length) throw new Error("Nested Cargo generated source retirement census drift");
+    for (const retirement of row.generatedSourceRetirements) {
+      const mapping = row.mappings.find((mapping) => mapping.sourcePath === retirement.sourcePath);
+      if (Object.keys(retirement).sort().join("\0") !== "destinationPath\0generatorContractId\0sourceMode\0sourcePath" || row.id !== "wgpu-renderer" || !mapping || mapping.disposition !== "generated" || mapping.destinationPath !== retirement.destinationPath || retirement.generatorContractId !== "wgpu-frame-worker" || retirement.sourceMode !== 0o644 || taxonomy.generatorContracts[retirement.generatorContractId]?.ownership !== "owned") throw new Error("Nested Cargo generated source retirement authority drift");
+    }
+    if (!Array.isArray(row.derivedLeaves) || row.derivedLeaves.length !== (row.id === "wgpu-renderer" ? contract.derivedLeafCount : 0)) throw new Error("Nested Cargo derived leaf census drift");
+    for (const leaf of row.derivedLeaves) {
+      const mapping = row.mappings.find((mapping) => mapping.sourcePath === leaf.originSourcePath);
+      const key = leaf.path.normalize("NFC").toLocaleLowerCase("und").replaceAll("\ufe0f", "");
+      if (leaf.id !== "wgpu-renderer-registration" || leaf.path !== row.semanticOwnerRoot + "/🧊️renderer/📇️registry/🦀️.rs" || !exactOwnerPath(leaf.path) || !mapping || leaf.originSourceHash !== mapping.sourceHash || Buffer.byteLength(leaf.path) > taxonomy.collisionPolicy.maxPathBytes || destinations.has(key) || !taxonomy.semanticDirectoryKinds.registry || classifyPackageSourceRole(leaf.content, taxonomy.packageGlueGrammar.rust) !== leaf.expectedRole) throw new Error("Nested Cargo derived registration authority drift");
+      destinations.add(key);
+    }
+    for (const adapter of row.adapters) {
+      if (!exactOwnerPath(adapter.path) || !adapter.path.startsWith(row.destinationRoot + "/") || Buffer.byteLength(adapter.path) > taxonomy.collisionPolicy.maxPathBytes || adapter.targetPaths.some((path) => !row.mappings.some((mapping) => mapping.destinationPath === path) && !row.derivedLeaves.some((leaf) => leaf.path === path)) || classifyPackageSourceRole(adapter.content, taxonomy.packageGlueGrammar[adapter.language]) !== adapter.expectedRole) throw new Error("Nested Cargo adapter authority drift");
+    }
+    if (!Array.isArray(row.sourceSplices) || row.sourceSplices.length !== (row.id === "wgpu-renderer" ? 2 : 0)) throw new Error("Nested Cargo source splice census drift");
+    for (const splice of row.sourceSplices) if (!row.mappings.some((mapping) => mapping.sourcePath === splice.sourcePath && mapping.destinationPath === splice.destinationPath) || !splice.oldValue || !splice.newValue) throw new Error("Nested Cargo source splice ownership drift");
+    if (row.id === "wgpu-renderer") {
+      const [library, renderer] = row.sourceSplices, mapping = row.mappings.find((mapping) => mapping.sourcePath === library!.sourcePath)!;
+      const registration = library!.oldValue.match(/#\[cfg\(target_arch = "wasm32"\)\][\s\S]*?(?=#\[cfg\(not\(target_os = "wasi"\)\)\]\ninclude!\("📦️glue.rs"\);)/u)?.[0];
+      const split = registration?.indexOf('#[cfg(not(target_os = "wasi"))]') ?? -1;
+      if (library!.id !== "library-adapter-replacement" || renderer!.id !== "renderer-registration-merge" || createHash("sha256").update(library!.oldValue).digest("hex") !== mapping.sourceHash || Buffer.byteLength(library!.oldValue) !== mapping.sourceSize || library!.newValue !== row.adapters.find((adapter) => adapter.id === "wgpu-library")?.content || !registration || split < 0 || renderer!.destinationPath !== row.semanticOwnerRoot + "/🧊️renderer/🦀️.rs" || renderer!.newValue !== registration.slice(0, split) + renderer!.oldValue || row.derivedLeaves[0]!.content !== "//! 📇️ Renderer macro registration.\n\n" + registration.slice(split)) throw new Error("Nested Cargo renderer registration merge authority drift");
+    }
+  }
+  if (catalog.packages.flatMap((row) => row.mappings).filter((row) => row.sourceRole !== null).length !== contract.purityCount || catalog.packages.flatMap((row) => row.adapters).length !== contract.adapterCount) throw new Error("Nested Cargo purity census drift");
+  const generator = taxonomy.generatorContracts["jco-package-adapter"], activation = generator?.projectionActivation, jco = catalog.packages.find((row) => row.id === "jcoprobe-guest")!;
+  if (!activation || activation.kind !== "canonical-or-planned-package" || activation.projectionContractId !== "nested-cargo-packages-v1" || activation.packageId !== jco.id || activation.sourceManifestPath !== `${jco.sourceRoot}/Cargo.toml` || activation.destinationManifestPath !== `${jco.destinationRoot}/Cargo.toml` || jco.mappings.some((mapping) => !generator.inputPatterns.includes(mapping.sourcePath) || !generator.inputPatterns.includes(mapping.destinationPath)) || JSON.stringify(generator.outputRoots) !== JSON.stringify(jco.adapters.map((adapter) => ({ path: adapter.path, inclusion: "tracked" })))) throw new Error("Nested Cargo generator activation authority drift");
+  return catalog;
+}
+
+function nestedCargoField(content: string, section: string, key: string): unknown {
+  const escaped = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  content = content.replace(/"(?:\\.|[^"\\])*"|#[^\r\n]*/gu, (token) => token.startsWith("#") ? "" : token);
+  if ([...content.matchAll(new RegExp(`^\\s*\\[${escaped(section)}\\]\\s*(?:#.*)?$`, "gmu"))].length !== 1) return undefined;
+  const body = tomlTableBody(content, section);
+  if (body === undefined) return undefined;
+  const values = [...body.matchAll(new RegExp(`^\\s*${escaped(key)}\\s*=\\s*("[^"\\r\\n]*"|false|true|\\[[\\s\\S]*?\\])\\s*(?:#.*)?$`, "gmu"))];
+  if (values.length !== 1) return undefined;
+  try { return JSON.parse(values[0]![1]!.replace(/,\s*\]/gu, "]")); } catch { return undefined; }
+}
+
+/** 🧭️ Validates complete source or canonical package facts; no physical reads occur here. */
+export function semanticPackageProjectionAuthority(
+  facts: Readonly<{ packageId: string; nodes: readonly SemanticProjectionAuthorityNode[]; layout?: "source" | "destination"; occupiedPaths?: readonly string[]; cargoWorkspaceContent?: string; nodeWorkspaceContent?: string }>,
+  catalog: SemanticPackageProjectionCatalog,
+  taxonomy: Taxonomy,
+): Readonly<{ packageId: string; mappings: readonly SemanticPackageProjectionMapping[]; adapters: readonly SemanticPackageAdapter[]; sourceDigest: string; problems: readonly string[] }> {
+  const row = catalog.packages.find((entry) => entry.id === facts.packageId), problems: string[] = [];
+  const finish = () => ({ packageId: facts.packageId, mappings: problems.length ? [] : row!.mappings, adapters: problems.length ? [] : row!.adapters, sourceDigest: createHash("sha256").update(JSON.stringify([...facts.nodes].sort((a, b) => projectionByteCompare(a.path, b.path)))).digest("hex"), problems });
+  if (!row) { problems.push("Unregistered nested Cargo package identity"); return finish(); }
+  const memberId = row.id === "wgpu-renderer" ? "members-of-wgpu-target" : "members-of-jco-guest";
+  const ownerKind = row.id === "wgpu-renderer" ? "wgpu-target" : "jco-guest";
+  const members = taxonomy.semanticDirectoryMemberKinds[memberId];
+  const requiredMembers = row.mappings.filter((mapping) => !mapping.destinationPath.startsWith(row.destinationRoot + "/")).map((mapping) => mapping.destinationPath.slice(row.semanticOwnerRoot.length + 1).split("/")[0]!);
+  if (!taxonomy.semanticDirectoryKinds[ownerKind] || members?.source !== "registry" || !members.ownerKindIds.includes(ownerKind) || requiredMembers.some((member) => !members.memberNames.includes(member))) problems.push("Nested Cargo semantic owner/member registration is missing");
+  const boundary = taxonomy.packageBoundaryRules["🦀️rust"];
+  const requiredEntries = row.id === "wgpu-renderer" ? ["rust-library-entry", "rust-binary-entry", "rust-build-entry", "vitest-config-entry"] : ["rust-library-entry"];
+  if (!boundary || requiredEntries.some((id) => !taxonomy.configurableEntryContracts[id] || !taxonomy.packageSourceDispositions[id]) || (row.id === "wgpu-renderer" ? ["library", "binary", "builder", "tests", "typescript-language"] : ["library"]).some((id) => !boundary?.allowedDirectoryKindIds.includes(id))) problems.push("Nested Cargo package boundary prerequisite is missing");
+  const cargoEntries = requiredEntries.filter((id) => id.startsWith("rust-"));
+  if (cargoEntries.some((id) => !boundary?.entryContractIds.includes(id) || !taxonomy.ecosystems["🦀️rust"]?.entryContractIds?.includes(id) || row.id === "wgpu-renderer" && !taxonomy.targets["🧊️wgpu"]?.entryContractIds?.includes(id))) problems.push("Nested Cargo configured entry is absent from a package, ecosystem or target registry");
+  if (problems.length > 0) return finish();
+  const destination = facts.layout === "destination";
+  const expected = new Map(row.mappings.map((mapping) => [destination ? mapping.destinationPath : mapping.sourcePath, mapping]));
+  const adapters = new Map(row.adapters.map((adapter) => [adapter.path, adapter]));
+  const derived = new Map(row.derivedLeaves.map((leaf) => [leaf.path, leaf]));
+  const expectedPaths = new Set([...expected.keys(), ...(destination ? [...adapters.keys(), ...derived.keys()] : [])]);
+  const allowedDirectories = new Set<string>();
+  for (const path of expectedPaths) for (let parent = dirname(path); parent !== "."; parent = dirname(parent)) allowedDirectories.add(parent);
+  const nodes = new Map<string, SemanticProjectionAuthorityNode>();
+  for (const node of facts.nodes) {
+    if (!exactOwnerPath(node.path) || nodes.has(node.path) || !["file", "directory"].includes(node.nodeKind) || node.nodeKind === "directory" && !allowedDirectories.has(node.path) || node.nodeKind === "file" && !expectedPaths.has(node.path)) { problems.push("Unadmitted or duplicate nested Cargo node: " + node.path); continue; }
+    nodes.set(node.path, node);
+  }
+  for (const path of expectedPaths) {
+    const node = nodes.get(path), mapping = expected.get(path), adapter = destination ? adapters.get(path) : undefined;
+    if (node?.nodeKind !== "file" || typeof node.content !== "string") { problems.push("Missing nested Cargo regular leaf: " + path); continue; }
+    if (!destination && mapping && (createHash("sha256").update(node.content).digest("hex") !== mapping.sourceHash || Buffer.byteLength(node.content) !== mapping.sourceSize)) problems.push("Nested Cargo source preimage drift: " + path);
+    if (adapter && node.content !== adapter.content) problems.push("Nested Cargo canonical adapter bytes drift: " + path);
+    if (destination && derived.has(path) && node.content !== derived.get(path)!.content) problems.push("Nested Cargo canonical registration bytes drift: " + path);
+  }
+  for (const splice of row.sourceSplices) {
+    const content = nodes.get(destination ? splice.destinationPath : splice.sourcePath)?.content ?? "", value = destination ? splice.newValue : splice.oldValue;
+    if (!content.startsWith(value) || content.split(value).length - 1 !== 1) problems.push("Nested Cargo registration or adapter splice drift: " + splice.id);
+  }
+  if (problems.length === 0) for (const binding of row.joinedPathBindings) {
+    const mapping = row.mappings.find((entry) => entry.sourcePath === row.sourceRoot + "/" + binding.consumerRelativePath)!;
+    const path = destination ? mapping.destinationPath : mapping.sourcePath;
+    problems.push(...semanticPackageJoinedPathReferenceAuthority({ path, content: nodes.get(path)!.content!, layout: destination ? "destination" : "source" }, binding, row).problems);
+  }
+  if (!destination) {
+    const fold = (path: string): string => path.normalize("NFC").toLocaleLowerCase("und").replaceAll("\ufe0f", "");
+    const outputPaths = new Set([...row.mappings.map((mapping) => mapping.destinationPath), ...adapters.keys(), ...derived.keys()]);
+    for (const path of facts.occupiedPaths ?? []) if ([...outputPaths].some((output) => fold(path) === fold(output) || fold(output).startsWith(fold(path) + "/")) && !allowedDirectories.has(path)) problems.push("Nested Cargo destination collision: " + path);
+  }
+  const activeRoot = destination ? row.destinationRoot : row.sourceRoot;
+  const manifest = nodes.get(activeRoot + "/Cargo.toml")?.content ?? "";
+  if (nestedCargoField(manifest, "package", "name") !== row.identity.cargoPackageName) problems.push("Nested Cargo package name is not the exact registered identity");
+  if (nestedCargoField(manifest, "lib", "path") !== (destination ? "📚️library/🦀️.rs" : row.id === "wgpu-renderer" ? "🦀️lib.rs" : "🦀️component.rs")) problems.push("Nested Cargo library entry authority drift");
+  if (JSON.stringify(nestedCargoField(manifest, "lib", "crate-type")) !== JSON.stringify(row.id === "wgpu-renderer" ? ["cdylib", "rlib"] : ["cdylib"])) problems.push("Nested Cargo crate-type authority drift");
+  if (row.workspaceKind === "standalone") {
+    const workspace = tomlTableBody(manifest, "workspace");
+    if (workspace === undefined || workspace.replace(/#[^\r\n]*/gu, "").trim() !== "" || [...manifest.matchAll(/^\s*\[workspace\]\s*$/gmu)].length !== 1 || nestedCargoField(manifest, "package", "publish") !== false) problems.push("JCO requires its exact empty standalone workspace and non-publishing package");
+    const lock = nodes.get(activeRoot + "/Cargo.lock")?.content ?? "";
+    if (!lock.startsWith("# This file is automatically @generated by Cargo.\n") || !/^version = 4$/mu.test(lock) || !lock.includes('name = "semio-jcoprobe-guest"')) problems.push("JCO Cargo lock authority drift");
+    const wit = nodes.get(activeRoot + "/🧬️schema/📜️world.wit")?.content ?? "";
+    if (!wit.includes("package semio:jcoprobe@0.1.0;") || !/\bworld\s+jcoprobe\s*\{/u.test(wit)) problems.push("JCO WIT world identity drift");
+    const implementation = nodes.get(destination ? row.semanticOwnerRoot + "/🧩️component/🦀️.rs" : row.sourceRoot + "/🦀️component.rs")?.content ?? "";
+    if ([...implementation.matchAll(/^wit_bindgen::generate!\(\{\s*path:\s*"🧬️schema\/📜️world\.wit",\s*world:\s*"jcoprobe",\s*async:\s*true,?\s*\}\);/gmu)].length !== 1 || [...implementation.matchAll(/^wit_bindgen::generate!/gmu)].length !== 1) problems.push("JCO WIT binding must retain its exact Cargo-manifest-relative authority");
+  } else {
+    if (nestedCargoField(manifest, "package.metadata.semio", "role") !== "framework" || nestedCargoField(manifest, "package.metadata.semio", "id") !== "renderer-wgpu" || nestedCargoField(manifest, "package", "build") !== (destination ? "🏗️builder/🦀️.rs" : "build.rs")) problems.push("WGPU Cargo target/role authority drift");
+    const binary = manifest.replace(/^[ \t]*\[\[bin\]\][ \t]*$/gmu, "[bin]");
+    if (nestedCargoField(binary, "bin", "name") !== "semio-wgpu-native" || nestedCargoField(binary, "bin", "path") !== (destination ? "💾️binary/🦀️.rs" : "📦️bin.rs") || JSON.stringify(nestedCargoField(binary, "bin", "required-features")) !== JSON.stringify(["native-bin"])) problems.push("WGPU Cargo binary entry authority drift");
+    if (!(nestedCargoField(facts.cargoWorkspaceContent ?? "", "workspace", "members") as unknown[] | undefined)?.includes(activeRoot)) problems.push("WGPU is absent from the exact root Cargo workspace");
+    try {
+      const workspace = JSON.parse(facts.nodeWorkspaceContent ?? "null"), node = JSON.parse(nodes.get(activeRoot + "/package.json")?.content ?? "null"), nx = JSON.parse(nodes.get(activeRoot + "/📋️project.json")?.content ?? "null");
+      if (!Array.isArray(workspace?.workspaces) || !workspace.workspaces.includes(activeRoot) || node?.name !== row.identity.nodePackageName || node?.exports?.["."] !== (destination ? "./🟦️typescript/📚️library/🟦️.ts" : "./📦️index.ts") || nx?.name !== row.identity.nxProjectName || nx?.sourceRoot !== activeRoot || !nx?.targets || Object.values(nx.targets).some((target) => (target as { options?: { cwd?: string } }).options?.cwd !== activeRoot) || destination && (!nx?.namedInputs?.default?.includes(`{workspaceRoot}/${row.semanticOwnerRoot}/**/*`) || node?.repository?.directory !== row.destinationRoot)) problems.push("WGPU Node/Nx workspace identity drift");
+    } catch { problems.push("WGPU requires valid Node and Nx manifest evidence"); }
+    const configPath = destination ? "🟦️typescript/🧪️tests/🟦️.ts" : "🧪️vitest.config.ts";
+    const config = nodes.get(activeRoot + "/" + configPath)?.content ?? "", script = nodes.get(activeRoot + "/📜️script.ts")?.content ?? "";
+    if (classifyPackageSourceDisposition(config, taxonomy.packageSourceDispositions["vitest-config-entry"]!, taxonomy.packageGlueGrammar.typescript!) !== "tool-metadata" || script.split(JSON.stringify(configPath)).length !== 4) problems.push("WGPU exact Vitest configuration authority drift");
+  }
+  for (const mapping of row.mappings.filter((entry) => entry.sourceRole !== null && entry.disposition !== "adapter" && entry.disposition !== "tool-metadata")) {
+    const path = destination ? mapping.destinationPath : mapping.sourcePath, content = nodes.get(path)?.content;
+    const grammar = taxonomy.packageGlueGrammar[path.endsWith(".rs") ? "rust" : path.endsWith(".js") ? "javascript" : "typescript"];
+    if (content !== undefined && classifyPackageSourceRole(content, grammar) !== mapping.sourceRole) problems.push("Nested Cargo implementation role drift: " + path);
+  }
+  return finish();
+}
+function semanticPackageGenerationAuthority(repoRoot: string, packageId: SemanticPackageProjectionCase["id"], taxonomy: Taxonomy) {
+  const catalog = semanticPackageProjectionCatalog(repoRoot, taxonomy);
+  const row = catalog?.packages.find((entry) => entry.id === packageId);
+  if (!catalog || !row) throw new Error("Package adapter catalog is unavailable");
+  const source = exactOwnerRegularFile(repoRoot, row.sourceRoot + "/Cargo.toml"), destination = exactOwnerRegularFile(repoRoot, row.destinationRoot + "/Cargo.toml");
+  if (source === "invalid" || destination === "invalid" || Number(source === "file") + Number(destination === "file") !== 1) throw new Error("Package adapter requires exactly one source or canonical package");
+  const canonical = destination === "file";
+  const paths = [...new Set(row.mappings.map((mapping) => canonical ? mapping.destinationPath : mapping.sourcePath))];
+  const nodes: SemanticProjectionAuthorityNode[] = paths.map((path) => {
+    if (exactOwnerRegularFile(repoRoot, path) !== "file") throw new Error("Package adapter source is not a no-follow regular file: " + path);
+    return { path, nodeKind: "file", content: readFileSync(join(repoRoot, path), "utf8") };
+  });
+  const generated = [...row.adapters.filter((adapter) => !row.mappings.some((mapping) => mapping.destinationPath === adapter.path)), ...row.derivedLeaves];
+  for (const leaf of [...row.adapters, ...row.derivedLeaves]) {
+    const state = exactOwnerRegularFile(repoRoot, leaf.path);
+    if (state === "invalid" || !canonical && state !== "absent") throw new Error("Package generated destination is occupied or invalid: " + leaf.path);
+    if (canonical && !paths.includes(leaf.path)) nodes.push({ path: leaf.path, nodeKind: "file", content: state === "file" ? readFileSync(join(repoRoot, leaf.path), "utf8") : leaf.content });
+  }
+  const workspace = (path: string): string | undefined => {
+    if (row.workspaceKind !== "repository") return undefined;
+    if (exactOwnerRegularFile(repoRoot, path) !== "file") throw new Error("Package workspace evidence is not a no-follow regular file: " + path);
+    return readFileSync(join(repoRoot, path), "utf8");
+  };
+  const authority = semanticPackageProjectionAuthority({ packageId, nodes, layout: canonical ? "destination" : "source", cargoWorkspaceContent: workspace("Cargo.toml"), nodeWorkspaceContent: workspace("package.json") }, catalog, taxonomy);
+  if (authority.problems.length) throw new Error(authority.problems.join(" | "));
+  return { authority, generated };
+}
+/** 🧩️ Renders package adapter bytes only from complete no-follow package authority. */
+export function semanticPackageAdapterPreview(repoRoot: string, packageId: "jcoprobe-guest", taxonomy: Taxonomy = loadTaxonomy()): readonly SemanticPackageAdapter[] {
+  return semanticPackageGenerationAuthority(repoRoot, packageId, taxonomy).authority.adapters;
+}
+/** 🏗️ Renders only new generated leaves, excluding authored mappings and their source splices. */
+export function semanticPackageGeneratedLeafPreview(repoRoot: string, packageId: SemanticPackageProjectionCase["id"], taxonomy: Taxonomy = loadTaxonomy()): readonly Readonly<{ path: string; content: string }>[] {
+  return semanticPackageGenerationAuthority(repoRoot, packageId, taxonomy).generated.map(({ path, content }) => ({ path, content })).sort((left, right) => projectionByteCompare(left.path, right.path));
+}
+function nestedCargoGeneratedPrestate(repoRoot: string, path: string, generatorId: string, taxonomy: Taxonomy): boolean {
+  if (!["jco-package-adapter", "external-cargo-locks"].includes(generatorId)) return false;
+  try {
+    if (generatorId === "jco-package-adapter") return semanticPackageAdapterPreview(repoRoot, "jcoprobe-guest", taxonomy).some((adapter) => adapter.path === path);
+    const row = semanticPackageProjectionCatalog(repoRoot, taxonomy)?.packages.find((entry) => entry.id === "jcoprobe-guest");
+    const mapping = row?.mappings.find((entry) => entry.destinationPath === path && basename(entry.sourcePath) === "Cargo.lock");
+    return Boolean(mapping && exactOwnerRegularFile(repoRoot, mapping.sourcePath) === "file" && createHash("sha256").update(readFileSync(join(repoRoot, mapping.sourcePath))).digest("hex") === mapping.sourceHash);
+  } catch { return false; }
+}
+//#endregion 📦️Nested Cargo Package Authority
+
+function exactOwnerPath(path: unknown): path is string {
+  return typeof path === "string" && path.length > 0 && path === path.normalize("NFC") && !path.startsWith("/") && !path.includes("\\") && !/[\u0000-\u001f]/u.test(path) && path.split("/").every((part) => part !== "" && part !== "." && part !== "..") && !["compose", "temp/compose"].some((root) => path === root || path.startsWith(root + "/"));
+}
+
+//#region 🖋️Exact Authored Owner Documents
+/** 📏️ Validates the closed language-neutral authored-document correction grammar. */
+export function parseSemanticOwnedDocumentCorrections(input: unknown): Readonly<Record<string, SemanticOwnedDocumentCorrection>> {
+  const record = (value: unknown, keys: readonly string[], label: string): Record<string, unknown> => {
+    if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join("\0") !== [...keys].sort().join("\0")) throw new Error(`Invalid authored document ${label} fields`);
+    return value as Record<string, unknown>;
+  };
+  const rows = record(input, ["repo-library-script-filename-v1"], "registry");
+  for (const [id, value] of Object.entries(rows)) {
+    const row = record(value, ["contractKind", "activation", "sourcePath", "destinationPath", "preimage", "postimage", "replacementFixedFilenameContractId", "splices", "rationaleRule"], id);
+    if (row.contractKind !== "exact-owner-content-splices" || row.activation !== "owner-leaf-move" || row.replacementFixedFilenameContractId !== "root-script" || row.rationaleRule !== "owner-script-filename-documentation-v1" || !exactOwnerPath(row.sourcePath) || !row.sourcePath.endsWith("/README.md") || !exactOwnerPath(row.destinationPath) || row.destinationPath !== dirname(row.sourcePath) + "/📃️readme/📝️.md") throw new Error(`Invalid authored document ${id} owner or activation`);
+    const preimage = record(row.preimage, ["sha256", "mode", "size"], id + " preimage"), postimage = record(row.postimage, ["sha256", "size"], id + " postimage");
+    if (typeof preimage.sha256 !== "string" || !/^[0-9a-f]{64}$/u.test(preimage.sha256) || preimage.mode !== "0644" || !Number.isSafeInteger(preimage.size) || (preimage.size as number) < 0 || typeof postimage.sha256 !== "string" || !/^[0-9a-f]{64}$/u.test(postimage.sha256) || !Number.isSafeInteger(postimage.size) || (postimage.size as number) < 0) throw new Error(`Invalid authored document ${id} preimage or postimage`);
+    if (!Array.isArray(row.splices) || row.splices.length !== 10) throw new Error(`Authored document ${id} requires exactly ten filename splices`);
+    let previousEnd = 0, previousLine = 0, delta = 0;
+    for (const value of row.splices) {
+      const splice = record(value, ["line", "startByte", "endByte", "oldValue", "newValue", "linePreimage"], id + " splice");
+      if (!Number.isSafeInteger(splice.line) || (splice.line as number) < 1 || (splice.line as number) < previousLine || !Number.isSafeInteger(splice.startByte) || (splice.startByte as number) < previousEnd || !Number.isSafeInteger(splice.endByte) || (splice.endByte as number) > (preimage.size as number) || splice.oldValue !== "script.ts" || splice.newValue !== "📜️script.ts" || (splice.endByte as number) - (splice.startByte as number) !== Buffer.byteLength(splice.oldValue) || typeof splice.linePreimage !== "string" || splice.linePreimage.includes("\n") || !splice.linePreimage.includes(splice.oldValue)) throw new Error(`Invalid, repeated, or overlapping authored document ${id} splice`);
+      previousEnd = splice.endByte as number;
+      previousLine = splice.line as number;
+      delta += Buffer.byteLength(splice.newValue) - Buffer.byteLength(splice.oldValue);
+    }
+    if ((postimage.size as number) !== (preimage.size as number) + delta) throw new Error(`Authored document ${id} postimage size does not match its splices`);
+  }
+  return rows as unknown as Readonly<Record<string, SemanticOwnedDocumentCorrection>>;
+}
+
+/** 🧩️ Produces exact UTF-16 edit offsets from byte-bound authored authority without modifying the frozen source. */
+export function semanticExactOwnedDocumentCorrectionAuthority(catalog: SemanticExactOwnedFileCatalog, contract: SemanticExactOwnedFileProjectionContract, facts: Readonly<{ path: string; finalPath: string; content: string; mode: number; moving: boolean }>): Readonly<{ disposition: "none" | "rewrite" | "problem"; splices: readonly Readonly<{ start: number; end: number; oldValue: string; newValue: string; correctionId: string }>[]; problems: readonly string[] }> {
+  const failure = (message: string) => ({ disposition: "problem" as const, splices: [], problems: [message] });
+  let corrections: Readonly<Record<string, SemanticOwnedDocumentCorrection>>;
+  try { corrections = parseSemanticOwnedDocumentCorrections(contract.authoredDocumentCorrections); } catch (error) { return failure(error instanceof Error ? error.message : String(error)); }
+  if (!facts.moving) return { disposition: "none", splices: [], problems: [] };
+  const selected = Object.entries(corrections).find(([, row]) => row.sourcePath === facts.path);
+  if (!selected) return { disposition: "none", splices: [], problems: [] };
+  const [id, row] = selected;
+  const owner = catalog.cases.find((entry) => entry.sourcePath === row.sourcePath);
+  if (!owner || owner.disposition !== "owner-documentation-relocate" || owner.generatorOwnerId !== null || owner.destinationPath !== row.destinationPath || facts.finalPath !== row.destinationPath || owner.preimage.sha256 !== row.preimage.sha256 || owner.preimage.mode !== row.preimage.mode || owner.preimage.size !== row.preimage.size) return failure(`Authored document ${id} does not match its frozen owner move`);
+  const bytes = Buffer.from(facts.content), hash = (value: string | Buffer): string => createHash("sha256").update(value).digest("hex");
+  if (hash(bytes) !== row.preimage.sha256 || bytes.byteLength !== row.preimage.size || facts.mode !== Number.parseInt(row.preimage.mode, 8)) return failure(`Authored document ${id} source preimage drifted`);
+  const lines = facts.content.split("\n");
+  const splices: { start: number; end: number; oldValue: string; newValue: string; correctionId: string }[] = [];
+  for (const splice of row.splices) {
+    const prefix = bytes.subarray(0, splice.startByte), selected = bytes.subarray(splice.startByte, splice.endByte);
+    const prefixText = prefix.toString("utf8"), oldValue = selected.toString("utf8");
+    if (!Buffer.from(prefixText).equals(prefix) || !Buffer.from(oldValue).equals(selected) || oldValue !== splice.oldValue || prefixText.split("\n").length !== splice.line || lines[splice.line - 1] !== splice.linePreimage) return failure(`Authored document ${id} exact span or line context drifted`);
+    splices.push({ start: prefixText.length, end: prefixText.length + oldValue.length, oldValue, newValue: splice.newValue, correctionId: id });
+  }
+  const result = [...splices].reverse().reduce((text, splice) => text.slice(0, splice.start) + splice.newValue + text.slice(splice.end), facts.content);
+  if (hash(result) !== row.postimage.sha256 || Buffer.byteLength(result) !== row.postimage.size) return failure(`Authored document ${id} resulting content drifted`);
+  return { disposition: "rewrite", splices, problems: [] };
+}
+//#endregion 🖋️Exact Authored Owner Documents
+
+function exactOwnerRegularFile(repoRoot: string, path: string): "file" | "absent" | "invalid" {
+  if (!exactOwnerPath(path)) return "invalid";
+  const segments = path.split("/");
+  for (let index = 0; index < segments.length; index++) {
+    let stat;
+    try { stat = lstatSync(join(repoRoot, ...segments.slice(0, index + 1))); } catch (error) { return (error as NodeJS.ErrnoException).code === "ENOENT" ? "absent" : "invalid"; }
+    if (stat.isSymbolicLink() || (index < segments.length - 1 ? !stat.isDirectory() : !stat.isFile())) return "invalid";
+  }
+  return "file";
+}
+
+/** 🔐️ Loads only the schema-registered catalog with exact bytes, paths, counts, and owner classifications. */
+export function semanticExactOwnedFileCatalog(repoRoot: string, taxonomy: Taxonomy): SemanticExactOwnedFileCatalog | null {
+  const contract = taxonomy.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];
+  if (contract?.contractKind !== "exact-owner-path-catalog") return null;
+  const path = contract.authorityCatalogPath;
+  const state = exactOwnerRegularFile(repoRoot, path);
+  if (state === "absent") return null;
+  if (state !== "file") throw new Error("Exact owner catalog must be a regular file beneath non-symlink parents");
+  const bytes = readFileSync(join(repoRoot, path));
+  if (createHash("sha256").update(bytes).digest("hex") !== contract.authorityCatalogSha256) throw new Error("Exact owner catalog digest drift: " + path);
+  const value = JSON.parse(bytes.toString("utf8")) as Record<string, unknown>;
+  const object = (input: unknown): Record<string, unknown> => {
+    if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Exact owner catalog requires object records");
+    return input as Record<string, unknown>;
+  };
+  const ownerEvidence = object(value.ownerEvidence) as unknown as SemanticExactOwnedFileCatalog["ownerEvidence"];
+  const referenceOwners = object(value.referenceOwners) as unknown as SemanticExactOwnedFileCatalog["referenceOwners"];
+  const generatorOwners = object(value.generatorOwners) as unknown as SemanticExactOwnedFileCatalog["generatorOwners"];
+  if (value.schemaVersion !== 1 || value.cohortId !== "nested-readme-license-owner-authority" || !Array.isArray(value.cases)) throw new Error("Exact owner catalog schema is invalid");
+  for (const evidence of Object.values(ownerEvidence)) {
+    if (!(contract.ownerEvidenceKinds as readonly string[]).includes(evidence.kind) || !Array.isArray(evidence.evidencePaths) || evidence.evidencePaths.some((path) => !exactOwnerPath(path))) throw new Error("Exact owner catalog has invalid owner evidence");
+  }
+  if (JSON.stringify(Object.keys(referenceOwners).sort()) !== JSON.stringify([...contract.referenceOwnerIds].sort()) || JSON.stringify(Object.keys(generatorOwners).sort()) !== JSON.stringify([...contract.generatorOwnerIds].sort())) throw new Error("Exact owner catalog consumer registries drifted");
+  for (const [id, consumer] of Object.entries(referenceOwners)) if (typeof consumer.kind !== "string" || typeof consumer.ownerPath !== "string" || ["repo-cli-dev-docs-go", "commonmark-scratch-rust-reader", "vscode-package-ignore"].includes(id) && !exactOwnerPath(consumer.ownerPath)) throw new Error("Exact owner catalog has invalid concrete consumer: " + id);
+  const sources = new Set<string>(), destinations = new Set<string>();
+  const counts = { fixed: 0, license: 0, projected: 0, readme: 0, referenceBindings: 0, total: value.cases.length };
+  const cases = value.cases.map((input) => {
+    const row = object(input) as unknown as SemanticExactOwnedFileCase;
+    const sourceBasename = typeof row.sourcePath === "string" ? basename(row.sourcePath) : "";
+    if (!exactOwnerPath(row.sourcePath) || !exactOwnerPath(row.destinationPath) || !(contract.sourceBasenames as readonly string[]).includes(sourceBasename) || !contract.allowedDispositions.includes(row.disposition) || !ownerEvidence[row.ownerEvidenceId] || sources.has(row.sourcePath) || destinations.has(row.destinationPath) || Buffer.byteLength(row.destinationPath) > 240) throw new Error("Exact owner catalog has invalid or duplicate source/destination ownership");
+    const readme = sourceBasename === "README.md";
+    const kind = contract.destinationDirectoryKinds[readme ? "readme" : "license"];
+    const evidenceKind = ownerEvidence[row.ownerEvidenceId].kind;
+    const expectedDisposition = evidenceKind === "package-publication" ? "fixed" : evidenceKind === "third-party-attribution" ? "attribution-relocate" : evidenceKind === "configurable-owner-license" ? "configurable-owner-license-relocate" : evidenceKind === "ticket-evidence" || evidenceKind === "ticket-scratch" ? "generated-evidence-relocate" : "owner-documentation-relocate";
+    const fixed = row.disposition === "fixed";
+    if (row.disposition !== expectedDisposition || row.destinationPath !== (fixed ? row.sourcePath : dirname(row.sourcePath) + "/" + kind.directoryName + "/" + kind.filename) || row.fixedContractId !== (fixed ? readme ? "bun-package-readme" : "bun-package-license" : null) || row.projectionContractId !== (fixed ? null : readme ? "exact-owner-readme-projection" : "exact-owner-license-projection")) throw new Error("Exact owner catalog classification or semantic destination drifted: " + row.sourcePath);
+    if (!row.preimage || !/^[0-9a-f]{64}$/u.test(row.preimage.sha256) || row.preimage.mode !== "0644" || !Number.isSafeInteger(row.preimage.size) || row.preimage.size < 0 || !Array.isArray(row.referenceOwnerIds) || row.referenceOwnerIds.length === 0 || new Set(row.referenceOwnerIds).size !== row.referenceOwnerIds.length || row.referenceOwnerIds.some((id) => !referenceOwners[id])) throw new Error("Exact owner catalog leaf/reference evidence is invalid: " + row.sourcePath);
+    if (row.generatorOwnerId !== null) {
+      const generator = generatorOwners[row.generatorOwnerId], registered = taxonomy.generatorContracts[row.generatorOwnerId];
+      if (!generator || !registered || generator.currentOutputPath !== row.sourcePath || generator.requiredOutputPath !== row.destinationPath || generator.ownerPath !== registered.ownerPath || generator.target !== registered.target || !registered.outputRoots.some((output) => output.path === row.destinationPath) || registered.outputRoots.some((output) => output.path === row.sourcePath)) throw new Error("Exact owner catalog generator registration drifted: " + row.sourcePath);
+    }
+    counts[readme ? "readme" : "license"]++;
+    counts[fixed ? "fixed" : "projected"]++;
+    counts.referenceBindings += row.referenceOwnerIds.length;
+    sources.add(row.sourcePath);
+    destinations.add(row.destinationPath);
+    return row;
+  });
+  if (Object.keys(counts).some((key) => counts[key as keyof typeof counts] !== contract.expectedCounts[key as keyof typeof counts])) throw new Error("Exact owner catalog census drifted");
+  return { cases, ownerEvidence, referenceOwners, generatorOwners };
+}
+
+/** 🧭️ Resolves an exact owner leaf from language-neutral facts; raw-source bytes authorize projection once. */
+export function semanticExactOwnedFileProjectionAuthority(catalog: SemanticExactOwnedFileCatalog, facts: Readonly<{ path: string; nodeKind: string; contentHash: string; mode: number; size: number; sourcePresent: boolean; destinationPresent: boolean; destinationPreimage?: Readonly<{ contentHash: string; mode: number; size: number }>; occupiedPaths: readonly string[] }>): Readonly<{ disposition: "none" | "fixed" | "project" | "regenerate" | "canonical" | "problem"; entry: SemanticExactOwnedFileCase | null; problems: readonly string[] }> {
+  const entry = catalog.cases.find((entry) => entry.sourcePath === facts.path || entry.destinationPath === facts.path);
+  if (!entry) return { disposition: "none", entry: null, problems: [] };
+  const problems: string[] = [];
+  const fixed = entry.disposition === "fixed", raw = facts.path === entry.sourcePath;
+  const convergentGenerator = entry.generatorOwnerId !== null && facts.destinationPreimage?.contentHash === entry.preimage.sha256 && facts.destinationPreimage?.mode === Number.parseInt(entry.preimage.mode, 8) && facts.destinationPreimage?.size === entry.preimage.size;
+  if (facts.nodeKind !== "file") problems.push("Owner leaf must be a regular file");
+  if (!fixed && facts.sourcePresent && facts.destinationPresent && !convergentGenerator) problems.push("Raw and projected owner leaves coexist");
+  if (raw && (facts.contentHash !== entry.preimage.sha256 || facts.mode !== Number.parseInt(entry.preimage.mode, 8) || facts.size !== entry.preimage.size)) problems.push("Frozen owner leaf preimage drifted");
+  const fold = (path: string): string => path.normalize("NFC").replaceAll("\uFE0F", "").toLocaleLowerCase("und");
+  if (!fixed && raw && facts.occupiedPaths.some((path) => path !== entry.sourcePath && !(convergentGenerator && path === entry.destinationPath) && fold(path) === fold(entry.destinationPath))) problems.push("Projected owner destination is occupied or folded-colliding");
+  return { disposition: problems.length ? "problem" : fixed ? "fixed" : raw ? entry.generatorOwnerId ? "regenerate" : "project" : "canonical", entry, problems };
+}
+
+function exactOwnerGeneratorPrestate(repoRoot: string, outputPath: string, generatorId: string, catalog: SemanticExactOwnedFileCatalog | null): boolean {
+  const entry = catalog?.cases.find((entry) => entry.generatorOwnerId === generatorId && entry.destinationPath === outputPath);
+  if (!entry || exactOwnerRegularFile(repoRoot, entry.sourcePath) !== "file") return false;
+  const stat = lstatSync(join(repoRoot, entry.sourcePath)), bytes = readFileSync(join(repoRoot, entry.sourcePath));
+  return (stat.mode & 0o7777) === Number.parseInt(entry.preimage.mode, 8) && bytes.byteLength === entry.preimage.size && createHash("sha256").update(bytes).digest("hex") === entry.preimage.sha256;
+}
+
 export function validateGeneratorContractsAgainstWorkspace(repoRoot: string, taxonomy: Taxonomy = readTaxonomyUnchecked()): string[] {
   const problems: string[] = [];
   const root = resolve(repoRoot);
+  const catalog = semanticExactOwnedFileCatalog(root, taxonomy);
   for (const [id, contract] of Object.entries(taxonomy.generatorContracts ?? {})) {
     if (contract.target) {
       if (!contract.ownerPath) {
@@ -2750,7 +3943,7 @@ export function validateGeneratorContractsAgainstWorkspace(repoRoot: string, tax
     for (const output of contract.outputRoots ?? []) {
       const owners = generatorContractIdsForOutputPath(output.path, taxonomy);
       if (owners.length !== 1 || owners[0] !== id) problems.push(`generatorContracts[${JSON.stringify(id)}] output ${JSON.stringify(output.path)} does not have exactly one owner.`);
-      if (output.inclusion === "tracked" && !existsSync(join(root, output.path))) problems.push(`generatorContracts[${JSON.stringify(id)}] tracked output ${JSON.stringify(output.path)} is missing.`);
+      if (output.inclusion === "tracked" && !existsSync(join(root, output.path)) && !exactOwnerGeneratorPrestate(root, output.path, id, catalog) && !nestedCargoGeneratedPrestate(root, output.path, id, taxonomy)) problems.push(`generatorContracts[${JSON.stringify(id)}] tracked output ${JSON.stringify(output.path)} is missing.`);
     }
   }
   return problems;
@@ -2772,6 +3965,1189 @@ export function areaOf(repoRelPath: string, taxonomy: Taxonomy = loadTaxonomy())
   return bestKey ? taxonomy.areas[bestKey] : undefined;
 }
 //#endregion 🔣️Taxonomy
+
+//#region 🦀️RustStructure
+export type RustStructuralVisibility = "private" | "pub" | `pub(${string})`;
+export type RustStructuralFieldStyle = "unit" | "tuple" | "struct";
+
+export interface RustModuleFact {
+  readonly name: string;
+  readonly visibility: RustStructuralVisibility;
+  readonly inline: boolean;
+  readonly pathTarget: string | null;
+  readonly cfgTest: boolean;
+}
+
+export interface RustModuleGraphFact {
+  readonly name: string;
+  readonly modulePath: readonly string[];
+  readonly visibility: RustStructuralVisibility;
+  readonly inline: boolean;
+  readonly pathTarget: string | null;
+}
+
+export interface RustModuleUseFact {
+  readonly modulePath: readonly string[];
+  readonly specifier: string;
+  readonly relation: "import" | "reexport";
+  readonly visibility: RustStructuralVisibility;
+}
+
+export interface RustEnumVariantFact {
+  readonly name: string;
+  readonly fieldStyle: RustStructuralFieldStyle;
+  readonly fieldTypes: readonly string[];
+  readonly wrappedTupleLeafType: string | null;
+}
+
+export interface RustEnumFact {
+  readonly name: string;
+  readonly visibility: RustStructuralVisibility;
+  readonly variants: readonly RustEnumVariantFact[];
+}
+
+export interface RustPayloadFieldFact {
+  readonly name: string | null;
+  readonly type: string;
+}
+
+export interface RustInlinePayloadFact {
+  readonly name: string;
+  readonly visibility: RustStructuralVisibility;
+  readonly fieldStyle: RustStructuralFieldStyle;
+  readonly fields: readonly RustPayloadFieldFact[];
+}
+
+export interface RustImplFact {
+  readonly traitPath: string | null;
+  readonly selfType: string;
+  readonly methods: readonly string[];
+  readonly associatedConstants: readonly string[];
+}
+
+export interface RustConstIdentityFact {
+  readonly owner: string | null;
+  readonly name: string;
+  readonly type: string | null;
+  readonly value: string;
+  readonly stringValue: string | null;
+  readonly identityFields: Readonly<Record<string, string>>;
+}
+
+export interface RustMatchArmFact {
+  readonly pattern: string;
+  readonly variantPath: string | null;
+  readonly expression: string;
+}
+
+export interface RustIncludeFact {
+  readonly macro: "include" | "include_str" | "include_bytes";
+  readonly expression: string;
+  readonly usesOutDir: boolean;
+}
+
+export interface RustStructuralFacts {
+  readonly schemaVersion: 1;
+  readonly modules: readonly RustModuleFact[];
+  readonly enums: readonly RustEnumFact[];
+  readonly impls: readonly RustImplFact[];
+  readonly inlinePayloads: readonly RustInlinePayloadFact[];
+  readonly matchArms: readonly RustMatchArmFact[];
+  readonly constants: readonly RustConstIdentityFact[];
+  readonly includes: readonly RustIncludeFact[];
+  readonly testModules: readonly RustModuleFact[];
+}
+
+export interface RustVirtualSourceFact {
+  readonly path: string;
+  readonly facts: RustStructuralFacts;
+}
+
+export interface RustTestModuleFact {
+  readonly name: string;
+  readonly modulePath: readonly string[];
+  readonly mountBase: readonly string[];
+  readonly pathTarget: string | null;
+  readonly configuration: "enabled" | "disabled" | "ambiguous";
+}
+
+export interface RustRunnableTestFact {
+  readonly name: string;
+  readonly modulePath: readonly string[];
+}
+
+export interface RustTestFacts {
+  readonly schemaVersion: 1;
+  readonly runnableTests: readonly RustRunnableTestFact[];
+  readonly mountedModules: readonly RustTestModuleFact[];
+}
+
+type RustTokenKind = "identifier" | "string" | "number" | "punctuation";
+
+interface RustToken {
+  readonly kind: RustTokenKind;
+  readonly text: string;
+  readonly start: number;
+  readonly end: number;
+}
+
+interface RustAttributes {
+  readonly ranges: readonly (readonly [number, number])[];
+  readonly next: number;
+}
+
+interface RustVisibility {
+  readonly value: RustStructuralVisibility;
+  readonly next: number;
+}
+
+/** 🔤️ Recognizes a Rust identifier code point without interpreting comments or literal contents. */
+function rustIdentifierPart(character: string): boolean {
+  return character === "_" || /[\p{L}\p{N}]/u.test(character);
+}
+
+/** 🧵️ Decodes the identity-bearing value of one normal, byte, or raw Rust string token. */
+function rustStringValue(token: RustToken | undefined): string | null {
+  if (!token || token.kind !== "string") return null;
+  let text = token.text;
+  if (text.startsWith("b") && !text.startsWith("br")) text = text.slice(1);
+  if (text.startsWith("br") || text.startsWith("r")) {
+    const quote = text.indexOf('"');
+    if (quote < 0) return null;
+    const hashes = text.slice(text.startsWith("br") ? 2 : 1, quote).length;
+    return text.slice(quote + 1, text.length - hashes - 1);
+  }
+  try {
+    return JSON.parse(text) as string;
+  } catch {
+    return text.length >= 2 ? text.slice(1, -1) : null;
+  }
+}
+
+/** 🧱️ Tokenizes Rust while discarding nested comments and keeping strings/chars/raw strings atomic. */
+function rustTokens(source: string): RustToken[] {
+  const tokens: RustToken[] = [];
+  const punctuation = ["::", "=>", "->", "..=", "...", "..", "&&", "||", "<=", ">=", "==", "!=", "<<=", ">>=", "<<", ">>"];
+  let index = 0;
+  while (index < source.length) {
+    const start = index;
+    const character = source[index]!;
+    if (/\s/u.test(character)) {
+      index += 1;
+      continue;
+    }
+    if (source.startsWith("//", index)) {
+      index = source.indexOf("\n", index + 2);
+      if (index < 0) break;
+      continue;
+    }
+    if (source.startsWith("/*", index)) {
+      let depth = 1;
+      index += 2;
+      while (index < source.length && depth > 0) {
+        if (source.startsWith("/*", index)) {
+          depth += 1;
+          index += 2;
+        } else if (source.startsWith("*/", index)) {
+          depth -= 1;
+          index += 2;
+        } else index += 1;
+      }
+      continue;
+    }
+    const rawPrefix = source.startsWith("br", index) ? 2 : source.startsWith("r", index) ? 1 : 0;
+    if (rawPrefix > 0) {
+      let cursor = index + rawPrefix;
+      while (source[cursor] === "#") cursor += 1;
+      if (source[cursor] === '"') {
+        const hashes = cursor - index - rawPrefix;
+        const suffix = `"${"#".repeat(hashes)}`;
+        const close = source.indexOf(suffix, cursor + 1);
+        index = close < 0 ? source.length : close + suffix.length;
+        tokens.push({ kind: "string", text: source.slice(start, index), start, end: index });
+        continue;
+      }
+    }
+    if (character === '"' || (character === "b" && source[index + 1] === '"')) {
+      index += character === "b" ? 2 : 1;
+      while (index < source.length) {
+        if (source[index] === "\\") index += 2;
+        else if (source[index] === '"') {
+          index += 1;
+          break;
+        } else index += 1;
+      }
+      tokens.push({ kind: "string", text: source.slice(start, index), start, end: index });
+      continue;
+    }
+    if (character === "'" && source[index + 2] === "'") {
+      index += 3;
+      tokens.push({ kind: "string", text: source.slice(start, index), start, end: index });
+      continue;
+    }
+    if (rustIdentifierPart(character) && !/[0-9]/u.test(character)) {
+      index += character.length;
+      while (index < source.length) {
+        const next = String.fromCodePoint(source.codePointAt(index)!);
+        if (!rustIdentifierPart(next)) break;
+        index += next.length;
+      }
+      tokens.push({ kind: "identifier", text: source.slice(start, index), start, end: index });
+      continue;
+    }
+    if (/[0-9]/u.test(character)) {
+      index += 1;
+      while (index < source.length && /[\p{L}\p{N}_.]/u.test(source[index]!)) index += 1;
+      tokens.push({ kind: "number", text: source.slice(start, index), start, end: index });
+      continue;
+    }
+    const operator = punctuation.find((candidate) => source.startsWith(candidate, index));
+    index += operator?.length ?? 1;
+    tokens.push({ kind: "punctuation", text: operator ?? character, start, end: index });
+  }
+  return tokens;
+}
+
+/** 🧩️ Pairs Rust delimiter tokens so all structural scans can skip nested syntax exactly. */
+function rustTokenPairs(tokens: readonly RustToken[]): ReadonlyMap<number, number> {
+  const pairs = new Map<number, number>();
+  const stack: { readonly index: number; readonly token: string }[] = [];
+  const closeFor: Readonly<Record<string, string>> = { "(": ")", "[": "]", "{": "}" };
+  for (let index = 0; index < tokens.length; index += 1) {
+    const text = tokens[index]!.text;
+    if (closeFor[text]) stack.push({ index, token: text });
+    else if (text === ")" || text === "]" || text === "}") {
+      const open = stack.at(-1);
+      if (open && closeFor[open.token] === text) {
+        stack.pop();
+        pairs.set(open.index, index);
+        pairs.set(index, open.index);
+      }
+    }
+  }
+  return pairs;
+}
+
+/** 📝️ Renders one token range in a deterministic compact Rust spelling. */
+function rustTokenText(tokens: readonly RustToken[], start: number, end: number): string {
+  return tokens.slice(start, end).map((token) => token.text).join(" ")
+    .replace(/\s*::\s*/gu, "::")
+    .replace(/\s*([<>(){}\[\],;:.!])\s*/gu, "$1")
+    .replace(/\s+/gu, " ")
+    .trim();
+}
+
+/** 🧩️ Splits a token range only at delimiters outside paired nested syntax. */
+function rustTokenSegments(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number, delimiter: string): (readonly [number, number])[] {
+  const segments: (readonly [number, number])[] = [];
+  let segmentStart = start;
+  for (let index = start; index < end; index += 1) {
+    const pair = pairs.get(index);
+    if (pair !== undefined && pair > index) {
+      index = pair;
+      continue;
+    }
+    if (tokens[index]!.text !== delimiter) continue;
+    if (segmentStart < index) segments.push([segmentStart, index]);
+    segmentStart = index + 1;
+  }
+  if (segmentStart < end) segments.push([segmentStart, end]);
+  return segments;
+}
+
+/** 🏷️ Reads consecutive outer attributes attached to one Rust item. */
+function rustAttributes(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number): RustAttributes {
+  const ranges: (readonly [number, number])[] = [];
+  let index = start;
+  while (index + 1 < end && tokens[index]!.text === "#" && tokens[index + 1]!.text === "[") {
+    const close = pairs.get(index + 1);
+    if (close === undefined || close >= end) break;
+    ranges.push([index + 2, close]);
+    index = close + 1;
+  }
+  return { ranges, next: index };
+}
+
+/** 👁️ Reads Rust item visibility without flattening restricted `pub(...)` scopes. */
+function rustVisibility(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number): RustVisibility {
+  if (tokens[start]?.text !== "pub") return { value: "private", next: start };
+  if (tokens[start + 1]?.text !== "(") return { value: "pub", next: start + 1 };
+  const close = pairs.get(start + 1);
+  if (close === undefined) return { value: "pub", next: start + 1 };
+  return { value: `pub(${rustTokenText(tokens, start + 2, close)})`, next: close + 1 };
+}
+
+/** 📍️ Extracts a decoded `#[path = "..."]` target from parsed item attributes. */
+function rustPathAttribute(tokens: readonly RustToken[], attributes: RustAttributes): string | null {
+  for (const [start, end] of attributes.ranges) {
+    if (tokens[start]?.text !== "path") continue;
+    for (let index = start + 1; index < end; index += 1) if (tokens[index]!.text === "=") return rustStringValue(tokens[index + 1]);
+  }
+  return null;
+}
+
+/** 🧪️ Identifies a test-only module from tokenized `cfg(...test...)` attributes. */
+function rustCfgTest(tokens: readonly RustToken[], attributes: RustAttributes): boolean {
+  return attributes.ranges.some(([start, end]) => tokens[start]?.text === "cfg" && tokens.slice(start + 1, end).some((token) => token.kind === "identifier" && token.text === "test"));
+}
+
+//#region 🧪️RustRunnableTests
+type RustTestConfiguration = "enabled" | "disabled" | "ambiguous";
+
+interface RustTestAttributes {
+  readonly configuration: RustTestConfiguration;
+  readonly test: boolean;
+  readonly ignored: boolean;
+  readonly pathTarget: string | null;
+}
+
+/** 🧪️ Combines Rust test configurations without treating unknown cfg values as enabled. */
+function rustTestConfigurationAnd(left: RustTestConfiguration, right: RustTestConfiguration): RustTestConfiguration {
+  if (left === "disabled" || right === "disabled") return "disabled";
+  if (left === "ambiguous" || right === "ambiguous") return "ambiguous";
+  return "enabled";
+}
+
+/** 🧪️ Negates the test-mode truth value of one parsed cfg predicate. */
+function rustTestConfigurationNot(value: RustTestConfiguration): RustTestConfiguration {
+  return value === "enabled" ? "disabled" : value === "disabled" ? "enabled" : "ambiguous";
+}
+
+/** 🧪️ Evaluates only cfg predicates whose truth is proven by rustc --test. */
+function rustTestConfigurationExpression(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number): RustTestConfiguration {
+  const head = tokens[start];
+  if (!head || head.kind !== "identifier") return "ambiguous";
+  if (head.text === "test" && start + 1 === end) return "enabled";
+  const open = tokens[start + 1]?.text === "(" ? start + 1 : -1;
+  const close = open < 0 ? undefined : pairs.get(open);
+  if (close === undefined || close + 1 !== end) return "ambiguous";
+  const parts = rustTokenSegments(tokens, pairs, open + 1, close, ",");
+  if (head.text === "not" && parts.length === 1) return rustTestConfigurationNot(rustTestConfigurationExpression(tokens, pairs, ...parts[0]!));
+  if (head.text === "all") return parts.reduce<RustTestConfiguration>((value, part) => rustTestConfigurationAnd(value, rustTestConfigurationExpression(tokens, pairs, ...part)), "enabled");
+  if (head.text === "any") {
+    const values = parts.map((part) => rustTestConfigurationExpression(tokens, pairs, ...part));
+    if (values.includes("enabled")) return "enabled";
+    return values.every((value) => value === "disabled") ? "disabled" : "ambiguous";
+  }
+  return "ambiguous";
+}
+
+/** 🧪️ Reads consecutive inner attributes that configure their enclosing module or crate scope. */
+function rustInnerAttributes(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number): RustAttributes {
+  const ranges: (readonly [number, number])[] = [];
+  let index = start;
+  while (index + 2 < end && tokens[index]!.text === "#" && tokens[index + 1]!.text === "!" && tokens[index + 2]!.text === "[") {
+    const close = pairs.get(index + 2);
+    if (close === undefined || close >= end) break;
+    ranges.push([index + 3, close]);
+    index = close + 1;
+  }
+  return { ranges, next: index };
+}
+
+/** 🧪️ Recognizes whether an unresolved cfg_attr could change a test's executability or source identity. */
+function rustTestAttributeCanAffectExecution(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number): boolean {
+  const name = tokens[start]?.text;
+  if (name === "cfg" || name === "ignore" || name === "path") return true;
+  if (name !== "cfg_attr" || tokens[start + 1]?.text !== "(") return true;
+  const close = pairs.get(start + 1);
+  if (close === undefined || close + 1 !== end) return true;
+  const parts = rustTokenSegments(tokens, pairs, start + 2, close, ",");
+  return parts.slice(1).some((part) => rustTestAttributeCanAffectExecution(tokens, pairs, ...part));
+}
+
+/** 🧪️ Resolves direct and test-enabled cfg_attr attributes without assuming unknown cfg values. */
+function rustTestAttributes(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, attributes: RustAttributes): RustTestAttributes {
+  let configuration: RustTestConfiguration = "enabled";
+  let test = false;
+  let ignored = false;
+  let pathTarget: string | null = null;
+  const apply = (start: number, end: number, fromCfgAttr = false): void => {
+    const name = tokens[start]?.text;
+    if (name === "cfg") {
+      if (tokens[start + 1]?.text !== "(") { configuration = rustTestConfigurationAnd(configuration, "ambiguous"); return; }
+      const close = pairs.get(start + 1);
+      configuration = rustTestConfigurationAnd(configuration, close === undefined || close + 1 !== end ? "ambiguous" : rustTestConfigurationExpression(tokens, pairs, start + 2, close));
+      return;
+    }
+    if (name === "test") { test = true; return; }
+    if (name === "ignore") { ignored = true; return; }
+    if (name === "path") {
+      const equals = tokens[start + 1]?.text === "=" ? start + 1 : -1;
+      const target = equals < 0 ? null : rustStringValue(tokens[equals + 1]);
+      if (target === null || pathTarget !== null) configuration = rustTestConfigurationAnd(configuration, "ambiguous");
+      else pathTarget = target;
+      return;
+    }
+    if (name !== "cfg_attr" || tokens[start + 1]?.text !== "(") {
+      if (fromCfgAttr) configuration = rustTestConfigurationAnd(configuration, "ambiguous");
+      return;
+    }
+    const close = pairs.get(start + 1);
+    if (close === undefined || close + 1 !== end) { configuration = rustTestConfigurationAnd(configuration, "ambiguous"); return; }
+    const parts = rustTokenSegments(tokens, pairs, start + 2, close, ",");
+    if (parts.length < 2) { configuration = rustTestConfigurationAnd(configuration, "ambiguous"); return; }
+    const condition = rustTestConfigurationExpression(tokens, pairs, ...parts[0]!);
+    if (condition === "enabled") for (const part of parts.slice(1)) apply(...part, true);
+    else if (condition === "ambiguous" && parts.slice(1).some((part) => rustTestAttributeCanAffectExecution(tokens, pairs, ...part))) configuration = rustTestConfigurationAnd(configuration, "ambiguous");
+  };
+  for (const range of attributes.ranges) apply(...range);
+  return { configuration, test, ignored, pathTarget };
+}
+
+/** 🧪️ Preserves only an exact, leaf-local path spelling for an inline module's child mount base. */
+function rustTestInlineMountBase(target: string | null, name: string): readonly string[] | null {
+  if (target === null) return [name];
+  if (!target || target.includes("\0") || target.includes("\\") || target.startsWith("/") || /^[A-Za-z]:/u.test(target)) return null;
+  const segments = target.split("/");
+  return segments.some((segment) => !segment || segment === "." || segment === "..") ? null : segments;
+}
+
+/** 🧪️ Extracts only top-level, enabled, non-ignored test functions and their explicit mounted modules. */
+export function inspectRustRunnableTests(source: string): RustTestFacts {
+  const tokens = rustTokens(source);
+  const pairs = rustTokenPairs(tokens);
+  const runnableTests: RustRunnableTestFact[] = [];
+  const mountedModules: RustTestModuleFact[] = [];
+  const skipItem = (start: number, end: number): number => {
+    const boundary = rustFindTopLevel(tokens, pairs, start, end, new Set([";", "{"]));
+    if (boundary < 0) return end;
+    if (tokens[boundary]!.text === ";") return boundary + 1;
+    return (pairs.get(boundary) ?? end - 1) + 1;
+  };
+  const parseScope = (start: number, end: number, modulePath: readonly string[], mountBase: readonly string[], inherited: RustTestConfiguration): void => {
+    const inner = rustInnerAttributes(tokens, pairs, start, end);
+    const scopeConfiguration = rustTestConfigurationAnd(inherited, rustTestAttributes(tokens, pairs, inner).configuration);
+    for (let index = inner.next; index < end;) {
+      const attributes = rustAttributes(tokens, pairs, index, end);
+      const visibility = rustVisibility(tokens, pairs, attributes.next);
+      const keyword = tokens[visibility.next]?.text;
+      const itemAttributes = rustTestAttributes(tokens, pairs, attributes);
+      const configuration = rustTestConfigurationAnd(scopeConfiguration, itemAttributes.configuration);
+      if (keyword === "mod") {
+        const name = tokens[visibility.next + 1];
+        const boundary = rustFindTopLevel(tokens, pairs, visibility.next + 2, end, new Set([";", "{"]));
+        if (!name || name.kind !== "identifier" || boundary < 0) return;
+        const childPath = [...modulePath, name.text];
+        const inline = tokens[boundary]!.text === "{";
+        if (!inline) mountedModules.push({ name: name.text, modulePath: childPath, mountBase, pathTarget: itemAttributes.pathTarget, configuration });
+        if (!inline) { index = boundary + 1; continue; }
+        const close = pairs.get(boundary);
+        if (close === undefined) return;
+        const inlineBase = rustTestInlineMountBase(itemAttributes.pathTarget, name.text);
+        parseScope(boundary + 1, close, childPath, inlineBase === null ? mountBase : [...mountBase, ...inlineBase], inlineBase === null ? rustTestConfigurationAnd(configuration, "ambiguous") : configuration);
+        index = close + 1;
+        continue;
+      }
+      if (keyword === "fn") {
+        const name = tokens[visibility.next + 1];
+        if (name?.kind === "identifier" && configuration === "enabled" && itemAttributes.test && !itemAttributes.ignored) runnableTests.push({ name: name.text, modulePath });
+      }
+      index = skipItem(attributes.next, end);
+    }
+  };
+  parseScope(0, tokens.length, [], [], "enabled");
+  return { schemaVersion: 1, runnableTests, mountedModules };
+}
+//#endregion 🧪️RustRunnableTests
+
+/** ⏩️ Finds a top-level token while skipping every paired nested group. */
+function rustFindTopLevel(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number, wanted: ReadonlySet<string>): number {
+  for (let index = start; index < end; index += 1) {
+    const pair = pairs.get(index);
+    if (pair !== undefined && pair > index) {
+      if (wanted.has(tokens[index]!.text)) return index;
+      index = pair;
+      continue;
+    }
+    if (wanted.has(tokens[index]!.text)) return index;
+  }
+  return -1;
+}
+
+/** 🔤️ Returns the first path-shaped constructor in one tokenized match pattern. */
+function rustPatternVariantPath(tokens: readonly RustToken[], start: number, end: number): string | null {
+  for (let index = start; index < end; index += 1) {
+    if (tokens[index]?.kind !== "identifier") continue;
+    const parts = [tokens[index]!.text];
+    let cursor = index + 1;
+    while (cursor + 1 < end && tokens[cursor]!.text === "::" && tokens[cursor + 1]!.kind === "identifier") {
+      parts.push(tokens[cursor + 1]!.text);
+      cursor += 2;
+    }
+    if (parts.length > 1) return parts.join("::");
+  }
+  return null;
+}
+
+/** 🏷️ Derives stable string identity fields from one struct-literal const expression. */
+function rustConstIdentityFields(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number): Readonly<Record<string, string>> {
+  const open = rustFindTopLevel(tokens, pairs, start, end, new Set(["{"]));
+  const close = open < 0 ? undefined : pairs.get(open);
+  if (open < 0 || close === undefined || close > end) return {};
+  const fields: Record<string, string> = {};
+  for (const [fieldStart, fieldEnd] of rustTokenSegments(tokens, pairs, open + 1, close, ",")) {
+    const colon = rustFindTopLevel(tokens, pairs, fieldStart, fieldEnd, new Set([":"]));
+    const name = tokens[fieldStart];
+    const value = colon < 0 ? null : rustStringValue(tokens[colon + 1]);
+    if (name?.kind === "identifier" && value !== null) fields[name.text] = value;
+  }
+  return Object.fromEntries(Object.entries(fields).sort(([left], [right]) => left.localeCompare(right)));
+}
+
+/** 🌳️ Parses Rust items from tokens and exposes only stable structural facts. */
+class RustStructureParser {
+  readonly modules: RustModuleFact[] = [];
+  readonly enums: RustEnumFact[] = [];
+  readonly impls: RustImplFact[] = [];
+  readonly inlinePayloads: RustInlinePayloadFact[] = [];
+  readonly constants: RustConstIdentityFact[] = [];
+
+  constructor(readonly tokens: readonly RustToken[], readonly pairs: ReadonlyMap<number, number>) {}
+
+  parse(): void {
+    this.parseScope(0, this.tokens.length);
+  }
+
+  private parseScope(start: number, end: number): void {
+    let index = start;
+    while (index < end) {
+      const attributes = rustAttributes(this.tokens, this.pairs, index, end);
+      const visibility = rustVisibility(this.tokens, this.pairs, attributes.next);
+      const keyword = this.tokens[visibility.next]?.text;
+      if (keyword === "mod") index = this.parseModule(attributes, visibility, end);
+      else if (keyword === "enum") index = this.parseEnum(visibility, end);
+      else if (keyword === "struct") index = this.parseStruct(visibility, end);
+      else if (keyword === "impl") index = this.parseImpl(visibility.next, end);
+      else if (keyword === "const" && this.tokens[visibility.next + 1]?.text !== "fn") index = this.parseConst(visibility.next, end, null);
+      else index = this.skipItem(attributes.next, end);
+    }
+  }
+
+  private skipItem(start: number, end: number): number {
+    const boundary = rustFindTopLevel(this.tokens, this.pairs, start, end, new Set([";", "{"]));
+    if (boundary < 0) return end;
+    if (this.tokens[boundary]!.text === ";") return boundary + 1;
+    const close = this.pairs.get(boundary);
+    return close === undefined ? end : close + 1;
+  }
+
+  private parseModule(attributes: RustAttributes, visibility: RustVisibility, end: number): number {
+    const keyword = visibility.next;
+    const name = this.tokens[keyword + 1]?.text ?? "";
+    const boundary = rustFindTopLevel(this.tokens, this.pairs, keyword + 2, end, new Set([";", "{"]));
+    const inline = boundary >= 0 && this.tokens[boundary]!.text === "{";
+    const fact: RustModuleFact = { name, visibility: visibility.value, inline, pathTarget: rustPathAttribute(this.tokens, attributes), cfgTest: rustCfgTest(this.tokens, attributes) };
+    this.modules.push(fact);
+    if (!inline) return boundary < 0 ? end : boundary + 1;
+    const close = this.pairs.get(boundary);
+    if (close === undefined) return end;
+    this.parseScope(boundary + 1, close);
+    return close + 1;
+  }
+
+  private parseEnum(visibility: RustVisibility, end: number): number {
+    const keyword = visibility.next;
+    const name = this.tokens[keyword + 1]?.text ?? "";
+    const open = rustFindTopLevel(this.tokens, this.pairs, keyword + 2, end, new Set(["{"]));
+    const close = open < 0 ? undefined : this.pairs.get(open);
+    if (open < 0 || close === undefined) return end;
+    const variants: RustEnumVariantFact[] = [];
+    for (const [rawStart, rawEnd] of rustTokenSegments(this.tokens, this.pairs, open + 1, close, ",")) {
+      const attributes = rustAttributes(this.tokens, this.pairs, rawStart, rawEnd);
+      const variantStart = attributes.next;
+      const variant = this.tokens[variantStart];
+      if (variant?.kind !== "identifier") continue;
+      const shape = this.tokens[variantStart + 1]?.text;
+      if (shape === "(") {
+        const fieldClose = this.pairs.get(variantStart + 1) ?? variantStart + 1;
+        const fieldTypes = rustTokenSegments(this.tokens, this.pairs, variantStart + 2, fieldClose, ",").map(([fieldStart, fieldEnd]) => rustTokenText(this.tokens, fieldStart, fieldEnd));
+        variants.push({ name: variant.text, fieldStyle: "tuple", fieldTypes, wrappedTupleLeafType: fieldTypes.length === 1 ? fieldTypes[0]! : null });
+      } else if (shape === "{") {
+        const fieldClose = this.pairs.get(variantStart + 1) ?? variantStart + 1;
+        const fieldTypes = rustTokenSegments(this.tokens, this.pairs, variantStart + 2, fieldClose, ",").map(([fieldStart, fieldEnd]) => {
+          const fieldAttributes = rustAttributes(this.tokens, this.pairs, fieldStart, fieldEnd);
+          const fieldVisibility = rustVisibility(this.tokens, this.pairs, fieldAttributes.next);
+          const colon = rustFindTopLevel(this.tokens, this.pairs, fieldVisibility.next, fieldEnd, new Set([":"]));
+          return colon < 0 ? "" : rustTokenText(this.tokens, colon + 1, fieldEnd);
+        }).filter(Boolean);
+        variants.push({ name: variant.text, fieldStyle: "struct", fieldTypes, wrappedTupleLeafType: null });
+      } else variants.push({ name: variant.text, fieldStyle: "unit", fieldTypes: [], wrappedTupleLeafType: null });
+    }
+    this.enums.push({ name, visibility: visibility.value, variants });
+    return close + 1;
+  }
+
+  private parseStruct(visibility: RustVisibility, end: number): number {
+    const keyword = visibility.next;
+    const name = this.tokens[keyword + 1]?.text ?? "";
+    const boundary = rustFindTopLevel(this.tokens, this.pairs, keyword + 2, end, new Set([";", "{", "("]));
+    if (boundary < 0) return end;
+    const shape = this.tokens[boundary]!.text;
+    if (shape === ";") {
+      this.inlinePayloads.push({ name, visibility: visibility.value, fieldStyle: "unit", fields: [] });
+      return boundary + 1;
+    }
+    const close = this.pairs.get(boundary);
+    if (close === undefined) return end;
+    const fields: RustPayloadFieldFact[] = [];
+    for (const [rawStart, rawEnd] of rustTokenSegments(this.tokens, this.pairs, boundary + 1, close, ",")) {
+      const attributes = rustAttributes(this.tokens, this.pairs, rawStart, rawEnd);
+      const fieldVisibility = rustVisibility(this.tokens, this.pairs, attributes.next);
+      const colon = rustFindTopLevel(this.tokens, this.pairs, fieldVisibility.next, rawEnd, new Set([":"]));
+      if (shape === "{") {
+        const fieldName = this.tokens[fieldVisibility.next];
+        if (fieldName?.kind === "identifier" && colon >= 0) fields.push({ name: fieldName.text, type: rustTokenText(this.tokens, colon + 1, rawEnd) });
+      } else fields.push({ name: null, type: rustTokenText(this.tokens, fieldVisibility.next, rawEnd) });
+    }
+    this.inlinePayloads.push({ name, visibility: visibility.value, fieldStyle: shape === "{" ? "struct" : "tuple", fields });
+    return close + 1;
+  }
+
+  private parseImpl(keyword: number, end: number): number {
+    const open = rustFindTopLevel(this.tokens, this.pairs, keyword + 1, end, new Set(["{"]));
+    const close = open < 0 ? undefined : this.pairs.get(open);
+    if (open < 0 || close === undefined) return end;
+    let angleDepth = 0;
+    let forIndex = -1;
+    for (let index = keyword + 1; index < open; index += 1) {
+      const text = this.tokens[index]!.text;
+      if (text === "<") angleDepth += 1;
+      else if (text === ">") angleDepth = Math.max(0, angleDepth - 1);
+      else if (text === ">>") angleDepth = Math.max(0, angleDepth - 2);
+      else if (text === "for" && angleDepth === 0) forIndex = index;
+    }
+    const headerStart = keyword + 1;
+    const traitPath = forIndex < 0 ? null : rustTokenText(this.tokens, headerStart, forIndex).replace(/^!/, "");
+    const selfType = rustTokenText(this.tokens, forIndex < 0 ? headerStart : forIndex + 1, open);
+    const methods: string[] = [];
+    const associatedConstants: string[] = [];
+    let index = open + 1;
+    while (index < close) {
+      const attributes = rustAttributes(this.tokens, this.pairs, index, close);
+      const visibility = rustVisibility(this.tokens, this.pairs, attributes.next);
+      const token = this.tokens[visibility.next]?.text;
+      if (token === "fn" || (token === "async" && this.tokens[visibility.next + 1]?.text === "fn")) {
+        const nameIndex = visibility.next + (token === "async" ? 2 : 1);
+        if (this.tokens[nameIndex]?.kind === "identifier") methods.push(this.tokens[nameIndex]!.text);
+        index = this.skipItem(attributes.next, close);
+      } else if (token === "const") {
+        const name = this.tokens[visibility.next + 1]?.text;
+        if (name) associatedConstants.push(name);
+        index = this.parseConst(visibility.next, close, selfType);
+      } else index = this.skipItem(attributes.next, close);
+    }
+    this.impls.push({ traitPath, selfType, methods, associatedConstants });
+    return close + 1;
+  }
+
+  private parseConst(keyword: number, end: number, owner: string | null): number {
+    const name = this.tokens[keyword + 1]?.text ?? "";
+    const semicolon = rustFindTopLevel(this.tokens, this.pairs, keyword + 2, end, new Set([";"]));
+    if (semicolon < 0) return end;
+    const colon = rustFindTopLevel(this.tokens, this.pairs, keyword + 2, semicolon, new Set([":"]));
+    const equals = rustFindTopLevel(this.tokens, this.pairs, keyword + 2, semicolon, new Set(["="]));
+    const valueStart = equals < 0 ? semicolon : equals + 1;
+    const value = rustTokenText(this.tokens, valueStart, semicolon);
+    this.constants.push({
+      owner,
+      name,
+      type: colon < 0 || equals < 0 ? null : rustTokenText(this.tokens, colon + 1, equals),
+      value,
+      stringValue: valueStart + 1 === semicolon ? rustStringValue(this.tokens[valueStart]) : null,
+      identityFields: rustConstIdentityFields(this.tokens, this.pairs, valueStart, semicolon),
+    });
+    return semicolon + 1;
+  }
+}
+
+/** 🎯️ Finds every token-aware match arm, including nested function bodies, without scanning literals. */
+function rustMatchArms(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>): RustMatchArmFact[] {
+  const facts: RustMatchArmFact[] = [];
+  for (let index = 0; index < tokens.length; index += 1) {
+    if (tokens[index]!.kind !== "identifier" || tokens[index]!.text !== "match") continue;
+    const open = rustFindTopLevel(tokens, pairs, index + 1, tokens.length, new Set(["{"]));
+    const close = open < 0 ? undefined : pairs.get(open);
+    if (open < 0 || close === undefined) continue;
+    for (const [armStart, armEnd] of rustTokenSegments(tokens, pairs, open + 1, close, ",")) {
+      const arrow = rustFindTopLevel(tokens, pairs, armStart, armEnd, new Set(["=>"]));
+      if (arrow < 0) continue;
+      facts.push({ pattern: rustTokenText(tokens, armStart, arrow), variantPath: rustPatternVariantPath(tokens, armStart, arrow), expression: rustTokenText(tokens, arrow + 1, armEnd) });
+    }
+  }
+  return facts;
+}
+
+/** 📦️ Finds include macros and explicitly records whether their token tree reaches `OUT_DIR`. */
+function rustIncludes(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>): RustIncludeFact[] {
+  const facts: RustIncludeFact[] = [];
+  const names = new Set(["include", "include_str", "include_bytes"] as const);
+  for (let index = 0; index + 2 < tokens.length; index += 1) {
+    const name = tokens[index]!.text as RustIncludeFact["macro"];
+    if (!names.has(name) || tokens[index + 1]!.text !== "!" || tokens[index + 2]!.text !== "(") continue;
+    const close = pairs.get(index + 2);
+    if (close === undefined) continue;
+    const expressionTokens = tokens.slice(index + 3, close);
+    facts.push({
+      macro: name,
+      expression: rustTokenText(tokens, index + 3, close),
+      usesOutDir: expressionTokens.some((token) => (token.kind === "identifier" && token.text === "OUT_DIR") || rustStringValue(token) === "OUT_DIR"),
+    });
+  }
+  return facts;
+}
+
+/** 🧠️ Extracts a stable schema-versioned structural report from one Rust source string. */
+export function inspectRustStructure(source: string): RustStructuralFacts {
+  const tokens = rustTokens(source);
+  const pairs = rustTokenPairs(tokens);
+  const parser = new RustStructureParser(tokens, pairs);
+  parser.parse();
+  const modules = parser.modules;
+  return {
+    schemaVersion: 1,
+    modules,
+    enums: parser.enums,
+    impls: parser.impls,
+    inlinePayloads: parser.inlinePayloads,
+    matchArms: rustMatchArms(tokens, pairs),
+    constants: parser.constants,
+    includes: rustIncludes(tokens, pairs),
+    testModules: modules.filter((module) => module.cfgTest),
+  };
+}
+
+/** 🕸️ Extracts mounted modules and use items with lexical Rust scope, excluding decoys. */
+export function inspectRustModuleGraphFacts(source: string): { readonly modules: readonly RustModuleGraphFact[]; readonly uses: readonly RustModuleUseFact[] } {
+  const tokens = rustTokens(source);
+  const pairs = rustTokenPairs(tokens);
+  const modules: RustModuleGraphFact[] = [];
+  const uses: RustModuleUseFact[] = [];
+  const skipItem = (start: number, end: number): number => {
+    const boundary = rustFindTopLevel(tokens, pairs, start, end, new Set([";", "{"]));
+    if (boundary < 0) return end;
+    if (tokens[boundary]!.text === ";") return boundary + 1;
+    return (pairs.get(boundary) ?? end - 1) + 1;
+  };
+  const parseScope = (start: number, end: number, modulePath: readonly string[]): void => {
+    for (let index = start; index < end;) {
+      const attributes = rustAttributes(tokens, pairs, index, end);
+      const visibility = rustVisibility(tokens, pairs, attributes.next);
+      const keyword = tokens[visibility.next]?.text;
+      if (keyword === "use") {
+        const boundary = rustFindTopLevel(tokens, pairs, visibility.next + 1, end, new Set([";"]));
+        if (boundary < 0) return;
+        uses.push({ modulePath, specifier: rustTokenText(tokens, visibility.next + 1, boundary), relation: visibility.value === "private" ? "import" : "reexport", visibility: visibility.value });
+        index = boundary + 1;
+        continue;
+      }
+      if (keyword !== "mod") {
+        index = skipItem(attributes.next, end);
+        continue;
+      }
+      const name = tokens[visibility.next + 1];
+      const boundary = rustFindTopLevel(tokens, pairs, visibility.next + 2, end, new Set([";", "{"]));
+      if (!name || name.kind !== "identifier" || boundary < 0) return;
+      const inline = tokens[boundary]!.text === "{";
+      const childPath = [...modulePath, name.text];
+      modules.push({ name: name.text, modulePath: childPath, visibility: visibility.value, inline, pathTarget: rustPathAttribute(tokens, attributes) });
+      if (!inline) {
+        index = boundary + 1;
+        continue;
+      }
+      const close = pairs.get(boundary);
+      if (close === undefined) return;
+      parseScope(boundary + 1, close, childPath);
+      index = close + 1;
+    }
+  };
+  parseScope(0, tokens.length, []);
+  return { modules, uses };
+}
+
+/** 🪪️ Lists top-level public Rust type declarations without comment or string decoys. */
+export function inspectRustPublicTypeNames(source: string): readonly string[] {
+  const tokens = rustTokens(source), pairs = rustTokenPairs(tokens), names: string[] = [];
+  for (let index = 0; index < tokens.length;) {
+    const attributes = rustAttributes(tokens, pairs, index, tokens.length), visibility = rustVisibility(tokens, pairs, attributes.next), keyword = tokens[visibility.next]?.text;
+    if (visibility.value === "pub" && (keyword === "struct" || keyword === "enum") && tokens[visibility.next + 1]?.kind === "identifier") names.push(tokens[visibility.next + 1]!.text);
+    const boundary = rustFindTopLevel(tokens, pairs, attributes.next, tokens.length, new Set([";", "{"]));
+    if (boundary < 0) break;
+    if (tokens[boundary]!.text === ";") { index = boundary + 1; continue; }
+    const close = pairs.get(boundary); if (close === undefined) break; index = close + 1;
+  }
+  return [...new Set(names)].sort();
+}
+
+/** 🧷️ Locates one unambiguous public mutation aggregate declaration for structured insertion. */
+export function inspectRustMutationAggregateSpan(source: string): { declarationStart: number; bodyOpen: number; bodyClose: number; enumName: string } | null {
+  const tokens = rustTokens(source);
+  const pairs = rustTokenPairs(tokens);
+  const matches: { declarationStart: number; bodyOpen: number; bodyClose: number; enumName: string }[] = [];
+  let malformed = false;
+  for (let index = 0; index < tokens.length;) {
+    const declarationIndex = index;
+    const attributes = rustAttributes(tokens, pairs, declarationIndex, tokens.length);
+    const visibility = rustVisibility(tokens, pairs, attributes.next);
+    if (visibility.value !== "pub" || tokens[visibility.next]?.text !== "enum") {
+      const boundary = rustFindTopLevel(tokens, pairs, attributes.next, tokens.length, new Set([";", "{"]));
+      if (boundary < 0) break;
+      if (tokens[boundary]!.text === ";") { index = boundary + 1; continue; }
+      const close = pairs.get(boundary);
+      if (close === undefined) { malformed = true; break; }
+      index = close + 1;
+      continue;
+    }
+    const name = tokens[visibility.next + 1];
+    if (!name || name.kind !== "identifier" || !name.text.endsWith("Mutation")) { index = visibility.next + 1; continue; }
+    const body = rustFindTopLevel(tokens, pairs, visibility.next + 2, tokens.length, new Set(["{"]));
+    const close = body < 0 ? undefined : pairs.get(body);
+    if (close === undefined) { malformed = true; break; }
+    const attributeStart = tokens[declarationIndex]!.start;
+    const docs = /((?:(?:[ \t]*\/\/\/[^\n]*(?:\n|$))|(?:[ \t]*\/\*\*[\s\S]*?\*\/[ \t]*(?:\n|$)))+)$/u.exec(source.slice(0, attributeStart));
+    matches.push({ declarationStart: docs?.index ?? attributeStart, bodyOpen: tokens[body]!.start, bodyClose: tokens[close]!.start, enumName: name.text });
+    index = close + 1;
+  }
+  return !malformed && matches.length === 1 ? matches[0]! : null;
+}
+
+/** 📜️ Renders the stable Rust structural report as deterministic newline-terminated JSON. */
+export function renderRustStructuralFactsJson(facts: RustStructuralFacts): string {
+  return `${JSON.stringify(facts, null, 2)}\n`;
+}
+
+/** 🪪️ Lists exact Rust identifiers and string identities without accepting comment text or prefixes. */
+export function inspectRustSourceIdentities(source: string): readonly string[] {
+  return [...new Set(rustTokens(source).flatMap((token) => token.kind === "identifier" ? [token.text] : token.kind === "string" ? [rustStringValue(token) ?? ""] : []))].sort();
+}
+
+//#region 🛡️MutationInputs
+/** 🏷️ Extracts type identities while excluding path prefixes and string/comment decoys. */
+function rustTypeNames(source: string): string[] {
+  const tokens = rustTokens(source);
+  return [...new Set(tokens.filter((token, index) => token.kind === "identifier" && tokens[index + 1]?.text !== "::" && !["as", "dyn", "impl", "mut", "const"].includes(token.text)).map((token) => token.text))];
+}
+
+/** 🔗️ Records local type and renamed-import edges without evaluating or expanding source. */
+function rustTypeAliasEdges(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>): Map<string, string[]> {
+  const aliases = new Map<string, string[]>();
+  for (let index = 0; index < tokens.length; index++) {
+    if (tokens[index]?.text === "type" && tokens[index + 1]?.kind === "identifier") {
+      const end = rustFindTopLevel(tokens, pairs, index + 2, tokens.length, new Set([";"]));
+      const equals = end < 0 ? -1 : rustFindTopLevel(tokens, pairs, index + 2, end, new Set(["="]));
+      if (equals >= 0) aliases.set(tokens[index + 1]!.text, rustTypeNames(rustTokenText(tokens, equals + 1, end)));
+    }
+    if (tokens[index]?.text !== "use") continue;
+    const end = rustFindTopLevel(tokens, pairs, index + 1, tokens.length, new Set([";"]));
+    for (let cursor = index + 1; cursor < end; cursor++) {
+      if (tokens[cursor]?.text === "as" && tokens[cursor - 1]?.kind === "identifier" && tokens[cursor + 1]?.kind === "identifier") aliases.set(tokens[cursor + 1]!.text, [tokens[cursor - 1]!.text]);
+    }
+  }
+  return aliases;
+}
+
+/** 🚧️ Indexes an aggregate once and inspects each leaf for reachable aggregate-state inputs. */
+export function createRustMutationInputInspector(aggregateSource: string): (leafSource: string) => readonly string[] {
+  const aggregateTokens = rustTokens(aggregateSource);
+  const aggregatePairs = rustTokenPairs(aggregateTokens);
+  const aggregateAliases = rustTypeAliasEdges(aggregateTokens, aggregatePairs);
+  const aggregateTypes = new Set<string>();
+  const typeQueue: string[] = [];
+  for (let index = 0; index + 3 < aggregateTokens.length; index++) {
+    if (aggregateTokens[index]?.text !== "#" || aggregateTokens[index + 1]?.text !== "[" || aggregateTokens[index + 2]?.text !== "mutations" || aggregateTokens[index + 3]?.text !== "(") continue;
+    const close = aggregatePairs.get(index + 3);
+    if (close === undefined) continue;
+    for (const [start, end] of rustTokenSegments(aggregateTokens, aggregatePairs, index + 4, close, ",")) {
+      if (["snapshot", "diff"].includes(aggregateTokens[start]?.text ?? "") && aggregateTokens[start + 1]?.text === "=") typeQueue.push(...rustTypeNames(rustTokenText(aggregateTokens, start + 2, end)));
+    }
+  }
+  for (let index = 0; index < typeQueue.length; index++) {
+    const name = typeQueue[index]!;
+    if (aggregateTypes.has(name)) continue;
+    aggregateTypes.add(name);
+    typeQueue.push(...aggregateAliases.get(name) ?? []);
+  }
+  if (aggregateTypes.size === 0) return () => [];
+  const owners = new Set(inspectRustStructure(aggregateSource).enums.flatMap((item) => item.variants.flatMap((variant) => variant.fieldTypes.flatMap(rustTypeNames))));
+  return (leafSource) => {
+    const leafTokens = rustTokens(leafSource);
+    const graph = rustTypeAliasEdges(leafTokens, rustTokenPairs(leafTokens));
+    const leafFacts = inspectRustStructure(leafSource);
+    for (const payload of leafFacts.inlinePayloads) graph.set(payload.name, payload.fields.flatMap((field) => rustTypeNames(field.type)));
+    for (const payload of leafFacts.enums) graph.set(payload.name, payload.variants.flatMap((variant) => variant.fieldTypes.flatMap(rustTypeNames)));
+    const carriers: string[] = [];
+    for (const owner of owners) {
+      if (!graph.has(owner)) continue;
+      const paths = [[owner]];
+      const visited = new Set<string>();
+      for (let index = 0; index < paths.length; index++) {
+        const path = paths[index]!;
+        const name = path.at(-1)!;
+        if (visited.has(name)) continue;
+        visited.add(name);
+        if (aggregateTypes.has(name)) carriers.push(path.join(" -> "));
+        else for (const child of graph.get(name) ?? []) paths.push([...path, child]);
+      }
+    }
+    return carriers.sort();
+  };
+}
+//#endregion 🛡️MutationInputs
+
+//#region 🛡️MutationCodecOwnership
+export interface RustMutationCodecOwnershipFact {
+  readonly kind: "whole-aggregate-serialization" | "whole-aggregate-deserialization" | "aggregate-variant-match";
+}
+
+function rustMutationCodecAliasClosure(seeds: readonly string[], aliases: ReadonlyMap<string, readonly string[]>): Set<string> {
+  const names = new Set(seeds);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const [alias, targets] of aliases) {
+      if (names.has(alias) || !targets.some((target) => names.has(target))) continue;
+      names.add(alias);
+      changed = true;
+    }
+  }
+  return names;
+}
+
+function rustMutationCodecCall(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, nameIndex: number): { readonly open: number; readonly close: number; readonly genericStart: number | null; readonly genericEnd: number | null } | null {
+  let cursor = nameIndex + 1;
+  let genericStart: number | null = null;
+  let genericEnd: number | null = null;
+  if (tokens[cursor]?.text === "::" && tokens[cursor + 1]?.text === "<") {
+    genericStart = cursor + 2;
+    let depth = 1;
+    cursor += 2;
+    for (; cursor < tokens.length; cursor += 1) {
+      if (tokens[cursor]!.text === "<") depth += 1;
+      else if (tokens[cursor]!.text === ">") depth -= 1;
+      if (depth === 0) break;
+    }
+    if (depth !== 0) return null;
+    genericEnd = cursor;
+    cursor += 1;
+  }
+  if (tokens[cursor]?.text !== "(") return null;
+  const close = pairs.get(cursor);
+  return close === undefined ? null : { open: cursor, close, genericStart, genericEnd };
+}
+
+function rustMutationCodecExpressionIsAggregate(tokens: readonly RustToken[], start: number, end: number, aggregateValues: readonly ReadonlyMap<string, boolean>[]): boolean {
+  const values = tokens.slice(start, end).filter((token) => !["&", "mut", "(", ")"].includes(token.text));
+  if (values.length !== 1 || values[0]?.kind !== "identifier") return false;
+  for (let index = aggregateValues.length - 1; index >= 0; index -= 1) if (aggregateValues[index]!.has(values[0].text)) return aggregateValues[index]!.get(values[0].text) === true;
+  return false;
+}
+
+function rustMutationCodecImplRanges(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, aggregateTypes: ReadonlySet<string>): (readonly [number, number])[] {
+  const ranges: (readonly [number, number])[] = [];
+  for (let index = 0; index < tokens.length; index += 1) {
+    if (tokens[index]?.text !== "impl") continue;
+    let open = -1;
+    for (let cursor = index + 1; cursor < tokens.length; cursor += 1) {
+      if (tokens[cursor]!.text === "{") {
+        open = cursor;
+        break;
+      }
+      if (tokens[cursor]!.text === ";") break;
+    }
+    const close = open < 0 ? undefined : pairs.get(open);
+    if (close === undefined) continue;
+    const forIndex = rustFindTopLevel(tokens, pairs, index + 1, open, new Set(["for"]));
+    let cursor = forIndex < 0 ? index + 1 : forIndex + 1;
+    if (tokens[cursor]?.text === "<") {
+      let depth = 1;
+      cursor += 1;
+      for (; cursor < open && depth > 0; cursor += 1) {
+        if (tokens[cursor]?.text === "<") depth += 1;
+        else if (tokens[cursor]?.text === ">") depth -= 1;
+      }
+    }
+    const path: string[] = [];
+    for (; cursor < open; cursor += 1) {
+      const token = tokens[cursor]!;
+      if (token.kind === "identifier") path.push(token.text);
+      else if (token.text === "::") continue;
+      else break;
+    }
+    if (aggregateTypes.has(path.at(-1) ?? "")) ranges.push([open + 1, close]);
+    index = close;
+  }
+  return ranges;
+}
+
+function rustMutationCodecSerdeCall(tokens: readonly RustToken[], nameIndex: number, serdeAliases: ReadonlySet<string>): boolean {
+  return tokens[nameIndex - 1]?.text === "::" && serdeAliases.has(tokens[nameIndex - 2]?.text ?? "");
+}
+
+interface RustMutationCodecFunctionRange {
+  readonly start: number;
+  readonly bodyStart: number;
+  readonly bodyEnd: number;
+  readonly aggregateImpl: boolean;
+}
+
+function rustMutationCodecFunctions(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, aggregateImplRanges: readonly (readonly [number, number])[]): RustMutationCodecFunctionRange[] {
+  const functions: RustMutationCodecFunctionRange[] = [];
+  for (let index = 0; index < tokens.length; index += 1) {
+    if (tokens[index]?.text !== "fn") continue;
+    let bodyStart = -1;
+    for (let cursor = index + 1; cursor < tokens.length; cursor += 1) {
+      if (tokens[cursor]!.text !== "{") continue;
+      bodyStart = cursor;
+      break;
+    }
+    const bodyEnd = bodyStart < 0 ? undefined : pairs.get(bodyStart);
+    if (bodyEnd === undefined) continue;
+    functions.push({ start: index, bodyStart, bodyEnd, aggregateImpl: aggregateImplRanges.some(([start, end]) => index >= start && index < end) });
+    index = bodyEnd;
+  }
+  return functions;
+}
+
+function rustMutationCodecTypeIsAggregate(tokens: readonly RustToken[], start: number, end: number, aggregateTypes: ReadonlySet<string>, aggregateImpl: boolean): boolean {
+  const names = rustTypeNames(rustTokenText(tokens, start, end));
+  return names.some((name) => aggregateTypes.has(name)) || (aggregateImpl && names.includes("Self"));
+}
+
+function rustMutationCodecParameterValues(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, fnRange: RustMutationCodecFunctionRange, aggregateTypes: ReadonlySet<string>): Map<string, boolean> {
+  const values = new Map<string, boolean>();
+  for (let cursor = fnRange.start + 1; cursor < fnRange.bodyStart; cursor += 1) {
+    if (tokens[cursor]?.text !== "(") continue;
+    const close = pairs.get(cursor);
+    if (close === undefined) break;
+    for (const [start, end] of rustTokenSegments(tokens, pairs, cursor + 1, close, ",")) {
+      const colon = rustFindTopLevel(tokens, pairs, start, end, new Set([":"]));
+      const name = tokens[start]?.text === "mut" ? tokens[start + 1] : tokens[start];
+      const receiver = tokens.slice(start, end).find((token) => token.text === "self");
+      if (receiver) {
+        values.set("self", fnRange.aggregateImpl);
+        continue;
+      }
+      if (name?.kind !== "identifier") continue;
+      if (colon >= 0) values.set(name.text, rustMutationCodecTypeIsAggregate(tokens, colon + 1, end, aggregateTypes, fnRange.aggregateImpl));
+    }
+    break;
+  }
+  return values;
+}
+
+function rustMutationCodecLetValue(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, index: number, end: number, values: readonly Map<string, boolean>[], aggregateTypes: ReadonlySet<string>, aggregateImpl: boolean): void {
+  const semicolon = rustFindTopLevel(tokens, pairs, index + 1, end, new Set([";"]));
+  const statementEnd = semicolon < 0 ? end : semicolon;
+  const name = tokens[index + (tokens[index + 1]?.text === "mut" ? 2 : 1)];
+  const equals = rustFindTopLevel(tokens, pairs, index + 1, statementEnd, new Set(["="]));
+  const colon = equals < 0 ? -1 : rustFindTopLevel(tokens, pairs, index + 1, equals, new Set([":"]));
+  if (name?.kind === "identifier" && equals >= 0) values.at(-1)!.set(name.text, (colon >= 0 && rustMutationCodecTypeIsAggregate(tokens, colon + 1, equals, aggregateTypes, aggregateImpl)) || rustMutationCodecExpressionIsAggregate(tokens, equals + 1, statementEnd, values));
+}
+
+function rustMutationCodecInferredAggregate(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, index: number, callClose: number, fnRange: RustMutationCodecFunctionRange, aggregateTypes: ReadonlySet<string>): boolean {
+  let statementStart = fnRange.bodyStart + 1;
+  for (let cursor = index - 1; cursor >= statementStart; cursor -= 1) {
+    if (![";", "{", "}"].includes(tokens[cursor]?.text ?? "")) continue;
+    statementStart = cursor + 1;
+    break;
+  }
+  const letIndex = tokens.slice(statementStart, index).findIndex((token) => token.text === "let");
+  if (letIndex >= 0) {
+    const start = statementStart + letIndex;
+    const equals = rustFindTopLevel(tokens, pairs, start + 1, index, new Set(["="]));
+    const colon = equals < 0 ? -1 : rustFindTopLevel(tokens, pairs, start + 1, equals, new Set([":"]));
+    if (colon >= 0) return rustMutationCodecTypeIsAggregate(tokens, colon + 1, equals, aggregateTypes, fnRange.aggregateImpl);
+  }
+  const arrow = rustFindTopLevel(tokens, pairs, fnRange.start + 1, fnRange.bodyStart, new Set(["->"]));
+  const returnsCall = tokens.slice(statementStart, index).some((token) => token.text === "return");
+  const tailCall = !tokens.slice(callClose + 1, fnRange.bodyEnd).some((token) => token.text === ";");
+  return arrow >= 0 && (returnsCall || tailCall) && rustMutationCodecTypeIsAggregate(tokens, arrow + 1, fnRange.bodyStart, aggregateTypes, fnRange.aggregateImpl);
+}
+
+/** 🧪️ Finds executable aggregate codec bypasses from Rust token structure without type expansion. */
+export function createRustMutationCodecOwnershipInspector(aggregateSource: string): (codecSource: string) => readonly RustMutationCodecOwnershipFact[] {
+  const aggregateTokens = rustTokens(aggregateSource);
+  const aggregatePairs = rustTokenPairs(aggregateTokens);
+  const aggregateAliases = rustTypeAliasEdges(aggregateTokens, aggregatePairs);
+  const aggregateEnums = inspectRustStructure(aggregateSource).enums.filter((item) => item.name.includes("Mutation"));
+  const aggregateTypeSeeds = aggregateEnums.map((item) => item.name);
+  const aggregateVariantNames = new Set(aggregateEnums.flatMap((item) => item.variants.map((variant) => variant.name)));
+  return (codecSource) => {
+    const tokens = rustTokens(codecSource);
+    const pairs = rustTokenPairs(tokens);
+    const aliases = new Map([...aggregateAliases, ...rustTypeAliasEdges(tokens, pairs)]);
+    const aggregateTypes = rustMutationCodecAliasClosure(aggregateTypeSeeds, aliases);
+    const serdeAliases = rustMutationCodecAliasClosure(["serde_json"], aliases);
+    const aggregateImplRanges = rustMutationCodecImplRanges(tokens, pairs, aggregateTypes);
+    const facts: RustMutationCodecOwnershipFact[] = [];
+    for (const fnRange of rustMutationCodecFunctions(tokens, pairs, aggregateImplRanges)) {
+      const values: Map<string, boolean>[] = [rustMutationCodecParameterValues(tokens, pairs, fnRange, aggregateTypes)];
+      for (let index = fnRange.bodyStart + 1; index < fnRange.bodyEnd; index += 1) {
+        if (tokens[index]?.text === "{") values.push(new Map());
+        else if (tokens[index]?.text === "}") values.pop();
+        if (tokens[index]?.text === "let") rustMutationCodecLetValue(tokens, pairs, index, fnRange.bodyEnd, values, aggregateTypes, fnRange.aggregateImpl);
+        const name = tokens[index]?.text;
+        if (!name || !rustMutationCodecSerdeCall(tokens, index, serdeAliases)) continue;
+        const call = rustMutationCodecCall(tokens, pairs, index);
+        if (!call) continue;
+        if (["to_vec", "to_string", "to_value", "to_writer"].includes(name) && rustTokenSegments(tokens, pairs, call.open + 1, call.close, ",").some(([start, end]) => rustMutationCodecExpressionIsAggregate(tokens, start, end, values))) facts.push({ kind: "whole-aggregate-serialization" });
+        if (!["from_slice", "from_str", "from_reader", "from_value"].includes(name)) continue;
+        const genericTypes = call.genericStart === null || call.genericEnd === null ? [] : rustTypeNames(rustTokenText(tokens, call.genericStart, call.genericEnd));
+        if (genericTypes.some((type) => aggregateTypes.has(type)) || (genericTypes.includes("Self") && fnRange.aggregateImpl) || (genericTypes.length === 0 && rustMutationCodecInferredAggregate(tokens, pairs, index, call.close, fnRange, aggregateTypes))) facts.push({ kind: "whole-aggregate-deserialization" });
+      }
+    }
+    for (let index = 0; index < tokens.length; index += 1) {
+      if (tokens[index]?.text !== "match") continue;
+      let open = -1;
+      for (let cursor = index + 1; cursor < tokens.length; cursor += 1) if (tokens[cursor]!.text === "{") { open = cursor; break; }
+      const close = open < 0 ? undefined : pairs.get(open);
+      if (close === undefined) continue;
+      const aggregateImpl = aggregateImplRanges.some(([start, end]) => index >= start && index < end);
+      for (const [start, end] of rustTokenSegments(tokens, pairs, open + 1, close, ",")) {
+        const arrow = rustFindTopLevel(tokens, pairs, start, end, new Set(["=>"]));
+        const path = arrow < 0 ? null : rustPatternVariantPath(tokens, start, arrow);
+        const parts = path?.split("::") ?? [];
+        const owner = parts.at(-2) ?? "";
+        if (parts.length > 1 && (aggregateTypes.has(owner) || (aggregateImpl && owner === "Self")) && aggregateVariantNames.has(parts.at(-1) ?? "")) facts.push({ kind: "aggregate-variant-match" });
+      }
+      index = close;
+    }
+    return facts;
+  };
+}
+//#endregion 🛡️MutationCodecOwnership
+
+/** 🛡️ Normalizes one virtual repository path without permitting absolute or parent traversal. */
+function rustVirtualRelativePath(path: string): string {
+  const normalized = path.normalize("NFC").replaceAll("\\", "/").replace(/^\.\//u, "").replace(/\/{2,}/gu, "/");
+  if (!normalized || normalized.startsWith("/") || /^[A-Za-z]:\//u.test(normalized)) throw new Error(`Rust virtual source path must be repository-relative: ${JSON.stringify(path)}.`);
+  const segments = normalized.split("/");
+  if (segments.some((segment) => !segment || segment === "." || segment === "..")) throw new Error(`Rust virtual source path contains traversal: ${JSON.stringify(path)}.`);
+  return segments.join("/");
+}
+
+/** 🚫️ Applies configured opaque prefixes lexically to a virtual path before its reader is called. */
+export function taxonomyRelativePathIsExcluded(path: string, taxonomy: Taxonomy = loadTaxonomy()): boolean {
+  const normalized = rustVirtualRelativePath(path);
+  return Object.values(taxonomy.pathExclusions).some((exclusion) => {
+    const prefix = exclusion.path.replaceAll("\\", "/").replace(/^\.\//u, "").replace(/\/+$/u, "");
+    return normalized === prefix || normalized.startsWith(`${prefix}/`);
+  });
+}
+
+/** 🧪️ Inspects an in-memory/virtual Rust tree, filtering opaque paths before any source read. */
+export function inspectRustVirtualSources(paths: readonly string[], readSource: (path: string) => string, taxonomy: Taxonomy = loadTaxonomy()): RustVirtualSourceFact[] {
+  const candidates = paths.map((path) => ({ original: path, normalized: rustVirtualRelativePath(path) }))
+    .filter(({ normalized }) => !taxonomyRelativePathIsExcluded(normalized, taxonomy) && normalized.endsWith(".rs"))
+    .sort((left, right) => Buffer.from(left.normalized).compare(Buffer.from(right.normalized)));
+  const seen = new Set<string>();
+  return candidates.map(({ original, normalized }) => {
+    if (seen.has(normalized)) throw new Error(`Rust virtual source path is duplicated after normalization: ${JSON.stringify(normalized)}.`);
+    seen.add(normalized);
+    return { path: normalized, facts: inspectRustStructure(readSource(original)) };
+  });
+}
+//#endregion 🦀️RustStructure
 
 //#region 🧭️Discovery
 /** 🎭️ Package "kind" declared by the ecosystem's role marker — see `readSemioMarker` and `taxonomy.roles`. */
@@ -2873,19 +5249,24 @@ function rustPackageName(text: string): string | undefined {
  * ecosystem is discovery-opaque (no marker spec, e.g. dotnet), or no `role` is declared.
  */
 export function readSemioMarker(manifestPath: string, lang: PackageLang, taxonomy: Taxonomy = loadTaxonomy()): { role: PackageRole; id?: string } | undefined {
+  return existsSync(manifestPath) ? parseSemioMarker(readFileSync(manifestPath, "utf8"), lang, taxonomy) : undefined;
+}
+
+/** 🏷️ Resolves role metadata from supplied bytes, including transaction preimage views. */
+function parseSemioMarker(content: string, lang: PackageLang, taxonomy: Taxonomy): { role: PackageRole; id?: string } | undefined {
   const spec = taxonomy.ecosystems[lang]?.marker;
-  if (!spec || !existsSync(manifestPath)) return undefined;
+  if (!spec) return undefined;
   let role: string | undefined;
   let id: string | undefined;
   if (spec.format === "toml") {
-    const body = tomlTableBody(readFileSync(manifestPath, "utf8"), spec.table);
+    const body = tomlTableBody(content, spec.table);
     if (!body) return undefined;
     role = body.match(new RegExp(`^${spec.roleKey}\\s*=\\s*"([^"]+)"`, "m"))?.[1];
     id = body.match(new RegExp(`^${spec.idKey}\\s*=\\s*"([^"]+)"`, "m"))?.[1];
   } else {
     let parsed: unknown;
     try {
-      parsed = JSON.parse(readFileSync(manifestPath, "utf8"));
+      parsed = JSON.parse(content);
     } catch {
       return undefined;
     }
@@ -2973,13 +5354,13 @@ function stripEmoji(segment: string): string {
 }
 
 /** 🆔️ Falls back to the manifest's own package name, else an emoji-stripped dash-joined owner path, when `readSemioMarker` found no explicit `id`. */
-function fallbackPackageId(manifestPath: string, lang: PackageLang, ownerRel: string): string {
+function fallbackPackageId(manifestPath: string, lang: PackageLang, ownerRel: string, content?: string): string {
   try {
     if (lang === "🦀️rust") {
-      const name = rustPackageName(readFileSync(manifestPath, "utf8"));
+      const name = rustPackageName(content ?? readFileSync(manifestPath, "utf8"));
       if (name) return name;
     } else {
-      const name = (JSON.parse(readFileSync(manifestPath, "utf8")) as { name?: string }).name;
+      const name = (JSON.parse(content ?? readFileSync(manifestPath, "utf8")) as { name?: string }).name;
       if (name) return name;
     }
   } catch {
@@ -3015,6 +5396,259 @@ export function clearDiscoveryCache(): void {
   scanCache.clear();
 }
 
+//#region 📇️CatalogInputs
+/** 🌳️ Logical preimage filesystem used equally by catalog generation and transaction revalidation. */
+export interface RegistryCatalogInputView {
+  entries(path: string): readonly { readonly name: string; readonly nodeKind: "file" | "directory" | "symlink" }[];
+  kind(path: string): "file" | "directory" | "symlink" | null;
+  readText(path: string): string;
+}
+
+/** 🔮️ Read-only post-operation inputs for the exact registry preview owner. */
+export interface RegistryCatalogProjection {
+  readonly contractId: "plugin-registry";
+  readonly schemaVersion: 1;
+  readonly moves: readonly { readonly sourcePath: string; readonly destinationPath: string; readonly nodeKind: "file" | "symlink" }[];
+  readonly edits: readonly { readonly path: string; readonly bytesBase64: string }[];
+  readonly removals: readonly string[];
+}
+
+/** 🔐️ Validates bounded stdin data before any projected path can reach the filesystem. */
+export function parseRegistryCatalogProjection(content: string, taxonomy: Taxonomy): RegistryCatalogProjection {
+  const authority = taxonomy.generatorContracts["plugin-registry"]?.inputDiscovery?.previewInput;
+  if (!authority || authority.protocol !== "registry-projected-inputs-v1" || Buffer.byteLength(content) > authority.maxBytes) throw new Error("Registry projected input payload exceeds its declared authority.");
+  const value = JSON.parse(content) as RegistryCatalogProjection;
+  const keys = (row: unknown, expected: readonly string[]): boolean => Boolean(row && typeof row === "object" && !Array.isArray(row) && Object.keys(row).sort().join("\0") === [...expected].sort().join("\0"));
+  const path = (value: unknown): value is string => typeof value === "string" && value.length > 0 && value === value.normalize("NFC") && !value.includes("\\") && !value.includes("\0") && !value.startsWith("/") && !/^[A-Za-z]:/u.test(value) && value.split("/").every((part) => part && part !== "." && part !== "..") && !Object.values(taxonomy.pathExclusions).some((entry) => { const prefix = entry.path.replace(/\/+$/u, ""); return value === prefix || value.startsWith(prefix + "/"); });
+  if (!keys(value, ["contractId", "schemaVersion", "moves", "edits", "removals"]) || value.contractId !== "plugin-registry" || value.schemaVersion !== 1 || !Array.isArray(value.moves) || !Array.isArray(value.edits) || !Array.isArray(value.removals) || value.moves.length + value.edits.length + value.removals.length > authority.maxOperations) throw new Error("Registry projected input payload has unsupported shape or operation count.");
+  const sources = new Set<string>(), destinations = new Set<string>(), edits = new Set<string>(), removals = new Set<string>();
+  for (const move of value.moves) {
+    if (!keys(move, ["sourcePath", "destinationPath", "nodeKind"]) || !path(move.sourcePath) || !path(move.destinationPath) || move.sourcePath === move.destinationPath || !["file", "symlink"].includes(move.nodeKind) || sources.has(move.sourcePath) || destinations.has(move.destinationPath)) throw new Error("Registry projected move is invalid or duplicated.");
+    sources.add(move.sourcePath); destinations.add(move.destinationPath);
+  }
+  for (const edit of value.edits) {
+    if (!keys(edit, ["path", "bytesBase64"]) || !path(edit.path) || typeof edit.bytesBase64 !== "string" || Buffer.from(edit.bytesBase64, "base64").toString("base64") !== edit.bytesBase64 || edits.has(edit.path)) throw new Error("Registry projected edit is invalid or duplicated.");
+    edits.add(edit.path);
+  }
+  for (const removal of value.removals) {
+    if (!path(removal) || removals.has(removal) || sources.has(removal) || destinations.has(removal)) throw new Error("Registry projected removal is invalid or overlaps a move.");
+    removals.add(removal);
+  }
+  return value;
+}
+
+/** 🌳️ Applies only authorized leaf operations and their required ancestor membership in memory. */
+export function registryCatalogProjectedInputView(repoRoot: string, taxonomy: Taxonomy, projection: RegistryCatalogProjection, base: RegistryCatalogInputView = registryCatalogInputView(repoRoot, taxonomy)): RegistryCatalogInputView {
+  const checked = parseRegistryCatalogProjection(JSON.stringify(projection), taxonomy);
+  const sources = new Set(checked.moves.map((move) => move.sourcePath));
+  const removed = new Set(checked.removals);
+  const moves = new Map(checked.moves.map((move) => [move.destinationPath, move]));
+  const edits = new Map(checked.edits.map((edit) => [edit.path, Buffer.from(edit.bytesBase64, "base64").toString("utf8")]));
+  const createdDirectories = new Set<string>();
+  for (const move of checked.moves) {
+    if (base.kind(move.sourcePath) !== move.nodeKind) throw new Error(`Registry projected source drifted: ${move.sourcePath}`);
+    if (base.kind(move.destinationPath) !== null && !sources.has(move.destinationPath)) throw new Error(`Registry projected destination is occupied: ${move.destinationPath}`);
+    for (let parent = dirname(move.destinationPath); parent !== "."; parent = dirname(parent)) {
+      const kind = base.kind(parent);
+      if (kind && kind !== "directory") throw new Error(`Registry projected ancestor is not a directory: ${parent}`);
+      if (!kind) createdDirectories.add(parent);
+    }
+  }
+  for (const path of removed) if (base.kind(path) === null) throw new Error(`Registry projected removal drifted: ${path}`);
+  const kind = (path: string): "file" | "directory" | "symlink" | null => {
+    if (moves.has(path)) return moves.get(path)!.nodeKind;
+    if (sources.has(path) || removed.has(path)) return null;
+    if (createdDirectories.has(path)) return "directory";
+    return base.kind(path);
+  };
+  for (const path of edits.keys()) if (kind(path) !== "file") throw new Error(`Registry projected edit is not a regular post-state file: ${path}`);
+  return {
+    kind,
+    entries(path) {
+      if (kind(path) !== "directory") return [];
+      const rows = new Map<string, "file" | "directory" | "symlink">();
+      if (!createdDirectories.has(path)) for (const entry of base.entries(path)) {
+        const child = path ? `${path}/${entry.name}` : entry.name;
+        const childKind = kind(child);
+        if (childKind) rows.set(entry.name, childKind);
+      }
+      for (const child of [...moves.keys(), ...createdDirectories]) if ((dirname(child) === "." ? "" : dirname(child)) === path) rows.set(basename(child), kind(child)!);
+      return [...rows].map(([name, nodeKind]) => ({ name, nodeKind }));
+    },
+    readText(path) {
+      if (kind(path) !== "file") throw new Error(`Registry projected content is missing or a symlink: ${path}`);
+      return edits.get(path) ?? base.readText(moves.get(path)?.sourcePath ?? path);
+    },
+  };
+}
+
+/** 🎯️ Conservative lexical admission before the expensive shared catalog membership scan. */
+export function registryCatalogPathMayAffect(path: string, taxonomy: Taxonomy = loadTaxonomy()): boolean {
+  const authority = taxonomy.generatorContracts["plugin-registry"]?.inputDiscovery;
+  if (!authority || Object.values(taxonomy.pathExclusions).some((entry) => { const prefix = entry.path.replace(/\/+$/u, ""); return path === prefix || path.startsWith(prefix + "/"); })) return false;
+  const roots = [...authority.implementationEntryPaths, ...Object.values(authority.workspaceImports).flatMap((entry) => [entry.entryPath, entry.manifestPath])].map((path) => path.split("/")[0]);
+  if (roots.includes(path.split("/")[0])) return true;
+  return !path.split("/").some((segment) => segment.startsWith(".") || DISCOVERY_SKIP_DIRS.has(segment));
+}
+
+/** 🛡️ Creates one no-follow, opaque-first catalog filesystem view. */
+export function registryCatalogInputView(repoRoot: string, taxonomy: Taxonomy = loadTaxonomy()): RegistryCatalogInputView {
+  const kinds = new Map<string, "file" | "directory" | "symlink" | null>();
+  const checked = (path: string): string => {
+    const absolute = resolve(repoRoot, path || ".");
+    const normalized = relative(repoRoot, absolute).replaceAll("\\", "/");
+    if (normalized !== path || pathIsExcluded(repoRoot, absolute, taxonomy)) throw new Error(`Registry catalog input is outside its nonopaque owner: ${path}`);
+    return absolute;
+  };
+  const kind = (path: string): "file" | "directory" | "symlink" | null => {
+    const absolute = checked(path);
+    if (kinds.has(path)) return kinds.get(path)!;
+    const parent = dirname(path) === "." ? "" : dirname(path);
+    if (path && parent !== path) {
+      const parentKind = kind(parent);
+      if (parentKind === "symlink") throw new Error(`Registry catalog ancestor is a symlink: ${parent}`);
+      if (parentKind !== "directory") return null;
+    }
+    let value: "file" | "directory" | "symlink" | null;
+    try {
+      const stat = lstatSync(absolute);
+      value = stat.isSymbolicLink() ? "symlink" : stat.isDirectory() ? "directory" : stat.isFile() ? "file" : null;
+      if (value === null) throw new Error(`Registry catalog input is not a regular node: ${path}`);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      value = null;
+    }
+    kinds.set(path, value);
+    return value;
+  };
+  return {
+    kind,
+    entries(path) {
+      const absolute = checked(path);
+      const nodeKind = kind(path);
+      if (nodeKind === null) return [];
+      if (nodeKind !== "directory") throw new Error(`Registry catalog directory is ${nodeKind}: ${path}`);
+      return readdirSync(absolute, { withFileTypes: true }).filter((entry) => !pathIsExcluded(repoRoot, join(absolute, entry.name), taxonomy)).map((entry) => ({ name: entry.name, nodeKind: entry.isSymbolicLink() ? "symlink" as const : entry.isDirectory() ? "directory" as const : "file" as const }));
+    },
+    readText(path) {
+      if (kind(path) !== "file") throw new Error(`Registry catalog content input is missing or a symlink: ${path}`);
+      return readFileSync(checked(path), "utf8");
+    },
+  };
+}
+
+/** 📦️ Catalog discovery deliberately omits source-role, cache-tag and package-purity diagnostics. */
+export function discoverCatalogPackages(repoRoot: string, taxonomy: Taxonomy = loadTaxonomy(), view: RegistryCatalogInputView = registryCatalogInputView(repoRoot, taxonomy)): DiscoveredPackage[] {
+  return [...scanRepo(repoRoot, taxonomy, { view, inputs: new Set<string>() }).packages];
+}
+
+/** 📚️ Example IDs are directory membership with one schema-owned primary Rust leaf. */
+export function registryExampleCatalog(repoRoot: string, cratePath: string, taxonomy: Taxonomy = loadTaxonomy(), view: RegistryCatalogInputView = registryCatalogInputView(repoRoot, taxonomy), inputs = new Set<string>()): string[] {
+  const authority = taxonomy.generatorContracts["plugin-registry"]?.inputDiscovery;
+  if (!authority || authority.kind !== "registry-catalog") throw new Error("Registry catalog input discovery is not declared.");
+  const area = taxonomy.pluginAreas.find((area) => cratePath.startsWith(area + "/"));
+  const pluginRoot = area ? cratePath.split("/").slice(0, area.split("/").length + 1).join("/") : cratePath.split("/")[0]!;
+  const leaf = canonicalPrimaryFilenameForKind(authority.exampleFileKindId, taxonomy);
+  const exists = (path: string): boolean => {
+    const kind = view.kind(path);
+    if (kind === "symlink") throw new Error(`Registry catalog example input is a symlink: ${path}`);
+    if (kind) inputs.add(path);
+    return kind !== null;
+  };
+  const dirs = (path: string): string[] => exists(path) ? view.entries(path).filter((entry) => entry.nodeKind === "directory").map((entry) => entry.name) : [];
+  const ids = new Set<string>();
+  const slugPattern = new RegExp(taxonomy.exampleSlugPattern, "u");
+  const slugs = (path: string): void => {
+    for (const slug of dirs(path)) if (slugPattern.test(slug) && !taxonomy.forbiddenExampleSlugs.includes(slug) && exists(`${path}/${slug}/${leaf}`)) ids.add(slug);
+  };
+  const artifacts = `${pluginRoot}/${taxonomy.artifactsDirName}`;
+  for (const artifact of dirs(artifacts)) {
+    const artifactPath = `${artifacts}/${artifact}`;
+    slugs(`${artifactPath}/${authority.exampleDirectoryName}`);
+    const standards = `${artifactPath}/${taxonomy.standardsDirName}`;
+    for (const standard of dirs(standards)) {
+      const subsets = `${standards}/${standard}/${taxonomy.subsetsDirName}`;
+      for (const subset of dirs(subsets)) for (const role of taxonomy.surfaceRoles) {
+        const surface = `${subsets}/${subset}/${taxonomy.surfaceDirNames[role]}`;
+        if (exists(surface)) slugs(`${surface}/${authority.exampleDirectoryName}`);
+      }
+    }
+  }
+  return [...ids].sort();
+}
+
+//#region 🔗️RegistryCompilerImports
+export interface RegistryCompilerImport {
+  readonly path: string;
+  readonly kind: string;
+}
+
+/** 🔎️ Validates Bun's runtime compiler capability and returns owned import records. */
+export function scanRegistryCompilerImports(source: string, platform: unknown = Reflect.get(globalThis, "Bun")): readonly RegistryCompilerImport[] {
+  if (platform === null || typeof platform !== "object" && typeof platform !== "function") throw new Error("Registry import discovery requires Bun's compiler runtime.");
+  const constructor: unknown = Reflect.get(platform, "Transpiler");
+  if (typeof constructor !== "function") throw new Error("Registry import discovery requires Bun.Transpiler.");
+  const compiler: unknown = Reflect.construct(constructor, [{ loader: "tsx" }]);
+  if (compiler === null || typeof compiler !== "object") throw new Error("Bun.Transpiler returned an invalid compiler.");
+  const scan: unknown = Reflect.get(compiler, "scanImports");
+  if (typeof scan !== "function") throw new Error("Bun.Transpiler does not expose scanImports.");
+  const imports: unknown = Reflect.apply(scan, compiler, [source]);
+  if (!Array.isArray(imports)) throw new Error("Bun.Transpiler returned invalid import records.");
+  return imports.map((entry: unknown) => {
+    if (entry === null || typeof entry !== "object") throw new Error("Bun.Transpiler returned an invalid import record.");
+    const path: unknown = Reflect.get(entry, "path"), kind: unknown = Reflect.get(entry, "kind");
+    if (typeof path !== "string" || typeof kind !== "string") throw new Error("Bun.Transpiler import records require string path and kind.");
+    return { path, kind };
+  });
+}
+
+/** 🔗️ Native compiler import identities, preserving Unicode source specifiers. */
+export function registryStaticImports(source: string): readonly string[] {
+  return [...new Set(scanRegistryCompilerImports(source.replace(/^#![^\n]*(?:\n|$)/u, "\n")).filter((entry) => entry.kind === "import-statement").map((entry) => {
+    const decoded = Buffer.from(entry.path, "latin1").toString("utf8");
+    return decoded !== entry.path && !decoded.includes("\ufffd") && source.includes(decoded) ? decoded : entry.path;
+  }))].sort();
+}
+//#endregion 🔗️RegistryCompilerImports
+
+/** 📇️ Exact content inputs plus positive membership witnesses; ignored files are not excluded. */
+export function registryCatalogInputPaths(repoRoot: string, taxonomy: Taxonomy = loadTaxonomy(), view: RegistryCatalogInputView = registryCatalogInputView(repoRoot, taxonomy)): readonly string[] {
+  const authority = taxonomy.generatorContracts["plugin-registry"]?.inputDiscovery;
+  if (!authority || authority.kind !== "registry-catalog") throw new Error("Registry catalog input discovery is not declared.");
+  const inputs = new Set<string>();
+  const packages = scanRepo(repoRoot, taxonomy, { view, inputs }).packages;
+  for (const pkg of packages) if (pkg.lang === "🦀️rust" && (pkg.role === "plugin" || pkg.role === "extension")) {
+    const descriptor = relative(repoRoot, resolve(repoRoot, pkg.packageRel, authority.descriptorRelativePath)).replaceAll("\\", "/");
+    const kind = view.kind(descriptor);
+    if (kind === "symlink") throw new Error(`Registry descriptor is a symlink: ${descriptor}`);
+    if (kind) inputs.add(descriptor);
+    registryExampleCatalog(repoRoot, pkg.packageRel, taxonomy, view, inputs);
+  }
+  const visited = new Set<string>();
+  const visit = (path: string): void => {
+    if (visited.has(path)) return;
+    visited.add(path);
+    const source = view.readText(path);
+    inputs.add(path);
+    for (const specifier of registryStaticImports(source)) {
+      if (specifier.startsWith("node:") || specifier.startsWith("bun:")) continue;
+      if (specifier.startsWith(".")) {
+        visit(relative(repoRoot, resolve(repoRoot, dirname(path), specifier)).replaceAll("\\", "/"));
+        continue;
+      }
+      const binding = authority.workspaceImports[specifier];
+      if (!binding) throw new Error(`Registry implementation import is not schema-owned: ${specifier} in ${path}`);
+      const manifest = JSON.parse(view.readText(binding.manifestPath)) as { name?: string; exports?: Record<string, unknown> };
+      if (manifest.name !== specifier || manifest.exports?.["."] !== "./" + relative(dirname(binding.manifestPath), binding.entryPath).replaceAll("\\", "/")) throw new Error(`Registry workspace import binding drifted: ${specifier}`);
+      inputs.add(binding.manifestPath);
+      visit(binding.entryPath);
+    }
+  };
+  for (const path of authority.implementationEntryPaths) visit(path);
+  return [...inputs].filter(Boolean).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
+}
+//#endregion 📇️CatalogInputs
+
 export type PackageSourceRole = "declaration" | "registration" | "bootstrap" | "thin-delegation" | "tool-metadata" | "implementation" | "unresolved";
 
 /** 🧪️ Conservatively classifies one source leaf against its schema-selected package grammar. */
@@ -3022,7 +5656,7 @@ export function classifyPackageSourceRole(content: string, grammar: PackageGlueG
   const source = content.replace(/\/\*[\s\S]*?\*\//gu, "").replace(/(^|\s)\/\/.*$/gmu, "$1").replace(/(^|\s)#(?!\[).*$/gmu, "$1").trim();
   if (!source) return "declaration";
   if (grammar.analyzer === "rust") {
-    if (/\b(?:struct|enum|trait|impl|const|static|fn)\b/u.test(source)) return "implementation";
+    if (/\b(?:struct|enum|trait|impl|const|static|fn)\b|\bmacro_rules\s*!/u.test(source)) return "implementation";
     const rest = source.replace(/#!?\[[^\]]*\]/gu, "").replace(/(?:pub\s+)?(?:use|mod)\s+[^;{}]+[;{]/gu, "").replace(/\bextern\s+crate\s+[^;]+;/gu, "").replace(/\binclude!?\s*\([^;]+;/gu, "").replace(/[{};]/gu, "").trim();
     if (/^(?:[A-Za-z_]\w*::)*[A-Za-z_]\w*!\s*\([^{}]*\)$/u.test(rest)) return "registration";
     return rest ? "unresolved" : "declaration";
@@ -3071,6 +5705,7 @@ export function classifyPackageSourceRole(content: string, grammar: PackageGlueG
 /** 🧾️ Classifies an explicitly dispositioned source-format fixed/configurable package entry. */
 export function classifyPackageSourceDisposition(content: string, disposition: PackageSourceDisposition, grammar: PackageGlueGrammarSpec): PackageSourceRole {
   if (disposition.validator === "package-glue") return classifyPackageSourceRole(content, grammar);
+  if (disposition.validator === "vitest-configuration") return /^\s*import\s*\{\s*defineConfig\s*\}\s*from\s*["']vitest\/config["'];\s*export\s+default\s+defineConfig\(\{[\s\S]*\}\);\s*$/u.test(content) && classifyPackageSourceRole(content, grammar) === "declaration" ? "tool-metadata" : "unresolved";
   return /\bScriptRouter\b/u.test(content) && /\brunBundleScriptMain\b/u.test(content) ? "tool-metadata" : "unresolved";
 }
 
@@ -3084,7 +5719,8 @@ export function classifyPackageSourceDisposition(content: string, disposition: P
  * can drift. A markerless manifest is skipped silently in a `legacy`/`mixed`/`exempt`/undeclared area (not yet
  * migrated) but always shows up in `discoverBurndown`, so nothing vanishes unnoticed.
  */
-function scanRepo(repoRoot: string, taxonomy: Taxonomy): DiscoveryScan {
+function scanRepo(repoRoot: string, taxonomy: Taxonomy, catalog?: { readonly view: RegistryCatalogInputView; readonly inputs: Set<string> }): DiscoveryScan {
+  if (typeof taxonomy.packagesDirName !== "string" || typeof taxonomy.targetsDirName !== "string" || !taxonomy.roles || !taxonomy.areas || !taxonomy.configurableEntryContracts) throw new Error("Catalog discovery requires the complete validated taxonomy vocabulary.");
   const packagesDirName = taxonomy.packagesDirName;
   const targetsDirName = taxonomy.targetsDirName;
   const forbiddenSegments = new Set(taxonomy.forbiddenPathSegments);
@@ -3095,6 +5731,20 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy): DiscoveryScan {
   const implDirsByArea: Record<string, number> = {};
   let implDirsTotal = 0;
   const rel = (abs: string): string => relative(repoRoot, abs).replaceAll("\\", "/");
+  const catalogExists = (abs: string): boolean => {
+    if (!catalog) return existsSync(abs);
+    const path = rel(abs);
+    const kind = catalog.view.kind(path);
+    if (kind === "symlink") throw new Error(`Registry catalog input is a symlink: ${path}`);
+    if (kind) catalog.inputs.add(path);
+    return kind !== null;
+  };
+  const catalogEntries = (abs: string) => {
+    if (!catalog) return readdirSafe(abs);
+    const path = rel(abs);
+    if (path) catalog.inputs.add(path);
+    return catalog.view.entries(path).map((entry) => ({ name: entry.name, isDirectory: () => entry.nodeKind === "directory", isFile: () => entry.nodeKind === "file" }));
+  };
 
   const addPackageProblem = (owner: OwnerAccumulator, path: string, kind: DiscoveryProblem["kind"], detail: string): void => {
     const repoPath = rel(path);
@@ -3103,6 +5753,7 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy): DiscoveryScan {
   };
 
   const collectPackageRoles = (packageRoot: string, lang: PackageLang, owner: OwnerAccumulator, entryContractIds: readonly string[]): void => {
+    if (catalog) return;
     const rule = taxonomy.packageBoundaryRules[lang];
     const grammar = rule && taxonomy.packageGlueGrammar[rule.glueGrammarId];
     if (!rule || !grammar) {
@@ -3174,7 +5825,9 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy): DiscoveryScan {
 
   const resolveOne = (manifestAbs: string, lang: PackageLang, owner: OwnerAccumulator, target: PackageTarget | undefined): void => {
     const manifestPath = rel(manifestAbs);
-    const marker = readSemioMarker(manifestAbs, lang, taxonomy);
+    const content = catalog?.view.readText(manifestPath);
+    const marker = content === undefined ? readSemioMarker(manifestAbs, lang, taxonomy) : parseSemioMarker(content, lang, taxonomy);
+    if (catalog) catalog.inputs.add(manifestPath);
     if (!marker) {
       unmarkedManifests.push({ path: manifestPath, area: owner.area });
       problems.push({ kind: "manifest-without-marker", path: manifestPath, message: `"${manifestPath}" has no resolvable semio role marker; all non-opaque areas require one.` });
@@ -3191,7 +5844,7 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy): DiscoveryScan {
       packageRel: rel(dirname(manifestAbs)),
       manifestPath,
       role: marker.role,
-      id: marker.id ?? fallbackPackageId(manifestAbs, lang, owner.ownerRel),
+      id: marker.id ?? fallbackPackageId(manifestAbs, lang, owner.ownerRel, content),
       area: owner.area,
       maturity: "clean",
     });
@@ -3199,7 +5852,7 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy): DiscoveryScan {
 
   const scanPackagesDir = (packagesAbs: string, owner: OwnerAccumulator): void => {
     if (pathIsExcluded(repoRoot, packagesAbs, taxonomy)) return;
-    for (const langEntry of readdirSafe(packagesAbs)) {
+    for (const langEntry of catalogEntries(packagesAbs)) {
       if (!langEntry.isDirectory() || langEntry.name.startsWith(".")) continue;
       const lang = langEntry.name as PackageLang;
       const ecosystem = taxonomy.ecosystems[lang];
@@ -3215,8 +5868,8 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy): DiscoveryScan {
       }
       const directManifestAbs = join(langAbs, manifestFilename);
       const targetsAbs = join(langAbs, targetsDirName);
-      const hasDirect = existsSync(directManifestAbs);
-      const hasTargets = existsSync(targetsAbs);
+      const hasDirect = catalogExists(directManifestAbs);
+      const hasTargets = catalogExists(targetsAbs);
       if (hasDirect && hasTargets) {
         problems.push({ kind: "ambiguous-lang-shape", path: rel(langAbs), message: `"${rel(langAbs)}" has both a direct manifest and a target directory.` });
         continue;
@@ -3227,12 +5880,12 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy): DiscoveryScan {
         continue;
       }
       if (!hasTargets) continue;
-      for (const targetEntry of readdirSafe(targetsAbs)) {
+      for (const targetEntry of catalogEntries(targetsAbs)) {
         if (!targetEntry.isDirectory()) continue;
         const targetAbs = join(targetsAbs, targetEntry.name);
         if (pathIsExcluded(repoRoot, targetAbs, taxonomy)) continue;
         const targetManifestAbs = join(targetAbs, manifestFilename);
-        if (!existsSync(targetManifestAbs)) {
+        if (!catalogExists(targetManifestAbs)) {
           problems.push({ kind: "target-without-manifest", path: rel(targetAbs), message: `"${rel(targetAbs)}" has no exact manifest contract ${JSON.stringify(manifestFilename)}.` });
           continue;
         }
@@ -3249,11 +5902,12 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy): DiscoveryScan {
 
   const walk = (absDir: string, ownerStack: readonly OwnerAccumulator[]): void => {
     if (pathIsExcluded(repoRoot, absDir, taxonomy)) return;
-    const entries = readdirSafe(absDir);
+    const entries = catalogEntries(absDir);
     let stack = ownerStack;
     if (entries.some((entry) => entry.isDirectory() && entry.name === packagesDirName)) {
       const ownerRel = rel(absDir);
       const owner: OwnerAccumulator = { ownerRel, area: areaOf(ownerRel, taxonomy) ?? "", packages: [], residualImplDirs: 0, entryFilesAtOwnerRoot: ownerRootEntryFiles(entries) };
+      if (catalog) for (const name of owner.entryFilesAtOwnerRoot) catalogExists(join(absDir, name));
       owners.set(ownerRel, owner);
       stack = [...ownerStack, owner];
       scanPackagesDir(join(absDir, packagesDirName), owner);
@@ -3263,6 +5917,7 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy): DiscoveryScan {
       const path = join(absDir, entry.name);
       if (pathIsExcluded(repoRoot, path, taxonomy)) continue;
       if (forbiddenSegments.has(entry.name)) {
+        if (catalog) catalog.inputs.add(rel(path));
         implDirsTotal += 1;
         const area = stack.at(-1)?.area ?? areaOf(rel(absDir), taxonomy) ?? "";
         implDirsByArea[area] = (implDirsByArea[area] ?? 0) + 1;
@@ -3621,9 +6276,8 @@ function semanticAssemblyOnly(content: string, extension: string): boolean {
 }
 
 /** 🧷️ Mechanical glue and collection assembly establish reachability but never qualify as a production consumer. */
-function semanticProductionConsumer(source: SemanticSource, taxonomy: Taxonomy): boolean {
-  const entries = new Set(Object.values(taxonomy.configurableEntryContracts).map((contract) => contract.filename));
-  return source.production && !entries.has(basename(source.abs)) && !semanticAssemblyOnly(source.content, extname(source.abs));
+function semanticProductionConsumer(source: SemanticSource, packages: readonly DiscoveredPackage[]): boolean {
+  return source.production && !packages.some((pkg) => source.rel.startsWith(`${pkg.packageRel}/`)) && !semanticAssemblyOnly(source.content, extname(source.abs));
 }
 
 function semanticPublicSymbols(source: SemanticSource): string[] {
@@ -3919,7 +6573,7 @@ function semanticPathInRoots(path: string, roots: readonly string[]): boolean {
 /** 📊️ Builds the timestamp-free semantic census from taxonomy-defined active scope. */
 export function buildSemanticCensus(repoRoot: string, options: { readonly scope?: string } = {}, taxonomy: Taxonomy = loadTaxonomy()): SemanticCensus {
   repoRoot = realpathSync(repoRoot);
-  const problems: SemanticProblem[] = validateTaxonomy(taxonomy).map((message) => ({ code: "taxonomy-schema", severity: "error", path: semanticRel(repoRoot, join(__dirname, "../🔣️taxonomy.json")), message }));
+  const problems: SemanticProblem[] = validateTaxonomy(taxonomy).map((message) => ({ code: "taxonomy-schema", severity: "error", path: "📋️project.json#metadata.semio.taxonomy", message }));
   for (const pkgProblem of discoverPackageProblems(repoRoot, taxonomy)) {
     problems.push({
       code: pkgProblem.kind,
@@ -3991,7 +6645,7 @@ export function buildSemanticCensus(repoRoot: string, options: { readonly scope?
   for (const source of sourceFiles) {
     const from = sourceToComponent.get(source.abs);
     if (!from) continue;
-    const production = semanticProductionConsumer(source, taxonomy);
+    const production = semanticProductionConsumer(source, packages);
     const pathTargets = source.rel.endsWith(".rs") ? resolveRustPathAttributes(source.abs, source.content) : [];
     for (const pathTarget of pathTargets) {
       let targetAbs = pathTarget.target;
@@ -4048,7 +6702,7 @@ export function buildSemanticCensus(repoRoot: string, options: { readonly scope?
       if (productionConsumers.length < taxonomy.semanticConsumerMinimum) problems.push({ code: "module-production-consumer-minimum", severity: "error", path: draft.currentPath, componentId: draft.id, message: `Resolved reverse closure reaches ${productionConsumers.length} independent production components; ${taxonomy.semanticConsumerMinimum} are required.` });
       if (productionConsumers.length >= taxonomy.semanticConsumerMinimum && lca !== draft.currentOwner) problems.push({ code: "module-lowest-common-owner", severity: "error", path: draft.currentPath, componentId: draft.id, message: `Module is owned by ${JSON.stringify(draft.currentOwner)} but consumers compute ${JSON.stringify(lca)}.` });
     }
-    const languageMirrors = semanticUnique(draft.sourceFiles.map((source) => Object.entries(taxonomy.componentFileKinds).find(([, kindId]) => canonicalStemmedFilenameForKind(kindId, "component", taxonomy) === basename(source.abs))?.[0]).filter((value): value is string => Boolean(value)));
+    const languageMirrors = semanticUnique(draft.sourceFiles.map((source) => Object.entries(taxonomy.componentFileKinds).find(([, kindId]) => kindId === fileKindIdForFilename(basename(source.abs), taxonomy))?.[0]).filter((value): value is string => Boolean(value)));
     const ownerPackages = packages.filter((pkg) => draft.currentPath === pkg.ownerRel || draft.currentPath.startsWith(`${pkg.ownerRel}/`) || pkg.ownerRel.startsWith(`${draft.currentPath}/`)).map((pkg) => `${pkg.role}:${pkg.ownerRel}${pkg.target ? `#${pkg.target}` : ""}`);
     const duplicateClusters = duplicates.filter((cluster) => cluster.componentIds.includes(draft.id)).map((cluster) => cluster.id);
     const staticImports = semanticUnique(draft.sourceFiles.flatMap((source) => [...semanticImportSpecs(source), ...semanticRustUseSpecs(source)]));

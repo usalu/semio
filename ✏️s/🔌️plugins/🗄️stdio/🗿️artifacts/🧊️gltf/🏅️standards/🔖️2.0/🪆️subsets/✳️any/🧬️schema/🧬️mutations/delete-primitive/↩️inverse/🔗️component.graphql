@@ -1,6 +1,0 @@
-# delete-primitive inverse facet.
-input GltfDeletePrimitivePayloadV1 {
-  mesh: Int!
-  primitive: Int!
-}
-type GltfDeletePrimitiveInverseV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

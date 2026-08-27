@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🧬️mutations/🏷️set-info-title",
+  "semanticKind": "set-info-title",
+  "displayName": "Set Info Title",
+  "emoji": "🏷️",
+  "aggregateVariant": "SetInfoTitle",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "set-info-title",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": ["applied"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]
+}

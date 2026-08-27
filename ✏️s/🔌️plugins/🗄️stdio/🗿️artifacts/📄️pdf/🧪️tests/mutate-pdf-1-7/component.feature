@@ -6,7 +6,7 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
   The input is a real 65-page bachelor thesis produced by LaTeX, not a synthetic fixture, and it is
   read where the domain already keeps it. Every scenario copies it into the case work directory
   before touching it; the committed document is never written to. The oracle drives the registered
-  `lopdf` reference implementation over this subset's own real object-graph model (18 mutation
+  `lopdf` reference implementation over this subset's own real object-graph model (16 direct mutation
   kinds: page insert/remove/reorder/media-box/crop-box/rotate/content-replace/content-append, plus
   the raw object-graph vocabulary — insert/remove/set-object, dict-entry and trailer-entry edits).
   `remove-page` and `set-info` route through the shared `document` module's own
@@ -18,7 +18,7 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
   and under `semantic-pdf-v1`'s own tolerance, so no scenario can pass merely because `lopdf`
   declined to error. `mutate-<kind>` fails unless the mutation MOVES the compared projection — a
   kind that applies cleanly and changes nothing observable would otherwise report a green for a
-  mutation nobody watched, and until this wave all eighteen of them did exactly that.
+  mutation nobody watched, and until this wave all sixteen of them did exactly that.
   `inverse-<kind>` applies the mutation, applies its own independently computed inverse, and fails
   with the first diverging field unless the result projects onto exactly what the original document
   projects onto. `identity-round-trip` fails unless the re-serialized bytes differ from the input
@@ -26,7 +26,7 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
 
   WHAT THE PROJECTION HAD TO GROW BEFORE THE OBSERVABILITY LAW COULD BE HONEST. The shared PDF
   projection reports declared version, page count and per-page media box, content operators and
-  shown text — a page-and-metadata surface. Seven of this catalog's eighteen kinds never touch a
+  shown text — a page-and-metadata surface. Seven of this catalog's sixteen kinds never touch a
   page: insert-object, remove-object, set-object-value, set-dict-entry, remove-dict-entry,
   set-trailer-entry and remove-trailer-entry all edit the COS object graph, and an eighth,
   set-page-crop-box, moves a page field the shared surface does not report. Asserting observability
@@ -90,7 +90,7 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
   resolved authoring lanes every page and metadata mutation edits, objects/trailer are the retained
   native carrier — and encode_pdf serialized the carrier ALONE whenever it was non-empty. On this
   thesis it always is, so set-page-rotation, set-page-media-box, set-page-crop-box, set-page-content,
-  append-page-content, insert-page, remove-page, move-page, set-info and set-snapshot all applied
+  append-page-content, insert-page, remove-page, move-page and set-info all applied
   cleanly to the snapshot and then vanished on export: the subject's own reader projected 65 pages
   where the oracle had 64, rotate 0 where the oracle had 90, title "" where the oracle had the
   stamped one. That is a mutation reporting as applied that no reader can find in the bytes, and it
@@ -112,8 +112,8 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
   sets its type with TJ, so it undoes the mutation from an empty string. Both sides project text: []
   and agree there — the loss is in the reference's round trip, not in the projection and not in this
   implementation. The subject half proves it rather than asserting it in prose: its inverse-<kind>
-  handler holds all eighteen kinds to the inverse law with NO carve-out at all, contentOperators
-  included, and all eighteen pass. Dropping the axis from the comparison would make these three go
+  handler holds all sixteen kinds to the inverse law with NO carve-out at all, contentOperators
+  included, and all sixteen pass. Dropping the axis from the comparison would make these three go
   green while hiding exactly that fact, so they stay red and attributed. The oracle half keeps its
   own documented one-axis exemption for the same three kinds, because on ITS side the loss is real.
 
@@ -129,8 +129,6 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                   | params                                                                                                                                                                    |
-      | no-mutation          | {}                                                                                                                                                                        |
-      | set-snapshot         | {"declaredVersion": "2.0", "title": "Wave 7 Snapshot Title"}                                                                                                             |
       | insert-page          | {"index": 30, "page": {"mediaBox": [0, 0, 612, 792], "rotate": 0, "text": "Inserted page for wave 7 mutation testing"}}                                                  |
       | remove-page          | {"index": 7}                                                                                                                                                              |
       | set-page-media-box   | {"index": 15, "mediaBox": [0, 0, 595, 842]}                                                                                                                              |
@@ -160,8 +158,6 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                   | params                                                                                                                                                                    |
-      | no-mutation          | {}                                                                                                                                                                        |
-      | set-snapshot         | {"declaredVersion": "2.0", "title": "Wave 7 Snapshot Title"}                                                                                                             |
       | insert-page          | {"index": 30, "page": {"mediaBox": [0, 0, 612, 792], "rotate": 0, "text": "Inserted page for wave 7 mutation testing"}}                                                  |
       | remove-page          | {"index": 7}                                                                                                                                                              |
       | set-page-media-box   | {"index": 15, "mediaBox": [0, 0, 595, 842]}                                                                                                                              |

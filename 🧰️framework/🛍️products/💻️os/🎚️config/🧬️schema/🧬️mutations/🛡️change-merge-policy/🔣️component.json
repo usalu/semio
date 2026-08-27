@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy",
+  "semanticKind": "change-merge-policy",
+  "displayName": "Change Merge Policy",
+  "emoji": "🛡️",
+  "aggregateVariant": "ChangeMergePolicy",
+  "payloadSchema": "os.config.merge-policy#change-merge-policy",
+  "textOpcode": null,
+  "binaryTag": null,
+  "invertibility": "self",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": ["applied", "warning"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "typescript"]
+}

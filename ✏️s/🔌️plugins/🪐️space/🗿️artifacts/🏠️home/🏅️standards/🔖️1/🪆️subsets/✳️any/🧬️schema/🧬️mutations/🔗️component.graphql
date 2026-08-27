@@ -1,6 +1,6 @@
-# 🧬️ S Home mutation schema — artifact-lane fields only.
+# 🏠️ Space Home direct mutation aggregate.
+input ChangeCatalogGenerationInput { newCatalogGeneration: Long! }
 
-type SHomeMutation {
-  schema: String! @state(class: ARTIFACT)
-  catalogGeneration: Long! @state(class: ARTIFACT)
+input SHomeMutationInput {
+  changeCatalogGeneration: ChangeCatalogGenerationInput
 }

@@ -1,0 +1,251 @@
+Artifact Store One-Item Publication Validation — 2026-08-27
+
+FORMAT
+rustfmt --edition 2021 '<Store component>' '<plugin component>'
+exit 0; no output
+
+FIXTURE ORACLE
+bun -e '<Ajv2020 strict validation of both schema/fixture pairs>'
+exit 0
+artifact-store-one-item-publication-v1: valid
+artifact-ephemeral-one-item-publication-v1: valid
+
+NATIVE NX INTEGRATION
+bun nx run @semio-tech/framework-os-host-rs:check --skip-nx-cache
+exit 0
+NX Successfully ran target check for project @semio-tech/framework-os-host-rs
+Finished dev profile [unoptimized] target(s) in 4m 18s
+
+FOCUSED PLUGIN HOSTILE TEST
+bun nx run @semio-tech/framework-os-host-rs:test -- rust -p semio-framework-plugin document_revision_change_between_ephemeral_preparation_turns_closes_without_publishing_the_lane_root
+exit 1 while compiling the shared plugin lib-test target
+Scoped E0425 Store-name errors at lines 31683/31687 were fixed by qualifying store::ArtifactStore and store::ConfigStore.
+Remaining blocker: eight E0277 errors at lines 7015, 7021, 7026, and 7031. Older DummyApp transaction tests pass Result<DummySnapshot, Fault> from synchronous app.snapshot() into resolve_ready, which requires Future.
+Evidence that blocker expressions are outside this change:
+git diff -U0 -- '<plugin component>' | rg -n -C 3 'resolve_ready\(app\.snapshot|DummySnapshot'
+exit 1; no matches/output
+The focused test did not execute; no pass claim is made.
+
+Direct authorized retry after fixing the scoped qualifications:
+cargo test --manifest-path '🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml' document_revision_change_between_ephemeral_preparation_turns_closes_without_publishing_the_lane_root
+exit 101
+Exactly eight E0277 errors remain at the four untouched DummyApp lines; the two scoped E0425 errors are gone.
+
+FOCUSED STORE RETRY
+bun nx run @semio-tech/framework-os-kernel:test --skip-nx-cache -- rust artifact_store_one_item
+exit 1 before target resolution
+NX Could not load plugin ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin.mjs
+This condition was transient; the coordinator subsequently confirmed the file is present.
+
+DIRECT NATIVE PLUGIN CHECK
+cargo check --manifest-path '🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml'
+exit 0
+Finished dev profile [unoptimized] target(s) in 1m 08s
+
+DIRECT WASM32-WASIP2 PLUGIN CHECK
+cargo check --manifest-path '🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml' --target wasm32-wasip2
+exit 0
+Finished dev profile [unoptimized] target(s) in 2m 43s
+
+PRODUCTION SHORTCUT SCAN
+rg -n -F '.apply_one(' '<plugin component>'
+Only match: the source-test forbidden-string literal.
+Store advance region scan for Mutation::diff, Mutation::inverse, .diff(, .inverse(, and .apply(: no matches.
+
+SHARED-GREEN TEST CALL-SITE CLEANUP
+Source diagnosis:
+- The eight E0277 diagnostics were two trait-bound notes for each of four expressions in the
+  plugin's cfg(test) DummyApp helper-law region (lines 7015, 7021, 7026, and 7031).
+- ArtifactApp::snapshot is synchronous and returns Result<DummySnapshot, Fault>; the four tests
+  still passed that value to resolve_ready after the API became synchronous.
+- No production call site was involved.
+
+Patch:
+- resolve_ready(app.snapshot()).unwrap().count -> app.snapshot().unwrap().count
+- the same direct value in the three test projection closures
+
+rustfmt --edition 2021 '<plugin component>'
+exit 0; no output
+
+rg -n 'resolve_ready\(app\.snapshot\(\)\)' '<plugin component>'
+exit 1; no matches/output
+
+FOCUSED HOSTILE STALE-BETWEEN-TURNS RETRY
+cargo test --manifest-path '<plugin Cargo.toml>' document_revision_change_between_ephemeral_preparation_turns_closes_without_publishing_the_lane_root
+exit 0
+running 1 test
+test component::app::typed_command_full_operation_tests::document_revision_change_between_ephemeral_preparation_turns_closes_without_publishing_the_lane_root ... ok
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 406 filtered out; finished in 0.02s
+
+The first retry mistakenly supplied --exact without the fully qualified module path. It exited 0
+but selected zero tests; it is not counted as proof. The command above is the genuine execution.
+
+FOCUSED STORE PRESENCE/TRANSIENT RETRY
+cargo test --manifest-path '<Store Cargo.toml>' presence_and_transient_one_item_publications_are_retained_stale_safe_cancelable_and_exactly_closed
+exit 101 before the named test executed because the shared kernel lib-test target has 38 compile errors.
+The named source test contains successful Transient publication, receipt equality, published-root
+Arc identity, ACK, displaced-root retention during bounded close, and final retirement assertions.
+Representative shared blockers:
+- DemoSnapshot does not satisfy MemberStoreOwner<SeverityMutation> in other Store tests.
+- tail_undo_cache ManuallyDrop type mismatch.
+- FixedCommandPage test drift uses Vec::as_slice/as_ref.
+- projection invalidation tests access .cause on Result.
+- pre-existing type inference and borrow-check errors in unrelated Store test regions.
+No focused Store pass claim is made.
+
+ADDITIONAL OBSERVATIONS OUTSIDE THE BOUNDED CLEANUP
+cargo test --manifest-path '<plugin Cargo.toml>' fixture_contract_is_anchored_to_the_production_retained_factory_publisher_and_host_receivers
+exit 101 after executing the selected test: source-law assertion `maximum extent authority` failed
+because the current admission slice contains no `.begin_exact_wire` spelling.
+
+cargo test --manifest-path '<plugin Cargo.toml>' transaction_testkit_tests
+exit 101 after compilation succeeded: an existing transaction test aborted when ArtifactStore Drop
+rejected the missing terminal-empty shallow-shell witness. This is runtime teardown drift, not one
+of the resolved synchronous snapshot compile diagnostics.
+
+NATIVE/WASM RECHECK DECISION
+The cleanup changed only four cfg(test) expressions and rustfmt made no production semantic edit.
+Production native and wasm checks were therefore not rerun; their green results above remain the
+latest production validation for this implementation surface.
+
+SHARED STORE LIB-TEST REPAIR AND LIVE-AUTHORITY CLOSURE
+The 38 shared Store lib-test compile diagnostics were repaired without broadening production
+mutation semantics. The repaired support includes MemberStoreOwner bounds, fixed-page access,
+Result projection, retained owner shapes, and exact terminal teardown.
+
+Production API closure:
+- `ArtifactStoreOneItemLiveAuthority` is minted by Store from the live operation, generation,
+  revision, applied count, next sequence number, HLC, and actor.
+- `ArtifactStoreOneItemPreparationRequest` carries `authority: Arc<...>`.
+- `ArtifactStoreOneItemPrepared` no longer accepts `next_cursor` or fabricated base IDs.
+- Store initialization installs fixed cursor applied/redo ledgers; Store owns exact cursor publish.
+- Domain factories prepare semantic edit/post-root/digest data and must use authority-derived
+  sequence, clock, and actor metadata; Store rejects disagreement before root installation.
+- Authority and cursor owners retire under the item/byte close grant and participate in the
+  terminal-empty witness.
+
+FOCUSED DURABLE SINGLE/RETRY/ACK/ROOT LAW
+cargo test --manifest-path '<Store Cargo.toml>' artifact_store_one_item_single_retry_ack_and_move_only_root_preserve_generation_revision_and_history --message-format short
+exit 0
+running 1 test
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 844 filtered out
+
+FOCUSED DURABLE STALE/SATURATION/CANCEL LAW
+cargo test --manifest-path '<Store Cargo.toml>' artifact_store_one_item_stale_saturation_and_cancel_leave_root_generation_and_revision_unchanged --message-format short
+exit 0
+running 1 test
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 844 filtered out
+
+FOCUSED DURABLE DROP TERMINALITY LAW
+cargo test --manifest-path '<Store Cargo.toml>' artifact_store_one_item_drop_rejects_an_unclosed_publication_owner --message-format short
+exit 0
+running 1 test
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 844 filtered out
+The selected should-panic law observes the exact unclosed-publication rejection without allowing a
+second Store destructor panic to obscure the witness.
+
+FOCUSED PRESENCE/TRANSIENT RETAINED LAW
+cargo test --manifest-path '<Store Cargo.toml>' presence_and_transient_one_item_publications_are_retained_stale_safe_cancelable_and_exactly_closed --message-format short
+exit 0
+running 1 test
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 844 filtered out
+The executed law covers Presence and Transient publish, retry/ACK, Arc root identity, stale and
+cancel behavior, displaced-root retention during publication, bounded retirement, and terminal
+emptiness.
+
+FOCUSED HOSTILE STALE-BETWEEN-TURNS LAW, CURRENT SOURCE
+cargo test --manifest-path '<plugin Cargo.toml>' document_revision_change_between_ephemeral_preparation_turns_closes_without_publishing_the_lane_root --message-format short
+exit 0
+running 1 test
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 407 filtered out
+
+FOCUSED CURRENT PRODUCTION SOURCE ANCHOR
+cargo test --manifest-path '<plugin Cargo.toml>' fixture_contract_is_anchored_to_the_production_retained_factory_publisher_and_host_receivers --message-format short
+exit 0
+running 1 test
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 407 filtered out
+
+NARROW SHARED TRANSACTION TESTKIT COMPILE/RUNTIME WITNESS
+cargo test --manifest-path '<plugin Cargo.toml>' command_cache_inputs_share_immutable_arcs --message-format short
+exit 0
+running 1 test
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 407 filtered out
+
+FINAL FORMAT
+rustfmt '<Store component>' '<plugin component>' '<SPR channel component>'
+exit 0; no output
+
+FINAL DIRECT NATIVE PLUGIN CHECK
+cargo check --manifest-path '<plugin Cargo.toml>' --message-format short
+exit 0
+Finished `dev` profile [unoptimized] target(s) in 41.73s
+Warnings only; no compile errors.
+
+FINAL DIRECT WASM32-WASIP2 PLUGIN CHECK
+cargo check --manifest-path '<plugin Cargo.toml>' --target wasm32-wasip2 --message-format short
+exit 0
+Finished `dev` profile [unoptimized] target(s) in 45.91s
+Warnings only; no compile errors.
+
+STORE-OWNED PREPARED DIGEST API CLOSURE
+Exact public API:
+- `ArtifactStoreOneItemLiveAuthority::prepared_edit_digest<Mutation: Serialize>(&self,
+  edit: &Edit<Mutation>) -> Result<[u8; 32], String>`
+- `ArtifactStoreOneItemLiveAuthority::prepare_one_item<P, Mutation: Serialize>(&self,
+  edit: Edit<Mutation>, post_snapshot: Arc<P>)
+  -> Result<ArtifactStoreOneItemPrepared<P, Mutation>, String>`
+- immutable authority getters: `operation()`, `generation()`, `base_revision()`,
+  `base_applied_edit_count()`, `next_sequence_number()`, `next_clock()`, and `actor()`
+- prepared checkpoint getter: `edit_digest()`
+
+Authority and prepared-envelope fields are private. Apps cannot construct a live authority,
+inject cursor/history fields, mutate an accumulator, or construct a raw prepared envelope. The
+preferred constructor seals semantic edit/root inputs with Store-derived actor, clock, identity,
+and digest metadata. Commit preflight recomputes `prepared_edit_digest` and compares it with the
+sealed candidate before any publication mutation.
+
+FOCUSED HOSTILE DIGEST/AUTHORITY LAW
+cargo test --manifest-path '<Store Cargo.toml>' artifact_store_one_item_digest_helper_matches_validation_and_rejects_forged_cursor_history --message-format short
+exit 0
+running 1 test
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 845 filtered out
+The executed law proves helper/private-validation digest parity and that an altered candidate
+digest cannot change generation, revision, root, cursor, or history.
+
+TICKET-ISOLATED FIXTURE/ORACLE LAW
+CARGO_TARGET_DIR='<ticket>/🧪️target-store-digest-helper' cargo test --manifest-path '<Store Cargo.toml>' one_item_publication_fixture_matches_the_third_party_json_oracle --message-format short
+exit 0
+running 2 tests
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 844 filtered out
+The filter also selected the ephemeral fixture oracle. The durable fixture now includes exact
+canonical-helper, forged-digest, and forged-base-history authority cases.
+
+STRICT THIRD-PARTY SCHEMA PARITY
+bun -e '<Ajv2020 strict validation of durable schema/fixture>'
+exit 0
+artifact-store-one-item-publication-v1: valid
+
+TICKET-ISOLATED SEALED SOURCE LAW
+CARGO_TARGET_DIR='<ticket>/🧪️target-store-digest-helper' cargo test --manifest-path '<Store Cargo.toml>' one_item_publication_source_denies_generic_or_unbounded_shortcuts --message-format short
+exit 0
+running 1 test
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 845 filtered out
+The law rejects public raw authority/prepared fields, cursor fields in the domain envelope, and a
+Store validation path that does not recompute the public canonical helper.
+
+CONCURRENT BUILD ISOLATION
+The first shared-target fixture command waited on a peer `semio-s-plugin-stdio` build. Only this
+queued command was canceled (exit 130); the peer was not interrupted. Every remaining Cargo
+command used the explicit ticket-local target above.
+
+FINAL ISOLATED NATIVE PLUGIN CHECK
+CARGO_TARGET_DIR='<ticket>/🧪️target-store-digest-helper' cargo check --manifest-path '<plugin Cargo.toml>' --message-format short
+exit 0
+Finished `dev` profile [unoptimized] target(s) in 8m 49s
+Warnings only; no compile errors.
+
+FINAL ISOLATED WASM32-WASIP2 PLUGIN CHECK
+CARGO_TARGET_DIR='<ticket>/🧪️target-store-digest-helper' cargo check --manifest-path '<plugin Cargo.toml>' --target wasm32-wasip2 --message-format short
+exit 0
+Finished `dev` profile [unoptimized] target(s) in 8m 59s
+Warnings only; no compile errors.

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/sequence/sequence/mutation/change-step-collapsed/payload.json",
+  "title": "ChangeStepCollapsed",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "collapsed"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "collapsed": {
+      "type": "boolean"
+    }
+  }
+}

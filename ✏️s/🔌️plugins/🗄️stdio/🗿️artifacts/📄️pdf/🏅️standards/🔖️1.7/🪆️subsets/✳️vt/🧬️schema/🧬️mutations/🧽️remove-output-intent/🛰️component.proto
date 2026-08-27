@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7_vt.mutation.remove_output_intent;
+
+// 🧽️ Direct remove-output-intent protobuf payload.
+message RemoveOutputIntentMutation {
+}

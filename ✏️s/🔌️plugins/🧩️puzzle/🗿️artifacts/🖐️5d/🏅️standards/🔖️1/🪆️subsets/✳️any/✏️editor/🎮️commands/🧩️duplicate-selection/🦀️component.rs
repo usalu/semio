@@ -1,6 +1,6 @@
 //! 🧩️ `duplicate-selection` command.
 
-use crate::editor::puzzle5d::{next_part_id, Puzzle5dActionCtx, Puzzle5dPart};
+use crate::editor::puzzle5d::{Puzzle5dActionCtx, Puzzle5dFreshIds, Puzzle5dPart};
 
 /// 📄️ Clones every selected part at a small flat+volume offset. Aborts (emitting nothing at all) when
 /// the selection holds no parts — the pre-migration `return Emit::default()`. 🕹️ ticket
@@ -9,7 +9,7 @@ use crate::editor::puzzle5d::{next_part_id, Puzzle5dActionCtx, Puzzle5dPart};
 /// limitation.
 pub fn duplicate_selection(ctx: &mut Puzzle5dActionCtx<'_>) {
     let ids = ctx.selected_part_ids();
-    let clones: Vec<Puzzle5dPart> = ctx
+    let mut clones: Vec<Puzzle5dPart> = ctx
         .scene
         .document
         .parts
@@ -17,7 +17,6 @@ pub fn duplicate_selection(ctx: &mut Puzzle5dActionCtx<'_>) {
         .filter(|part| ids.contains(&part.id))
         .map(|part| {
             let mut clone = part.clone();
-            clone.id = next_part_id();
             clone.part_3d.origin[0] += 0.5;
             clone.part_3d.origin[1] += 0.5;
             clone.part_2d.x += 48.0;
@@ -28,6 +27,10 @@ pub fn duplicate_selection(ctx: &mut Puzzle5dActionCtx<'_>) {
     if clones.is_empty() {
         ctx.abort = true;
         return;
+    }
+    let mut fresh_ids = Puzzle5dFreshIds::from_document(&ctx.scene.document);
+    for clone in &mut clones {
+        clone.id = fresh_ids.next_part();
     }
     ctx.scene.document.parts.extend(clones);
 }

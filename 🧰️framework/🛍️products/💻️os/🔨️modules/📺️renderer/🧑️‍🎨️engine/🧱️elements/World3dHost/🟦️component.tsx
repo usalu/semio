@@ -7,7 +7,8 @@
 
 // #region 🔌️Adapters
 import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, Suspense, useSyncExternalStore, type ComponentProps, type DragEvent, type MouseEvent } from "react";
-import { Box3, BufferAttribute, BufferGeometry, Color, DoubleSide, EdgesGeometry, Group, LineBasicMaterial, LineSegments, Mesh, MeshStandardMaterial, Object3D, OrthographicCamera, PointsMaterial, Quaternion, ShaderMaterial, TextureLoader, Vector3, type ThreeEvent } from "three";
+import { Box3, BufferAttribute, BufferGeometry, Color, DoubleSide, EdgesGeometry, Group, LineBasicMaterial, LineSegments, Mesh, MeshStandardMaterial, Object3D, OrthographicCamera, PointsMaterial, Quaternion, ShaderMaterial, TextureLoader, Vector3 } from "three";
+import type { ThreeEvent } from "@semio-tech/ui-react";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { clearColorResolveCache, resolveColorHex, semanticVar, themeColorVar, tokenVar } from "@semio-tech/ui-styling";
@@ -51,6 +52,7 @@ import {
   type TutorialCameraDriver,
   type UiLabel,
 } from "@semio-tech/ui-react";
+import { isIconName } from "@semio-tech/assets";
 import { windowElementId, type ComponentSceneHostProps, type ContextMenuItemSpec, type MergeMode, type PluginContextMenuSurfaceTarget } from "@semio-tech/framework";
 import {
   cadVec3ToThree,
@@ -512,7 +514,7 @@ export function semanticColorsFromPalette(palette: MeshStylePalette): SemanticCo
 const celebratingWorldInstanceUntil = new Map<string, number>();
 const celebratingWorldInstanceListeners = new Set<() => void>();
 let celebratingWorldInstanceVersion = 0;
-let celebratingWorldInstanceTimer: ReturnType<typeof setTimeout> | null = null;
+let celebratingWorldInstanceTimer: number | null = null;
 
 function notifyCelebratingWorldInstances(): void {
   celebratingWorldInstanceVersion += 1;
@@ -598,7 +600,8 @@ const CELEBRATE_CONIC_SPIN_SECONDS = 1.2;
 
 /** 🎉️ Document-timeline celebrate spin angle — phase-locked to the CSS `:root` celebrate-border-spin clock. */
 function celebrateConicAngleRadians(): number {
-  const timeMs = typeof document !== "undefined" ? (document.timeline?.currentTime ?? performance.now()) : 0;
+  const timelineTime = typeof document !== "undefined" ? document.timeline?.currentTime : null;
+  const timeMs = typeof timelineTime === "number" ? timelineTime : performance.now();
   return (((timeMs / 1000) % CELEBRATE_CONIC_SPIN_SECONDS) / CELEBRATE_CONIC_SPIN_SECONDS) * Math.PI * 2;
 }
 
@@ -958,7 +961,7 @@ function seedPendingWorldProjectionCamera(
         target: sceneCamera.target,
         distance: Math.hypot(sceneCamera.position[0] - sceneCamera.target[0], sceneCamera.position[1] - sceneCamera.target[1], sceneCamera.position[2] - sceneCamera.target[2]) || 600,
       });
-  return { ...pose, fov: "fov" in pendingSpec ? pendingSpec.fov : sceneCamera.fov, explicitProjection: true };
+  return { ...pose, fov: worldProjectionModeFov(pendingSpec) ?? sceneCamera.fov, explicitProjection: true };
 }
 
 /** @emoji 📷️ Viewport-aware reframe for a projection seed so orthographic panes fit content — re-runs whenever
@@ -988,7 +991,7 @@ function WorldProjectionContentFrame(props: {
     const { camera, controls: rawControls } = getThree();
     const controls = rawControls as { target: Vector3; update?: () => void } | null;
     const pose = frameWorldProjectionPose(props.spec, props.bounds, { viewportWidth: size.width, viewportHeight: size.height });
-    const framed: WorldParsedCameraState = { ...pose, fov: "fov" in props.spec ? props.spec.fov : props.fov, explicitProjection: true };
+    const framed: WorldParsedCameraState = { ...pose, fov: worldProjectionModeFov(props.spec) ?? props.fov, explicitProjection: true };
     const ortho = camera as OrthographicCamera & { readonly isOrthographicCamera?: boolean };
     if (ortho.isOrthographicCamera) {
       ortho.left = size.width / -2;
@@ -1082,7 +1085,7 @@ export function parseSelectionDomainsFromSession(json: string): { readonly nodes
 }
 
 export function selectionGroupsFromDomains(domains: { readonly nodes: string[]; readonly edges: string[]; readonly handles: string[] }): NonNullable<PluginContextMenuSurfaceTarget["selection"]> {
-  const groups: NonNullable<PluginContextMenuSurfaceTarget["selection"]> = [];
+  const groups: NonNullable<PluginContextMenuSurfaceTarget["selection"]>[number][] = [];
   if (domains.nodes.length > 0) groups.push({ domain: "node", ids: domains.nodes });
   if (domains.edges.length > 0) groups.push({ domain: "edge", ids: domains.edges });
   if (domains.handles.length > 0) groups.push({ domain: "handle", ids: domains.handles });
@@ -1100,8 +1103,8 @@ export function mapContextMenuSpecs(
     const shortcut = spec.shortcut ?? (boundKeys ? formatKeybindingShortcut(boundKeys) : undefined);
     return {
       id: spec.id,
-      label: wireLabel(spec.label),
-      icon: spec.icon,
+      label: spec.label === undefined ? undefined : wireLabel(spec.label),
+      icon: spec.icon && isIconName(spec.icon) ? spec.icon : undefined,
       color: spec.color,
       shortcut,
       disabled: spec.disabled,
@@ -1110,8 +1113,8 @@ export function mapContextMenuSpecs(
       destructive: spec.destructive,
       onSelect: spec.action
         ? (event) => {
-            const clientX = event && "clientX" in event && typeof (event as MouseEvent).clientX === "number" ? (event as MouseEvent).clientX : undefined;
-            const clientY = event && "clientY" in event && typeof (event as MouseEvent).clientY === "number" ? (event as MouseEvent).clientY : undefined;
+            const clientX = event && "clientX" in event && typeof event.clientX === "number" ? event.clientX : undefined;
+            const clientY = event && "clientY" in event && typeof event.clientY === "number" ? event.clientY : undefined;
             const pointArgs = spec.action === "openVortexSuggestions" && clientX != null && clientY != null ? { x: clientX, y: clientY } : undefined;
             dispatch(spec.action!, { ...spec.args, ...pointArgs });
           }
@@ -1907,7 +1910,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
   readonly showEdges?: boolean;
   readonly pickEnabled: boolean;
   readonly onPaintAt?: (objectId: string, u: number, v: number) => void;
-  readonly paintFromHit: (objectId: string, mesh: WorldMeshData, event: ThreeEvent<PointerEvent> & { faceIndex?: number | null; uv?: { x: number; y: number } }) => void;
+  readonly paintFromHit: (objectId: string, mesh: WorldMeshData, event: { faceIndex?: number | null; uv?: { x: number; y: number } }) => void;
   readonly flatShading?: boolean;
   readonly onInstancePointerDown: (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
   readonly onInstancePointerMove: (id: string | null) => void;
@@ -1972,7 +1975,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
     <group ref={rootRef} position={position as [number, number, number]} scale={scale as [number, number, number]} quaternion={quaternion}>
       {meshData ? (
         <>
-          {hasShadedMesh ? (
+          {hasShadedMesh && geometry ? (
             <PaintTexturedMesh
             geometry={geometry}
             style={style}
@@ -2502,7 +2505,7 @@ function WorldInstancesLayer({
 
   const mergeMode = (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => componentMergeArg(resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode));
 
-  const paintFromHit = (objectId: string, mesh: WorldMeshData, event: ThreeEvent<PointerEvent> & { faceIndex?: number | null; uv?: { x: number; y: number } }) => {
+  const paintFromHit = (objectId: string, mesh: WorldMeshData, event: { faceIndex?: number | null; uv?: { x: number; y: number } }) => {
     if (!onPaintAt) return;
     let u = event.uv?.x;
     let v = event.uv?.y;
@@ -4016,7 +4019,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
   const gridSnapEnabled = lod.gridSnapEnabled ?? false;
   const suggestionMenuOpen = Boolean(interaction.suggestionMenu?.open);
-  const suggestionMenuOwnsThisWindow = worldSuggestionMenuOwnsWindow(interaction.suggestionMenu, windowInstanceId);
+  const suggestionMenuOwnsThisWindow = worldSuggestionMenuOwnsWindow(interaction.suggestionMenu, windowInstanceId ?? undefined);
   const suggestionMenuCheckingPlacementLabel = useLabel("ui.host.checkingPlacement");
   const suggestionMenuNoPlacementLabel = useLabel("ui.host.noPlacement");
   const suggestionMenuTitleLabel = useLabel("ui.surfaceContextMenu.placementSuggestions");
@@ -4821,7 +4824,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   }, [finalizeMarqueeSelection, marqueeDown, paintMode, selection.engagementSessionActive]);
 
   const handleEmptyClick = useCallback(
-    (event: MouseEvent) => {
+    (event: globalThis.MouseEvent) => {
       // 🧹️ Consume the post-marquee suppress flag so a stale `true` cannot permanently no-operation background deselect.
       if (wasMarqueeDragRef.current) {
         wasMarqueeDragRef.current = false;
@@ -5008,7 +5011,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
           const menu = await openSurfaceContextMenu(
             requestContextMenu,
             {
-              menu: { id: "world3d" },
+              menu: { id: "world3d", args: null },
               surface: { surfaceId: node.surfaceId, kind: "world3d", hits, selection: selectionGroups },
               windowInstanceId: windowInstanceId ?? undefined,
               point: { x: event.clientX, y: event.clientY },

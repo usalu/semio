@@ -1,55 +1,41 @@
-/** 💾 Generic glTF mutation envelope binary transport. */
-import { GLTF_MUTATION_MAX_COMMAND_ID_BYTES, GLTF_MUTATION_MAX_PAYLOAD_BYTES, validateGltfMutationEnvelope, type GltfMutation, type GltfMutationRejection } from '../../../🔨️modules/🧭️mutation-dispatch/🟦️component.ts';
+/** 💾 Binary transport for the visible glTF mutation aggregate. */
+import type { GltfMutation } from '../../../🧬️schema/🧬️mutations/🟦️component.ts';
 
 export const GLTF_MUTATION_BINARY_FORMAT = 1 as const;
 export const GLTF_MUTATION_BINARY_MARKER = 0x47 as const;
+export interface GltfMutationCodecRejection { readonly code: string; readonly path: string; readonly detail: string }
 export type GltfMutationsBinary = Uint8Array;
-export type GltfMutationBinaryApplication = { readonly bytes: Uint8Array; readonly value: GltfMutation; readonly rejection?: never } | { readonly bytes: Uint8Array; readonly value?: never; readonly rejection: GltfMutationRejection };
+export type GltfMutationBinaryApplication = { readonly bytes: Uint8Array; readonly value: GltfMutation; readonly rejection?: never } | { readonly bytes: Uint8Array; readonly value?: never; readonly rejection: GltfMutationCodecRejection };
 
+const maxPayloadBytes = 64 * 1024;
 const utf8 = new TextEncoder();
 const decodeUtf8 = new TextDecoder('utf-8', { fatal: true });
-const rejected = (bytes: Uint8Array, code: string, path: string, detail: string): GltfMutationBinaryApplication => ({ bytes, rejection: { code, path, detail } });
+const rejected = (bytes: Uint8Array, detail: string): GltfMutationBinaryApplication => ({ bytes, rejection: { code: 'gltf.mutation.malformed-transport', path: 'binary', detail } });
 const encodeVarint = (value: number): number[] => {
   const bytes: number[] = [];
   for (let pending = value; ; pending = Math.floor(pending / 128)) { bytes.push(pending % 128 | (pending >= 128 ? 128 : 0)); if (pending < 128) return bytes; }
 };
-const decodeVarint = (bytes: Uint8Array, offset: number): { readonly value: number; readonly offset: number } | GltfMutationRejection => {
+const decodeVarint = (bytes: Uint8Array, offset: number): { readonly value: number; readonly offset: number } | undefined => {
   let value = 0;
   let multiplier = 1;
-  for (let index = offset; index < bytes.length && index < offset + 5; index += 1) {
+  for (let index = offset; index < bytes.length && index < offset + 10; index += 1) {
     const byte = bytes[index]!;
     value += (byte & 0x7f) * multiplier;
-    if (byte < 128) return value <= 0xffff_ffff ? { value, offset: index + 1 } : { code: 'gltf.mutation.malformed-envelope', path: 'binary', detail: 'varint exceeds u32' };
+    if (byte < 128) return Number.isSafeInteger(value) ? { value, offset: index + 1 } : undefined;
     multiplier *= 128;
   }
-  return { code: 'gltf.mutation.malformed-envelope', path: 'binary', detail: 'truncated or oversized varint' };
+  return undefined;
 };
 
 export const encodeGltfMutationBinary = (value: GltfMutation): GltfMutationBinaryApplication => {
-  const rejection = validateGltfMutationEnvelope(value);
-  if (rejection) return { bytes: new Uint8Array(), rejection };
-  const commandId = utf8.encode(value.commandId);
-  const payload = utf8.encode(value.payload);
-  const phase = value.phase === 'mutation' ? 1 : 3;
-  const bytes = new Uint8Array([GLTF_MUTATION_BINARY_FORMAT, GLTF_MUTATION_BINARY_MARKER, phase, ...encodeVarint(commandId.length), ...commandId, ...encodeVarint(value.version), ...encodeVarint(payload.length), ...payload]);
-  return { bytes, value };
+  const payload = utf8.encode(JSON.stringify(value));
+  if (payload.length > maxPayloadBytes) return rejected(new Uint8Array(), 'aggregate exceeds the payload budget');
+  return { bytes: new Uint8Array([GLTF_MUTATION_BINARY_FORMAT, GLTF_MUTATION_BINARY_MARKER, ...encodeVarint(payload.length), ...payload]), value };
 };
 
 export const decodeGltfMutationBinary = (bytes: Uint8Array): GltfMutationBinaryApplication => {
-  if (bytes.length < 3 || bytes[0] !== GLTF_MUTATION_BINARY_FORMAT || bytes[1] !== GLTF_MUTATION_BINARY_MARKER) return rejected(bytes, 'gltf.mutation.malformed-envelope', 'binary', 'format or marker is invalid');
-  const phase = bytes[2] === 1 ? 'mutation' : bytes[2] === 3 ? 'inverse' : undefined;
-  if (!phase) return rejected(bytes, 'gltf.mutation.malformed-envelope', 'phase', 'phase is not supported by a mutation envelope');
-  const idLength = decodeVarint(bytes, 3);
-  if ('code' in idLength || idLength.value === 0 || idLength.value > GLTF_MUTATION_MAX_COMMAND_ID_BYTES || idLength.offset + idLength.value > bytes.length) return rejected(bytes, 'gltf.mutation.malformed-envelope', 'commandId', 'command id length is invalid');
-  const idStart = idLength.offset;
-  const version = decodeVarint(bytes, idStart + idLength.value);
-  if ('code' in version) return { bytes, rejection: version };
-  const payloadLength = decodeVarint(bytes, version.offset);
-  if ('code' in payloadLength || payloadLength.value > GLTF_MUTATION_MAX_PAYLOAD_BYTES || payloadLength.offset + payloadLength.value !== bytes.length) return rejected(bytes, 'gltf.mutation.malformed-envelope', 'payload', 'payload length is invalid or has trailing bytes');
-  let commandId: string;
-  let payload: string;
-  try { commandId = decodeUtf8.decode(bytes.slice(idStart, idStart + idLength.value)); payload = decodeUtf8.decode(bytes.slice(payloadLength.offset)); } catch (cause) { return rejected(bytes, 'gltf.mutation.malformed-envelope', 'binary', String(cause)); }
-  const value: GltfMutation = { commandId, version: version.value, phase, payload };
-  const rejection = validateGltfMutationEnvelope(value);
-  return rejection ? { bytes, rejection } : { bytes, value };
+  if (bytes.length < 3 || bytes[0] !== GLTF_MUTATION_BINARY_FORMAT || bytes[1] !== GLTF_MUTATION_BINARY_MARKER) return rejected(bytes, 'format or aggregate marker is invalid');
+  const length = decodeVarint(bytes, 2);
+  if (!length || length.value > maxPayloadBytes || length.offset + length.value !== bytes.length) return rejected(bytes, 'payload length is invalid or has trailing bytes');
+  try { return { bytes, value: JSON.parse(decodeUtf8.decode(bytes.slice(length.offset))) as GltfMutation }; } catch (cause) { return rejected(bytes, String(cause)); }
 };

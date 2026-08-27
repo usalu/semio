@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "semanticKind": "change-physical-dims",
+  "before": {
+    "schema": "stdio.png",
+    "width": 2,
+    "height": 1,
+    "bitDepth": 8,
+    "colorType": "rgba",
+    "interlace": false,
+    "plte": null,
+    "trns": null,
+    "gama": 100000,
+    "chrm": null,
+    "srgb": null,
+    "phys": null,
+    "time": null,
+    "bkgd": null,
+    "textChunks": [
+      {
+        "keyword": "Title",
+        "value": "Two Pixel Swatch",
+        "compressed": false,
+        "kind": "text",
+        "languageTag": "",
+        "translatedKeyword": ""
+      }
+    ],
+    "pixels": [
+      255,
+      0,
+      0,
+      255,
+      0,
+      0,
+      255,
+      255
+    ],
+    "chunkOrder": [
+      {
+        "chunk": "ihdr"
+      },
+      {
+        "chunk": "gama"
+      },
+      {
+        "chunk": "text",
+        "index": 0
+      },
+      {
+        "chunk": "idat"
+      },
+      {
+        "chunk": "iend"
+      }
+    ],
+    "unknownChunks": []
+  },
+  "mutation": {
+    "mutation": "change-physical-dims",
+    "payload": {
+      "phys": {
+        "ppuX": 96,
+        "ppuY": 96,
+        "unitIsMeter": false
+      }
+    }
+  },
+  "after": {
+    "schema": "stdio.png",
+    "width": 2,
+    "height": 1,
+    "bitDepth": 8,
+    "colorType": "rgba",
+    "interlace": false,
+    "plte": null,
+    "trns": null,
+    "gama": 100000,
+    "chrm": null,
+    "srgb": null,
+    "phys": {
+      "ppuX": 96,
+      "ppuY": 96,
+      "unitIsMeter": false
+    },
+    "time": null,
+    "bkgd": null,
+    "textChunks": [
+      {
+        "keyword": "Title",
+        "value": "Two Pixel Swatch",
+        "compressed": false,
+        "kind": "text",
+        "languageTag": "",
+        "translatedKeyword": ""
+      }
+    ],
+    "pixels": [
+      255,
+      0,
+      0,
+      255,
+      0,
+      0,
+      255,
+      255
+    ],
+    "chunkOrder": [
+      {
+        "chunk": "ihdr"
+      },
+      {
+        "chunk": "gama"
+      },
+      {
+        "chunk": "text",
+        "index": 0
+      },
+      {
+        "chunk": "phys"
+      },
+      {
+        "chunk": "idat"
+      },
+      {
+        "chunk": "iend"
+      }
+    ],
+    "unknownChunks": []
+  }
+}

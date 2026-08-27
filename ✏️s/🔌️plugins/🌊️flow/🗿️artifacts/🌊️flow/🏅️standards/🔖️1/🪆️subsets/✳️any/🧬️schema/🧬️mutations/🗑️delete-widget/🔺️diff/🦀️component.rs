@@ -7,7 +7,7 @@ use protocol::Identified;
 
 use super::mutation::DeleteWidget;
 
-pub async fn diff(payload: &DeleteWidget, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
+pub fn diff(payload: &DeleteWidget, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
     let mut scene = flow_working_scene(base);
     if !scene.widgets.iter().any(|widget| widget.id() == &payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Widget \"{}\" does not exist.", payload.id), [payload.id.clone()]);

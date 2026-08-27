@@ -160,7 +160,7 @@ mod tests {
     fn widget_id_covers_all_widget_kinds() {
         let widgets: Vec<Widget> = vec![
             Widget::Neuron { id: "neuron-1".into(), neuron_kind: "math.add".into(), params: Default::default(), input_ports: vec![], output_ports: vec![], preview: true },
-            Widget::InputSlider { id: "slider-1".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 },
+            Widget::InputSlider { id: "slider-1".into(), label: "Number".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 },
             Widget::InputNote { id: "note-1".into(), text: String::new() },
             Widget::InputImage { id: "image-1".into(), src: String::new() },
             Widget::Variable { id: "variable-1".into(), name: "x".into(), schema: "number".into() },

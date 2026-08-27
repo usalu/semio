@@ -9,7 +9,7 @@ use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 use serde_json::{json, Value};
 
 //#region 🔖️Measure
-pub async fn measure(config: &FlowConfig, labels: &FlowPlayLabels) -> WindowMeasure {
+pub fn measure(config: &FlowConfig, labels: &FlowPlayLabels) -> WindowMeasure {
     let mut items = vec![MeasureSelectItem { id: FLOW_LOD_MODE_AUTOMATIC.into(), value: FLOW_LOD_MODE_AUTOMATIC.into(), label: labels.automatic.into() }];
     items.extend(serde_json::from_str::<Vec<Value>>(&dag_lod_scale_json()).unwrap_or_default().into_iter().filter_map(|lod| {
         let id = lod.get("id").and_then(|value| value.as_str())?.to_string();

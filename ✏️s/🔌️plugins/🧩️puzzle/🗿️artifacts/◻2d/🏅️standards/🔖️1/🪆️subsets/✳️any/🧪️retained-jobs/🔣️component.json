@@ -3,7 +3,8 @@
   "owner": "puzzle2d",
   "documentSchema": "puzzle.2d.fixture",
   "payloadSchema": "puzzle.2d.fixture.tool-command.v1",
-  "toolIds": ["addNode", "forceLayout", "setActiveExample"],
+  "toolIds": [],
+  "evidenceToolIds": ["addNode", "forceLayout", "setActiveExample"],
   "capacities": {
     "rawBytes": 8192,
     "decodedItems": 512,

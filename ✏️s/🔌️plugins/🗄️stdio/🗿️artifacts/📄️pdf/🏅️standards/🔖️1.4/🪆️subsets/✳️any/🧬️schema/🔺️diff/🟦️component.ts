@@ -1,7 +1,7 @@
 /** 🔺️ PdfDiff (1.4) — a handcrafted sparse diff over the document's page tree, mirroring the Rust
  *  `PdfDiff` shape 1:1. `removed`/`modified` indices address the BASE state (removals applied
  *  descending); `added` indices address the FINAL state (insertions applied ascending). There is
- *  no `snapshot?: PdfSnapshot` full-replace slot — even `SetSnapshot`'s diff is `between`. */
+ *  no `snapshot?: PdfSnapshot` full-replace slot; every change stays page-addressed. */
 import type { PageDoc } from '../📸️snapshot/🟦️component.ts';
 
 export interface PdfPageDiff {

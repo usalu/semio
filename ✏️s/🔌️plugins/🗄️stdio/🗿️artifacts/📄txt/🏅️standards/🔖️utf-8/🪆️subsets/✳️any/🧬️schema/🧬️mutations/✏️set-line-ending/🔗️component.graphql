@@ -1,0 +1,2 @@
+# 🧬 set-line-ending/SetLineEnding
+input SetLineEndingPayload { value: String! }

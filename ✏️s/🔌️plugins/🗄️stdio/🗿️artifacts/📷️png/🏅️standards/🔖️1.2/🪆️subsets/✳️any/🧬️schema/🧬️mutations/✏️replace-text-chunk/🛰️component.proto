@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.png.mutation;
+// 🧬️ replace-text-chunk/ReplaceTextChunk; complex fields follow the direct payload schema.
+message ReplaceTextChunkMutation { uint64 index = 1; bytes chunk = 2; }

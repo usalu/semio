@@ -11,8 +11,10 @@ use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::artifacts::jack::{JackSnapshot, Node, PortDirection, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
 use crate::editor::jack::config::{JackConfig, JackConfigMutation};
 use crate::editor::jack::presence::{JackPresence, JackPresenceMutation};
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, AppActionRegistry, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, Dialect, DomainTopology, DraftView, Editor, Effect, Emit, Fault,
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, AppActionRegistry, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, Dialect, DomainTopology, DraftView, Editor, EditorApp, Effect, Emit, Fault,
     GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation,
     NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphViewport, PanelGroup, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, WindowMeasure, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -305,6 +307,189 @@ impl protocol::OpBinary for TrinityJackCommand {
 #[derive(Default)]
 pub struct TrinityJackPlayApp;
 
+//#region 🧵️RetainedConfigCommands
+const JACK_RETAINED_CONFIG_TOOL_IDS: &[&str] = &["setViewport", "textEdit", "textSelect", "requestCompletions", "setLodMode", "editorEngagementInput", "graphEngagementInput", "resultsEngagementInput"];
+const JACK_RETAINED_PAYLOAD_SCHEMA: &str = "trinity.graph.config-command.v1";
+const JACK_RETAINED_RAW_BYTES: usize = 8_192;
+const JACK_RETAINED_WORK_ITEMS: usize = 64;
+const JACK_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "setViewport", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "textEdit", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "textSelect", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "requestCompletions", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setLodMode", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "editorEngagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "graphEngagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "resultsEngagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
+];
+
+fn jack_retained_config_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(JACK_RETAINED_RAW_BYTES, 64, JACK_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
+}
+
+fn jack_retained_config_extent(command: &TrinityJackCommand, _snapshot: &JackSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    let bytes = match command {
+        TrinityJackCommand::SetViewport { viewport_json } => viewport_json.len(),
+        TrinityJackCommand::TextEdit { text } => text.len(),
+        TrinityJackCommand::TextSelect { .. } | TrinityJackCommand::RequestCompletions => 0,
+        TrinityJackCommand::SetLodMode { window_id, value } => window_id.len().checked_add(value.len())?,
+        TrinityJackCommand::EditorEngagementInput { value } | TrinityJackCommand::GraphEngagementInput { value } | TrinityJackCommand::ResultsEngagementInput { value } => value.len(),
+        _ => return None,
+    };
+    (bytes <= JACK_RETAINED_RAW_BYTES).then_some(1)
+}
+
+fn jack_retained_config_reduce(
+    command: &TrinityJackCommand,
+    _snapshot: &JackSnapshot,
+    config: &JackConfig,
+    _history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _operation: &AppOperationContext,
+) -> Result<Emit<TrinityGraphMutation, JackConfigMutation, NoDraftMutation>, Fault> {
+    match command {
+        TrinityJackCommand::SetViewport { viewport_json } => crate::editor::jack::commands::set_viewport(viewport_json),
+        TrinityJackCommand::TextEdit { text } => crate::editor::jack::commands::text_edit(text),
+        TrinityJackCommand::TextSelect { start, end } => crate::editor::jack::commands::text_select(*start, *end),
+        TrinityJackCommand::RequestCompletions => crate::editor::jack::commands::request_completions(config.revision),
+        TrinityJackCommand::SetLodMode { window_id, value } => crate::editor::jack::commands::set_lod_mode(window_id, value),
+        TrinityJackCommand::EditorEngagementInput { value } => crate::editor::jack::commands::editor_engagement_input(value),
+        TrinityJackCommand::GraphEngagementInput { value } => crate::editor::jack::commands::graph_engagement_input(value),
+        TrinityJackCommand::ResultsEngagementInput { value } => crate::editor::jack::commands::results_engagement_input(value),
+        _ => Err(Fault::from("jack-retained-config-route-mismatch")),
+    }
+}
+
+struct JackRetainedConfigJobFactory { keys: Vec<ToolFactoryKey> }
+
+impl JackRetainedConfigJobFactory {
+    fn new(controller: &str) -> Self { Self { keys: JACK_RETAINED_CONFIG_TOOL_IDS.iter().map(|tool| ToolFactoryKey::new(controller, *tool)).collect() } }
+}
+
+impl ToolJobFactory for JackRetainedConfigJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<TrinityJackPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<TrinityJackPlayApp>>;
+    fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
+    fn payload_schema_id(&self) -> &str { JACK_RETAINED_PAYLOAD_SCHEMA }
+    fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
+    fn execution_contract(&self) -> ToolExecutionContract { jack_retained_config_contract() }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> { Ok(ArtifactRetainedCommandJob::new(payload)) }
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > JACK_RETAINED_RAW_BYTES || checkpoint.is_some() { return Err((ToolJobFactoryError::new("Jack retained config command rejects oversized wire or checkpoint owner"), input, checkpoint)); }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for JackRetainedConfigJobFactory {
+    type Owner = EditorApp<TrinityJackPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = JACK_RETAINED_CONFIG_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = JACK_RETAINED_PUBLICATION_CONTRACTS;
+}
+//#endregion 🧵️RetainedConfigCommands
+
+//#region 📬️ConfigPreparation
+const JACK_STORE_MAXIMUM_BYTES: usize = 32_768;
+
+struct JackConfigPreparationFactory;
+
+struct JackConfigPreparation {
+    base: Option<store::SnapshotRead<JackConfig>>,
+    mutation: Option<JackConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    candidate: Option<(JackConfig, Vec<JackConfigMutation>, JackConfigMutation, usize)>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<JackConfig, JackConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    phase: u8,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn jack_bounded_serialized_bytes<T: serde::Serialize>(value: &T) -> Result<usize, String> {
+    struct Counter(usize);
+    impl std::io::Write for Counter {
+        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+            self.0 = self.0.checked_add(bytes.len()).filter(|total| *total <= JACK_STORE_MAXIMUM_BYTES).ok_or_else(|| std::io::Error::other("Jack retained Config value exceeds its fixed envelope"))?;
+            Ok(bytes.len())
+        }
+        fn flush(&mut self) -> std::io::Result<()> { Ok(()) }
+    }
+    let mut counter = Counter(0);
+    serde_json::to_writer(&mut counter, value).map_err(|error| error.to_string())?;
+    Ok(counter.0)
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<JackConfig, JackConfigMutation> for JackConfigPreparationFactory {
+    fn preflight(&self, mutation: &JackConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) { return Err("Jack config preparation rejected its lane or description envelope".into()); }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: jack_bounded_serialized_bytes(mutation)? })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<JackConfig, JackConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<JackConfig, JackConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<JackConfig, JackConfigMutation>> {
+        if request.lane != store::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES { return Err(request); }
+        Ok(Box::new(JackConfigPreparation { base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, prepared: None, checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), phase: 0, cancelled: false, closing: false }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<JackConfig, JackConfigMutation> for JackConfigPreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        use protocol::Mutation as _;
+        if !grant.permits_one() || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.prepared.is_some() || self.phase >= 2 { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        match self.phase {
+            0 => {
+                let base = self.base.as_ref().ok_or_else(|| "Jack config preparation lost its exact base root".to_string())?;
+                let mutation = self.mutation.take().ok_or_else(|| "Jack config preparation lost its mutation owner".to_string())?;
+                let retained_bytes = jack_bounded_serialized_bytes(base.get())?;
+                let inverse = mutation.inverse(base.get());
+                let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+                self.candidate = Some((post, inverse, mutation, retained_bytes));
+                self.phase = 1;
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: retained_bytes, digest: [0; 32] };
+                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
+            }
+            1 => {
+                let (post, inverse, mutation, retained_bytes) = self.candidate.take().ok_or_else(|| "Jack config preparation lost its semantic candidate".to_string())?;
+                let authority = self.authority.as_ref().ok_or_else(|| "Jack config preparation lost its Store authority".to_string())?;
+                let id = format!("jack-config-retained-{}", authority.next_sequence_number());
+                let edit = protocol::Edit {
+                    id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![mutation], inverse,
+                    mutation_meta: vec![protocol::MutationMeta { mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64, author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly, payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default() }],
+                    description: self.description.take(), coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+                };
+                let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+                self.phase = 2;
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: retained_bytes, digest: prepared.edit_digest() };
+                self.prepared = Some(prepared);
+                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+            }
+            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)),
+        }
+    }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<JackConfig, JackConfigMutation>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<JackConfig, JackConfigMutation>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }); }
+        if let Some(base) = self.base.take() { if !base.return_to_registry() { return Err("Jack config preparation could not return its exact base root".into()); } return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }); }
+        if let Some(authority) = self.authority.as_ref() { if grant.maximum_bytes < authority.actor().len() { return Ok(store::SnapshotRetirementStep::Blocked); } self.authority = None; return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }); }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none() }
+}
+//#endregion 📬️ConfigPreparation
+
 impl ArtifactEditor for TrinityJackPlayApp {
     type Snapshot = JackSnapshot;
     type Mutation = TrinityGraphMutation;
@@ -321,6 +506,36 @@ impl ArtifactEditor for TrinityJackPlayApp {
 
     const DIALECT: Dialect = TRINITY_JACK_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(JackConfigPreparationFactory))
+    }
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<TrinityJackPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.trinity.jack@1/*#editor",
+        document_schema: "trinity.graph",
+        factory: "JackRetainedConfigJobFactory",
+        factory_type: JackRetainedConfigJobFactory,
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
+        tools: ["setViewport", "textEdit", "textSelect", "requestCompletions", "setLodMode", "editorEngagementInput", "graphEngagementInput", "resultsEngagementInput"]
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(JackRetainedConfigJobFactory::new(&controller))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !JACK_RETAINED_CONFIG_TOOL_IDS.contains(&request.tool_id.as_str()) { return Ok(None); }
+        if request.command.command_id() != request.tool_id || jack_retained_config_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) { return Err(Fault::from("jack-retained-config-tool-mismatch-or-capacity")); }
+        let tool_id = request.command.command_id();
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, jack_retained_config_reduce, jack_retained_config_extent));
+        let operation = AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id.clone(), operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision };
+        let payload = ArtifactRetainedCommandPayload::try_new_with_context(*request.command, request.snapshot, request.config, request.history, request.interaction_state, request.interaction_hover, request.context, operation, request.completion, TrinityJackPlayApp::command_id, JACK_RETAINED_RAW_BYTES, JACK_RETAINED_WORK_ITEMS, work)?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         Some(crate::artifacts::jack::spr::jack_envelope_decode_owner_bundle())
@@ -555,6 +770,15 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
             .view_action("editorEngagementInput", LocalizedLabel::native("Editor Engagement Input", "Editor-Eingabe"))
             .view_action("graphEngagementInput", LocalizedLabel::native("Graph Engagement Input", "Graph-Eingabe"))
             .view_action("resultsEngagementInput", LocalizedLabel::native("Results Engagement Input", "Ergebnis-Eingabe"))
+            .action_interactive_job("setViewport", InteractiveJobClassification::Migrated)
+            .action_interactive_job("textEdit", InteractiveJobClassification::Migrated)
+            .action_interactive_job("textSelect", InteractiveJobClassification::Migrated)
+            .action_interactive_job("requestCompletions", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLodMode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("editorEngagementInput", InteractiveJobClassification::Migrated)
+            .action_interactive_job("graphEngagementInput", InteractiveJobClassification::Migrated)
+            .action_interactive_job("resultsEngagementInput", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchNodes", InteractiveJobClassification::BatchOnlyPendingRewrite)
             // 🕹️ Domain "ast": jack's document nodes, transitive over each node's first incoming
             // connection (see `interaction_topology`). Selection/hover, marquee, modes and merges are
             // ALL framework-injected now — no app-declared setSelection/graphPointerDown verbs.

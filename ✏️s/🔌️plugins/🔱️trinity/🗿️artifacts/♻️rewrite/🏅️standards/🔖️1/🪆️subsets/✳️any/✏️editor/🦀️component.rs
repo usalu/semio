@@ -5,7 +5,7 @@
 //! `config::RewriteConfig`, written via `config::RewriteConfigMutation`s. Every rule/parameter/
 //! before-fixture edit flows through the semantic `RewriteRuleMutation` vocabulary (`edit-*` body
 //! replaces, `change-*`/`remove-*` map upserts) — see
-//! `crate::artifacts::rewrite::mutations::rewrite_snapshot_mutations`, the seam commands that still
+//! `crate::artifacts::rewrite::rewrite_snapshot_mutations`, the seam commands that still
 //! compute a whole `next: RewriteSnapshot` use to emit granular mutations. The
 //! `TrinityRewriteCommand` enum stays hand-rolled (TEMPLATE §5.1 fallback, same rationale as `jack`).
 

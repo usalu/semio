@@ -1,6 +1,0 @@
-# change-mesh-extension-data inverse facet.
-input GltfChangeMeshExtensionDataPayloadV1 {
-  mesh: Int!
-  data: GltfDataPresenceInput!
-}
-type GltfChangeMeshExtensionDataInverseV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

@@ -31,7 +31,7 @@ impl Default for FlowTopology {
 /// `BTreeMap`/sorted-adjacency iteration order; widgets left over after the queue drains (a
 /// cycle) are appended in id order so `topo_order` always stays a total permutation of every
 /// widget id.
-pub async fn compute_flow_topology(widgets: &[Widget], synapses: &[SynapseSpec]) -> FlowTopology {
+pub fn compute_flow_topology(widgets: &[Widget], synapses: &[SynapseSpec]) -> FlowTopology {
     let ids: BTreeSet<String> = widgets.iter().map(|widget| widget_id(widget).to_string()).collect();
     let mut indegree: BTreeMap<String, u32> = ids.iter().cloned().map(|id| (id, 0)).collect();
     let mut adjacency: BTreeMap<String, Vec<String>> = ids.iter().cloned().map(|id| (id, Vec::new())).collect();
@@ -89,7 +89,7 @@ mod tests {
     use super::*;
 
     async fn slider(id: &str) -> Widget {
-        Widget::InputSlider { id: id.into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 }
+        Widget::InputSlider { id: id.into(), label: id.into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 }
     }
 
     async fn synapse(id: &str, from: &str, to: &str) -> SynapseSpec {

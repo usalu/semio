@@ -4,8 +4,8 @@
 //! `set-default-app`/`clear-default-app` under `🧬️mutations/`. `AppRole`/`AppRef`/`ArtifactDialect`
 //! are owned by lane 0-A (`🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs` and
 //! `🧰️framework/🔨️modules/🚪️io/🦀️component.rs`, both re-exported flat off the `semio_framework`
-//! crate root) — imported here, never redefined. NOT YET wired into any crate's `📦️glue.rs`
-//! (out of this lease's scope; see `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET/📓️w0-c-report.md`).
+//! crate root) — imported here, never redefined. The plugin host mounts this schema together with
+//! every direct mutation leaf in its Rust glue.
 
 use semio_framework::{AppRef, AppRole, ArtifactDialect};
 use serde::{Deserialize, Serialize};
@@ -42,6 +42,49 @@ impl protocol::MutationDiff<OpeningPreferences> for OpeningPreferences {
     }
 }
 //#endregion 🔖️Schema
+
+//#region 🌉️MutationCodecBridge
+/// 🧬️ Applies one opening-preferences mutation through its whole-record diff.
+pub fn apply_opening_config_mutation(snapshot: &mut OpeningPreferences, mutation: &super::mutations::OpeningConfigMutation) -> protocol::MutationApplyResult<()> {
+    use protocol::{Mutation as _, MutationDiff as _};
+    *snapshot = mutation.diff(snapshot).diff().apply(snapshot)?;
+    Ok(())
+}
+
+/// ↩️ Computes the mutation's inverse steps from the pre-mutation preferences.
+pub fn inverse_opening_config_mutation(snapshot: &OpeningPreferences, mutation: &super::mutations::OpeningConfigMutation) -> Vec<super::mutations::OpeningConfigMutation> {
+    use protocol::Mutation as _;
+    mutation.inverse(snapshot)
+}
+
+/// 📥️ Decodes the internally tagged opening-config JSON projection.
+pub fn decode_opening_config_mutation_json(text: &str) -> Result<super::mutations::OpeningConfigMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📤️ Encodes opening preferences to their canonical camel-case JSON projection.
+pub fn encode_opening_preferences_json(snapshot: &OpeningPreferences) -> String {
+    serde_json::to_string(snapshot).expect("OpeningPreferences serialization is infallible")
+}
+
+/// 📥️ Decodes the canonical opening-preferences JSON projection.
+pub fn decode_opening_preferences_json(text: &str) -> Result<OpeningPreferences, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// ▶️ Applies a mutation and returns its diagnostic `(code, severity)` pairs.
+pub fn apply_opening_config_mutation_reporting(snapshot: &mut OpeningPreferences, mutation: &super::mutations::OpeningConfigMutation) -> Vec<(String, String)> {
+    use protocol::Mutation as _;
+    let outcome = mutation.diff(snapshot).apply_to(snapshot);
+    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
+}
+
+/// ↩️ Returns the mutation's own inverse steps for an external fixture adapter.
+pub fn inverse_opening_config_mutation_steps(mutation: &super::mutations::OpeningConfigMutation, base: &OpeningPreferences) -> Vec<super::mutations::OpeningConfigMutation> {
+    use protocol::Mutation as _;
+    mutation.inverse(base)
+}
+//#endregion 🌉️MutationCodecBridge
 
 //#region 🧪️Tests
 #[cfg(test)]

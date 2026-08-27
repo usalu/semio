@@ -1,0 +1,3 @@
+# 🗑️ remove-page payload.
+input RemovePageInput {
+  index: Pdf14Index!

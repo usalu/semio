@@ -60,7 +60,7 @@ async fn decode_wires_snapshot_binary(bytes: &[u8]) -> Result<WiresSnapshot, Str
     let edges = read_dsl_list(&mut reader)?;
     let camera = read_dsl(&mut reader)?;
     let meta = read_dsl(&mut reader)?;
-    let content = crate::artifacts::wires::wires_content_child_handle_and_cache(nodes, edges);
+    let content = crate::artifacts::wires::wires_content_child_with_owner(nodes, edges);
     Ok(WiresSnapshot { wires_fixture, content, camera, meta })
 }
 //#endregion 🔖️BinaryPrimitives

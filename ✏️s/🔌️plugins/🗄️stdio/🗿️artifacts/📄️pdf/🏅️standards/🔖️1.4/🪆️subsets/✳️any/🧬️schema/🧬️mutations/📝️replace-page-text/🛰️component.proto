@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.stdio.pdf.v1_4.mutations;
+
+// 📝️ replace-page-text payload.
+message ReplacePageText {
+  uint64 index = 1;
+  string text = 2;
+}

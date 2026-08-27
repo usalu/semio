@@ -19,11 +19,11 @@ import { Button } from "../🔘️Button/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🗨️Dialog
-export type UIDialogProps = {
-  readonly dialog: DialogDefinition;
+export type UIDialogProps<Arg extends ActionArgDef = ActionArgDef> = {
+  readonly dialog: Omit<DialogDefinition, "args"> & { readonly args: readonly Arg[] };
   readonly seedArgs?: Readonly<Record<string, unknown>>;
   /** 🎛️ Injected staged-field renderer so ui-react never imports from framework/os/renderer. */
-  readonly renderField: (def: ActionArgDef, value: unknown, onChange: (value: unknown) => void) => React.ReactElement;
+  readonly renderField: (def: Arg, value: unknown, onChange: (value: unknown) => void) => React.ReactElement;
   readonly onSubmit: (args: Record<string, unknown>) => void;
   readonly onCancel: () => void;
 };
@@ -32,7 +32,7 @@ export type UIDialogProps = {
  * introduction info box (`GLASS_OVERLAY_BOX_CLASS`) presenting `dialog.args` as a staged form —
  * renders the declarative `DialogDefinition` contract. Submit dispatches the merged effective args;
  * cancel (Escape, veil click, or the Cancel button) all funnel through `onCancel`. */
-export const UIDialog: React.FC<UIDialogProps> = ({ dialog, seedArgs, renderField, onSubmit, onCancel }) => {
+export function UIDialog<Arg extends ActionArgDef>({ dialog, seedArgs, renderField, onSubmit, onCancel }: UIDialogProps<Arg>): React.ReactElement {
   const cancelLabel = useLabel("ui.common.cancel");
   const shellScope = useShellScopeOptional();
   const { terminology } = useUiTerminology();
@@ -74,5 +74,5 @@ export const UIDialog: React.FC<UIDialogProps> = ({ dialog, seedArgs, renderFiel
       </Surface>
     </>
   );
-};
+}
 // #endregion 🗨️Dialog

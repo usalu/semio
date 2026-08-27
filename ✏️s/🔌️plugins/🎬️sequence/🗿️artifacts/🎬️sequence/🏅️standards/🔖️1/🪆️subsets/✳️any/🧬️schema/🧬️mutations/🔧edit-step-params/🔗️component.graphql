@@ -1,0 +1,5 @@
+# 🔧 edit-step-params direct payload.
+input EditStepParamsInput {
+  id: String!
+  params: JSON!
+}

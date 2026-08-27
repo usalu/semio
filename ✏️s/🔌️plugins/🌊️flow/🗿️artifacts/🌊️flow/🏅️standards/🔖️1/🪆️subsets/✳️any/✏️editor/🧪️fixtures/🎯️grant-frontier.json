@@ -1,0 +1,15 @@
+{
+  "schema": "semio.flow.grant-frontier.v1",
+  "maximumTextBytes": 16384,
+  "productionGrantBytes": 4096,
+  "preparationGrantBytes": [1, 64, 4096],
+  "canonicalVariants": ["Snapshot", "SetContributions", "SetPreviewOff", "SetCamera", "SetLodMode", "SetProximityDistance", "SetGridVisible", "SetGridSnapEnabled", "SetGridFactor", "SetCatalogueSections", "SetAutomationEnabled", "SetGeneration", "SetDuplicateWidgetProgress", "CancelDuplicateWidget", "SetLocale"],
+  "cases": [
+    { "id": "tiny-production", "unit": "a", "repetitions": 1, "grantBytes": 4096, "cancelAt": 0, "expectedTextBytes": 1 },
+    { "id": "maximum-production", "unit": "a", "repetitions": 16384, "grantBytes": 4096, "cancelAt": 2, "expectedTextBytes": 16384 },
+    { "id": "maximum-single-byte", "unit": "a", "repetitions": 16384, "grantBytes": 1, "cancelAt": 17, "expectedTextBytes": 16384 },
+    { "id": "utf8-split", "unit": "🌊", "repetitions": 4096, "grantBytes": 3, "cancelAt": 4, "expectedTextBytes": 16384 },
+    { "id": "escaped-control", "unit": "\u0000", "repetitions": 16384, "grantBytes": 64, "cancelAt": 3, "expectedTextBytes": 16384 },
+    { "id": "utf8-single-byte", "unit": "🌊", "repetitions": 4096, "grantBytes": 1, "cancelAt": 1, "expectedTextBytes": 16384 }
+  ]
+}

@@ -26,19 +26,17 @@ The exact mapping oracle is:
 
 Its SHA-256 during this audit was `52f2a3c5b7e44114b0eff260c8f7f5116acbf7e969bf0a5e13e24021284ca820`.
 
-CAD roots:
+Historical CAD source root `C0` is recorded in the [frozen catalog's `/projections/0/sourceRoot` field](../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️cad-draw-path-projection/🔣️.json#/projections/0/sourceRoot). Its proposed destination was:
 
 ```text
-C0 = ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions
 C1 = ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models
 ```
 
 Every exact CAD target below follows the golden's exact `C0/<source suffix> → C1/<destination suffix>` pair. Renameable semantic JSON leaves become semantic directories with physical `🔣️.json` leaves; model manifests become `<model>/🔣️.json`.
 
-Draw roots:
+Historical Draw source root `D0` is recorded in the [frozen catalog's `/projections/1/sourceRoot` field](../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️cad-draw-path-projection/🔣️.json#/projections/1/sourceRoot). Its proposed destination was:
 
 ```text
-D0 = ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down
 D1 = ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down
 ```
 

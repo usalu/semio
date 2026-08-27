@@ -1,0 +1,4 @@
+# 🧽️ Direct remove-trim-box GraphQL payload.
+input RemoveTrimBoxMutationInput {
+  pageIndex: Int!
+}

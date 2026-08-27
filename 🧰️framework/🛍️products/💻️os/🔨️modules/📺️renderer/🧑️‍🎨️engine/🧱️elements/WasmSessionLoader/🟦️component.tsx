@@ -22,10 +22,6 @@ import { type GraphWasmSession } from "@semio-tech/infinite-canvas-react-rendere
 type EngineSessionWasmModule = { readonly default: (input?: unknown) => Promise<unknown> } & Record<string, new () => unknown>;
 
 const ENGINE_SESSION_IMPORTERS: Record<string, () => Promise<EngineSessionWasmModule>> = {
-  "node-graph": () => import("@semio-tech/framework-surface-rs"),
-  "paint-2d": () => import("@semio-tech/framework-surface-rs"),
-  "tiled-map": () => import("@semio-tech/framework-surface-rs"),
-  terrain: () => import("@semio-tech/framework-surface-rs"),
   "board-2d": () => import("@semio-tech/framework-surface-rs"),
 };
 
@@ -55,6 +51,20 @@ async function createEngineSession<TSession>(engineKind: keyof typeof ENGINE_SES
   return new mod[sessionClassName]() as TSession;
 }
 //#endregion 🔖️EngineSessionLoader
+
+//#region 🗺️SharedSurfaceSessionLoader
+type SurfaceSessionModule = typeof import("@semio-tech/framework-surface-rs");
+let surfaceSessionModulePromise: Promise<SurfaceSessionModule> | undefined;
+
+/** 🗺️ Initializes the actual shared surface module before invoking a compiler-checked constructor. */
+async function createSurfaceSession<T>(construct: (module: SurfaceSessionModule) => T): Promise<T> {
+  surfaceSessionModulePromise ??= import("@semio-tech/framework-surface-rs").then(async (module) => {
+    await module.default();
+    return module;
+  });
+  return construct(await surfaceSessionModulePromise);
+}
+//#endregion 🗺️SharedSurfaceSessionLoader
 
 //#region 🔖️DemandFrameScheduler
 /** 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: shared render-on-demand scheduler for wasm engine
@@ -113,103 +123,22 @@ export function createDemandFrameScheduler(render: () => void, opts?: { readonly
 
 //#region GraphSession
 export async function createGraphSession(): Promise<GraphWasmSession> {
-  return createEngineSession<GraphWasmSession>("node-graph", "GraphSession");
+  return createSurfaceSession((module) => new module.GraphSession());
 }
 //#endregion GraphSession
 
 //#region FlowSession
-export type FlowTaskEvent = {
-  readonly event?: number;
-  readonly status?: number;
-  readonly body?: Uint8Array;
-};
-
-export type FlowTask<T = unknown> = {
-  readonly result: Promise<T>;
-  cancel(): boolean;
-  subscribe(observer: (event: FlowTaskEvent) => void): () => void;
-};
-
-type FlowMutation = FlowTask<void>;
-type FlowQuery = FlowTask<unknown>;
-
-export type FlowWasmSession = {
-  documentJson(): FlowQuery;
-  synchronizeDocumentJson(json: string): FlowMutation;
-  selectionDomainsJson(): FlowQuery;
-  setSelection(json: string): FlowMutation;
-  setPreviewOff(json: string): FlowMutation;
-  setCatalogueJson(json: string): FlowMutation;
-  catalogueJson(): FlowQuery;
-  setNeuronKindInfosJson(json: string): FlowMutation;
-  setComputingProgress(json: string): FlowMutation;
-  setNodeStatuses(json: string): FlowMutation;
-  setAutomaticLod(enabled: boolean): FlowMutation;
-  setForcedDrawLodLabel(label: string): FlowMutation;
-  setCanvasThemeJson(json: string): FlowMutation;
-  setCamera(x: number, y: number, zoom: number): FlowMutation;
-  pointerDownScreen(sx: number, sy: number, button: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean, pan: boolean): FlowMutation;
-  pointerMoveScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): FlowMutation;
-  pointerUpScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): FlowMutation;
-  wheelScreen(sx: number, sy: number, deltaX: number, deltaY: number, zoomGesture: boolean): FlowMutation;
-  labelOverlayPaintStateJson(): FlowQuery;
-  sliderOverlayStateJson(): FlowQuery;
-  selectionUnionBoundsScreenJson(): FlowQuery;
-  selectionPreviewPointsJson(): FlowQuery;
-  selectionPreviewCrossing(): FlowQuery;
-  selectionPreviewMethod(): FlowQuery;
-  selectedWidgetIds(): FlowQuery;
-  hoveredWidgetId(): FlowQuery;
-  hoveredChannelJson(): FlowQuery;
-  pickTargetsAtScreenJson(sx: number, sy: number): FlowQuery;
-  entityScreenJson(domain: string, id: string): FlowQuery;
-  previewText(): FlowQuery;
-  preselectWidgetIdsJson(): FlowQuery;
-  previewOffWidgetIds(): FlowQuery;
-  alignSelection(mode: string): FlowMutation;
-  undo(): FlowQuery;
-  redo(): FlowQuery;
-  selectAll(): FlowMutation;
-  deleteSelection(): FlowMutation;
-  addWidget(descriptorJson: string, worldX: number, worldY: number): FlowQuery;
-  setGhostWidget(descriptorJson: string, worldX: number, worldY: number): FlowMutation;
-  clearGhostWidget(): FlowMutation;
-  worldFromScreen(sx: number, sy: number): FlowQuery;
-  applyEvalOutputsJson(json: string): FlowMutation;
-  noteInsertText(chunk: string): FlowMutation;
-  noteBackspace(): FlowMutation;
-  noteDeleteForward(): FlowMutation;
-  noteCommitEdit(): FlowMutation;
-  noteMoveCaret(direction: string, extend: boolean): FlowMutation;
-  setSliderValue(widgetId: string, value: number): FlowMutation;
-  setNeuronParams(widgetId: string, paramsJson: string): FlowMutation;
-  setHover(widgetId: string | null): FlowMutation;
-  setHoverChannel(widgetId: string | null, port?: string | null): FlowMutation;
-  cameraJson(): FlowQuery;
-  setSize(width: number, height: number, dpr: number): FlowMutation;
-  renderFrame(): FlowQuery;
-  attachCanvas(canvas: HTMLCanvasElement, width: number, height: number, dpr: number): FlowTask<unknown>;
-  renderCanvas(canvas: HTMLCanvasElement): FlowTask<unknown>;
-  close(): Promise<void>;
-  free(): Promise<void>;
-};
-
-type FlowSessionModule = {
-  readonly default: (source: unknown) => Promise<unknown>;
-  readonly FlowSession: new () => FlowWasmSession;
-};
-
-type FlowCoreModule = {
-  readonly default: (input?: unknown) => Promise<unknown>;
-};
+export type { FlowTask, FlowTaskEvent } from "@semio-tech/flow-core/🟨️flow-browser.js";
+export type FlowWasmSession = import("@semio-tech/flow-core/🟨️flow-browser.js").FlowSession;
+type FlowSessionModule = typeof import("@semio-tech/flow-core/🟨️flow-browser.js");
 
 let flowSessionPromise: Promise<FlowSessionModule> | null = null;
 
 export async function createFlowSession(): Promise<FlowWasmSession> {
   if (!flowSessionPromise) {
     flowSessionPromise = Promise.all([
-      import("@semio-tech/flow-core") as Promise<FlowCoreModule>,
-      import("@semio-tech/flow-core/🟨️flow-browser.js") as Promise<FlowSessionModule>,
+      import("@semio-tech/flow-core"),
+      import("@semio-tech/flow-core/🟨️flow-browser.js"),
     ]).then(async ([core, browser]) => {
       const exports = await core.default();
       await browser.default(exports);
@@ -297,8 +226,7 @@ export type RasterWasmSession = {
   setActiveUtility(utility: string): void;
   setBrushSize(size: number): void;
   setBrushOpacity(opacity: number): void;
-  setHoveredIdSilent(id?: string | null): void;
-  setSelectionIdsJson(json: string): void;
+  syncInteraction(selectedIdsJson: string, hoveredId?: string | null): void;
   setCanvasThemeJson(json: string): void;
   cameraJson(): string;
   setViewMode(mode: string, layerId?: string | null): void;
@@ -310,7 +238,7 @@ export type RasterWasmSession = {
 };
 
 export async function createRasterSession(): Promise<RasterWasmSession> {
-  return createEngineSession<RasterWasmSession>("paint-2d", "RasterSession");
+  return createSurfaceSession((module) => new module.RasterSession());
 }
 //#endregion RasterSession
 
@@ -338,8 +266,7 @@ export type MapWasmSession = {
   setLodMode(mode: string): void;
   setLayerVisibilityJson(json: string): void;
   setLayerStrokeScaleJson(json: string): void;
-  setSelectionJson(json: string): void;
-  setHoverJson(json: string): void;
+  syncInteraction(granularity: string, selectedIdsJson: string, hoveredId?: string): void;
   featuresInRectJson(x0: number, y0: number, x1: number, y1: number, crossing: boolean): string;
   featuresInPolygonJson(pointsJson: string, crossing: boolean): string;
   hitTestFeatureJson(sx: number, sy: number): string;
@@ -352,7 +279,7 @@ export type MapWasmSession = {
 };
 
 export async function createMapSession(): Promise<MapWasmSession> {
-  return createEngineSession<MapWasmSession>("tiled-map", "MapSession");
+  return createSurfaceSession((module) => new module.MapSession());
 }
 //#endregion MapSession
 
@@ -367,7 +294,7 @@ export type TerrainWasmSession = {
 };
 
 export async function createTerrainSession(): Promise<TerrainWasmSession> {
-  return createEngineSession<TerrainWasmSession>("terrain", "TerrainSession");
+  return createSurfaceSession((module) => new module.TerrainSession());
 }
 //#endregion TerrainSession
 

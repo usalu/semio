@@ -323,9 +323,10 @@ fn executable_mappings(source: &Source) -> Result<BTreeMap<String, ArtifactExecu
         }
     }
     if source.artifact == "gltf" {
-        for descriptor in crate::artifacts::gltf::schema::mutations::gltf_mutation_leaf_descriptors() {
-            let id = descriptor.command_id.to_owned();
-            let identity = ArtifactExecutableIdentity::from_function_pointer(descriptor.plan as *const ());
+        use protocol::SemanticMutation;
+        for descriptor in crate::artifacts::gltf::schema::mutations::GltfMutation::kinds() {
+            let id = format!("s.stdio.gltf.mutation.{}.v1", descriptor.kind);
+            let identity = ArtifactExecutableIdentity::from_function_pointer(crate::artifacts::gltf::schema::mutations::apply_gltf_mutation as *const ());
             if mappings.insert(id.clone(), identity).is_some() {
                 return Err(failure(format!("{} repeats executable mapping {id}", source.id)));
             }

@@ -7012,23 +7012,23 @@ pub mod app {
             async fn new_app_constructs_a_registry_less_wrapper() {
                 let mut app = new_app::<DummyApp>().await;
                 app.dispatch_typed(DummyCommand::Increment, &meta("local")).await.expect("increment");
-                assert_eq!(semio_framework::io::resolve_ready(app.snapshot()).unwrap().count, 1);
+                assert_eq!(app.snapshot().unwrap().count, 1);
             }
 
             #[semio_framework_async_macros::async_test]
             async fn assert_undo_redo_round_trip_passes_for_a_real_operation() {
                 let mut app = new_app::<DummyApp>().await;
-                assert_undo_redo_round_trip(&mut app, DummyCommand::Increment, |app| semio_framework::io::resolve_ready(app.snapshot()).unwrap().count, 0, 1).await;
+                assert_undo_redo_round_trip(&mut app, DummyCommand::Increment, |app| app.snapshot().unwrap().count, 0, 1).await;
             }
 
             #[semio_framework_async_macros::async_test]
             async fn assert_two_instances_converge_on_disjoint_edits() {
-                assert_two_instances_converge::<DummyApp, i32>("mem://testkit-converge", DummyCommand::Increment, DummyCommand::Increment, |app| semio_framework::io::resolve_ready(app.snapshot()).unwrap().count).await;
+                assert_two_instances_converge::<DummyApp, i32>("mem://testkit-converge", DummyCommand::Increment, DummyCommand::Increment, |app| app.snapshot().unwrap().count).await;
             }
 
             #[semio_framework_async_macros::async_test]
             async fn assert_ingest_idempotent_does_not_double_apply() {
-                assert_ingest_idempotent::<DummyApp, i32>(DummyCommand::Increment, |app| semio_framework::io::resolve_ready(app.snapshot()).unwrap().count).await;
+                assert_ingest_idempotent::<DummyApp, i32>(DummyCommand::Increment, |app| app.snapshot().unwrap().count).await;
             }
         }
 
@@ -7266,6 +7266,42 @@ pub mod app {
                 async fn render(_body_key: &str, doc: &ArtifactView<'_, TxnSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
                     built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}", doc.snapshot.count)))
                 }
+
+                fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+                    Some(crate::app::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+                }
+
+                fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+                    Some(crate::app::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+                }
+            }
+
+            fn close_transaction_store_roots(app: &mut VcsArtifactApp<TxnApp>) {
+                for _ in 0..100_000 {
+                    if store::SpaceMember::close_owned_step(&mut app.store, 1, 1_048_576).expect("document store bounded close") == store::SnapshotRetirementStep::Complete {
+                        break;
+                    }
+                }
+                assert!(store::SpaceMember::close_owned_terminal_is_empty(&app.store));
+                for _ in 0..100_000 {
+                    if store::SpaceMember::close_owned_step(&mut app.config_store, 1, 1_048_576).expect("config store bounded close") == store::SnapshotRetirementStep::Complete {
+                        break;
+                    }
+                }
+                assert!(store::SpaceMember::close_owned_terminal_is_empty(&app.config_store));
+                app.draft_store.install_member_store_owners_exact(crate::app::bounded_document_store_owners::<NoDraft, NoDraftMutation>());
+                for _ in 0..100_000 {
+                    if store::SpaceMember::close_owned_step(&mut app.draft_store, 1, 1_048_576).expect("draft store bounded close") == store::SnapshotRetirementStep::Complete {
+                        break;
+                    }
+                }
+                assert!(store::SpaceMember::close_owned_terminal_is_empty(&app.draft_store));
+                for _ in 0..100_000 {
+                    if store::SpaceMember::close_owned_step(&mut app.interaction_store, 1, 1_048_576).expect("interaction store bounded close") == store::SnapshotRetirementStep::Complete {
+                        break;
+                    }
+                }
+                assert!(store::SpaceMember::close_owned_terminal_is_empty(&app.interaction_store));
             }
 
             #[semio_framework_async_macros::async_test]
@@ -7294,6 +7330,7 @@ pub mod app {
                 assert!(std::sync::Arc::ptr_eq(cached_snapshot, &snapshot));
                 assert!(std::sync::Arc::ptr_eq(cached_config, &config));
                 assert!(std::sync::Arc::ptr_eq(cached_history, &history));
+                close_transaction_store_roots(&mut app);
             }
 
             #[semio_framework_async_macros::async_test]
@@ -7308,6 +7345,7 @@ pub mod app {
                 assert_eq!(app.store.envelope().vcs.edits.len(), 1, "coalesced increments stay one undo edit");
                 assert_eq!(history.commands.len(), 1, "coalesced increments stay one command row");
                 assert_eq!(history.commands[0].op_lines.len(), 2, "only the new operation tail is appended to cached history");
+                close_transaction_store_roots(&mut app);
             }
 
             #[semio_framework_async_macros::async_test]
@@ -9372,23 +9410,23 @@ pub mod app {
         }
 
         /// 🧬️ Fixed-size, restart-stable identity paired with the captured child snapshot.
-        pub async fn revision(&self, slot: &str, child_id: &str) -> Result<[u8; 32], Fault> {
+        pub fn revision(&self, slot: &str, child_id: &str) -> Result<[u8; 32], Fault> {
             self.find(slot, child_id)?.map(|entry| entry.revision).ok_or_else(|| plugin_sdk_fault(format!("no live child store for slot {slot} child {child_id}")))
         }
 
         /// 🧵️ Selects an immutable child snapshot capability without exposing concrete ownership.
-        pub async fn typed_read<S: ArtifactPack + Send + Sync + 'static>(&self, slot: &str, child_id: &str) -> Result<store::SnapshotReadRef<'_, S>, Fault> {
+        pub fn typed_read<S: ArtifactPack + Send + Sync + 'static>(&self, slot: &str, child_id: &str) -> Result<store::SnapshotReadRef<'_, S>, Fault> {
             let snapshot = &self.find(slot, child_id)?.ok_or_else(|| plugin_sdk_fault(format!("no live child store for slot {slot} child {child_id}")))?.snapshot;
             snapshot.typed::<S>().ok_or_else(|| plugin_sdk_fault(format!("child snapshot type mismatch for slot {slot} child {child_id}")))
         }
 
         /// 🎯️ The dialect a child materializes as, for a caller that must route by kind.
-        pub async fn dialect(&self, slot: &str, child_id: &str) -> Option<ArtifactDialect> {
+        pub fn dialect(&self, slot: &str, child_id: &str) -> Option<ArtifactDialect> {
             self.find(slot, child_id).ok().flatten().map(|entry| entry.dialect.clone())
         }
 
         /// 📋️ Every `(slot, child_id)` currently live under this document.
-        pub async fn slots(&self) -> Vec<(String, String)> {
+        pub fn slots(&self) -> Vec<(String, String)> {
             let Some(root) = self.root.as_deref() else { return Vec::new() };
             let mut slots = Vec::with_capacity(root.len);
             for index in 0..CHILD_CONTENT_SLOTS {
@@ -9400,7 +9438,7 @@ pub mod app {
         }
 
         /// 🈳️ Whether this document has any live children at all.
-        pub async fn is_empty(&self) -> bool {
+        pub fn is_empty(&self) -> bool {
             self.root.as_ref().is_none_or(|root| root.len == 0)
         }
     }
@@ -10105,6 +10143,13 @@ pub mod app {
             drop(typed_shell);
             let root = std::sync::Arc::new(metadata);
             Ok(PeerRosterCandidate { seq: self.seq, generation: self.generation, cancel: self.cancel.clone(), own_color: self.own_color, now_ms: self.now_ms, root, typed })
+        }
+
+        fn retain_rejected_candidate(&mut self, candidate: PeerRosterCandidate<A::Presence>) {
+            assert!(self.terminal_is_empty(), "returned peer candidate must rejoin its exact empty publication owner");
+            *self.retirement = Some(PeerPresenceRootRetirement::new(candidate.root));
+            *self.rejected = Some(Box::new(candidate.typed.into_retirement()));
+            self.fail(plugin_sdk_fault("presence store closed before peer publication"));
         }
 
         fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
@@ -11104,6 +11149,44 @@ pub mod app {
     }
 
     impl ChildEmit {
+        fn close_one(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+            if maximum_items == 0 {
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            if let Some(op) = self.ops.last_mut() {
+                if !op.is_empty() {
+                    if maximum_bytes == 0 {
+                        return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                    }
+                    op.pop();
+                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 1 };
+                }
+                self.ops.pop();
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            let value = if let Some(label) = self.labels.last_mut() {
+                if label.is_empty() {
+                    self.labels.pop();
+                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                }
+                label
+            } else if !self.op_schema.0.is_empty() {
+                &mut self.op_schema.0
+            } else if !self.child_id.is_empty() {
+                &mut self.child_id
+            } else if !self.slot.is_empty() {
+                &mut self.slot
+            } else {
+                return PluginCloseStep::Complete;
+            };
+            let bytes = value.chars().next_back().expect("retained child string is nonempty").len_utf8();
+            if bytes > maximum_bytes {
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            value.pop();
+            PluginCloseStep::Pending { released_items: 0, released_bytes: bytes }
+        }
+
         /// 🏭️ The one sanctioned constructor: `S` is the child artifact's OWN snapshot type (turbofish
         /// it explicitly, e.g. `ChildEmit::of::<ChildSnapshot, _>("mesh", &child_id, ops)` — `S`
         /// appears only in the `SemanticMutation<S>` bound below, so Rust cannot infer it from `ops`
@@ -11779,6 +11862,54 @@ pub mod app {
         /// 🔐️ Supplies the exact snapshot/mutation/store disposal catalog used by document
         /// replacement and close. `None` keeps both routes fail closed.
         fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+            None
+        }
+
+        /// 🎛️ Supplies exact config snapshot/mutation/store retirement authority.
+        fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+            None
+        }
+
+        /// 📝️ Supplies exact draft snapshot/mutation/store retirement authority.
+        fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+            None
+        }
+
+        /// 📬️ Supplies the app-owned retained semantic preparation authority for one
+        /// document mutation. `None` is an explicit fail-closed publication denial.
+        fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+            None
+        }
+
+        /// 📬️ Supplies the app-owned retained semantic preparation authority for one
+        /// config mutation. Generic config mutation replay is never substituted.
+        fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+            None
+        }
+
+        /// 📬️ Supplies the app-owned retained semantic preparation authority for one
+        /// draft mutation. Generic draft mutation replay is never substituted.
+        fn build_draft_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Draft, Self::DraftMutation>>> {
+            None
+        }
+
+        /// 📬️ Supplies retained shared-live presence preparation. Absence denies the lane.
+        fn build_presence_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Presence, Self::PresenceMutation>>> {
+            None
+        }
+
+        /// 📬️ Supplies retained local-only transient preparation. Absence denies the lane.
+        fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
+            None
+        }
+
+        /// 🧹️ Supplies exact bounded retirement for a displaced local presence root.
+        fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+            None
+        }
+
+        /// 🧹️ Supplies exact bounded retirement for a displaced transient root.
+        fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
             None
         }
 
@@ -12698,7 +12829,26 @@ pub mod app {
             ids
         }
 
-        pub(crate) fn tool_job_registration<A: ArtifactApp>(&self, runtime_controller_id: &str, document_schema: &str, generated_ids: &[&str]) -> Result<(String, Vec<QualifiedBoundedFirstStepProof>), Fault> {
+        pub(crate) fn tool_job_registration<A: ArtifactApp>(
+            &self,
+            runtime_controller_id: &str,
+            document_schema: &str,
+            generated_ids: &[&str],
+            bus: &semio_framework::ActionBus,
+            registrations: &BTreeMap<String, ArtifactToolRegistration>,
+        ) -> Result<(String, Vec<QualifiedBoundedFirstStepProof>), Fault> {
+            self.validate_tool_job_rows::<A>(runtime_controller_id, document_schema, generated_ids, bus, registrations, A::bounded_first_step_tool_proofs())
+        }
+
+        fn validate_tool_job_rows<A: ArtifactApp>(
+            &self,
+            runtime_controller_id: &str,
+            document_schema: &str,
+            generated_ids: &[&str],
+            bus: &semio_framework::ActionBus,
+            registrations: &BTreeMap<String, ArtifactToolRegistration>,
+            rows: Vec<ArtifactBoundedFirstStepProof>,
+        ) -> Result<(String, Vec<QualifiedBoundedFirstStepProof>), Fault> {
             if !self.controller_id.is_empty() && self.controller_id != runtime_controller_id {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.catalog-controller"), "tool proof catalog controller does not match the live registry controller"));
             }
@@ -12708,16 +12858,27 @@ pub mod app {
             let owner = ToolOwnerWitness::of::<A>();
             let mut seen = BTreeSet::new();
             let mut proofs = Vec::new();
-            for row in A::bounded_first_step_tool_proofs() {
+            for row in rows {
                 let unique = seen.insert(row.tool_id);
-                let authoritative =
-                    row.owner == owner && row.controller_id == runtime_controller_id && row.document_schema == document_schema && row.factory == BOUNDED_FIRST_STEP_FACTORY && !row.owner_file.is_empty() && expected.contains(row.tool_id) && unique;
+                let registered = registrations.get(row.tool_id);
+                let generic = row.factory == BOUNDED_FIRST_STEP_FACTORY && row.factory_type_id.is_none() && row.factory_type_name.is_none() && registered.is_none();
+                let exact_registered = registered.is_some_and(|registration| {
+                    row.factory_type_id == Some(registration.factory_type_id)
+                        && row.factory_type_name == Some(registration.factory_type_name)
+                        && row.factory == registration.factory_type_name.rsplit("::").next().unwrap_or_default()
+                        && registration.owner == owner
+                        && registration.key.controller_id == runtime_controller_id
+                        && registration.key.tool_id == row.tool_id
+                        && registration.contract == row.contract
+                        && bus.admit_exact_wire(runtime_controller_id, row.tool_id, &registration.schema_id, &[]).is_ok_and(|admission| QualifiedToolProof::AppOwned(registration.clone()).admits::<A>(&admission))
+                });
+                let authoritative = row.owner == owner && row.controller_id == runtime_controller_id && row.document_schema == document_schema && (generic || exact_registered) && !row.owner_file.is_empty() && expected.contains(row.tool_id) && unique;
                 if !authoritative {
                     return Err(Fault::new(
                         FaultOrigin::Framework,
                         FaultCode::new("interactive-job.catalog-authority"),
                         format!(
-                            "bounded reducer proof rejected tool '{}': owner='{}' expected_owner='{}', controller='{}' expected_controller='{}', schema='{}' expected_schema='{}', factory='{}' expected_factory='{}', owner_file_present={}, generated_migrated={}, unique={unique}",
+                            "tool factory proof rejected tool '{}': owner='{}' expected_owner='{}', controller='{}' expected_controller='{}', schema='{}' expected_schema='{}', factory='{}' registered_factory='{}', owner_file_present={}, generated_migrated={}, unique={unique}, typed_join={exact_registered}",
                             row.tool_id,
                             row.owner.owner_type_name,
                             owner.owner_type_name,
@@ -12726,13 +12887,15 @@ pub mod app {
                             row.document_schema,
                             document_schema,
                             row.factory,
-                            BOUNDED_FIRST_STEP_FACTORY,
+                            registered.map_or(BOUNDED_FIRST_STEP_FACTORY, |registration| registration.factory_type_name),
                             !row.owner_file.is_empty(),
                             expected.contains(row.tool_id),
                         ),
                     ));
                 }
-                proofs.push(QualifiedBoundedFirstStepProof { row, owner });
+                if generic {
+                    proofs.push(QualifiedBoundedFirstStepProof { row, owner });
+                }
             }
             if seen != expected {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.catalog-incomplete"), "a migrated generated command lacks its exact owner-local bounded reducer proof"));
@@ -13053,6 +13216,8 @@ pub mod app {
         pub(crate) owner: ToolOwnerWitness,
         controller_id: &'static str,
         factory: &'static str,
+        factory_type_id: Option<std::any::TypeId>,
+        factory_type_name: Option<&'static str>,
         tool_id: &'static str,
         document_schema: &'static str,
         contract: semio_framework::ToolExecutionContract,
@@ -13060,8 +13225,83 @@ pub mod app {
 
     impl ArtifactBoundedFirstStepProof {
         pub fn new<A: ArtifactApp>(owner_file: &'static str, controller_id: &'static str, factory: &'static str, tool_id: &'static str, document_schema: &'static str, contract: semio_framework::ToolExecutionContract) -> Self {
-            Self { owner_file, owner: ToolOwnerWitness::of::<A>(), controller_id, factory, tool_id, document_schema, contract }
+            Self { owner_file, owner: ToolOwnerWitness::of::<A>(), controller_id, factory, factory_type_id: None, factory_type_name: None, tool_id, document_schema, contract }
         }
+
+        pub fn with_factory_type<A: ArtifactApp, F: ArtifactOwnedToolJobFactory<Owner = A>>(mut self) -> Self {
+            assert_eq!(self.owner, ToolOwnerWitness::of::<A>(), "proof factory belongs to its exact concrete app owner");
+            self.factory_type_id = Some(std::any::TypeId::of::<F>());
+            self.factory_type_name = Some(std::any::type_name::<F>());
+            self
+        }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn test_unregistered_tool_job_admission_rejected<A: ArtifactApp>(catalog: &AppActionRegistry, generated: &[&str]) -> bool {
+        catalog.tool_job_registration::<A>(A::APP_ID, A::DOCUMENT_SCHEMA, generated, &semio_framework::ActionBus::new(), &BTreeMap::new()).is_err()
+    }
+
+    /// 🧪 Executes hostile proof substitutions inside the private authority module in test builds only.
+    #[cfg(test)]
+    pub(crate) fn test_retained_factory_proof_join<A, F, G, W>(mut catalog: AppActionRegistry, controller: &'static str, tool: &'static str, factory: F)
+    where
+        A: ArtifactApp,
+        F: ArtifactOwnedToolJobFactory<Owner = A>,
+        G: ArtifactOwnedToolJobFactory<Owner = A>,
+        W: ArtifactApp,
+    {
+        let fixture: Value = serde_json::from_str(include_str!("🧪️tool-factory-proof.json")).expect("language-neutral factory join fixture");
+        let bus = semio_framework::ActionBus::new();
+        let empty_bus = semio_framework::ActionBus::new();
+        let contract = semio_framework::ToolJobFactory::execution_contract(&factory);
+        let mut factories = ArtifactToolFactoryRegistry::<A>::new(&bus, controller);
+        factories.register(factory).expect("exact app-owned factory");
+        let registrations = factories.finish();
+        let mut declaration = catalog.actions.get("noopMutation").expect("fixture action").clone();
+        declaration.semantics.execution.interactive_job = semio_framework::InteractiveJobClassification::Migrated;
+        catalog.actions.insert(tool.into(), declaration);
+        let exact = ArtifactBoundedFirstStepProof::new::<A>(file!(), controller, "TestRetainedCommandFactory", tool, A::DOCUMENT_SCHEMA, contract)
+            .with_factory_type::<A, F>();
+        for case in fixture["cases"].as_array().expect("join cases") {
+            let mut row = exact.clone();
+            let mut registered = registrations.clone();
+            let mut live_bus = &bus;
+            let change = case["change"].as_str().expect("case change");
+            match change {
+                "none" | "duplicate" => {}
+                "missingType" => row.factory_type_id = None,
+                "wrongType" => row.factory_type_id = Some(std::any::TypeId::of::<A>()),
+                "sameOwnerDifferentFactory" => row = row.with_factory_type::<A, G>(),
+                "wrongTypeName" => row.factory_type_name = Some(std::any::type_name::<A>()),
+                "wrongFactory" => row.factory = "NotTheRegisteredFactory",
+                "wrongOwner" => row.owner = ToolOwnerWitness::of::<W>(),
+                "wrongController" => row.controller_id = "s.test.other@1/*#editor",
+                "wrongDocumentSchema" => row.document_schema = "semio.test.other.v1",
+                "wrongTool" => row.tool_id = "otherTool",
+                "wrongContract" => row.contract = semio_framework::ToolExecutionContract::resumable(4_096, 5, 1, 4_096, 7_500, 1, 1),
+                "wrongPayloadSchema" => registered.get_mut(tool).expect("registered tool").schema_id = "wrong.payload.schema".into(),
+                "missingRegistration" => registered.clear(),
+                "differentBus" => live_bus = &empty_bus,
+                "sentinel" => {
+                    row.factory = BOUNDED_FIRST_STEP_FACTORY;
+                    row.factory_type_id = None;
+                    row.factory_type_name = None;
+                }
+                other => panic!("unknown fixture change {other}"),
+            }
+            let rows = if change == "duplicate" { vec![row.clone(), row] } else { vec![row] };
+            let actual = catalog.validate_tool_job_rows::<A>(controller, A::DOCUMENT_SCHEMA, &[tool], live_bus, &registered, rows);
+            assert_eq!(actual.is_ok(), case["accepted"].as_bool().expect("expected admission"), "{}", case["id"]);
+            if let Ok((resolved_controller, generic)) = actual {
+                assert_eq!(resolved_controller, controller);
+                assert!(generic.is_empty(), "a registered custom factory must never construct the generic fallback");
+            }
+        }
+        assert!(TypedCommandFullOperationJobFactory::<A>::from_proof(QualifiedBoundedFirstStepProof { owner: exact.owner, row: exact }).is_none());
+        let generic = ArtifactBoundedFirstStepProof::new::<A>(file!(), controller, BOUNDED_FIRST_STEP_FACTORY, tool, A::DOCUMENT_SCHEMA, contract);
+        let (_, mut generic_proofs) = catalog.validate_tool_job_rows::<A>(controller, A::DOCUMENT_SCHEMA, &[tool], &empty_bus, &BTreeMap::new(), vec![generic]).expect("unregistered exact generic reducer remains supported");
+        assert_eq!(generic_proofs.len(), 1);
+        assert!(TypedCommandFullOperationJobFactory::<A>::from_proof(generic_proofs.pop().expect("generic proof")).is_some());
     }
 
     /// 🧬️ Declares an exact bounded-first-step proof catalog in the owning plugin source.
@@ -13073,19 +13313,24 @@ pub mod app {
             controller: $controller:literal,
             document_schema: $document_schema:literal,
             factory: $factory:literal,
+            $(factory_type: $factory_type:ty,)?
             contract: $contract:expr,
             tools: [$($tool:literal),+ $(,)?]
         ) => {
             fn bounded_first_step_tool_proofs() -> Vec<$crate::ArtifactBoundedFirstStepProof> {
+                let qualify = |proof: $crate::ArtifactBoundedFirstStepProof| {
+                    $(let proof = proof.with_factory_type::<$owner, $factory_type>();)?
+                    proof
+                };
                 vec![$(
-                    $crate::ArtifactBoundedFirstStepProof::new::<$owner>(
+                    qualify($crate::ArtifactBoundedFirstStepProof::new::<$owner>(
                         $owner_file,
                         $controller,
                         $factory,
                         $tool,
                         $document_schema,
                         $contract,
-                    )
+                    ))
                 ),+]
             }
         };
@@ -13095,21 +13340,43 @@ pub mod app {
             controller: $controller:literal,
             document_schema: $document_schema:literal,
             factory: $factory:literal,
+            $(factory_type: $factory_type:ty,)?
             tools: { $($tool:literal => $contract:expr),+ $(,)? }
         ) => {
             fn bounded_first_step_tool_proofs() -> Vec<$crate::ArtifactBoundedFirstStepProof> {
+                let qualify = |proof: $crate::ArtifactBoundedFirstStepProof| {
+                    $(let proof = proof.with_factory_type::<$owner, $factory_type>();)?
+                    proof
+                };
                 vec![$(
-                    $crate::ArtifactBoundedFirstStepProof::new::<$owner>(
+                    qualify($crate::ArtifactBoundedFirstStepProof::new::<$owner>(
                         $owner_file,
                         $controller,
                         $factory,
                         $tool,
                         $document_schema,
                         $contract,
-                    )
+                    ))
                 ),+]
             }
         };
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    pub enum ArtifactToolPublicationLane {
+        HostOnly,
+        Artifact,
+        Config,
+        Draft,
+        Presence,
+        Transient,
+        Child,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct ArtifactToolPublicationContract {
+        pub tool_id: &'static str,
+        pub lanes: &'static [ArtifactToolPublicationLane],
     }
 
     /// 🔐️ A plugin factory's concrete owner is part of its Rust type, so a copied `ArtifactApp`
@@ -13118,6 +13385,15 @@ pub mod app {
         type Owner: ArtifactApp;
         const TOOL_IDS: &'static [&'static str];
         const DOCUMENT_SCHEMA: &'static str;
+        const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[];
+
+        fn latest_wins_target(_command: &<Self::Owner as ArtifactApp>::Command) -> Option<&str> {
+            None
+        }
+
+        fn build_latest_wins_command_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<<Self::Owner as ArtifactApp>::Command>>> {
+            None
+        }
     }
 
     /// 🧳️ Object-safe app-instance operation state retained and closed by [VcsArtifactApp].
@@ -13186,6 +13462,9 @@ pub mod app {
         contract: semio_framework::ToolExecutionContract,
         factory_type_id: std::any::TypeId,
         factory_type_name: &'static str,
+        publication_lanes: &'static [ArtifactToolPublicationLane],
+        latest_wins_target: for<'a> fn(&'a dyn std::any::Any) -> Option<&'a str>,
+        latest_wins_command_disposer: fn() -> Option<Box<dyn std::any::Any + Send>>,
     }
 
     /// 🧾️ Public predecode projection of one exact app-contributed registration. It contains no
@@ -13197,6 +13476,7 @@ pub mod app {
         pub(crate) tool_id: String,
         pub(crate) schema_id: String,
         pub(crate) max_raw_wire_bytes: usize,
+        pub(crate) publication_lanes: &'static [ArtifactToolPublicationLane],
     }
 
     /// 🧰️ Compiler-bound registration context passed only to `ArtifactApp`'s explicit hook.
@@ -13228,6 +13508,13 @@ pub mod app {
             if expected.is_empty() || expected != actual || factory.keys().iter().any(|key| key.controller_id != self.controller_id) {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.owner-key"), "app-owned factory keys are not an exact live-controller/tool bijection"));
             }
+            let publication = F::PUBLICATION_CONTRACTS.iter().map(|contract| (contract.tool_id, contract.lanes)).collect::<BTreeMap<_, _>>();
+            if publication.len() != F::PUBLICATION_CONTRACTS.len()
+                || publication.keys().copied().collect::<BTreeSet<_>>() != expected
+                || publication.values().any(|lanes| lanes.is_empty() || (lanes.contains(&ArtifactToolPublicationLane::HostOnly) && lanes.len() != 1))
+            {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.publication-contract"), "app-owned factory lacks an exact nonempty per-tool publication-lane contract"));
+            }
             if factory.classification() != semio_framework::InteractiveJobClassification::Migrated {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.owner-classification"), "app-owned factory must be explicitly Migrated"));
             }
@@ -13242,7 +13529,12 @@ pub mod app {
                 if self.registrations.contains_key(&key.tool_id) {
                     return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.owner-duplicate"), format!("duplicate app-owned tool {}", key.tool_id)));
                 }
-                self.registrations.insert(key.tool_id.clone(), ArtifactToolRegistration { owner, key, schema_id: schema_id.clone(), contract, factory_type_id, factory_type_name });
+                let publication_lanes = publication.get(key.tool_id.as_str()).copied().expect("validated exact tool publication contract");
+                self.registrations.insert(key.tool_id.clone(), ArtifactToolRegistration {
+                    owner, key, schema_id: schema_id.clone(), contract, factory_type_id, factory_type_name, publication_lanes,
+                    latest_wins_target: |command| command.downcast_ref::<<F::Owner as ArtifactApp>::Command>().and_then(F::latest_wins_target),
+                    latest_wins_command_disposer: || F::build_latest_wins_command_disposer().map(|owner| Box::new(owner) as Box<dyn std::any::Any + Send>),
+                });
             }
             Ok(())
         }
@@ -13815,6 +14107,96 @@ pub mod app {
         fn close_step(&mut self, owner: &mut T, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
         fn terminal_is_empty(&self, owner: &T) -> bool;
     }
+
+    //#region 🎛️BoundedConfigStoreOwners
+    struct BoundedConfigValueRetirement<T> {
+        value: std::mem::ManuallyDrop<Option<T>>,
+    }
+
+    impl<T: Send + 'static> store::ErasedSnapshotRetirement for BoundedConfigValueRetirement<T> {
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+            if maximum_items == 0 || maximum_bytes < store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if let Some(value) = self.value.take() {
+                drop(value);
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES });
+            }
+            Ok(store::SnapshotRetirementStep::Complete)
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.value.is_none()
+        }
+    }
+
+    impl<T> Drop for BoundedConfigValueRetirement<T> {
+        fn drop(&mut self) {
+            assert!(self.value.is_none(), "bounded config value retirement reached Drop before exact terminal emptiness");
+        }
+    }
+
+    struct BoundedConfigRetirementFactory<T>(std::marker::PhantomData<fn() -> T>);
+
+    impl<T> BoundedConfigRetirementFactory<T> {
+        fn new() -> Self {
+            Self(std::marker::PhantomData)
+        }
+    }
+
+    impl<T: Send + 'static> store::ArtifactOwnedValueRetirementFactory<T> for BoundedConfigRetirementFactory<T> {
+        fn retire_owned(&self, value: T) -> Box<dyn store::ErasedSnapshotRetirement> {
+            Box::new(BoundedConfigValueRetirement { value: std::mem::ManuallyDrop::new(Some(value)) })
+        }
+    }
+
+    impl<T: Send + Sync + 'static> store::SnapshotRetirementFactory<T> for BoundedConfigRetirementFactory<T> {
+        fn retire(&self, snapshot: std::sync::Arc<T>) -> Box<dyn store::ErasedSnapshotRetirement> {
+            Box::new(BoundedConfigValueRetirement { value: std::mem::ManuallyDrop::new(Some(snapshot)) })
+        }
+    }
+
+    /// 🎛️ Exact one-page retirement catalog for explicitly bounded app configuration stores.
+    pub fn bounded_config_store_owners<C, M>() -> store::MemberStoreOwners<C, M>
+    where
+        C: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+        M: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<C> + OpBinary + OpText + Send + 'static,
+    {
+        store::MemberStoreOwners::new(
+            std::sync::Arc::new(BoundedConfigRetirementFactory::<C>::new()),
+            std::sync::Arc::new(BoundedConfigRetirementFactory::<C>::new()),
+            std::sync::Arc::new(BoundedConfigRetirementFactory::<M>::new()),
+            Box::new(store::ArtifactStoreCursorDisposer::<C, M>::new()),
+        )
+    }
+
+    /// 🧹️ Explicit close adapter paired with [`bounded_config_store_owners`].
+    pub fn bounded_config_store_disposer<C, M>() -> Box<dyn ArtifactOwnedDisposer<ConfigStore<C, M>>>
+    where
+        C: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+        M: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<C> + OpBinary + OpText + Send + 'static,
+    {
+        Box::new(ArtifactDocumentStoreDisposer::<C, M>::new())
+    }
+
+    /// 🗃️ Exact one-page retirement catalog for an explicitly bounded document store.
+    pub fn bounded_document_store_owners<P, M>() -> store::MemberStoreOwners<P, M>
+    where
+        P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+        M: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
+        bounded_config_store_owners::<P, M>()
+    }
+
+    /// 🧽️ Explicit close adapter paired with [`bounded_document_store_owners`].
+    pub fn bounded_document_store_disposer<P, M>() -> Box<dyn ArtifactOwnedDisposer<ArtifactStore<P, M>>>
+    where
+        P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+        M: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
+        Box::new(ArtifactDocumentStoreDisposer::<P, M>::new())
+    }
+    //#endregion 🎛️BoundedConfigStoreOwners
 
     /// @emoji 🧹️ Explicit adapter from an app-owned document-store close catalog to the
     /// plugin close protocol. Apps must return this adapter themselves; the framework never installs
@@ -14652,6 +15034,7 @@ pub mod app {
                 type Owner = A;
                 const TOOL_IDS: &'static [&'static str] = &[$route];
                 const DOCUMENT_SCHEMA: &'static str = A::DOCUMENT_SCHEMA;
+                const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: $route, lanes: &[ArtifactToolPublicationLane::HostOnly] }];
             }
         };
     }
@@ -14840,6 +15223,7 @@ pub mod app {
         type Owner = A;
         const TOOL_IDS: &'static [&'static str] = &["configuration-binary"];
         const DOCUMENT_SCHEMA: &'static str = A::DOCUMENT_SCHEMA;
+        const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "configuration-binary", lanes: &[ArtifactToolPublicationLane::HostOnly] }];
     }
 
     fn register_framework_reserved_factories<A: ArtifactApp>(registry: &mut ArtifactToolFactoryRegistry<'_, A>) -> Result<(), Fault> {
@@ -14929,6 +15313,13 @@ pub mod app {
             }
         }
 
+        fn publication_lanes(&self) -> &'static [ArtifactToolPublicationLane] {
+            match self {
+                Self::Bounded(_) => &[],
+                Self::FrameworkOwned(registration) | Self::AppOwned(registration) => registration.publication_lanes,
+            }
+        }
+
         fn schema_id(&self) -> String {
             match self {
                 Self::Bounded(proof) => proof.schema_id(),
@@ -14973,17 +15364,74 @@ pub mod app {
     pub(crate) const TOOL_CANCELLATION_SLOTS: usize = 1_024;
     const TOOL_CANCELLATION_WORDS: usize = TOOL_CANCELLATION_SLOTS / u64::BITS as usize;
 
+    struct ToolPublicationClaim {
+        state: std::sync::atomic::AtomicU8,
+    }
+
+    impl ToolPublicationClaim {
+        fn new() -> std::sync::Arc<Self> {
+            std::sync::Arc::new(Self { state: std::sync::atomic::AtomicU8::new(0) })
+        }
+
+        fn cancel(&self) {
+            self.state.fetch_or(2, std::sync::atomic::Ordering::AcqRel);
+        }
+
+        fn is_cancelled(&self) -> bool {
+            self.state.load(std::sync::atomic::Ordering::Acquire) & 2 != 0
+        }
+
+        fn finish(&self) {
+            self.state.fetch_or(4, std::sync::atomic::Ordering::AcqRel);
+        }
+
+        fn is_finished(&self) -> bool {
+            self.state.load(std::sync::atomic::Ordering::Acquire) & 4 != 0
+        }
+
+        fn try_claim(self: &std::sync::Arc<Self>) -> Option<ToolPublicationPermit> {
+            self.state.compare_exchange(0, 1, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).ok()?;
+            Some(ToolPublicationPermit { claim: self.clone() })
+        }
+    }
+
+    struct ToolPublicationPermit {
+        claim: std::sync::Arc<ToolPublicationClaim>,
+    }
+
+    struct ToolPublicationScopePermit {
+        _app: ToolPublicationPermit,
+        _document: Option<ToolPublicationPermit>,
+        _operation: ToolPublicationPermit,
+    }
+
+    impl Drop for ToolPublicationPermit {
+        fn drop(&mut self) {
+            let previous = self.claim.state.fetch_and(!1, std::sync::atomic::Ordering::AcqRel);
+            assert_ne!(previous & 1, 0, "publication claim is released by its exact sole permit");
+        }
+    }
+
     struct ToolDocumentCancellationScope {
         document: ArtifactDocumentAuthority,
         generation: u64,
         token: semio_framework_job::CancelToken,
+        publication_claim: std::sync::Arc<ToolPublicationClaim>,
         operation: ToolOperationKey,
+    }
+
+    struct ToolKeyedDocumentCancellationScope {
+        token: semio_framework_job::CancelToken,
+        publication_claim: std::sync::Arc<ToolPublicationClaim>,
+        active: usize,
     }
 
     pub(crate) struct ToolCancellationState {
         slots: Box<[std::mem::MaybeUninit<ToolDocumentCancellationScope>]>,
         occupied: [u64; TOOL_CANCELLATION_WORDS],
         allocation_admitted: bool,
+        keyed_operations: ArtifactFixedRegistry<ToolDocumentCancellationScope>,
+        keyed_documents: ArtifactFixedRegistry<ToolKeyedDocumentCancellationScope>,
     }
 
     impl ToolCancellationState {
@@ -15035,6 +15483,7 @@ pub mod app {
     pub struct ToolCancellationHandle {
         pub(crate) state: std::sync::Arc<std::sync::Mutex<ToolCancellationState>>,
         app_scope: semio_framework_job::CancelToken,
+        publication_scope: std::sync::Arc<ToolPublicationClaim>,
         app_generation: std::sync::Arc<std::sync::atomic::AtomicU64>,
         active: std::sync::Arc<std::sync::atomic::AtomicUsize>,
     }
@@ -15047,8 +15496,12 @@ pub mod app {
                 slots.resize_with(TOOL_CANCELLATION_SLOTS, std::mem::MaybeUninit::uninit);
             }
             Self {
-                state: std::sync::Arc::new(std::sync::Mutex::new(ToolCancellationState { slots: slots.into_boxed_slice(), occupied: [0; TOOL_CANCELLATION_WORDS], allocation_admitted })),
+                state: std::sync::Arc::new(std::sync::Mutex::new(ToolCancellationState {
+                    slots: slots.into_boxed_slice(), occupied: [0; TOOL_CANCELLATION_WORDS], allocation_admitted,
+                    keyed_operations: ArtifactFixedRegistry::new(), keyed_documents: ArtifactFixedRegistry::new(),
+                })),
                 app_scope: semio_framework_job::CancelToken::root_now(),
+                publication_scope: ToolPublicationClaim::new(),
                 app_generation: std::sync::Arc::new(std::sync::atomic::AtomicU64::new(0)),
                 active: std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0)),
             }
@@ -15067,6 +15520,7 @@ pub mod app {
         pub(crate) fn begin(&self, key: ToolOperationKey) -> Result<ToolCancellationLease, Fault> {
             let document_token = self.app_scope.child_now();
             let token = document_token.child_now();
+            let publication_claim = ToolPublicationClaim::new();
             let index = Self::slot(key.document);
             let (superseded, generation) = {
                 let mut state = self.try_state()?;
@@ -15078,16 +15532,39 @@ pub mod app {
                 }
                 let superseded = state.take(index);
                 let generation = superseded.as_ref().map_or(0, |scope| scope.generation.saturating_add(1));
-                state.insert_admitted(index, ToolDocumentCancellationScope { document: key.document, generation, token: document_token, operation: key.clone() });
+                state.insert_admitted(index, ToolDocumentCancellationScope { document: key.document, generation, token: document_token, publication_claim: publication_claim.clone(), operation: key.clone() });
                 drop(state);
                 (superseded, generation)
             };
             if let Some(scope) = superseded {
+                scope.publication_claim.cancel();
                 scope.token.cancel_now();
             } else {
                 self.active.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
             }
-            Ok(ToolCancellationLease { handle: self.clone(), document: key.document, document_generation: generation, key, token, finished: false })
+            Ok(ToolCancellationLease { handle: self.clone(), document: key.document, document_generation: generation, key, token, publication_claim, document_claim: None, keyed: false, finished: false })
+        }
+
+        fn begin_keyed(&self, key: ToolOperationKey) -> Result<ToolCancellationLease, Fault> {
+            let mut state = self.try_state()?;
+            if !state.keyed_operations.can_insert(key.operation_id.0) {
+                return Err(plugin_sdk_fault("keyed cancellation operation has no exact pre-admitted slot"));
+            }
+            let document_id = u64::from(key.document.0);
+            if state.keyed_documents.get(document_id).is_none() {
+                if !state.keyed_documents.can_insert(document_id) {
+                    return Err(plugin_sdk_fault("keyed cancellation document has no exact pre-admitted slot"));
+                }
+                state.keyed_documents.insert_admitted(document_id, ToolKeyedDocumentCancellationScope { token: self.app_scope.child_now(), publication_claim: ToolPublicationClaim::new(), active: 0 });
+            }
+            let document = state.keyed_documents.get_mut(document_id).expect("exact keyed document was admitted");
+            let token = document.token.child_now();
+            let document_claim = document.publication_claim.clone();
+            document.active += 1;
+            let publication_claim = ToolPublicationClaim::new();
+            state.keyed_operations.insert_admitted(key.operation_id.0, ToolDocumentCancellationScope { document: key.document, generation: key.generation.0, token: token.clone(), publication_claim: publication_claim.clone(), operation: key.clone() });
+            self.active.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+            Ok(ToolCancellationLease { handle: self.clone(), document: key.document, document_generation: key.generation.0, key, token, publication_claim, document_claim: Some(document_claim), keyed: true, finished: false })
         }
 
         #[cfg(test)]
@@ -15098,6 +15575,11 @@ pub mod app {
         pub fn cancel(&self, key: &ToolOperationKey) -> Result<bool, Fault> {
             let detached = {
                 let mut state = self.try_state()?;
+                if let Some(scope) = state.keyed_operations.get(key.operation_id.0).filter(|scope| scope.operation == *key) {
+                    scope.publication_claim.cancel();
+                    scope.token.cancel_now();
+                    return Ok(true);
+                }
                 let index = Self::slot(key.document);
                 let detached = if state.get(index).is_some_and(|scope| scope.document == key.document && scope.operation == *key) { state.take(index) } else { None };
                 drop(state);
@@ -15105,6 +15587,7 @@ pub mod app {
             };
             if let Some(scope) = detached {
                 self.active.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+                scope.publication_claim.cancel();
                 scope.token.cancel_now();
                 Ok(true)
             } else {
@@ -15121,30 +15604,47 @@ pub mod app {
         }
 
         pub fn cancel_document(&self, document: ArtifactDocumentAuthority) -> Result<bool, Fault> {
-            let detached = {
+            let (detached, keyed) = {
                 let mut state = self.try_state()?;
+                let keyed = if let Some(scope) = state.keyed_documents.get(u64::from(document.0)) {
+                    scope.publication_claim.cancel();
+                    scope.token.cancel_now();
+                    true
+                } else { false };
                 let index = Self::slot(document);
                 let detached = if state.get(index).is_some_and(|scope| scope.document == document) { state.take(index) } else { None };
                 drop(state);
-                detached
+                (detached, keyed)
             };
             if let Some(scope) = detached {
                 self.active.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+                scope.publication_claim.cancel();
                 scope.token.cancel_now();
                 Ok(true)
             } else {
-                Ok(false)
+                Ok(keyed)
             }
         }
 
         pub fn cancel_scope_generation(&self) {
+            self.publication_scope.cancel();
             self.app_scope.cancel_now();
             let _ = self.app_generation.fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |generation| Some(generation.saturating_add(1)));
         }
 
         fn cleanup_slot(&self, index: usize) -> Result<bool, Fault> {
             if index >= TOOL_CANCELLATION_SLOTS {
-                return Ok(false);
+                let mut state = self.try_state()?;
+                let Some(operation) = state.keyed_operations.id_at(index - TOOL_CANCELLATION_SLOTS) else { return Ok(false); };
+                let scope = state.keyed_operations.remove(operation).expect("exact keyed cancellation cleanup slot");
+                scope.publication_claim.cancel();
+                scope.token.cancel_now();
+                let document_id = u64::from(scope.document.0);
+                let document = state.keyed_documents.get_mut(document_id).expect("keyed cancellation cleanup retains document authority");
+                document.active -= 1;
+                if document.active == 0 { drop(state.keyed_documents.remove(document_id)); }
+                self.active.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+                return Ok(true);
             }
             let detached = {
                 let mut state = self.try_state()?;
@@ -15154,11 +15654,35 @@ pub mod app {
             };
             if let Some(scope) = detached {
                 self.active.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+                scope.publication_claim.cancel();
                 scope.token.cancel_now();
                 Ok(true)
             } else {
                 Ok(false)
             }
+        }
+
+        fn cleanup_finished_slot(&self, index: usize) -> Result<Option<bool>, Fault> {
+            let mut state = match self.state.try_lock() {
+                Ok(state) => state,
+                Err(std::sync::TryLockError::WouldBlock) => return Ok(None),
+                Err(std::sync::TryLockError::Poisoned(_)) => return Err(plugin_sdk_fault("finished cancellation authority is poisoned")),
+            };
+            let detached = if index < TOOL_CANCELLATION_SLOTS {
+                if !state.get(index).is_some_and(|scope| scope.publication_claim.is_finished()) { return Ok(Some(false)); }
+                state.take(index)
+            } else {
+                let Some(operation) = state.keyed_operations.id_at(index - TOOL_CANCELLATION_SLOTS) else { return Ok(Some(false)); };
+                if !state.keyed_operations.get(operation).is_some_and(|scope| scope.publication_claim.is_finished()) { return Ok(Some(false)); }
+                let scope = state.keyed_operations.remove(operation).expect("finished exact keyed cancellation owner");
+                let document_id = u64::from(scope.document.0);
+                let document = state.keyed_documents.get_mut(document_id).expect("finished keyed operation retains document count");
+                document.active -= 1;
+                if document.active == 0 { drop(state.keyed_documents.remove(document_id)); }
+                Some(scope)
+            };
+            if detached.is_some() { self.active.fetch_sub(1, std::sync::atomic::Ordering::AcqRel); }
+            Ok(Some(detached.is_some()))
         }
     }
 
@@ -15168,6 +15692,9 @@ pub mod app {
         document_generation: u64,
         key: ToolOperationKey,
         token: semio_framework_job::CancelToken,
+        publication_claim: std::sync::Arc<ToolPublicationClaim>,
+        document_claim: Option<std::sync::Arc<ToolPublicationClaim>>,
+        keyed: bool,
         finished: bool,
     }
 
@@ -15177,11 +15704,62 @@ pub mod app {
         }
 
         fn cancel_token(&self) -> semio_framework_job::CancelToken {
-            self.token.clone()
+            self.token.child_now()
+        }
+
+        fn cancel(&self) {
+            self.publication_claim.cancel();
+            self.token.cancel_now();
+        }
+
+        fn rebind_keyed(&mut self, base_revision: semio_framework_job::RevisionId, generation: semio_framework_job::Generation) -> Result<bool, Fault> {
+            let mut state = match self.handle.state.try_lock() {
+                Ok(state) => state,
+                Err(std::sync::TryLockError::WouldBlock) => return Ok(false),
+                Err(std::sync::TryLockError::Poisoned(_)) => return Err(plugin_sdk_fault("keyed cancellation authority is poisoned")),
+            };
+            if !self.keyed || self.finished || self.publication_claim.is_cancelled() || self.token.is_cancelled_now() {
+                return Err(plugin_sdk_fault("only a live exact keyed lease may rebind its revision"));
+            }
+            let scope = state.keyed_operations.get_mut(self.key.operation_id.0).ok_or_else(|| plugin_sdk_fault("keyed rebase lost its registered cancellation authority"))?;
+            if scope.operation != self.key || !std::sync::Arc::ptr_eq(&scope.publication_claim, &self.publication_claim) {
+                return Err(plugin_sdk_fault("keyed rebase does not own the registered cancellation authority"));
+            }
+            scope.operation.base_revision = base_revision;
+            scope.operation.generation = generation;
+            scope.generation = generation.0;
+            self.key.base_revision = base_revision;
+            self.key.generation = generation;
+            self.document_generation = generation.0;
+            Ok(true)
+        }
+
+        fn try_claim_publication(&self) -> Option<ToolPublicationScopePermit> {
+            let app = self.handle.publication_scope.try_claim()?;
+            let document = match self.document_claim.as_ref() {
+                Some(claim) => Some(claim.try_claim()?),
+                None => None,
+            };
+            let operation = self.publication_claim.try_claim()?;
+            Some(ToolPublicationScopePermit { _app: app, _document: document, _operation: operation })
         }
 
         fn release_current(&self) {
             let Ok(mut state) = self.handle.state.try_lock() else { return };
+            if self.keyed {
+                if !state.keyed_operations.get(self.key.operation_id.0).is_some_and(|scope| scope.operation == self.key && std::sync::Arc::ptr_eq(&scope.publication_claim, &self.publication_claim)) { return; }
+                let detached = state.keyed_operations.remove(self.key.operation_id.0);
+                if detached.is_some() {
+                    let document_id = u64::from(self.document.0);
+                    let document = state.keyed_documents.get_mut(document_id).expect("keyed operation retains its exact document scope");
+                    document.active -= 1;
+                    if document.active == 0 {
+                        drop(state.keyed_documents.remove(document_id));
+                    }
+                    self.handle.active.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+                }
+                return;
+            }
             let index = ToolCancellationHandle::slot(self.document);
             let detached = if state.get(index).is_some_and(|scope| scope.document == self.document && scope.generation == self.document_generation && scope.operation == self.key) { state.take(index) } else { None };
             drop(state);
@@ -15191,11 +15769,13 @@ pub mod app {
         }
 
         fn finish(mut self) {
+            self.publication_claim.finish();
             self.release_current();
             self.finished = true;
         }
 
         fn finish_in_place(&mut self) {
+            self.publication_claim.finish();
             self.release_current();
             self.finished = true;
         }
@@ -15217,12 +15797,248 @@ pub mod app {
 
     impl Drop for ToolCancellationLease {
         fn drop(&mut self) {
-            self.release_current();
             if !self.finished {
-                self.token.cancel_now();
+                self.cancel();
             }
+            self.publication_claim.finish();
+            self.release_current();
         }
     }
+
+    //#region 🗝️RetainedLatestWinsKeys
+    use semio_framework_os_kernel::ordered as latest_wins_ordered;
+    struct ToolLatestWinsKeyCopy {
+        key: Option<String>,
+        instance: u32,
+        part: usize,
+        offset: usize,
+        prefix: usize,
+    }
+
+    impl ToolLatestWinsKeyCopy {
+        fn new(instance: u32, parts: [&str; 4]) -> Result<Self, Fault> {
+            let size = parts.iter().try_fold(8usize + 4 * 16, |size, part| part.len().checked_mul(2).and_then(|bytes| size.checked_add(bytes))).ok_or_else(|| plugin_sdk_fault("latest-wins exact key length overflow"))?;
+            let mut key = String::new();
+            key.try_reserve_exact(size).map_err(|_| plugin_sdk_fault("latest-wins exact key allocation was not admitted"))?;
+            Ok(Self { key: Some(key), instance, part: 0, offset: 0, prefix: 0 })
+        }
+
+        fn advance(&mut self, parts: [&str; 4], maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+            if maximum_items == 0 || maximum_bytes < 3 {
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            const HEX: &[u8; 16] = b"0123456789abcdef";
+            let key = self.key.as_mut().expect("key copy retains its exact output until handoff");
+            if self.part == 0 {
+                let count = (8 - self.prefix).min(maximum_bytes);
+                for _ in 0..count {
+                    key.push(HEX[((self.instance >> (28 - self.prefix * 4)) & 15) as usize] as char);
+                    self.prefix += 1;
+                }
+                if self.prefix == 8 { self.part = 1; self.prefix = 0; }
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: count };
+            }
+            if self.part > 4 {
+                return PluginCloseStep::Complete;
+            }
+            let part = parts[self.part - 1].as_bytes();
+            if self.prefix < 16 {
+                let count = (16 - self.prefix).min(maximum_bytes);
+                for _ in 0..count {
+                    key.push(HEX[((part.len() as u64 >> (60 - self.prefix * 4)) & 15) as usize] as char);
+                    self.prefix += 1;
+                }
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: count };
+            }
+            if self.offset < part.len() {
+                let count = (part.len() - self.offset).min(maximum_bytes / 3);
+                for byte in &part[self.offset..self.offset + count] {
+                    key.push(HEX[(byte >> 4) as usize] as char);
+                    key.push(HEX[(byte & 15) as usize] as char);
+                }
+                self.offset += count;
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: count * 3 };
+            }
+            self.part += 1;
+            self.offset = 0;
+            self.prefix = 0;
+            PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
+        }
+
+        fn take_key(&mut self) -> Option<std::sync::Arc<String>> {
+            (self.part > 4).then(|| self.key.take()).flatten().map(std::sync::Arc::new)
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+            if maximum_items == 0 || maximum_bytes == 0 {
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            if let Some(key) = self.key.as_mut() {
+                if key.pop().is_some() {
+                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 1 };
+                }
+                self.key = None;
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            PluginCloseStep::Complete
+        }
+    }
+
+    struct ToolLatestWinsScope {
+        key: std::sync::Arc<String>,
+        operation: u64,
+        token: semio_framework_job::CancelToken,
+        claim: std::sync::Weak<ToolPublicationClaim>,
+    }
+
+    impl ToolLatestWinsScope {
+        fn cancel(&self) {
+            if let Some(claim) = self.claim.upgrade() { claim.cancel(); }
+            self.token.cancel_now();
+        }
+    }
+
+    struct ToolLatestWinsRegistry {
+        map: Option<latest_wins_ordered::OrderedMap<ToolLatestWinsScope>>,
+        update: Option<latest_wins_ordered::UpdateCursor<ToolLatestWinsScope>>,
+        retirement: Option<latest_wins_ordered::Retirement<ToolLatestWinsScope>>,
+        retired_key: Option<String>,
+        active_operation: Option<u64>,
+        outcome: Option<(u64, bool)>,
+        scan: usize,
+        admission_scan: Option<usize>,
+        update_closing: bool,
+        closing: bool,
+    }
+
+    impl ToolLatestWinsRegistry {
+        fn new() -> Self {
+            Self { map: Some(latest_wins_ordered::OrderedMap::new()), update: None, retirement: None, retired_key: None, active_operation: None, outcome: None, scan: 0, admission_scan: None, update_closing: false, closing: false }
+        }
+
+        fn can_begin(&self) -> bool {
+            !self.closing && self.update.is_none() && self.retirement.is_none() && self.retired_key.is_none() && self.outcome.is_none()
+        }
+
+        fn begin(&mut self, operation: u64, key: std::sync::Arc<String>, lease: &ToolCancellationLease) -> bool {
+            if !self.can_begin() { return false; }
+            if self.map.as_ref().expect("live key map").len() >= ARTIFACT_LIVE_OUTPUT_SLOTS {
+                match self.admission_scan {
+                    None => { self.admission_scan = Some(ARTIFACT_LIVE_OUTPUT_SLOTS); return false; }
+                    Some(0) => {}
+                    Some(_) => return false,
+                }
+            }
+            let scope = ToolLatestWinsScope { key: key.clone(), operation, token: lease.token.clone(), claim: std::sync::Arc::downgrade(&lease.publication_claim) };
+            self.update = Some(self.map.as_ref().expect("live key map").begin_set_shared(key, std::sync::Arc::new(scope)));
+            self.active_operation = Some(operation);
+            self.update_closing = false;
+            true
+        }
+
+        fn take_outcome(&mut self, operation: u64) -> Option<bool> {
+            if self.outcome.is_some_and(|(owner, _)| owner == operation) { self.outcome.take().map(|(_, accepted)| accepted) } else { None }
+        }
+
+        fn cancel(&mut self, operation: u64) {
+            if self.active_operation == Some(operation) && !self.update_closing {
+                if let Some(update) = self.update.as_mut() { update.begin_close(); }
+                self.update_closing = true;
+                self.outcome = Some((operation, false));
+            }
+        }
+
+        fn retire_scope(&mut self, scope: ToolLatestWinsScope) {
+            self.retired_key = std::sync::Arc::into_inner(scope.key);
+        }
+
+        fn retirement_step(&mut self, step: latest_wins_ordered::RetirementStep<ToolLatestWinsScope>) -> PluginCloseStep {
+            match step {
+                latest_wins_ordered::RetirementStep::Blocked => PluginCloseStep::Blocked { reason: "latest-wins key retirement has no grant" },
+                latest_wins_ordered::RetirementStep::Progress { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                latest_wins_ordered::RetirementStep::OwnedValue(scope) => { self.retire_scope(scope); PluginCloseStep::Pending { released_items: 1, released_bytes: 0 } }
+                latest_wins_ordered::RetirementStep::Complete => PluginCloseStep::Complete,
+            }
+        }
+
+        fn advance(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+            if maximum_items == 0 || maximum_bytes == 0 { return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }; }
+            let grant = latest_wins_ordered::Grant { maximum_items: maximum_items.min(1), maximum_bytes };
+            if let Some(key) = self.retired_key.as_mut() {
+                if key.pop().is_some() { return PluginCloseStep::Pending { released_items: 0, released_bytes: 1 }; }
+                self.retired_key = None;
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if let Some(retirement) = self.retirement.as_mut() {
+                let step = retirement.advance(grant);
+                if matches!(step, latest_wins_ordered::RetirementStep::Complete) { self.retirement = None; }
+                return self.retirement_step(step);
+            }
+            if let Some(update) = self.update.as_mut() {
+                if self.update_closing {
+                    let step = update.close_step(grant);
+                    if matches!(step, latest_wins_ordered::RetirementStep::Complete) {
+                        assert!(update.terminal_is_empty());
+                        self.update = None;
+                        self.active_operation = None;
+                        self.update_closing = false;
+                    }
+                    return self.retirement_step(step);
+                }
+                if !update.is_complete() {
+                    return match update.advance(grant) {
+                        latest_wins_ordered::Step::Blocked => PluginCloseStep::Blocked { reason: "latest-wins exact comparison has no grant" },
+                        latest_wins_ordered::Step::Progress { completed_items, completed_bytes } => PluginCloseStep::Pending { released_items: completed_items, released_bytes: completed_bytes },
+                        latest_wins_ordered::Step::Complete => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                    };
+                }
+                let candidate = update.take_result().expect("complete exact key update retains its candidate");
+                self.admission_scan = None;
+                if candidate.len() > ARTIFACT_LIVE_OUTPUT_SLOTS {
+                    self.retirement = Some(candidate.retire());
+                    if let Some(operation) = self.active_operation { self.outcome = Some((operation, false)); }
+                } else {
+                    let previous = self.map.replace(candidate).expect("live exact key map");
+                    self.retirement = Some(previous.retire());
+                    if let Some(scope) = update.take_removed() {
+                        if self.active_operation.is_some_and(|operation| operation != scope.operation) { scope.cancel(); }
+                    }
+                    if let Some(operation) = self.active_operation { self.outcome = Some((operation, true)); }
+                }
+                update.begin_close();
+                self.update_closing = true;
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if self.closing {
+                if let Some(map) = self.map.take() {
+                    self.retirement = Some(map.retire());
+                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                }
+                return PluginCloseStep::Complete;
+            }
+            let map = self.map.as_ref().expect("live exact key map");
+            if map.is_empty() { self.scan = 0; return PluginCloseStep::Complete; }
+            self.scan %= map.len();
+            let (_, scope) = map.entry_at_rank(self.scan).expect("fixed metadata rank within key map");
+            self.scan += 1;
+            if let Some(remaining) = self.admission_scan.as_mut() { *remaining = remaining.saturating_sub(1); }
+            if scope.claim.strong_count() == 0 {
+                self.update = Some(map.begin_remove_shared(scope.key.clone()));
+                self.update_closing = false;
+            }
+            PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
+        }
+
+        fn begin_close(&mut self) {
+            self.closing = true;
+            if let Some(update) = self.update.as_mut() { update.begin_close(); self.update_closing = true; }
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing && self.map.is_none() && self.update.is_none() && self.retirement.is_none() && self.retired_key.is_none()
+        }
+    }
+    //#endregion 🗝️RetainedLatestWinsKeys
 
     struct FrameworkReservedCommitPermit {
         operation: semio_framework_job::Operation,
@@ -15298,7 +16114,7 @@ pub mod app {
             }
             match self.close_stage {
                 ActiveMediaExportCloseStage::Live => {
-                    self.lease.cancel_token().cancel_now();
+                    self.lease.cancel();
                     if let Some(session) = self.session.as_mut() {
                         session.begin_close();
                     }
@@ -15751,6 +16567,93 @@ pub mod app {
         raw_wire: semio_framework::action_bus::RetainedToolWireInput,
     }
 
+    struct PendingLatestWinsCommand<A: ArtifactApp> {
+        command: std::mem::ManuallyDrop<Option<Box<A::Command>>>,
+        disposer: Box<dyn ArtifactOwnedDisposer<A::Command>>,
+        admission: Option<AdmittedToolCommand>,
+        meta: ActionMeta,
+        operation: semio_framework_job::Operation,
+        revision: [u8; 32],
+        lease: Option<ToolCancellationLease>,
+        key_copy: Option<ToolLatestWinsKeyCopy>,
+        key: Option<std::sync::Arc<String>>,
+        retired_key: Option<String>,
+        lookup_started: bool,
+        accepted: bool,
+        restarting: bool,
+        closing: bool,
+    }
+
+    impl<A: ArtifactApp> PendingLatestWinsCommand<A> {
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            if maximum_items == 0 || maximum_bytes == 0 { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+            if let Some(command) = self.command.as_mut() {
+                let step = self.disposer.close_step(command, maximum_items.min(1), maximum_bytes)?;
+                if step == PluginCloseStep::Complete {
+                    if !self.disposer.terminal_is_empty(command) { return Err(plugin_sdk_fault("latest-wins command disposer reported a false terminal")); }
+                    drop(self.command.take());
+                }
+                return Ok(step);
+            }
+            let step = self.close_key_step(maximum_items, maximum_bytes);
+            if step != PluginCloseStep::Complete { return Ok(step); }
+            if let Some(admission) = self.admission.as_mut() {
+                if !admission.raw_wire.terminal_is_empty() {
+                    return Ok(match admission.raw_wire.close_step(maximum_items.min(1), maximum_bytes) {
+                        semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                        semio_framework_job::InteractiveJobCloseStep::Blocked => PluginCloseStep::Blocked { reason: "latest-wins retained raw input close is blocked" },
+                        semio_framework_job::InteractiveJobCloseStep::Complete => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                    });
+                }
+                if let QualifiedToolProof::AppOwned(registration) = &mut admission.proof {
+                    for text in [&mut registration.key.controller_id, &mut registration.key.tool_id, &mut registration.schema_id] {
+                        if let Some(step) = MountedTypedCommandFullOperation::<A>::retire_string_scalar(text, maximum_bytes) { return Ok(step); }
+                    }
+                }
+                for text in [&mut admission.verb, &mut admission.wire_admission.key.controller_id, &mut admission.wire_admission.key.tool_id, &mut admission.wire_admission.schema_id] {
+                    if let Some(step) = MountedTypedCommandFullOperation::<A>::retire_string_scalar(text, maximum_bytes) { return Ok(step); }
+                }
+                self.admission = None;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            Ok(PluginCloseStep::Complete)
+        }
+
+        fn close_key_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+            if maximum_items == 0 {
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            if let Some(copy) = self.key_copy.as_mut() {
+                let step = copy.close_step(maximum_items, maximum_bytes);
+                if step == PluginCloseStep::Complete {
+                    self.key_copy = None;
+                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                }
+                return step;
+            }
+            if let Some(key) = self.key.take() {
+                self.retired_key = std::sync::Arc::into_inner(key);
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if let Some(key) = self.retired_key.as_mut() {
+                if let Some(step) = MountedTypedCommandFullOperation::<A>::retire_string_scalar(key, maximum_bytes) { return step; }
+                self.retired_key = None;
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            PluginCloseStep::Complete
+        }
+
+        fn command_owners_are_empty(&self) -> bool {
+            self.command.is_none() && self.admission.is_none() && self.key_copy.is_none() && self.key.is_none() && self.retired_key.is_none()
+        }
+    }
+
+    impl<A: ArtifactApp> Drop for PendingLatestWinsCommand<A> {
+        fn drop(&mut self) {
+            if !std::thread::panicking() { assert!(self.command_owners_are_empty(), "latest-wins admission must transfer or cursor-retire its exact command/key/raw owners"); }
+        }
+    }
+
     struct TypedCommandWireWriter {
         input: semio_framework::action_bus::RetainedToolWireInput,
         page: [u8; semio_framework::action_bus::TOOL_WIRE_PAGE_BYTES],
@@ -15809,6 +16712,57 @@ pub mod app {
         Retiring,
     }
 
+    enum PendingArtifactStorePublication<A: ArtifactApp> {
+        Artifact(store::ArtifactStoreOneItemPublication<A::Snapshot, A::Mutation>),
+        Config(store::ArtifactStoreOneItemPublication<A::Config, A::ConfigMutation>),
+        Draft(store::ArtifactStoreOneItemPublication<A::Draft, A::DraftMutation>),
+        Presence(store::ArtifactEphemeralOneItemPublication<A::Presence, A::PresenceMutation>),
+        Transient(store::ArtifactEphemeralOneItemPublication<A::Transient, A::TransientMutation>),
+    }
+
+    impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
+        fn acknowledge(&mut self) -> bool {
+            match self {
+                Self::Artifact(publication) => publication.acknowledge(),
+                Self::Config(publication) => publication.acknowledge(),
+                Self::Draft(publication) => publication.acknowledge(),
+                Self::Presence(publication) => publication.acknowledge(),
+                Self::Transient(publication) => publication.acknowledge(),
+            }
+        }
+
+        fn begin_close(&mut self) {
+            match self {
+                Self::Artifact(publication) => publication.begin_close(),
+                Self::Config(publication) => publication.begin_close(),
+                Self::Draft(publication) => publication.begin_close(),
+                Self::Presence(publication) => publication.begin_close(),
+                Self::Transient(publication) => publication.begin_close(),
+            }
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, Fault> {
+            let grant = store::ArtifactStoreOneItemGrant { maximum_items: maximum_items.min(1), maximum_bytes };
+            match self {
+                Self::Artifact(publication) => publication.close_step(grant).map_err(plugin_sdk_fault),
+                Self::Config(publication) => publication.close_step(grant).map_err(plugin_sdk_fault),
+                Self::Draft(publication) => publication.close_step(grant).map_err(plugin_sdk_fault),
+                Self::Presence(publication) => publication.close_step(grant).map_err(plugin_sdk_fault),
+                Self::Transient(publication) => publication.close_step(grant).map_err(plugin_sdk_fault),
+            }
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            match self {
+                Self::Artifact(publication) => publication.terminal_is_empty(),
+                Self::Config(publication) => publication.terminal_is_empty(),
+                Self::Draft(publication) => publication.terminal_is_empty(),
+                Self::Presence(publication) => publication.terminal_is_empty(),
+                Self::Transient(publication) => publication.terminal_is_empty(),
+            }
+        }
+    }
+
     struct MountedTypedCommandFullOperation<A: ArtifactApp> {
         verb: String,
         meta: ActionMeta,
@@ -15820,6 +16774,7 @@ pub mod app {
         presence_generation: u64,
         transient_generation: u64,
         contract: semio_framework::ToolExecutionContract,
+        publication_lanes: &'static [ArtifactToolPublicationLane],
         session: Option<semio_framework_job::MountedWorkerJobSession<semio_framework::ErasedToolJob>>,
         session_rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<semio_framework::ErasedToolJob>>,
         completion: Option<ArtifactToolCompletion<A>>,
@@ -15829,6 +16784,7 @@ pub mod app {
         terminal_outcome: Option<semio_framework_job::StepOutcome>,
         terminal_seen: bool,
         publication: Option<ArtifactToolCompletionValue<A>>,
+        pending_artifact_publication: Option<PendingArtifactStorePublication<A>>,
         result_page: Option<TypedOperationResultPage>,
         result_page_presented: bool,
         result_sequence: u32,
@@ -15890,6 +16846,11 @@ pub mod app {
                     let Some(outcome) = session.take_checked_out_outcome() else {
                         return Ok(PluginCloseStep::Blocked { reason: "typed operation checked-out outcome changed during one mounted turn" });
                     };
+                    if matches!(outcome, semio_framework_job::StepOutcome::Cancelled) {
+                        if let Some(lease) = self.cancellation_lease.as_ref() {
+                            lease.cancel();
+                        }
+                    }
                     self.terminal_seen = terminal;
                     self.terminal_outcome = Some(outcome);
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
@@ -15911,6 +16872,27 @@ pub mod app {
             self.result_page_presented = false;
             self.stage = MountedTypedCommandFullOperationStage::AwaitingAck;
             Ok(())
+        }
+
+        fn reject_cancelled_publication(&mut self) -> Result<bool, Fault> {
+            if self.stage != MountedTypedCommandFullOperationStage::Publishing {
+                return Ok(false);
+            }
+            let lease = self.cancellation_lease.as_ref().ok_or_else(|| plugin_sdk_fault("typed-operation publication lacks its exact cancellation lease"))?;
+            if !lease.handle.publication_scope.is_cancelled() && !lease.document_claim.as_ref().is_some_and(|claim| claim.is_cancelled()) && !lease.publication_claim.is_cancelled() && !lease.token.is_cancelled_now() {
+                return Ok(false);
+            }
+            if self.publication.is_none() {
+                if let Some(completion) = self.completion.as_ref() {
+                    self.publication = completion.take()?;
+                }
+            }
+            if let Some(pending) = self.pending_artifact_publication.as_mut() {
+                pending.begin_close();
+            }
+            self.ui_pending = false;
+            self.queue_page(TypedOperationResultPage::try_new(self.next_token(), TypedOperationResultLane::Fault, b"typed-operation cancelled before its next publication unit")?)?;
+            Ok(true)
         }
 
         fn take_result_page(&mut self) -> Option<TypedOperationResultPage> {
@@ -15937,6 +16919,11 @@ pub mod app {
                 return Ok(false);
             }
             let lane = page.lane;
+            if matches!(lane, TypedOperationResultLane::Artifact | TypedOperationResultLane::Config | TypedOperationResultLane::Draft | TypedOperationResultLane::Presence | TypedOperationResultLane::Transient)
+                && !self.pending_artifact_publication.as_mut().is_some_and(PendingArtifactStorePublication::acknowledge)
+            {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.artifact-publication-ack"), "artifact-store result ACK lost its exact pending publication authority"));
+            }
             self.result_page = None;
             self.result_page_presented = false;
             self.result_sequence = self.result_sequence.checked_add(1).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.result-sequence"), "typed-operation result sequence exhausted"))?;
@@ -15964,16 +16951,39 @@ pub mod app {
             if self.result_page.is_some() {
                 return Ok(PluginCloseStep::Blocked { reason: "typed operation retains an unacknowledged result page" });
             }
+            if let Some(pending) = self.pending_artifact_publication.as_mut() {
+                pending.begin_close();
+                let step = pending.close_step(maximum_items, maximum_bytes)?;
+                if step == store::SnapshotRetirementStep::Complete {
+                    if !pending.terminal_is_empty() {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.artifact-publication-terminal"), "artifact-store publication reported complete without terminal emptiness"));
+                    }
+                    self.pending_artifact_publication = None;
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                return Ok(match step {
+                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                    store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "artifact-store publication close is blocked" },
+                    store::SnapshotRetirementStep::Complete => unreachable!("handled terminal artifact-store publication"),
+                });
+            }
             if let Some(publication) = self.publication.as_mut() {
                 match publication {
                     ArtifactToolCompletionValue::Emit(Ok(emit), ephemeral) => {
+                        if let Some(child) = emit.child_emits.last_mut() {
+                            let step = child.close_one(maximum_items, maximum_bytes);
+                            if step == PluginCloseStep::Complete {
+                                emit.child_emits.pop();
+                                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                            }
+                            return Ok(step);
+                        }
                         if maximum_items != 0 {
                             if emit.artifact_mutations.pop().is_some()
                                 || emit.config_mutations.pop().is_some()
                                 || emit.draft_mutations.pop().is_some()
                                 || ephemeral.presence.pop().is_some()
                                 || ephemeral.transient.pop().is_some()
-                                || emit.child_emits.pop().is_some()
                                 || emit.effects.pop().is_some()
                                 || emit.events.pop().is_some()
                                 || emit.tasks.pop().is_some()
@@ -16065,6 +17075,7 @@ pub mod app {
                 && self.session_rejected.is_none()
                 && self.terminal_outcome.is_none()
                 && self.publication.is_none()
+                && self.pending_artifact_publication.is_none()
                 && self.result_page.is_none()
                 && self.raw_input.is_none()
                 && self.output_chunks.is_none()
@@ -16511,7 +17522,7 @@ pub mod app {
 
     impl<A: ArtifactApp> TypedCommandFullOperationJobFactory<A> {
         pub(crate) fn from_proof(proof: QualifiedBoundedFirstStepProof) -> Option<Self> {
-            if proof.owner != ToolOwnerWitness::of::<A>() || proof.row.owner != proof.owner {
+            if proof.owner != ToolOwnerWitness::of::<A>() || proof.row.owner != proof.owner || proof.row.factory != BOUNDED_FIRST_STEP_FACTORY || proof.row.factory_type_id.is_some() || proof.row.factory_type_name.is_some() {
                 return None;
             }
             let keys = vec![proof.key()];
@@ -16544,6 +17555,142 @@ pub mod app {
             payload.operation = Some(operation);
             Ok(payload)
         }
+    }
+
+    #[cfg(test)]
+    pub(crate) async fn test_retained_keyed_dispatch<A: ArtifactApp + Default>(registry: AppActionRegistry, command: fn(&str, i32) -> A::Command, mutation: fn(i32) -> A::Mutation, observe: fn(&A::Snapshot) -> i32) {
+        let fixture: Value = serde_json::from_str(include_str!("🧪️tool-latest-wins-integration.json")).unwrap();
+        let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1)));
+        for case in fixture["cases"].as_array().unwrap() {
+            let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry.clone()).await;
+            app.bind_instance_id(7).await;
+            let meta = ActionMeta { actor: "fixture".into(), instance_id: 7 };
+            let first = Box::new(command(case["firstTarget"].as_str().unwrap(), case["firstValue"].as_i64().unwrap() as i32));
+            let wire = <A::Command as ::protocol::OpBinary>::encode_op(&first).unwrap();
+            let admission = app.admit_command_wire("compositeEdit", &wire, 1).await.unwrap();
+            assert!(matches!(admission.proof, QualifiedToolProof::AppOwned(_)));
+            app.dispatch_typed_command_inner(first, admission, &meta).await.unwrap();
+            let first_id = *app.latest_wins_order.items.front().unwrap();
+            assert!(!app.can_admit_typed_operation(first_id + ARTIFACT_LIVE_OUTPUT_SLOTS as u64));
+            for _ in 0..100_000 {
+                if app.tool_operations.get(first_id).is_some() { break; }
+                app.advance_latest_wins_command_one().await.unwrap();
+                plugin_job_yield_once().await;
+            }
+            let first_token = app.tool_operations.get(first_id).expect("actual registered first worker").cancellation_lease.as_ref().unwrap().token.clone();
+            let next = Box::new(command(case["nextTarget"].as_str().unwrap(), case["nextValue"].as_i64().unwrap() as i32));
+            let wire = <A::Command as ::protocol::OpBinary>::encode_op(&next).unwrap();
+            let admission = app.admit_command_wire("compositeEdit", &wire, 1).await.unwrap();
+            app.dispatch_typed_command_inner(next, admission, &meta).await.unwrap();
+            let next_id = *app.latest_wins_order.items.front().unwrap();
+            let old_key = app.latest_wins_commands.get(next_id).unwrap().lease.as_ref().unwrap().key.clone();
+            app.store.dispatch(ArtifactCommand::Apply { mutations: vec![mutation(13)], description: None }).await.unwrap();
+            let fresh_revision = app.store.content_revision_now();
+            for _ in 0..100_000 {
+                if app.tool_operations.get(next_id).is_some() { break; }
+                app.advance_latest_wins_command_one().await.unwrap();
+                plugin_job_yield_once().await;
+            }
+            let mounted = app.tool_operations.get(next_id).expect("accepted key creates actual fresh worker");
+            assert_eq!(mounted.canonical_revision, fresh_revision);
+            assert_eq!(mounted.operation.generation.0, fixture["rebase"]["afterGeneration"].as_u64().unwrap());
+            let fresh_key = mounted.cancellation_lease.as_ref().unwrap().key.clone();
+            assert_eq!(fresh_key.generation, mounted.operation.generation);
+            assert!(!app.tool_cancellations.cancel(&old_key).unwrap());
+            assert_eq!(serde_json::json!(first_token.is_cancelled_now()), case["firstCancelled"]);
+            let expected = 13 + case["nextValue"].as_i64().unwrap() as i32;
+            for _ in 0..100_000 {
+                if observe(app.store.snapshot_root().as_ref()) == expected { break; }
+                if app.tool_operations.get(next_id).unwrap().stage == MountedTypedCommandFullOperationStage::Worker {
+                    app.tool_operations.get_mut(next_id).unwrap().drive_worker_step(&pool).unwrap();
+                } else {
+                    app.advance_typed_operation_publication_one().await.unwrap();
+                }
+                plugin_job_yield_once().await;
+            }
+            let state = app.tool_operations.get(next_id).unwrap();
+            eprintln!("[DEBUG] registered keyed dispatch progress stage={:?} terminal_seen={} pending={} completion={} result={:?}", state.stage, state.terminal_seen, state.pending_artifact_publication.is_some(), state.publication.is_some(), state.result_page.as_ref().map(|page| String::from_utf8_lossy(&page.bytes[..page.len])));
+            assert_eq!(serde_json::json!(observe(app.store.snapshot_root().as_ref())), serde_json::json!(expected));
+            assert!(app.tool_cancellations.cancel(&fresh_key).unwrap());
+            for _ in 0..100_000 {
+                if app.close_terminal_is_empty() { break; }
+                match app.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
+                    PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES); }
+                    PluginCloseStep::Complete => break,
+                    PluginCloseStep::Blocked { .. } => {}
+                }
+                plugin_job_yield_once().await;
+            }
+            assert!(app.close_terminal_is_empty());
+            eprintln!("[DEBUG] actual registered keyed dispatch {} preserved exact target supersession, rebased its worker, published count{expected}, and closed every retained owner", case["id"]);
+        }
+        for case in fixture["lostReservations"].as_array().unwrap() {
+            let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry.clone()).await;
+            app.bind_instance_id(7).await;
+            let meta = ActionMeta { actor: "fixture".into(), instance_id: 7 };
+            let command = Box::new(command("aä🧵", 42));
+            let wire = <A::Command as ::protocol::OpBinary>::encode_op(&command).unwrap();
+            let admission = app.admit_command_wire("compositeEdit", &wire, 1).await.unwrap();
+            app.dispatch_typed_command_inner(command, admission, &meta).await.unwrap();
+            let id = *app.latest_wins_order.items.front().unwrap();
+            let pending = app.latest_wins_commands.get_mut(id).unwrap();
+            let copy = pending.key_copy.take();
+            let key = pending.key.take();
+            pending.retired_key = Some(fixture["keyRetirement"]["text"].as_str().unwrap().into());
+            assert_eq!(pending.close_key_step(0, 4_096), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            let mut retired_bytes = 0;
+            for bytes in fixture["keyRetirement"]["scalarBytes"].as_array().unwrap() {
+                let bytes = bytes.as_u64().unwrap() as usize;
+                assert_eq!(pending.close_key_step(1, bytes - 1), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                assert_eq!(pending.close_key_step(1, bytes), PluginCloseStep::Pending { released_items: 0, released_bytes: bytes });
+                retired_bytes += bytes;
+            }
+            assert_eq!(serde_json::json!(retired_bytes), fixture["keyRetirement"]["utf8Bytes"]);
+            assert_eq!(pending.close_key_step(1, 0), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            pending.key_copy = copy;
+            pending.key = key;
+            let slot = id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS;
+            let foreign = id + ARTIFACT_LIVE_OUTPUT_SLOTS as u64;
+            app.typed_operation_reservations[slot] = case["foreignReservation"].as_bool().unwrap().then_some(foreign);
+            for _ in 0..8 {
+                app.advance_latest_wins_command_one().await.unwrap();
+                assert!(app.tool_operations.get(id).is_none());
+                if case["foreignReservation"].as_bool().unwrap() { assert_eq!(app.typed_operation_reservations[slot], Some(foreign)); }
+            }
+            app.typed_operation_reservations[slot] = None;
+            for _ in 0..100_000 {
+                if app.tool_operations.get(id).is_some() { break; }
+                app.advance_latest_wins_command_one().await.unwrap();
+            }
+            let mounted = app.tool_operations.get_mut(id).expect("vacant rejected slot receives its retained terminal result");
+            assert!(mounted.session.is_none());
+            let page = mounted.result_page.as_ref().unwrap();
+            assert_eq!(page.lane, TypedOperationResultLane::Fault);
+            assert!(mounted.acknowledge_result_page(page.token).unwrap());
+            assert_eq!(observe(app.store.snapshot_root().as_ref()), 0);
+            for _ in 0..100_000 {
+                if app.close_terminal_is_empty() { break; }
+                let _ = app.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
+                plugin_job_yield_once().await;
+            }
+            assert!(app.close_terminal_is_empty());
+            eprintln!("[DEBUG] actual registered keyed dispatch {} preserved foreign reservation, retired seven UTF-8 bytes exactly, and delivered rejection after vacancy", case["id"]);
+        }
+    }
+
+    #[cfg(test)]
+    pub(crate) async fn test_retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = NoPresence, PresenceMutation = NoPresenceMutation> + Default>() {
+        typed_command_full_operation_tests::retained_cancellation_publication_boundaries::<A>().await;
+    }
+
+    #[cfg(test)]
+    pub(crate) async fn test_retained_latest_wins_slot_and_publication_fairness<A: ArtifactApp<Presence = NoPresence, PresenceMutation = NoPresenceMutation> + Default>() {
+        typed_command_full_operation_tests::retained_latest_wins_slot_and_publication_fairness::<A>().await;
+    }
+
+    #[cfg(test)]
+    pub(crate) async fn test_retained_document_cancellation<A: ArtifactApp + Default>(factory: &dyn store::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>, mutation: fn() -> A::Mutation, observe: fn(&A::Snapshot) -> i32) {
+        typed_command_full_operation_tests::retained_document_cancellation::<A>(factory, mutation, observe).await;
     }
 
     #[cfg(test)]
@@ -16692,6 +17839,536 @@ pub mod app {
             }
         }
 
+        struct TwoTurnNoPresencePreparationFactory;
+
+        struct TwoTurnNoPresencePreparation {
+            request: Option<store::ArtifactEphemeralOneItemPreparationRequest<NoPresence, NoPresenceMutation>>,
+            prepared: Option<store::ArtifactEphemeralOneItemPrepared<NoPresence>>,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint,
+            turn: u8,
+            closing: bool,
+        }
+
+        impl store::ArtifactEphemeralOneItemPreparationFactory<NoPresence, NoPresenceMutation> for TwoTurnNoPresencePreparationFactory {
+            fn preflight(&self, _mutation: &NoPresenceMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+                Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 64 })
+            }
+
+            fn begin(
+                &self,
+                request: store::ArtifactEphemeralOneItemPreparationRequest<NoPresence, NoPresenceMutation>,
+            ) -> Result<Box<dyn store::ArtifactEphemeralOneItemPreparation<NoPresence, NoPresenceMutation>>, store::ArtifactEphemeralOneItemPreparationRequest<NoPresence, NoPresenceMutation>> {
+                Ok(Box::new(TwoTurnNoPresencePreparation { request: Some(request), prepared: None, checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), turn: 0, closing: false }))
+            }
+        }
+
+        impl store::ArtifactEphemeralOneItemPreparation<NoPresence, NoPresenceMutation> for TwoTurnNoPresencePreparation {
+            fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+                if !grant.permits_one() {
+                    return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+                }
+                if self.turn == 0 {
+                    self.turn = 1;
+                    self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: [1; 32] };
+                    return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
+                }
+                if self.prepared.is_none() {
+                    let _request = self.request.take().ok_or_else(|| "two-turn presence preparation lost its owner bundle".to_string())?;
+                    self.prepared = Some(store::ArtifactEphemeralOneItemPrepared { next_root: std::sync::Arc::new(NoPresence::default()) });
+                    self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 2, digest: [2; 32] };
+                }
+                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+            }
+
+            fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+                self.checkpoint
+            }
+
+            fn prepared(&self) -> Option<&store::ArtifactEphemeralOneItemPrepared<NoPresence>> {
+                self.prepared.as_ref()
+            }
+
+            fn take_prepared(&mut self) -> Option<store::ArtifactEphemeralOneItemPrepared<NoPresence>> {
+                self.prepared.take()
+            }
+
+            fn cancel(&mut self) {}
+
+            fn begin_close(&mut self) {
+                self.closing = true;
+            }
+
+            fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+                if !self.closing || grant.maximum_items == 0 {
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                if self.prepared.take().is_some() || self.request.take().is_some() {
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                Ok(store::SnapshotRetirementStep::Complete)
+            }
+
+            fn terminal_is_empty(&self) -> bool {
+                self.closing && self.request.is_none() && self.prepared.is_none()
+            }
+        }
+
+        struct NoPresenceLocalRootRetirement {
+            root: Option<std::sync::Arc<NoPresence>>,
+        }
+
+        impl store::ErasedSnapshotRetirement for NoPresenceLocalRootRetirement {
+            fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+                if maximum_items == 0 {
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                if self.root.take().is_some() {
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                Ok(store::SnapshotRetirementStep::Complete)
+            }
+
+            fn terminal_is_empty(&self) -> bool {
+                self.root.is_none()
+            }
+        }
+
+        struct NoPresenceLocalRootRetirementFactory;
+
+        impl store::SnapshotRetirementFactory<NoPresence> for NoPresenceLocalRootRetirementFactory {
+            fn retire(&self, snapshot: std::sync::Arc<NoPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
+                Box::new(NoPresenceLocalRootRetirement { root: Some(snapshot) })
+            }
+        }
+
+        pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = NoPresence, PresenceMutation = NoPresenceMutation> + Default>() {
+            let fixture: Value = serde_json::from_str(include_str!("🧪️tool-latest-wins.json")).expect("language-neutral cancellation boundaries");
+            let grant = store::ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_bytes: fixture["maximumBytes"].as_u64().unwrap() as usize };
+            assert_eq!(grant.maximum_items, 1);
+            assert_eq!(grant.maximum_bytes, TYPED_OPERATION_RESULT_PAGE_BYTES);
+            for case in fixture["publicationCases"].as_array().unwrap() {
+                let boundary = case["cancelAt"].as_str().unwrap();
+                let mut app = VcsArtifactApp::<A>::new(A::default()).await;
+                let revision = app.store.content_revision_now();
+                let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(app.store.generation_now()), 17);
+                let cancellations = app.tool_cancellations.clone();
+                let lease = cancellations.begin(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation }).unwrap();
+                let before = app.presence_store.local_root();
+                let mut mounted = MountedTypedCommandFullOperation::<A> {
+                    verb: "setGraphParameter".into(), meta: ActionMeta { actor: "fixture".into(), instance_id: 7 }, operation, canonical_revision: revision,
+                    artifact_generation: operation.generation.0, config_generation: 0, draft_generation: 0, presence_generation: 0, transient_generation: 0,
+                    contract: semio_framework::ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1), publication_lanes: &[ArtifactToolPublicationLane::Presence],
+                    session: None, session_rejected: None, completion: None, raw_input: None, output_chunks: None, cancellation_lease: Some(lease),
+                    terminal_outcome: None, terminal_seen: true, publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())), pending_artifact_publication: None, result_page: None,
+                    result_page_presented: false, result_sequence: 0, publication_attempt: 0, ui_pending: true, stage: MountedTypedCommandFullOperationStage::Publishing,
+                };
+                if boundary != "producer" {
+                    let pending = app.presence_store.begin_publish_one(operation.operation, 0, NoPresenceMutation::Noop, Some(&TwoTurnNoPresencePreparationFactory), Some(std::sync::Arc::new(NoPresenceLocalRootRetirementFactory))).unwrap();
+                    mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Presence(pending));
+                    let target = match boundary {
+                        "preparation" => store::ArtifactStoreOneItemPublicationPhase::Preparing,
+                        "preflight" => store::ArtifactStoreOneItemPublicationPhase::PreflightingCommit,
+                        "publishing" => store::ArtifactStoreOneItemPublicationPhase::Publishing,
+                        "awaitingAck" => store::ArtifactStoreOneItemPublicationPhase::AwaitingAck,
+                        other => panic!("unknown publication boundary {other}"),
+                    };
+                    for _ in 0..8 {
+                        let Some(PendingArtifactStorePublication::Presence(pending)) = mounted.pending_artifact_publication.as_ref() else { panic!("exact pending presence owner"); };
+                        if pending.phase() == target { break; }
+                        app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
+                    }
+                    let Some(PendingArtifactStorePublication::Presence(pending)) = mounted.pending_artifact_publication.as_ref() else { panic!("exact pending presence owner"); };
+                    assert_eq!(pending.phase(), target);
+                }
+                mounted.cancellation_lease.as_ref().unwrap().cancel();
+                if boundary == "awaitingAck" {
+                    let page = mounted.result_page.as_ref().unwrap().clone();
+                    assert!(!mounted.reject_cancelled_publication().unwrap());
+                    assert_eq!(mounted.result_page.as_ref().unwrap().token, page.token);
+                    assert_eq!(mounted.result_page.as_ref().unwrap().bytes(), page.bytes());
+                    assert!(mounted.acknowledge_result_page(page.token).unwrap());
+                }
+                app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
+                assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::AwaitingAck);
+                let cancelled = mounted.result_page.as_ref().unwrap();
+                assert_eq!(cancelled.lane, TypedOperationResultLane::Fault);
+                assert!(std::str::from_utf8(cancelled.bytes()).unwrap().contains("cancelled"));
+                assert_eq!(serde_json::json!({ "committed": app.presence_store.generation_now() != 0 }), serde_json::json!({ "committed": case["committed"] }));
+                assert_eq!(std::sync::Arc::ptr_eq(&before, &app.presence_store.local_root()), !case["committed"].as_bool().unwrap());
+                assert!(!mounted.ui_pending);
+                let token = cancelled.token;
+                assert!(mounted.acknowledge_result_page(token).unwrap());
+                for _ in 0..64 {
+                    if mounted.terminal_is_empty() { break; }
+                    match mounted.retirement_step(grant.maximum_items, grant.maximum_bytes).unwrap() {
+                        PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES); }
+                        PluginCloseStep::Complete => break,
+                        PluginCloseStep::Blocked { reason } => panic!("cancelled exact publication close blocked: {reason}"),
+                    }
+                }
+                assert!(mounted.terminal_is_empty(), "{boundary}");
+                assert_eq!(cancellations.active_operation_count(), 0);
+                drop(before);
+                for _ in 0..100_000 {
+                    if app.close_terminal_is_empty() { break; }
+                    match app.close_step(grant.maximum_items, grant.maximum_bytes).unwrap() {
+                        PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES); }
+                        PluginCloseStep::Complete => break,
+                        PluginCloseStep::Blocked { reason } => panic!("cancelled publication app close blocked: {reason}"),
+                    }
+                }
+                assert!(app.close_terminal_is_empty(), "{boundary}");
+                eprintln!("[DEBUG] actual mounted publisher cancellation boundary {boundary} retained its exact Store root/ACK and reached bounded terminal close");
+            }
+            for case in fixture["linearizationCases"].as_array().unwrap() {
+                let cancellations = ToolCancellationHandle::default();
+                let key = ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: semio_framework_job::allocate_operation_id(), base_revision: semio_framework_job::RevisionId(3), generation: semio_framework_job::Generation(0) };
+                let lease = cancellations.begin(key.clone()).unwrap();
+                let mut presence = store::PresenceStore::<NoPresence, NoPresenceMutation>::new(NoPresence::default());
+                let mut pending = presence.begin_publish_one(key.operation_id, 0, NoPresenceMutation::Noop, Some(&TwoTurnNoPresencePreparationFactory), Some(std::sync::Arc::new(NoPresenceLocalRootRetirementFactory))).unwrap();
+                for _ in 0..8 {
+                    if pending.phase() == store::ArtifactStoreOneItemPublicationPhase::Publishing { break; }
+                    assert!(matches!(presence.advance_publish_one(&mut pending, grant).unwrap(), store::ArtifactStoreOneItemAdvance::Progress(_)));
+                }
+                assert_eq!(pending.phase(), store::ArtifactStoreOneItemPublicationPhase::Publishing);
+                let mut permit = if case["claimFirst"].as_bool().unwrap() { Some(lease.try_claim_publication().unwrap()) } else { None };
+                assert!(cancellations.cancel(&key).unwrap());
+                if !case["claimFirst"].as_bool().unwrap() {
+                    permit = lease.try_claim_publication();
+                }
+                if permit.is_some() {
+                    assert!(matches!(presence.advance_publish_one(&mut pending, grant).unwrap(), store::ArtifactStoreOneItemAdvance::Published(_)));
+                    assert!(pending.acknowledge());
+                }
+                drop(permit);
+                assert!(lease.try_claim_publication().is_none(), "a cancelled lease can never claim a later publication unit");
+                assert_eq!(serde_json::json!({ "committed": presence.generation_now() != 0 }), serde_json::json!({ "committed": case["committed"] }));
+                pending.begin_close();
+                for _ in 0..16 {
+                    if pending.terminal_is_empty() { break; }
+                    let _ = pending.close_step(grant).unwrap();
+                }
+                assert!(pending.terminal_is_empty());
+                lease.finish();
+                assert_eq!(cancellations.active_operation_count(), 0);
+            }
+        }
+
+        fn fixture_latest_wins_key(scope: &Value) -> std::sync::Arc<String> {
+            let parts = [scope["document"].as_str().unwrap(), scope["controller"].as_str().unwrap(), scope["tool"].as_str().unwrap(), scope["target"].as_str().unwrap()];
+            let mut copy = ToolLatestWinsKeyCopy::new(scope["instance"].as_u64().unwrap() as u32, parts).unwrap();
+            assert_eq!(copy.advance(parts, 0, 4_096), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            assert_eq!(copy.advance(parts, 1, 0), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            for _ in 0..100_000 {
+                match copy.advance(parts, 1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
+                    PluginCloseStep::Complete => return copy.take_key().unwrap(),
+                    PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= 4_096); }
+                    PluginCloseStep::Blocked { reason } => panic!("full-domain key blocked: {reason}"),
+                }
+            }
+            panic!("full-domain key did not progress under the production grant")
+        }
+
+        pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(factory: &dyn store::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>, mutation: fn() -> A::Mutation, observe: fn(&A::Snapshot) -> i32) {
+            let fixture: Value = serde_json::from_str(include_str!("🧪️tool-latest-wins.json")).unwrap();
+            for case in fixture["publicationCases"].as_array().unwrap() {
+                for exhaust_ack in [false, true] {
+                    let boundary = case["cancelAt"].as_str().unwrap();
+                    let mut app = VcsArtifactApp::<A>::new(A::default()).await;
+                    let before = app.store.snapshot_root();
+                    let revision = app.store.content_revision_now();
+                    let generation = app.store.generation_now();
+                    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(generation), 1);
+                    let lease = app.tool_cancellations.begin_keyed(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation }).unwrap();
+                    let mut mounted = MountedTypedCommandFullOperation::<A> {
+                        verb: "setGraphParameter".into(), meta: ActionMeta { actor: "fixture".into(), instance_id: 7 }, operation, canonical_revision: revision,
+                        artifact_generation: generation, config_generation: 0, draft_generation: 0, presence_generation: 0, transient_generation: 0,
+                        contract: semio_framework::ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1), publication_lanes: &[ArtifactToolPublicationLane::Artifact],
+                        session: None, session_rejected: None, completion: None, raw_input: None, output_chunks: None, cancellation_lease: Some(lease), terminal_outcome: None,
+                        terminal_seen: true, publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())), pending_artifact_publication: None,
+                        result_page: None, result_page_presented: false, result_sequence: 0, publication_attempt: 0, ui_pending: true, stage: MountedTypedCommandFullOperationStage::Publishing,
+                    };
+                    if boundary != "producer" {
+                        let pending = app.store.begin_apply_one(operation.operation, generation, revision, "fixture".into(), mutation(), None, HistoryLane::Document, Some(factory)).unwrap_or_else(|_| panic!("exact scalar document preparation admission"));
+                        mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Artifact(pending));
+                        let target = match boundary {
+                            "preparation" => store::ArtifactStoreOneItemPublicationPhase::Preparing,
+                            "preflight" => store::ArtifactStoreOneItemPublicationPhase::PreflightingCommit,
+                            "publishing" => store::ArtifactStoreOneItemPublicationPhase::Publishing,
+                            "awaitingAck" => store::ArtifactStoreOneItemPublicationPhase::AwaitingAck,
+                            _ => unreachable!(),
+                        };
+                        for _ in 0..100_000 {
+                            let Some(PendingArtifactStorePublication::Artifact(pending)) = mounted.pending_artifact_publication.as_ref() else { panic!("exact document pending owner"); };
+                            if pending.phase() == target { break; }
+                            app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
+                        }
+                        let Some(PendingArtifactStorePublication::Artifact(pending)) = mounted.pending_artifact_publication.as_ref() else { panic!("exact document pending owner"); };
+                        assert_eq!(pending.phase(), target);
+                    }
+                    mounted.cancellation_lease.as_ref().unwrap().cancel();
+                    if boundary == "awaitingAck" && !exhaust_ack {
+                        let receipt = mounted.result_page.as_ref().unwrap().clone();
+                        assert!(!mounted.reject_cancelled_publication().unwrap());
+                        assert_eq!(mounted.result_page.as_ref().unwrap().bytes(), receipt.bytes());
+                        assert!(mounted.acknowledge_result_page(receipt.token).unwrap());
+                    }
+                    if boundary != "awaitingAck" || !exhaust_ack { app.publish_mounted_typed_operation_unit(&mut mounted).unwrap(); }
+                    let token = if exhaust_ack {
+                        let first = mounted.take_result_page().unwrap();
+                        let mut final_page = first.clone();
+                        for _ in 0..TYPED_OPERATION_MAXIMUM_RETRIES { final_page = mounted.take_result_page().unwrap(); }
+                        assert_eq!(final_page.lane, TypedOperationResultLane::Fault);
+                        assert!(!mounted.acknowledge_result_page(first.token).unwrap());
+                        final_page.token
+                    } else { mounted.result_page.as_ref().unwrap().token };
+                    let committed = case["committed"].as_bool().unwrap();
+                    let actual = serde_json::json!({ "count": observe(&app.store.snapshot_root()), "generation": app.store.generation_now() - generation, "sameRoot": std::sync::Arc::ptr_eq(&before, &app.store.snapshot_root()) });
+                    let expected = serde_json::json!({ "count": if committed { 42 } else { 0 }, "generation": u64::from(committed), "sameRoot": !committed });
+                    assert_eq!(actual, expected, "{boundary}, exhausted ACK={exhaust_ack}");
+                    assert!(mounted.acknowledge_result_page(token).unwrap());
+                    for _ in 0..100_000 {
+                        if mounted.terminal_is_empty() { break; }
+                        match mounted.retirement_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
+                            PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES); }
+                            PluginCloseStep::Complete => {},
+                            PluginCloseStep::Blocked { reason } => panic!("document cancellation close blocked: {reason}"),
+                        }
+                    }
+                    assert!(mounted.terminal_is_empty());
+                    drop(before);
+                    for _ in 0..100_000 {
+                        if app.close_terminal_is_empty() { break; }
+                        match app.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
+                            PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES); }
+                            PluginCloseStep::Complete => {},
+                            PluginCloseStep::Blocked { reason } => panic!("document cancellation app close blocked: {reason}"),
+                        }
+                    }
+                    assert!(app.close_terminal_is_empty());
+                    eprintln!("[DEBUG] real mounted Document publication {boundary}, exhausted ACK={exhaust_ack}: count/revision/root retained and close terminal");
+                }
+            }
+        }
+
+        #[test]
+        fn retained_latest_wins_full_domain_exact_keys_match_serde_oracle_and_retire() {
+            let fixture: Value = serde_json::from_str(include_str!("🧪️tool-latest-wins.json")).unwrap();
+            let first = &fixture["first"];
+            assert_eq!(first["target"].as_str().unwrap().len(), 8_192);
+            for case in fixture["cases"].as_array().unwrap() {
+                let next = &case["next"];
+                assert_eq!(next["target"].as_str().unwrap().len(), 8_192);
+                let oracle = first == next;
+                assert_eq!(oracle, case["superseded"].as_bool().unwrap());
+                let cancellations = ToolCancellationHandle::default();
+                let mut registry = ToolLatestWinsRegistry::new();
+                let first_operation = semio_framework_job::allocate_operation_id();
+                let first_lease = cancellations.begin_keyed(ToolOperationKey { app_instance_id: first["instance"].as_u64().unwrap() as u32, document: ArtifactDocumentAuthority(7), operation_id: first_operation, base_revision: semio_framework_job::RevisionId(1), generation: semio_framework_job::Generation(0) }).unwrap();
+                assert!(registry.begin(first_operation.0, fixture_latest_wins_key(first), &first_lease));
+                for _ in 0..100_000 {
+                    if registry.take_outcome(first_operation.0) == Some(true) { break; }
+                    let _ = registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
+                }
+                assert!(!first_lease.token.is_cancelled_now());
+                for _ in 0..100_000 { if registry.can_begin() { break; } let _ = registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES); }
+                assert!(registry.can_begin());
+                let next_operation = semio_framework_job::allocate_operation_id();
+                let next_lease = cancellations.begin_keyed(ToolOperationKey { app_instance_id: next["instance"].as_u64().unwrap() as u32, document: ArtifactDocumentAuthority(7), operation_id: next_operation, base_revision: semio_framework_job::RevisionId(1), generation: semio_framework_job::Generation(0) }).unwrap();
+                assert!(registry.begin(next_operation.0, fixture_latest_wins_key(next), &next_lease));
+                let mut accepted = false;
+                for _ in 0..100_000 {
+                    if let Some(result) = registry.take_outcome(next_operation.0) { accepted = result; break; }
+                    match registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
+                        PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES); }
+                        PluginCloseStep::Complete => {},
+                        PluginCloseStep::Blocked { reason } => panic!("exact key comparison blocked: {reason}"),
+                    }
+                }
+                assert!(accepted);
+                assert_eq!(first_lease.token.is_cancelled_now(), oracle, "{}", case["id"]);
+                assert!(!next_lease.token.is_cancelled_now());
+                first_lease.finish();
+                next_lease.finish();
+                assert_eq!(cancellations.active_operation_count(), 0);
+                registry.begin_close();
+                for _ in 0..300_000 {
+                    if registry.terminal_is_empty() { break; }
+                    match registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
+                        PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES); }
+                        PluginCloseStep::Complete => {},
+                        PluginCloseStep::Blocked { reason } => panic!("exact key close blocked: {reason}"),
+                    }
+                }
+                assert!(registry.terminal_is_empty());
+                eprintln!("[DEBUG] exact latest-wins key {} matched independent serde scope equality and retired its 8192-byte identity", case["id"]);
+            }
+        }
+
+        #[test]
+        fn retained_latest_wins_producer_child_cannot_bypass_document_or_app_publication_claim() {
+            let cancellations = ToolCancellationHandle::default();
+            let key = ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: semio_framework_job::allocate_operation_id(), base_revision: semio_framework_job::RevisionId(1), generation: semio_framework_job::Generation(0) };
+            let lease = cancellations.begin_keyed(key.clone()).unwrap();
+            let producer = lease.cancel_token();
+            producer.cancel_now();
+            assert!(!lease.token.is_cancelled_now());
+            assert!(lease.try_claim_publication().is_some());
+            assert!(cancellations.cancel_document(key.document).unwrap());
+            assert!(lease.try_claim_publication().is_none());
+            lease.finish();
+            let lease = cancellations.begin_keyed(ToolOperationKey { operation_id: semio_framework_job::allocate_operation_id(), ..key }).unwrap();
+            let prior_claim = lease.try_claim_publication().unwrap();
+            cancellations.cancel_scope_generation();
+            drop(prior_claim);
+            assert!(lease.try_claim_publication().is_none());
+            lease.finish();
+            assert_eq!(cancellations.active_operation_count(), 0);
+        }
+
+        #[test]
+        fn retained_latest_wins_contended_finish_is_deferred_and_cannot_release_replacement() {
+            let fixture: Value = serde_json::from_str(include_str!("🧪️tool-latest-wins-integration.json")).unwrap();
+            let cancellations = ToolCancellationHandle::default();
+            let key = ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: semio_framework_job::allocate_operation_id(), base_revision: semio_framework_job::RevisionId(1), generation: semio_framework_job::Generation(0) };
+            let lease = cancellations.begin_keyed(key.clone()).unwrap();
+            let lock = cancellations.state.lock().unwrap();
+            lease.finish();
+            assert_eq!(serde_json::json!(cancellations.active_operation_count()), fixture["deferredFinish"]["activeBeforeSweep"]);
+            drop(lock);
+            let index = TOOL_CANCELLATION_SLOTS + key.operation_id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS;
+            assert_eq!(cancellations.cleanup_finished_slot(index).unwrap(), Some(true));
+            assert_eq!(serde_json::json!(cancellations.active_operation_count()), fixture["deferredFinish"]["activeAfterSweep"]);
+            let old = cancellations.begin_keyed(key.clone()).unwrap();
+            assert!(cancellations.cleanup_slot(index).unwrap());
+            let replacement = cancellations.begin_keyed(ToolOperationKey { generation: semio_framework_job::Generation(1), ..key }).unwrap();
+            old.finish();
+            assert_eq!(serde_json::json!(cancellations.active_operation_count() == 1 && !replacement.token.is_cancelled_now()), fixture["deferredFinish"]["replacementPreserved"]);
+            replacement.finish();
+            assert_eq!(cancellations.active_operation_count(), 0);
+            eprintln!("[DEBUG] lock-held keyed finish retained its preadmitted release marker; one-slot sweep released only its exact claim");
+        }
+
+        #[test]
+        fn retained_latest_wins_rebase_rebinds_exact_registered_cancellation_authority() {
+            let fixture: Value = serde_json::from_str(include_str!("🧪️tool-latest-wins-integration.json")).unwrap();
+            let cancellations = ToolCancellationHandle::default();
+            let old = ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: semio_framework_job::allocate_operation_id(), base_revision: semio_framework_job::RevisionId(1), generation: semio_framework_job::Generation(fixture["rebase"]["beforeGeneration"].as_u64().unwrap()) };
+            let fresh = ToolOperationKey { base_revision: semio_framework_job::RevisionId(2), generation: semio_framework_job::Generation(fixture["rebase"]["afterGeneration"].as_u64().unwrap()), ..old.clone() };
+            let mut lease = cancellations.begin_keyed(old.clone()).unwrap();
+            let busy = cancellations.state.lock().unwrap();
+            assert!(!lease.rebind_keyed(fresh.base_revision, fresh.generation).unwrap());
+            drop(busy);
+            assert!(lease.rebind_keyed(fresh.base_revision, fresh.generation).unwrap());
+            assert_eq!(lease.key, fresh);
+            assert_eq!(serde_json::json!({ "old": cancellations.cancel(&old).unwrap(), "fresh": cancellations.cancel(&fresh).unwrap() }), serde_json::json!({ "old": fixture["rebase"]["cancelOldKey"], "fresh": fixture["rebase"]["cancelFreshKey"] }));
+            assert!(lease.try_claim_publication().is_none());
+            lease.finish();
+            assert_eq!(cancellations.active_operation_count(), 0);
+            eprintln!("[DEBUG] retained keyed rebase rejected the old cancellation key and accepted only the exact refreshed revision/generation");
+        }
+
+        #[test]
+        fn retained_latest_wins_full_registry_reclaims_completed_targets_before_admission() {
+            let fixture: Value = serde_json::from_str(include_str!("🧪️tool-latest-wins-integration.json")).unwrap();
+            let cancellations = ToolCancellationHandle::default();
+            let mut registry = ToolLatestWinsRegistry::new();
+            let count = fixture["reclamation"]["sequentialCompletedTargets"].as_u64().unwrap();
+            let mut accepted = 0;
+            for index in 0..count {
+                let operation = semio_framework_job::allocate_operation_id();
+                let lease = cancellations.begin_keyed(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation, base_revision: semio_framework_job::RevisionId(1), generation: semio_framework_job::Generation(0) }).unwrap();
+                let key = std::sync::Arc::new(format!("target-{index:04}"));
+                let mut begun = false;
+                let mut result = None;
+                for _ in 0..100_000 {
+                    if !begun { begun = registry.begin(operation.0, key.clone(), &lease); }
+                    if begun { result = registry.take_outcome(operation.0); }
+                    if result.is_some() { break; }
+                    match registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
+                        PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES); }
+                        PluginCloseStep::Complete => {}
+                        PluginCloseStep::Blocked { reason } => panic!("full-map retained admission blocked: {reason}"),
+                    }
+                }
+                assert_eq!(result, Some(true), "completed target {index} must not consume permanent admission capacity");
+                accepted += 1;
+                for _ in 0..100_000 { if registry.can_begin() { break; } registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES); }
+                assert!(registry.can_begin());
+                lease.finish();
+            }
+            assert_eq!(serde_json::json!(accepted), fixture["reclamation"]["acceptedTargets"]);
+            assert_eq!(cancellations.active_operation_count(), 0);
+            registry.begin_close();
+            for _ in 0..100_000 { if registry.terminal_is_empty() { break; } registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES); }
+            assert!(registry.terminal_is_empty());
+            eprintln!("[DEBUG] retained latest-wins registry admitted65sequential completed targets under64live slots and one-item/4096-byte grants");
+        }
+
+        pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: ArtifactApp<Presence = NoPresence, PresenceMutation = NoPresenceMutation> + Default>() {
+            let fixture: Value = serde_json::from_str(include_str!("🧪️tool-latest-wins-integration.json")).unwrap();
+            let mut app = VcsArtifactApp::<A>::new(A::default()).await;
+            let first = fixture["slotReservation"]["firstOperation"].as_u64().unwrap();
+            let collision = fixture["slotReservation"]["collidingOperation"].as_u64().unwrap();
+            app.typed_operation_reservations[first as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = Some(first);
+            assert_eq!(serde_json::json!(app.can_admit_typed_operation(collision)), fixture["slotReservation"]["collisionAdmitted"]);
+            assert!(!app.can_admit_typed_operation(first));
+            app.typed_operation_reservations[first as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = None;
+            assert!(app.can_admit_typed_operation(collision));
+            let revision = app.store.content_revision_now();
+            for id in [1, 2] {
+                let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(id), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(0), 17);
+                let lease = app.tool_cancellations.begin_keyed(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation }).unwrap();
+                let pending = if id == 2 { Some(PendingArtifactStorePublication::Presence(app.presence_store.begin_publish_one(operation.operation, 0, NoPresenceMutation::Noop, Some(&TwoTurnNoPresencePreparationFactory), Some(std::sync::Arc::new(NoPresenceLocalRootRetirementFactory))).unwrap())) } else { None };
+                app.tool_operations.insert_admitted(id, MountedTypedCommandFullOperation::<A> {
+                    verb: "setGraphParameter".into(), meta: ActionMeta { actor: "fixture".into(), instance_id: 7 }, operation, canonical_revision: revision,
+                    artifact_generation: 0, config_generation: 0, draft_generation: 0, presence_generation: 0, transient_generation: 0,
+                    contract: semio_framework::ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1), publication_lanes: &[ArtifactToolPublicationLane::Presence],
+                    session: None, session_rejected: None, completion: None, raw_input: None, output_chunks: None, cancellation_lease: Some(lease),
+                    terminal_outcome: None, terminal_seen: true, publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())), pending_artifact_publication: pending,
+                    result_page: None, result_page_presented: false, result_sequence: 0, publication_attempt: 0, ui_pending: false,
+                    stage: if id == 1 { MountedTypedCommandFullOperationStage::Worker } else { MountedTypedCommandFullOperationStage::Publishing },
+                });
+            }
+            for _ in 0..fixture["fairness"]["secondPublishesWithinMetadataVisits"].as_u64().unwrap() {
+                if app.presence_store.generation_now() == 1 { break; }
+                app.advance_typed_operation_publication_one().await.unwrap();
+            }
+            assert_eq!(app.presence_store.generation_now(), 1);
+            assert_eq!(app.tool_operations.get(1).unwrap().stage, MountedTypedCommandFullOperationStage::Worker);
+            assert!(app.take_typed_operation_result_page(7).is_none());
+            assert!(app.take_typed_operation_result_page(7).is_some());
+            app.tool_operations.get_mut(1).unwrap().stage = MountedTypedCommandFullOperationStage::Retiring;
+            let cancellation_state = app.tool_cancellations.state.clone();
+            let lock = cancellation_state.lock().unwrap();
+            for _ in 0..64 {
+                let first = app.tool_operations.get_mut(1).unwrap();
+                if first.terminal_is_empty() { break; }
+                first.retirement_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
+            }
+            assert!(app.tool_operations.get(1).unwrap().terminal_is_empty());
+            assert_eq!(app.tool_cancellations.active_operation_count(), 2);
+            app.maintenance_stage = 18;
+            app.maintenance_cancellation_cursor = TOOL_CANCELLATION_SLOTS + 1;
+            assert_eq!(app.maintenance_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            assert_eq!(app.maintenance_cancellation_cursor, TOOL_CANCELLATION_SLOTS + 1);
+            assert_eq!(app.tool_cancellations.active_operation_count(), 2);
+            drop(lock);
+            app.maintenance_stage = 18;
+            app.maintenance_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
+            assert_eq!(app.tool_cancellations.active_operation_count(), 1);
+            for _ in 0..100_000 {
+                if app.close_terminal_is_empty() { break; }
+                match app.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
+                    PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES); }
+                    PluginCloseStep::Complete => break,
+                    PluginCloseStep::Blocked { reason } => panic!("fairness fixture close blocked: {reason}"),
+                }
+            }
+            assert!(app.close_terminal_is_empty());
+            eprintln!("[DEBUG] reserved modulo-collision rejected; ready second publisher and result ACK progressed past a retained first worker");
+        }
+
         #[test]
         fn language_neutral_empty_single_max_and_plus_one_match_the_test_only_oracle() {
             let fixture: serde_json::Value = serde_json::from_str(FIXTURE).expect("language-neutral typed-command fixture");
@@ -16829,6 +18506,79 @@ pub mod app {
         }
 
         #[test]
+        fn document_revision_change_between_ephemeral_preparation_turns_closes_without_publishing_the_lane_root() {
+            let canonical_revision = [3; 32];
+            let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(93), semio_framework_job::RevisionId(u64::from_be_bytes([3; 8])), semio_framework_job::Generation(0), 17);
+            let mut presence = store::PresenceStore::<NoPresence, NoPresenceMutation>::new(NoPresence::default());
+            let initial_root = presence.local_root();
+            let factory = TwoTurnNoPresencePreparationFactory;
+            let mut publication = presence.begin_publish_one(operation.operation, 0, NoPresenceMutation::Noop, Some(&factory), Some(std::sync::Arc::new(NoPresenceLocalRootRetirementFactory))).expect("two-turn presence publication admits");
+            let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 64 };
+            assert!(matches!(presence.advance_publish_one(&mut publication, grant), Ok(store::ArtifactStoreOneItemAdvance::Progress(_))));
+            assert!(std::sync::Arc::ptr_eq(&initial_root, &presence.local_root()));
+            assert_eq!(presence.generation_now(), 0);
+
+            let changed_document_revision = [4; 32];
+            assert!(!typed_operation_document_is_fresh(&operation, canonical_revision, changed_document_revision, 0));
+            publication.begin_close();
+            for _ in 0..4 {
+                if publication.close_step(grant).expect("stale pending publication closes") == store::SnapshotRetirementStep::Complete {
+                    break;
+                }
+            }
+            assert!(publication.terminal_is_empty());
+            assert!(std::sync::Arc::ptr_eq(&initial_root, &presence.local_root()));
+            assert_eq!(presence.generation_now(), 0);
+        }
+
+        #[test]
+        fn retained_child_wire_rejection_retires_nested_owners_under_the_production_grant() {
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("../🏪️store/🧪️member-publication.json")).expect("retained child fixture");
+            let row = &fixture["orderedMembers"][0];
+            let mut wire = row["wire"].as_str().unwrap().as_bytes().to_vec();
+            wire.resize(wire.len() + row["paddingBytes"].as_u64().unwrap() as usize, b' ');
+            let wire_bytes = wire.len();
+            let mut child = ChildEmit { slot: "slot".into(), child_id: "child".into(), ops: vec![wire], op_schema: SchemaId("demo.member.json-number".into()), labels: vec!["ä🧩".into()] };
+            assert_eq!(child.close_one(0, TYPED_OPERATION_RESULT_PAGE_BYTES), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            assert_eq!(child.ops[0].len(), wire_bytes);
+            let mut bytes = 0;
+            let mut complete = false;
+            for _ in 0..wire_bytes + 128 {
+                match child.close_one(1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
+                    PluginCloseStep::Pending { released_items, released_bytes } => {
+                        assert!(released_items <= 1);
+                        assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
+                        bytes += released_bytes;
+                    }
+                    PluginCloseStep::Complete => {
+                        complete = true;
+                        break;
+                    }
+                    PluginCloseStep::Blocked { .. } => panic!("admitted child wire must retire under the maximum production grant"),
+                }
+            }
+            assert!(complete);
+            assert!(bytes >= wire_bytes);
+            assert!(child.ops.is_empty() && child.labels.is_empty() && child.slot.is_empty() && child.child_id.is_empty() && child.op_schema.0.is_empty());
+            eprintln!("[DEBUG] child wire retirement released {bytes} bytes under the production grant");
+        }
+
+        #[test]
+        fn typed_child_publication_never_enters_the_monolithic_group_fallback() {
+            let source = include_str!("🦀️component.rs");
+            let start = source.rfind("fn publish_mounted_typed_operation_unit(").expect("mounted typed publisher");
+            let end = source[start..].find("fn require_tool_operation_authority(").map(|offset| start + offset).expect("typed publisher end");
+            let publisher = &source[start..end];
+            for forbidden in ["dispatch_emit_group(", "child_emits.last().cloned()", "vec![child.clone()]"] {
+                assert!(!publisher.contains(forbidden), "unbounded Child publication shortcut: {forbidden}");
+            }
+            let child_gate = publisher.find("if !emit.child_emits.is_empty()").expect("group authority fail-closed gate");
+            let artifact_apply = publisher.find("if let Some(mutation) = emit.artifact_mutations.pop()").expect("first durable publication");
+            assert!(child_gate < artifact_apply, "unsupported children cannot leave a partially published parent mutation");
+            assert!(source.contains("ArtifactToolPublicationLane::Child => Some(\"child retained group publication\")"));
+        }
+
+        #[test]
         fn full_operation_source_rejects_generic_reducers_and_old_monolithic_shells() {
             let source = include_str!("🦀️component.rs");
             let start = source.find("impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A>").expect("typed full-operation job");
@@ -16861,7 +18611,8 @@ pub mod app {
         #[test]
         fn fixture_contract_is_anchored_to_the_production_retained_factory_publisher_and_host_receivers() {
             let source = include_str!("🦀️component.rs");
-            let admission_start = source.find("async fn admit_command_json").expect("production raw JSON admission");
+            let admission_marker = ["async fn admit_command_json_with_", "proof(&self"].concat();
+            let admission_start = source.rfind(&admission_marker).expect("production raw JSON admission");
             let admission_end = source[admission_start..].find("pub async fn new(app: A)").map(|offset| admission_start + offset).expect("admission route end");
             let admission = &source[admission_start..admission_end];
             let reserve = admission.find(".begin_exact_wire").expect("maximum extent authority");
@@ -16869,19 +18620,28 @@ pub mod app {
             let seal = admission.find("finish_admitted_prefix").expect("truthful exact prefix");
             assert!(reserve < encode && encode < seal);
 
-            let dispatch_start = source.find("async fn dispatch_typed_command_inner").expect("production typed dispatch");
+            let dispatch_start = source.rfind("async fn dispatch_typed_command_inner").expect("production typed dispatch");
             let dispatch_end = source[dispatch_start..].find("pub fn dispatch_typed").map(|offset| dispatch_start + offset).expect("production dispatch end");
             let dispatch = &source[dispatch_start..dispatch_end];
             assert!(dispatch.contains("dispatch_wire_retained_with_spec"));
             assert!(dispatch.contains("retained_wire.take()"));
 
-            let publisher_start = source.find("async fn publish_mounted_typed_operation_unit").expect("production one-page publisher");
+            let publisher_start = source.rfind("fn publish_mounted_typed_operation_unit").expect("production one-page publisher");
             let publisher_end = source[publisher_start..].find("fn require_tool_operation_authority").map(|offset| publisher_start + offset).expect("publisher end");
             let publisher = &source[publisher_start..publisher_end];
-            for retained_apply in ["artifact_mutations.last().cloned()", "config_mutations.last().cloned()", "draft_mutations.last().cloned()", "presence.last().cloned()", "transient.last().cloned()"] {
-                assert!(publisher.contains(retained_apply), "production apply must preserve its original owner: {retained_apply}");
+            for retained_seam in ["pending_artifact_publication", "begin_apply_one", "advance_apply_one", "ArtifactStoreOneItemAdvance::Published", "publication.close_step(grant)"] {
+                assert!(publisher.contains(retained_seam), "production publisher lost its retained one-item seam: {retained_seam}");
             }
-            assert!(publisher.contains("dispatch_emit_group"));
+            for forbidden in [".apply_one(", "artifact_mutations.last().cloned()", "config_mutations.last().cloned()", "draft_mutations.last().cloned()", "presence.last().cloned()", "transient.last().cloned()"] {
+                assert!(!publisher.contains(forbidden), "production publisher restored a monolithic or clone-then-pop shortcut: {forbidden}");
+            }
+            let freshness = publisher.find("typed-operation pending publication rejected a stale immutable document root").expect("per-turn document freshness gate");
+            let pending_advance = publisher[freshness..].find("if let Some(pending) = mounted.pending_artifact_publication.as_mut()").map(|offset| freshness + offset).expect("pending publication advance");
+            assert!(freshness < pending_advance, "document freshness must fail closed before every retained lane advance");
+            assert!(publisher[..pending_advance].contains("pending.begin_close()"));
+            assert!(publisher[..pending_advance].contains("pending.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES)"));
+            assert!(!publisher.contains("dispatch_emit_group("));
+            assert!(!publisher.contains(".await"));
             assert!(publisher.contains("typed_effect_outbox.push"));
             assert!(publisher.contains("typed_event_outbox.push"));
             assert!(publisher.contains("typed_ui_outbox.push"));
@@ -17535,6 +19295,14 @@ pub mod app {
         /// never becomes document content. The typed home for what used to live in plugin
         /// `thread_local!`s.
         pub(crate) transient_store: store::TransientStore<A::Transient, A::TransientMutation>,
+        artifact_one_item_factory: Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>>>,
+        config_one_item_factory: Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<A::Config, A::ConfigMutation>>>,
+        draft_one_item_factory: Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<A::Draft, A::DraftMutation>>>,
+        presence_one_item_factory: Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<A::Presence, A::PresenceMutation>>>,
+        transient_one_item_factory: Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<A::Transient, A::TransientMutation>>>,
+        presence_local_root_retirement_factory: Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<A::Presence>>>,
+        transient_local_root_retirement_factory: Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<A::Transient>>>,
+        unsupported_publication_contracts: BTreeMap<String, &'static str>,
         /// 🧾 Last Emit op packs produced by `dispatch_emit` — consumed by `AppCommand::PureCommand`.
         last_emit_wire: Option<(Vec<u8>, Vec<u8>, Vec<u8>)>,
         typed_effect_outbox: ArtifactFixedQueue<Effect>,
@@ -17557,6 +19325,13 @@ pub mod app {
         tool_cancellations: ToolCancellationHandle,
         live_runtime_instance_id: Option<u32>,
         tool_operations: ArtifactFixedRegistry<MountedTypedCommandFullOperation<A>>,
+        typed_operation_reservations: [Option<u64>; ARTIFACT_LIVE_OUTPUT_SLOTS],
+        typed_publication_cursor: usize,
+        typed_result_cursor: usize,
+        latest_wins_commands: ArtifactFixedRegistry<PendingLatestWinsCommand<A>>,
+        latest_wins_order: ArtifactFixedQueue<u64>,
+        latest_wins_keys: ToolLatestWinsRegistry,
+        latest_wins_turn: bool,
         media_exports: ArtifactFixedRegistry<ActiveMediaExport>,
         media_closures: ArtifactFixedRegistry<ActiveMediaExport>,
         snapshot_retirements: ArtifactFixedRegistry<ArtifactSnapshotCloseRetention>,
@@ -17580,6 +19355,7 @@ pub mod app {
         close_presence_peer_cursor: usize,
         close_peer_roster_cursor: usize,
         pub(crate) maintenance_stage: u8,
+        maintenance_cancellation_cursor: usize,
         maintenance_tool_cursor: usize,
         maintenance_media_cursor: usize,
         maintenance_segment_cursor: usize,
@@ -17752,6 +19528,11 @@ pub mod app {
     }
     //#endregion 🔖️ViewerGuard
 
+    fn typed_operation_document_is_fresh(operation: &semio_framework_job::Operation, canonical_revision: [u8; 32], live_revision: [u8; 32], live_generation: u64) -> bool {
+        let live_short = semio_framework_job::RevisionId(u64::from_be_bytes(live_revision[..8].try_into().expect("revision lane width")));
+        canonical_revision == live_revision && matches!(semio_framework_job::validate_commit(operation, live_short, semio_framework_job::Generation(live_generation)), semio_framework_job::CommitValidation::Accepted)
+    }
+
     impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
         #[cfg(test)]
         pub(crate) fn test_registered_tool_keys(&self) -> BTreeSet<(String, String)> {
@@ -17880,11 +19661,11 @@ pub mod app {
                 }
                 if !terminal {
                     if let Some(code) = protocol_fault {
-                        cancellation_lease.cancel_token().cancel_now();
+                        cancellation_lease.cancel();
                         return Err(Fault::new(FaultOrigin::Framework, FaultCode::new(code), format!("framework route '{verb}' returned an invalid retained checkpoint")));
                     }
                     if overrun {
-                        cancellation_lease.cancel_token().cancel_now();
+                        cancellation_lease.cancel();
                     }
                     session.resume().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.resume"), "framework reserved outcome lost its exact resume authority"))?;
                     continue;
@@ -17939,6 +19720,9 @@ pub mod app {
         }
 
         fn qualified_tool_proof(&self, verb: &str) -> Result<QualifiedToolProof, Fault> {
+            if let Some(lane) = self.unsupported_publication_contracts.get(verb) {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.publication-authority-missing"), format!("typed command '{verb}' declares the unsupported {lane} publication lane")));
+            }
             if let Some(registration) = self.app_tool_registrations.get(verb) {
                 return Ok(QualifiedToolProof::AppOwned(registration.clone()));
             }
@@ -17952,6 +19736,9 @@ pub mod app {
         }
 
         fn qualified_host_configuration_tool_proof(&self, verb: &str) -> Result<QualifiedToolProof, Fault> {
+            if let Some(lane) = self.unsupported_publication_contracts.get(verb) {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.publication-authority-missing"), format!("host configuration command '{verb}' declares the unsupported {lane} publication lane")));
+            }
             if let Some(registration) = self.app_tool_registrations.get(verb) {
                 return Ok(QualifiedToolProof::AppOwned(registration.clone()));
             }
@@ -18056,22 +19843,57 @@ pub mod app {
             if let Some(owners) = A::build_document_store_owners() {
                 store.install_member_store_owners_exact(owners);
             }
-            let config_store = ConfigStore::new(config_envelope.await).await.expect("failed to create config store");
-            let draft_store = store::DraftStore::new(draft_envelope).await.expect("failed to create draft store");
-            let interaction_store = ConfigStore::new(interaction_envelope).await.expect("failed to create interaction store");
+            let mut config_store = ConfigStore::new(config_envelope.await).await.expect("failed to create config store");
+            if let Some(owners) = A::build_config_store_owners() {
+                config_store.install_member_store_owners_exact(owners);
+            }
+            let mut draft_store = store::DraftStore::new(draft_envelope).await.expect("failed to create draft store");
+            if let Some(owners) = A::build_draft_store_owners() {
+                draft_store.install_member_store_owners_exact(owners);
+            }
+            let mut interaction_store = ConfigStore::new(interaction_envelope).await.expect("failed to create interaction store");
+            interaction_store.install_member_store_owners_exact(bounded_config_store_owners::<protocol::InteractionState, InteractionConfigMutation>());
             let genesis_mutations = A::genesis().await;
             if !genesis_mutations.is_empty() {
                 store.dispatch(ArtifactCommand::Apply { mutations: genesis_mutations, description: Some("genesis".to_string()) }).await.expect("ArtifactApp::genesis mutations must apply cleanly onto a freshly constructed store");
             }
             let dispatch_report = protocol::DispatchReport { policy: store.merge_policy(), worst: None, messages: Vec::new() };
-            let (tool_job_controller_id, tool_job_registrations) =
-                registry.tool_job_registration::<A>(&app_id, A::DOCUMENT_SCHEMA, <A::Command as ::protocol::OpBinary>::TOOL_JOB_IDS).expect("bounded reducer proof catalog must exactly match migrated generated declarations");
             let mut framework_tool_registry = ArtifactToolFactoryRegistry::<A>::new(&tool_jobs, &app_id);
             register_framework_reserved_factories(&mut framework_tool_registry).expect("framework-owned reserved factories must preserve exact owner/controller/schema/tool authority");
             let framework_tool_registrations = framework_tool_registry.finish();
             let mut app_tool_registry = ArtifactToolFactoryRegistry::<A>::new(&tool_jobs, &app_id);
             A::register_tool_job_factories(&mut app_tool_registry).expect("app-owned tool factories must preserve exact owner/controller/schema/tool authority");
             let app_tool_registrations = app_tool_registry.finish();
+            let (tool_job_controller_id, tool_job_registrations) = registry
+                .tool_job_registration::<A>(&app_id, A::DOCUMENT_SCHEMA, <A::Command as ::protocol::OpBinary>::TOOL_JOB_IDS, &tool_jobs, &app_tool_registrations)
+                .expect("tool proof catalog must exactly join migrated generated declarations to live concrete factories");
+            let artifact_one_item_factory = A::build_artifact_store_one_item_preparation_factory();
+            let config_one_item_factory = A::build_config_store_one_item_preparation_factory();
+            let draft_one_item_factory = A::build_draft_store_one_item_preparation_factory();
+            let presence_one_item_factory = A::build_presence_store_one_item_preparation_factory();
+            let transient_one_item_factory = A::build_transient_store_one_item_preparation_factory();
+            let presence_local_root_retirement_factory = A::build_presence_local_root_retirement_factory();
+            let transient_local_root_retirement_factory = A::build_transient_local_root_retirement_factory();
+            let mut unsupported_publication_contracts = BTreeMap::new();
+            for registration in framework_tool_registrations.values().chain(app_tool_registrations.values()) {
+                let unsupported = registration.publication_lanes.iter().copied().find_map(|lane| match lane {
+                    ArtifactToolPublicationLane::Artifact if artifact_one_item_factory.is_none() => Some("artifact"),
+                    ArtifactToolPublicationLane::Config if config_one_item_factory.is_none() => Some("config"),
+                    ArtifactToolPublicationLane::Draft if draft_one_item_factory.is_none() => Some("draft"),
+                    ArtifactToolPublicationLane::Presence if presence_one_item_factory.is_none() || presence_local_root_retirement_factory.is_none() => Some("presence"),
+                    ArtifactToolPublicationLane::Transient if transient_one_item_factory.is_none() || transient_local_root_retirement_factory.is_none() => Some("transient"),
+                    ArtifactToolPublicationLane::Child => Some("child retained group publication"),
+                    ArtifactToolPublicationLane::HostOnly
+                    | ArtifactToolPublicationLane::Artifact
+                    | ArtifactToolPublicationLane::Config
+                    | ArtifactToolPublicationLane::Draft
+                    | ArtifactToolPublicationLane::Presence
+                    | ArtifactToolPublicationLane::Transient => None,
+                });
+                if let Some(lane) = unsupported {
+                    unsupported_publication_contracts.insert(registration.key.tool_id.clone(), lane);
+                }
+            }
             let instance_operation_owner = ArtifactInstanceOperationOwnerHandle::new(A::build_instance_operation_owner());
             let mut bounded_tool_proofs = BTreeMap::new();
             let mut bounded_tool_contracts = Vec::with_capacity(tool_job_registrations.len());
@@ -18086,6 +19908,7 @@ pub mod app {
                     tool_id: tool_id.clone(),
                     schema_id: proof.schema_id(),
                     max_raw_wire_bytes: proof.contract().max_raw_wire_bytes,
+                    publication_lanes: &[ArtifactToolPublicationLane::HostOnly],
                 });
                 let factory = TypedCommandFullOperationJobFactory::<A>::from_proof(proof.clone()).expect("validated bounded reducer proof must retain its concrete owner authority");
                 tool_jobs.register_once(factory).expect("validated bounded reducer factory must register exactly once");
@@ -18114,6 +19937,14 @@ pub mod app {
                 peer_presence_retirements: ArtifactFixedRegistry::new(),
                 presence_peer_retirements: ArtifactFixedRegistry::new(),
                 transient_store: store::TransientStore::new(A::Transient::default()),
+                artifact_one_item_factory,
+                config_one_item_factory,
+                draft_one_item_factory,
+                presence_one_item_factory,
+                transient_one_item_factory,
+                presence_local_root_retirement_factory,
+                transient_local_root_retirement_factory,
+                unsupported_publication_contracts,
                 last_emit_wire: None,
                 typed_effect_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
                 typed_event_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
@@ -18131,6 +19962,13 @@ pub mod app {
                 tool_cancellations: ToolCancellationHandle::default(),
                 live_runtime_instance_id: None,
                 tool_operations: ArtifactFixedRegistry::new(),
+                typed_operation_reservations: [None; ARTIFACT_LIVE_OUTPUT_SLOTS],
+                typed_publication_cursor: 0,
+                typed_result_cursor: 0,
+                latest_wins_commands: ArtifactFixedRegistry::new(),
+                latest_wins_order: ArtifactFixedQueue::new(ARTIFACT_LIVE_OUTPUT_SLOTS),
+                latest_wins_keys: ToolLatestWinsRegistry::new(),
+                latest_wins_turn: true,
                 media_exports: ArtifactFixedRegistry::new(),
                 media_closures: ArtifactFixedRegistry::new(),
                 snapshot_retirements: ArtifactFixedRegistry::new(),
@@ -18154,6 +19992,7 @@ pub mod app {
                 close_presence_peer_cursor: 0,
                 close_peer_roster_cursor: 0,
                 maintenance_stage: 0,
+                maintenance_cancellation_cursor: 0,
                 maintenance_tool_cursor: 0,
                 maintenance_media_cursor: 0,
                 maintenance_segment_cursor: 0,
@@ -18673,6 +20512,7 @@ pub mod app {
                 || !self.presence_peer_retirements.can_insert(generation)
                 || !self.peer_roster_outcomes.can_insert(generation)
                 || !self.presence_store.peer_retirement_available()
+                || self.presence_store.retirement_started()
             {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-publication-authority"), "peer roster lost its exact generation, outcome, or retirement admission before publication"));
             }
@@ -18682,11 +20522,14 @@ pub mod app {
             Ok(ValidatedPeerRosterCommit { seq, generation })
         }
 
-        fn publish_peer_roster_candidate_admitted(&mut self, admission: ValidatedPeerRosterCommit, candidate: PeerRosterCandidate<A::Presence>) {
-            let PeerRosterCandidate { seq: _, generation: _, cancel: _, own_color, now_ms, root, typed } = candidate;
+        fn publish_peer_roster_candidate_admitted(&mut self, admission: ValidatedPeerRosterCommit, candidate: PeerRosterCandidate<A::Presence>) -> Result<(), PeerRosterCandidate<A::Presence>> {
+            let PeerRosterCandidate { seq, generation: candidate_generation, cancel, own_color, now_ms, root, typed } = candidate;
             let ValidatedPeerRosterCommit { seq: _, generation } = admission;
             let _ = now_ms;
-            let typed_retirement = self.presence_store.publish_peer_commit(typed);
+            let typed_retirement = match self.presence_store.publish_peer_commit(typed) {
+                Ok(retirement) => retirement,
+                Err(typed) => return Err(PeerRosterCandidate { seq, generation: candidate_generation, cancel, own_color, now_ms, root, typed }),
+            };
             let previous = std::mem::replace(&mut *self.peer_presence, root);
             if previous.is_empty() {
                 drop(previous);
@@ -18698,6 +20541,7 @@ pub mod app {
             if let Some(retirement) = typed_retirement {
                 self.presence_peer_retirements.insert_admitted(generation, retirement);
             }
+            Ok(())
         }
 
         /// 🌱️ Opens an already-persisted child store for `slot`/`child_id` via `M::open` (this
@@ -20810,13 +22654,19 @@ pub mod app {
         /// 📬️ Advances exactly one retained publication unit. Store lanes return one-item
         /// receipts; host lanes remain in the operation until their fixed result page is ACKed.
         async fn advance_typed_operation_publication_one(&mut self) -> Result<(), Fault> {
-            let Some((_, operation_id)) = self.tool_operations.next_id_from(0) else { return Ok(()) };
+            if !self.latest_wins_commands.is_empty() && (self.latest_wins_turn || self.tool_operations.is_empty()) {
+                self.latest_wins_turn = false;
+                return self.advance_latest_wins_command_one().await;
+            }
+            self.latest_wins_turn = true;
+            let Some((index, operation_id)) = self.tool_operations.next_id_from(self.typed_publication_cursor) else { return Ok(()) };
+            self.typed_publication_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
             if !self.tool_operations.get_mut(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Publishing) {
                 return Ok(());
             }
             let mut mounted =
                 self.tool_operations.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.publication-authority"), "typed-operation publication owner changed before one-unit transfer"))?;
-            let outcome = self.publish_mounted_typed_operation_unit(&mut mounted).await;
+            let outcome = self.publish_mounted_typed_operation_unit(&mut mounted);
             if let Err(fault) = outcome {
                 mounted.publication_attempt = mounted.publication_attempt.saturating_add(1);
                 if mounted.publication_attempt > TYPED_OPERATION_MAXIMUM_RETRIES {
@@ -20835,7 +22685,124 @@ pub mod app {
             Ok(())
         }
 
-        async fn publish_mounted_typed_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>) -> Result<(), Fault> {
+        async fn advance_latest_wins_command_one(&mut self) -> Result<(), Fault> {
+            let Some(operation_id) = self.latest_wins_order.items.front().copied() else { return Ok(()) };
+            let mut pending = self.latest_wins_commands.remove(operation_id).expect("exact pending keyed command");
+            let ready = match self.advance_latest_wins_admission_unit(&mut pending) {
+                Ok(ready) => ready,
+                Err(_) => { pending.closing = true; if let Some(lease) = pending.lease.as_ref() { lease.cancel(); } false }
+            };
+            let reserved = self.typed_operation_reservations[operation_id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] == Some(operation_id);
+            if !reserved || !self.tool_operations.can_insert(operation_id) {
+                pending.closing = true;
+                pending.lease.as_ref().expect("pending slot rejection retains its cancellation lease").cancel();
+                if !self.tool_operations.can_insert(operation_id) || self.typed_operation_reservations[operation_id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS].is_some_and(|owner| owner != operation_id) {
+                    self.latest_wins_commands.insert_admitted(operation_id, pending);
+                    return Ok(());
+                }
+            }
+            if ready && !pending.closing {
+                let command = pending.command.take().expect("accepted latest-wins command owner");
+                let admission = pending.admission.take().expect("accepted latest-wins exact raw admission");
+                let lease = pending.lease.take().expect("accepted latest-wins cancellation lease");
+                assert_eq!(self.latest_wins_order.pop(), Some(operation_id));
+                let started = self.start_typed_command_operation(command, admission, &pending.meta, pending.operation.operation, Some(lease)).await;
+                if started.is_err() { self.typed_operation_reservations[operation_id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = None; }
+                started?;
+                return Ok(());
+            }
+            if pending.closing && pending.command_owners_are_empty() {
+                let mut mounted = MountedTypedCommandFullOperation::<A> {
+                    verb: "latest-wins-admission".into(), meta: pending.meta.clone(), operation: pending.operation, canonical_revision: pending.revision,
+                    artifact_generation: pending.operation.generation.0, config_generation: 0, draft_generation: 0, presence_generation: 0, transient_generation: 0,
+                    contract: semio_framework::ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1), publication_lanes: &[],
+                    session: None, session_rejected: None, completion: None, raw_input: None, output_chunks: None, cancellation_lease: pending.lease.take(),
+                    terminal_outcome: None, terminal_seen: true, publication: None, pending_artifact_publication: None, result_page: None, result_page_presented: false,
+                    result_sequence: 0, publication_attempt: 0, ui_pending: false, stage: MountedTypedCommandFullOperationStage::Publishing,
+                };
+                mounted.queue_page(TypedOperationResultPage::try_new(mounted.next_token(), TypedOperationResultLane::Fault, b"latest-wins command admission cancelled or rejected before worker publication")?)?;
+                self.tool_operations.insert_admitted(operation_id, mounted);
+                self.typed_operation_reservations[operation_id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = None;
+                assert_eq!(self.latest_wins_order.pop(), Some(operation_id));
+            } else {
+                self.latest_wins_commands.insert_admitted(operation_id, pending);
+            }
+            Ok(())
+        }
+
+        fn advance_latest_wins_admission_unit(&mut self, pending: &mut PendingLatestWinsCommand<A>) -> Result<bool, Fault> {
+            let operation = pending.operation.operation.0;
+            if pending.lease.as_ref().is_none_or(|lease| lease.token.is_cancelled_now()) { pending.closing = true; }
+            if pending.closing {
+                self.latest_wins_keys.cancel(operation);
+                self.latest_wins_keys.take_outcome(operation);
+                if self.latest_wins_keys.active_operation == Some(operation) {
+                    self.latest_wins_keys.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
+                } else {
+                    pending.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES)?;
+                }
+                return Ok(false);
+            }
+            let live_revision = self.store.content_revision_now();
+            if live_revision != pending.revision || self.store.generation_now() != pending.operation.generation.0 { pending.restarting = true; }
+            if pending.restarting {
+                self.latest_wins_keys.cancel(operation);
+                self.latest_wins_keys.take_outcome(operation);
+                if self.latest_wins_keys.active_operation == Some(operation) {
+                    self.latest_wins_keys.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
+                } else if pending.close_key_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES) == PluginCloseStep::Complete {
+                    let base_revision = semio_framework_job::RevisionId(u64::from_be_bytes(live_revision[..8].try_into().expect("revision lane width")));
+                    let generation = semio_framework_job::Generation(self.store.generation_now());
+                    if !pending.lease.as_mut().expect("keyed rebase retains its exact lease").rebind_keyed(base_revision, generation)? { return Ok(false); }
+                    pending.lookup_started = false;
+                    pending.accepted = false;
+                    pending.restarting = false;
+                    pending.revision = live_revision;
+                    pending.operation.base_revision = base_revision;
+                    pending.operation.generation = generation;
+                }
+                return Ok(false);
+            }
+            if pending.accepted {
+                return Ok(pending.close_key_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES) == PluginCloseStep::Complete);
+            }
+            if pending.lookup_started {
+                if let Some(accepted) = self.latest_wins_keys.take_outcome(operation) {
+                    pending.accepted = accepted;
+                    pending.closing = !accepted;
+                    if !accepted { pending.lease.as_ref().expect("live pending lease").cancel(); }
+                } else {
+                    self.latest_wins_keys.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
+                }
+                return Ok(false);
+            }
+            if let Some(key) = pending.key.as_ref() {
+                if self.latest_wins_keys.begin(operation, key.clone(), pending.lease.as_ref().expect("live pending lease")) {
+                    pending.lookup_started = true;
+                } else {
+                    self.latest_wins_keys.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
+                }
+                return Ok(false);
+            }
+            let admission = pending.admission.as_ref().expect("pending exact admission");
+            let QualifiedToolProof::AppOwned(registration) = &admission.proof else { return Err(plugin_sdk_fault("latest-wins admission lost its concrete factory")); };
+            let command = pending.command.as_ref().expect("pending exact command");
+            let target = (registration.latest_wins_target)(command.as_ref()).ok_or_else(|| plugin_sdk_fault("latest-wins command lost its exact borrowed target"))?;
+            let parts = [&*self.store.envelope().id, &*registration.key.controller_id, &*registration.key.tool_id, target];
+            if pending.key_copy.is_none() {
+                pending.key_copy = Some(ToolLatestWinsKeyCopy::new(pending.meta.instance_id, parts)?);
+                return Ok(false);
+            }
+            let copy = pending.key_copy.as_mut().expect("retained exact key byte cursor");
+            if copy.advance(parts, 1, TYPED_OPERATION_RESULT_PAGE_BYTES) == PluginCloseStep::Complete { pending.key = copy.take_key(); }
+            Ok(false)
+        }
+
+        fn publish_mounted_typed_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>) -> Result<(), Fault> {
+            if mounted.reject_cancelled_publication()? {
+                return Ok(());
+            }
+            let _permit = mounted.cancellation_lease.as_ref().and_then(ToolCancellationLease::try_claim_publication).ok_or_else(|| plugin_sdk_fault("typed-operation publication claim is cancelled or occupied"))?;
             if mounted.publication.is_none() {
                 let Some(completion) = mounted.completion.as_ref() else { return Err(plugin_sdk_fault("typed-operation completion owner was retired before publication")) };
                 let Some(publication) = completion.take()? else { return Ok(()) };
@@ -20844,63 +22811,248 @@ pub mod app {
             }
             let live_revision = self.store.content_revision_now();
             let live_generation = self.store.generation_now();
-            let live_short = semio_framework_job::RevisionId(u64::from_be_bytes(live_revision[..8].try_into().expect("revision lane width")));
-            if mounted.canonical_revision != live_revision || !matches!(semio_framework_job::validate_commit(&mounted.operation, live_short, semio_framework_job::Generation(live_generation)), semio_framework_job::CommitValidation::Accepted) {
-                let page = TypedOperationResultPage::try_new(mounted.next_token(), TypedOperationResultLane::Fault, b"typed-operation publication rejected a stale immutable root")?;
-                return mounted.queue_page(page);
+            if !typed_operation_document_is_fresh(&mounted.operation, mounted.canonical_revision, live_revision, live_generation) {
+                let closed = if let Some(pending) = mounted.pending_artifact_publication.as_mut() {
+                    pending.begin_close();
+                    matches!(pending.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES)?, store::SnapshotRetirementStep::Complete) && pending.terminal_is_empty()
+                } else {
+                    false
+                };
+                if closed {
+                    mounted.pending_artifact_publication = None;
+                }
+                return Err(plugin_sdk_fault("typed-operation pending publication rejected a stale immutable document root"));
+            }
+            if let Some(pending) = mounted.pending_artifact_publication.as_mut() {
+                let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: TYPED_OPERATION_RESULT_PAGE_BYTES };
+                let pending_lane = match pending {
+                    PendingArtifactStorePublication::Artifact(_) => TypedOperationResultLane::Artifact,
+                    PendingArtifactStorePublication::Config(_) => TypedOperationResultLane::Config,
+                    PendingArtifactStorePublication::Draft(_) => TypedOperationResultLane::Draft,
+                    PendingArtifactStorePublication::Presence(_) => TypedOperationResultLane::Presence,
+                    PendingArtifactStorePublication::Transient(_) => TypedOperationResultLane::Transient,
+                };
+                let advance = match pending {
+                    PendingArtifactStorePublication::Artifact(publication) => {
+                        if publication.phase() == store::ArtifactStoreOneItemPublicationPhase::Closing {
+                            let failed = publication.fault().is_some();
+                            match publication.close_step(grant).map_err(plugin_sdk_fault)? {
+                                store::SnapshotRetirementStep::Complete if publication.terminal_is_empty() => {
+                                    mounted.pending_artifact_publication = None;
+                                    return if failed { Err(plugin_sdk_fault("artifact-store publication rejected stale or cancelled authority")) } else { Ok(()) };
+                                }
+                                store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("artifact-store publication closed without terminal emptiness")),
+                                _ if failed => return Err(plugin_sdk_fault("artifact-store publication is retiring a rejected authority")),
+                                _ => return Ok(()),
+                            }
+                        }
+                        self.store.advance_apply_one(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?
+                    }
+                    PendingArtifactStorePublication::Config(publication) => {
+                        if publication.phase() == store::ArtifactStoreOneItemPublicationPhase::Closing {
+                            let failed = publication.fault().is_some();
+                            match publication.close_step(grant).map_err(plugin_sdk_fault)? {
+                                store::SnapshotRetirementStep::Complete if publication.terminal_is_empty() => {
+                                    mounted.pending_artifact_publication = None;
+                                    return if failed { Err(plugin_sdk_fault("config-store publication rejected stale or cancelled authority")) } else { Ok(()) };
+                                }
+                                store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("config-store publication closed without terminal emptiness")),
+                                _ if failed => return Err(plugin_sdk_fault("config-store publication is retiring a rejected authority")),
+                                _ => return Ok(()),
+                            }
+                        }
+                        self.config_store.advance_apply_one(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?
+                    }
+                    PendingArtifactStorePublication::Draft(publication) => {
+                        if publication.phase() == store::ArtifactStoreOneItemPublicationPhase::Closing {
+                            let failed = publication.fault().is_some();
+                            match publication.close_step(grant).map_err(plugin_sdk_fault)? {
+                                store::SnapshotRetirementStep::Complete if publication.terminal_is_empty() => {
+                                    mounted.pending_artifact_publication = None;
+                                    return if failed { Err(plugin_sdk_fault("draft-store publication rejected stale or cancelled authority")) } else { Ok(()) };
+                                }
+                                store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("draft-store publication closed without terminal emptiness")),
+                                _ if failed => return Err(plugin_sdk_fault("draft-store publication is retiring a rejected authority")),
+                                _ => return Ok(()),
+                            }
+                        }
+                        self.draft_store.advance_apply_one(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?
+                    }
+                    PendingArtifactStorePublication::Presence(publication) => {
+                        if publication.phase() == store::ArtifactStoreOneItemPublicationPhase::Closing {
+                            let failed = publication.fault().is_some();
+                            match publication.close_step(grant).map_err(plugin_sdk_fault)? {
+                                store::SnapshotRetirementStep::Complete if publication.terminal_is_empty() => {
+                                    mounted.pending_artifact_publication = None;
+                                    return if failed { Err(plugin_sdk_fault("presence-store publication rejected stale or cancelled authority")) } else { Ok(()) };
+                                }
+                                store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("presence-store publication closed without terminal emptiness")),
+                                _ if failed => return Err(plugin_sdk_fault("presence-store publication is retiring a rejected authority")),
+                                _ => return Ok(()),
+                            }
+                        }
+                        self.presence_store.advance_publish_one(publication, grant).map_err(plugin_sdk_fault)?
+                    }
+                    PendingArtifactStorePublication::Transient(publication) => {
+                        if publication.phase() == store::ArtifactStoreOneItemPublicationPhase::Closing {
+                            let failed = publication.fault().is_some();
+                            match publication.close_step(grant).map_err(plugin_sdk_fault)? {
+                                store::SnapshotRetirementStep::Complete if publication.terminal_is_empty() => {
+                                    mounted.pending_artifact_publication = None;
+                                    return if failed { Err(plugin_sdk_fault("transient-store publication rejected stale or cancelled authority")) } else { Ok(()) };
+                                }
+                                store::SnapshotRetirementStep::Complete => return Err(plugin_sdk_fault("transient-store publication closed without terminal emptiness")),
+                                _ if failed => return Err(plugin_sdk_fault("transient-store publication is retiring a rejected authority")),
+                                _ => return Ok(()),
+                            }
+                        }
+                        self.transient_store.advance_publish_one(publication, grant).map_err(plugin_sdk_fault)?
+                    }
+                };
+                return match advance {
+                    store::ArtifactStoreOneItemAdvance::Published(receipt) => {
+                        match pending_lane {
+                            TypedOperationResultLane::Artifact => {
+                                mounted.artifact_generation = receipt.generation_after;
+                                mounted.canonical_revision = self.store.content_revision_now();
+                                mounted.operation.base_revision = semio_framework_job::RevisionId(u64::from_be_bytes(mounted.canonical_revision[..8].try_into().expect("revision lane width")));
+                                mounted.operation.generation = semio_framework_job::Generation(receipt.generation_after);
+                            }
+                            TypedOperationResultLane::Config => mounted.config_generation = receipt.generation_after,
+                            TypedOperationResultLane::Draft => mounted.draft_generation = receipt.generation_after,
+                            TypedOperationResultLane::Presence => mounted.presence_generation = receipt.generation_after,
+                            TypedOperationResultLane::Transient => mounted.transient_generation = receipt.generation_after,
+                            _ => unreachable!("pending artifact publication has one durable store lane"),
+                        }
+                        let token = mounted.next_token();
+                        mounted.queue_page(TypedOperationResultPage::try_serialize(token, pending_lane, &receipt)?)
+                    }
+                    store::ArtifactStoreOneItemAdvance::Progress(_) | store::ArtifactStoreOneItemAdvance::Blocked => Ok(()),
+                    store::ArtifactStoreOneItemAdvance::AwaitingAck(_) => Err(plugin_sdk_fault("artifact-store publication awaits an ACK without its retained host page")),
+                    store::ArtifactStoreOneItemAdvance::Complete => Err(plugin_sdk_fault("artifact-store publication completed before result ACK")),
+                };
             }
             let token = mounted.next_token();
+            let publication_lanes = mounted.publication_lanes;
             let page = match mounted.publication.as_mut().expect("publication owner was installed") {
                 ArtifactToolCompletionValue::Emit(Err(fault), _) | ArtifactToolCompletionValue::Download(Err(fault), _) => TypedOperationResultPage::try_new(token, TypedOperationResultLane::Fault, fault.as_bytes())?,
                 ArtifactToolCompletionValue::Download(Ok(download), ephemeral) => {
-                    if let Some(mutation) = ephemeral.presence.last().cloned() {
-                        let receipt = self.presence_store.apply_one(mounted.presence_generation, mutation).map_err(|(detail, _)| plugin_sdk_fault(detail))?;
-                        drop(ephemeral.presence.pop());
-                        mounted.presence_generation = receipt.generation_after;
-                        TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Presence, &receipt)?
-                    } else if let Some(mutation) = ephemeral.transient.last().cloned() {
-                        let receipt = self.transient_store.apply_one(mounted.transient_generation, mutation).map_err(|(detail, _)| plugin_sdk_fault(detail))?;
-                        drop(ephemeral.transient.pop());
-                        mounted.transient_generation = receipt.generation_after;
-                        TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Transient, &receipt)?
+                    if (!ephemeral.presence.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Presence)) || (!ephemeral.transient.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Transient)) {
+                        return Err(plugin_sdk_fault("typed-operation emitted an undeclared ephemeral publication lane"));
+                    }
+                    if let Some(mutation) = ephemeral.presence.pop() {
+                        match self.presence_store.begin_publish_one(mounted.operation.operation, mounted.presence_generation, mutation, self.presence_one_item_factory.as_deref(), self.presence_local_root_retirement_factory.clone()) {
+                            Ok(publication) => {
+                                mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Presence(publication));
+                                return Ok(());
+                            }
+                            Err(rejected) => {
+                                let (reason, mutation) = rejected.into_owners();
+                                ephemeral.presence.push(mutation);
+                                return Err(plugin_sdk_fault(reason));
+                            }
+                        }
+                    } else if let Some(mutation) = ephemeral.transient.pop() {
+                        match self.transient_store.begin_publish_one(mounted.operation.operation, mounted.transient_generation, mutation, self.transient_one_item_factory.as_deref(), self.transient_local_root_retirement_factory.clone()) {
+                            Ok(publication) => {
+                                mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Transient(publication));
+                                return Ok(());
+                            }
+                            Err(rejected) => {
+                                let (reason, mutation) = rejected.into_owners();
+                                ephemeral.transient.push(mutation);
+                                return Err(plugin_sdk_fault(reason));
+                            }
+                        }
                     } else {
                         TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Download, &(download.filename.as_str(), download.mime_type.as_str(), download.encoding.as_deref(), download.chunks.bytes()))?
                     }
                 }
                 ArtifactToolCompletionValue::Emit(Ok(emit), ephemeral) => {
-                    if let Some(mutation) = emit.artifact_mutations.last().cloned() {
-                        let (_, receipt) = self.store.apply_one(mounted.artifact_generation, mutation, emit.description.clone(), store::HistoryLane::Document).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
-                        drop(emit.artifact_mutations.pop());
-                        emit.description = None;
-                        mounted.artifact_generation = receipt.generation_after;
-                        mounted.canonical_revision = self.store.content_revision_now();
-                        mounted.operation.base_revision = semio_framework_job::RevisionId(u64::from_be_bytes(mounted.canonical_revision[..8].try_into().expect("revision lane width")));
-                        mounted.operation.generation = semio_framework_job::Generation(receipt.generation_after);
-                        TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Artifact, &receipt)?
-                    } else if let Some(mutation) = emit.config_mutations.last().cloned() {
-                        let (_, receipt) = self.config_store.apply_one(mounted.config_generation, mutation, None, store::HistoryLane::Document).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
-                        drop(emit.config_mutations.pop());
-                        mounted.config_generation = receipt.generation_after;
-                        TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Config, &receipt)?
-                    } else if let Some(mutation) = emit.draft_mutations.last().cloned() {
-                        let (_, receipt) = self.draft_store.apply_one(mounted.draft_generation, mutation, None, store::HistoryLane::Document).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
-                        drop(emit.draft_mutations.pop());
-                        mounted.draft_generation = receipt.generation_after;
-                        TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Draft, &receipt)?
-                    } else if let Some(mutation) = ephemeral.presence.last().cloned() {
-                        let receipt = self.presence_store.apply_one(mounted.presence_generation, mutation).map_err(|(detail, _)| plugin_sdk_fault(detail))?;
-                        drop(ephemeral.presence.pop());
-                        mounted.presence_generation = receipt.generation_after;
-                        TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Presence, &receipt)?
-                    } else if let Some(mutation) = ephemeral.transient.last().cloned() {
-                        let receipt = self.transient_store.apply_one(mounted.transient_generation, mutation).map_err(|(detail, _)| plugin_sdk_fault(detail))?;
-                        drop(ephemeral.transient.pop());
-                        mounted.transient_generation = receipt.generation_after;
-                        TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Transient, &receipt)?
-                    } else if let Some(child) = emit.child_emits.last().cloned() {
-                        let receipt = self.dispatch_emit_group(&mounted.verb, Vec::new(), vec![child.clone()], None, Vec::new(), Vec::new(), semio_framework::kernel::UiDirtyScope::None, None, &mounted.meta).await?;
-                        drop(emit.child_emits.pop());
-                        TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Child, &(child.slot, child.child_id, receipt.inverse_group.member_edits.len()))?
+                    if !emit.child_emits.is_empty() {
+                        return Err(plugin_sdk_fault("typed-operation child output requires retained all-member preparation, grouped history/log sealing, and atomic child-root publication"));
+                    }
+                    if (!emit.artifact_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Artifact))
+                        || (!emit.config_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Config))
+                        || (!emit.draft_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Draft))
+                        || (!ephemeral.presence.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Presence))
+                        || (!ephemeral.transient.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Transient))
+                        || (!emit.child_emits.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Child))
+                    {
+                        return Err(plugin_sdk_fault("typed-operation emitted a store lane absent from its exact factory publication contract"));
+                    }
+                    if let Some(mutation) = emit.artifact_mutations.pop() {
+                        match self.store.begin_apply_one(
+                            mounted.operation.operation,
+                            mounted.artifact_generation,
+                            mounted.canonical_revision,
+                            mounted.meta.actor.clone(),
+                            mutation,
+                            emit.description.take(),
+                            store::HistoryLane::Document,
+                            self.artifact_one_item_factory.as_deref(),
+                        ) {
+                            Ok(publication) => {
+                                mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Artifact(publication));
+                                return Ok(());
+                            }
+                            Err(rejected) => {
+                                let (reason, mutation, description) = rejected.into_owners();
+                                emit.artifact_mutations.push(mutation);
+                                emit.description = description;
+                                return Err(plugin_sdk_fault(reason));
+                            }
+                        }
+                    } else if let Some(mutation) = emit.config_mutations.pop() {
+                        let revision = self.config_store.content_revision_now();
+                        match self.config_store.begin_apply_one(mounted.operation.operation, mounted.config_generation, revision, mounted.meta.actor.clone(), mutation, None, store::HistoryLane::Document, self.config_one_item_factory.as_deref()) {
+                            Ok(publication) => {
+                                mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Config(publication));
+                                return Ok(());
+                            }
+                            Err(rejected) => {
+                                let (reason, mutation, _) = rejected.into_owners();
+                                emit.config_mutations.push(mutation);
+                                return Err(plugin_sdk_fault(reason));
+                            }
+                        }
+                    } else if let Some(mutation) = emit.draft_mutations.pop() {
+                        let revision = self.draft_store.content_revision_now();
+                        match self.draft_store.begin_apply_one(mounted.operation.operation, mounted.draft_generation, revision, mounted.meta.actor.clone(), mutation, None, store::HistoryLane::Document, self.draft_one_item_factory.as_deref()) {
+                            Ok(publication) => {
+                                mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Draft(publication));
+                                return Ok(());
+                            }
+                            Err(rejected) => {
+                                let (reason, mutation, _) = rejected.into_owners();
+                                emit.draft_mutations.push(mutation);
+                                return Err(plugin_sdk_fault(reason));
+                            }
+                        }
+                    } else if let Some(mutation) = ephemeral.presence.pop() {
+                        match self.presence_store.begin_publish_one(mounted.operation.operation, mounted.presence_generation, mutation, self.presence_one_item_factory.as_deref(), self.presence_local_root_retirement_factory.clone()) {
+                            Ok(publication) => {
+                                mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Presence(publication));
+                                return Ok(());
+                            }
+                            Err(rejected) => {
+                                let (reason, mutation) = rejected.into_owners();
+                                ephemeral.presence.push(mutation);
+                                return Err(plugin_sdk_fault(reason));
+                            }
+                        }
+                    } else if let Some(mutation) = ephemeral.transient.pop() {
+                        match self.transient_store.begin_publish_one(mounted.operation.operation, mounted.transient_generation, mutation, self.transient_one_item_factory.as_deref(), self.transient_local_root_retirement_factory.clone()) {
+                            Ok(publication) => {
+                                mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Transient(publication));
+                                return Ok(());
+                            }
+                            Err(rejected) => {
+                                let (reason, mutation) = rejected.into_owners();
+                                ephemeral.transient.push(mutation);
+                                return Err(plugin_sdk_fault(reason));
+                            }
+                        }
                     } else if let Some(effect) = emit.effects.pop() {
                         if let Err(effect) = self.typed_effect_outbox.push(effect) {
                             emit.effects.push(effect);
@@ -20955,6 +23107,10 @@ pub mod app {
             }
         }
 
+        fn can_admit_typed_operation(&self, operation: u64) -> bool {
+            self.tool_operations.can_insert(operation) && self.typed_operation_reservations[operation as usize % ARTIFACT_LIVE_OUTPUT_SLOTS].is_none()
+        }
+
         async fn dispatch_typed_command_inner(&mut self, command: Box<A::Command>, admission: AdmittedToolCommand, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             if self.live_runtime_instance_id != Some(meta.instance_id) {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.live-instance"), format!("typed command '{}' does not belong to the mounted live app instance", admission.verb)));
@@ -20965,9 +23121,41 @@ pub mod app {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.command-identity"), format!("exact admitted command '{}' decoded as '{verb}'", admission.verb)));
             }
             let operation_id = semio_framework_job::allocate_operation_id();
-            if !self.tool_operations.can_insert(operation_id.0) || !self.segmented_downloads.can_insert(operation_id.0) || !self.segmented_closures.can_insert(operation_id.0) {
+            if !self.can_admit_typed_operation(operation_id.0) || !self.latest_wins_commands.can_insert(operation_id.0) || !self.latest_wins_order.allocation_admitted || self.latest_wins_order.len() >= ARTIFACT_LIVE_OUTPUT_SLOTS || !self.segmented_downloads.can_insert(operation_id.0) || !self.segmented_closures.can_insert(operation_id.0) {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-capacity"), "fixed typed-operation and segmented-output authorities did not pre-admit the exact operation slot"));
             }
+            if let QualifiedToolProof::AppOwned(registration) = &admission.proof {
+                if let Some(target) = (registration.latest_wins_target)(command.as_ref()) {
+                    let disposer = (registration.latest_wins_command_disposer)().and_then(|owner| owner.downcast::<Box<dyn ArtifactOwnedDisposer<A::Command>>>().ok()).map(|owner| *owner)
+                        .ok_or_else(|| plugin_sdk_fault("latest-wins target requires its exact compiler-owned command retirement factory"))?;
+                    let revision = self.store.content_revision_now();
+                    let generation = semio_framework_job::Generation(self.store.generation_now());
+                    let base_revision = semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().expect("revision lane width")));
+                    let operation = semio_framework_job::Operation::new(operation_id, base_revision, generation, operation_id.0);
+                    let key = ToolLatestWinsKeyCopy::new(meta.instance_id, [&self.store.envelope().id, &registration.key.controller_id, &registration.key.tool_id, target])?;
+                    let lease = self.tool_cancellations.begin_keyed(ToolOperationKey { app_instance_id: meta.instance_id, document: ArtifactDocumentAuthority(meta.instance_id), operation_id, base_revision, generation })?;
+                    self.typed_operation_reservations[operation_id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = Some(operation_id.0);
+                    self.latest_wins_commands.insert_admitted(operation_id.0, PendingLatestWinsCommand {
+                        command: std::mem::ManuallyDrop::new(Some(command)), disposer, admission: Some(admission), meta: meta.clone(), operation, revision, lease: Some(lease),
+                        key_copy: Some(key), key: None, retired_key: None, lookup_started: false, accepted: false, restarting: false, closing: false,
+                    });
+                    self.latest_wins_order.push(operation_id.0).expect("exact FIFO command slot was pre-admitted");
+                    let mut started = Self::empty_result(&verb, meta, Vec::new(), Vec::new(), semio_framework::kernel::UiDirtyScope::None).await;
+                    started.output = DslValue::Object(vec![("operationId".into(), DslValue::String(operation_id.0.to_string())), ("generation".into(), DslValue::String(generation.0.to_string()))]);
+                    return Ok(started);
+                }
+            }
+            self.start_typed_command_operation(command, admission, meta, operation_id, None).await
+        }
+
+        async fn start_typed_command_operation(&mut self, command: Box<A::Command>, admission: AdmittedToolCommand, meta: &ActionMeta, operation_id: semio_framework_job::OperationId, reserved_lease: Option<ToolCancellationLease>) -> Result<InvocationResult, Fault> {
+            assert!(self.tool_operations.can_insert(operation_id.0), "typed worker handoff retains its exact empty operation slot");
+            if reserved_lease.is_some() {
+                assert_eq!(self.typed_operation_reservations[operation_id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS], Some(operation_id.0), "keyed worker handoff owns its exact pending reservation");
+            } else {
+                assert!(self.can_admit_typed_operation(operation_id.0), "ordinary worker cannot consume another pending operation reservation");
+            }
+            let verb = admission.verb.clone();
             self.refresh_cache().await?;
             let draft_snapshot = self.draft_store.snapshot_root();
             let interaction_state = self.interaction_store.snapshot_root();
@@ -20989,9 +23177,12 @@ pub mod app {
             let seed_handle = artifact_handle_of(&format!("{}/{}/{verb}/{}", meta.instance_id, self.tool_job_controller_id, base_revision.0)).await;
             let operation = semio_framework_job::Operation::new(operation_id, base_revision, generation, (seed_handle.0 as u64) ^ ((seed_handle.0 >> 64) as u64));
             let operation_key = ToolOperationKey { app_instance_id: meta.instance_id, document: ArtifactDocumentAuthority(meta.instance_id), operation_id, base_revision, generation };
-            let cancellation_lease = self.tool_cancellations.begin(operation_key)?;
+            let cancellation_lease = match reserved_lease { Some(lease) => lease, None => self.tool_cancellations.begin(operation_key)? };
+            assert_eq!(cancellation_lease.key.base_revision, base_revision, "fresh worker receives a revision-rebound cancellation lease");
+            assert_eq!(cancellation_lease.key.generation, generation, "fresh worker receives a generation-rebound cancellation lease");
             let payload_schema_id = admission.proof.schema_id();
             let qualified_key = admission.proof.key();
+            let publication_lanes = admission.proof.publication_lanes();
             let completion = ArtifactToolCompletion::<A>::new();
             let retained_wire_admission = admission.wire_admission.clone();
             let app_owned_retained_route = matches!(&admission.proof, QualifiedToolProof::AppOwned(_));
@@ -21114,6 +23305,7 @@ pub mod app {
                     presence_generation,
                     transient_generation,
                     contract: admission.proof.contract(),
+                    publication_lanes,
                     session,
                     session_rejected,
                     completion: Some(completion),
@@ -21123,6 +23315,7 @@ pub mod app {
                     terminal_outcome: None,
                     terminal_seen: false,
                     publication: None,
+                    pending_artifact_publication: None,
                     result_page: None,
                     result_page_presented: false,
                     result_sequence: 0,
@@ -21132,6 +23325,7 @@ pub mod app {
                 },
             );
             if let Some(active) = self.tool_operations.get_mut(operation_id.0) {
+                self.typed_operation_reservations[operation_id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = None;
                 let _ = active.drive_worker_step(&pool)?;
             }
             let mut started = Self::empty_result(&verb, meta, Vec::new(), Vec::new(), semio_framework::kernel::UiDirtyScope::None).await;
@@ -21577,11 +23771,29 @@ pub mod app {
                     return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-mounted-false-terminal"), "mounted app jobs reported Complete without an exact terminal-empty witness"));
                 }
             }
-            if self.close_cancellation_cursor < TOOL_CANCELLATION_SLOTS {
+            if self.close_cancellation_cursor < TOOL_CANCELLATION_SLOTS + ARTIFACT_LIVE_OUTPUT_SLOTS {
                 let released = self.tool_cancellations.cleanup_slot(self.close_cancellation_cursor)?;
                 self.close_cancellation_cursor = self.close_cancellation_cursor.saturating_add(1);
                 let _ = released;
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if !self.latest_wins_keys.terminal_is_empty() {
+                self.latest_wins_keys.begin_close();
+                let step = self.latest_wins_keys.advance(maximum_items.min(1), maximum_bytes);
+                return Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 1, released_bytes: 0 } } else { step });
+            }
+            if let Some(operation_id) = self.latest_wins_order.items.front().copied() {
+                let pending = self.latest_wins_commands.get_mut(operation_id).expect("exact closing keyed command");
+                let step = pending.close_step(maximum_items.min(1), maximum_bytes)?;
+                if pending.command_owners_are_empty() {
+                    if let Some(step) = MountedTypedCommandFullOperation::<A>::retire_string_scalar(&mut pending.meta.actor, maximum_bytes) { return Ok(step); }
+                    if let Some(lease) = pending.lease.take() { lease.finish(); }
+                    drop(self.latest_wins_commands.remove(operation_id));
+                    self.typed_operation_reservations[operation_id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = None;
+                    assert_eq!(self.latest_wins_order.pop(), Some(operation_id));
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                return Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 1, released_bytes: 0 } } else { step });
             }
             if !self.tool_operations.is_empty() {
                 let Some((_, operation_id)) = self.tool_operations.next_id_from(0) else {
@@ -22037,6 +24249,10 @@ pub mod app {
                 && self.close_interaction_disposer.is_none()
                 && self.tool_cancellations.active_operation_count() == 0
                 && self.tool_operations.is_empty()
+                && self.latest_wins_commands.is_empty()
+                && self.typed_operation_reservations.iter().all(Option::is_none)
+                && self.latest_wins_order.len() == 0
+                && self.latest_wins_keys.terminal_is_empty()
                 && self.close_instance_operation_owner_drained
                 && self.instance_operation_owner.terminal_is_empty().unwrap_or(false)
                 && self.media_exports.is_empty()
@@ -22065,6 +24281,10 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
             if self.tool_operations.is_empty()
+                && self.tool_cancellations.active_operation_count() == 0
+                && self.latest_wins_commands.is_empty()
+                && self.latest_wins_keys.map.as_ref().is_some_and(|map| map.is_empty())
+                && self.latest_wins_keys.can_begin()
                 && self.media_closures.is_empty()
                 && self.segmented_closures.is_empty()
                 && self.snapshot_retirements.is_empty()
@@ -22087,7 +24307,7 @@ pub mod app {
                 return pump.drive(|| store.take_returned_snapshot_read_retirement().map_err(|error| error.into_fault()), maximum_items, maximum_bytes);
             }
             let stage = self.maintenance_stage;
-            self.maintenance_stage = (self.maintenance_stage + 1) % 17;
+            self.maintenance_stage = (self.maintenance_stage + 1) % 19;
             match stage {
                 0 => {
                     let Some((index, operation_id)) = self.tool_operations.next_id_from(self.maintenance_tool_cursor) else {
@@ -22364,7 +24584,10 @@ pub mod app {
                                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
                             }
                         };
-                        self.publish_peer_roster_candidate_admitted(admission, candidate);
+                        if let Err(candidate) = self.publish_peer_roster_candidate_admitted(admission, candidate) {
+                            self.peer_roster_publications.get_mut(generation).expect("exact peer candidate return owner").retain_rejected_candidate(candidate);
+                            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                        }
                     }
                     if !self.peer_roster_publications.get(generation).is_some_and(PeerRosterPublication::terminal_is_empty) {
                         return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-terminal-not-empty"), "peer roster publication reached outcome handoff without an exact empty terminal witness"));
@@ -22429,6 +24652,14 @@ pub mod app {
                     None => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
                 },
                 16 => self.instance_operation_owner.maintenance_step(maximum_items.min(1), maximum_bytes),
+                17 => Ok(self.latest_wins_keys.advance(maximum_items.min(1), maximum_bytes)),
+                18 => {
+                    if self.tool_cancellations.cleanup_finished_slot(self.maintenance_cancellation_cursor)?.is_none() {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    self.maintenance_cancellation_cursor = (self.maintenance_cancellation_cursor + 1) % (TOOL_CANCELLATION_SLOTS + ARTIFACT_LIVE_OUTPUT_SLOTS);
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
                 _ => unreachable!("fixed maintenance stage"),
             }
         }
@@ -22455,6 +24686,7 @@ pub mod app {
                     tool_id: registration.key.tool_id.clone(),
                     schema_id: registration.schema_id.clone(),
                     max_raw_wire_bytes: registration.contract.max_raw_wire_bytes,
+                    publication_lanes: registration.publication_lanes,
                 }))
                 .chain(self.app_tool_registrations.values().map(|registration| ArtifactToolPublicContract {
                     owner: registration.owner,
@@ -22462,6 +24694,7 @@ pub mod app {
                     tool_id: registration.key.tool_id.clone(),
                     schema_id: registration.schema_id.clone(),
                     max_raw_wire_bytes: registration.contract.max_raw_wire_bytes,
+                    publication_lanes: registration.publication_lanes,
                 }))
                 .collect()
         }
@@ -22471,7 +24704,8 @@ pub mod app {
         }
 
         fn take_typed_operation_result_page(&mut self, receiver: u32) -> Option<TypedOperationResultPage> {
-            let (_, operation_id) = self.tool_operations.next_id_from(0)?;
+            let (index, operation_id) = self.tool_operations.next_id_from(self.typed_result_cursor)?;
+            self.typed_result_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
             let operation = self.tool_operations.get_mut(operation_id)?;
             (operation.meta.instance_id == receiver).then(|| operation.take_result_page()).flatten()
         }
@@ -24337,6 +26571,55 @@ pub mod app {
             None
         }
 
+        fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+            None
+        }
+
+        /// 📝️ Grants exact draft retirement ownership to this editor adapter.
+        fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+            None
+        }
+
+        /// 📬️ Grants retained one-item document preparation to this editor adapter.
+        fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+            None
+        }
+
+        /// 📬️ Grants retained one-item config preparation to this editor adapter.
+        fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+            None
+        }
+
+        /// 📬️ Grants retained one-item draft preparation to this editor adapter.
+        fn build_draft_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Draft, Self::DraftMutation>>> {
+            None
+        }
+
+        /// 📬️ Grants retained shared-live presence preparation to this editor adapter.
+        fn build_presence_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Presence, Self::PresenceMutation>>> {
+            None
+        }
+
+        /// 📬️ Grants retained local-live transient preparation to this editor adapter.
+        fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
+            None
+        }
+
+        /// 🧹️ Grants bounded displaced-presence-root retirement to this editor adapter.
+        fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+            None
+        }
+
+        /// 👥️ Grants exact typed retirement for peer presence snapshots to this editor adapter.
+        fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+            None
+        }
+
+        /// 🧹️ Grants bounded displaced-transient-root retirement to this editor adapter.
+        fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+            None
+        }
+
         fn build_document_store_initialization_job(
             envelope: ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
             _operation: semio_framework_job::OperationId,
@@ -24584,6 +26867,31 @@ pub mod app {
             false
         }
 
+        /// 📬️ Grants retained one-item config preparation to this viewer adapter.
+        fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+            None
+        }
+
+        /// 📬️ Grants retained shared-live presence preparation to this viewer adapter.
+        fn build_presence_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Presence, Self::PresenceMutation>>> {
+            None
+        }
+
+        /// 📬️ Grants retained local-live transient preparation to this viewer adapter.
+        fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
+            None
+        }
+
+        /// 🧹️ Grants bounded displaced-presence-root retirement to this viewer adapter.
+        fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+            None
+        }
+
+        /// 🧹️ Grants bounded displaced-transient-root retirement to this viewer adapter.
+        fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+            None
+        }
+
         /// 👥️🫧️ See `ArtifactEditor::ephemeral` for why this returns a tuple, not `EphemeralEmit<Self>`.
         fn ephemeral(
             _command: &Self::Command,
@@ -24794,6 +27102,36 @@ pub mod app {
         fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
             E::build_document_store_owners()
         }
+        fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+            E::build_config_store_owners()
+        }
+        fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+            E::build_draft_store_owners()
+        }
+        fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+            E::build_artifact_store_one_item_preparation_factory()
+        }
+        fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+            E::build_config_store_one_item_preparation_factory()
+        }
+        fn build_draft_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Draft, Self::DraftMutation>>> {
+            E::build_draft_store_one_item_preparation_factory()
+        }
+        fn build_presence_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Presence, Self::PresenceMutation>>> {
+            E::build_presence_store_one_item_preparation_factory()
+        }
+        fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
+            E::build_transient_store_one_item_preparation_factory()
+        }
+        fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+            E::build_presence_local_root_retirement_factory()
+        }
+        fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+            E::build_presence_peer_retirement_factory()
+        }
+        fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+            E::build_transient_local_root_retirement_factory()
+        }
         fn build_document_store_initialization_job(
             envelope: ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
             operation: semio_framework_job::OperationId,
@@ -24997,6 +27335,21 @@ pub mod app {
         }
         fn mounted_job_prepare_snapshot_read(operation: AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
             V::mounted_job_prepare_snapshot_read(operation, snapshot)
+        }
+        fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+            V::build_config_store_one_item_preparation_factory()
+        }
+        fn build_presence_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Presence, Self::PresenceMutation>>> {
+            V::build_presence_store_one_item_preparation_factory()
+        }
+        fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
+            V::build_transient_store_one_item_preparation_factory()
+        }
+        fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+            V::build_presence_local_root_retirement_factory()
+        }
+        fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+            V::build_transient_local_root_retirement_factory()
         }
         type Snapshot = V::Snapshot;
         type Mutation = V::Mutation;
@@ -30385,6 +32738,80 @@ pub mod plugin_runtime {
             }
         }
 
+        struct TestCountOneItemPreparationFactory;
+
+        struct TestCountOneItemPreparation {
+            request: Option<store::ArtifactStoreOneItemPreparationRequest<TestSnapshot, TestMutation>>,
+            prepared: Option<store::ArtifactStoreOneItemPrepared<TestSnapshot, TestMutation>>,
+            authority_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
+            turn: u8,
+            closing: bool,
+        }
+
+        impl store::ArtifactStoreOneItemPreparationFactory<TestSnapshot, TestMutation> for TestCountOneItemPreparationFactory {
+            fn preflight(&self, mutation: &TestMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+                if !matches!(mutation, TestMutation::SetCount { .. }) || description.is_some() || lane != store::HistoryLane::Document { return Err("test count accepts exactly one scalar mutation".into()); }
+                Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 1_024 })
+            }
+
+            fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<TestSnapshot, TestMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<TestSnapshot, TestMutation>>, store::ArtifactStoreOneItemPreparationRequest<TestSnapshot, TestMutation>> {
+                if !request.base.get().label.is_empty() || request.authority.actor().len() > 32 || request.authority.group_id().is_some() { return Err(request); }
+                Ok(Box::new(TestCountOneItemPreparation { request: Some(request), prepared: None, authority_retirement: None, turn: 0, closing: false }))
+            }
+        }
+
+        impl store::ArtifactStoreOneItemPreparation<TestSnapshot, TestMutation> for TestCountOneItemPreparation {
+            fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+                if !grant.permits_one() || grant.maximum_bytes < 1_024 || self.closing { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+                if self.turn == 0 {
+                    self.turn = 1;
+                    return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint()));
+                }
+                if self.prepared.is_none() {
+                    let request = self.request.as_ref().ok_or_else(|| "test count lost its exact request".to_string())?;
+                    let TestMutation::SetCount { value } = &request.mutation else { return Err("test count requires scalar mutation".into()); };
+                    let authority = &request.authority;
+                    let edit = store::Edit {
+                        id: format!("fixture-count-{}", authority.next_sequence_number()), actor: Some(authority.actor().into()),
+                        forwards: vec![TestMutation::SetCount { value: *value }], inverse: vec![TestMutation::SetCount { value: request.base.get().count }],
+                        mutation_meta: vec![protocol::MutationMeta { mutation_id: None, dependencies: Vec::new(), base_version: 0, author_id: Some(protocol::ActorId(authority.actor().into())), timestamp: authority.next_clock(),
+                            undo_policy: protocol::UndoPolicy::ExactBaseOnly, payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default() }],
+                        description: None, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+                    };
+                    self.prepared = Some(authority.prepare_one_item(edit, std::sync::Arc::new(TestSnapshot { count: *value, label: String::new() }))?);
+                    self.turn = 2;
+                }
+                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint()))
+            }
+
+            fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+                store::ArtifactStoreOneItemCheckpoint { cursor: u32::from(self.turn), completed_items: u32::from(self.turn), completed_bytes: u64::from(self.turn), digest: self.prepared.as_ref().map_or([0; 32], store::ArtifactStoreOneItemPrepared::edit_digest) }
+            }
+
+            fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<TestSnapshot, TestMutation>> { self.prepared.as_ref() }
+            fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<TestSnapshot, TestMutation>> { self.prepared.take() }
+            fn cancel(&mut self) { self.closing = true; }
+            fn begin_close(&mut self) { self.closing = true; }
+
+            fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+                if !self.closing || !grant.permits_one() || grant.maximum_bytes < 1_024 { return Ok(store::SnapshotRetirementStep::Blocked); }
+                if self.prepared.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 1_024 }); }
+                if let Some(request) = self.request.take() {
+                    assert!(request.base.return_to_registry());
+                    self.authority_retirement = Some(request.authority.retire());
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                if let Some(owner) = self.authority_retirement.as_mut() {
+                    let step = owner.close_step(grant.maximum_items.min(1), grant.maximum_bytes)?;
+                    if step == store::SnapshotRetirementStep::Complete { assert!(owner.terminal_is_empty()); self.authority_retirement = None; }
+                    return Ok(step);
+                }
+                Ok(store::SnapshotRetirementStep::Complete)
+            }
+
+            fn terminal_is_empty(&self) -> bool { self.closing && self.prepared.is_none() && self.request.is_none() && self.authority_retirement.is_none() }
+        }
+
         impl ::protocol::OpText for TestMutation {
             fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
                 let variants = <Self as ::dsl::DslVariants>::variants();
@@ -30632,6 +33059,8 @@ pub mod plugin_runtime {
         }
 
         impl ::protocol::OpBinary for TestCommand {
+            const TOOL_JOB_IDS: &'static [&'static str] = &["compositeEdit"];
+
             fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
                 ::dsl::variants_binary::encode_op(self)
             }
@@ -30711,6 +33140,34 @@ pub mod plugin_runtime {
             fn new() -> Self {
                 Self { keys: vec![semio_framework::ToolFactoryKey::new(TEST_RETAINED_COMMAND_CONTROLLER, TEST_RETAINED_COMMAND_TOOL)] }
             }
+        }
+
+        struct OtherTestRetainedCommandFactory(TestRetainedCommandFactory);
+
+        impl semio_framework::ToolJobFactory for OtherTestRetainedCommandFactory {
+            type Payload = crate::retained_command::ArtifactRetainedCommandPayload<TestApp>;
+            type Job = crate::retained_command::ArtifactRetainedCommandJob<TestApp>;
+            fn keys(&self) -> &[semio_framework::ToolFactoryKey] { &self.0.keys }
+            fn payload_schema_id(&self) -> &str { TEST_RETAINED_COMMAND_SCHEMA }
+            fn classification(&self) -> semio_framework::InteractiveJobClassification { semio_framework::InteractiveJobClassification::Migrated }
+            fn execution_contract(&self) -> semio_framework::ToolExecutionContract { semio_framework::ToolJobFactory::execution_contract(&self.0) }
+            fn create_job(&mut self, operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
+                semio_framework::ToolJobFactory::create_job(&mut self.0, operation, payload)
+            }
+        }
+
+        impl ArtifactOwnedToolJobFactory for OtherTestRetainedCommandFactory {
+            type Owner = TestApp;
+            const TOOL_IDS: &'static [&'static str] = &[TEST_RETAINED_COMMAND_TOOL];
+            const DOCUMENT_SCHEMA: &'static str = TestApp::DOCUMENT_SCHEMA;
+            const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = TestRetainedCommandFactory::PUBLICATION_CONTRACTS;
+        }
+
+        impl ArtifactOwnedToolJobFactory for TestRetainedCommandFactory {
+            type Owner = TestApp;
+            const TOOL_IDS: &'static [&'static str] = &[TEST_RETAINED_COMMAND_TOOL];
+            const DOCUMENT_SCHEMA: &'static str = TestApp::DOCUMENT_SCHEMA;
+            const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: TEST_RETAINED_COMMAND_TOOL, lanes: &[ArtifactToolPublicationLane::HostOnly] }];
         }
 
         impl semio_framework::ToolJobFactory for TestRetainedCommandFactory {
@@ -30924,6 +33381,43 @@ pub mod plugin_runtime {
             }
         }
 
+        //#region 🧹️ExactEmptyLaneFixtureOwners
+        struct TestEmptyPresenceStoreDisposer;
+
+        impl ArtifactOwnedDisposer<store::PresenceStore<NoPresence, NoPresenceMutation>> for TestEmptyPresenceStoreDisposer {
+            fn close_step(&mut self, owner: &mut store::PresenceStore<NoPresence, NoPresenceMutation>, maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+                if maximum_items == 0 {
+                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                if !owner.peers_root().is_empty() {
+                    return Ok(PluginCloseStep::Blocked { reason: "empty-presence fixture requires its peer roster to be cursor-retired first" });
+                }
+                assert_eq!(std::mem::size_of::<NoPresence>(), 0);
+                Ok(PluginCloseStep::Complete)
+            }
+
+            fn terminal_is_empty(&self, owner: &store::PresenceStore<NoPresence, NoPresenceMutation>) -> bool {
+                owner.peers_root().is_empty() && std::mem::size_of::<NoPresence>() == 0
+            }
+        }
+
+        struct TestEmptyTransientStoreDisposer;
+
+        impl ArtifactOwnedDisposer<store::TransientStore<crate::app::NoTransient, crate::app::NoTransientMutation>> for TestEmptyTransientStoreDisposer {
+            fn close_step(&mut self, _owner: &mut store::TransientStore<crate::app::NoTransient, crate::app::NoTransientMutation>, maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+                if maximum_items == 0 {
+                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                assert_eq!(std::mem::size_of::<crate::app::NoTransient>(), 0);
+                Ok(PluginCloseStep::Complete)
+            }
+
+            fn terminal_is_empty(&self, _owner: &store::TransientStore<crate::app::NoTransient, crate::app::NoTransientMutation>) -> bool {
+                std::mem::size_of::<crate::app::NoTransient>() == 0
+            }
+        }
+        //#endregion 🧹️ExactEmptyLaneFixtureOwners
+
         impl ArtifactApp for TestApp {
             // 🪪️ Must equal `test_app_surface_id()` — a hand-typed `&'static str` because the runtime
             // `ArtifactApp::APP_ID` const (contract §2.1, "kept") cannot call a heap-allocating fn at
@@ -30944,6 +33438,38 @@ pub mod plugin_runtime {
 
             fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
                 Some(std::sync::Arc::new(NoPresenceRetirementFactory))
+            }
+
+            fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+                Some(bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+            }
+
+            fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+                Some(bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+            }
+
+            fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+                Some(bounded_document_store_owners::<Self::Draft, Self::DraftMutation>())
+            }
+
+            fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+                Some(bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+            }
+
+            fn build_config_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+                Some(bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+            }
+
+            fn build_draft_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+                Some(bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
+            }
+
+            fn build_presence_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+                Some(Box::new(TestEmptyPresenceStoreDisposer))
+            }
+
+            fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+                Some(Box::new(TestEmptyTransientStoreDisposer))
             }
 
             fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
@@ -31050,7 +33576,7 @@ pub mod plugin_runtime {
                         ..Default::default()
                     }),
                     TestCommand::ProbeChild { slot, child_id } => {
-                        let _snapshot = doc.children.typed_read::<TestSnapshot>(slot, child_id).await?;
+                        let _snapshot = doc.children.typed_read::<TestSnapshot>(slot, child_id)?;
                         Ok(Emit::effect(Effect::DispatchAction { req: RequestId(91_001), action: "probeChildContinuation".into(), args: None, delay_ms: 0 }))
                     }
                     // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: no mutations of its own — the
@@ -31149,6 +33675,167 @@ pub mod plugin_runtime {
             }
         }
 
+        //#region 🗝️RegisteredKeyedDispatchFixture
+        #[derive(Default)]
+        struct KeyedTestApp;
+
+        struct KeyedTestCommandDisposer;
+
+        impl ArtifactOwnedDisposer<TestCommand> for KeyedTestCommandDisposer {
+            fn close_step(&mut self, command: &mut TestCommand, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+                if maximum_items == 0 || maximum_bytes < 4 { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+                let TestCommand::CompositeEdit { slot, child_id, .. } = command else { return Err(Fault::from("keyed fixture owns only its composite command")); };
+                if let Some(character) = slot.pop().or_else(|| child_id.pop()) { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: character.len_utf8() }); }
+                Ok(PluginCloseStep::Complete)
+            }
+
+            fn terminal_is_empty(&self, command: &TestCommand) -> bool {
+                matches!(command, TestCommand::CompositeEdit { slot, child_id, .. } if slot.is_empty() && child_id.is_empty())
+            }
+        }
+
+        struct KeyedTestJob {
+            command: Option<Box<TestCommand>>,
+            completion: Option<ArtifactToolCompletion<KeyedTestApp>>,
+            raw: Option<semio_framework::action_bus::RetainedToolWireInput>,
+            page: usize,
+            base_count: i32,
+            closing: bool,
+        }
+
+        impl semio_framework_job::InteractiveJob for KeyedTestJob {
+            fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+                if cx.is_cancelled() { return semio_framework_job::StepOutcome::Cancelled; }
+                if self.raw.as_ref().is_some_and(|raw| self.page < raw.page_count()) {
+                    self.page += 1;
+                    return semio_framework_job::StepOutcome::Yield;
+                }
+                let TestCommand::CompositeEdit { child_value, .. } = self.command.as_deref().unwrap() else { panic!("exact keyed fixture command"); };
+                self.completion.as_ref().unwrap().complete(Ok(Emit::mutations(vec![TestMutation::SetCount { value: self.base_count + child_value }])), EphemeralEmit::default()).expect("one exact keyed completion");
+                semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                })
+            }
+
+            fn begin_close(&mut self) { self.closing = true; }
+
+            fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+                if !self.closing || maximum_items == 0 { return semio_framework_job::InteractiveJobCloseStep::Blocked; }
+                if let Some(raw) = self.raw.as_mut() {
+                    let step = raw.close_step(1, maximum_bytes);
+                    if raw.terminal_is_empty() {
+                        self.raw = None;
+                        return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    }
+                    return step;
+                }
+                if let Some(command) = self.command.as_mut() {
+                    match KeyedTestCommandDisposer.close_step(command, 1, maximum_bytes).unwrap() {
+                        PluginCloseStep::Pending { released_items, released_bytes } => return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                        PluginCloseStep::Blocked { .. } => return semio_framework_job::InteractiveJobCloseStep::Blocked,
+                        PluginCloseStep::Complete => { assert!(KeyedTestCommandDisposer.terminal_is_empty(command)); self.command = None; return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }; }
+                    }
+                }
+                if self.completion.take().is_some() { return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }; }
+                semio_framework_job::InteractiveJobCloseStep::Complete
+            }
+
+            fn terminal_is_empty(&self) -> bool { self.closing && self.raw.is_none() && self.command.is_none() && self.completion.is_none() }
+        }
+
+        struct KeyedTestFactory { keys: Vec<semio_framework::ToolFactoryKey> }
+
+        impl semio_framework::ToolJobFactory for KeyedTestFactory {
+            type Payload = KeyedTestJob;
+            type Job = KeyedTestJob;
+            fn keys(&self) -> &[semio_framework::ToolFactoryKey] { &self.keys }
+            fn payload_schema_id(&self) -> &str { "semio.test.keyed-command.v1" }
+            fn classification(&self) -> semio_framework::InteractiveJobClassification { semio_framework::InteractiveJobClassification::Migrated }
+            fn execution_contract(&self) -> semio_framework::ToolExecutionContract { semio_framework::ToolExecutionContract::resumable(32_768, 4, 1, 4_096, 7_500, 1, 1) }
+            fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> { Ok(payload) }
+            fn create_job_from_wire_pages_with_payload(&mut self, _operation: semio_framework_job::Operation, mut payload: Self::Payload, input: semio_framework::action_bus::RetainedToolWireInput, checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+                assert!(checkpoint.is_none());
+                payload.raw = Some(input);
+                Ok(payload)
+            }
+        }
+
+        impl crate::app::ArtifactOwnedToolJobFactory for KeyedTestFactory {
+            type Owner = KeyedTestApp;
+            const TOOL_IDS: &'static [&'static str] = &["compositeEdit"];
+            const DOCUMENT_SCHEMA: &'static str = KeyedTestApp::DOCUMENT_SCHEMA;
+            const PUBLICATION_CONTRACTS: &'static [crate::app::ArtifactToolPublicationContract] = &[crate::app::ArtifactToolPublicationContract { tool_id: "compositeEdit", lanes: &[crate::app::ArtifactToolPublicationLane::Artifact] }];
+            fn latest_wins_target(command: &TestCommand) -> Option<&str> { match command { TestCommand::CompositeEdit { child_id, .. } => Some(child_id), _ => None } }
+            fn build_latest_wins_command_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<TestCommand>>> { Some(Box::new(KeyedTestCommandDisposer)) }
+        }
+
+        impl ArtifactApp for KeyedTestApp {
+            const APP_ID: &'static str = "s.test.keyed@1/*#editor";
+            const DOCUMENT_SCHEMA: &'static str = "semio.test/v1";
+            type Snapshot = TestSnapshot;
+            type Mutation = TestMutation;
+            type Config = TestConfig;
+            type ConfigMutation = TestConfigMutation;
+            type Draft = NoDraft;
+            type DraftMutation = NoDraftMutation;
+            type Presence = NoPresence;
+            type PresenceMutation = NoPresenceMutation;
+            type Transient = crate::app::NoTransient;
+            type TransientMutation = crate::app::NoTransientMutation;
+            type Command = TestCommand;
+            crate::bounded_first_step_tool_proofs! {
+                owner: KeyedTestApp, owner_file: "plugin/🦀️component.rs", controller: "s.test.keyed@1/*#editor", document_schema: "semio.test/v1",
+                factory: "KeyedTestFactory", factory_type: KeyedTestFactory,
+                contract: semio_framework::ToolExecutionContract::resumable(32_768, 4, 1, 4_096, 7_500, 1, 1), tools: ["compositeEdit"]
+            }
+            fn register_tool_job_factories(registry: &mut crate::app::ArtifactToolFactoryRegistry<'_, Self>) -> Result<(), Fault> {
+                registry.register(KeyedTestFactory { keys: vec![semio_framework::ToolFactoryKey::new(registry.controller_id(), "compositeEdit")] })
+            }
+            async fn build_tool_job(request: ArtifactOwnedToolJobRequest<Self>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+                assert!(request.snapshot.label.is_empty());
+                let job = KeyedTestJob { command: Some(request.command), completion: Some(request.completion), raw: None, page: 0, base_count: request.snapshot.count, closing: false };
+                Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
+            }
+            fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> { Some(std::sync::Arc::new(TestCountOneItemPreparationFactory)) }
+            fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> { TestApp::build_document_store_owners() }
+            fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> { TestApp::build_config_store_owners() }
+            fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> { TestApp::build_draft_store_owners() }
+            fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> { TestApp::build_document_store_disposer() }
+            fn build_config_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> { TestApp::build_config_store_disposer() }
+            fn build_draft_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> { TestApp::build_draft_store_disposer() }
+            fn build_presence_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> { TestApp::build_presence_store_disposer() }
+            fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> { TestApp::build_transient_store_disposer() }
+            fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> { TestApp::build_presence_peer_retirement_factory() }
+            async fn initial_snapshot() -> TestSnapshot { TestSnapshot::default() }
+            async fn command_id(command: &TestCommand) -> &'static str { TestApp::command_id(command).await }
+            async fn handle(_command: &TestCommand, _doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> { Err(Fault::from("keyed fixture requires its actual retained factory")) }
+            async fn render(body: &str, doc: &ArtifactView<'_, TestSnapshot>, cfg: &ConfigView<'_, TestConfig>) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> { TestApp::render(body, doc, cfg).await }
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn retained_latest_wins_registered_dispatch_rebases_worker_and_publishes_real_document() {
+            let manifest = App::from_builder(
+                App::builder(KeyedTestApp::APP_ID, LocalizedLabel::data("Keyed Fixture"))
+                    .await
+                    .document(["state"])
+                    .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                    .await
+                    .window_kind("main", LocalizedLabel::data("Main"), "synthetic.main", semio_framework_ui_contract::SurfaceKind::Canvas2d, IconName::AppWindow)
+                    .await
+                    .app_command("compositeEdit", LocalizedLabel::data("Set Parameter"), "fixture", ActionKind::Mutation)
+                    .await
+                    .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
+                    .await,
+            ).await;
+            crate::app::test_retained_keyed_dispatch::<KeyedTestApp>(
+                AppActionRegistry::from_definition(&manifest.definition),
+                |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value },
+                |value| TestMutation::SetCount { value }, |snapshot| snapshot.count,
+            ).await;
+        }
+        //#endregion 🗝️RegisteredKeyedDispatchFixture
+
         use crate::__semio_dispatch_PluginApp;
         use crate::plugin_app_close_prelude::*;
         semio_framework_dispatch_macros::dyn_enum_close! {
@@ -31226,7 +33913,8 @@ pub mod plugin_runtime {
         /// (`AppActionRegistry`/`materialize_args`) and has no meaning for a typed `Self::Command` value a
         /// Rust caller constructs directly (a "missing required field" is a compile error, not a runtime
         /// one). `setLabelRequired` stays declared here purely as a registry fixture for the context-menu
-        /// label-resolution test below.
+        /// label-resolution test below. These synthetic reducers have no retained factory authority;
+        /// only an exact authority test may promote its own selected row to Migrated.
         async fn contract_registry() -> AppActionRegistry {
             let app = App::from_builder(
                 App::builder(test_app_surface_id().await, LocalizedLabel::data("Synthetic"))
@@ -31244,7 +33932,8 @@ pub mod plugin_runtime {
                 .await.app_command("incrementViaCommand", LocalizedLabel::data("Increment"), "counter", ActionKind::Mutation)
                 .await.app_command("watchdogOverrun", LocalizedLabel::data("Watchdog Overrun"), "counter", ActionKind::Mutation)
                 .await.app_command("setLabelViaCommand", LocalizedLabel::data("Set Label"), "counter", ActionKind::Mutation)
-                .await.mode_command("edit", CommandDefinition::bounded_catalog("mode.increment", LocalizedLabel::data("Mode Increment"), "counter", ActionKind::Mutation)).await,
+                .await.mode_command("edit", CommandDefinition::bounded_catalog("mode.increment", LocalizedLabel::data("Mode Increment"), "counter", ActionKind::Mutation))
+                .await.interactive_jobs(semio_framework::InteractiveJobClassification::BatchOnlyPendingRewrite).await,
             )
             .await;
             AppActionRegistry::from_definition(&app.definition)
@@ -31373,13 +34062,38 @@ pub mod plugin_runtime {
         //#endregion 🧪️SharedFrameworkActionRouteTests
 
         #[semio_framework_async_macros::async_test]
+        async fn retained_factory_proof_requires_the_exact_registered_runtime_authority() {
+            crate::app::test_retained_factory_proof_join::<TestApp, TestRetainedCommandFactory, OtherTestRetainedCommandFactory, CopyDrawApp>(contract_registry().await, TEST_RETAINED_COMMAND_CONTROLLER, TEST_RETAINED_COMMAND_TOOL, TestRetainedCommandFactory::new());
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn retained_latest_wins_cancellation_guards_real_store_publication_and_preserves_committed_ack() {
+            crate::app::test_retained_cancellation_publication_boundaries::<TestApp>().await;
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn retained_latest_wins_reserved_slots_and_ready_publisher_are_fair() {
+            crate::app::test_retained_latest_wins_slot_and_publication_fairness::<TestApp>().await;
+        }
+
+        #[test]
+        fn retained_latest_wins_raw_capacity_is_not_initialized_byte_retirement() {
+            crate::retained_command::test_raw_allocation_close::<TestApp>();
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn retained_latest_wins_real_document_publication_cancellation_and_exhausted_ack_close() {
+            crate::app::test_retained_document_cancellation::<TestApp>(&TestCountOneItemPreparationFactory, || TestMutation::SetCount { value: 42 }, |snapshot| snapshot.count).await;
+        }
+
+        #[semio_framework_async_macros::async_test]
         async fn copied_app_type_cannot_inherit_same_controller_schema_and_id_proof() {
             let mut owner = contract_registry().await;
             let mut declaration = owner.actions.get("noopMutation").expect("fixture action").clone();
             declaration.semantics.execution.interactive_job = semio_framework::InteractiveJobClassification::Migrated;
             owner.actions.insert("canvasPointerDown".into(), declaration);
             owner.controller_id = "s.draw.draw@1/*#editor".into();
-            assert!(owner.tool_job_registration::<CopyDrawApp>(CopyDrawApp::APP_ID, CopyDrawApp::DOCUMENT_SCHEMA, &["canvasPointerDown"]).is_err());
+            assert!(crate::app::test_unregistered_tool_job_admission_rejected::<CopyDrawApp>(&owner, &["canvasPointerDown"]));
 
             let audited_draw_row = ArtifactBoundedFirstStepProof::new::<TestApp>(
                 "owner.rs",
@@ -32459,7 +35173,7 @@ pub mod plugin_runtime {
         /// 🧪️ The child's current `count`, read through the same `ChildContentView` seam an app uses.
         async fn reads_child_count(app: &VcsArtifactApp<TestApp, TestMembers>) -> i32 {
             let view = ChildContentView::clone(&app.child_content_root);
-            view.typed_read::<TestSnapshot>("slot", "child-1").await.expect("child readable through the view").count
+            view.typed_read::<TestSnapshot>("slot", "child-1").expect("child readable through the view").count
         }
 
         #[semio_framework_async_macros::async_test]
@@ -32473,9 +35187,9 @@ pub mod plugin_runtime {
             app.register_child("slot", "child-b", test_child_dialect().await, new_test_child("child-b").await.expect("construct child-b")).await.expect("register child-b");
             let current_root = app.child_content_root.root.as_ref().expect("advanced root");
             assert!(!std::sync::Arc::ptr_eq(&admitted_root, current_root), "a child lifecycle event publishes a new root");
-            assert!(admitted.typed_read::<TestSnapshot>("slot", "child-a").await.is_ok(), "the admitted root remains exact after later publication");
-            assert!(admitted.typed_read::<TestSnapshot>("slot", "child-b").await.is_err(), "the admitted root never observes a later child");
-            assert!(ChildContentView::clone(&app.child_content_root).typed_read::<TestSnapshot>("slot", "child-b").await.is_ok());
+            assert!(admitted.typed_read::<TestSnapshot>("slot", "child-a").is_ok(), "the admitted root remains exact after later publication");
+            assert!(admitted.typed_read::<TestSnapshot>("slot", "child-b").is_err(), "the admitted root never observes a later child");
+            assert!(ChildContentView::clone(&app.child_content_root).typed_read::<TestSnapshot>("slot", "child-b").is_ok());
             assert!(!app.child_content_retirements.is_empty(), "the replaced nonempty root remains under explicit retirement authority");
         }
 
@@ -34831,6 +37545,10 @@ pub use app::testkit;
 pub use app::ActionFactory;
 pub use app::{
     artifact_inference_service,
+    bounded_config_store_disposer,
+    bounded_config_store_owners,
+    bounded_document_store_disposer,
+    bounded_document_store_owners,
     built_text_node,
     built_text_to_component_tree,
     built_to_component_tree,
@@ -34920,6 +37638,8 @@ pub use app::{
     ArtifactStoreInitializationJob,
     ArtifactToolCompletion,
     ArtifactToolFactoryRegistry,
+    ArtifactToolPublicationContract,
+    ArtifactToolPublicationLane,
     ArtifactView,
     ArtifactViewer,
     AsyncComposeFn,

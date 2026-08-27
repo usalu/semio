@@ -17,9 +17,9 @@ synapses [id:TEXT wire:WIRE] {
 generations [id:TEXT name:TEXT values:VAL] {
 }
 widgets {
-  input-slider id="height" value=6 min=0 max=10 step=0.5
-  input-slider id="radius" value=0.5 min=0.1 max=2 step=0.05
-  input-slider id="sides" value=6 min=3 max=12 step=1
+  input-slider id="height" label="Column Height" value=6 min=0 max=10 step=0.5
+  input-slider id="radius" label="Profile Radius" value=0.5 min=0.1 max=2 step=0.05
+  input-slider id="sides" label="Side Count" value=6 min=3 max=12 step=1
   neuron id="profile" neuron-kind=brep.curve.polygon preview=false input-ports=[ "radius" "sides" ] output-ports=[ ] params=[ ]
   neuron id="extrusion-axis" neuron-kind=math.vector preview=false input-ports=[ "x" "y" "z" ] output-ports=[ ] params=[ ]
   neuron id="extrude" neuron-kind=brep.solid.extrude preview=true input-ports=[ "wire" "vector" ] output-ports=[ ] params=[ ]

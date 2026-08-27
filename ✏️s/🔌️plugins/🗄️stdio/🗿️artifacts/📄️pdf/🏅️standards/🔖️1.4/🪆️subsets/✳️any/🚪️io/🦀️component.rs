@@ -715,11 +715,11 @@ mod tests {
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn demo_mutation_cases() -> Vec<PdfMutation> {
             vec![
-                PdfMutation::NoMutation,
-                PdfMutation::SetSnapshot { snapshot: demo_pdf_snapshot() },
-                PdfMutation::SetSnapshot {
-                    snapshot: PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), pages: vec![PageDoc { width: 612.0, height: 792.0, text: "hello world".into() }, PageDoc { width: 200.0, height: 300.0, text: String::new() }] },
-                },
+                PdfMutation::InsertPage(mutations::InsertPage { index: 0, page: PageDoc::default() }),
+                PdfMutation::RemovePage(mutations::RemovePage { index: 0 }),
+                PdfMutation::MovePage(mutations::MovePage { from: 0, to: 1 }),
+                PdfMutation::ResizePage(mutations::ResizePage { index: 1, width: 300.5, height: 400.25 }),
+                PdfMutation::ReplacePageText(mutations::ReplacePageText { index: 0, text: "hello world".into() }),
             ]
         }
 

@@ -1,0 +1,3 @@
+# 🧬️ insert-ifd/InsertIfd
+scalar InsertIfdMutationValue
+input InsertIfdMutation { index: Int! ifd: InsertIfdMutationValue! }

@@ -1,0 +1,19 @@
+{
+  "schema": "artifact-tool-latest-wins-integration/v1",
+  "maximumItems": 1,
+  "maximumBytes": 4096,
+  "cases": [
+    { "id": "same-target-supersession", "firstTarget": "widget-a", "nextTarget": "widget-a", "firstValue": 42, "nextValue": 84, "firstCancelled": true },
+    { "id": "different-target-independent", "firstTarget": "widget-a", "nextTarget": "widget-b", "firstValue": 42, "nextValue": 84, "firstCancelled": false }
+  ],
+  "rebase": { "beforeGeneration": 0, "afterGeneration": 1, "cancelOldKey": false, "cancelFreshKey": true, "retainedPublicationAfterColdEdit": true },
+  "keyRetirement": { "text": "aä🧵", "utf8Bytes": 7, "scalarBytes": [4, 2, 1], "zeroItemProgress": 0, "subscalarProgress": 0 },
+  "lostReservations": [
+    { "id": "lost-vacant-slot", "foreignReservation": false, "rejectionAfterVacancy": true },
+    { "id": "foreign-slot-preserved", "foreignReservation": true, "rejectionAfterVacancy": true }
+  ],
+  "deferredFinish": { "mutexHeld": true, "activeBeforeSweep": 1, "activeAfterSweep": 0, "replacementPreserved": true },
+  "slotReservation": { "capacity": 64, "firstOperation": 1, "collidingOperation": 65, "collisionAdmitted": false },
+  "reclamation": { "capacity": 64, "sequentialCompletedTargets": 65, "acceptedTargets": 65 },
+  "fairness": { "firstOperation": 1, "secondOperation": 2, "firstStage": "Worker", "secondStage": "Publishing", "secondPublishesWithinMetadataVisits": 64 }
+}

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️set-page-media-box",
+  "semanticKind": "set-page-media-box",
+  "displayName": "Set Page Media Box",
+  "emoji": "📐️",
+  "aggregateVariant": "SetPageMediaBox",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "set-page-media-box",
+  "binaryTag": 2,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

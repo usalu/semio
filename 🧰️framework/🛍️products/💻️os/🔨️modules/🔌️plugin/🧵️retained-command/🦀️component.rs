@@ -547,12 +547,11 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
             return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: released };
         }
         if self.raw.capacity() != 0 {
-            if maximum_items == 0 || maximum_bytes < self.raw.capacity() {
+            if maximum_items == 0 {
                 return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
-            let released = self.raw.capacity();
             self.raw = Vec::new();
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: released };
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         if let Some(checkpoint) = self.checkpoint_input.as_mut() {
             if maximum_items == 0 {
@@ -653,9 +652,40 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
 //#endregion 🧵️Job
 
 #[cfg(test)]
+pub(crate) fn test_raw_allocation_close<A: ArtifactApp>() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️raw-allocation-close.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut raw = Vec::with_capacity(case["capacity"].as_u64().unwrap() as usize);
+        raw.resize(case["initializedBytes"].as_u64().unwrap() as usize, 42);
+        let mut job = ArtifactRetainedCommandJob::<A> {
+            command: None, snapshot: None, config: None, history: None, interaction_state: None, interaction_hover: None, context: None, operation: None, completion: None,
+            command_id: |_| "fixture", maximum_raw_bytes: raw.capacity(), maximum_work_items: 1, work: None, checkpoint_input: None,
+            checkpoint_bytes: [0; ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES], checkpoint_byte_len: 0, checkpoint_page_cursor: 0, raw_input: None, raw, raw_page_cursor: 0,
+            emit: None, ephemeral: None, phase: ArtifactRetainedCommandPhase::Complete, checkpoint_pending: false, work_progress: 0, closing: false,
+        };
+        job.begin_close();
+        let mut items = 0;
+        let mut bytes = 0;
+        for _ in 0..8 {
+            match job.close_step(1, 4096) {
+                InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
+                    assert!(released_items <= 1 && released_bytes <= 4096);
+                    items += released_items;
+                    bytes += released_bytes;
+                }
+                InteractiveJobCloseStep::Complete => break,
+                InteractiveJobCloseStep::Blocked => panic!("empty raw allocation must not require capacity-sized byte authority"),
+            }
+        }
+        assert!(job.terminal_is_empty());
+        assert_eq!(serde_json::json!({ "items": items, "bytes": bytes }), serde_json::json!({ "items": case["expectedAllocationRelease"], "bytes": case["expectedByteRelease"] }));
+        eprintln!("[DEBUG] retained-command raw allocation {} released initialized bytes in4096-byte pages then one empty allocation", case["id"]);
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
-    use byteorder::{LittleEndian, WriteBytesExt};
 
     const CHECKPOINT_FIXTURE_JSON: &str = include_str!("🧪️fixtures/🔣️artifact-command-checkpoint.json");
 
@@ -699,23 +729,29 @@ mod tests {
         }
     }
 
-    fn byteorder_oracle(case: &CheckpointCase, work: &[u8]) -> Vec<u8> {
+    fn write_owned_little_endian_u64(target: &mut Vec<u8>, value: u64) {
+        for shift in (0..64).step_by(8) {
+            target.push((value >> shift) as u8);
+        }
+    }
+
+    fn owned_checkpoint_oracle(case: &CheckpointCase, work: &[u8]) -> Vec<u8> {
         let mut encoded = Vec::with_capacity(ARTIFACT_COMMAND_CHECKPOINT_HEADER_BYTES + work.len());
         encoded.extend_from_slice(b"ARC1");
         encoded.push(3);
         encoded.push(u8::from(case.work_phase));
         encoded.extend_from_slice(&[0, 0]);
-        encoded.write_u64::<LittleEndian>(case.raw_page_cursor).expect("oracle cursor");
-        encoded.write_u64::<LittleEndian>(case.raw_bytes).expect("oracle raw bytes");
-        encoded.write_u64::<LittleEndian>(case.work_progress).expect("oracle work progress");
-        encoded.write_u64::<LittleEndian>(case.context_digest).expect("oracle context digest");
-        encoded.write_u64::<LittleEndian>(case.workspace_identity).expect("oracle workspace identity");
+        write_owned_little_endian_u64(&mut encoded, case.raw_page_cursor);
+        write_owned_little_endian_u64(&mut encoded, case.raw_bytes);
+        write_owned_little_endian_u64(&mut encoded, case.work_progress);
+        write_owned_little_endian_u64(&mut encoded, case.context_digest);
+        write_owned_little_endian_u64(&mut encoded, case.workspace_identity);
         encoded.extend_from_slice(work);
         encoded
     }
 
     #[test]
-    fn checkpoint_binary_matches_schema_fixture_and_byteorder_oracle() {
+    fn checkpoint_binary_matches_schema_fixture_and_owned_oracle() {
         let fixture: CheckpointFixture = serde_json::from_str(CHECKPOINT_FIXTURE_JSON).expect("checkpoint fixture shape");
         assert_eq!(fixture.format, "ARC1");
         assert_eq!(fixture.version, 3);
@@ -742,8 +778,8 @@ mod tests {
             }
             assert_eq!(case.outcome, "ok", "unknown fixture outcome for {}", case.name);
             let length = encoded.unwrap_or_else(|error| panic!("{} unexpectedly rejected: {error:?}", case.name));
-            let oracle = byteorder_oracle(&case, &work);
-            assert_eq!(&bytes[..length], oracle, "{} differs from byteorder oracle", case.name);
+            let oracle = owned_checkpoint_oracle(&case, &work);
+            assert_eq!(&bytes[..length], oracle, "{} differs from owned oracle", case.name);
             let decoded = decode_artifact_command_checkpoint(&bytes[..length], case.raw_bytes as usize, case.raw_page_cursor as usize, case.raw_bytes as usize, case.context_digest, case.workspace_identity)
                 .unwrap_or_else(|error| panic!("{} decode rejected: {error:?}", case.name));
             assert_eq!(decoded.work_phase, case.work_phase);
@@ -754,6 +790,14 @@ mod tests {
             assert_eq!(decoded.workspace_identity, case.workspace_identity);
             assert_eq!(decoded.work, work);
         }
+    }
+
+    #[test]
+    fn owned_little_endian_oracle_preserves_every_hostile_byte_lane() {
+        let mut bytes = Vec::new();
+        write_owned_little_endian_u64(&mut bytes, 0x8877_6655_4433_2211);
+        write_owned_little_endian_u64(&mut bytes, u64::MAX);
+        assert_eq!(bytes, [0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]);
     }
 
     #[test]

@@ -1,0 +1,4 @@
+syntax = "proto3";
+package semio.s.trinity.jack.mutation.delete_node;
+// delete-node / DeleteNode
+message DeleteNode { string id = 1; }

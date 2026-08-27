@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.bmp.mutation;
+// 🧬️ replace-palette-entry/ReplacePaletteEntry; complex fields follow the direct payload schema.
+message ReplacePaletteEntryMutation { uint64 index = 1; bytes entry = 2; }

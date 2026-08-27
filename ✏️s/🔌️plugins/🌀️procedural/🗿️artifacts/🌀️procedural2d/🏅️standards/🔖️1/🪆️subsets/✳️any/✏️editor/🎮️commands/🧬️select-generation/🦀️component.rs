@@ -33,7 +33,7 @@ fn refresh_generation_preview(config: &mut Procedural2dConfig, fixture: &FlowFix
 fn handle_generation(action: &str, args: Option<&Value>, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Emit<Procedural2dMutation, Procedural2dConfigMutation> {
     let projection = doc.snapshot;
     let spec = flow_fixture_to_form_spec(&projection.fixture);
-    let mut state = projection.generation.clone();
+    let mut state = projection.generation.as_state().clone();
     state.selected_generation_id = cfg.snapshot.selected_generation_id.clone();
     let mut next_config = cfg.snapshot.clone();
     if action == "selectGeneration" {

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "grants", "label", "cases", "cancelAfterSteps", "terminalEmpty"],
+  "properties": {
+    "version": { "const": 1 }, "grants": { "const": [1,64,4096] },
+    "label": { "type": "object", "additionalProperties": false, "required": ["unit","repetitions","expectedBytes"], "properties": { "unit": { "const": "🌊" }, "repetitions": { "const": 1200 }, "expectedBytes": { "const": 4800 } } },
+    "cases": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "object", "additionalProperties": false, "required": ["id","mutation","widgets","synapses","inverseKinds"], "properties": {
+      "id": { "enum": ["delete-widget","disconnect","move-widget","replace-widget"] },
+      "mutation": { "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["mutation","id"], "properties": { "mutation": { "enum": ["deleteWidget","disconnectWidgets"] }, "id": { "type": "string", "minLength": 1 } } },
+        { "type": "object", "additionalProperties": false, "required": ["mutation","entries"], "properties": { "mutation": { "const": "moveWidgets" }, "entries": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["id","layout"], "properties": { "id": { "type": "string", "minLength": 1 }, "layout": { "$ref": "#/definitions/layout" } } } } } },
+        { "type": "object", "additionalProperties": false, "required": ["mutation","id","widget"], "properties": { "mutation": { "const": "replaceWidget" }, "id": { "type": "string", "minLength": 1 }, "widget": { "type": "object", "additionalProperties": false, "required": ["kind","id","label","value","min","max","step"], "properties": { "kind": { "const": "inputSlider" }, "id": { "type": "string" }, "label": { "type": "string" }, "value": { "type": "number" }, "min": { "type": "number" }, "max": { "type": "number" }, "step": { "type": "number" } } } } }
+      ] },
+      "widgets": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+      "synapses": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+      "inverseKinds": { "type": "array", "items": { "enum": ["createWidget","moveWidgets","connectWidgets","replaceWidget"] } }
+    } } },
+    "cancelAfterSteps": { "const": [0,1,17,131] }, "terminalEmpty": { "const": true }
+  },
+  "definitions": { "layout": { "type": "object", "additionalProperties": false, "required": ["x","y"], "properties": { "x": { "type": "number" }, "y": { "type": "number" } } } }
+}

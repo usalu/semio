@@ -1,0 +1,2 @@
+# 🔍️ Direct edit-lhs / EditLhs payload.
+input EditLhsInput { newLhsJson: String! }

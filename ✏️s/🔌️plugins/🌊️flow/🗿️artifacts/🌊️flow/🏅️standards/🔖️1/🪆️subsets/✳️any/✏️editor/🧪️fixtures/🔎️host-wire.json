@@ -1,0 +1,11 @@
+{
+  "version":1,"grants":[1,64,4096],"cancelAfterSteps":[0,1,17,4097],"terminalEmpty":true,
+  "cases":[
+    {"id":"evaluate","ordinal":14,"fields":[null,null,null],"wireBytes":4,"symbols":0},
+    {"id":"contextMenuAt","ordinal":22,"fields":[{"type":"text","unit":"node","repeat":1,"suffix":""},null,null],"wireBytes":12,"symbols":1},
+    {"id":"openSpotlight","ordinal":24,"fields":[null,null,null],"wireBytes":4,"symbols":0},
+    {"id":"replaceImage","ordinal":25,"fields":[{"type":"text","unit":"🌊","repeat":4094,"suffix":""},null,null],"wireBytes":16384,"symbols":0},
+    {"id":"flowEvalTick","ordinal":34,"fields":[null,null,null],"wireBytes":4,"symbols":0},
+    {"id":"flowEvalResolve","ordinal":35,"fields":[{"type":"u64","value":"18446744073709551615"},{"type":"text","unit":"{}","repeat":1,"suffix":""},null],"wireBytes":22,"symbols":1}
+  ]
+}

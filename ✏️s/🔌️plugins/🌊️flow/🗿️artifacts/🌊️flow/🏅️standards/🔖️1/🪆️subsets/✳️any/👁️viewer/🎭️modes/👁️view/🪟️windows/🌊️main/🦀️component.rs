@@ -22,7 +22,7 @@ const FLOW_VIEW_APP_ID: &str = "flow-view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::flow::create_flow_viewer`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Flow", "Flow"),
@@ -45,11 +45,11 @@ pub async fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Own copy of the mutation-capable Main window's identically named helper (duplication is the
 /// deliberate cost of a genuinely independent viewer, contract §2.2).
-async fn split_endpoint(endpoint: &str) -> (String, String) {
+fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
-async fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let nodes: Vec<NodeGraphNodeRecord> = fixture
         .nodes
         .iter()
@@ -81,7 +81,7 @@ async fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>,
 /// (never persisted — a viewer has no `Transient`/`Config` lane to hold one), the artifact's own pure
 /// LOD/grid/proximity defaults (`Config = NoConfig` means there is no persisted per-session camera or
 /// canvas state to read), no selection, no preview-off overlay.
-pub async fn render(document: &FlowSnapshot) -> UiNode {
+pub fn render(document: &FlowSnapshot) -> UiNode {
     let live = document.to_fixture();
     let session = FlowEvalSession::new();
     let host = flow_host_with_session(&live, &session);

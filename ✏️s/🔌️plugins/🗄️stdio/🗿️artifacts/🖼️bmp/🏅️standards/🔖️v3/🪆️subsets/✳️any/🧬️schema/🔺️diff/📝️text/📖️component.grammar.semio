@@ -18,7 +18,7 @@ start diff
 # rather than base64 -- documented quirk, ../🦀️component.rs's own doc comment) are BOTH rank 1,
 # so their DECLARATION order (`palette` before `pixels` in the struct) decides, which happens to
 # match print order here too. Verified against a real `BmpDiff::between(a, b).print_diff()` call
-# ([DEBUG] probe, this wave's own scratch): `"header-size=56 width=8 height=6 row-order=top-down
+# (recorded runtime probe): `"header-size=56 width=8 height=6 row-order=top-down
 # planes=2 bits-per-pixel=24 compression=3 image-size=200 x-pixels-per-meter=3000
 # y-pixels-per-meter=4000 colors-used=5 colors-important=2 palette { removed=[ ]
 # modified=[ index=1 entry { b=99 g=88 r=77 reserved=1 } ] added=[ index=2 entry { b=200 g=201

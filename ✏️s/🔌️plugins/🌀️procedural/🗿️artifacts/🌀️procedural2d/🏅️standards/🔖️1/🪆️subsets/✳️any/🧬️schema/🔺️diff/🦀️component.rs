@@ -1,7 +1,7 @@
 //! 🧬️ Procedural2d diff schema — sparse field delta over the artifact.
 
 use crate::artifacts::procedural2d::schema::Procedural2dArtifact;
-use flow::playbook::GenerationPlayState;
+use flow::playbook::GenerationPlayRoot;
 use flow::CameraJson;
 use flow::FlowFixture;
 use schema::ArtifactSchema;
@@ -19,7 +19,7 @@ pub struct Procedural2dDiff {
     #[state(artifact)]
     pub fixture: Option<FlowFixture>,
     #[state(artifact)]
-    pub generation: Option<GenerationPlayState>,
+    pub generation: Option<GenerationPlayRoot>,
     #[state(presence)]
     pub selected_ids: Option<Procedural2dStringList>,
     #[state(config)]

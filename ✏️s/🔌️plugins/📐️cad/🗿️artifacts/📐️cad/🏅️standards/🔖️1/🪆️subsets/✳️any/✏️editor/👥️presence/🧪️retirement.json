@@ -1,0 +1,12 @@
+{
+  "grant": { "maximumItems": 1, "maximumBytes": 4096 },
+  "cases": [
+    { "name": "empty", "activeUtility": { "unit": "", "repeat": 0 }, "engagementStep": { "unit": "", "repeat": 0 }, "engagementPane": null, "expectedBytes": 0 },
+    { "name": "default", "activeUtility": { "unit": "move", "repeat": 1 }, "engagementStep": { "unit": "Idle", "repeat": 1 }, "engagementPane": null, "expectedBytes": 8 },
+    { "name": "large-unicode", "activeUtility": { "unit": "a", "repeat": 8192 }, "engagementStep": { "unit": "🧵", "repeat": 2048 }, "engagementPane": { "unit": "ä", "repeat": 4096 }, "expectedBytes": 24576 }
+  ],
+  "storeCases": [
+    { "name": "local-only", "local": "default", "peers": [], "sharedRoot": false, "expectedBytes": 8 },
+    { "name": "nonempty-shared-roster", "local": "large-unicode", "peers": [{ "actor": "peer-a", "presence": "default" }, { "actor": "peer-b", "presence": "large-unicode" }], "sharedRoot": true, "expectedBytes": 49172 }
+  ]
+}

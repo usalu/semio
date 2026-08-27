@@ -1,15 +1,19 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
-  "_comment": "🧩️ This subset's own contribution to the repository test platform. Unlike every other stdio artifact, glTF has no `pub enum GltfMutation` -- its vocabulary is a descriptor table, `GLTF_MUTATION_LEAF_DESCRIPTORS` in `../🧬️schema/🧬️mutations/🦀️component.rs`. 120 real leaf directories exist on disk (complete `🦠️mutation`/`🔺️diff`/`↩️inverse` files, no stubs, one committed fixture case each), but only 7 are mounted as production modules in `📦️glue.rs` AND listed in the descriptor assembly -- the other 113 are real but unmounted, which is `📦️glue.rs`-owned wiring out of this ticket's scope (ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION owns that expansion). The 4 that were mounted-but-not-registered (`bind-node-child`, `unbind-node-child`, `bind-scene-root-node`, `unbind-scene-root-node`) were added to the assembly for this ticket -- their `DESCRIPTOR` consts and fixture tests already existed and already passed, only the array entry was missing. This catalog declares exactly those 7 real, dispatchable kinds, honestly smaller than the 120 on disk. The `gltf` crate (1.4.1, MIT) is a credible reader and IS already production-reachable (`🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs`'s `mesh_to_glb`/`mesh_from_glb`/`GlbExporter`/`GlbImporter`) but confirmed genuinely independent of this subset's own codec (`../🧬️schema/📸️snapshot/🦀️component.rs`'s `GltfSnapshot` never names `gltf::`, no `impl From<gltf::...>` anywhere, `decode_glb`/`encode_glb` are hand-rolled over `serde_json` alone) -- registering it here with a `productionDebt` record naming that one file would have been legitimate, exactly like `image`/`png`. It was not registered anyway: linking it needs a `Cargo.toml` edit this ticket must not make itself. `json` (json-rust) 0.12 is already linked (`oracles` feature, `../../../../../../🧪️oracle/📦️packages/🦀️rust/Cargo.toml`) and already proven independent for `stdio.json`'s own RFC 8259 oracle -- it appears nowhere in this repository's production dependency graph, unlike `serde_json`, which this subset's own codec also uses and which is therefore excluded for the same reason it was excluded there.",
+  "_comment": "🧬️ The glTF 2.0 Any mutation catalog is an exact 120-row mirror of the direct semantic folders, derived aggregate variants, language-neutral descriptors, payload schemas, language surfaces, and json-rust differential vectors.",
   "oracles": [
     {
       "id": "json-rust-gltf-2-0-mutate",
       "ecosystem": "rust",
       "package": "json",
       "version": "0.12",
-      "capabilities": ["gltf-2-0-mutate"],
-      "comparisonProfiles": ["semantic-gltf-v1"],
+      "capabilities": [
+        "gltf-2-0-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-gltf-v1"
+      ],
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/maciejhirsz/json-rust",
@@ -27,7 +31,7 @@
       "vectors": [
         {
           "mutationId": "bind-default-scene",
-          "sourceMutationDirectoryName": "bind-default-scene",
+          "sourceMutationDirectoryName": "🔗️🎬️bind-default-scene",
           "mutationDirectoryName": "🔗️🎬️bind-default-scene",
           "scenarios": [
             {
@@ -38,7 +42,7 @@
         },
         {
           "mutationId": "bind-morph-target-attribute",
-          "sourceMutationDirectoryName": "bind-morph-target-attribute",
+          "sourceMutationDirectoryName": "🔗️🧬️bind-morph-target-attribute",
           "mutationDirectoryName": "🔗️🧬️bind-morph-target-attribute",
           "scenarios": [
             {
@@ -49,7 +53,7 @@
         },
         {
           "mutationId": "bind-node-camera",
-          "sourceMutationDirectoryName": "bind-node-camera",
+          "sourceMutationDirectoryName": "🔗️🔘️bind-node-camera",
           "mutationDirectoryName": "🔗️🔘️bind-node-camera",
           "scenarios": [
             {
@@ -60,7 +64,7 @@
         },
         {
           "mutationId": "bind-node-child",
-          "sourceMutationDirectoryName": "bind-node-child",
+          "sourceMutationDirectoryName": "🔗️🔘️bind-node-child",
           "mutationDirectoryName": "🔗️🔘️bind-node-child",
           "scenarios": [
             {
@@ -71,7 +75,7 @@
         },
         {
           "mutationId": "bind-node-mesh",
-          "sourceMutationDirectoryName": "bind-node-mesh",
+          "sourceMutationDirectoryName": "🔗️🔘️bind-node-mesh",
           "mutationDirectoryName": "🔗️🔘️bind-node-mesh",
           "scenarios": [
             {
@@ -82,7 +86,7 @@
         },
         {
           "mutationId": "bind-node-skin",
-          "sourceMutationDirectoryName": "bind-node-skin",
+          "sourceMutationDirectoryName": "🔗️🔘️bind-node-skin",
           "mutationDirectoryName": "🔗️🔘️bind-node-skin",
           "scenarios": [
             {
@@ -93,7 +97,7 @@
         },
         {
           "mutationId": "bind-primitive-attribute",
-          "sourceMutationDirectoryName": "bind-primitive-attribute",
+          "sourceMutationDirectoryName": "🔗️🔺️bind-primitive-attribute",
           "mutationDirectoryName": "🔗️🔺️bind-primitive-attribute",
           "scenarios": [
             {
@@ -104,7 +108,7 @@
         },
         {
           "mutationId": "bind-primitive-indices",
-          "sourceMutationDirectoryName": "bind-primitive-indices",
+          "sourceMutationDirectoryName": "🔗️🔺️bind-primitive-indices",
           "mutationDirectoryName": "🔗️🔺️bind-primitive-indices",
           "scenarios": [
             {
@@ -115,7 +119,7 @@
         },
         {
           "mutationId": "bind-primitive-material",
-          "sourceMutationDirectoryName": "bind-primitive-material",
+          "sourceMutationDirectoryName": "🔗️🔺️bind-primitive-material",
           "mutationDirectoryName": "🔗️🔺️bind-primitive-material",
           "scenarios": [
             {
@@ -126,7 +130,7 @@
         },
         {
           "mutationId": "bind-scene-root-node",
-          "sourceMutationDirectoryName": "bind-scene-root-node",
+          "sourceMutationDirectoryName": "🔗️🎬️bind-scene-root-node",
           "mutationDirectoryName": "🔗️🎬️bind-scene-root-node",
           "scenarios": [
             {
@@ -137,7 +141,7 @@
         },
         {
           "mutationId": "change-asset-descriptive-metadata",
-          "sourceMutationDirectoryName": "change-asset-descriptive-metadata",
+          "sourceMutationDirectoryName": "✏️📦️change-asset-descriptive-metadata",
           "mutationDirectoryName": "✏️📦️change-asset-descriptive-metadata",
           "scenarios": [
             {
@@ -148,7 +152,7 @@
         },
         {
           "mutationId": "change-asset-extension-data",
-          "sourceMutationDirectoryName": "change-asset-extension-data",
+          "sourceMutationDirectoryName": "✏️📦️change-asset-extension-data",
           "mutationDirectoryName": "✏️📦️change-asset-extension-data",
           "scenarios": [
             {
@@ -159,7 +163,7 @@
         },
         {
           "mutationId": "change-asset-extra-data",
-          "sourceMutationDirectoryName": "change-asset-extra-data",
+          "sourceMutationDirectoryName": "✏️📦️change-asset-extra-data",
           "mutationDirectoryName": "✏️📦️change-asset-extra-data",
           "scenarios": [
             {
@@ -170,7 +174,7 @@
         },
         {
           "mutationId": "change-asset-version",
-          "sourceMutationDirectoryName": "change-asset-version",
+          "sourceMutationDirectoryName": "✏️📦️change-asset-version",
           "mutationDirectoryName": "✏️📦️change-asset-version",
           "scenarios": [
             {
@@ -181,7 +185,7 @@
         },
         {
           "mutationId": "change-document-extension-data",
-          "sourceMutationDirectoryName": "change-document-extension-data",
+          "sourceMutationDirectoryName": "✏️📄️change-document-extension-data",
           "mutationDirectoryName": "✏️📄️change-document-extension-data",
           "scenarios": [
             {
@@ -192,7 +196,7 @@
         },
         {
           "mutationId": "change-document-extra-data",
-          "sourceMutationDirectoryName": "change-document-extra-data",
+          "sourceMutationDirectoryName": "✏️📄️change-document-extra-data",
           "mutationDirectoryName": "✏️📄️change-document-extra-data",
           "scenarios": [
             {
@@ -203,7 +207,7 @@
         },
         {
           "mutationId": "change-material-alpha-mode",
-          "sourceMutationDirectoryName": "change-material-alpha-mode",
+          "sourceMutationDirectoryName": "✏️💎️change-material-alpha-mode",
           "mutationDirectoryName": "✏️💎️change-material-alpha-mode",
           "scenarios": [
             {
@@ -214,7 +218,7 @@
         },
         {
           "mutationId": "change-material-double-sided",
-          "sourceMutationDirectoryName": "change-material-double-sided",
+          "sourceMutationDirectoryName": "✏️💎️change-material-double-sided",
           "mutationDirectoryName": "✏️💎️change-material-double-sided",
           "scenarios": [
             {
@@ -225,7 +229,7 @@
         },
         {
           "mutationId": "change-mesh-extension-data",
-          "sourceMutationDirectoryName": "change-mesh-extension-data",
+          "sourceMutationDirectoryName": "✏️🕸️change-mesh-extension-data",
           "mutationDirectoryName": "✏️🕸️change-mesh-extension-data",
           "scenarios": [
             {
@@ -236,7 +240,7 @@
         },
         {
           "mutationId": "change-mesh-extra-data",
-          "sourceMutationDirectoryName": "change-mesh-extra-data",
+          "sourceMutationDirectoryName": "✏️🕸️change-mesh-extra-data",
           "mutationDirectoryName": "✏️🕸️change-mesh-extra-data",
           "scenarios": [
             {
@@ -247,7 +251,7 @@
         },
         {
           "mutationId": "change-mesh-morph-weights",
-          "sourceMutationDirectoryName": "change-mesh-morph-weights",
+          "sourceMutationDirectoryName": "✏️🕸️change-mesh-morph-weights",
           "mutationDirectoryName": "✏️🕸️change-mesh-morph-weights",
           "scenarios": [
             {
@@ -258,7 +262,7 @@
         },
         {
           "mutationId": "change-mesh-name",
-          "sourceMutationDirectoryName": "change-mesh-name",
+          "sourceMutationDirectoryName": "✏️🕸️change-mesh-name",
           "mutationDirectoryName": "✏️🕸️change-mesh-name",
           "scenarios": [
             {
@@ -269,7 +273,7 @@
         },
         {
           "mutationId": "change-node-extension-data",
-          "sourceMutationDirectoryName": "change-node-extension-data",
+          "sourceMutationDirectoryName": "✏️🔘️change-node-extension-data",
           "mutationDirectoryName": "✏️🔘️change-node-extension-data",
           "scenarios": [
             {
@@ -280,7 +284,7 @@
         },
         {
           "mutationId": "change-node-extra-data",
-          "sourceMutationDirectoryName": "change-node-extra-data",
+          "sourceMutationDirectoryName": "✏️🔘️change-node-extra-data",
           "mutationDirectoryName": "✏️🔘️change-node-extra-data",
           "scenarios": [
             {
@@ -291,7 +295,7 @@
         },
         {
           "mutationId": "change-node-morph-weights",
-          "sourceMutationDirectoryName": "change-node-morph-weights",
+          "sourceMutationDirectoryName": "✏️🔘️change-node-morph-weights",
           "mutationDirectoryName": "✏️🔘️change-node-morph-weights",
           "scenarios": [
             {
@@ -302,7 +306,7 @@
         },
         {
           "mutationId": "change-node-name",
-          "sourceMutationDirectoryName": "change-node-name",
+          "sourceMutationDirectoryName": "✏️🔘️change-node-name",
           "mutationDirectoryName": "✏️🔘️change-node-name",
           "scenarios": [
             {
@@ -313,7 +317,7 @@
         },
         {
           "mutationId": "change-primitive-extension-data",
-          "sourceMutationDirectoryName": "change-primitive-extension-data",
+          "sourceMutationDirectoryName": "✏️🔺️change-primitive-extension-data",
           "mutationDirectoryName": "✏️🔺️change-primitive-extension-data",
           "scenarios": [
             {
@@ -324,7 +328,7 @@
         },
         {
           "mutationId": "change-primitive-extra-data",
-          "sourceMutationDirectoryName": "change-primitive-extra-data",
+          "sourceMutationDirectoryName": "✏️🔺️change-primitive-extra-data",
           "mutationDirectoryName": "✏️🔺️change-primitive-extra-data",
           "scenarios": [
             {
@@ -335,7 +339,7 @@
         },
         {
           "mutationId": "change-primitive-topology-mode",
-          "sourceMutationDirectoryName": "change-primitive-topology-mode",
+          "sourceMutationDirectoryName": "✏️🔺️change-primitive-topology-mode",
           "mutationDirectoryName": "✏️🔺️change-primitive-topology-mode",
           "scenarios": [
             {
@@ -346,7 +350,7 @@
         },
         {
           "mutationId": "change-scene-extension-data",
-          "sourceMutationDirectoryName": "change-scene-extension-data",
+          "sourceMutationDirectoryName": "✏️🎬️change-scene-extension-data",
           "mutationDirectoryName": "✏️🎬️change-scene-extension-data",
           "scenarios": [
             {
@@ -357,7 +361,7 @@
         },
         {
           "mutationId": "change-scene-extra-data",
-          "sourceMutationDirectoryName": "change-scene-extra-data",
+          "sourceMutationDirectoryName": "✏️🎬️change-scene-extra-data",
           "mutationDirectoryName": "✏️🎬️change-scene-extra-data",
           "scenarios": [
             {
@@ -368,7 +372,7 @@
         },
         {
           "mutationId": "change-scene-name",
-          "sourceMutationDirectoryName": "change-scene-name",
+          "sourceMutationDirectoryName": "✏️🎬️change-scene-name",
           "mutationDirectoryName": "✏️🎬️change-scene-name",
           "scenarios": [
             {
@@ -379,7 +383,7 @@
         },
         {
           "mutationId": "create-accessor",
-          "sourceMutationDirectoryName": "create-accessor",
+          "sourceMutationDirectoryName": "🌱️📐️create-accessor",
           "mutationDirectoryName": "🌱️📐️create-accessor",
           "scenarios": [
             {
@@ -390,7 +394,7 @@
         },
         {
           "mutationId": "create-animation",
-          "sourceMutationDirectoryName": "create-animation",
+          "sourceMutationDirectoryName": "🌱️🎞️create-animation",
           "mutationDirectoryName": "🌱️🎞️create-animation",
           "scenarios": [
             {
@@ -401,7 +405,7 @@
         },
         {
           "mutationId": "create-buffer",
-          "sourceMutationDirectoryName": "create-buffer",
+          "sourceMutationDirectoryName": "🌱️💾️create-buffer",
           "mutationDirectoryName": "🌱️💾️create-buffer",
           "scenarios": [
             {
@@ -412,7 +416,7 @@
         },
         {
           "mutationId": "create-buffer-view",
-          "sourceMutationDirectoryName": "create-buffer-view",
+          "sourceMutationDirectoryName": "🌱️👁️create-buffer-view",
           "mutationDirectoryName": "🌱️👁️create-buffer-view",
           "scenarios": [
             {
@@ -423,7 +427,7 @@
         },
         {
           "mutationId": "create-camera",
-          "sourceMutationDirectoryName": "create-camera",
+          "sourceMutationDirectoryName": "🌱️🎥️create-camera",
           "mutationDirectoryName": "🌱️🎥️create-camera",
           "scenarios": [
             {
@@ -434,7 +438,7 @@
         },
         {
           "mutationId": "create-image",
-          "sourceMutationDirectoryName": "create-image",
+          "sourceMutationDirectoryName": "🌱️🖼️create-image",
           "mutationDirectoryName": "🌱️🖼️create-image",
           "scenarios": [
             {
@@ -445,7 +449,7 @@
         },
         {
           "mutationId": "create-material",
-          "sourceMutationDirectoryName": "create-material",
+          "sourceMutationDirectoryName": "🌱️💎️create-material",
           "mutationDirectoryName": "🌱️💎️create-material",
           "scenarios": [
             {
@@ -456,7 +460,7 @@
         },
         {
           "mutationId": "create-mesh",
-          "sourceMutationDirectoryName": "create-mesh",
+          "sourceMutationDirectoryName": "🌱️🕸️create-mesh",
           "mutationDirectoryName": "🌱️🕸️create-mesh",
           "scenarios": [
             {
@@ -467,7 +471,7 @@
         },
         {
           "mutationId": "create-morph-target",
-          "sourceMutationDirectoryName": "create-morph-target",
+          "sourceMutationDirectoryName": "🌱️🧬️create-morph-target",
           "mutationDirectoryName": "🌱️🧬️create-morph-target",
           "scenarios": [
             {
@@ -478,7 +482,7 @@
         },
         {
           "mutationId": "create-node",
-          "sourceMutationDirectoryName": "create-node",
+          "sourceMutationDirectoryName": "🌱️🔘️create-node",
           "mutationDirectoryName": "🌱️🔘️create-node",
           "scenarios": [
             {
@@ -489,7 +493,7 @@
         },
         {
           "mutationId": "create-primitive",
-          "sourceMutationDirectoryName": "create-primitive",
+          "sourceMutationDirectoryName": "🌱️🔺️create-primitive",
           "mutationDirectoryName": "🌱️🔺️create-primitive",
           "scenarios": [
             {
@@ -500,7 +504,7 @@
         },
         {
           "mutationId": "create-sampler",
-          "sourceMutationDirectoryName": "create-sampler",
+          "sourceMutationDirectoryName": "🌱️🎛️create-sampler",
           "mutationDirectoryName": "🌱️🎛️create-sampler",
           "scenarios": [
             {
@@ -511,7 +515,7 @@
         },
         {
           "mutationId": "create-scene",
-          "sourceMutationDirectoryName": "create-scene",
+          "sourceMutationDirectoryName": "🌱️🎬️create-scene",
           "mutationDirectoryName": "🌱️🎬️create-scene",
           "scenarios": [
             {
@@ -522,7 +526,7 @@
         },
         {
           "mutationId": "create-skin",
-          "sourceMutationDirectoryName": "create-skin",
+          "sourceMutationDirectoryName": "🌱️🧥️create-skin",
           "mutationDirectoryName": "🌱️🧥️create-skin",
           "scenarios": [
             {
@@ -533,7 +537,7 @@
         },
         {
           "mutationId": "create-texture",
-          "sourceMutationDirectoryName": "create-texture",
+          "sourceMutationDirectoryName": "🌱️🎨️create-texture",
           "mutationDirectoryName": "🌱️🎨️create-texture",
           "scenarios": [
             {
@@ -543,9 +547,9 @@
           ]
         },
         {
-          "mutationId": "declare-used-extension",
-          "sourceMutationDirectoryName": "declare-used-extension",
-          "mutationDirectoryName": "📣️🧩️declare-used-extension",
+          "mutationId": "add-used-extension",
+          "sourceMutationDirectoryName": "📣️🧩️add-used-extension",
+          "mutationDirectoryName": "📣️🧩️add-used-extension",
           "scenarios": [
             {
               "id": "declares-the-unlit-extension-ahead-of-the-transform-extension",
@@ -555,7 +559,7 @@
         },
         {
           "mutationId": "delete-accessor",
-          "sourceMutationDirectoryName": "delete-accessor",
+          "sourceMutationDirectoryName": "🗑️📐️delete-accessor",
           "mutationDirectoryName": "🗑️📐️delete-accessor",
           "scenarios": [
             {
@@ -566,7 +570,7 @@
         },
         {
           "mutationId": "delete-animation",
-          "sourceMutationDirectoryName": "delete-animation",
+          "sourceMutationDirectoryName": "🗑️🎞️delete-animation",
           "mutationDirectoryName": "🗑️🎞️delete-animation",
           "scenarios": [
             {
@@ -577,7 +581,7 @@
         },
         {
           "mutationId": "delete-buffer",
-          "sourceMutationDirectoryName": "delete-buffer",
+          "sourceMutationDirectoryName": "🗑️💾️delete-buffer",
           "mutationDirectoryName": "🗑️💾️delete-buffer",
           "scenarios": [
             {
@@ -588,7 +592,7 @@
         },
         {
           "mutationId": "delete-buffer-view",
-          "sourceMutationDirectoryName": "delete-buffer-view",
+          "sourceMutationDirectoryName": "🗑️👁️delete-buffer-view",
           "mutationDirectoryName": "🗑️👁️delete-buffer-view",
           "scenarios": [
             {
@@ -599,7 +603,7 @@
         },
         {
           "mutationId": "delete-camera",
-          "sourceMutationDirectoryName": "delete-camera",
+          "sourceMutationDirectoryName": "🗑️🎥️delete-camera",
           "mutationDirectoryName": "🗑️🎥️delete-camera",
           "scenarios": [
             {
@@ -610,7 +614,7 @@
         },
         {
           "mutationId": "delete-image",
-          "sourceMutationDirectoryName": "delete-image",
+          "sourceMutationDirectoryName": "🗑️🖼️delete-image",
           "mutationDirectoryName": "🗑️🖼️delete-image",
           "scenarios": [
             {
@@ -621,7 +625,7 @@
         },
         {
           "mutationId": "delete-material",
-          "sourceMutationDirectoryName": "delete-material",
+          "sourceMutationDirectoryName": "🗑️💎️delete-material",
           "mutationDirectoryName": "🗑️💎️delete-material",
           "scenarios": [
             {
@@ -632,7 +636,7 @@
         },
         {
           "mutationId": "delete-mesh",
-          "sourceMutationDirectoryName": "delete-mesh",
+          "sourceMutationDirectoryName": "🗑️🕸️delete-mesh",
           "mutationDirectoryName": "🗑️🕸️delete-mesh",
           "scenarios": [
             {
@@ -643,7 +647,7 @@
         },
         {
           "mutationId": "delete-morph-target",
-          "sourceMutationDirectoryName": "delete-morph-target",
+          "sourceMutationDirectoryName": "🗑️🧬️delete-morph-target",
           "mutationDirectoryName": "🗑️🧬️delete-morph-target",
           "scenarios": [
             {
@@ -654,7 +658,7 @@
         },
         {
           "mutationId": "delete-node",
-          "sourceMutationDirectoryName": "delete-node",
+          "sourceMutationDirectoryName": "🗑️🔘️delete-node",
           "mutationDirectoryName": "🗑️🔘️delete-node",
           "scenarios": [
             {
@@ -665,7 +669,7 @@
         },
         {
           "mutationId": "delete-primitive",
-          "sourceMutationDirectoryName": "delete-primitive",
+          "sourceMutationDirectoryName": "🗑️🔺️delete-primitive",
           "mutationDirectoryName": "🗑️🔺️delete-primitive",
           "scenarios": [
             {
@@ -676,7 +680,7 @@
         },
         {
           "mutationId": "delete-sampler",
-          "sourceMutationDirectoryName": "delete-sampler",
+          "sourceMutationDirectoryName": "🗑️🎛️delete-sampler",
           "mutationDirectoryName": "🗑️🎛️delete-sampler",
           "scenarios": [
             {
@@ -687,7 +691,7 @@
         },
         {
           "mutationId": "delete-scene",
-          "sourceMutationDirectoryName": "delete-scene",
+          "sourceMutationDirectoryName": "🗑️🎬️delete-scene",
           "mutationDirectoryName": "🗑️🎬️delete-scene",
           "scenarios": [
             {
@@ -698,7 +702,7 @@
         },
         {
           "mutationId": "delete-skin",
-          "sourceMutationDirectoryName": "delete-skin",
+          "sourceMutationDirectoryName": "🗑️🧥️delete-skin",
           "mutationDirectoryName": "🗑️🧥️delete-skin",
           "scenarios": [
             {
@@ -709,7 +713,7 @@
         },
         {
           "mutationId": "delete-texture",
-          "sourceMutationDirectoryName": "delete-texture",
+          "sourceMutationDirectoryName": "🗑️🎨️delete-texture",
           "mutationDirectoryName": "🗑️🎨️delete-texture",
           "scenarios": [
             {
@@ -720,7 +724,7 @@
         },
         {
           "mutationId": "move-accessor",
-          "sourceMutationDirectoryName": "move-accessor",
+          "sourceMutationDirectoryName": "🚚️📐️move-accessor",
           "mutationDirectoryName": "🚚️📐️move-accessor",
           "scenarios": [
             {
@@ -731,7 +735,7 @@
         },
         {
           "mutationId": "move-animation",
-          "sourceMutationDirectoryName": "move-animation",
+          "sourceMutationDirectoryName": "🚚️🎞️move-animation",
           "mutationDirectoryName": "🚚️🎞️move-animation",
           "scenarios": [
             {
@@ -742,7 +746,7 @@
         },
         {
           "mutationId": "move-buffer",
-          "sourceMutationDirectoryName": "move-buffer",
+          "sourceMutationDirectoryName": "🚚️💾️move-buffer",
           "mutationDirectoryName": "🚚️💾️move-buffer",
           "scenarios": [
             {
@@ -753,7 +757,7 @@
         },
         {
           "mutationId": "move-buffer-view",
-          "sourceMutationDirectoryName": "move-buffer-view",
+          "sourceMutationDirectoryName": "🚚️👁️move-buffer-view",
           "mutationDirectoryName": "🚚️👁️move-buffer-view",
           "scenarios": [
             {
@@ -764,7 +768,7 @@
         },
         {
           "mutationId": "move-camera",
-          "sourceMutationDirectoryName": "move-camera",
+          "sourceMutationDirectoryName": "🚚️🎥️move-camera",
           "mutationDirectoryName": "🚚️🎥️move-camera",
           "scenarios": [
             {
@@ -775,7 +779,7 @@
         },
         {
           "mutationId": "move-image",
-          "sourceMutationDirectoryName": "move-image",
+          "sourceMutationDirectoryName": "🚚️🖼️move-image",
           "mutationDirectoryName": "🚚️🖼️move-image",
           "scenarios": [
             {
@@ -786,7 +790,7 @@
         },
         {
           "mutationId": "move-material",
-          "sourceMutationDirectoryName": "move-material",
+          "sourceMutationDirectoryName": "🚚️💎️move-material",
           "mutationDirectoryName": "🚚️💎️move-material",
           "scenarios": [
             {
@@ -797,7 +801,7 @@
         },
         {
           "mutationId": "move-mesh",
-          "sourceMutationDirectoryName": "move-mesh",
+          "sourceMutationDirectoryName": "🚚️🕸️move-mesh",
           "mutationDirectoryName": "🚚️🕸️move-mesh",
           "scenarios": [
             {
@@ -808,7 +812,7 @@
         },
         {
           "mutationId": "move-morph-target",
-          "sourceMutationDirectoryName": "move-morph-target",
+          "sourceMutationDirectoryName": "🚚️🧬️move-morph-target",
           "mutationDirectoryName": "🚚️🧬️move-morph-target",
           "scenarios": [
             {
@@ -819,7 +823,7 @@
         },
         {
           "mutationId": "move-morph-target-attribute",
-          "sourceMutationDirectoryName": "move-morph-target-attribute",
+          "sourceMutationDirectoryName": "🚚️🧬️move-morph-target-attribute",
           "mutationDirectoryName": "🚚️🧬️move-morph-target-attribute",
           "scenarios": [
             {
@@ -830,7 +834,7 @@
         },
         {
           "mutationId": "move-node",
-          "sourceMutationDirectoryName": "move-node",
+          "sourceMutationDirectoryName": "🚚️🔘️move-node",
           "mutationDirectoryName": "🚚️🔘️move-node",
           "scenarios": [
             {
@@ -841,7 +845,7 @@
         },
         {
           "mutationId": "move-node-child",
-          "sourceMutationDirectoryName": "move-node-child",
+          "sourceMutationDirectoryName": "🚚️🔘️move-node-child",
           "mutationDirectoryName": "🚚️🔘️move-node-child",
           "scenarios": [
             {
@@ -852,7 +856,7 @@
         },
         {
           "mutationId": "move-primitive",
-          "sourceMutationDirectoryName": "move-primitive",
+          "sourceMutationDirectoryName": "🚚️🔺️move-primitive",
           "mutationDirectoryName": "🚚️🔺️move-primitive",
           "scenarios": [
             {
@@ -863,7 +867,7 @@
         },
         {
           "mutationId": "move-primitive-attribute",
-          "sourceMutationDirectoryName": "move-primitive-attribute",
+          "sourceMutationDirectoryName": "🚚️🔺️move-primitive-attribute",
           "mutationDirectoryName": "🚚️🔺️move-primitive-attribute",
           "scenarios": [
             {
@@ -874,7 +878,7 @@
         },
         {
           "mutationId": "move-required-extension",
-          "sourceMutationDirectoryName": "move-required-extension",
+          "sourceMutationDirectoryName": "🚚️🧩️move-required-extension",
           "mutationDirectoryName": "🚚️🧩️move-required-extension",
           "scenarios": [
             {
@@ -885,7 +889,7 @@
         },
         {
           "mutationId": "move-sampler",
-          "sourceMutationDirectoryName": "move-sampler",
+          "sourceMutationDirectoryName": "🚚️🎛️move-sampler",
           "mutationDirectoryName": "🚚️🎛️move-sampler",
           "scenarios": [
             {
@@ -896,7 +900,7 @@
         },
         {
           "mutationId": "move-scene",
-          "sourceMutationDirectoryName": "move-scene",
+          "sourceMutationDirectoryName": "🚚️🎬️move-scene",
           "mutationDirectoryName": "🚚️🎬️move-scene",
           "scenarios": [
             {
@@ -907,7 +911,7 @@
         },
         {
           "mutationId": "move-scene-root-node",
-          "sourceMutationDirectoryName": "move-scene-root-node",
+          "sourceMutationDirectoryName": "🚚️🎬️move-scene-root-node",
           "mutationDirectoryName": "🚚️🎬️move-scene-root-node",
           "scenarios": [
             {
@@ -918,7 +922,7 @@
         },
         {
           "mutationId": "move-skin",
-          "sourceMutationDirectoryName": "move-skin",
+          "sourceMutationDirectoryName": "🚚️🧥️move-skin",
           "mutationDirectoryName": "🚚️🧥️move-skin",
           "scenarios": [
             {
@@ -929,7 +933,7 @@
         },
         {
           "mutationId": "move-texture",
-          "sourceMutationDirectoryName": "move-texture",
+          "sourceMutationDirectoryName": "🚚️🎨️move-texture",
           "mutationDirectoryName": "🚚️🎨️move-texture",
           "scenarios": [
             {
@@ -940,7 +944,7 @@
         },
         {
           "mutationId": "move-used-extension",
-          "sourceMutationDirectoryName": "move-used-extension",
+          "sourceMutationDirectoryName": "🚚️🧩️move-used-extension",
           "mutationDirectoryName": "🚚️🧩️move-used-extension",
           "scenarios": [
             {
@@ -951,7 +955,7 @@
         },
         {
           "mutationId": "reorder-accessors",
-          "sourceMutationDirectoryName": "reorder-accessors",
+          "sourceMutationDirectoryName": "🔀️📐️reorder-accessors",
           "mutationDirectoryName": "🔀️📐️reorder-accessors",
           "scenarios": [
             {
@@ -962,7 +966,7 @@
         },
         {
           "mutationId": "reorder-animations",
-          "sourceMutationDirectoryName": "reorder-animations",
+          "sourceMutationDirectoryName": "🔀️🎞️reorder-animations",
           "mutationDirectoryName": "🔀️🎞️reorder-animations",
           "scenarios": [
             {
@@ -973,7 +977,7 @@
         },
         {
           "mutationId": "reorder-buffer-views",
-          "sourceMutationDirectoryName": "reorder-buffer-views",
+          "sourceMutationDirectoryName": "🔀️👁️reorder-buffer-views",
           "mutationDirectoryName": "🔀️👁️reorder-buffer-views",
           "scenarios": [
             {
@@ -984,7 +988,7 @@
         },
         {
           "mutationId": "reorder-buffers",
-          "sourceMutationDirectoryName": "reorder-buffers",
+          "sourceMutationDirectoryName": "🔀️💾️reorder-buffers",
           "mutationDirectoryName": "🔀️💾️reorder-buffers",
           "scenarios": [
             {
@@ -995,7 +999,7 @@
         },
         {
           "mutationId": "reorder-cameras",
-          "sourceMutationDirectoryName": "reorder-cameras",
+          "sourceMutationDirectoryName": "🔀️🎥️reorder-cameras",
           "mutationDirectoryName": "🔀️🎥️reorder-cameras",
           "scenarios": [
             {
@@ -1006,7 +1010,7 @@
         },
         {
           "mutationId": "reorder-images",
-          "sourceMutationDirectoryName": "reorder-images",
+          "sourceMutationDirectoryName": "🔀️🖼️reorder-images",
           "mutationDirectoryName": "🔀️🖼️reorder-images",
           "scenarios": [
             {
@@ -1017,7 +1021,7 @@
         },
         {
           "mutationId": "reorder-materials",
-          "sourceMutationDirectoryName": "reorder-materials",
+          "sourceMutationDirectoryName": "🔀️💎️reorder-materials",
           "mutationDirectoryName": "🔀️💎️reorder-materials",
           "scenarios": [
             {
@@ -1028,7 +1032,7 @@
         },
         {
           "mutationId": "reorder-meshs",
-          "sourceMutationDirectoryName": "reorder-meshs",
+          "sourceMutationDirectoryName": "🔀️🕸️reorder-meshs",
           "mutationDirectoryName": "🔀️🕸️reorder-meshs",
           "scenarios": [
             {
@@ -1039,7 +1043,7 @@
         },
         {
           "mutationId": "reorder-morph-target-attributes",
-          "sourceMutationDirectoryName": "reorder-morph-target-attributes",
+          "sourceMutationDirectoryName": "🔀️🧬️reorder-morph-target-attributes",
           "mutationDirectoryName": "🔀️🧬️reorder-morph-target-attributes",
           "scenarios": [
             {
@@ -1050,7 +1054,7 @@
         },
         {
           "mutationId": "reorder-morph-targets",
-          "sourceMutationDirectoryName": "reorder-morph-targets",
+          "sourceMutationDirectoryName": "🔀️🧬️reorder-morph-targets",
           "mutationDirectoryName": "🔀️🧬️reorder-morph-targets",
           "scenarios": [
             {
@@ -1061,7 +1065,7 @@
         },
         {
           "mutationId": "reorder-node-children",
-          "sourceMutationDirectoryName": "reorder-node-children",
+          "sourceMutationDirectoryName": "🔀️🔘️reorder-node-children",
           "mutationDirectoryName": "🔀️🔘️reorder-node-children",
           "scenarios": [
             {
@@ -1072,7 +1076,7 @@
         },
         {
           "mutationId": "reorder-nodes",
-          "sourceMutationDirectoryName": "reorder-nodes",
+          "sourceMutationDirectoryName": "🔀️🔘️reorder-nodes",
           "mutationDirectoryName": "🔀️🔘️reorder-nodes",
           "scenarios": [
             {
@@ -1083,7 +1087,7 @@
         },
         {
           "mutationId": "reorder-primitive-attributes",
-          "sourceMutationDirectoryName": "reorder-primitive-attributes",
+          "sourceMutationDirectoryName": "🔀️🔺️reorder-primitive-attributes",
           "mutationDirectoryName": "🔀️🔺️reorder-primitive-attributes",
           "scenarios": [
             {
@@ -1094,7 +1098,7 @@
         },
         {
           "mutationId": "reorder-primitives",
-          "sourceMutationDirectoryName": "reorder-primitives",
+          "sourceMutationDirectoryName": "🔀️🔺️reorder-primitives",
           "mutationDirectoryName": "🔀️🔺️reorder-primitives",
           "scenarios": [
             {
@@ -1105,7 +1109,7 @@
         },
         {
           "mutationId": "reorder-required-extensions",
-          "sourceMutationDirectoryName": "reorder-required-extensions",
+          "sourceMutationDirectoryName": "🔀️🧩️reorder-required-extensions",
           "mutationDirectoryName": "🔀️🧩️reorder-required-extensions",
           "scenarios": [
             {
@@ -1116,7 +1120,7 @@
         },
         {
           "mutationId": "reorder-samplers",
-          "sourceMutationDirectoryName": "reorder-samplers",
+          "sourceMutationDirectoryName": "🔀️🎛️reorder-samplers",
           "mutationDirectoryName": "🔀️🎛️reorder-samplers",
           "scenarios": [
             {
@@ -1127,7 +1131,7 @@
         },
         {
           "mutationId": "reorder-scene-root-nodes",
-          "sourceMutationDirectoryName": "reorder-scene-root-nodes",
+          "sourceMutationDirectoryName": "🔀️🎬️reorder-scene-root-nodes",
           "mutationDirectoryName": "🔀️🎬️reorder-scene-root-nodes",
           "scenarios": [
             {
@@ -1138,7 +1142,7 @@
         },
         {
           "mutationId": "reorder-scenes",
-          "sourceMutationDirectoryName": "reorder-scenes",
+          "sourceMutationDirectoryName": "🔀️🎬️reorder-scenes",
           "mutationDirectoryName": "🔀️🎬️reorder-scenes",
           "scenarios": [
             {
@@ -1149,7 +1153,7 @@
         },
         {
           "mutationId": "reorder-skins",
-          "sourceMutationDirectoryName": "reorder-skins",
+          "sourceMutationDirectoryName": "🔀️🧥️reorder-skins",
           "mutationDirectoryName": "🔀️🧥️reorder-skins",
           "scenarios": [
             {
@@ -1160,7 +1164,7 @@
         },
         {
           "mutationId": "reorder-textures",
-          "sourceMutationDirectoryName": "reorder-textures",
+          "sourceMutationDirectoryName": "🔀️🎨️reorder-textures",
           "mutationDirectoryName": "🔀️🎨️reorder-textures",
           "scenarios": [
             {
@@ -1171,7 +1175,7 @@
         },
         {
           "mutationId": "reorder-used-extensions",
-          "sourceMutationDirectoryName": "reorder-used-extensions",
+          "sourceMutationDirectoryName": "🔀️🧩️reorder-used-extensions",
           "mutationDirectoryName": "🔀️🧩️reorder-used-extensions",
           "scenarios": [
             {
@@ -1181,9 +1185,9 @@
           ]
         },
         {
-          "mutationId": "reparent-node",
-          "sourceMutationDirectoryName": "reparent-node",
-          "mutationDirectoryName": "👪️🔘️reparent-node",
+          "mutationId": "move-node-parent",
+          "sourceMutationDirectoryName": "👪️🔘️move-node-parent",
+          "mutationDirectoryName": "👪️🔘️move-node-parent",
           "scenarios": [
             {
               "id": "adopts-the-second-scene-root-under-the-first-node",
@@ -1192,9 +1196,9 @@
           ]
         },
         {
-          "mutationId": "require-extension",
-          "sourceMutationDirectoryName": "require-extension",
-          "mutationDirectoryName": "✅️🧩️require-extension",
+          "mutationId": "add-required-extension",
+          "sourceMutationDirectoryName": "✅️🧩️add-required-extension",
+          "mutationDirectoryName": "✅️🧩️add-required-extension",
           "scenarios": [
             {
               "id": "promotes-the-unlit-declaration-to-a-hard-requirement",
@@ -1203,9 +1207,9 @@
           ]
         },
         {
-          "mutationId": "transform-node",
-          "sourceMutationDirectoryName": "transform-node",
-          "mutationDirectoryName": "🔄️🔘️transform-node",
+          "mutationId": "change-node-transform",
+          "sourceMutationDirectoryName": "🔄️🔘️change-node-transform",
+          "mutationDirectoryName": "🔄️🔘️change-node-transform",
           "scenarios": [
             {
               "id": "replaces-a-translation-with-a-scaled-trs-transform",
@@ -1215,7 +1219,7 @@
         },
         {
           "mutationId": "unbind-default-scene",
-          "sourceMutationDirectoryName": "unbind-default-scene",
+          "sourceMutationDirectoryName": "✂️🎬️unbind-default-scene",
           "mutationDirectoryName": "✂️🎬️unbind-default-scene",
           "scenarios": [
             {
@@ -1226,7 +1230,7 @@
         },
         {
           "mutationId": "unbind-morph-target-attribute",
-          "sourceMutationDirectoryName": "unbind-morph-target-attribute",
+          "sourceMutationDirectoryName": "✂️🧬️unbind-morph-target-attribute",
           "mutationDirectoryName": "✂️🧬️unbind-morph-target-attribute",
           "scenarios": [
             {
@@ -1237,7 +1241,7 @@
         },
         {
           "mutationId": "unbind-node-camera",
-          "sourceMutationDirectoryName": "unbind-node-camera",
+          "sourceMutationDirectoryName": "✂️🔘️unbind-node-camera",
           "mutationDirectoryName": "✂️🔘️unbind-node-camera",
           "scenarios": [
             {
@@ -1248,7 +1252,7 @@
         },
         {
           "mutationId": "unbind-node-child",
-          "sourceMutationDirectoryName": "unbind-node-child",
+          "sourceMutationDirectoryName": "✂️🔘️unbind-node-child",
           "mutationDirectoryName": "✂️🔘️unbind-node-child",
           "scenarios": [
             {
@@ -1259,7 +1263,7 @@
         },
         {
           "mutationId": "unbind-node-mesh",
-          "sourceMutationDirectoryName": "unbind-node-mesh",
+          "sourceMutationDirectoryName": "✂️🔘️unbind-node-mesh",
           "mutationDirectoryName": "✂️🔘️unbind-node-mesh",
           "scenarios": [
             {
@@ -1270,7 +1274,7 @@
         },
         {
           "mutationId": "unbind-node-skin",
-          "sourceMutationDirectoryName": "unbind-node-skin",
+          "sourceMutationDirectoryName": "✂️🔘️unbind-node-skin",
           "mutationDirectoryName": "✂️🔘️unbind-node-skin",
           "scenarios": [
             {
@@ -1281,7 +1285,7 @@
         },
         {
           "mutationId": "unbind-primitive-attribute",
-          "sourceMutationDirectoryName": "unbind-primitive-attribute",
+          "sourceMutationDirectoryName": "✂️🔺️unbind-primitive-attribute",
           "mutationDirectoryName": "✂️🔺️unbind-primitive-attribute",
           "scenarios": [
             {
@@ -1292,7 +1296,7 @@
         },
         {
           "mutationId": "unbind-primitive-indices",
-          "sourceMutationDirectoryName": "unbind-primitive-indices",
+          "sourceMutationDirectoryName": "✂️🔺️unbind-primitive-indices",
           "mutationDirectoryName": "✂️🔺️unbind-primitive-indices",
           "scenarios": [
             {
@@ -1303,7 +1307,7 @@
         },
         {
           "mutationId": "unbind-primitive-material",
-          "sourceMutationDirectoryName": "unbind-primitive-material",
+          "sourceMutationDirectoryName": "✂️🔺️unbind-primitive-material",
           "mutationDirectoryName": "✂️🔺️unbind-primitive-material",
           "scenarios": [
             {
@@ -1314,7 +1318,7 @@
         },
         {
           "mutationId": "unbind-scene-root-node",
-          "sourceMutationDirectoryName": "unbind-scene-root-node",
+          "sourceMutationDirectoryName": "✂️🎬️unbind-scene-root-node",
           "mutationDirectoryName": "✂️🎬️unbind-scene-root-node",
           "scenarios": [
             {
@@ -1324,9 +1328,9 @@
           ]
         },
         {
-          "mutationId": "unrequire-extension",
-          "sourceMutationDirectoryName": "unrequire-extension",
-          "mutationDirectoryName": "🚫️🧩️unrequire-extension",
+          "mutationId": "remove-required-extension",
+          "sourceMutationDirectoryName": "🚫️🧩️remove-required-extension",
+          "mutationDirectoryName": "🚫️🧩️remove-required-extension",
           "scenarios": [
             {
               "id": "relaxes-the-unlit-requirement-while-keeping-the-declaration",
@@ -1335,9 +1339,9 @@
           ]
         },
         {
-          "mutationId": "withdraw-used-extension",
-          "sourceMutationDirectoryName": "withdraw-used-extension",
-          "mutationDirectoryName": "🔙️🧩️withdraw-used-extension",
+          "mutationId": "remove-used-extension",
+          "sourceMutationDirectoryName": "🔙️🧩️remove-used-extension",
+          "mutationDirectoryName": "🔙️🧩️remove-used-extension",
           "scenarios": [
             {
               "id": "withdraws-the-unlit-declaration-that-nothing-requires",
@@ -1361,7 +1365,12 @@
     {
       "id": "semantic-gltf-v1",
       "description": "glTF 2.0 documents compared by the default scene, every scene's root node list, every node's child list and every material's alphaMode/doubleSided -- the entire normative surface the 7 registered mutation kinds touch. Geometry, accessors, buffers, images, samplers, textures, skins, animations, cameras and extensions are out of scope: no registered kind observes them, the same way semantic-mesh-v1 leaves precision and naming to writer freedom.",
-      "ignoreKeys": ["byteLength", "fileSize", "generator", "copyright"]
+      "ignoreKeys": [
+        "byteLength",
+        "fileSize",
+        "generator",
+        "copyright"
+      ]
     }
   ]
 }

@@ -23,7 +23,7 @@ use semio_s_plugin_stdio_test_oracle::law;
 /// 🦠️ Kebab-case spelling of every `JpgMutation` variant, matching the subject's own `KINDS` const
 /// and the catalog's declared `kinds` — the registration bookkeeping loop below iterates this once
 /// for `mutate-<kind>` and once for `inverse-<kind>`.
-const KINDS: [&str; 12] = ["no-mutation", "set-snapshot", "set-jfif-header", "set-quant-table", "remove-quant-table", "set-huffman-table", "remove-huffman-table", "set-restart-interval", "insert-other-segment", "remove-other-segment", "set-pixels", "set-re-encode-quality"];
+const KINDS: &[&str] = &["change-jfif-header", "replace-quant-table", "remove-quant-table", "replace-huffman-table", "remove-huffman-table", "change-restart-interval", "insert-other-segment", "remove-other-segment", "replace-pixels", "change-re-encode-quality"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -43,11 +43,11 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 /// It exists because JPEG is lossy and every step of these round trips re-quantizes: measured on
 /// this fixture (2275x2560 = 5 824 000 pixels), one reference decode → re-encode at quality 90
 /// moves 413 pixels out of luma bucket 0 and 382 out of bucket 7; the inverse round trip's second
-/// re-encode raises that to 805; and `set-re-encode-quality`, which passes through quality 50,
+/// re-encode raises that to 805; and `change-re-encode-quality`, which passes through quality 50,
 /// moves 8841 out of bucket 7. All of those are drift a lossy codec is entitled to. The profile's
 /// own description states what the slack is sized to still catch — wrong geometry, blank/inverted/
-/// solid output, wildly shifted tonal balance — and a mutation this case's `set-pixels`/
-/// `set-snapshot` rows perform lands ~5.6 MILLION pixels in the wrong bucket, three orders of
+/// solid output, wildly shifted tonal balance — and a mutation this case's `replace-pixels`/
+/// `replace-pixels` rows perform lands ~5.6 MILLION pixels in the wrong bucket, three orders of
 /// magnitude past it, so the law below stays substantive rather than being excused by the slack.
 const JPG_TOLERANCE: f64 = 400_000.0;
 
@@ -56,14 +56,14 @@ const JPG_TOLERANCE: f64 = 400_000.0;
 /// DQT/DHT tables scaled by `re_encode_quality` on every encode and never emits a DRI marker at
 /// all. They mutate the typed snapshot and nothing else, which the feature description states and
 /// the subset's own oracle module documents against the encoder's source. Everything NOT on this
-/// list — including `set-jfif-header`, `insert-other-segment` and `remove-other-segment`, which are
+/// list — including `change-jfif-header`, `insert-other-segment` and `remove-other-segment`, which are
 /// written to real bytes — must move the projection, and the law below fails the scenario if it
 /// does not.
-const UNOBSERVABLE: &[&str] = &["set-quant-table", "remove-quant-table", "set-huffman-table", "remove-huffman-table", "set-restart-interval"];
+const UNOBSERVABLE: &[&str] = &["replace-quant-table", "remove-quant-table", "replace-huffman-table", "remove-huffman-table", "change-restart-interval"];
 //#endregion 🔖️Lossy
 
 //#region 🔖️Oracle
-/// 🧭️ The document as `no-mutation` leaves it — one full decode and re-encode by the reference
+/// 🧭️ The document as an unchanged round trip leaves it — one full decode and re-encode by the reference
 /// codec, and the baseline both the observability and the inverse law are stated against.
 ///
 /// It is deliberately NOT the committed bytes. JPEG is lossy and both encoders regenerate their
@@ -79,7 +79,7 @@ fn unmutated_baseline(original: &[u8]) -> Result<semio_repo_test_host::Json, Str
 /// 🔮️ Applies the scenario's declared mutation with the reference `image` codec and ASSERTS the
 /// result is distinguishable from that same codec's own untouched output, under the slack the case
 /// is measured by. Without that assertion a kind whose effect lands outside the projection passes
-/// exactly as `no-mutation` does — which is what all eight non-raster kinds did while this case
+/// exactly as an unchanged round trip does — which is what all eight non-raster kinds did while this case
 /// compared only geometry and a luma histogram.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let original = mutable_input(ctx)?;
@@ -118,7 +118,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// tables rather than carrying the source's forward, so the committed scan's own tables (written by
 /// whatever produced it) are gone by construction. Excluding it here is the same writer-freedom
 /// statement the histogram's slack makes, named rather than absorbed — and the member still carries
-/// its full weight in the observability law, where it is what makes `set-re-encode-quality` visible
+/// its full weight in the observability law, where it is what makes `change-re-encode-quality` visible
 /// at all.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let original = mutable_input(ctx)?;
@@ -170,18 +170,7 @@ mod subject {
     /// into the REAL typed `JpgMutation` this subset's own codec applies.
     fn mutation_from_spec(kind: &str, params: &Json, base: &JpgSnapshot) -> Result<JpgMutation, String> {
         match kind {
-            "no-mutation" => Ok(JpgMutation::NoMutation),
-            "set-snapshot" => {
-                let width = number(params, "width", 2.0) as u32;
-                let height = number(params, "height", 2.0) as u32;
-                let fill = fill_of(params, [128, 128, 128, 255]);
-                let mut snapshot = base.clone();
-                snapshot.width = width;
-                snapshot.height = height;
-                snapshot.pixels = fill.iter().copied().cycle().take((width as usize) * (height as usize) * 4).collect();
-                Ok(JpgMutation::SetSnapshot { snapshot })
-            }
-            "set-jfif-header" => {
+            "change-jfif-header" => {
                 let version = params.array("version");
                 let component = |index: usize, fallback: u8| version.get(index).and_then(|v| match v { Json::Number(n) => Some(*n as u8), _ => None }).unwrap_or(fallback);
                 let density_units = match params.str("densityUnits").as_str() {
@@ -189,27 +178,27 @@ mod subject {
                     "pixels-per-cm" => JfifDensityUnits::PixelsPerCm,
                     _ => JfifDensityUnits::Aspect,
                 };
-                Ok(JpgMutation::SetJfifHeader { version: (component(0, 1), component(1, 1)), density_units, x_density: number(params, "xDensity", 1.0) as u16, y_density: number(params, "yDensity", 1.0) as u16, thumbnail: None })
+                Ok(JpgMutation::ChangeJfifHeader(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::ChangeJfifHeaderMutation { version: (component(0, 1), component(1, 1)), density_units, x_density: number(params, "xDensity", 1.0) as u16, y_density: number(params, "yDensity", 1.0) as u16, thumbnail: None }))
             }
-            "set-quant-table" => Ok(JpgMutation::SetQuantTable { table: JpgQuantTable { id: number(params, "id", 0.0) as u8, precision: 0, values: [number(params, "fill", 10.0) as u16; 64] } }),
-            "remove-quant-table" => Ok(JpgMutation::RemoveQuantTable { id: number(params, "id", 0.0) as u8 }),
-            "set-huffman-table" => {
+            "replace-quant-table" => Ok(JpgMutation::ReplaceQuantTable(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::ReplaceQuantTableMutation { table: JpgQuantTable { id: number(params, "id", 0.0) as u8, precision: 0, values: [number(params, "fill", 10.0) as u16; 64] } })),
+            "remove-quant-table" => Ok(JpgMutation::RemoveQuantTable(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::RemoveQuantTableMutation { id: number(params, "id", 0.0) as u8 })),
+            "replace-huffman-table" => {
                 let class = if params.str("class") == "ac" { JpgHuffmanClass::Ac } else { JpgHuffmanClass::Dc };
                 let seed = number(params, "fill", 1.0) as u8;
-                Ok(JpgMutation::SetHuffmanTable { table: JpgHuffmanTable { id: number(params, "id", 0.0) as u8, class, bits: [seed; 16], values: vec![seed, seed.wrapping_add(1)] } })
+                Ok(JpgMutation::ReplaceHuffmanTable(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::ReplaceHuffmanTableMutation { table: JpgHuffmanTable { id: number(params, "id", 0.0) as u8, class, bits: [seed; 16], values: vec![seed, seed.wrapping_add(1)] } }))
             }
             "remove-huffman-table" => {
                 let class = if params.str("class") == "ac" { JpgHuffmanClass::Ac } else { JpgHuffmanClass::Dc };
-                Ok(JpgMutation::RemoveHuffmanTable { key: JpgHuffmanTableKey { class, id: number(params, "id", 0.0) as u8 } })
+                Ok(JpgMutation::RemoveHuffmanTable(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::RemoveHuffmanTableMutation { key: JpgHuffmanTableKey { class, id: number(params, "id", 0.0) as u8 } }))
             }
-            "set-restart-interval" => Ok(JpgMutation::SetRestartInterval { restart_interval: Some(number(params, "restartInterval", 16.0) as u16) }),
-            "insert-other-segment" => Ok(JpgMutation::InsertOtherSegment { index: number(params, "index", 0.0) as usize, segment: JpgSegment { marker: number(params, "marker", 226.0) as u8, data: hex_decode(&params.str("data"))? } }),
-            "remove-other-segment" => Ok(JpgMutation::RemoveOtherSegment { index: number(params, "index", 0.0) as usize }),
-            "set-pixels" => {
+            "change-restart-interval" => Ok(JpgMutation::ChangeRestartInterval(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::ChangeRestartIntervalMutation { restart_interval: Some(number(params, "restartInterval", 16.0) as u16) })),
+            "insert-other-segment" => Ok(JpgMutation::InsertOtherSegment(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::InsertOtherSegmentMutation { index: number(params, "index", 0.0) as usize, segment: JpgSegment { marker: number(params, "marker", 226.0) as u8, data: hex_decode(&params.str("data"))? } })),
+            "remove-other-segment" => Ok(JpgMutation::RemoveOtherSegment(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::RemoveOtherSegmentMutation { index: number(params, "index", 0.0) as usize })),
+            "replace-pixels" => {
                 let fill = fill_of(params, [9, 9, 9, 255]);
-                Ok(JpgMutation::SetPixels { pixels: fill.iter().copied().cycle().take(base.pixels.len()).collect() })
+                Ok(JpgMutation::ReplacePixels(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::ReplacePixelsMutation { pixels: fill.iter().copied().cycle().take(base.pixels.len()).collect() }))
             }
-            "set-re-encode-quality" => Ok(JpgMutation::SetReEncodeQuality { quality: Some(number(params, "quality", 90.0).clamp(1.0, 100.0) as u8) }),
+            "change-re-encode-quality" => Ok(JpgMutation::ChangeReEncodeQuality(semio_s_plugin_stdio::artifacts::jpg::schema::mutations::ChangeReEncodeQualityMutation { quality: Some(number(params, "quality", 90.0).clamp(1.0, 100.0) as u8) })),
             other => Err(format!("mutation kind {other:?} has no subject implementation")),
         }
     }

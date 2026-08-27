@@ -34,9 +34,9 @@ use base64::Engine as _;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{
     tree_item_with_action, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppOperationContext, ArtifactOwnedToolJobFactory,
-    ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DraftView, EditorApp, Emit, Fault, Label, LocalizedLabel, Media,
-    MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, NoDraft, NoDraftMutation, PluginAssemblyError, UiNode, UiText, UiValue, UtilityCategory, UtilityDefinition, WindowEngagement,
-    WindowMeasure, WorldSunConfig, SET_ACTIVE_UTILITY_ACTION_ID,
+    ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DraftView,
+    EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, NoDraft, NoDraftMutation, PluginAssemblyError, UiNode, UiText, UiValue, UtilityCategory,
+    UtilityDefinition, WindowEngagement, WindowMeasure, WorldSunConfig, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
@@ -1060,45 +1060,137 @@ impl CadPlayApp {
 }
 
 //#region 🧵️RetainedCommands
-const CAD_HOST_CONFIGURATION_TOOL_IDS: &[&str] = &["setContributions"];
+const CAD_RETAINED_ARTIFACT_TOOL_IDS: &[&str] = &["addNode", "renameNode", "patchCadPlayReference", "focusModelDefinition"];
+const CAD_RETAINED_CONFIG_TOOL_IDS: &[&str] = &[
+    "setCamera",
+    "setProjection",
+    "setProjectionParam",
+    "setDislocateOption",
+    "setNodeSelection",
+    "setReferenceSelection",
+    "referenceHover",
+    "engagementInput",
+    "engagementPossibleSelect",
+    "engagementRepeatLast",
+    "engagementAbort",
+    "worldPointerMove",
+    "toggleSun",
+    "setSunAzimuth",
+    "setSunElevation",
+    "setSunIntensity",
+    "setActiveUtility",
+    "setLocale",
+    "setTerminology",
+    "setContributions",
+];
+const CAD_RETAINED_TOOL_IDS: &[&str] = &[
+    "addNode",
+    "renameNode",
+    "patchCadPlayReference",
+    "focusModelDefinition",
+    "setCamera",
+    "setProjection",
+    "setProjectionParam",
+    "setDislocateOption",
+    "setNodeSelection",
+    "setReferenceSelection",
+    "referenceHover",
+    "engagementInput",
+    "engagementPossibleSelect",
+    "engagementRepeatLast",
+    "engagementAbort",
+    "worldPointerMove",
+    "toggleSun",
+    "setSunAzimuth",
+    "setSunElevation",
+    "setSunIntensity",
+    "setActiveUtility",
+    "setLocale",
+    "setTerminology",
+    "setContributions",
+    "loadRawRequest",
+];
 const CAD_RETAINED_COMMAND_SCHEMA: &str = "cad.scene.tool-command.v1";
 const CAD_RETAINED_RAW_BYTES: usize = 8_192;
-const CAD_RETAINED_WORK_ITEMS: usize = 16_384;
+const CAD_RETAINED_WORK_ITEMS: usize = 1;
+const CAD_CONFIG_STORE_MAXIMUM_BYTES: usize = 65_536;
+const CAD_CONFIG_STORE_MAXIMUM_ITEMS: usize = 256;
 
-fn cad_host_configuration_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(CAD_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500)
+const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "renameNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchCadPlayReference", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "focusModelDefinition", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setProjection", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setProjectionParam", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setDislocateOption", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setNodeSelection", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setReferenceSelection", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "referenceHover", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "engagementPossibleSelect", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "engagementRepeatLast", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "worldPointerMove", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "toggleSun", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setSunAzimuth", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setSunElevation", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setActiveUtility", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setTerminology", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "loadRawRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+];
+
+fn cad_retained_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(CAD_RETAINED_RAW_BYTES, 64, CAD_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
 }
 
-fn cad_host_configuration_extent(_command: &CadCommand, _snapshot: &CadSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    Some(1)
+fn cad_retained_extent(command: &CadCommand, _snapshot: &CadSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    CAD_RETAINED_TOOL_IDS.contains(&command.command_id()).then_some(1)
 }
 
-fn cad_host_configuration_reduce(
+fn cad_retained_reduce(
     command: &CadCommand,
     snapshot: &CadSnapshot,
     config: &CadConfig,
     history: &semio_framework_plugin::HistoryView,
-    _interaction: &protocol::InteractionState,
+    interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     operation: &AppOperationContext,
 ) -> Result<Emit<CadMutation, CadConfigMutation, NoDraftMutation>, Fault> {
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config };
-    let mut ctx = CadDispatchCtx { interaction: CadInteractionSnapshot::default(), preview_operation: Some(CadPreviewOperationIdentity::from(operation)) };
-    command.dispatch(&doc, &cfg, &mut ctx)
-}
-
-struct CadHostConfigurationJobFactory {
-    keys: Vec<ToolFactoryKey>,
-}
-
-impl CadHostConfigurationJobFactory {
-    fn new(controller_id: &str) -> Self {
-        Self { keys: CAD_HOST_CONFIGURATION_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    let selection = interaction.selection.get(CAD_INTERACTION_DOMAIN).cloned().unwrap_or_default();
+    let retained_interaction = CadInteractionSnapshot { granularity: selection.granularity.clone(), ids: selection.ids.clone(), anchor_id: selection.anchor_id.clone() };
+    let mut ctx = CadDispatchCtx { interaction: retained_interaction, preview_operation: Some(CadPreviewOperationIdentity::from(operation)) };
+    if CAD_RETAINED_ARTIFACT_TOOL_IDS.contains(&command.command_id()) {
+        admit_cad_snapshot(snapshot).map_err(Fault::from)?;
+        return command.dispatch(&doc, &cfg, &mut ctx);
+    }
+    if CAD_RETAINED_CONFIG_TOOL_IDS.contains(&command.command_id()) {
+        admit_cad_config(config).map_err(Fault::from)?;
+        return command.dispatch(&doc, &cfg, &mut ctx);
+    }
+    match command {
+        CadCommand::LoadRawRequest(payload) => load_raw_request::handle(payload, &doc, &cfg, &mut ctx),
+        _ => Err(Fault::from("cad-retained-route-mismatch")),
     }
 }
 
-impl ToolJobFactory for CadHostConfigurationJobFactory {
+struct CadRetainedCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl CadRetainedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: CAD_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for CadRetainedCommandJobFactory {
     type Payload = ArtifactRetainedCommandPayload<EditorApp<CadPlayApp>>;
     type Job = ArtifactRetainedCommandJob<EditorApp<CadPlayApp>>;
 
@@ -1115,7 +1207,7 @@ impl ToolJobFactory for CadHostConfigurationJobFactory {
     }
 
     fn execution_contract(&self) -> ToolExecutionContract {
-        cad_host_configuration_contract()
+        cad_retained_contract()
     }
 
     fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
@@ -1130,18 +1222,447 @@ impl ToolJobFactory for CadHostConfigurationJobFactory {
         checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
     ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > CAD_RETAINED_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("CAD host configuration rejects oversized wire or checkpoint owner"), input, checkpoint));
+            return Err((ToolJobFactoryError::new("CAD retained command rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
         Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
     }
 }
 
-impl ArtifactOwnedToolJobFactory for CadHostConfigurationJobFactory {
-    type Owner = EditorApp<CadPlayApp>;
-    const TOOL_IDS: &'static [&'static str] = CAD_HOST_CONFIGURATION_TOOL_IDS;
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for CadRetainedCommandJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<CadPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = CAD_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = CAD_RETAINED_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
+
+//#region 📬️ConfigStorePreparation
+struct CadConfigStorePreparationFactory;
+
+struct CadConfigStorePreparation {
+    base: Option<store::SnapshotRead<CadConfig>>,
+    mutation: Option<CadConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<CadConfig, CadConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn cad_projection_retained_bytes(projection: &crate::artifacts::cad::CadProjectionDsl) -> usize {
+    projection.kind.len()
+        .saturating_add(projection.orthographic_view.len())
+        .saturating_add(projection.axonometric_variant.len())
+        .saturating_add(projection.axonometric_quadrant.len())
+        .saturating_add(projection.oblique_variant.len())
+        .saturating_add(projection.one_point_axis.len())
+        .saturating_add(projection.curvilinear_mapping.len())
+}
+
+fn cad_camera_retained_bytes(camera: &CadCamera) -> usize {
+    cad_projection_retained_bytes(&camera.projection)
+}
+
+fn cad_config_retained_bytes(config: &CadConfig) -> usize {
+    let option_bytes = [
+        config.hovered_reference_id.as_deref(),
+        config.active_example_id.as_deref(),
+        config.selected_reference_model_definition_id.as_deref(),
+        config.selected_reference_id.as_deref(),
+        config.engagement_pane.as_deref(),
+        config.engagement_session_json.as_deref(),
+        config.engagement_preview_operation_json.as_deref(),
+        config.last_finalized_interaction_id.as_deref(),
+    ]
+    .into_iter()
+    .flatten()
+    .fold(0usize, |bytes, value| bytes.saturating_add(value.len()));
+    config.selected_node_ids.iter().fold(0usize, |bytes, value| bytes.saturating_add(value.len()))
+        .saturating_add(option_bytes)
+        .saturating_add(config.engagement_input.len())
+        .saturating_add(config.engagement_step.len())
+        .saturating_add(config.sun.color.len())
+        .saturating_add(cad_camera_retained_bytes(&config.camera))
+        .saturating_add(cad_camera_retained_bytes(&config.camera_building))
+        .saturating_add(cad_camera_retained_bytes(&config.camera_energy))
+        .saturating_add(cad_camera_retained_bytes(&config.camera_structure_classic))
+        .saturating_add(config.active_utility_id.len())
+        .saturating_add(config.locale.len())
+        .saturating_add(config.terminology.len())
+        .saturating_add(config.contributions_json.len())
+}
+
+fn admit_cad_config(config: &CadConfig) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    if config.selected_node_ids.len() > CAD_CONFIG_STORE_MAXIMUM_ITEMS {
+        return Err("CAD config exceeds its fixed retained item envelope".into());
+    }
+    let retained_bytes = cad_config_retained_bytes(config);
+    if retained_bytes > CAD_CONFIG_STORE_MAXIMUM_BYTES {
+        return Err("CAD config exceeds its fixed retained byte envelope".into());
+    }
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+}
+
+fn admit_cad_config_mutation(mutation: &CadConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    match mutation {
+        CadConfigMutation::Snapshot { config } => admit_cad_config(config),
+        CadConfigMutation::SetContributions { json } if json.len() <= CAD_CONFIG_STORE_MAXIMUM_BYTES => Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: json.len() }),
+        CadConfigMutation::SetContributions { .. } => Err("CAD config mutation exceeds its fixed retained byte envelope".into()),
+    }
+}
+
+fn prepare_cad_config(base: &CadConfig, mutation: CadConfigMutation) -> Result<(CadConfig, Vec<CadConfigMutation>, CadConfigMutation), String> {
+    admit_cad_config(base)?;
+    admit_cad_config_mutation(&mutation)?;
+    let inverse = <CadConfigMutation as protocol::Mutation<CadConfig>>::inverse(&mutation, base);
+    let post = <CadConfigMutation as protocol::Mutation<CadConfig>>::diff(&mutation, base).into_parts().0;
+    admit_cad_config(&post)?;
+    Ok((post, inverse, mutation))
+}
+
+fn cad_config_store_edit(forward: CadConfigMutation, inverse: Vec<CadConfigMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<CadConfigMutation> {
+    let id = format!("cad-config-retained-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<CadConfig, CadConfigMutation> for CadConfigStorePreparationFactory {
+    fn preflight(&self, mutation: &CadConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("CAD config preparation rejected its lane or description envelope".into());
+        }
+        admit_cad_config_mutation(mutation)
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<CadConfig, CadConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<CadConfig, CadConfigMutation>> {
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(CadConfigStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation> for CadConfigStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "CAD config preparation lost its exact base root".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "CAD config preparation lost its mutation owner".to_string())?;
+        let (post, inverse, forward) = prepare_cad_config(base.get(), mutation)?;
+        let authority = self.authority.as_ref().ok_or_else(|| "CAD config preparation lost its Store authority".to_string())?;
+        let edit = cad_config_store_edit(forward, inverse, self.description.take(), authority);
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<CadConfig, CadConfigMutation>> { self.prepared.as_ref() }
+
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<CadConfig, CadConfigMutation>> { self.prepared.take() }
+
+    fn cancel(&mut self) { self.cancelled = true; }
+
+    fn begin_close(&mut self) { self.closing = true; }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("CAD config preparation could not return its exact base root".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️ConfigStorePreparation
+
+//#region 📬️ArtifactStorePreparation
+const CAD_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 65_536;
+const CAD_ARTIFACT_STORE_MAXIMUM_ITEMS: usize = 512;
+
+struct CadArtifactStorePreparationFactory;
+
+struct CadArtifactStorePreparation {
+    base: Option<store::SnapshotRead<CadSnapshot>>,
+    mutation: Option<CadMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn cad_child_retained_bytes<S>(child: &store::ArtifactChild<S>) -> usize {
+    child.child_id.len().saturating_add(child.target.to_uri().len())
+}
+
+fn cad_snapshot_retained_bytes(snapshot: &CadSnapshot) -> usize {
+    let fixed_children = [
+        snapshot.shape_model.as_ref().map(cad_child_retained_bytes),
+        snapshot.building_model.as_ref().map(cad_child_retained_bytes),
+        snapshot.energy_model.as_ref().map(cad_child_retained_bytes),
+        snapshot.structure_classic_model.as_ref().map(cad_child_retained_bytes),
+    ]
+    .into_iter()
+    .flatten()
+    .fold(0usize, usize::saturating_add);
+    let drawing_bytes = snapshot.drawings.iter().map(cad_child_retained_bytes).fold(0usize, usize::saturating_add);
+    let reference_bytes = snapshot.references_by_model_definition_id.iter().fold(0usize, |bytes, (model_definition_id, references)| {
+        references.iter().fold(bytes.saturating_add(model_definition_id.len()), |bytes, reference| {
+            bytes.saturating_add(reference.id.len()).saturating_add(reference.source_url.len()).saturating_add(reference.media_kind.len())
+        })
+    });
+    let node_bytes = snapshot.nodes.iter().fold(0usize, |bytes, node| bytes.saturating_add(node.id.len()).saturating_add(node.label.len()).saturating_add(node.kind.len()));
+    snapshot
+        .schema
+        .len()
+        .saturating_add(snapshot.id.len())
+        .saturating_add(snapshot.active_model_definition_id.len())
+        .saturating_add(fixed_children)
+        .saturating_add(drawing_bytes)
+        .saturating_add(reference_bytes)
+        .saturating_add(node_bytes)
+}
+
+fn cad_snapshot_items(snapshot: &CadSnapshot) -> usize {
+    snapshot
+        .drawings
+        .len()
+        .saturating_add(snapshot.nodes.len())
+        .saturating_add(snapshot.references_by_model_definition_id.values().map(Vec::len).sum::<usize>())
+        .saturating_add(snapshot.shape_model.is_some() as usize)
+        .saturating_add(snapshot.building_model.is_some() as usize)
+        .saturating_add(snapshot.energy_model.is_some() as usize)
+        .saturating_add(snapshot.structure_classic_model.is_some() as usize)
+}
+
+fn admit_cad_snapshot(snapshot: &CadSnapshot) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let work_items = cad_snapshot_items(snapshot);
+    let retained_bytes = cad_snapshot_retained_bytes(snapshot);
+    if work_items > CAD_ARTIFACT_STORE_MAXIMUM_ITEMS || retained_bytes > CAD_ARTIFACT_STORE_MAXIMUM_BYTES {
+        return Err("CAD Artifact exceeds its fixed retained preparation envelope".into());
+    }
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+}
+
+fn admit_cad_artifact_mutation(mutation: &CadMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let retained_bytes = serde_json::to_vec(mutation).map_err(|error| error.to_string())?.len();
+    if retained_bytes > CAD_ARTIFACT_STORE_MAXIMUM_BYTES {
+        return Err("CAD Artifact mutation exceeds its fixed retained byte envelope".into());
+    }
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+}
+
+fn prepare_cad_artifact(base: &CadSnapshot, mutation: CadMutation) -> Result<(CadSnapshot, Vec<CadMutation>, CadMutation), String> {
+    admit_cad_snapshot(base)?;
+    admit_cad_artifact_mutation(&mutation)?;
+    let inverse = <CadMutation as protocol::Mutation<CadSnapshot>>::inverse(&mutation, base);
+    let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&mutation, base);
+    let post = protocol::MutationDiff::apply(outcome.diff(), base).map_err(|error| error.to_string())?;
+    admit_cad_snapshot(&post)?;
+    Ok((post, inverse, mutation))
+}
+
+fn cad_artifact_store_edit(forward: CadMutation, inverse: Vec<CadMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<CadMutation> {
+    let id = format!("cad-artifact-retained-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<CadSnapshot, CadMutation> for CadArtifactStorePreparationFactory {
+    fn preflight(&self, mutation: &CadMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("CAD Artifact preparation rejected its lane or description envelope".into());
+        }
+        admit_cad_artifact_mutation(mutation)
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<CadSnapshot, CadMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation>>, store::ArtifactStoreOneItemPreparationRequest<CadSnapshot, CadMutation>> {
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(CadArtifactStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation> for CadArtifactStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "CAD Artifact preparation lost its exact base root".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "CAD Artifact preparation lost its mutation owner".to_string())?;
+        let (post, inverse, forward) = prepare_cad_artifact(base.get(), mutation)?;
+        let authority = self.authority.as_ref().ok_or_else(|| "CAD Artifact preparation lost its Store authority".to_string())?;
+        let edit = cad_artifact_store_edit(forward, inverse, self.description.take(), authority);
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>> { self.prepared.as_ref() }
+
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>> { self.prepared.take() }
+
+    fn cancel(&mut self) { self.cancelled = true; }
+
+    fn begin_close(&mut self) { self.closing = true; }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("CAD Artifact preparation could not return its exact base root".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️ArtifactStorePreparation
+
+//#region 🧹️EmptyLaneRetirement
+struct CadNoTransientStoreDisposer;
+
+impl semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation>> for CadNoTransientStoreDisposer {
+    fn close_step(
+        &mut self,
+        _owner: &mut store::TransientStore<semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation>,
+        maximum_items: usize,
+        _maximum_bytes: usize,
+    ) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        if maximum_items == 0 {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        assert_eq!(std::mem::size_of::<semio_framework_plugin::NoTransient>(), 0);
+        Ok(semio_framework_plugin::PluginCloseStep::Complete)
+    }
+
+    fn terminal_is_empty(&self, _owner: &store::TransientStore<semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation>) -> bool {
+        std::mem::size_of::<semio_framework_plugin::NoTransient>() == 0
+    }
+}
+//#endregion 🧹️EmptyLaneRetirement
 
 impl ArtifactEditor for CadPlayApp {
     type Snapshot = CadSnapshot;
@@ -1156,35 +1677,109 @@ impl ArtifactEditor for CadPlayApp {
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
     type Command = CadCommand;
 
+    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_owners() -> Option<store::MemberStoreOwners<Self::Draft, Self::DraftMutation>> {
+        assert_eq!(std::mem::size_of::<NoDraft>(), 0);
+        Some(semio_framework_plugin::bounded_document_store_owners::<NoDraft, NoDraftMutation>())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<NoDraft, NoDraftMutation>())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(Box::new(CadNoTransientStoreDisposer))
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(crate::editor::cad::presence::retirement::CadPresenceRetirementFactory))
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(crate::editor::cad::presence::retirement::CadPresenceRetirementFactory))
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(crate::editor::cad::presence::retirement::CadPresenceStoreDisposer::new()))
+    }
+
     const DIALECT: Dialect = crate::artifacts::cad::CAD_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;
+
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(CadArtifactStorePreparationFactory))
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(CadConfigStorePreparationFactory))
+    }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<CadPlayApp>,
         owner_file: "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
         controller: "s.cad.cad@1/*#editor",
         document_schema: "cad.scene",
-        factory: "BoundedFirstStepCommandJobFactory",
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
+        factory: "CadRetainedCommandJobFactory",
+        factory_type: CadRetainedCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
         tools: [
-            "addObject", "patchObject", "patchSelection", "deleteObject", "duplicateObject", "addNode", "renameNode", "translateSelection", "rotateSelection", "scaleSelection", "applyTransformation", "importCadFile", "patchCadPlayReference", "engagementSubmit", "focusModelDefinition", "setActiveExample", "worldPointerDown", "setCamera", "setProjection", "setProjectionParam", "setDislocateOption", "setNodeSelection", "setReferenceSelection", "referenceHover", "engagementInput", "engagementPossibleSelect", "engagementRepeatLast", "engagementAbort", "worldPointerMove", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setActiveUtility", "setContributions", "saveSelected", "saveInPlay", "saveCurrent", "loadRawRequest",
+            "addNode",
+            "renameNode",
+            "patchCadPlayReference",
+            "focusModelDefinition",
+            "setCamera",
+            "setProjection",
+            "setProjectionParam",
+            "setDislocateOption",
+            "setNodeSelection",
+            "setReferenceSelection",
+            "referenceHover",
+            "engagementInput",
+            "engagementPossibleSelect",
+            "engagementRepeatLast",
+            "engagementAbort",
+            "worldPointerMove",
+            "toggleSun",
+            "setSunAzimuth",
+            "setSunElevation",
+            "setSunIntensity",
+            "setActiveUtility",
+            "setLocale",
+            "setTerminology",
+            "setContributions",
+            "loadRawRequest"
         ]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
-        let controller_id = registry.controller_id().to_string();
-        registry.register(CadHostConfigurationJobFactory::new(&controller_id))
+        let controller = registry.controller_id().to_string();
+        registry.register(CadRetainedCommandJobFactory::new(&controller))
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !CAD_HOST_CONFIGURATION_TOOL_IDS.contains(&request.tool_id.as_str()) {
+        if !CAD_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
-        if request.command.command_id() != request.tool_id {
-            return Err(Fault::from("cad-host-configuration-command-tool-mismatch"));
+        if request.command.command_id() != request.tool_id || cad_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
+            return Err(Fault::from("cad-retained-command-tool-mismatch"));
         }
         let tool_id = request.command.command_id();
-        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, cad_host_configuration_reduce, cad_host_configuration_extent));
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, cad_retained_reduce, cad_retained_extent));
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
@@ -1424,7 +2019,7 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::cad::CAD_DIALECT).document(["semio", "cad"])
             .command({
                 let mut definition = CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) };
-                definition.semantics.execution.interactive_job = semio_framework_plugin::InteractiveJobClassification::Migrated;
+                definition.semantics.execution.interactive_job = semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite;
                 definition
             })
             .action_interactive_job("setContributions", semio_framework_plugin::InteractiveJobClassification::Migrated)
@@ -1454,6 +2049,8 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::bounded_catalog("patchCadPlayReference", LocalizedLabel::native("Patch Reference", "Referenz aktualisieren"), ActionKind::Mutation).in_palette(false))
             .action_with(ActionDefinition::bounded_catalog("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation).in_palette(false))
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
+            .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
+            .view_action("setTerminology", LocalizedLabel::native("Set Terminology", "Terminologie festlegen"))
             .view_action("setProjection", LocalizedLabel::native("Set Projection", "Projektion festlegen"))
             .view_action("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"))
             .mutation("focusModelDefinition", LocalizedLabel::native("Focus Model Definition", "Modelldefinition fokussieren"))
@@ -1516,23 +2113,24 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             // shooting's format defaults — every `CadConfig` field is session view-state, not a setting).
             .config(CadPlayApp::config_spec())
             .io(cad_io())
-            .action_interactive_job("addObject", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("patchObject", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("patchSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("deleteObject", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("duplicateObject", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveUtility", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addObject", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("patchObject", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("patchSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("deleteObject", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("duplicateObject", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("addNode", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("renameNode", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("translateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("rotateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("scaleSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("applyTransformation", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("importCadFile", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("translateSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("rotateSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("scaleSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("applyTransformation", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("importCadFile", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("patchCadPlayReference", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("focusModelDefinition", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("worldPointerDown", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("worldPointerDown", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setProjection", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setProjectionParam", semio_framework_plugin::InteractiveJobClassification::Migrated)
@@ -1549,10 +2147,11 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setSunAzimuth", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setSunElevation", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setSunIntensity", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveUtility", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("saveSelected", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("saveInPlay", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("saveCurrent", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLocale", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setTerminology", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("saveSelected", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("saveInPlay", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("saveCurrent", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("loadRawRequest", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`Viewer`/`.editor::<E>(def: AppDefinition)`
             // take a bare `AppDefinition`, not the old `App { definition, examples }` — there is no
@@ -1815,10 +2414,148 @@ mod tests {
             .expect("CAD contribution mutation");
         assert_eq!(mutation, CadConfigMutation::SetContributions { json: "[{\"id\":\"cad\"}]".into() });
         assert_eq!(<CadPlayApp as ArtifactEditor>::host_configuration_mutation("setActiveExample", None).expect("non-host action"), None);
-        let factory = CadHostConfigurationJobFactory::new("s.cad.cad@1/*#editor");
-        assert_eq!(ToolJobFactory::keys(&factory), &[ToolFactoryKey::new("s.cad.cad@1/*#editor", "setContributions")]);
+        assert!(<CadPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some());
+        assert!(<CadPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_some());
+        let factory = CadRetainedCommandJobFactory::new("s.cad.cad@1/*#editor");
+        let expected_keys = CAD_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new("s.cad.cad@1/*#editor", *tool_id)).collect::<Vec<_>>();
+        assert_eq!(ToolJobFactory::keys(&factory), expected_keys);
         assert_eq!(ToolJobFactory::payload_schema_id(&factory), CAD_RETAINED_COMMAND_SCHEMA);
         assert_eq!(ToolJobFactory::classification(&factory), InteractiveJobClassification::Migrated);
+        assert_eq!(<CadRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, CAD_RETAINED_PUBLICATION_CONTRACTS);
+        assert_eq!(<CadPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), CAD_RETAINED_TOOL_IDS.len());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_cad_presence_close_empty_lanes_have_exact_owners() {
+        let fixture: Value = serde_json::from_str(include_str!("👥️presence/🧪️retirement.json")).unwrap();
+        let maximum_items = fixture["grant"]["maximumItems"].as_u64().unwrap() as usize;
+        let maximum_bytes = fixture["grant"]["maximumBytes"].as_u64().unwrap() as usize;
+        let envelope = store::create_document_envelope::<NoDraft, NoDraftMutation>("draft.empty", "cad-draft-close", NoDraft::default(), None);
+        let mut draft = store::DraftStore::new(envelope).await.unwrap();
+        draft.install_member_store_owners_exact(<CadPlayApp as ArtifactEditor>::build_draft_store_owners().unwrap());
+        let mut disposer = <CadPlayApp as ArtifactEditor>::build_draft_store_disposer().unwrap();
+        for turn in 0..100_000 {
+            match disposer.close_step(&mut draft, maximum_items, maximum_bytes).unwrap() {
+                semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } => assert!(released_items <= maximum_items && released_bytes <= maximum_bytes),
+                semio_framework_plugin::PluginCloseStep::Blocked { reason } => panic!("empty CAD draft close blocked: {reason}"),
+                semio_framework_plugin::PluginCloseStep::Complete => break,
+            }
+            assert!(turn < 99_999);
+        }
+        assert!(disposer.terminal_is_empty(&draft));
+        let mut transient = store::TransientStore::new(semio_framework_plugin::NoTransient::default());
+        let mut disposer = <CadPlayApp as ArtifactEditor>::build_transient_store_disposer().unwrap();
+        assert_eq!(disposer.close_step(&mut transient, 0, maximum_bytes).unwrap(), semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        assert_eq!(disposer.close_step(&mut transient, maximum_items, maximum_bytes).unwrap(), semio_framework_plugin::PluginCloseStep::Complete);
+        assert!(disposer.terminal_is_empty(&transient));
+        eprintln!("[DEBUG] CAD exact NoDraft and NoTransient owners completed under 1-item/4096-byte grants");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_factory_proofs_activate_the_real_cad_manifest_and_close_under_the_production_grant() {
+        let fixture: Value = serde_json::from_str(include_str!("../🧪️retained-jobs/🔣️component.json")).expect("CAD activation fixture");
+        let activation = &fixture["activation"];
+        let controller = activation["controller"].as_str().expect("controller");
+        let bus = semio_framework::ActionBus::new();
+        let registry = AppActionRegistry::from_definition(&create_cad_app());
+        let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<CadPlayApp>>::with_registry_on_bus(EditorApp::<CadPlayApp>::default(), registry, bus.clone()).await;
+        assert_eq!(app.app_id().await, controller);
+        assert_eq!(<CadPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), activation["proofRows"].as_u64().expect("proof rows") as usize);
+        let mut admitted = std::collections::BTreeSet::new();
+        for tool_id in CAD_RETAINED_TOOL_IDS {
+            let admission = bus.admit_exact_wire(controller, *tool_id, CAD_RETAINED_COMMAND_SCHEMA, &[]).expect("real CAD factory is live before proof validation");
+            assert_eq!(admission.factory_type_id, std::any::TypeId::of::<CadRetainedCommandJobFactory>());
+            assert_eq!(admission.factory_type_name, std::any::type_name::<CadRetainedCommandJobFactory>());
+            assert!(admitted.insert(*tool_id));
+        }
+        assert!(admitted.contains(activation["injectedTool"].as_str().expect("injected tool")));
+        let maximum_items = activation["closeItems"].as_u64().expect("close items") as usize;
+        let maximum_bytes = activation["closeBytes"].as_u64().expect("close bytes") as usize;
+        let mut complete = false;
+        for _ in 0..100_000 {
+            match app.close_step(maximum_items, maximum_bytes).expect("bounded CAD close") {
+                semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } => {
+                    assert!(released_items <= maximum_items && released_bytes <= maximum_bytes);
+                }
+                semio_framework_plugin::PluginCloseStep::Blocked { reason } => panic!("CAD constructor close blocked: {reason}"),
+                semio_framework_plugin::PluginCloseStep::Complete => { complete = true; break; }
+            }
+        }
+        assert!(complete && app.close_terminal_is_empty(), "the real mounted CAD owner must reach its empty terminal shell");
+        eprintln!("[DEBUG] CAD activation joined {} exact app factory rows including setActiveUtility and completed bounded close", admitted.len());
+    }
+
+    #[test]
+    fn retained_config_store_preparation_is_bounded_exact_and_reversible() {
+        let base = CadConfig::default();
+        let mut next = base.clone();
+        next.locale = "de-DE".into();
+        next.active_utility_id = "dislocate".into();
+        let mutation = CadConfigMutation::Snapshot { config: next.clone() };
+        let footprint = admit_cad_config_mutation(&mutation).expect("bounded CAD config mutation");
+        assert_eq!(footprint.work_items, 1);
+        let (post, inverse, forward) = prepare_cad_config(&base, mutation.clone()).expect("exact CAD config preparation");
+        assert_eq!(post, next);
+        assert_eq!(forward, mutation);
+        assert_eq!(inverse, vec![CadConfigMutation::Snapshot { config: base.clone() }]);
+        let oversized = CadConfigMutation::SetContributions { json: "x".repeat(CAD_CONFIG_STORE_MAXIMUM_BYTES + 1) };
+        assert!(admit_cad_config_mutation(&oversized).is_err());
+    }
+
+    #[test]
+    fn retained_artifact_store_preparation_is_bounded_exact_and_reversible() {
+        let base = crate::artifacts::cad::empty_cad_snapshot();
+        let node = crate::artifacts::cad::CadNode { id: "node-retained".into(), label: "Retained".into(), kind: "group".into() };
+        let mutation = CadMutation::CreateNode(crate::artifacts::cad::mutations::create_node::mutation::CreateNode { node: node.clone() });
+        let footprint = admit_cad_artifact_mutation(&mutation).expect("bounded CAD Artifact mutation");
+        assert_eq!(footprint.work_items, 1);
+        let (post, inverse, forward) = prepare_cad_artifact(&base, mutation.clone()).expect("exact CAD Artifact preparation");
+        assert_eq!(post.nodes, vec![node]);
+        assert_eq!(forward, mutation);
+        let mut restored = post;
+        for operation in inverse {
+            let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&operation, &restored);
+            restored = protocol::MutationDiff::apply(outcome.diff(), &restored).expect("exact inverse");
+        }
+        assert_eq!(restored, base);
+    }
+
+    #[test]
+    fn retained_route_fixture_matches_the_exact_owner_manifest_and_laws() {
+        let fixture: Value = serde_json::from_str(include_str!("../🧪️retained-jobs/🔣️component.json")).expect("CAD retained route fixture");
+        let routes = fixture.get("routes").and_then(Value::as_array).expect("route array");
+        let route_ids = routes.iter().map(|route| route.get("id").and_then(Value::as_str).expect("route id")).collect::<std::collections::BTreeSet<_>>();
+        let command_ids = every_command()
+            .iter()
+            .map(CadCommand::command_id)
+            .filter(|id| *id != SET_ACTIVE_UTILITY_ACTION_ID)
+            .collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(routes.len(), 40);
+        assert_eq!(route_ids, command_ids);
+        assert_eq!(fixture.get("admittedRoutes"), Some(&json!(CAD_RETAINED_TOOL_IDS)));
+        assert_eq!(fixture.pointer("/limits/closePageBytes").and_then(Value::as_u64), Some(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES as u64));
+        assert_eq!(fixture.get("laws"), Some(&json!(["ownerLocal", "progress", "cancel", "freshness", "ackBeforeClose", "incrementalClose", "terminalEmpty"])));
+        assert!(routes.iter().all(|route| {
+            let id = route.get("id").and_then(Value::as_str);
+            let disposition = route.get("disposition").and_then(Value::as_str);
+            let blocker = route.get("blocker").and_then(Value::as_str);
+            if id.is_some_and(|id| CAD_RETAINED_TOOL_IDS.contains(&id)) {
+                disposition == Some("migrated") && blocker == Some("none")
+            } else {
+                disposition == Some("batchOnlyPendingRewrite") && blocker.is_some_and(|blocker| blocker != "none")
+            }
+        }));
+        let manifest = create_cad_app();
+        for tool_id in CAD_RETAINED_TOOL_IDS {
+            let actions = manifest.actions.iter().filter(|action| action.id == *tool_id).collect::<Vec<_>>();
+            assert_eq!(actions.len(), 1, "{tool_id} requires exactly one manifest declaration");
+            assert_eq!(actions[0].semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{tool_id}");
+        }
+        assert_eq!(manifest.actions.iter().find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).map(|action| action.semantics.execution.interactive_job), Some(InteractiveJobClassification::Migrated));
+        assert!(manifest.actions.iter().filter(|action| route_ids.contains(action.id.as_str())).all(|action| {
+            let expected = if CAD_RETAINED_TOOL_IDS.contains(&action.id.as_str()) { InteractiveJobClassification::Migrated } else { InteractiveJobClassification::BatchOnlyPendingRewrite };
+            action.semantics.execution.interactive_job == expected
+        }));
     }
 
     /// ⚖️ LAW: the one-action spot check above is not enough — this is the framework's own harness,

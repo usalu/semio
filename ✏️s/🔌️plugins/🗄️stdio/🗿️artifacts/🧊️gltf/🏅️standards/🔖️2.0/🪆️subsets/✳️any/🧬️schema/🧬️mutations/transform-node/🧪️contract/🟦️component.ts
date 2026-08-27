@@ -1,6 +1,0 @@
-/** 🧪️ Mutation-law probe for transform-node. */
-import type { GltfSnapshot } from '../../../📸️snapshot/🟦️component.ts';
-import { applyGltfTransformNode, type GltfTransformNodePayload } from '../../transform-node/🦠️mutation/🟦️component.ts';
-import { deriveGltfTransformNodeDiff } from '../../transform-node/🔺️diff/🟦️component.ts';
-import { deriveGltfTransformNodeInverse } from '../../transform-node/↩️inverse/🟦️component.ts';
-export const assertGltfTransformNodeLaws = (base: GltfSnapshot, payload: GltfTransformNodePayload) => { const first = applyGltfTransformNode(base, payload); if (!first.accepted) return first; const replay = applyGltfTransformNode(base, payload); if (!replay.accepted || JSON.stringify(first.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(first.diff) !== JSON.stringify(replay.diff)) throw new Error('transform-node replay is non-deterministic'); const direct = deriveGltfTransformNodeDiff(base, payload); const inverse = deriveGltfTransformNodeInverse(base, payload); if (!direct.accepted || !inverse.accepted || JSON.stringify(direct.touchedPaths) !== JSON.stringify(first.touchedPaths) || JSON.stringify(inverse.touchedPaths) !== JSON.stringify(first.touchedPaths)) throw new Error('transform-node diff or inverse law failed'); return { first, direct, inverse }; };

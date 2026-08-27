@@ -1,3 +1,4 @@
 syntax = "proto3";
-package semio.stdio_pdf.mutations_text;
-message Artifact { string schema = 1; bytes payload = 2; }
+package semio.stdio.pdf.v1_4.mutations.text;
+// 📝️ Canonical direct-leaf opcode and hexadecimal JSON payload.
+message PdfMutationText { string line = 1; }

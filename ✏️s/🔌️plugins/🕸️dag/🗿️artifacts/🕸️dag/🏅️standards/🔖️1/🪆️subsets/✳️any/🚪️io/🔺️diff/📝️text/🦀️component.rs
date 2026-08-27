@@ -24,7 +24,7 @@ pub use crate::artifacts::dag::schema::diff::*;
 /// that scene, then mint+cache a whole new content handle here — the "mint+cache whole handle, never
 /// apply-then-capture" pattern flow's `diff_replace_content`/writer's `diff_set_text` established.
 pub async fn diff_replace_content(nodes: Vec<DagNodeSpec>, edges: Vec<DagFixtureEdge>) -> DagDiff {
-    DagDiff { content: Some(crate::artifacts::dag::dag_content_child_handle_and_cache(nodes, edges)), ..Default::default() }
+    DagDiff { content: Some(crate::artifacts::dag::dag_content_child_with_owner(nodes, edges)), ..Default::default() }
 }
 //#endregion 🔖️ReplaceContent
 

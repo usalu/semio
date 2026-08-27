@@ -1,4 +1,0 @@
-scalar GltfChangeNodeExtraDataDiffJsonV1
-enum GltfChangeNodeExtraDataDiffPresenceStateV1 { absent present }
-input GltfChangeNodeExtraDataDiffPresenceV1 { state: GltfChangeNodeExtraDataDiffPresenceStateV1!, value: GltfChangeNodeExtraDataDiffJsonV1 }
-input GltfChangeNodeExtraDataDiffV1 { node: Int!, before: GltfChangeNodeExtraDataDiffPresenceV1!, after: GltfChangeNodeExtraDataDiffPresenceV1!, touchedPaths: [String!]! }

@@ -6,7 +6,7 @@ use protocol::Identified;
 
 use super::mutation::MoveWidgets;
 
-pub async fn diff(payload: &MoveWidgets, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
+pub fn diff(payload: &MoveWidgets, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
     let mut scene = flow_working_scene(base);
     let missing_ids: Vec<String> = payload.entries.iter().map(|entry| entry.id.clone()).filter(|id| !scene.widgets.iter().any(|widget| widget.id() == id)).collect();
     if !missing_ids.is_empty() {

@@ -4,7 +4,7 @@ camera {
   x=0 y=0 zoom=1
 }
 widgets {
-  input-slider id=slider value=3 min=0 max=10 step=0.1
+  input-slider id=slider label="Number" value=3 min=0 max=10 step=0.1
   neuron id=rect neuron-kind=math.add preview=true input-ports=[ ] output-ports=[ ]
   params [key:TEXT value:BLOCK] {
   }

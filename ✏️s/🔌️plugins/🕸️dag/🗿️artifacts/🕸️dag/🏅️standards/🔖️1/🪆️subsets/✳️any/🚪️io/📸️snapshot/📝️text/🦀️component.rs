@@ -76,7 +76,7 @@ async fn parse_dag_snapshot_body(body: &str) -> Result<DagSnapshot, String> {
     let schema = schema.ok_or_else(|| "dag snapshot: missing schema line".to_string())?;
     let nodes = nodes.ok_or_else(|| "dag snapshot: missing nodes line".to_string())?;
     let edges = edges.ok_or_else(|| "dag snapshot: missing edges line".to_string())?;
-    let content = crate::artifacts::dag::dag_content_child_handle_and_cache(nodes, edges);
+    let content = crate::artifacts::dag::dag_content_child_with_owner(nodes, edges);
     Ok(DagSnapshot { schema, content })
 }
 //#endregion 🔖️CodecPrimitives
@@ -113,10 +113,10 @@ mod tests {
     async fn dump_example_dsl_when_requested() {
         if std::env::var("DUMP_DAG_EXAMPLE").is_ok() {
             use crate::artifacts::dag::snapshot::schema::DagSnapshot;
-            use crate::artifacts::dag::{dag_content_child_handle_and_cache, DagFixtureEdge, DagNodeSpec, DAG_DOCUMENT_SCHEMA};
+            use crate::artifacts::dag::{dag_content_child_with_owner, DagFixtureEdge, DagNodeSpec, DAG_DOCUMENT_SCHEMA};
             let nodes = vec![DagNodeSpec { id: "slider-a".into(), name: "A".into(), ..Default::default() }, DagNodeSpec { id: "slider-b".into(), name: "B".into(), x: 200.0, ..Default::default() }];
             let edges = vec![DagFixtureEdge { id: "edge-1".into(), source: "slider-a@out".into(), target: "slider-b@in".into(), ..Default::default() }];
-            let content = dag_content_child_handle_and_cache(nodes, edges);
+            let content = dag_content_child_with_owner(nodes, edges);
             let snapshot = DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), content };
             println!("{}", print_dsl(&snapshot));
         }

@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.png.mutation;
+// 🧬️ change-header/ChangeHeader; complex fields follow the direct payload schema.
+message ChangeHeaderMutation { uint64 width = 1; uint64 height = 2; uint64 bit_depth = 3; bytes color_type = 4; bool interlace = 5; }

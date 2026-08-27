@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.flow.command.set-graph-parameter.fixture",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "cases", "longWidgetId", "retirement", "rejected"],
+  "properties": {
+    "schema": {"const": "semio.flow.command.set-graph-parameter"},
+    "cases": {"type": "array", "minItems": 3, "items": {"$ref": "semio.flow.command.set-graph-parameter"}},
+    "longWidgetId": {
+      "type": "object", "additionalProperties": false, "required": ["unit", "repetitions", "value", "expectedBytes"],
+      "properties": {"unit": {"const": "🌊"}, "repetitions": {"const": 2048}, "value": {"const": 4}, "expectedBytes": {"const": 8192}}
+    },
+    "retirement": {
+      "type": "object", "additionalProperties": false,
+      "required": ["grants", "surfaceUnit", "surfaceRepetitions", "cancelAt", "terminalEmpty"],
+      "properties": {
+        "grants": {"const": [0, 1, 4096]}, "surfaceUnit": {"const": "🎛️"}, "surfaceRepetitions": {"const": 1024},
+        "cancelAt": {"const": [0, 1, 4, 4097]}, "terminalEmpty": {"const": true}
+      }
+    },
+    "rejected": {"type": "array", "minItems": 7, "items": {"type": "object", "not": {"$ref": "semio.flow.command.set-graph-parameter"}}}
+  }
+}

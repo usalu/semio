@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.manifest.action-semantics-defaults.v1",
+  "type": "array",
+  "minItems": 6,
+  "maxItems": 6,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "kind",
+      "semantics"
+    ],
+    "properties": {
+      "kind": {
+        "enum": [
+          "mutation",
+          "view",
+          "interaction",
+          "history",
+          "clipboard",
+          "shell"
+        ]
+      },
+      "semantics": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "effects",
+          "policy",
+          "execution",
+          "useWhen",
+          "examples"
+        ],
+        "properties": {
+          "effects": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "reads",
+              "writes",
+              "external",
+              "destructive",
+              "reversible"
+            ],
+            "properties": {
+              "reads": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "writes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "external": {
+                "type": "boolean"
+              },
+              "destructive": {
+                "type": "boolean"
+              },
+              "reversible": {
+                "type": "boolean"
+              }
+            }
+          },
+          "policy": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scopes",
+              "approval"
+            ],
+            "properties": {
+              "scopes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "approval": {
+                "enum": [
+                  "never",
+                  "whenDestructive",
+                  "always"
+                ]
+              }
+            }
+          },
+          "execution": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "preview",
+              "undo",
+              "idempotency",
+              "expectedRevision",
+              "cancellable",
+              "class",
+              "interactiveJob"
+            ],
+            "properties": {
+              "preview": {
+                "enum": [
+                  "none",
+                  "dryRun",
+                  "diff"
+                ]
+              },
+              "undo": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "none",
+                      "inverse"
+                    ]
+                  }
+                }
+              },
+              "idempotency": {
+                "enum": [
+                  "natural",
+                  "key",
+                  "none"
+                ]
+              },
+              "expectedRevision": {
+                "type": "boolean"
+              },
+              "cancellable": {
+                "type": "boolean"
+              },
+              "class": {
+                "enum": [
+                  "interactive",
+                  "background",
+                  "job"
+                ]
+              },
+              "interactiveJob": {
+                "const": "unclassified"
+              }
+            }
+          },
+          "useWhen": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

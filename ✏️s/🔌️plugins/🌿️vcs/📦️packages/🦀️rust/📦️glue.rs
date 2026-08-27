@@ -71,6 +71,8 @@ pub mod artifacts {
                                 mod component;
                                 pub use component::*;
                             }
+                            #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🦀️component.rs"]
+                            pub mod operations;
                             #[path = "."]
                             pub mod mutations {
                                 #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
@@ -82,8 +84,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/🧪️tests/appends-urgent-tag/🦀️component.rs"]
                                     mod tests_appends_urgent_tag;
@@ -94,8 +97,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/🧪️tests/retitles-the-document/🦀️component.rs"]
                                     mod tests_retitles_the_document;
@@ -106,8 +110,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/🧪️tests/rewrites-the-notes/🦀️component.rs"]
                                     mod tests_rewrites_the_notes;
@@ -118,8 +123,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter/🧪️tests/sets-counter-to-seven/🦀️component.rs"]
                                     mod tests_sets_counter_to_seven;
@@ -130,8 +136,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/🧪️tests/detaches-the-review-tag/🦀️component.rs"]
                                     mod tests_detaches_the_review_tag;
@@ -142,8 +149,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
+                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/🦀️component.rs"]
+                                    mod component;
+                                    pub use component::*;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/🧪️tests/draft-to-review/🦀️component.rs"]
                                     mod tests_draft_to_review;

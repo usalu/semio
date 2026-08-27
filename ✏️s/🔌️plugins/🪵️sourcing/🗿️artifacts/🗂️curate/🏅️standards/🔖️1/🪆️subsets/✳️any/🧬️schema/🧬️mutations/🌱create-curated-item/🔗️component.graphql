@@ -1,0 +1,9 @@
+"""🌱 Direct create-curated-item payload."""
+input CreateCuratedItemInput {
+  item: CuratedItemInput!
+}
+
+input CuratedItemInput {
+  objectId: String!
+  count: Int!
+}

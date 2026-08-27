@@ -47,7 +47,7 @@ Inventory applies the following mutually exclusive order:
 
 The history projection records the source leaf preimage and, when present, the sibling manifest preimage and parsed state. Planning rejects an occupied destination, incoming reference that is not covered by a structured edit, changed source or manifest bytes, a symlink/nonregular source, or a source outside the exact immediate owner.
 
-The closed FEM ticket currently has six governed old-name occurrences that must converge to its history destination: two structured `join(ticket, "📌️important.md")` calls, three prose markers across the two owning `.mjs` files, and the generated `📋️registrar-handoff.json` marker. The two script preimage hashes remain `e18760…` and `5dab8f…`. Edit the two sources first and regenerate/verify the registrar output; do not hand-author the generated JSON independently.
+The closed FEM ticket currently has five governed old-name occurrences that must converge to its history destination: two structured `join(ticket, "📌️important.md")` calls, two exact `see 📌️important.md` prose markers across the two owning `.mjs` files, and the generated `📋️registrar-handoff.json` marker. The prior six-occurrence/three-prose count was stale; the exact current census is four authored occurrences plus one generated occurrence. The two authored source preimage hashes remain `e18760f389273a8db1262c04e79a181e41a26adba2bbb753ac98c6a6d5c3c84b` and `5dab8fd67e876c41b5ac411cf9b5f632bf301bef841a6f92f8e8eefddb971be5`. The repo-lib generator owner previews, regenerates, and verifies the registrar JSON after the four structured source edits; the generated JSON is never hand-authored independently.
 
 ## Schema Shape
 

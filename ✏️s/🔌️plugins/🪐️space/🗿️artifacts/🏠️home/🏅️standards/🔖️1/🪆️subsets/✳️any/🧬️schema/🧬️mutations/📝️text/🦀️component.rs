@@ -2,6 +2,8 @@
 
 pub use crate::artifacts::home::schema::mutations::SHomeMutation;
 
+pub const TEXT_OPCODES: &[(&str, &str)] = &[("ChangeCatalogGeneration", super::change_catalog_generation::text::TEXT_OPCODE)];
+
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");

@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.writer.v1;
+
+message ChangeLanguage {
+  string new_language_id = 1;
+}

@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.jpg.mutation;
+// 🧬️ change-jfif-header/ChangeJfifHeader; complex fields follow the direct payload schema.
+message ChangeJfifHeaderMutation { bytes version = 1; bytes density_units = 2; uint64 x_density = 3; uint64 y_density = 4; bytes thumbnail = 5; }

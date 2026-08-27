@@ -19,8 +19,9 @@
 //! ENTITY can be missing, and only an already-equal value is a no-op.
 
 use crate::artifacts::jack::diff::JackDiff;
-use crate::artifacts::jack::mutations::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation, TrinityGraphMutation};
-use crate::artifacts::jack::{cache_jack_content, jack_working_scene, EntityRef, JackSnapshot, Node, PropertyBag, PropertyValue};
+use crate::artifacts::jack::mutations::TrinityGraphMutation;
+use crate::artifacts::jack::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation};
+use crate::artifacts::jack::{materialize_jack_content, jack_working_scene, EntityRef, JackSnapshot, Node, PropertyBag, PropertyValue};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -39,7 +40,7 @@ fn mutation() -> TrinityGraphMutation {
 /// property bag ALREADY maps the payload's key to the payload's value. Entity id, key and value are
 /// all read straight off the committed mutation payload.
 fn before() -> JackSnapshot {
-    let snapshot: JackSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: JackSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let TrinityGraphMutation::ChangeDataProperty(payload) = mutation() else {
         panic!("keeps-a-node-property-at-the-value-it-already-holds's committed mutation must be a change-data-property");
     };
@@ -49,7 +50,7 @@ fn before() -> JackSnapshot {
     let mut properties = PropertyBag::new();
     properties.insert(payload.key.clone(), payload.new_value.clone());
     let seeded = Node { id: node_id, kind: "Piece".into(), name: "Capsule A".into(), x: 120.0, y: -40.0, width: 80.0, height: 40.0, properties, ports: Vec::new() };
-    cache_jack_content(&snapshot.content.child_id, vec![seeded], Vec::new());
+    materialize_jack_content(&mut snapshot.content, vec![seeded], Vec::new());
     snapshot
 }
 

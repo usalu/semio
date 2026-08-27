@@ -1,0 +1,18 @@
+{
+  "initial": {
+    "schema": "flow.layout.cursor",
+    "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+    "widgets": [
+      { "kind": "inputNote", "id": "α", "text": "first" },
+      { "kind": "inputNote", "id": "β", "text": "second" }
+    ],
+    "synapses": [],
+    "layout": { "α": { "x": 1.0, "y": 2.0 } }
+  },
+  "edits": [
+    { "id": "α", "layout": { "x": 3.5, "y": -2.0 } },
+    { "id": "β", "layout": { "x": -1.0, "y": 4.0 } },
+    { "id": "α", "layout": null },
+    { "id": "β", "layout": null }
+  ]
+}

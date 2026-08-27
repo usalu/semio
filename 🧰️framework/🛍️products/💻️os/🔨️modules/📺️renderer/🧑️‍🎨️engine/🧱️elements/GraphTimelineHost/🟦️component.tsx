@@ -50,7 +50,7 @@ export function GraphTimelineHost({ node, onAction, requestContextMenu }: Compon
         const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
-            menu: { id: "graphTimeline" },
+            menu: { id: "graphTimeline", args: null },
             surface: { surfaceId: node.surfaceId, kind: "graphTimeline", hits: [], selection: [] },
             windowInstanceId: windowInstanceId ?? undefined,
             point: { x: event.clientX, y: event.clientY },

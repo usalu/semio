@@ -1,0 +1,207 @@
+{
+  "schemaVersion": 1,
+  "semanticKind": "replace-pixels",
+  "before": {
+    "schema": "stdio.tiff",
+    "byteOrder": "littleEndian",
+    "ifds": [
+      {
+        "entries": [
+          {
+            "tag": 256,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                2
+              ]
+            }
+          },
+          {
+            "tag": 257,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                2
+              ]
+            }
+          },
+          {
+            "tag": 258,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                8,
+                8,
+                8,
+                8
+              ]
+            }
+          },
+          {
+            "tag": 259,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                1
+              ]
+            }
+          },
+          {
+            "tag": 262,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                2
+              ]
+            }
+          },
+          {
+            "tag": 305,
+            "kind": "ascii",
+            "values": {
+              "kind": "ascii",
+              "value": "semio"
+            }
+          }
+        ],
+        "pixels": []
+      }
+    ],
+    "pixels": [
+      255,
+      0,
+      0,
+      255,
+      0,
+      255,
+      0,
+      255,
+      0,
+      0,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255
+    ]
+  },
+  "mutation": {
+    "mutation": "replace-pixels",
+    "payload": {
+      "pixels": [
+        9,
+        9,
+        9,
+        255,
+        9,
+        9,
+        9,
+        255,
+        9,
+        9,
+        9,
+        255,
+        9,
+        9,
+        9,
+        255
+      ]
+    }
+  },
+  "after": {
+    "schema": "stdio.tiff",
+    "byteOrder": "littleEndian",
+    "ifds": [
+      {
+        "entries": [
+          {
+            "tag": 256,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                2
+              ]
+            }
+          },
+          {
+            "tag": 257,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                2
+              ]
+            }
+          },
+          {
+            "tag": 258,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                8,
+                8,
+                8,
+                8
+              ]
+            }
+          },
+          {
+            "tag": 259,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                1
+              ]
+            }
+          },
+          {
+            "tag": 262,
+            "kind": "short",
+            "values": {
+              "kind": "short",
+              "value": [
+                2
+              ]
+            }
+          },
+          {
+            "tag": 305,
+            "kind": "ascii",
+            "values": {
+              "kind": "ascii",
+              "value": "semio"
+            }
+          }
+        ],
+        "pixels": []
+      }
+    ],
+    "pixels": [
+      9,
+      9,
+      9,
+      255,
+      9,
+      9,
+      9,
+      255,
+      9,
+      9,
+      9,
+      255,
+      9,
+      9,
+      9,
+      255
+    ]
+  }
+}

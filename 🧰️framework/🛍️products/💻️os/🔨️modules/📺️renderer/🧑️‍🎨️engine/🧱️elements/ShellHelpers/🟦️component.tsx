@@ -28,6 +28,7 @@ import {
   // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, D6:
   // `ActionArgDef.control` is gone (derived, not stored) — every reader below now calls this instead.
   argControl,
+  actionSemanticsForKind,
   type ActionDefinition,
   type ActionDescriptor,
   type ActionInvocation,
@@ -953,7 +954,7 @@ export async function runRequestMediaFrames(
   }
   try {
     if (webCodecsAvailable() && (await runTier1VideoFrames(bytes, effect, name, dispatchOne))) return;
-    const url = URL.createObjectURL(new Blob([bytes], { type: "video/mp4" }));
+    const url = URL.createObjectURL(new Blob([new Uint8Array(bytes)], { type: "video/mp4" }));
     const video = createVideoElement();
     video.muted = true;
     video.playsInline = true;
@@ -1024,7 +1025,7 @@ export function resolveArtifactByAppId(loadedPlugins: readonly LoadedProgramStat
   return breadcrumb;
 }
 
-export function appWindowLabel(app: AppDefinition, terminology: string, windowLabel: string, locale: string = SHELL_LOCALES[0]): string {
+export function appWindowLabel(app: Pick<AppDefinition, "label" | "breadcrumb" | "terminologyBreadcrumbs">, terminology: string, windowLabel: string, locale: string = SHELL_LOCALES[0]): string {
   const trimmed = windowLabel.trim();
   if (trimmed) return trimmed;
   const override = app.terminologyBreadcrumbs?.[terminology];
@@ -1134,7 +1135,7 @@ function resolveFrameworkWindowTitle(
   windowKindId: string,
   instanceId: string | undefined,
   bakedTitle: string | undefined,
-  windowKinds: readonly { readonly id: string; readonly label: LocalizedLabel | string }[],
+  windowKinds: readonly { readonly id: string; readonly label: unknown }[],
   terminology: string,
   locale: string,
 ): string {
@@ -1144,17 +1145,12 @@ function resolveFrameworkWindowTitle(
 }
 
 function convertFrameworkLayoutNodeToModeLayout(
-  node: WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode,
+  node: WindowLayoutAxisNode | WindowLayoutStackNode,
   appLabelsOverlay: PluginAppLabelsOverlay,
-  windowKinds: readonly { readonly id: string; readonly label: LocalizedLabel | string }[],
+  windowKinds: readonly { readonly id: string; readonly label: unknown }[],
   terminology: string,
   locale: string,
-): WindowLayoutNode {
-  if (node.kind === "window") {
-    const id = node.instanceId ?? node.windowKindId;
-    const title = resolveFrameworkWindowTitle(node.windowKindId, node.instanceId, node.title, windowKinds, terminology, locale);
-    return { kind: "window", id, title: wireLabel(resolveAppLabel(appLabelsOverlay, "windowKind", id, title)), corner: node.corner };
-  }
+): Exclude<WindowLayoutNode, { kind: "window" }> {
   if (node.kind === "stack") {
     return {
       kind: "stack",
@@ -1181,7 +1177,7 @@ function convertFrameworkLayoutNodeToModeLayout(
 /** @emoji 🗣️ Re-resolves every window's title from the app manifest's windowKinds via resolveManifestLabel in place, preserving the tree's structure/sizes/arrangement — used to react to a locale/terminology switch without discarding the user's live layout. */
 export function retitleWindowLayoutNode(
   node: WindowLayoutNode,
-  windowKinds: readonly { readonly id: string; readonly label: LocalizedLabel | string }[],
+  windowKinds: readonly { readonly id: string; readonly label: unknown }[],
   extraInstances: readonly ExtraWindowInstance[],
   terminology: string,
   locale: string,
@@ -1202,7 +1198,7 @@ export function retitleWindowLayoutNode(
 /** @emoji 🪟️ Resolves a framework layout into the live mode tree, extra instances, and pending projection templates without inferring window focus (no side effects). */
 export function resolveFrameworkLayoutSeed(
   layout: WindowLayout | undefined,
-  windowKinds: readonly { readonly id: string; readonly label: LocalizedLabel | string }[],
+  windowKinds: readonly { readonly id: string; readonly label: unknown }[],
   appLabelsOverlay: PluginAppLabelsOverlay,
   terminology: string,
   locale: string,
@@ -1245,7 +1241,7 @@ export function resolveFrameworkLayoutSeed(
 /** @emoji 🪟️ Applies a resolved framework layout seed: registers one-shot world projections, then returns the live layout payload. */
 export function applyFrameworkLayoutSeed(
   layout: WindowLayout | undefined,
-  windowKinds: readonly { readonly id: string; readonly label: LocalizedLabel | string }[],
+  windowKinds: readonly { readonly id: string; readonly label: unknown }[],
   appLabelsOverlay: PluginAppLabelsOverlay,
   terminology: string,
   locale: string,
@@ -1346,7 +1342,7 @@ function windowEngagementControlToSpec(control: WindowEngagementControl | undefi
     return {
       kind: control.kind,
       id: control.id,
-      label: control.label,
+      label: control.label === undefined ? undefined : uiDataLabel(control.label),
       value: control.value,
       disabled: control.disabled,
       options: control.options.map((row) => ({ id: row.id, label: row.label, disabled: row.disabled })),
@@ -1357,9 +1353,9 @@ function windowEngagementControlToSpec(control: WindowEngagementControl | undefi
     return {
       kind: "select",
       id: control.id,
-      label: control.label,
+      label: control.label === undefined ? undefined : uiDataLabel(control.label),
       value: control.value,
-      placeholder: control.placeholder,
+      placeholder: control.placeholder === undefined ? undefined : uiDataLabel(control.placeholder),
       disabled: control.disabled,
       items: control.items.map((row) => ({ id: row.id, value: row.value, label: row.label })),
       onChange: control.onChange ? (value: string) => onAction({ ...control.onChange!, args: { ...(control.onChange!.args as object | undefined), value } }) : undefined,
@@ -1369,10 +1365,9 @@ function windowEngagementControlToSpec(control: WindowEngagementControl | undefi
     if (!action) return;
     onAction({ ...action, args: { ...(action.args as object | undefined), value } });
   };
-  return {
-    kind: control.kind,
+  const numeric = {
     id: control.id,
-    label: control.label,
+    label: control.label === undefined ? undefined : uiDataLabel(control.label),
     value: control.value,
     min: control.min,
     max: control.max,
@@ -1382,6 +1377,11 @@ function windowEngagementControlToSpec(control: WindowEngagementControl | undefi
     onChange: control.onChange ? (value: number) => dispatchNumeric(control.onChange, value) : undefined,
     onCommit: control.onCommit ? (value: number) => dispatchNumeric(control.onCommit, value) : undefined,
   };
+  if (control.kind === "slider") {
+    if (control.min === undefined || control.max === undefined) throw new Error("engagement slider requires explicit minimum and maximum");
+    return { ...numeric, kind: "slider", min: control.min, max: control.max };
+  }
+  return { ...numeric, kind: "stepper" };
 }
 
 const PLUGIN_LOAD_TIMEOUT_MS = 30_000;
@@ -1389,6 +1389,16 @@ const PLUGIN_LOAD_TIMEOUT_MS = 30_000;
 /** @emoji 🔌️ Result of {@link installPlugin} — the boot effect must not infer success from
  * `loadedPluginsRef`, which only updates after the next React commit. */
 export type PluginInstallOutcome = "loaded" | "already-loaded" | "in-flight" | "missing-registry" | "failed";
+
+/** 🔐️ Keeps app-session ownership deterministic while dependency plugins stream concurrently. */
+export function pluginShouldEstablishSession(pluginId: string, primaryPluginId: string | undefined, hasSession: boolean): boolean {
+  return !hasSession && pluginId === primaryPluginId;
+}
+
+/** 🧭️ Studio configures its catalogue; a focused shell configures only its active aggregate. */
+export function pluginShouldReceiveContributions(pluginId: string, sessionPluginId: string, hostMode: boolean): boolean {
+  return hostMode || pluginId === sessionPluginId;
+}
 
 export async function loadPluginModuleResilient(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle | null> {
   try {
@@ -1415,7 +1425,7 @@ function defaultViewportEngagement(): WindowEngagement {
   };
 }
 
-export function resolveWindowEngagement(kind: AppDefinition["windowKinds"][number], windowId: string, byWindowId: Readonly<Record<string, WindowEngagement>>): WindowEngagement | undefined {
+export function resolveWindowEngagement(kind: Pick<AppDefinition["windowKinds"][number], "options">, windowId: string, byWindowId: Readonly<Record<string, WindowEngagement>>): WindowEngagement | undefined {
   const surfaceKind = (kind as { surfaceKind?: string }).surfaceKind;
   const declaredEngagement = kind.options.engagement.kind === "some" ? kind.options.engagement.value : undefined;
   return byWindowId[windowId] ?? declaredEngagement ?? (isViewportSurface(surfaceKind) ? defaultViewportEngagement() : undefined);
@@ -1425,8 +1435,8 @@ export function windowEngagementToSpec(engagement: WindowEngagement | undefined,
   if (!engagement) return undefined;
   const options = engagement.options?.map((option) => ({
     id: option.id,
-    label: option.label,
-    icon: option.iconId ? <Icon icon={option.iconId as IconName} size="small" /> : undefined,
+    label: option.label === undefined ? undefined : uiDataLabel(option.label),
+    icon: option.iconId ? <Icon icon={option.iconId} size="small" /> : { kind: "text" as const, text: option.label ?? option.id },
     pressed: option.pressed,
     disabled: option.disabled,
     onPress: option.action ? () => onAction(option.action!) : undefined,
@@ -1446,7 +1456,7 @@ export function windowEngagementToSearchSpec(engagement: WindowEngagement | unde
     ? {
         id: engagement.input.id,
         value: engagement.input.value,
-        placeholder: engagement.input.placeholder,
+        placeholder: engagement.input.placeholder === undefined ? undefined : uiDataLabel(engagement.input.placeholder),
         disabled: engagement.input.disabled,
         onChange: engagement.input.onChange ? (value: string) => onAction({ ...engagement.input!.onChange!, args: { ...(engagement.input!.onChange!.args as object | undefined), value } }) : undefined,
         onSubmit: engagement.input.onSubmit ? (value: string) => onAction({ ...engagement.input!.onSubmit!, args: { ...(engagement.input!.onSubmit!.args as object | undefined), value } }) : undefined,
@@ -1555,11 +1565,11 @@ export function resolveUtilities(app: Pick<AppDefinition, "utilities">, windowKi
 }
 
 /** 🧰️ Chrome-known ribbon-group ids that already have a `ui.ribbon.parent.*` translation key — the fallback tier for plugin-declared utility groups not covered by that plugin's own `groupLabels` overlay. */
-const CHROME_KNOWN_RIBBON_PARENT_CATEGORIES = new Set(UI_RIBBON_PARENT_CATEGORIES);
 
 /** 🧰️ Resolves a `UtilityDefinition.group` id's display label: the app's own `groupLabels` overlay first, then the shared `ui.ribbon.parent.*` chrome vocabulary for known category ids, else the raw id. */
 function resolveUtilityGroupLabel(group: string, appLabelsOverlay: PluginAppLabelsOverlay): string {
-  const fallback = CHROME_KNOWN_RIBBON_PARENT_CATEGORIES.has(group) ? shellLabel(`ui.ribbon.parent.${group as UiRibbonParentCategory}`) : group;
+  const known = UI_RIBBON_PARENT_CATEGORIES.find((category) => category === group);
+  const fallback = known === undefined ? group : shellLabel(`ui.ribbon.parent.${known}`);
   return resolveAppLabel(appLabelsOverlay, "group", group, fallback);
 }
 
@@ -1615,7 +1625,7 @@ export function resolveUtilityNodes(
 
 /** @emoji 💬️ Builds spawned-window engagement, search, measures, and utility-options chrome for one window instance. */
 export function spawnedWindowChromeForKind(
-  kind: AppDefinition["windowKinds"][number],
+  kind: Pick<AppDefinition["windowKinds"][number], "options">,
   windowId: string,
   engagementsByWindowId: Readonly<Record<string, WindowEngagement>>,
   measuresByWindowId: Readonly<Record<string, readonly WindowMeasure[]>>,
@@ -1981,20 +1991,16 @@ export function synthesizeLocalizedLabel(label: string | LocalizedLabel): Locali
   };
 }
 
-/** 🗺️ Resolves a manifest label field for the active terminology/locale. Every app-manifest struct's
- * `label`/`title`/`body`/`submitLabel`/`cancelLabel`/`description`/`text` field is now Rust's
- * `LocalizedLabel` on the wire — a `{ native: { en, de }, reuse: { en, de } }` matrix — instead of the
- * plain string these fields used to be. Falls back gracefully (reuse→native, missing locale→en, missing
- * entirely→"") so a stale/partial payload never throws; also tolerates a bare `string` defensively since
- * the owned schema mirror for these fields is still `unknown`/stale (see `framework/core/rs/lib.rs`'s
- * `LocalizedLabel` follow-up notes) — some call sites may still see the pre-migration shape until that
- * typegen lands. */
-export function resolveManifestLabel(label: LocalizedLabel | string | undefined, terminology: string, locale: string): string {
-  if (label === undefined) return "";
+/** 🗺️ Resolves an exact manifest terminology/locale cell or already-resolved/user-authored text. Malformed cells remain unresolved; no language is selected implicitly. */
+export function resolveManifestLabel(label: unknown, terminology: string, locale: string): string {
   if (typeof label === "string") return label;
-  const byTerminology = label[terminology as keyof LocalizedLabel] ?? label.native ?? label.reuse;
-  if (!byTerminology) return "";
-  return byTerminology[locale as keyof typeof byTerminology] ?? byTerminology.en ?? Object.values(byTerminology)[0] ?? "";
+  if (!label || typeof label !== "object" || !("native" in label) || !("reuse" in label)) return "";
+  if (terminology !== "native" && terminology !== "reuse") return "";
+  if (locale !== "en" && locale !== "de") return "";
+  const row = label[terminology];
+  if (!row || typeof row !== "object" || !("en" in row) || !("de" in row)) return "";
+  const value = row[locale];
+  return typeof value === "string" ? value : "";
 }
 
 /** @emoji 🗣️ Resolves a window-kind/panel-tab/mode/action/utility/example/actionArg/dialog/introduction/group id's locale-aware label from the active app's overlay, falling back to the static manifest label. */
@@ -2023,18 +2029,23 @@ export function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKi
 }
 
 /** @emoji 🗣️ Resolves one action-arg's label + (for `select` controls) its options' labels from the overlay's `actionArgLabels` map, keyed `"{scopeId}.{argId}"` / `"{scopeId}.{argId}.option.{value}"`. `scopeId` is an action id for staged/palette forms, a dialog id for dialog args, or a command id for command args. `ActionArgDef.label`/`ActionArgOption.label` are manifest `LocalizedLabel` fields, resolved for `terminology`/`locale` before the overlay's (always-empty, see the `AppLabelsOverlay` deletion note) fallback lookup even applies. */
-function resolveActionArgDef(def: ActionArgDef, scopeId: string, overlay: PluginAppLabelsOverlay, terminology: string, locale: string): ActionArgDef {
+export type ResolvedActionArgDef = Omit<ActionArgDef, "label" | "schema"> & {
+  readonly label: string;
+  readonly schema: Exclude<ActionArgDef["schema"], { kind: "string" }> | (Omit<Extract<ActionArgDef["schema"], { kind: "string" }>, "options"> & { readonly options: { value: string; label: string }[] });
+};
+
+export type ResolvedActionDefinition = Omit<ActionDefinition, "label" | "args"> & { readonly label: string; readonly args: ResolvedActionArgDef[] };
+export type ResolvedToolDefinition = Omit<ToolDefinition, "label"> & { readonly label: string };
+
+function resolveActionArgDef(def: ActionArgDef, scopeId: string, overlay: PluginAppLabelsOverlay, terminology: string, locale: string): ResolvedActionArgDef {
   const label = resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}`, resolveManifestLabel(def.label, terminology, locale));
-  // 🎫️ D6: `argControl(def).kind !== "select"` replaces the old `def.control.kind` check — a
-  // `select` control is now derived from `def.schema` (a `string` schema with non-empty `options`),
-  // so the options being resolved below live at `def.schema.options`, not on a stored `control`.
-  if (argControl(def).kind !== "select" || def.schema.kind !== "string") return label === def.label ? def : { ...def, label };
+  if (def.schema.kind !== "string") return { ...def, label, schema: def.schema };
   const options = def.schema.options.map((option) => ({ ...option, label: resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}.option.${option.value}`, resolveManifestLabel(option.label, terminology, locale)) }));
   return { ...def, label, schema: { ...def.schema, options } };
 }
 
 /** @emoji 🗣️ Resolves a `DialogDefinition`'s title/body/submitLabel/cancelLabel/args from the overlay's `dialogLabels`/`actionArgLabels` maps, keyed by the dialog's own id. `title`/`body`/`submitLabel`/`cancelLabel` are all manifest `LocalizedLabel` fields. */
-export function resolveDialogDefinition(dialog: DialogDefinition, overlay: PluginAppLabelsOverlay, terminology: string, locale: string): DialogDefinition {
+export function resolveDialogDefinition(dialog: DialogDefinition, overlay: PluginAppLabelsOverlay, terminology: string, locale: string): Omit<DialogDefinition, "args"> & { readonly args: ResolvedActionArgDef[] } {
   return {
     ...dialog,
     title: resolveAppLabel(overlay, "dialog", `${dialog.id}.title`, resolveManifestLabel(dialog.title, terminology, locale)),
@@ -2346,7 +2357,7 @@ export function isRevealCutoffHidden(instance: Pick<WorldInstanceRecord, "reveal
  * in flight are dropped (not queued). Used by World3dHost's `suggestionsTick`/`fillBuildTick` loops so a
  * slow program tick cannot unbounded-queue into the serialized WASM handle and starve the fill utility.
  */
-export function createInFlightSkippingInterval(run: () => unknown, delayMs: number, setIntervalFn: typeof setInterval = setInterval, clearIntervalFn: typeof clearInterval = clearInterval): () => void {
+export function createInFlightSkippingInterval<Timer>(run: () => unknown, delayMs: number, setIntervalFn?: (callback: () => void, delayMs: number) => Timer, clearIntervalFn?: (timer: Timer) => void): () => void {
   let cancelled = false;
   let inFlight = false;
   const tick = () => {
@@ -2356,10 +2367,18 @@ export function createInFlightSkippingInterval(run: () => unknown, delayMs: numb
       inFlight = false;
     });
   };
-  const timer = setIntervalFn(tick, delayMs);
+  let disposeTimer: () => void;
+  if (setIntervalFn && clearIntervalFn) {
+    const timer = setIntervalFn(tick, delayMs);
+    disposeTimer = () => clearIntervalFn(timer);
+  } else {
+    if (setIntervalFn || clearIntervalFn) throw new Error("interval scheduling and cancellation ports must be supplied together");
+    const timer = setInterval(tick, delayMs);
+    disposeTimer = () => clearInterval(timer);
+  }
   return () => {
     cancelled = true;
-    clearIntervalFn(timer);
+    disposeTimer();
   };
 }
 
@@ -2482,7 +2501,7 @@ function windowMeasureGroupHeaderSlider(measure: Extract<WindowMeasure, { kind: 
 
 function windowMeasureSelectControl(measure: Extract<WindowMeasure, { kind: "select" }>, onAction: (action: ActionDescriptor) => unknown): ReactNode {
   return (
-    <Select value={measure.value} onValueChange={(value) => onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value } })}>
+    <Select id={measure.id} value={measure.value} onValueChange={(value) => onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value } })}>
       <SelectTrigger id={measure.id} className="h-small w-full min-w-0" size="sm">
         <SelectValue />
       </SelectTrigger>
@@ -2498,7 +2517,7 @@ function windowMeasureSelectControl(measure: Extract<WindowMeasure, { kind: "sel
 }
 
 function windowMeasureToggleControl(measure: Extract<WindowMeasure, { kind: "toggle" }>, onAction: (action: ActionDescriptor) => unknown): ReactNode {
-  const label = measure.label ?? measure.text ?? measure.id;
+  const label = uiDataLabel(measure.label ?? measure.text ?? measure.id);
   return (
     <TreeCheckbox
       id={measure.id}
@@ -2567,21 +2586,21 @@ function renderWindowMeasure(measure: WindowMeasure, onAction: (action: ActionDe
   }
   if (measure.kind === "select") {
     return (
-      <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
+      <WindowMeasureTreeLeaf key={measure.id} label={measure.label === undefined ? undefined : uiDataLabel(measure.label)}>
         {windowMeasureSelectControl(measure, onAction)}
       </WindowMeasureTreeLeaf>
     );
   }
   if (measure.kind === "slider") {
     return (
-      <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
+      <WindowMeasureTreeLeaf key={measure.id} label={measure.label === undefined ? undefined : uiDataLabel(measure.label)}>
         <WindowMeasureSlider measure={measure} onAction={onAction} />
       </WindowMeasureTreeLeaf>
     );
   }
   if (measure.kind === "toggle") {
     return (
-      <WindowMeasureTreeLeaf key={measure.id} label={measure.label ?? measure.text} icon={windowMeasureToggleIcon(measure)}>
+      <WindowMeasureTreeLeaf key={measure.id} label={measure.label ?? measure.text ? uiDataLabel(measure.label ?? measure.text ?? "") : undefined} icon={windowMeasureToggleIcon(measure)}>
         {windowMeasureToggleControl(measure, onAction)}
       </WindowMeasureTreeLeaf>
     );
@@ -2659,10 +2678,10 @@ export function SelectionUtilityOptions({ activeUtilityId, windowId, onAction }:
             }
           }}
           items={[
-            { value: "replace", text: selectiveLabel },
-            { value: "additive", text: additiveLabel },
-            { value: "subtractive", text: subtractiveLabel },
-            { value: "invertive", text: invertiveLabel },
+            { value: "replace", icon: "mouse-pointer", text: selectiveLabel },
+            { value: "additive", icon: "plus", text: additiveLabel },
+            { value: "subtractive", icon: "minus", text: subtractiveLabel },
+            { value: "invertive", icon: { kind: "emoji", emoji: "🔄" }, text: invertiveLabel },
           ]}
         />
       </div>
@@ -2725,8 +2744,7 @@ export function utilityBarNode(utilities: readonly UtilityNode[] | undefined, wi
  * writes to the caller's local staged buffer. `value` is the already-resolved effective value
  * (staged ?? default ?? unset).
  */
-export function renderStagedArgControl(def: ActionArgDef, value: unknown, onChange: (value: unknown) => void, disabled?: boolean): ReactElement {
-  // 🎫️ D6: `def.control` is gone — derive it fresh via `argControl(def)` (mirrors Rust `ActionArgDef::control()`).
+export function renderStagedArgControl(def: ResolvedActionArgDef, value: unknown, onChange: (value: unknown) => void, disabled?: boolean): ReactElement {
   const control: ActionArgControl = argControl(def);
   switch (control.kind) {
     case "text":
@@ -2759,15 +2777,16 @@ export function renderStagedArgControl(def: ActionArgDef, value: unknown, onChan
       );
     }
     case "toggle":
-      return <Toggle id={def.id} pressed={value === true} text={def.label} disabled={disabled} onPressedChange={(pressed) => onChange(pressed)} />;
-    case "select":
+      return <Toggle id={def.id} icon="check" pressed={value === true} text={uiDataLabel(def.label)} disabled={disabled} onPressedChange={(pressed) => onChange(pressed)} />;
+    case "select": {
+      if (def.schema.kind !== "string") throw new Error("Select control requires a string argument schema");
       return (
-        <Select value={typeof value === "string" && value ? value : undefined} disabled={disabled} onValueChange={(next) => onChange(next)}>
+        <Select id={def.id} value={typeof value === "string" && value ? value : undefined} disabled={disabled} onValueChange={(next) => onChange(next)}>
           <SelectTrigger id={def.id} className="h-medium w-full min-w-0" size="sm">
             <SelectValue placeholder={def.label} />
           </SelectTrigger>
           <SelectContent>
-            {control.options.map((option, index) => (
+            {def.schema.options.map((option, index) => (
               <SelectItem key={`${def.id}:${index}:${option.value}`} value={option.value}>
                 {option.label}
               </SelectItem>
@@ -2775,6 +2794,7 @@ export function renderStagedArgControl(def: ActionArgDef, value: unknown, onChan
           </SelectContent>
         </Select>
       );
+    }
     case "vec3": {
       const tuple = Array.isArray(value) && value.length >= 3 ? (value as readonly number[]) : null;
       const axes = ["x", "y", "z"] as const;
@@ -2877,7 +2897,8 @@ export function actionCategoryId(action: Pick<ActionDefinition, "category" | "ki
 
 /** 🗂️ Resolves an action category's display label: the app's own group-label overlay first, then the shared `ui.ribbon.parent.*` chrome vocabulary for known category ids, else the raw id (mirrors {@link resolveUtilityGroupLabel}). */
 function actionCategoryLabel(category: string, appLabelsOverlay: PluginAppLabelsOverlay): string {
-  const fallback = CHROME_KNOWN_RIBBON_PARENT_CATEGORIES.has(category) ? shellLabel(`ui.ribbon.parent.${category as UiRibbonParentCategory}`) : category;
+  const known = UI_RIBBON_PARENT_CATEGORIES.find((value) => value === category);
+  const fallback = known === undefined ? category : shellLabel(`ui.ribbon.parent.${known}`);
   return resolveAppLabel(appLabelsOverlay, "group", category, fallback);
 }
 
@@ -2904,7 +2925,7 @@ export function actionCategories(actions: readonly ActionDefinition[], appLabels
 export function buildActionCategoryTree(
   windowId: string,
   controllerId: string,
-  actions: readonly ActionDefinition[],
+  actions: readonly ResolvedActionDefinition[],
   expandedActionId: string | null,
   stagedArgsByKey: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
   disabled: boolean,
@@ -2980,7 +3001,7 @@ export function buildActionCategoryTree(
 export type WindowActionPaneProps = {
   readonly windowId: string;
   readonly controllerId: string;
-  readonly actions: readonly ActionDefinition[];
+  readonly actions: readonly ResolvedActionDefinition[];
   readonly expandedActionId: string | null;
   readonly stagedArgsByKey: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
   readonly disabled: boolean;
@@ -3060,7 +3081,7 @@ export function windowActionPaneNode(
 //#region 🎛️CommandRegistry
 /** 🎛️ One command definition paired with its shared, fully qualified address. */
 export type ResolvedCommand = {
-  readonly definition: CommandDefinition;
+  readonly definition: Omit<CommandDefinition, "label" | "args"> & { readonly label: string; readonly args: ResolvedActionArgDef[] };
   readonly address: CommandAddress;
 };
 
@@ -3124,7 +3145,7 @@ export function resolveCommands(
   // the single choke point that resolves them to plain strings for every downstream consumer (the
   // footer command panel, the command palette, `noteShellCommand`'s history label); `osCommands` are
   // already plain strings (built by `buildOsCommands` via `shellLabel`) and pass through unchanged.
-  const resolveDefinition = (definition: CommandDefinition): CommandDefinition => ({
+  const resolveDefinition = (definition: CommandDefinition): ResolvedCommand["definition"] => ({
     ...definition,
     label: resolveManifestLabel(definition.label, terminology, locale),
     args: definition.args.map((def) => resolveActionArgDef(def, definition.id, overlay, terminology, locale)),
@@ -3172,7 +3193,7 @@ export function commandCategories(commands: readonly ResolvedCommand[]): { reado
 }
 
 function selectCommandArg(id: string, label: string, options: readonly { readonly value: string; readonly label: string }[]): ActionArgDef {
-  return { id, label, control: { kind: "select", options: options.map((option) => ({ ...option })) }, required: true };
+  return { id, label, schema: { kind: "string", options: options.map((option) => ({ ...option })) }, required: true };
 }
 
 /** @emoji 🚗️ Translated display name for a built-in driver id; a custom (user-authored) driver has no
@@ -3209,8 +3230,8 @@ export function buildOsCommands(
       id: "os.toggleFullscreen",
       label: shellLabel("ui.fullscreen.toggle"),
       category: "layout",
-      iconId: "maximize-2",
-      kind: "shell",
+      iconId: "maximize-2" as const,
+      semantics: actionSemanticsForKind("shell"), kind: "shell",
       inPalette: true,
       args: [],
       keybindings: [
@@ -3219,20 +3240,20 @@ export function buildOsCommands(
         { chord: "control+meta+f", platform: "macOs" },
       ],
     },
-    ...(hasIntroduction ? [{ id: "os.introduceApp", label: shellLabel("ui.command.introduceApp"), category: "app", iconId: "graduation-cap", kind: "shell" as const, inPalette: true, args: [], keybindings: [] }] : []),
+    ...(hasIntroduction ? [{ id: "os.introduceApp", label: shellLabel("ui.command.introduceApp"), category: "app", iconId: "graduation-cap" as const, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] }] : []),
     // 🎥️ `os.playTutorial` only appears once at least one tutorial is declared (app-own or brand-own);
     // `os.recordTutorial` is dev/studio-only (see `isTutorialRecorderAvailable`) and needs no declared
     // tutorial at all — recording an app IS the authoring path for one.
     ...(tutorials.length > 0
-      ? [{ id: "os.playTutorial", label: shellLabel("ui.command.playTutorial"), category: "app", iconId: "play", kind: "shell" as const, inPalette: true, keybindings: [], args: [selectCommandArg("tutorialId", shellLabel("tutorial.chapter"), tutorials.map((tutorial) => ({ value: tutorial.id, label: resolveManifestLabel(tutorial.title, terminology, locale) })))] }]
+      ? [{ id: "os.playTutorial", label: shellLabel("ui.command.playTutorial"), category: "app", iconId: "play" as const, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, keybindings: [], args: [selectCommandArg("tutorialId", shellLabel("tutorial.chapter"), tutorials.map((tutorial) => ({ value: tutorial.id, label: resolveManifestLabel(tutorial.title, terminology, locale) })))] }]
       : []),
-    ...(tutorialRecorderAvailable ? [{ id: "os.recordTutorial", label: shellLabel("ui.command.recordTutorial"), category: "app", iconId: "circle", kind: "shell" as const, inPalette: true, args: [], keybindings: [] }] : []),
+    ...(tutorialRecorderAvailable ? [{ id: "os.recordTutorial", label: shellLabel("ui.command.recordTutorial"), category: "app", iconId: "circle" as const, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] }] : []),
     {
       id: "os.setAppearance",
       label: shellLabel("ui.command.setAppearance"),
       category: "appearance",
-      iconId: "sun-moon",
-      kind: "shell",
+      iconId: "sun" as const,
+      semantics: actionSemanticsForKind("shell"), kind: "shell",
       keybindings: [],
       inPalette: true,
       args: [
@@ -3247,8 +3268,8 @@ export function buildOsCommands(
       id: "os.setThemeId",
       label: shellLabel("ui.command.setTheme"),
       category: "appearance",
-      iconId: "palette",
-      kind: "shell",
+      iconId: "palette" as const,
+      semantics: actionSemanticsForKind("shell"), kind: "shell",
       keybindings: [],
       inPalette: true,
       args: [
@@ -3263,8 +3284,8 @@ export function buildOsCommands(
       id: "os.setLayout",
       label: shellLabel("ui.command.setLayout"),
       category: "layout",
-      iconId: "layout-template",
-      kind: "shell",
+      iconId: "layout" as const,
+      semantics: actionSemanticsForKind("shell"), kind: "shell",
       keybindings: [],
       inPalette: true,
       args: [
@@ -3274,13 +3295,13 @@ export function buildOsCommands(
         ]),
       ],
     },
-    { id: "os.resetDock", label: shellLabel("ui.settings.resetDock"), category: "layout", iconId: "undo", kind: "shell", inPalette: true, args: [], keybindings: [] },
+    { id: "os.resetDock", label: shellLabel("ui.settings.resetDock"), category: "layout", iconId: "undo" as const, semantics: actionSemanticsForKind("shell"), kind: "shell", inPalette: true, args: [], keybindings: [] },
     {
       id: "os.setLocale",
       label: shellLabel("ui.command.setLocale"),
       category: "language",
-      iconId: "languages",
-      kind: "shell",
+      iconId: "globe" as const,
+      semantics: actionSemanticsForKind("shell"), kind: "shell",
       keybindings: [],
       inPalette: true,
       args: [
@@ -3294,8 +3315,8 @@ export function buildOsCommands(
       id: "os.setTerminology",
       label: shellLabel("ui.command.setTerminology"),
       category: "language",
-      iconId: "languages",
-      kind: "shell",
+      iconId: "type" as const,
+      semantics: actionSemanticsForKind("shell"), kind: "shell",
       keybindings: [],
       inPalette: true,
       args: [
@@ -3310,8 +3331,8 @@ export function buildOsCommands(
       id: "os.setDriver",
       label: shellLabel("ui.command.setDriver"),
       category: "layout",
-      iconId: "settings",
-      kind: "shell",
+      iconId: "settings" as const,
+      semantics: actionSemanticsForKind("shell"), kind: "shell",
       keybindings: [],
       inPalette: true,
       args: [
@@ -3327,8 +3348,8 @@ export function buildOsCommands(
     // "Open with…" section pre-scoped to that role rather than sending a wire command itself.
     ...(hasOpenArtifactSurfaces
       ? [
-          { id: OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID, label: openArtifactWithText(locale), category: "artifact", iconId: "eye" as IconName, kind: "shell" as const, inPalette: true, args: [], keybindings: [] },
-          { id: OPEN_ARTIFACT_WITH_EDITOR_COMMAND_ID, label: openArtifactWithText(locale), category: "artifact", iconId: "pencil" as IconName, kind: "shell" as const, inPalette: true, args: [], keybindings: [] },
+          { id: OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID, label: openArtifactWithText(locale), category: "artifact", iconId: "eye" as IconName, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] },
+          { id: OPEN_ARTIFACT_WITH_EDITOR_COMMAND_ID, label: openArtifactWithText(locale), category: "artifact", iconId: "pencil" as IconName, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] },
         ]
       : []),
   ];
@@ -3523,8 +3544,8 @@ export function buildCommandCategoryTabs(
  * panel path change); the tree itself is a single headerless section mapped to native `TreeDataItem`s
  * so Fill opens directly onto count + distribution with the same chrome as left-corner panel trees.
  */
-function buildToolTree(tool: ToolDefinition, controllerId: string, isActive: boolean, measures: readonly WindowMeasure[] | undefined, onAction: (action: ActionDescriptor) => unknown): { readonly sections: TreeDataSection[]; readonly sortableSections: false } {
-  const iconName: IconName = tool.iconId as IconName;
+function buildToolTree(tool: ResolvedToolDefinition, controllerId: string, isActive: boolean, measures: readonly WindowMeasure[] | undefined, onAction: (action: ActionDescriptor) => unknown): { readonly sections: TreeDataSection[]; readonly sortableSections: false } {
+  const iconName: IconName = tool.iconId;
   if (isActive && measures && measures.length > 0) {
     return {
       sortableSections: false,
@@ -3553,7 +3574,7 @@ function buildToolTree(tool: ToolDefinition, controllerId: string, isActive: boo
               <Toggle
                 id={`tool.${tool.id}`}
                 pressed={isActive}
-                text={tool.label}
+                text={uiDataLabel(tool.label)}
                 icon={<Icon icon={iconName} size="small" />}
                 onPressedChange={(pressed) => onAction({ controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: pressed ? tool.id : "" } })}
               />
@@ -3574,7 +3595,7 @@ function buildToolTree(tool: ToolDefinition, controllerId: string, isActive: boo
  * `resolveTree` reads those fresh off refs at render time instead.
  */
 export function buildToolTabs(
-  tools: readonly ToolDefinition[],
+  tools: readonly ResolvedToolDefinition[],
   controllerId: string,
   activeToolIdRef: React.RefObject<string | null>,
   toolMeasuresByToolIdRef: React.RefObject<Readonly<Record<string, readonly WindowMeasure[]>>>,
@@ -3655,31 +3676,6 @@ export function mergeRecordPreservingIdentity<V>(prev: Readonly<Record<string, V
   return changed ? next : prev;
 }
 
-/** @emoji 🎯️ Merges selection chrome into an existing world-3d component scene without touching instance geometry. */
-export function patchWorld3dChromeOntoNode(node: UiNode, patch: { readonly selectionJson: string; readonly vorticesJson?: string }): UiNode {
-  if (node.type !== "component" || !node.world3d) return node;
-  const next: UiNode = {
-    ...node,
-    world3d: {
-      ...node.world3d,
-      selectionJson: patch.selectionJson,
-      ...(patch.vorticesJson !== undefined ? { vorticesJson: patch.vorticesJson } : {}),
-    },
-  };
-  return preserveJsonIdentity(node, next);
-}
-
-/** @emoji 🌲️ Updates tree-level selection highlights without rebuilding structural sections. */
-export function patchDocumentTreeSelectedIds(node: UiNode, selectedIds: readonly string[], highlightedIds?: readonly string[]): UiNode {
-  if (node.type !== "tree") return node;
-  const next: UiNode = {
-    ...node,
-    selectedIds: [...selectedIds],
-    ...(highlightedIds ? { highlightedIds: [...highlightedIds] } : {}),
-  };
-  return preserveJsonIdentity(node, next);
-}
-
 //#region UiRefresh
 /** @emoji 🐢️ One cached section value keyed by `${section}:${key}` (e.g. `window:2d-overview`, `engagements`) — the hash is what gets sent back to the plugin next time so it can skip re-serializing unchanged content. */
 export type UiRefreshCache = Map<string, { readonly hash: string; readonly value: unknown }>;
@@ -3752,7 +3748,7 @@ export function buildUiRefreshRequest(
   if (scope.kind === "none") return null;
   const windows = windowInstances.filter((instance) => uiRefreshWantsWindow(scope, instance.bodyKey)).map((instance) => ({ key: instance.id, bodyKey: instance.bodyKey, hash: cache.get(`window:${instance.id}`)?.hash }));
   const panels = panelTabLeaves
-    .filter((tab): tab is { readonly kind: string; readonly bodyKey: string } => Boolean(tab.bodyKey) && uiRefreshWantsPanel(scope, tab.bodyKey!))
+    .filter((tab): tab is { readonly kind: PanelTabKind; readonly bodyKey: string } => Boolean(tab.bodyKey) && uiRefreshWantsPanel(scope, tab.bodyKey!))
     .map((tab) => ({ key: panelTabKindId(tab.kind), bodyKey: tab.bodyKey, hash: cache.get(`panel:${panelTabKindId(tab.kind)}`)?.hash }));
   const engagements = uiRefreshWantsFlag(scope, "engagements") ? { hash: cache.get("engagements")?.hash } : undefined;
   const measures = uiRefreshWantsFlag(scope, "measures") ? { hash: cache.get("measures")?.hash } : undefined;

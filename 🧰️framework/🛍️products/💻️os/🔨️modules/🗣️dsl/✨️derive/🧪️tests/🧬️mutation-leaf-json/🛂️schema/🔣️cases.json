@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "authorityOwner", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "authorityOwner": { "type": "string", "minLength": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 25,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "raw", "schemaAccepted", "parserAccepted", "diagnostic"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "raw": { "type": "string", "minLength": 2 },
+          "schemaAccepted": { "type": "boolean" },
+          "parserAccepted": { "type": "boolean" },
+          "diagnostic": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

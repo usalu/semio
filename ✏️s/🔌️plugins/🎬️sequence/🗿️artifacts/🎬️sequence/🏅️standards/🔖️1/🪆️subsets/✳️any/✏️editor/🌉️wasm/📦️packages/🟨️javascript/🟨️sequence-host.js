@@ -63,6 +63,8 @@ export const SequenceOperation = Object.freeze({
 
 export function createSequenceHost({ exports, memory, resolveCanvas, render = defaultRender, schedule = queueMicrotask, maximumInFlight = SEQUENCE_MAX_IN_FLIGHT } = {}) {
   if (!exports || !memory) throw new Error("Sequence Wasm exports and memory are required");
+  const bridgeOwner = exports.sequence_bridge_create();
+  if (!bridgeOwner) throw new Error("Sequence bridge owner allocation failed");
   const state = {
     nextRequest: 1n,
     generation: 1,
@@ -85,7 +87,7 @@ export function createSequenceHost({ exports, memory, resolveCanvas, render = de
     if (!pointer) throw new Error("Sequence allocation failed");
     try {
       new Uint8Array(memory.buffer, pointer, bytes.length).set(bytes);
-      if (exports.sequence_bridge_send(pointer, bytes.length, credit) !== 1) throw new Error("Sequence message rejected");
+      if (exports.sequence_bridge_send(bridgeOwner, pointer, bytes.length, credit) !== 1) throw new Error("Sequence message rejected");
     } finally {
       exports.sequence_bridge_release(pointer, bytes.length);
     }
@@ -96,7 +98,7 @@ export function createSequenceHost({ exports, memory, resolveCanvas, render = de
     let pointer = exports.sequence_bridge_allocate(capacity);
     if (!pointer) throw new Error("Sequence poll allocation failed");
     try {
-      let length = exports.sequence_bridge_poll(pointer, capacity, 4_096);
+      let length = exports.sequence_bridge_poll(bridgeOwner, pointer, capacity, 4_096);
       if (length <= 0) return { length };
       if (length > SEQUENCE_MAX_ENCODED_MESSAGE_BYTES) throw new Error("Sequence poll length exceeds the bounded envelope");
       if (length > capacity) {
@@ -104,7 +106,7 @@ export function createSequenceHost({ exports, memory, resolveCanvas, render = de
         capacity = length;
         pointer = exports.sequence_bridge_allocate(capacity);
         if (!pointer) throw new Error("Sequence exact retry allocation failed");
-        length = exports.sequence_bridge_poll(pointer, capacity, 4_096);
+        length = exports.sequence_bridge_poll(bridgeOwner, pointer, capacity, 4_096);
         if (length !== capacity) throw new Error("Sequence retained poll changed length");
       }
       return { length, bytes: new Uint8Array(memory.buffer, pointer, length).slice() };
@@ -285,7 +287,7 @@ export function createSequenceHost({ exports, memory, resolveCanvas, render = de
   const close = () => {
     if (state.closePromise) return state.closePromise;
     if (state.closed) return Promise.resolve();
-    exports.sequence_bridge_begin_close();
+    exports.sequence_bridge_begin_close(bridgeOwner);
     state.closing = true;
     state.canvases.clear();
     state.surfaces.clear();
@@ -301,7 +303,8 @@ export function createSequenceHost({ exports, memory, resolveCanvas, render = de
               state.blockedInbound = undefined;
               continue;
             }
-            if (exports.sequence_bridge_terminal_is_empty() === 1) {
+            if (exports.sequence_bridge_terminal_is_empty(bridgeOwner) === 1) {
+              if (exports.sequence_bridge_destroy(bridgeOwner) !== 1) throw new Error("Sequence bridge owner retirement failed");
               state.pages.clear();
               state.blockedInbound = undefined;
               state.closed = true;
@@ -332,7 +335,7 @@ export function createSequenceHost({ exports, memory, resolveCanvas, render = de
     return state.closePromise;
   };
 
-  return { state, start, cancel, closeHandle, registerCanvas, resolveCanvas, render, close, terminalIsEmpty: () => exports.sequence_bridge_terminal_is_empty() === 1 };
+  return { state, start, cancel, closeHandle, registerCanvas, resolveCanvas, render, close, terminalIsEmpty: () => state.closed || exports.sequence_bridge_terminal_is_empty(bridgeOwner) === 1 };
 }
 
 //#endregion 🌉️LinearMemoryHost

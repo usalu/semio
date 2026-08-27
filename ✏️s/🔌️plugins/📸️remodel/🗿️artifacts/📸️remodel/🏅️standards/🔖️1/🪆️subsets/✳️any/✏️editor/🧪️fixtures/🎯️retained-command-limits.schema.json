@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["controller", "documentSchema", "factory", "limits", "publicationContracts", "routes", "oracle"],
+  "properties": {
+    "controller": { "const": "s.remodel.remodel@1/*#editor" },
+    "documentSchema": { "const": "remodel.scene" },
+    "factory": { "const": "RemodelCommandJobFactory" },
+    "limits": {
+      "type": "object",
+      "required": ["bounded", "resumable"],
+      "properties": {
+        "bounded": { "$ref": "#/$defs/contract" },
+        "resumable": { "$ref": "#/$defs/contract" }
+      },
+      "additionalProperties": false
+    },
+    "publicationContracts": {
+      "type": "array",
+      "prefixItems": [
+        { "type": "object", "required": ["toolId", "lanes"], "properties": { "toolId": { "const": "importFrames" }, "lanes": { "const": ["hostOnly"] } }, "additionalProperties": false },
+        { "type": "object", "required": ["toolId", "lanes"], "properties": { "toolId": { "const": "importVideo" }, "lanes": { "const": ["hostOnly"] } }, "additionalProperties": false }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 41,
+      "maxItems": 41,
+      "items": {
+        "type": "object",
+        "required": ["id", "execution", "feature"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "execution": { "enum": ["bounded", "resumable"] },
+          "feature": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "oracle": {
+      "type": "object",
+      "required": ["library", "scope", "ownedInterface", "runtimeDependency", "expected"],
+      "properties": {
+        "library": { "const": "serde_json" },
+        "scope": { "const": "test-only-existing-dependency" },
+        "ownedInterface": { "const": "RemodelRetainedCatalogOracle" },
+        "runtimeDependency": { "const": false },
+        "expected": {
+          "type": "object",
+          "required": ["routes", "bounded", "resumable", "unique"],
+          "properties": {
+            "routes": { "const": 41 },
+            "bounded": { "const": 2 },
+            "resumable": { "const": 39 },
+            "unique": { "const": true }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "contract": {
+      "type": "object",
+      "required": ["maxRawBytes", "maxDecodedItems", "maxWorkUnitsPerStep", "maxOutputBytes", "maxStepMicros"],
+      "properties": {
+        "maxRawBytes": { "type": "integer", "minimum": 1 },
+        "maxDecodedItems": { "type": "integer", "minimum": 1 },
+        "maxWorkUnitsPerStep": { "type": "integer", "minimum": 1 },
+        "maxOutputBytes": { "type": "integer", "minimum": 1 },
+        "maxStepMicros": { "type": "integer", "minimum": 1, "maximum": 7999 },
+        "maxCheckpointBytes": { "type": "integer", "minimum": 1 },
+        "maxInFlightPages": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,138 @@
+{
+  "schema": "semio.tool-job.owner-factory-resolution.v1",
+  "ownerFile": "fixture/✏️editor/owner.rs",
+  "factoryFile": "fixture/✏️editor/⚙️engine/export.rs",
+  "glueFile": "fixture/📦️packages/🦀️rust/📦️glue.rs",
+  "ownerSource": "use crate::editor::engine::export::ExactFactory;\nuse crate::editor::engine::export::EXACT_DOCUMENT_SCHEMA;\nimpl ArtifactEditor for ExactOwner {\n const DOCUMENT_SCHEMA: &'static str = EXACT_DOCUMENT_SCHEMA;\n fn register_tool_job_factories(registry: &mut Registry) { let controller = registry.controller_id().to_string(); registry.register(ExactFactory::new(&controller)); }\n fn build_tool_job(request: Request) -> Result<Option<Spec>, Fault> { build(request) }\n}\napp_commands! { \"bounded\" => command::Bounded }\n.action_interactive_job(\"bounded\", InteractiveJobClassification::Migrated)\nbounded_first_step_tool_proofs! { owner: semio_framework_plugin::EditorApp<ExactOwner>, owner_file: \"fixture/✏️editor/owner.rs\", controller: \"fixture@1/*#editor\", document_schema: \"fixture.document\", factory: \"ExactFactory\", factory_type: ExactFactory, contract: semio_framework::ToolExecutionContract::bounded_first_step(64, 1, 1, 64, 100), tools: [\"bounded\"] }",
+  "factorySource": "pub struct ExactFactory;\nimpl semio_framework::ToolJobFactory for ExactFactory {\n type Job = ExactJob;\n fn create_job(&mut self, operation: Operation, payload: Payload) -> Result<ExactJob, Error> { ExactJob::new(operation, payload) }\n fn execution_contract(&self) -> Contract { bounded_contract() }\n}\nimpl semio_framework_plugin::ArtifactOwnedToolJobFactory for ExactFactory {\n type Owner = semio_framework_plugin::EditorApp<ExactOwner>;\n const TOOL_IDS: &'static [&'static str] = &[\"bounded\"];\n const DOCUMENT_SCHEMA: &'static str = \"fixture.document\";\n const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: \"bounded\", lanes: &[ArtifactToolPublicationLane::HostOnly] }];\n}\npub struct OtherFactory;\nimpl semio_framework::ToolJobFactory for OtherFactory { type Job = OtherJob; fn create_job(&mut self, operation: Operation, payload: Payload) -> Result<OtherJob, Error> { OtherJob::new(operation, payload) } fn execution_contract(&self) -> Contract { bounded_contract() } }\nimpl semio_framework_plugin::ArtifactOwnedToolJobFactory for OtherFactory { type Owner = semio_framework_plugin::EditorApp<ExactOwner>; const TOOL_IDS: &'static [&'static str] = &[\"other\"]; }\npub const EXACT_DOCUMENT_SCHEMA: &str = ExactSnapshot::SCHEMA;\nimpl ExactSnapshot { pub const SCHEMA: &'static str = \"fixture.document\"; }\nimpl WrongSnapshot { pub const SCHEMA: &'static str = \"wrong.document\"; }",
+  "glueSource": "#[path = \".\"] pub mod editor {\n #[path = \"../../✏️editor/owner.rs\"] mod component;\n pub use component::*;\n #[path = \".\"] pub mod engine {\n  #[path = \"../../✏️editor/⚙️engine/export.rs\"] pub mod export;\n }\n}",
+  "cases": [
+    {
+      "id": "exact-cross-file",
+      "target": "ownerSource",
+      "from": "",
+      "to": "",
+      "accepted": true
+    },
+    {
+      "id": "bogus-module-target",
+      "target": "glueSource",
+      "from": "../../✏️editor/⚙️engine/export.rs",
+      "to": "../../✏️editor/⚙️engine/missing.rs",
+      "accepted": false
+    },
+    {
+      "id": "bogus-import-path",
+      "target": "ownerSource",
+      "from": "crate::editor::engine::export::ExactFactory",
+      "to": "crate::editor::engine::unrelated::ExactFactory",
+      "accepted": false
+    },
+    {
+      "id": "wrong-owner",
+      "target": "factorySource",
+      "from": "EditorApp<ExactOwner>",
+      "to": "EditorApp<OtherOwner>",
+      "accepted": false
+    },
+    {
+      "id": "missing-live-registration",
+      "target": "ownerSource",
+      "from": "registry.register(ExactFactory::new(&controller));",
+      "to": "",
+      "accepted": false
+    },
+    {
+      "id": "missing-job-construction",
+      "target": "factorySource",
+      "from": "fn create_job(",
+      "to": "fn unreachable_job(",
+      "accepted": false
+    },
+    {
+      "id": "missing-execution-contract",
+      "target": "factorySource",
+      "from": "fn execution_contract(",
+      "to": "fn undocumented_contract(",
+      "accepted": false
+    },
+    {
+      "id": "wrong-owned-trait",
+      "target": "factorySource",
+      "from": "ArtifactOwnedToolJobFactory",
+      "to": "UnrelatedFactory",
+      "accepted": false
+    },
+    {
+      "id": "ambiguous-import",
+      "target": "ownerSource",
+      "from": "use crate::editor::engine::export::ExactFactory;",
+      "to": "use crate::editor::engine::export::ExactFactory;\nuse crate::unrelated::ExactFactory;",
+      "accepted": false
+    },
+    {
+      "id": "missing-compiler-witness",
+      "target": "ownerSource",
+      "from": "factory_type: ExactFactory,",
+      "to": "",
+      "accepted": false
+    },
+    {
+      "id": "wrong-compiler-witness",
+      "target": "ownerSource",
+      "from": "factory_type: ExactFactory,",
+      "to": "factory_type: OtherFactory,",
+      "accepted": false
+    },
+    {
+      "id": "same-owner-different-factory",
+      "target": "ownerSource",
+      "from": "factory_type: ExactFactory,",
+      "to": "factory_type: OtherFactory,",
+      "accepted": false
+    },
+    {
+      "id": "qualified-compiler-witness",
+      "target": "ownerSource",
+      "from": "factory_type: ExactFactory,",
+      "to": "factory_type: crate::editor::engine::export::ExactFactory,",
+      "accepted": true
+    },
+    {
+      "id": "generic-sentinel-with-custom-type",
+      "target": "ownerSource",
+      "from": "factory: \"ExactFactory\"",
+      "to": "factory: \"BoundedFirstStepCommandJobFactory\"",
+      "accepted": false
+    },
+    {
+      "id": "generic-sentinel-over-registered-custom",
+      "target": "ownerSource",
+      "from": "factory: \"ExactFactory\", factory_type: ExactFactory,",
+      "to": "factory: \"BoundedFirstStepCommandJobFactory\",",
+      "accepted": false
+    },
+    {
+      "id": "wrong-associated-schema-owner",
+      "target": "factorySource",
+      "from": "EXACT_DOCUMENT_SCHEMA: &str = ExactSnapshot::SCHEMA",
+      "to": "EXACT_DOCUMENT_SCHEMA: &str = WrongSnapshot::SCHEMA",
+      "accepted": false
+    },
+    {
+      "id": "missing-associated-schema-owner",
+      "target": "factorySource",
+      "from": "impl ExactSnapshot {",
+      "to": "impl UnrelatedSnapshot {",
+      "accepted": false
+    },
+    {
+      "id": "wrong-associated-schema-constant",
+      "target": "factorySource",
+      "from": "EXACT_DOCUMENT_SCHEMA: &str = ExactSnapshot::SCHEMA",
+      "to": "EXACT_DOCUMENT_SCHEMA: &str = ExactSnapshot::OTHER_SCHEMA",
+      "accepted": false
+    }
+  ],
+  "factoryType": "ExactFactory"
+}

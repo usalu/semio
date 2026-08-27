@@ -1,0 +1,3 @@
+# 🧬️ change-jfif-header/ChangeJfifHeader
+scalar ChangeJfifHeaderMutationValue
+input ChangeJfifHeaderMutation { version: ChangeJfifHeaderMutationValue! densityUnits: ChangeJfifHeaderMutationValue! xDensity: Int! yDensity: Int! thumbnail: ChangeJfifHeaderMutationValue }

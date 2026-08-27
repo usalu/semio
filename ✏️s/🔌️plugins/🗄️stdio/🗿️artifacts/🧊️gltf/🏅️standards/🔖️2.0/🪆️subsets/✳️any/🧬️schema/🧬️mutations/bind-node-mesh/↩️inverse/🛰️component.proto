@@ -1,3 +1,0 @@
-// bind-node-mesh inverse typed facet.
-syntax = "proto3"; package stdio.gltf.mutation;
-message GltfBindNodeMeshInverseV1 { GltfBindNodeMeshPayloadV1 operation=1; optional uint32 before=2; repeated string touched_paths=3; }

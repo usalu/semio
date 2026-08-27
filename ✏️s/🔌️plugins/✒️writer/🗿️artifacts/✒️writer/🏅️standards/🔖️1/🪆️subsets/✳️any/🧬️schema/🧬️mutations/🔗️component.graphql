@@ -1,9 +1,12 @@
-# 🧬️ Writer mutation schema.
+# ✒️ Writer direct mutation aggregate.
+input RenameWriterInput { newId: String! }
+input ChangeUriInput { newUri: String! }
+input ChangeLanguageInput { newLanguageId: String! }
+input EditTextInput { text: String! }
 
-type WriterMutation {
-  schema: String!
-  id: String!
-  languageId: String!
-  uri: String!
-  text: String!
+input WriterMutationInput {
+  renameWriter: RenameWriterInput
+  changeUri: ChangeUriInput
+  changeLanguage: ChangeLanguageInput
+  editText: EditTextInput
 }

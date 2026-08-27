@@ -1,2 +1,0 @@
-# change-scene-extra-data diff typed facet.
-input GltfChangeSceneExtraDataDiffV1 { operation: GltfChangeSceneExtraDataPayloadV1!, after: GltfJson, touchedPaths: [String!]! }

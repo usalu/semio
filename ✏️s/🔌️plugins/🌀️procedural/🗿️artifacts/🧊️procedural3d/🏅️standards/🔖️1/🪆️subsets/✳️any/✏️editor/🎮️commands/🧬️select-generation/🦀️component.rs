@@ -17,7 +17,7 @@ pub struct SelectGeneration {
 
 pub fn handle(payload: &SelectGeneration, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.fixture;
-    let mut state = doc.snapshot.generation.clone();
+    let mut state = doc.snapshot.generation.as_state().clone();
     state.selected_generation_id = cfg.snapshot.selected_generation_id.clone();
     select_generation(&mut state, &payload.id);
     let generation_preview_text = selected_generation(&state).map(|selected| evaluate_generation_preview(fixture, &selected.values));

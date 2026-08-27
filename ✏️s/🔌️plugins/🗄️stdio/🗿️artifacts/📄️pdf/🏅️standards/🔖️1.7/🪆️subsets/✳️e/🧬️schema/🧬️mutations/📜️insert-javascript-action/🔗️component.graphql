@@ -1,0 +1,4 @@
+# Direct insert-javascript-action GraphQL payload.
+input InsertJavascriptActionMutationInput {
+  script: String!
+}

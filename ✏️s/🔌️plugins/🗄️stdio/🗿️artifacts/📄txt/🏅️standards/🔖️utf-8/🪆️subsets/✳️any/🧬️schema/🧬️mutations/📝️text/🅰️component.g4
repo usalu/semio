@@ -1,5 +1,5 @@
 grammar Stdio_txt_mutation;
-// TxtMutation is transported as JSON (serde_json, `#[serde(tag = "mutation")]`).
+// TxtMutation delegates its payload codec to the opcode-selected direct leaf.
 document      : object EOF ;
 object        : '{' '"mutation"' ':' kind (',' field)* '}' ;
 kind          : '"noMutation"' | '"setSnapshot"' | '"setTrailingNewline"' | '"setLineEnding"'

@@ -1,0 +1,3 @@
+# 🧹️ Direct remove-data-property / RemoveDataProperty payload.
+input RemoveDataPropertyEntityRefInput { entity: String!, id: String! }
+input RemoveDataPropertyInput { entity: RemoveDataPropertyEntityRefInput!, key: String! }

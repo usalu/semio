@@ -1,8 +1,5 @@
 //! ⚖️ EN 1990 basis of structural design — document entities (constitutional: general).
 
-use std::cell::RefCell;
-use std::collections::HashMap;
-
 pub use crate::artifacts::en1990::schema::snapshot::En1990QkEntry;
 pub use crate::artifacts::en1990::schema::snapshot::En1990Snapshot;
 
@@ -19,7 +16,7 @@ pub use crate::artifacts::en1990::schema::snapshot::En1990Snapshot;
 /// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written. Every one of the five
 /// existing `insert`/`remove`/`reorder`/`change-category`/`change-value` mutation triads keeps its
 /// exact public payload/wire shape — only the internal diff/inverse implementation is rewired to
-/// read/write the working-scene cache below and re-mint a fresh content-addressed child handle,
+/// read/write the exact child owner below and re-mint a fresh content-addressed child handle,
 /// mirroring `➗️mathematical`'s `MATH_SCRATCH`/`🕸️dag`'s/`🔀️process`'s equivalent patterns for the
 /// identical per-entry mutation-rich shape.
 
@@ -64,24 +61,11 @@ pub fn en1990_qk_entries_from_table(table: &semio_s_plugin_stdio::artifacts::sem
 //#endregion 🔖️Converters
 
 //#region 🔖️WorkingScene
-thread_local! {
-    /// 🌱 Ephemeral, session-side cache of the live `q_k` entries behind a composed-child handle —
-    /// NEVER persisted (matches the `EngineRep` contract: wholly derived, droppable at any instant,
-    /// rebuilt from base). No `LinkResolver`/child-dispatch seam exists in `ArtifactApp::handle` yet
-    /// (checked directly against `🔌️plugin/🦀️component.rs`, W1-owned, read-only — same standing gap
-    /// every prior wave's report documents), so this is the only way a persisted content-addressed
-    /// handle round-trips to the real entries within one process — mirrors `➗️mathematical`'s
-    /// `MATH_SCRATCH`/`✒️writer`'s `WRITER_SCRATCH`.
-    ///
-    /// ⚠️ Same documented staleness gap as every prior exemplar, called out honestly rather than
-    /// hidden: a fresh process (a store-level undo/redo past this session's history, or a genuinely
-    /// reloaded persisted `.en1990` document) sees a `q_k` handle whose cache entry was never
-    /// populated — `en1990_qk` fails soft to an EMPTY table rather than panicking. For a compliance
-    /// calculation this means a reloaded document's variable-action combinations read as empty until
-    /// W1 lands a resolver; every check this artifact performs already routes through `en1990_qk`, so
-    /// the gap is visibly empty, not silently wrong-but-plausible. Not a fix for the missing
-    /// resolver — a bridge until one lands.
-    static EN1990_QK_SCRATCH: RefCell<HashMap<String, Vec<En1990QkEntry>>> = RefCell::new(HashMap::new());
+/// 🌱 Ephemeral representation of one exact EN 1990 table child. It is not serialized and
+/// retires with the child owner; equal wire identities never share entries.
+#[derive(Clone, Debug, Default)]
+pub struct En1990QkWorkingTable {
+    pub entries: Vec<En1990QkEntry>,
 }
 
 fn en1990_qk_scene_id(entries: &[En1990QkEntry]) -> String {
@@ -96,23 +80,17 @@ fn en1990_qk_target() -> store::os_io::ArtifactRef {
     store::os_io::ArtifactRef { artifact_id: "en1990-qk".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
 }
 
-/// 🏗️ Mints the composed-child handle for a `q_k` entry list AND seeds the scratch cache in one
-/// call — the standard way every mutation-diff/fixture builder in this artifact creates `q_k`
-/// field values; never construct this handle without also caching, or `en1990_qk` will read back
-/// empty.
+/// 🏗️ Mints the composed-child handle and transfers the entry list into that exact owner.
 pub fn en1990_qk_child_from_entries(entries: &[En1990QkEntry]) -> En1990QkChild {
     let scene_id = en1990_qk_scene_id(entries);
-    EN1990_QK_SCRATCH.with(|cache| {
-        cache.borrow_mut().insert(scene_id.clone(), entries.to_vec());
-    });
-    store::ArtifactChild::new(scene_id, en1990_qk_target())
+    store::ArtifactChild::new(scene_id, en1990_qk_target()).with_local_owner(std::sync::Arc::new(En1990QkWorkingTable { entries: entries.to_vec() }))
 }
 
 /// 🔎 The live `q_k` entries behind a snapshot's composed child — the single read call site every
-/// combination/compliance/inference/mutation-diff call path in this artifact now uses instead of
-/// the old `.q_k` field. Empty (never a panic) on a cache miss, per this region's own doc comment.
+/// combination/compliance/inference/mutation-diff call path in this artifact now uses. A wire-only
+/// child fails soft until its child document is materialized by the host.
 pub fn en1990_qk(snapshot: &En1990Snapshot) -> Vec<En1990QkEntry> {
-    EN1990_QK_SCRATCH.with(|cache| cache.borrow().get(&snapshot.q_k.child_id).cloned()).unwrap_or_default()
+    snapshot.q_k.local_owner::<En1990QkWorkingTable>().map(|table| table.entries.clone()).unwrap_or_default()
 }
 //#endregion 🔖️WorkingScene
 //#endregion 🔖️Composition
@@ -234,3 +212,36 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
         .as_slice()
 }
 //#endregion 🪪️Declaration
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    trait En1990ChildOwnerOracle {
+        fn expected() -> serde_json::Value;
+    }
+
+    struct SerdeJsonEn1990ChildOwnerOracle;
+
+    impl En1990ChildOwnerOracle for SerdeJsonEn1990ChildOwnerOracle {
+        fn expected() -> serde_json::Value {
+            serde_json::from_str(include_str!("🧪️fixtures/🎯️child-owner-isolation.json")).expect("language-neutral EN 1990 child-owner fixture")
+        }
+    }
+
+    #[test]
+    fn qk_working_table_is_owned_by_the_exact_child() {
+        let owned = en1990_qk_child_from_entries(&[En1990QkEntry { category: "snow".into(), value: 42.0 }]);
+        let wire = serde_json::to_vec(&owned).expect("EN 1990 child wire identity");
+        let reconstructed: En1990QkChild = serde_json::from_slice(&wire).expect("EN 1990 child wire roundtrip");
+        let observed = serde_json::json!({
+            "ownedHasPayload": owned.local_owner::<En1990QkWorkingTable>().is_some(),
+            "wireIdentityMatches": owned == reconstructed,
+            "wireHasPayload": reconstructed.local_owner::<En1990QkWorkingTable>().is_some(),
+        });
+
+        assert_eq!(observed, SerdeJsonEn1990ChildOwnerOracle::expected());
+    }
+}
+//#endregion 🧪️Tests

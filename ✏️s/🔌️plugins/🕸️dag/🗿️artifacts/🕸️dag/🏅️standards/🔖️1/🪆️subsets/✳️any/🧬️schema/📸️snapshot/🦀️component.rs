@@ -9,14 +9,14 @@
 //! ⚠️ **The WIRE FORMAT still carries the real `nodes`/`edges` data** (JSON-blob-encoded), not just
 //! the opaque handle — matching flow's own `<flow::FlowFixture as ArtifactDsl>::parse_dsl(text).map(
 //! Self::from_fixture)` precedent exactly. Reasoning: no `LinkResolver`/child-dispatch seam exists
-//! yet (see `🔖️WorkingScene` in the artifact root), so the working-scene cache is only populated
-//! in-process, by whatever call SET the `content` field (a mutation diff, `from_fixture`, …). A
+//! yet (see `🔖️WorkingScene` in the artifact root), so the exact child's local owner is populated
+//! in-process by whatever call sets the `content` field (a mutation diff, `from_fixture`, …). A
 //! codec that persisted only the bare handle would produce an UNRECOVERABLE snapshot the instant a
 //! fresh process parses it (confirmed by a real test failure during this migration: `default_snapshot
 //! ()` came back with an empty scene on every fresh run, silently vacuous-passing several inverse-law
-//! tests). `parse_dsl`/`decode_pack` therefore mint+cache a FRESH content-addressed handle from the
+//! tests). `parse_dsl`/`decode_pack` therefore mint a fresh self-owned content-addressed child from the
 //! decoded nodes/edges every time (deterministic — same data always re-derives the same handle, so
-//! peers replaying the same bytes converge); `print_dsl`/`encode_pack` read the CURRENT cached scene
+//! peers replaying the same bytes converge); `print_dsl`/`encode_pack` read the current owned scene
 //! back out via `dag_working_scene`.
 //!
 //! 🚪️ The hand-rolled `impl store::ArtifactDsl`/`impl store::ArtifactPack for DagSnapshot` (the
@@ -67,7 +67,7 @@ impl From<DagSnapshot> for infinite_board_port_directed_dag::DagSnapshot {
 
 impl From<infinite_board_port_directed_dag::DagSnapshot> for DagSnapshot {
     fn from(value: infinite_board_port_directed_dag::DagSnapshot) -> Self {
-        let content = crate::artifacts::dag::dag_content_child_handle_and_cache(value.nodes, value.edges);
+        let content = crate::artifacts::dag::dag_content_child_with_owner(value.nodes, value.edges);
         Self { schema: value.schema, content }
     }
 }
@@ -79,9 +79,8 @@ impl From<&DagSnapshot> for infinite_board_port_directed_dag::DagSnapshot {
 }
 
 /// 🧾️ Node/edge accessors matching the OLD field-access call-site shape (`document.nodes`), now
-/// reading through the working-scene cache. Kept as methods on `DagSnapshot` itself (rather than
-/// forcing every call site to import `dag_working_scene`) to minimize the app-layer rewrite's blast
-/// radius — see `crate::artifacts::dag::dag_working_scene` for the underlying cache.
+/// reading through the exact child owner. Kept as methods on `DagSnapshot` itself so call sites do
+/// not need to import `dag_working_scene`.
 impl DagSnapshot {
     pub async fn nodes(&self) -> Vec<DagNodeSpec> {
         crate::artifacts::dag::dag_working_scene(self).nodes
@@ -114,7 +113,7 @@ pub fn decode_dag_snapshot_json(text: &str) -> Result<DagSnapshot, String> {
     serde_json::from_str(text).map_err(|error| error.to_string())
 }
 
-/// 📝️ Parses `.dag.dsl.semio` text into a [`DagSnapshot`], SEEDING the working-scene cache for the
+/// 📝️ Parses `.dag.dsl.semio` text into a [`DagSnapshot`], attaching the working scene to the child
 /// handle it mints — a named, non-async pass-through of this type's own `store::ArtifactDsl` impl,
 /// whose trait and error type are both unnameable outside this crate. This is the only way an
 /// external caller can obtain a dag document whose composed `s.stdio.semio.graph` child actually

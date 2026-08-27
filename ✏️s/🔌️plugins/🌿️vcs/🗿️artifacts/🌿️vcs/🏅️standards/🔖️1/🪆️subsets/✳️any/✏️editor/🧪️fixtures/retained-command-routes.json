@@ -1,0 +1,15 @@
+{
+  "schema": "vcs.retained-command-routes.v1",
+  "routes": [
+    { "id": "incrementCounter", "execution": "bounded-first-step", "lanes": ["artifact"], "reason": "one scalar semantic mutation" },
+    { "id": "patchSnapshot", "execution": "bounded-first-step", "lanes": ["artifact"], "reason": "one admitted scalar semantic mutation" },
+    { "id": "setLocale", "execution": "bounded-first-step", "lanes": ["config"], "reason": "one byte-bounded config mutation" },
+    { "id": "noMutation", "execution": "bounded-first-step", "lanes": ["host-only"], "reason": "no persisted publication" },
+    { "id": "canvasPointerDown", "execution": "bounded-first-step", "lanes": ["host-only"], "reason": "no persisted publication" },
+    { "id": "canvasPointerMove", "execution": "bounded-first-step", "lanes": ["host-only"], "reason": "no persisted publication" },
+    { "id": "canvasPointerUp", "execution": "bounded-first-step", "lanes": ["host-only"], "reason": "no persisted publication" },
+    { "id": "canvasWheel", "execution": "bounded-first-step", "lanes": ["host-only"], "reason": "no persisted publication" },
+    { "id": "textEdit", "execution": "resumable", "lanes": ["artifact"], "reason": "checkpointed item-bounded projection diff" },
+    { "id": "edit", "execution": "resumable", "lanes": ["artifact"], "reason": "checkpointed item-bounded projection diff" }
+  ]
+}

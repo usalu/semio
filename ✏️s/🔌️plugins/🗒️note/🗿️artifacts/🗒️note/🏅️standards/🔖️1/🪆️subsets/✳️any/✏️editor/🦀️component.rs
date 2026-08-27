@@ -94,6 +94,7 @@ pub const NOTE_INTERACTION_BLOCKS: &str = "blocks";
 /// once, so every downstream handler keeps working with the raw ids it always did.
 pub struct NoteDispatchCtx {
     pub selected_block_ids: Vec<String>,
+    pub id_owner: crate::artifacts::note::schema::NoteIdOwner,
 }
 
 /// 🌳️ `blocks` domain topology from the document's own Group nesting — row-id-prefixed ids (matching
@@ -192,6 +193,42 @@ impl ArtifactEditor for NotePlayApp {
     const DIALECT: Dialect = crate::artifacts::note::NOTE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = NOTE_DOCUMENT_SCHEMA;
 
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<NotePlayApp>,
+        owner_file: "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.note.note@1/*#editor",
+        document_schema: "note.document",
+        factory: "NoteCommandJobFactory",
+        factory_type: crate::editor::note::retained::NoteCommandJobFactory,
+        tools: {
+            "setGridVisible" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "setGridSpacing" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "setCamera" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "setCameraZoom" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "setActiveUtility" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "setLocale" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "engagementInput" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "navigatorEngagementInput" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "loadRequest" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+        }
+    }
+
+    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
+        crate::editor::note::retained::register(registry)
+    }
+
+    async fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        crate::editor::note::retained::build(request).await
+    }
+
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(crate::editor::note::retained::artifact_preparation_factory())
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(crate::editor::note::retained::config_preparation_factory())
+    }
+
     async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::note::config::schema::app_schema_descriptor())
     }
@@ -216,7 +253,7 @@ impl ArtifactEditor for NotePlayApp {
         _engines: &EngineHandles,
     ) -> Result<Emit<NoteMutation, NoteConfigMutation, Self::DraftMutation>, Fault> {
         let selected_block_ids = interaction.selection(NOTE_INTERACTION_BLOCKS).ids.iter().filter_map(|id| crate::artifacts::note::schema::block_id_from_tree_row_id(id)).collect();
-        let mut ctx = NoteDispatchCtx { selected_block_ids };
+        let mut ctx = NoteDispatchCtx { selected_block_ids, id_owner: crate::artifacts::note::schema::NoteIdOwner::for_document_child(doc.snapshot, command.command_id()) };
         command.dispatch(doc, cfg, &mut ctx)
     }
 
@@ -342,6 +379,42 @@ pub fn create_note_app() -> AppDefinition {
                 ]).required().default_value("semio"),
             ])
             .action_args("setFixtureJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Document JSON", "Dokument-JSON")).required()])
+            .action_interactive_job("setGridVisible", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridSpacing", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridSubdivisions", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setGridOpacity", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setSnapEnabled", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setSnapGridSpacing", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setPencilWidth", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setEraserRadius", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addBlock", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("moveBlock", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("deleteBlock", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("duplicateBlock", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("duplicateSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("patchBlocks", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setFixtureJson", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("inkApplyEvents", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("nudgeSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("nudgeSelectionUp", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("nudgeSelectionDown", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("nudgeSelectionLeft", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("nudgeSelectionRight", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("nudgeSelectionUpFast", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("nudgeSelectionDownFast", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("nudgeSelectionLeftFast", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("nudgeSelectionRightFast", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCameraZoom", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveUtility", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLocale", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("navigatorEngagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("saveDownload", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("loadRequest", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 🧰️ Canvas utilities — one exclusive set per window, active utility host-owned (never a document operation).
             .utility(note_utility("selectDirect", LocalizedLabel::native("Direct", "Direkt"), "text-cursor", "Select", UtilityCategory::Selection))
             .utility(note_utility("selectMarquee", LocalizedLabel::native("Marquee", "Rahmenauswahl"), "selection", "Select", UtilityCategory::Selection))

@@ -1,1 +1,0 @@
-type GltfChangeMaterialDoubleSidedDiffV1 { material: Int!, expectedDoubleSided: Boolean!, doubleSided: Boolean!, touchedPaths: [String!]! }

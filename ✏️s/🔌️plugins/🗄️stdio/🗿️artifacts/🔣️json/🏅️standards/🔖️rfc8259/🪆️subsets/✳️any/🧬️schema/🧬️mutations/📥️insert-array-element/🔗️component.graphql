@@ -1,0 +1,2 @@
+# 🧬 insert-array-element/InsertArrayElement
+input InsertArrayElementPayload { path: [MutationPathSegment!]! index: Int! value: MutationPayload! }

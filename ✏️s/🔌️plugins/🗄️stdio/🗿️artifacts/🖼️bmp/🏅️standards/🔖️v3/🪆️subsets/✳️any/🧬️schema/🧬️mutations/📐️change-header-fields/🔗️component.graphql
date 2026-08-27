@@ -1,0 +1,3 @@
+# 🧬️ change-header-fields/ChangeHeaderFields
+scalar ChangeHeaderFieldsMutationValue
+input ChangeHeaderFieldsMutation { headerSize: ChangeHeaderFieldsMutationValue width: ChangeHeaderFieldsMutationValue height: ChangeHeaderFieldsMutationValue rowOrder: ChangeHeaderFieldsMutationValue planes: ChangeHeaderFieldsMutationValue bitsPerPixel: ChangeHeaderFieldsMutationValue compression: ChangeHeaderFieldsMutationValue imageSize: ChangeHeaderFieldsMutationValue xPixelsPerMeter: ChangeHeaderFieldsMutationValue yPixelsPerMeter: ChangeHeaderFieldsMutationValue colorsUsed: ChangeHeaderFieldsMutationValue colorsImportant: ChangeHeaderFieldsMutationValue }

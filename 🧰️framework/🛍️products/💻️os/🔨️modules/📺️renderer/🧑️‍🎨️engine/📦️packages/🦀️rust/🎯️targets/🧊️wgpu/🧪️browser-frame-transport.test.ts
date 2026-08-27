@@ -289,7 +289,21 @@ describe("browser frame worker transport", () => {
     expect(rustSource).toContain("OffscreenPresentToken::mint_for_dedicated_worker");
     expect(rustSource).toContain("WorldAssetResponsePage::try_from_owned");
     expect(rustSource).not.toContain("UiPresentToken");
-    expect(rustSource).toContain("OsHost::into_retirement");
+    const admittedRetirement = (source: string): boolean => {
+      const handoff = source.slice(source.indexOf("if self.close_phase == 5 {"), source.indexOf("self.close_phase = 6;"));
+      const retirement = source.slice(source.indexOf("if let Some(retired) = self.retired_host.as_mut()"), source.indexOf("fn ensure_live("));
+      return handoff.includes("match host.try_into_retirement()")
+        && handoff.includes("Ok(retirement) => self.retired_host = Some(retirement)")
+        && handoff.includes("Err(host) => {")
+        && handoff.includes("self.host = Some(host);")
+        && handoff.includes('return Err(js_error("host-close", "host retirement abandonment registry refused admission"))')
+        && retirement.includes("if !retired.close_step()")
+        && retirement.includes("if !retired.terminal_is_empty()")
+        && retirement.indexOf("if !retired.terminal_is_empty()") < retirement.indexOf("self.retired_host = None;");
+    };
+    expect(admittedRetirement(rustSource)).toBe(true);
+    for (const required of ["match host.try_into_retirement()", "self.host = Some(host);", "if !retired.terminal_is_empty()", "if !retired.close_step()"])
+      expect(admittedRetirement(rustSource.replace(required, "unqualified_retirement"))).toBe(false);
     expect(rustSource).not.toContain("drop(self.host.take())");
     expect(rustSource).not.toContain("forget(host)");
     expect(rustSource).toContain("DispatchEvent::TextEditStart");

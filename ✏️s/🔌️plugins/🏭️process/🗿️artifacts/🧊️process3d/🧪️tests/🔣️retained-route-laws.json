@@ -1,0 +1,59 @@
+{
+  "schema": "semio.process3d.retained-route-laws.v1",
+  "source": "🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+  "routeCount": 33,
+  "migratedCount": 11,
+  "batchOnlyCount": 22,
+  "limits": {
+    "rawBytes": 8192,
+    "workItems": 64,
+    "chunkBytes": 256,
+    "stepMicros": 7500,
+    "storeBytes": 16384
+  },
+  "groups": [
+    {
+      "status": "Migrated",
+      "execution": "bounded",
+      "lanes": ["Config"],
+      "routes": ["engagementAbort", "setCamera"]
+    },
+    {
+      "status": "Migrated",
+      "execution": "bounded",
+      "lanes": ["HostOnly"],
+      "routes": ["loadModelRequest"]
+    },
+    {
+      "status": "Migrated",
+      "execution": "resumable",
+      "lanes": ["Config"],
+      "routes": ["setActiveUtility", "engagementInput", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setLocale", "setContributions"]
+    },
+    {
+      "status": "BatchOnlyPendingRewrite",
+      "execution": "batch",
+      "lanes": [],
+      "routes": ["setSnapshot", "setActiveExample", "addStep", "addWorkshopMachine", "removeWorkshopMachine", "updateWorkshopMachine", "removeStep", "removeSelectedStep", "moveStep", "updateStep", "setStepEnabled", "setStock", "patchInspector", "setCursor", "stepCursor", "stepCursorBack", "stepCursorForward", "engagementSubmit", "worldPointerDown", "worldFaceDragEnd", "importModelFile", "exportModel"],
+      "blocker": "Document, geometry, history, import/export, and snapshot routes still require bounded preparation owners instead of scan-then-monolith dispatch."
+    }
+  ],
+  "oracleCases": [
+    { "bytes": 0, "expectedExtent": 1 },
+    { "bytes": 256, "expectedExtent": 1 },
+    { "bytes": 257, "expectedExtent": 2 },
+    { "bytes": 8192, "expectedExtent": 32 },
+    { "bytes": 8193, "expectedExtent": null }
+  ],
+  "laws": {
+    "exactRoutePartition": true,
+    "perOperationCursor": true,
+    "oneChunkPerStep": true,
+    "checkpointIdentity": true,
+    "cancellationOwnedByRetainedJob": true,
+    "freshnessValidatedBySharedPublisher": true,
+    "configStoreOneItemPreparation": true,
+    "terminalEmptyRetirement": true,
+    "scanThenMonolithRoutes": []
+  }
+}

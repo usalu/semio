@@ -7,7 +7,7 @@
 //! ⚠️ Why this leaf pins a REJECTION branch: `FlowSnapshot` persists its widgets/synapses/layout in
 //! an opaque composed `s.stdio.semio.flow` CHILD (`🔖️ContentBridge`/`🔖️WorkingScene`), and a
 //! successful `duplicate-widget` folds its plan's `create-widget` + `connect-widgets` steps into a
-//! `content` handle whose `child_id` is a `DefaultHasher` digest of the child content. Hand-authoring
+//! `content` handle whose `child_id` is a domain-separated SHA-256 digest of the child content. Hand-authoring
 //! such an `➡️after` would mean hand-forging a value from `std`'s deliberately unspecified default
 //! hasher. A refused PLAN mints nothing at all, so that is what this case pins.
 //!
@@ -20,7 +20,7 @@
 use crate::artifacts::flow::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, to_framework_mutation, FlowMutation};
 use crate::artifacts::flow::{cache_flow_content, flow_working_scene, FlowDiff, FlowSnapshot};
 use flow::Widget;
-use std::collections::BTreeMap;
+use flow::OrderedMap;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -40,7 +40,7 @@ fn expected_after() -> FlowSnapshot {
 fn before() -> FlowSnapshot {
     let mut snapshot: FlowSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let widgets = vec![Widget::InputNote { id: "note-alpha".into(), text: "Alpha".into() }, Widget::InputNote { id: "note-beta".into(), text: "Beta".into() }];
-    cache_flow_content(&mut snapshot.content, widgets, Vec::new(), BTreeMap::new());
+    cache_flow_content(&mut snapshot.content, widgets, Vec::new(), OrderedMap::new());
     snapshot
 }
 

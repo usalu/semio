@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "semanticKind": "insert-text-chunk",
+  "before": {
+    "schema": "stdio.png",
+    "width": 2,
+    "height": 1,
+    "bitDepth": 8,
+    "colorType": "rgba",
+    "interlace": false,
+    "plte": null,
+    "trns": null,
+    "gama": 100000,
+    "chrm": null,
+    "srgb": null,
+    "phys": null,
+    "time": null,
+    "bkgd": null,
+    "textChunks": [
+      {
+        "keyword": "Title",
+        "value": "Two Pixel Swatch",
+        "compressed": false,
+        "kind": "text",
+        "languageTag": "",
+        "translatedKeyword": ""
+      }
+    ],
+    "pixels": [
+      255,
+      0,
+      0,
+      255,
+      0,
+      0,
+      255,
+      255
+    ],
+    "chunkOrder": [
+      {
+        "chunk": "ihdr"
+      },
+      {
+        "chunk": "gama"
+      },
+      {
+        "chunk": "text",
+        "index": 0
+      },
+      {
+        "chunk": "idat"
+      },
+      {
+        "chunk": "iend"
+      }
+    ],
+    "unknownChunks": []
+  },
+  "mutation": {
+    "mutation": "insert-text-chunk",
+    "payload": {
+      "index": 1,
+      "chunk": {
+        "keyword": "Title",
+        "value": "Direct Owner",
+        "compressed": false,
+        "kind": "text",
+        "languageTag": "",
+        "translatedKeyword": ""
+      }
+    }
+  },
+  "after": {
+    "schema": "stdio.png",
+    "width": 2,
+    "height": 1,
+    "bitDepth": 8,
+    "colorType": "rgba",
+    "interlace": false,
+    "plte": null,
+    "trns": null,
+    "gama": 100000,
+    "chrm": null,
+    "srgb": null,
+    "phys": null,
+    "time": null,
+    "bkgd": null,
+    "textChunks": [
+      {
+        "keyword": "Title",
+        "value": "Two Pixel Swatch",
+        "compressed": false,
+        "kind": "text",
+        "languageTag": "",
+        "translatedKeyword": ""
+      },
+      {
+        "keyword": "Title",
+        "value": "Direct Owner",
+        "compressed": false,
+        "kind": "text",
+        "languageTag": "",
+        "translatedKeyword": ""
+      }
+    ],
+    "pixels": [
+      255,
+      0,
+      0,
+      255,
+      0,
+      0,
+      255,
+      255
+    ],
+    "chunkOrder": [
+      {
+        "chunk": "ihdr"
+      },
+      {
+        "chunk": "gama"
+      },
+      {
+        "chunk": "text",
+        "index": 0
+      },
+      {
+        "chunk": "text",
+        "index": 1
+      },
+      {
+        "chunk": "idat"
+      },
+      {
+        "chunk": "iend"
+      }
+    ],
+    "unknownChunks": []
+  }
+}

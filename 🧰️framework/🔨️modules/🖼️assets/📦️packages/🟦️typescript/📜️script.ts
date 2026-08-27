@@ -321,7 +321,7 @@ Add or edit SVGs under \`icon/\`, then run **build ui assets** (\`bun ./📜️s
 
 ${list}
 `;
-  return { path: join(assetsDir, "README.md"), content: body };
+  return { path: join(assetsDir, "📃️readme", "📝️.md"), content: body };
 }
 
 /** @emoji 🔖️ Renders universal shortcode bindings from the explicit external emoji snapshot. */
@@ -556,7 +556,7 @@ function assetOutputRoots(): readonly string[] {
   const root = assetsRoot();
   const generated = join(root, "🔣️icons/🤖️generated");
   return [
-    join(root, "README.md"),
+    join(root, "📃️readme", "📝️.md"),
     join(root, "🌱️metabolism/🔣️icons/🤖️generated"),
     join(generated, "🐍️icons.py"),
     join(generated, "🔣️icon_svgs"),
@@ -917,7 +917,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("preview-generated", PreviewGeneratedScript)
   .register("check-generated", CheckGeneratedScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "build" });
+if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "build" });
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;

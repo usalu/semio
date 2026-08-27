@@ -1,0 +1,4 @@
+# ✏️ Direct rename-vcs payload.
+input RenameVcsInput {
+  newTitle: String!
+}

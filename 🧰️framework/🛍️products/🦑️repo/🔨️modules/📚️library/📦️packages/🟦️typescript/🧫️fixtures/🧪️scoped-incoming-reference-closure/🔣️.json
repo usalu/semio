@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "contract": "referenceClosure",
+  "scope": "🧰️framework/🔨️modules/🌱️value",
+  "source": "🔣️component.json",
+  "destination": "🔣️.json",
+  "payload": "{\"answer\":42}\n",
+  "consumers": [
+    { "path": "consumers/rust.rs", "adapter": "rust", "source": "pub const SOURCE: &str = include_str!(\"{target}\");\n" },
+    { "path": "consumers/typescript.ts", "adapter": "typescript", "source": "import payload from \"{target}\" with { type: \"json\" };\nexport { payload };\n" },
+    { "path": "consumers/go.go", "adapter": "go", "source": "package fixture\n//go:generate tool {target}\n" },
+    { "path": "consumers/python.py", "adapter": "python", "source": "from pathlib import Path\npayload = Path(\"{target}\").read_text()\n" },
+    { "path": "consumers/dotnet.csproj", "adapter": "dotnet", "source": "<Project><ItemGroup><EmbeddedResource Include=\"{target}\" /></ItemGroup></Project>\n" },
+    { "path": "consumers/CMakeLists.txt", "adapter": "native", "source": "configure_file(\"{target}\" \"output.json\" COPYONLY)\n" },
+    { "path": "consumers/json.json", "adapter": "json", "source": "{\"input\":\"{target}\"}\n" },
+    { "path": "consumers/jsonc.jsonc", "adapter": "jsonc", "source": "{\n  // source\n  \"input\": \"{target}\"\n}\n" },
+    { "path": "consumers/toml.toml", "adapter": "toml", "source": "input = \"{target}\"\n" },
+    { "path": "consumers/yaml.yaml", "adapter": "yaml", "source": "input: \"{target}\"\n" },
+    { "path": "consumers/xml.xml", "adapter": "xml", "source": "<source path=\"{target}\" />\n" },
+    { "path": "consumers/markdown.md", "adapter": "markdown", "source": "[Payload]({target}#answer)\n" }
+  ],
+  "unsupported": [
+    { "path": "consumers/command.json", "source": "{\"command\":\"read {target}\"}\n" },
+    { "path": "consumers/unsupported.ts", "source": "const identity = \"{target}\";\n" },
+    { "path": "consumers/unsupported.feature", "source": "Feature: Source payload\n  Scenario: literal input\n    Given the source \"{target}\"\n" }
+  ],
+  "symlink": "consumers/payload-link",
+  "cases": ["external-preimage-drift", "new-incoming-before-apply", "new-incoming-during-apply", "unsupported-during-apply", "moved-consumer-outgoing-rebase", "opaque-candidates", "ancestor-symlink", "cancellation", "byte-order", "independent-parser-parity", "canonical-plan-coordinate-evidence", "forged-plan-authority", "unowned-plan-prose", "terminal-scan-cancellation", "latched-cancelled-resume"]
+}

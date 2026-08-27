@@ -1,0 +1,3 @@
+# 🧬️ change-background/ChangeBackground
+scalar ChangeBackgroundMutationValue
+input ChangeBackgroundMutation { bkgd: ChangeBackgroundMutationValue }

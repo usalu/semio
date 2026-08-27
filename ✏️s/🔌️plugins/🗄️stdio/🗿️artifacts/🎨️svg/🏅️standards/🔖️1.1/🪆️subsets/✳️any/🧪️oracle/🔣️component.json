@@ -8,8 +8,12 @@
       "ecosystem": "rust",
       "package": "quick-xml",
       "version": "0.42",
-      "capabilities": ["svg-1-1-mutate"],
-      "comparisonProfiles": ["semantic-svg-1-1-v1"],
+      "capabilities": [
+        "svg-1-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-svg-1-1-v1"
+      ],
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/tafia/quick-xml",
@@ -26,20 +30,61 @@
       "subsetDirectoryName": "✳️any",
       "vectors": [
         {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📄set-snapshot",
-          "mutationDirectoryName": "📄set-snapshot",
-          "scenarios": [
-            {
-              "id": "recolours-the-circle-fill-to-crimson",
-              "directoryName": "🧪️recolours-the-circle-fill-to-crimson"
-            }
-          ]
+          "mutationId": "set-declaration",
+          "sourceMutationDirectoryName": "✏️set-declaration",
+          "mutationDirectoryName": "✏️set-declaration",
+          "scenarios": []
+        },
+        {
+          "mutationId": "set-doctype",
+          "sourceMutationDirectoryName": "✏️set-doctype",
+          "mutationDirectoryName": "✏️set-doctype",
+          "scenarios": []
+        },
+        {
+          "mutationId": "insert-element",
+          "sourceMutationDirectoryName": "📥️insert-element",
+          "mutationDirectoryName": "📥️insert-element",
+          "scenarios": []
+        },
+        {
+          "mutationId": "remove-element",
+          "sourceMutationDirectoryName": "🗑️remove-element",
+          "mutationDirectoryName": "🗑️remove-element",
+          "scenarios": []
+        },
+        {
+          "mutationId": "set-element-name",
+          "sourceMutationDirectoryName": "✏️set-element-name",
+          "mutationDirectoryName": "✏️set-element-name",
+          "scenarios": []
+        },
+        {
+          "mutationId": "set-attribute",
+          "sourceMutationDirectoryName": "✏️set-attribute",
+          "mutationDirectoryName": "✏️set-attribute",
+          "scenarios": []
+        },
+        {
+          "mutationId": "set-text",
+          "sourceMutationDirectoryName": "✏️set-text",
+          "mutationDirectoryName": "✏️set-text",
+          "scenarios": []
+        },
+        {
+          "mutationId": "set-view-box",
+          "sourceMutationDirectoryName": "✏️set-view-box",
+          "mutationDirectoryName": "✏️set-view-box",
+          "scenarios": []
+        },
+        {
+          "mutationId": "set-transform",
+          "sourceMutationDirectoryName": "✏️set-transform",
+          "mutationDirectoryName": "✏️set-transform",
+          "scenarios": []
         }
       ],
       "kinds": [
-        "no-mutation",
-        "set-snapshot",
         "set-declaration",
         "set-doctype",
         "insert-element",

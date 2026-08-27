@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧬️schema/🧬️mutations/🧺️remove-font-file",
+  "semanticKind": "remove-font-file",
+  "displayName": "Remove Font File",
+  "emoji": "🧺️",
+  "aggregateVariant": "RemoveFontFile",
+  "payloadSchema": "s.stdio.pdf.1.7.a#remove-font-file",
+  "textOpcode": null,
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust"
+  ]
+}

@@ -1,12 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
-import fastGlob from "fast-glob";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
+import { parseArgs } from "node:util";
+import { nextestArtifactLocation, partitionNextestExecutionFilters } from "./📦️index.ts";
 import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyCanonicalArtifactKindBreaches, policyChildSlotKindDagBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyPluginDependencyParityBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
 import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, devToolingEnv, dispatchSubcommand, findRepoRoot, gitSpawnEnv, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { defineLint, type FileLinter } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { getWorkspaceRoot, layeringBreaches, layeringCounts, layeringReferences, loadLayeringBaseline, policyDiscoveredAllowlist } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { layeringBreaches, layeringCounts, layeringReferences, loadLayeringBaseline, policyDiscoveredAllowlist } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import {
   PLAYGROUND_PORTS,
@@ -19,12 +21,102 @@ import {
   playgroundPlayViteDefine,
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts";
-import { areaOf, clearDiscoveryCache, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadTaxonomy, readSemioMarker, validateTaxonomy } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { artifactFacetPathIsDeclared, buildSemanticCensus, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, generatorNxPreviewCommand, renderSemanticCensusJson, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, semanticProjectionCatalogProblems, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type SemanticProjectionAuthorityNode, type SemanticProjectionCatalogRegistration, type Taxonomy } from "../../🔍️discovery/🟦️component.ts";
+import { areaOf, clearDiscoveryCache, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadTaxonomy, readSemioMarker, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, validateTaxonomy } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, generatorNxPreviewCommand, inspectRustMutationAggregateSpan, inspectRustStructure, inspectRustVirtualSources, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, semanticProjectionCatalogProblems, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type SemanticProjectionAuthorityNode, type SemanticProjectionCatalogRegistration, type Taxonomy } from "../../🔍️discovery/🟦️component.ts";
 import { computeWorkspaces, diffWorkspaces } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { lstatSync, mkdirSync, mkdtempSync, readdirSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { applyTaxonomyPlan, artifactProjectionTail, canonicalJson, inventoryTaxonomy, noFollowTreeDigest, opaqueTreeDigest, parseGeneratorPreviewManifest, parseTaxonomyPlan, planTaxonomy, repositoryLocalSymlinkTargetPath, taxonomyPlanDigest, taxonomyPlatformPathViolationCodes, verifyTaxonomy, type OpaqueTreeDigest, type TaxonomyApplyResult, type TaxonomyInventory, type TaxonomyInventoryOptions, type TaxonomyPlan } from "../../🧹️normalization/🟦️.ts";
+import { applyTaxonomyPlan, artifactProjectionTail, canonicalJson, inventoryTaxonomy, noFollowTreeDigest, opaqueTreeDigest, parseGeneratorPreviewManifest, parseTaxonomyPlan, planTaxonomy, repositoryLocalSymlinkTargetPath, taxonomyPlanDigest, taxonomyPlatformPathViolationCodes, taxonomyScopedGitPathspec, verifyTaxonomy, type OpaqueTreeDigest, type TaxonomyApplyResult, type TaxonomyInventory, type TaxonomyInventoryOptions, type TaxonomyPlan, type TaxonomyProgress } from "../../🧹️normalization/🟦️.ts";
+import { ownedFilePaths, ownedFilesystemEntries, ownedPathByteSort, type OwnedFilesystemEntry } from "../../🧪️tests/🔍️filesystem/🟦️component.ts";
+import Ajv from "ajv";
+import fastGlob from "fast-glob";
+import { MUTATION_STRUCTURAL_POLICY_KINDS, inventoryMutationTaxonomy, newScaffoldMutationTree, planMutationTaxonomy, policyMutationStructuralBreaches, runMutationTaxonomyCli, validateJsonSchemaSubset } from "../../../../../../../📜️script.ts";
+
+//#region 🛡️ActiveTicketCleanProtection
+describe("active ticket clean protection", () => {
+  test("projects synthetic candidates with strict manifest and third-party oracle parity", async () => {
+    const { cleanRemovalProtection, cleanProjectRemovals } = await import("../../../../../../../📜️script.ts");
+    const fixturePath = join(import.meta.dir, "../../🧪️tests/🧹️clean");
+    const fixture = JSON.parse(readFileSync(join(fixturePath, "🧪️fixture.json"), "utf8"));
+    const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(fixturePath, "🧪️fixture.schema.json"), "utf8")));
+    expect(validate(fixture)).toBe(true);
+    for (const bad of [{ ...fixture, extra: true }, { ...fixture, version: 2 }, { ...fixture, cases: [] }]) expect(validate(bad)).toBe(false);
+    const root = resolve("/synthetic-workspace");
+    const nodes = new Map<string, { kind: "directory" | "file" | "symlink" | "unreadable"; text?: string }>([[root, { kind: "directory" }]]);
+    const add = (path: string, kind: "directory" | "file" | "symlink" | "unreadable", text?: string): void => {
+      const absolute = resolve(root, path); let parent = dirname(absolute);
+      while (parent !== root && parent.startsWith(root + sep)) { if (!nodes.has(parent)) nodes.set(parent, { kind: "directory" }); parent = dirname(parent); }
+      nodes.set(absolute, { kind, text });
+    };
+    for (const ticket of fixture.tickets) { add(ticket.path, "directory"); add(`${ticket.path}/log.txt`, "file", "evidence"); add(`${ticket.path}/target`, "directory"); if (ticket.manifest !== null) add(`${ticket.path}/🎫️ticket.json`, "file", ticket.manifest); }
+    for (const entry of fixture.special) add(entry.path, entry.kind);
+    const view = {
+      kind: (path: string) => nodes.get(path)?.kind ?? "missing" as const,
+      children: (path: string) => nodes.get(path)?.kind === "directory" ? [...nodes.keys()].filter((key) => key !== path && dirname(key) === path).map((key) => basename(key)) : undefined,
+      read: (path: string) => nodes.get(path)?.text,
+    };
+    const validClosed = new Ajv({ strict: true }).compile({ type: "object", required: ["status"], properties: { status: { const: "closed" } }, additionalProperties: true });
+    const intersects = (left: string, right: string) => left === right || left.startsWith(right + "/") || right.startsWith(left + "/");
+    const protectedPaths = fixture.tickets.filter((ticket: { manifest: string | null }) => { try { return !validClosed(JSON.parse(ticket.manifest ?? "null")); } catch { return true; } }).map((ticket: { path: string }) => ticket.path);
+    protectedPaths.push(...fixture.special.map((entry: { path: string }) => entry.path));
+    const oracle = (path: string) => path !== "." && !path.startsWith("../") && !protectedPaths.some((prefix: string) => intersects(path, prefix));
+    for (const vector of fixture.cases) {
+      expect(oracle(vector.candidate)).toBe(vector.allowed);
+      expect(cleanRemovalProtection(root, vector.candidate, view).length === 0).toBe(vector.allowed);
+    }
+    const parent = fixture.tickets.find((ticket: { path: string }) => ticket.path.endsWith("/NESTED")).path;
+    const candidates = [{ kind: "gitignore" as const, path: parent, bytes: 99 }, { kind: "ticket-dir" as const, path: `${parent}/target`, bytes: 11 }];
+    expect(cleanProjectRemovals(root, candidates, [], view).map((row) => row.path)).toEqual([`${parent}/target`]);
+    const allowed = `${fixture.reopened}/target`;
+    expect(cleanProjectRemovals(root, [{ kind: "ticket-dir", path: allowed, bytes: 11 }], [], view)).toHaveLength(1);
+    add(`${fixture.reopened}/🎫️ticket.json`, "file", '{"status":"open"}');
+    expect(cleanRemovalProtection(root, allowed, view)).toContain(resolve(root, fixture.reopened));
+    add(`${fixture.reopened}/🎫️ticket.json`, "file", '{"status":"closed"}');
+    let reads = 0;
+    const changesDuringWalk = { ...view, read: (path: string) => path === resolve(root, `${fixture.reopened}/🎫️ticket.json`) && ++reads > 1 ? '{"status":"open"}' : view.read(path) };
+    expect(cleanRemovalProtection(root, allowed, changesDuringWalk)).toContain(resolve(root, fixture.reopened));
+    const blocked: string[] = [];
+    expect(cleanProjectRemovals(root, candidates, [], view, (path) => blocked.push(path)).map((row) => row.path)).toEqual([`${parent}/target`]);
+    expect(blocked).toContain(resolve(root, `${parent}/child`));
+    expect(cleanProjectRemovals(root, [{ kind: "misplaced", path: ".🧬semio", bytes: 99 }], [resolve(root, ".🧬semio/🗺️map")], view)).toEqual([]);
+  });
+});
+//#endregion 🛡️ActiveTicketCleanProtection
+
+//#region 🔗️RegistryCompilerImports
+describe("registryCompilerImports", () => {
+  test("validates the language-neutral vectors against Bun and TypeScript", async () => {
+    const { registryStaticImports } = await import("../../🔍️discovery/🟦️component.ts");
+    const ts = await import("typescript");
+    const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🔍️discovery/🧪️compiler-imports.json"), "utf8")) as { cases: { name: string; source: string; expected: string[] }[] };
+    const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🔍️discovery/🧪️compiler-imports.schema.json"), "utf8"));
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+    expect(validate(fixture)).toBe(true);
+    expect(validate({ ...fixture, extra: true })).toBe(false);
+    for (const vector of fixture.cases) {
+      const source = ts.createSourceFile("fixture.tsx", vector.source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+      const oracle = [...new Set(source.statements.flatMap((statement) => {
+        if (ts.isImportDeclaration(statement) && statement.importClause?.isTypeOnly || ts.isExportDeclaration(statement) && statement.isTypeOnly) return [];
+        const specifier = ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement) ? statement.moduleSpecifier : undefined;
+        return specifier && ts.isStringLiteral(specifier) ? [specifier.text] : [];
+      }))].sort();
+      expect(oracle).toEqual(vector.expected);
+      expect(registryStaticImports(vector.source)).toEqual(oracle);
+    }
+  });
+
+  test("rejects malformed runtime compiler capabilities without trusting declarations", async () => {
+    const { scanRegistryCompilerImports } = await import("../../🔍️discovery/🟦️component.ts");
+    for (const platform of [null, {}, { Transpiler: 7 }, { Transpiler: () => ({}) }, { Transpiler: class {} }, { Transpiler: class { scanImports() { return {}; } } }, { Transpiler: class { scanImports() { return [{ path: 1, kind: "import-statement" }]; } } }, { Transpiler: class { scanImports() { return [{ path: "./a", kind: null }]; } } }]) {
+      expect(() => scanRegistryCompilerImports("import './a'", platform)).toThrow();
+    }
+    const row = { path: "./a", kind: "import-statement", ignored: true };
+    const imports = scanRegistryCompilerImports("", { Transpiler: class { scanImports() { return [row]; } } });
+    row.path = "./rebound";
+    expect(imports).toEqual([{ path: "./a", kind: "import-statement" }]);
+  });
+});
+//#endregion 🔗️RegistryCompilerImports
 
 //#region 🧪️GitFixture
 /** 🧬️Reads an isolated fixture's exact current commit without depending on subprocess pipe capture. */
@@ -33,6 +125,169 @@ function fixtureGitHead(root: string): string {
   return head.startsWith("ref: ") ? readFileSync(join(root, ".git", head.slice(5)), "utf8").trim() : head;
 }
 //#endregion 🧪️GitFixture
+
+//#region 🔍️OwnedFilesystemDiscovery
+const OWNED_FILESYSTEM_DISCOVERY_GOLDEN = join(import.meta.dir, "../../🧪️tests/🔍️filesystem/🧫️fixtures/🔣️.json");
+
+describe("owned filesystem discovery", () => {
+  test("sorts hostile Unicode and hidden nodes by bytes without following directory symlinks", () => {
+    const golden = JSON.parse(readFileSync(OWNED_FILESYSTEM_DISCOVERY_GOLDEN, "utf8")) as {
+      schemaVersion: number;
+      directories: string[];
+      files: { path: string; content: string }[];
+      symlinks: { path: string; target: string }[];
+      expected: OwnedFilesystemEntry[];
+    };
+    const root = mkdtempSync(join(tmpdir(), "owned-filesystem-discovery-"));
+    try {
+      expect(golden.schemaVersion).toBe(1);
+      for (const path of golden.directories) mkdirSync(join(root, path), { recursive: true });
+      for (const file of golden.files) {
+        const target = join(root, file.path);
+        mkdirSync(resolve(target, ".."), { recursive: true });
+        writeFileSync(target, file.content);
+      }
+      for (const link of golden.symlinks) symlinkSync(process.platform === "win32" ? join(root, link.target) : link.target, join(root, link.path), process.platform === "win32" ? "junction" : "dir");
+      const entries = ownedFilesystemEntries(root);
+      expect(entries).toEqual(golden.expected);
+      expect(entries.some(({ path }) => path.startsWith("alias/"))).toBe(false);
+      expect(ownedFilesystemEntries(join(root, "absent"))).toEqual([]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+//#endregion 🔍️OwnedFilesystemDiscovery
+
+//#region 🧭️WorkspaceTaxonomyAuthority
+const WORKSPACE_TAXONOMY_FIXTURE = join(import.meta.dir, "../../🧪️tests/🧬️workspace-taxonomy/🧫️fixtures/🔣️.json");
+const WORKSPACE_TAXONOMY_SCHEMA = join(import.meta.dir, "../../🧪️tests/🧬️workspace-taxonomy/🛂️schema.json");
+
+function workspaceTaxonomyFixtureRoot(prefix: string): { readonly root: string; readonly retained: boolean } {
+  const artifactDirectory = process.env.SEMIO_TEST_ARTIFACT_DIR?.trim();
+  const base = artifactDirectory ? resolve(getWorkspaceRoot(), artifactDirectory) : realpathSync(tmpdir());
+  mkdirSync(base, { recursive: true });
+  return { root: mkdtempSync(join(base, prefix)), retained: Boolean(artifactDirectory) };
+}
+
+describe("workspace taxonomy authority", () => {
+  test("resolves only a lexical, no-follow metadata.semio.taxonomy locator", () => {
+    const fixture = JSON.parse(readFileSync(WORKSPACE_TAXONOMY_FIXTURE, "utf8")) as {
+      canonicalLocator: string;
+      childLocator: string;
+      cases: readonly { name: string; manifest: object; target: "regular" | "file-symlink" | "directory-symlink" | "manifest-symlink"; expected: "resolve" | "reject"; reason: string }[];
+      startCases: readonly { name: string; entry: "root" | "linked-child" | "child" | "compose"; nx: "regular" | "missing"; expected: "resolve" | "reject"; reason: string }[];
+    };
+    expect(new Ajv({ allErrors: true, strict: true }).compile(JSON.parse(readFileSync(WORKSPACE_TAXONOMY_SCHEMA, "utf8")))(fixture)).toBe(true);
+    for (const vector of fixture.cases) {
+      const fixtureRoot = workspaceTaxonomyFixtureRoot("semio-workspace-taxonomy-");
+      const root = fixtureRoot.root;
+      try {
+        writeFileSync(join(root, "nx.json"), "{}\n");
+        const manifestPath = join(root, "📋️project.json");
+        const target = vector.name === "child-directory" || vector.name === "component-symlink" ? fixture.childLocator : fixture.canonicalLocator;
+        const targetPath = join(root, target);
+        if (vector.expected === "resolve" || vector.target !== "regular") {
+          mkdirSync(dirname(targetPath), { recursive: true });
+          writeFileSync(targetPath, "{}\n");
+        }
+        if (vector.target === "file-symlink") {
+          const linked = `${targetPath}.linked`;
+          writeFileSync(linked, "{}\n");
+          rmSync(targetPath);
+          symlinkSync(linked, targetPath, "file");
+        }
+        if (vector.target === "directory-symlink") {
+          const component = join(root, "🧪️virtual");
+          const linked = join(root, "🧪️linked");
+          mkdirSync(join(linked, "📚️child"), { recursive: true });
+          writeFileSync(join(linked, "📚️child", "🔣️taxonomy.json"), "{}\n");
+          rmSync(component, { recursive: true, force: true });
+          symlinkSync(linked, component, process.platform === "win32" ? "junction" : "dir");
+        }
+        if (vector.target === "manifest-symlink") {
+          const linked = join(root, "📋️project-linked.json");
+          writeFileSync(linked, JSON.stringify(vector.manifest));
+          symlinkSync(linked, manifestPath, "file");
+        } else writeFileSync(manifestPath, JSON.stringify(vector.manifest));
+        if (vector.expected === "resolve") {
+          const authority = resolveWorkspaceTaxonomyAuthority(root);
+          expect(authority.relativePath).toBe(target);
+          expect(relative(root, authority.taxonomyPath).replaceAll("\\", "/")).toBe(target);
+          expect(lstatSync(authority.taxonomyPath).isSymbolicLink()).toBe(false);
+        } else expect(() => resolveWorkspaceTaxonomyAuthority(root)).toThrow(vector.reason);
+      } finally {
+        if (!fixtureRoot.retained) rmSync(root, { recursive: true, force: true });
+      }
+    }
+  });
+
+  test("requires the exact marker pair and refuses symlink or compose ancestry before discovery", () => {
+    const fixture = JSON.parse(readFileSync(WORKSPACE_TAXONOMY_FIXTURE, "utf8")) as {
+      canonicalLocator: string;
+      startCases: readonly { name: string; entry: "root" | "linked-child" | "child" | "compose" | "compose-parent-root" | "compose-parent-start" | "root-nul" | "root-drive-relative" | "symlink-parent"; nx: "regular" | "missing"; expected: "resolve" | "reject"; reason: string }[];
+    };
+    for (const vector of fixture.startCases) {
+      const fixtureRoot = workspaceTaxonomyFixtureRoot("semio-workspace-taxonomy-start-");
+      const root = fixtureRoot.root;
+      try {
+        const workspace = vector.entry === "compose" ? join(root, "compose", "workspace") : join(root, "workspace");
+        const target = join(workspace, fixture.canonicalLocator);
+        mkdirSync(dirname(target), { recursive: true });
+        writeFileSync(target, "{}\n");
+        writeFileSync(join(workspace, "📋️project.json"), JSON.stringify({ metadata: { semio: { taxonomy: fixture.canonicalLocator } } }));
+        if (vector.nx === "regular") writeFileSync(join(workspace, "nx.json"), "{}\n");
+        const start = vector.entry === "linked-child" ? join(root, "linked-workspace", "child") : vector.entry === "child" ? join(workspace, "child", "nested") : vector.entry === "symlink-parent" ? `${root}${sep}linked-workspace${sep}..${sep}workspace` : vector.entry === "compose-parent-start" ? `${root}${sep}COMPOSE${sep}..${sep}workspace` : workspace;
+        if (vector.entry === "linked-child") {
+          mkdirSync(join(workspace, "child"), { recursive: true });
+          symlinkSync(workspace, join(root, "linked-workspace"), process.platform === "win32" ? "junction" : "dir");
+        }
+        if (vector.entry === "symlink-parent") symlinkSync(workspace, join(root, "linked-workspace"), process.platform === "win32" ? "junction" : "dir");
+        if (vector.entry === "child") mkdirSync(start, { recursive: true });
+        if (vector.expected === "resolve") {
+          const authority = resolveWorkspaceTaxonomyAuthorityFromDirectory(start);
+          expect(authority.workspaceRoot).toBe(workspace);
+        } else {
+          const resolveAuthority = vector.name === "marker-pair" || vector.entry === "compose" ? () => resolveWorkspaceTaxonomyAuthority(workspace) : vector.entry === "compose-parent-root" ? () => resolveWorkspaceTaxonomyAuthority(`${root}${sep}compose${sep}..${sep}workspace`) : vector.entry === "root-nul" ? () => resolveWorkspaceTaxonomyAuthority(`${workspace}\0`) : vector.entry === "root-drive-relative" ? () => resolveWorkspaceTaxonomyAuthority("C:workspace") : () => resolveWorkspaceTaxonomyAuthorityFromDirectory(start);
+          expect(resolveAuthority).toThrow(vector.reason);
+        }
+      } finally {
+        if (!fixtureRoot.retained) rmSync(root, { recursive: true, force: true });
+      }
+    }
+  });
+
+  test("does not borrow an outer taxonomy past a malformed nested nx workspace anchor", () => {
+    const fixture = JSON.parse(readFileSync(WORKSPACE_TAXONOMY_FIXTURE, "utf8")) as {
+      canonicalLocator: string;
+      anchorCases: readonly { name: string; nx: "regular" | "symlink"; project: "regular" | "missing" | "symlink"; reason: string }[];
+    };
+    for (const vector of fixture.anchorCases) {
+      const fixtureRoot = workspaceTaxonomyFixtureRoot("semio-workspace-taxonomy-anchor-");
+      const root = fixtureRoot.root;
+      try {
+        const outer = join(root, "outer-workspace");
+        const outerTaxonomy = join(outer, fixture.canonicalLocator);
+        mkdirSync(dirname(outerTaxonomy), { recursive: true });
+        writeFileSync(outerTaxonomy, "{}\n");
+        writeFileSync(join(outer, "nx.json"), "{}\n");
+        writeFileSync(join(outer, "📋️project.json"), JSON.stringify({ metadata: { semio: { taxonomy: fixture.canonicalLocator } } }));
+        const inner = join(outer, "nested-workspace");
+        mkdirSync(join(inner, "child"), { recursive: true });
+        const nxPath = join(inner, "nx.json");
+        const projectPath = join(inner, "📋️project.json");
+        if (vector.nx === "regular") writeFileSync(nxPath, "{}\n");
+        else symlinkSync(join(outer, "nx.json"), nxPath, "file");
+        if (vector.project === "regular") writeFileSync(projectPath, "{}\n");
+        if (vector.project === "symlink") symlinkSync(join(outer, "📋️project.json"), projectPath, "file");
+        expect(() => resolveWorkspaceTaxonomyAuthorityFromDirectory(join(inner, "child"))).toThrow(vector.reason);
+      } finally {
+        if (!fixtureRoot.retained) rmSync(root, { recursive: true, force: true });
+      }
+    }
+  });
+});
+//#endregion 🧭️WorkspaceTaxonomyAuthority
 
 //#region 🧪️EmojiPrefixPolicy
 describe("emoji-prefix policy", () => {
@@ -1409,6 +1664,53 @@ describe("command budgets", () => {
   });
 });
 
+//#region 🦀️NextestExecutionFilters
+describe("nextest execution filters", () => {
+  test("retains explicit task artifacts and preserves the default temporary location", () => {
+    const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧪️tests/🦀️nextest/🔣️artifact-location.json"), "utf8")) as { schema: string; cases: Array<{ value: string; relative: string | null; retain: boolean }> };
+    const validate = new Ajv({ strict: true }).compile({
+      type: "object", additionalProperties: false, required: ["schema", "cases"],
+      properties: {
+        schema: { const: "nextest-artifact-location/v1" },
+        cases: { type: "array", minItems: 4, items: { type: "object", additionalProperties: false, required: ["value", "relative", "retain"], properties: { value: { type: "string" }, relative: { type: ["string", "null"] }, retain: { type: "boolean" } } } },
+      },
+    });
+    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    for (const row of fixture.cases) {
+      expect(nextestArtifactLocation(import.meta.dir, { SEMIO_TEST_ARTIFACT_DIR: row.value })).toEqual({ directory: row.relative === null ? tmpdir() : resolve(import.meta.dir, row.relative), retain: row.retain });
+    }
+  });
+
+  test("preserves language-neutral build and execution vectors with an independent Node parser", () => {
+    const fixtureRoot = join(import.meta.dir, "../../🧪️tests/🦀️nextest");
+    const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️command-vectors.json"), "utf8")) as {
+      cases: Array<{ name: string; input: string[]; build: string[]; execution: string[]; libtest: string[] }>;
+      rejected: string[][];
+    };
+    const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🔣️schema.json"), "utf8")));
+    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    const runtimeKeys = ["filter-expr", "partition", "run-ignored", "ignore-default-filter"];
+    for (const row of fixture.cases) {
+      const options = {
+        lib: { type: "boolean" }, release: { type: "boolean" }, "no-default-features": { type: "boolean" }, package: { type: "string", short: "p", multiple: true }, features: { type: "string", short: "F", multiple: true }, target: { type: "string" }, "target-dir": { type: "string" }, "build-jobs": { type: "string" }, "cargo-profile": { type: "string" }, "cargo-message-format": { type: "string", multiple: true }, timings: { type: row.input.some((arg) => arg.startsWith("--timings=")) ? "string" : "boolean" }, config: { type: "string", multiple: true }, Z: { type: "string", short: "Z", multiple: true }, test: { type: "string", multiple: true }, bin: { type: "string", multiple: true }, bench: { type: "string", multiple: true }, example: { type: "string", multiple: true },
+        "filter-expr": { type: "string", short: "E", multiple: true }, partition: { type: "string" }, "run-ignored": { type: "string" }, "ignore-default-filter": { type: "boolean" },
+      } as const;
+      const actual = partitionNextestExecutionFilters(row.input);
+      expect(actual, row.name).toEqual({ buildArgs: row.build, executionArgs: row.execution, libtestArgs: row.libtest });
+      const separator = row.input.indexOf("--");
+      const original = parseArgs({ args: separator < 0 ? row.input : row.input.slice(0, separator), options, strict: true, allowPositionals: true });
+      const runtime = parseArgs({ args: actual.executionArgs, options, strict: true, allowPositionals: true });
+      const build = parseArgs({ args: actual.buildArgs, options, strict: true, allowPositionals: true });
+      expect(runtime.values, row.name).toEqual(Object.fromEntries(Object.entries(original.values).filter(([key]) => runtimeKeys.includes(key))));
+      expect(build.values, row.name).toEqual(Object.fromEntries(Object.entries(original.values).filter(([key]) => !runtimeKeys.includes(key))));
+      expect(runtime.positionals, row.name).toEqual(original.positionals);
+      expect(build.positionals, row.name).toEqual([]);
+    }
+    for (const args of fixture.rejected) expect(() => partitionNextestExecutionFilters(args)).toThrow();
+  });
+});
+//#endregion 🦀️NextestExecutionFilters
+
 describe("resolveCargoPackageName", () => {
   test("resolves short lib names to full package names", () => {
     const root = process.cwd();
@@ -1428,7 +1730,8 @@ describe("loadTaxonomy", () => {
   test("parses 🔣️taxonomy.json into the expected shape", () => {
     const taxonomy = loadTaxonomy();
     expect(taxonomy.artifactComponentDirs).toEqual(["🧬️schema", "🚪️io"]);
-    expect(taxonomy.mutationChildDirs).toEqual(["🦠️mutation", "🔺️diff", "↩️inverse"]);
+    expect(taxonomy.mutationComponentFileKindId).toBe("rust-source");
+    expect(taxonomy.mutationOptionalFacetDirs).toEqual(["🔺️diff", "↩️inverse", "🧩️plan", "📝️text", "💾️binary", "🧬️schema"]);
     expect(taxonomy.schemaChildDirs).toEqual(["📸️snapshot", "🔺️diff", "🧬️mutations", "💡️inferences"]);
     expect(taxonomy.representationDirs).toEqual(["📝️text", "💾️binary"]);
     expect(taxonomy.schemaFormats).toEqual({
@@ -1466,9 +1769,9 @@ describe("loadTaxonomy", () => {
     expect(Object.keys(taxonomy.areas).length).toBeGreaterThan(0);
   });
 
-  test("closes generator ownership and covers the exact third-party-inventoried Ralph surface", () => {
+  test("closes generator ownership and covers the exact platform-inventoried Ralph surface", () => {
     const taxonomy = loadTaxonomy();
-    const tracked = fastGlob.sync(".ralph-tui/**/*", { cwd: getWorkspaceRoot(), onlyFiles: true, dot: true }).sort();
+    const tracked = ownedFilePaths(join(getWorkspaceRoot(), ".ralph-tui")).map((path) => `.ralph-tui/${path}`);
     const setup = taxonomy.generatorContracts["setup-wizard-config"]!;
     expect(Object.values(taxonomy.generatorContracts).every((contract) => contract.ownership === "owned" || contract.ownership === "external")).toBe(true);
     expect(taxonomy.generatorContracts["ownerless-ui-icons"]).toBeUndefined();
@@ -1664,7 +1967,7 @@ describe("loadTaxonomy", () => {
     expect(taxonomy.taxonomyLeafParentDirs).not.toContain("🖼️assets");
     expect(taxonomy.taxonomyLeafParentDirs).not.toContain("🧪️tests");
     expect(taxonomy.taxonomyLeafParentDirs).toContain("🧬️mutations");
-    expect(taxonomy.taxonomyLeafParentDirs).toContain("🦠️mutation");
+    expect(taxonomy.taxonomyLeafParentDirs).not.toContain("🦠️mutation");
     expect(taxonomy.taxonomyLeafParentDirs).toContain("↩️inverse");
     expect(taxonomy.taxonomyLeafParentDirs).toContain("🔺️diff");
     expect(taxonomy.taxonomyLeafParentDirs).toContain("🧬️schema");
@@ -1811,14 +2114,20 @@ describe("validateTaxonomy", () => {
     expect(taxonomy.subsetChildDirs.filter((dir) => ["🏗️builder", "🧐️analyzer", "🎹️composer"].includes(dir))).toEqual([]);
   });
 
-  test("registers every mutation child as a taxonomy leaf parent", () => {
+  test("registers every optional mutation facet as a taxonomy leaf parent", () => {
     const taxonomy = loadTaxonomy();
-    expect(taxonomy.mutationChildDirs.every((dir) => taxonomy.taxonomyLeafParentDirs.includes(dir))).toBe(true);
+    expect(taxonomy.mutationOptionalFacetDirs.every((dir) => taxonomy.taxonomyLeafParentDirs.includes(dir))).toBe(true);
   });
 
-  test("declares mutation children and the schema mutation collection", () => {
+  test("declares direct mutation ownership and optional subfacets", () => {
     const taxonomy = loadTaxonomy();
-    expect(taxonomy.mutationChildDirs).toEqual(["🦠️mutation", "🔺️diff", "↩️inverse"]);
+    expect(taxonomy.mutationComponentFileKindId).toBe("rust-source");
+    expect(taxonomy.mutationDescriptorFileKindId).toBe("json");
+    expect(taxonomy.mutationOptionalFacetDirs).toEqual(["🔺️diff", "↩️inverse", "🧩️plan", "📝️text", "💾️binary", "🧬️schema"]);
+    expect(new RegExp(taxonomy.mutationDirectoryPattern, "u").test("➕️add-node")).toBe(true);
+    expect(new RegExp(taxonomy.mutationDirectoryPattern, "u").test("➕️node")).toBe(false);
+    expect("mutationChildDirs" in taxonomy).toBe(false);
+    expect("compositeMutationChildDirs" in taxonomy).toBe(false);
     expect(taxonomy.schemaChildDirs).toContain("🧬️mutations");
   });
 
@@ -1927,6 +2236,129 @@ describe("validateTaxonomy", () => {
   });
 });
 
+//#region 🧬️DirectMutationTaxonomyTests
+const DIRECT_MUTATION_RUST_FIXTURE = `
+#![allow(dead_code)]
+
+pub struct Snapshot;
+pub struct AddNode {
+    pub id: u64,
+    pub label: String,
+}
+
+#[path = "➕️add-node/🦀️component.rs"]
+pub mod add_node;
+
+#[cfg(test)]
+#[path = "🧪️tests/add-node/🦀️component.rs"]
+mod tests;
+
+pub enum Mutation {
+    AddNode(add_node::AddNode),
+    RemoveNode { id: u64 },
+    Noop,
+}
+
+impl protocol::MutationKind<Snapshot, Mutation> for AddNode {
+    const ID: &'static str = "add-node";
+
+    fn diff(&self, _base: &Snapshot) -> u64 {
+        self.id
+    }
+
+    fn inverse(&self, _base: &Snapshot) -> Vec<Mutation> {
+        Vec::new()
+    }
+}
+
+pub const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
+    verb: "add",
+    entity: "node",
+    kind: "add-node",
+    record: "AddNode",
+};
+pub const WIRE_KIND: &str = "add-node";
+const GENERATED: &str = include!(concat!(env!("OUT_DIR"), "/mutations.rs"));
+const FAKE_RUST: &str = r#"pub enum Fake { Bad(fake::Bad) }"#;
+// pub enum CommentFake { Bad(comment_fake::Bad) }
+
+pub fn dispatch(value: &Mutation) -> u64 {
+    match value {
+        Mutation::AddNode(payload) => payload.id,
+        Mutation::RemoveNode { id } => *id,
+        Mutation::Noop => 0,
+    }
+}
+`;
+
+describe("direct mutation taxonomy", () => {
+  test("models direct ownership and only optional child facets", () => {
+    const taxonomy = loadTaxonomy();
+    expect(artifactFacetPathIsDeclared("🧬️schema/🧬️mutations/➕️add-node", taxonomy)).toBe(true);
+    for (const facet of taxonomy.mutationOptionalFacetDirs) expect(artifactFacetPathIsDeclared(`🧬️schema/🧬️mutations/➕️add-node/${facet}`, taxonomy)).toBe(true);
+    expect(artifactFacetPathIsDeclared("🧬️schema/🧬️mutations/➕️add-node/🦠️mutation", taxonomy)).toBe(false);
+    expect(artifactFacetPathIsDeclared("🧬️schema/🧬️mutations/➕️node", taxonomy)).toBe(false);
+  });
+
+  test("extracts stable Rust structural facts without treating comments or strings as syntax", () => {
+    const facts = inspectRustStructure(DIRECT_MUTATION_RUST_FIXTURE);
+    expect(facts.schemaVersion).toBe(1);
+    expect(facts.modules).toEqual([
+      { name: "add_node", visibility: "pub", inline: false, pathTarget: "➕️add-node/🦀️component.rs", cfgTest: false },
+      { name: "tests", visibility: "private", inline: false, pathTarget: "🧪️tests/add-node/🦀️component.rs", cfgTest: true },
+    ]);
+    expect(facts.enums).toEqual([{
+      name: "Mutation",
+      visibility: "pub",
+      variants: [
+        { name: "AddNode", fieldStyle: "tuple", fieldTypes: ["add_node::AddNode"], wrappedTupleLeafType: "add_node::AddNode" },
+        { name: "RemoveNode", fieldStyle: "struct", fieldTypes: ["u64"], wrappedTupleLeafType: null },
+        { name: "Noop", fieldStyle: "unit", fieldTypes: [], wrappedTupleLeafType: null },
+      ],
+    }]);
+    expect(facts.inlinePayloads.find((payload) => payload.name === "AddNode")?.fields).toEqual([
+      { name: "id", type: "u64" },
+      { name: "label", type: "String" },
+    ]);
+    expect(facts.impls).toContainEqual({
+      traitPath: "protocol::MutationKind<Snapshot,Mutation>",
+      selfType: "AddNode",
+      methods: ["diff", "inverse"],
+      associatedConstants: ["ID"],
+    });
+    expect(facts.matchArms.map((arm) => arm.variantPath)).toEqual(["Mutation::AddNode", "Mutation::RemoveNode", "Mutation::Noop"]);
+    expect(facts.constants.find((constant) => constant.name === "SEMANTICS")?.identityFields).toEqual({ entity: "node", kind: "add-node", record: "AddNode", verb: "add" });
+    expect(facts.constants.find((constant) => constant.name === "WIRE_KIND")?.stringValue).toBe("add-node");
+    expect(facts.includes).toEqual([{ macro: "include", expression: 'concat!(env!("OUT_DIR"),"/mutations.rs")', usesOutDir: true }]);
+    expect(facts.testModules).toEqual([facts.modules[1]]);
+    expect(renderRustStructuralFactsJson(facts)).toBe(renderRustStructuralFactsJson(inspectRustStructure(DIRECT_MUTATION_RUST_FIXTURE)));
+  });
+
+  test("filters virtual opaque paths before reading and normalizes Windows separators", () => {
+    const outside = "🧰️framework/🧬️schema/🧬️mutations/➕️add-node/🦀️component.rs";
+    const opaque = "compose/🧬️schema/🧬️mutations/➕️add-node/🦀️component.rs";
+    const recoveredOpaque = "temp\\compose\\🧬️schema\\🧬️mutations\\➕️add-node\\🦀️component.rs";
+    const reads: string[] = [];
+    const inspected = inspectRustVirtualSources([opaque, outside, recoveredOpaque], (path) => {
+      reads.push(path);
+      if (path !== outside) throw new Error(`opaque virtual source was read: ${path}`);
+      return DIRECT_MUTATION_RUST_FIXTURE;
+    });
+    expect(reads).toEqual([outside]);
+    expect(inspected.map((entry) => entry.path)).toEqual([outside]);
+    expect(inspected[0]?.facts.enums[0]?.name).toBe("Mutation");
+  });
+
+  test("agrees with the nightly Rust parser on every declared structural identity", () => {
+    const facts = inspectRustStructure(DIRECT_MUTATION_RUST_FIXTURE);
+    const parsed = spawnSync("rustc", ["-Zunpretty=ast-tree", "--crate-type=lib", "-"], { input: DIRECT_MUTATION_RUST_FIXTURE, encoding: "utf8" });
+    expect(parsed.status).toBe(0);
+    const ast = parsed.stdout;
+    for (const identity of [...facts.modules.map((fact) => fact.name), ...facts.enums.map((fact) => fact.name), ...facts.inlinePayloads.map((fact) => fact.name), ...facts.constants.map((fact) => fact.name)]) expect(ast).toContain(identity);
+  });
+});
+//#endregion 🧬️DirectMutationTaxonomyTests
+
 //#region 🧩️SemanticCollections
 function semanticFixture(options: { readonly secondProductionConsumer?: boolean; readonly rootBehavior?: boolean; readonly rustRelativeConsumers?: boolean; readonly glueConsumer?: boolean } = {}): { readonly root: string; readonly taxonomy: Taxonomy } {
   const root = mkdtempSync(join(tmpdir(), "semio-semantic-census-"));
@@ -1936,21 +2368,21 @@ function semanticFixture(options: { readonly secondProductionConsumer?: boolean;
     mkdirSync(join(absolute, ".."), { recursive: true });
     writeFileSync(absolute, content);
   };
-  write("🧰️framework/🔨️modules/📏measure/🟦️component.ts", "export const measure = (value: number) => value;\n");
-  if (options.rustRelativeConsumers || options.glueConsumer) write("🧰️framework/🔨️modules/📏measure/🦀️component.rs", "pub fn measure(value: u32) -> u32 { value }\n");
-  write("🧰️framework/🔨️modules/🔣️component.json", JSON.stringify({ "x-semio": { kind: "collection", members: [{ directory: "📏measure", id: "measure", kind: "module", responsibility: "exact and stable numeric measurement", module: { productionConsumers: options.secondProductionConsumer ? ["height", "width"] : ["width"] } }] } }));
-  write("🧰️framework/💡️inferences/📏width/🟦️component.ts", 'import { measure } from "../../🔨️modules/📏measure/🟦️component.ts";\nexport const width = measure(1);\n');
-  if (options.secondProductionConsumer) write("🧰️framework/💡️inferences/↕️height/🟦️component.ts", 'import { measure } from "../../🔨️modules/📏measure/🟦️component.ts";\nexport const height = measure(1);\n');
+  write("🧰️framework/🔨️modules/📏measure/🟦️.ts", "export const measure = (value: number) => value;\n");
+  if (options.rustRelativeConsumers || options.glueConsumer) write("🧰️framework/🔨️modules/📏measure/🦀️.rs", "pub fn measure(value: u32) -> u32 { value }\n");
+  write("🧰️framework/🔨️modules/🔣️.json", JSON.stringify({ "x-semio": { kind: "collection", members: [{ directory: "📏measure", id: "measure", kind: "module", responsibility: "exact and stable numeric measurement", module: { productionConsumers: options.secondProductionConsumer ? ["height", "width"] : ["width"] } }] } }));
+  write("🧰️framework/💡️inferences/📏width/🟦️.ts", 'import { measure } from "../../🔨️modules/📏measure/🟦️.ts";\nexport const width = measure(1);\n');
+  if (options.secondProductionConsumer) write("🧰️framework/💡️inferences/↕️height/🟦️.ts", 'import { measure } from "../../🔨️modules/📏measure/🟦️.ts";\nexport const height = measure(1);\n');
   if (options.rustRelativeConsumers) {
-    write("🧰️framework/💡️inferences/📏width/🦀️component.rs", "use super::super::modules::measure::measure;\npub fn width() -> u32 { measure(1) }\n");
-    if (options.secondProductionConsumer) write("🧰️framework/💡️inferences/↕️height/🦀️component.rs", "use super::super::modules::measure::measure;\npub fn height() -> u32 { measure(1) }\n");
+    write("🧰️framework/💡️inferences/📏width/🦀️.rs", "use super::super::modules::measure::measure;\npub fn width() -> u32 { measure(1) }\n");
+    if (options.secondProductionConsumer) write("🧰️framework/💡️inferences/↕️height/🦀️.rs", "use super::super::modules::measure::measure;\npub fn height() -> u32 { measure(1) }\n");
   }
-  if (options.glueConsumer) write("🧰️framework/💡️inferences/📏width/📦️packages/🦀️rust/📦️glue.rs", '#[path = "../../../../🔨️modules/📏measure/🦀️component.rs"]\npub mod measure;\n');
-  write("🧰️framework/💡️inferences/🔣️component.json", JSON.stringify({ "x-semio": { kind: "collection", members: [
+  if (options.glueConsumer) write("🧰️framework/💡️inferences/📏width/📦️packages/🦀️rust/📦️glue.rs", '#[path = "../../../../🔨️modules/📏measure/🦀️.rs"]\npub mod measure;\n');
+  write("🧰️framework/💡️inferences/🔣️.json", JSON.stringify({ "x-semio": { kind: "collection", members: [
     { directory: "📏width", id: "width", kind: "inference", responsibility: "derived width", inference: { inputs: ["value"], target: "width" } },
     ...(options.secondProductionConsumer ? [{ directory: "↕️height", id: "height", kind: "inference", responsibility: "derived height", inference: { inputs: ["value"], target: "height" } }] : []),
   ] } }));
-  if (options.rootBehavior) write("🧰️framework/💡️inferences/🟦️component.ts", "export function analyze() { return 1; }\n");
+  if (options.rootBehavior) write("🧰️framework/💡️inferences/🟦️.ts", "export function analyze() { return 1; }\n");
   return { root, taxonomy };
 }
 
@@ -1962,11 +2394,11 @@ function schemaMountedRustModulesFixture(): { readonly root: string; readonly ta
     mkdirSync(join(absolute, ".."), { recursive: true });
     writeFileSync(absolute, content);
   };
-  write("🧰️framework/🔨️modules/📏measure/🦀️component.rs", "pub fn measure(value: u32) -> u32 { value }\n");
-  write("🧰️framework/🔨️modules/🔣️component.json", JSON.stringify({ "x-semio": { kind: "collection", members: [{ directory: "📏measure", id: "measure", kind: "module", responsibility: "exact and stable numeric measurement", module: { productionConsumers: ["height", "width"] } }] } }));
-  write("🧰️framework/🧬️schema/💡️inferences/📏width/🦀️component.rs", "use super::super::modules::measure::measure;\npub fn width() -> u32 { measure(1) }\n");
-  write("🧰️framework/🧬️schema/💡️inferences/↕️height/🦀️component.rs", "use super::super::modules::measure::measure;\npub fn height() -> u32 { measure(1) }\n");
-  write("🧰️framework/🧬️schema/💡️inferences/🔣️component.json", JSON.stringify({ "x-semio": { kind: "collection", members: [
+  write("🧰️framework/🔨️modules/📏measure/🦀️.rs", "pub fn measure(value: u32) -> u32 { value }\n");
+  write("🧰️framework/🔨️modules/🔣️.json", JSON.stringify({ "x-semio": { kind: "collection", members: [{ directory: "📏measure", id: "measure", kind: "module", responsibility: "exact and stable numeric measurement", module: { productionConsumers: ["height", "width"] } }] } }));
+  write("🧰️framework/🧬️schema/💡️inferences/📏width/🦀️.rs", "use super::super::modules::measure::measure;\npub fn width() -> u32 { measure(1) }\n");
+  write("🧰️framework/🧬️schema/💡️inferences/↕️height/🦀️.rs", "use super::super::modules::measure::measure;\npub fn height() -> u32 { measure(1) }\n");
+  write("🧰️framework/🧬️schema/💡️inferences/🔣️.json", JSON.stringify({ "x-semio": { kind: "collection", members: [
     { directory: "📏width", id: "width", kind: "inference", responsibility: "derived width", inference: { inputs: ["value"], target: "width" } },
     { directory: "↕️height", id: "height", kind: "inference", responsibility: "derived height", inference: { inputs: ["value"], target: "height" } },
   ] } }));
@@ -1981,9 +2413,9 @@ function mutationTransportFixture(): { readonly root: string; readonly taxonomy:
     mkdirSync(join(absolute, ".."), { recursive: true });
     writeFileSync(absolute, content);
   };
-  write("🧰️framework/🚪️io/🧬️mutations/📝️text/🟦️component.ts", "export const encodeMutationText = (value: string) => value;\n");
-  write("🧰️framework/🚪️io/🧬️mutations/💾️binary/🟦️component.ts", "export const encodeMutationBinary = (value: Uint8Array) => value;\n");
-  write("🧰️framework/🚪️io/🧬️mutations/🔣️component.json", JSON.stringify({ "x-semio": { kind: "collection", members: [
+  write("🧰️framework/🚪️io/🧬️mutations/📝️text/🟦️.ts", "export const encodeMutationText = (value: string) => value;\n");
+  write("🧰️framework/🚪️io/🧬️mutations/💾️binary/🟦️.ts", "export const encodeMutationBinary = (value: Uint8Array) => value;\n");
+  write("🧰️framework/🚪️io/🧬️mutations/🔣️.json", JSON.stringify({ "x-semio": { kind: "collection", members: [
     { directory: "📝️text", id: "framework.io.mutation-text", kind: "io", responsibility: "frozen mutation text transport", io: { format: "Semio mutation text", direction: "transport" } },
     { directory: "💾️binary", id: "framework.io.mutation-binary", kind: "io", responsibility: "frozen mutation binary transport", io: { format: "Semio mutation binary", direction: "transport" } },
   ] } }));
@@ -2010,7 +2442,7 @@ describe("semantic collection census", () => {
       const census = buildSemanticCensus(fixture.root, {}, fixture.taxonomy);
       const imports = census.graph.edges.filter((edge) => edge.to === "measure" && edge.mechanism === "static-import");
       expect(imports.map((edge) => edge.from)).toEqual(["height", "height", "width", "width"]);
-      expect(imports.map((edge) => edge.target.endsWith("🦀️component.rs") || edge.target.endsWith("🟦️component.ts"))).toEqual([true, true, true, true]);
+      expect(imports.map((edge) => edge.target.endsWith("🦀️.rs") || edge.target.endsWith("🟦️.ts"))).toEqual([true, true, true, true]);
       expect(census.records.find((record) => record.id === "measure")?.productionConsumers).toEqual(["height", "width"]);
     } finally {
       rmSync(fixture.root, { recursive: true, force: true });
@@ -2044,13 +2476,13 @@ describe("semantic collection census", () => {
   test("includes unregistered collection-path findings beneath a semantic owner scope", () => {
     const fixture = semanticFixture({ rootBehavior: true });
     try {
-      const manifestPath = join(fixture.root, "🧰️framework/💡️inferences/🔣️component.json");
+      const manifestPath = join(fixture.root, "🧰️framework/💡️inferences/🔣️.json");
       const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
       manifest["x-semio"].members[0].id = "framework.inference.width";
       writeFileSync(manifestPath, JSON.stringify(manifest));
       const scoped = buildSemanticCensus(fixture.root, { scope: "framework" }, fixture.taxonomy);
       expect(scoped.records.map((record) => record.id)).toEqual(["framework.inference.width"]);
-      expect(scoped.problems.some((problem) => problem.code === "collection-authored-behavior" && problem.path.endsWith("💡️inferences/🟦️component.ts"))).toBe(true);
+      expect(scoped.problems.some((problem) => problem.code === "collection-authored-behavior" && problem.path.endsWith("💡️inferences/🟦️.ts"))).toBe(true);
       expect(scoped.problems.some((problem) => problem.code === "module-production-consumer-minimum" && problem.path.endsWith("🔨️modules/📏measure"))).toBe(true);
     } finally {
       rmSync(fixture.root, { recursive: true, force: true });
@@ -2063,7 +2495,7 @@ describe("semantic collection census", () => {
       const census = buildSemanticCensus(fixture.root, {}, fixture.taxonomy);
       expect(census.problems).toEqual([]);
       expect(census.records.map((record) => record.id)).toEqual(["framework.io.mutation-binary", "framework.io.mutation-text"]);
-      const manifestPath = join(fixture.root, "🧰️framework/🚪️io/🧬️mutations/🔣️component.json");
+      const manifestPath = join(fixture.root, "🧰️framework/🚪️io/🧬️mutations/🔣️.json");
       const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
       manifest["x-semio"].members[0].io.direction = "import";
       writeFileSync(manifestPath, JSON.stringify(manifest));
@@ -2076,9 +2508,9 @@ describe("semantic collection census", () => {
   test("does not count a test call site as a second production component", () => {
     const fixture = semanticFixture();
     try {
-      const testPath = join(fixture.root, "🧰️framework/💡️inferences/📏width/🧪️tests/🟦️component.ts");
+      const testPath = join(fixture.root, "🧰️framework/💡️inferences/📏width/🧪️tests/🟦️.ts");
       mkdirSync(join(testPath, ".."), { recursive: true });
-      writeFileSync(testPath, 'import { measure } from "../../../🔨️modules/📏measure/🟦️component.ts";\nexport const checked = measure(1);\n');
+      writeFileSync(testPath, 'import { measure } from "../../../🔨️modules/📏measure/🟦️.ts";\nexport const checked = measure(1);\n');
       const module = buildSemanticCensus(fixture.root, {}, fixture.taxonomy).records.find((record) => record.id === "measure");
       expect(module?.productionConsumers).toEqual(["width"]);
       expect(module?.excludedConsumers).toEqual(["width"]);
@@ -2103,11 +2535,11 @@ describe("semantic collection census", () => {
     try {
       const collection = join(fixture.root, "🧰️framework/💡️inferences");
       mkdirSync(join(collection, "🧪️orphan"), { recursive: true });
-      writeFileSync(join(collection, "🧪️orphan/🟦️component.ts"), "export const orphan = true;\n");
-      const manifest = JSON.parse(readFileSync(join(collection, "🔣️component.json"), "utf8"));
+      writeFileSync(join(collection, "🧪️orphan/🟦️.ts"), "export const orphan = true;\n");
+      const manifest = JSON.parse(readFileSync(join(collection, "🔣️.json"), "utf8"));
       manifest["x-semio"].members.push({ directory: "🧹️stale", id: "stale", kind: "inference", responsibility: "stale result", inference: { inputs: ["x"], target: "stale" } });
       manifest["x-semio"].members[0].directory = "🧪️shared";
-      writeFileSync(join(collection, "🔣️component.json"), JSON.stringify(manifest));
+      writeFileSync(join(collection, "🔣️.json"), JSON.stringify(manifest));
       const codes = buildSemanticCensus(fixture.root, {}, fixture.taxonomy).problems.map((problem) => problem.code);
       expect(codes).toContain("manifest-child-missing");
       expect(codes).toContain("manifest-child-extra");
@@ -2124,12 +2556,12 @@ describe("semantic collection census", () => {
       "pub mod gltf {",
       '  #[path = "."]',
       "  pub mod schema {",
-      '    #[path = "metrics/🦀️component.rs"]',
+      '    #[path = "metrics/🦀️.rs"]',
       "    pub mod metric;",
       "  }",
       "}",
     ].join("\n");
-    expect(resolveRustPathAttributes(join(root, "📦️glue.rs"), source).at(-1)?.target).toBe(resolve(root, "../../metrics/🦀️component.rs"));
+    expect(resolveRustPathAttributes(join(root, "📦️glue.rs"), source).at(-1)?.target).toBe(resolve(root, "../../metrics/🦀️.rs"));
   });
 
   test("places inference codecs below I/O rather than the inference result collection", () => {
@@ -2617,13 +3049,48 @@ function projectionAuthority(projection: ArtifactProjectionGoldenEntry, nodes = 
 }
 
 describe("artifact path projection authority", () => {
-  test("artifact-example-model-catalog-projection is schema-owned and agrees with fast-glob", () => {
+  test("canonical CAD and Draw authority retains the exact language-neutral mapping digests", () => {
+    for (const projection of ARTIFACT_PROJECTION_GOLDEN.projections) {
+      const source = projectionAuthorityNodes(projection);
+      const sourceAuthority = projectionAuthority(projection, source);
+      const directories = new Set<string>([projection.destinationRoot]);
+      const files = projection.mappings.map(({ sourcePath, destinationPath }) => {
+        let content = source.find(({ path }) => path === sourcePath)!.content!;
+        for (const edit of sourceAuthority.referenceEdits.filter(({ path }) => path === destinationPath)) content = content.replace(JSON.stringify(edit.oldValue), JSON.stringify(edit.newValue));
+        for (let path = dirname(destinationPath); path !== dirname(projection.destinationRoot); path = dirname(path)) directories.add(path);
+        return { path: destinationPath, nodeKind: "file" as const, content };
+      });
+      const nodes = [...[...directories].map((path) => ({ path, nodeKind: "directory" as const })), ...files];
+      const result = semanticPathProjectionAuthority({ artifactRoot: projection.sourceRoot.slice(0, projection.sourceRoot.indexOf("/🏅️standards/")), contractId: projection.contractId, sourceRoot: projection.sourceRoot, nodes, layout: "destination" });
+      expect(result.problems).toEqual([]);
+      expect(result.mappings).toEqual(projection.mappings);
+      expect(result.mappingDigest).toBe(projection.mappingDigest);
+      expect(result.referenceEdits).toEqual([]);
+      const invalid = nodes.map((node) => node.nodeKind === "file" && node.path === files[0]!.path ? { ...node, path: `${node.path}.unexpected` } : node);
+      expect(semanticPathProjectionAuthority({ artifactRoot: projection.sourceRoot.slice(0, projection.sourceRoot.indexOf("/🏅️standards/")), contractId: projection.contractId, sourceRoot: projection.sourceRoot, nodes: invalid, layout: "destination" }).problems.length).toBeGreaterThan(0);
+      const symlink = nodes.map((node) => node.path === files[0]!.path ? { path: node.path, nodeKind: "symlink" as const } : node);
+      expect(semanticPathProjectionAuthority({ artifactRoot: projection.sourceRoot.slice(0, projection.sourceRoot.indexOf("/🏅️standards/")), contractId: projection.contractId, sourceRoot: projection.sourceRoot, nodes: symlink, layout: "destination" }).problems.some((problem) => problem.includes("forbidden symlink"))).toBe(true);
+    }
+  });
+
+  test("CAD profile vectors reject missing, duplicate, and ambiguous forward authority", () => {
+    const taxonomy = loadTaxonomy();
+    const catalog = taxonomy.semanticPathProjectionCatalogContracts["cad-model-catalog-v1"]!;
+    expect("profileVectors" in catalog && catalog.profileVectors).toEqual([{ artifactId: "📐️cad", standardVersion: "1", subsetId: "any" }]);
+    for (const vectors of [[], [{ artifactId: "📐️cad", standardVersion: "1", subsetId: "any" }, { artifactId: "📐️cad", standardVersion: "1", subsetId: "any" }], [{ artifactId: "📐️cad", standardVersion: "1", subsetId: "any/nested" }]]) {
+      const changed = structuredClone(taxonomy);
+      (changed.semanticPathProjectionCatalogContracts["cad-model-catalog-v1"] as { profileVectors: unknown }).profileVectors = vectors;
+      expect(validateTaxonomy(changed).some((problem) => /profile|tuple/u.test(problem))).toBe(true);
+    }
+  });
+
+  test("artifact-example-model-catalog-projection is schema-owned and agrees with owned filesystem discovery", () => {
     const projection = projectionGolden("artifact-example-model-catalog-v1");
     const result = projectionAuthority(projection);
-    const thirdParty = fastGlob.sync("**/*.json", { cwd: join(getWorkspaceRoot(), projection.sourceRoot), onlyFiles: true })
+    const platformBoundary = ownedFilePaths(join(getWorkspaceRoot(), projection.sourceRoot)).filter((path) => path.endsWith(".json"))
       .map((path) => `${projection.sourceRoot}/${path}`)
       .sort(projectionByteSort);
-    expect(thirdParty).toEqual(projection.mappings.map(({ sourcePath }) => sourcePath));
+    expect(platformBoundary).toEqual(projection.mappings.map(({ sourcePath }) => sourcePath));
     expect(result.problems).toEqual([]);
     expect(result.mappings).toEqual(projection.mappings);
     expect(result.destinationRoot).toBe(projection.destinationRoot);
@@ -2676,14 +3143,14 @@ describe("artifact path projection authority", () => {
     expect(projectionAuthority(projection, nodes, [projection.mappings[0]!.destinationPath]).problems.some((problem) => problem.includes("occupied"))).toBe(true);
   });
 
-  test("artifact-editor-command-projection preserves the strict fixed-file union and fast-glob parity", () => {
+  test("artifact-editor-command-projection preserves the strict fixed-file union and owned filesystem parity", () => {
     const projection = projectionGolden("artifact-editor-command-bundle-v1");
     const nodes = projectionAuthorityNodes(projection);
     const result = projectionAuthority(projection, nodes);
-    const thirdParty = fastGlob.sync("**/*", { cwd: join(getWorkspaceRoot(), projection.sourceRoot), onlyFiles: true })
+    const platformBoundary = ownedFilePaths(join(getWorkspaceRoot(), projection.sourceRoot))
       .map((path) => `${projection.sourceRoot}/${path}`)
       .sort(projectionByteSort);
-    expect(thirdParty).toEqual(projection.mappings.map(({ sourcePath }) => sourcePath));
+    expect(platformBoundary).toEqual(projection.mappings.map(({ sourcePath }) => sourcePath));
     expect(result.problems).toEqual([]);
     expect(result.mappings).toEqual(projection.mappings);
     expect(result.mappingDigest).toBe(projection.mappingDigest);
@@ -2733,7 +3200,15 @@ type MutationProjectionGolden = Readonly<{
 
 const NORMALIZATION_TICKET_REL = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION";
 const NORMALIZATION_SCHEMA_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
+const TICKET_IMPORTANT_HISTORY_ROOT_REL = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/SCOPED-HISTORY-APPLY";
+const TICKET_IMPORTANT_HISTORY_SOURCE_REL = `${TICKET_IMPORTANT_HISTORY_ROOT_REL}/📌️important.md`;
+const TICKET_IMPORTANT_HISTORY_DESTINATION_REL = `${TICKET_IMPORTANT_HISTORY_ROOT_REL}/📓️important/📝️.md`;
 const MUTATION_PROJECTION_GOLDEN = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures", "🧪️mutation-path-projection", "🔣️.json"), "utf8")) as MutationProjectionGolden;
+const SCOPED_INVENTORY_PATHSPEC_GOLDEN = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures", "🧪️scoped-inventory-pathspec", "🔣️.json"), "utf8")) as Readonly<{
+  schemaVersion: 1;
+  opaqueExclusions: readonly string[];
+  cases: readonly Readonly<{ id: string; inputScope: string | null; normalizedScope: string | null; conservativePrefix: string; positivePathspec: string; exclusionPathspecs: readonly string[] }>[];
+}>;
 
 /** 🧭️ Discovers mutation catalog files without third-party glob semantics. */
 function nativeMutationCatalogPaths(workspace: string): string[] {
@@ -2839,6 +3314,21 @@ function normalizationMove(plan: TaxonomyPlan, sourceSuffix: string): TaxonomyPl
   return move;
 }
 
+function inScopeForTest(path: string, scope: string): boolean {
+  const normalizedPath = path.normalize("NFC"), normalizedScope = scope.normalize("NFC");
+  return normalizedPath === normalizedScope || normalizedPath.startsWith(`${normalizedScope}/`) || normalizedScope.startsWith(`${normalizedPath}/`);
+}
+
+/** 🧾️ Reduces inventory entries to the physical census fields governed by scoped admission. */
+function normalizationInventoryCensus(inventory: TaxonomyInventory): readonly Readonly<Record<string, unknown>>[] {
+  return inventory.entries.filter(({ nodeKind }) => nodeKind !== "directory").map(({ sourcePath, nodeKind, mode, size, contentHash, symlinkTarget }) => ({ sourcePath, nodeKind, mode, size, contentHash, ...(symlinkTarget === undefined ? {} : { symlinkTarget }) }));
+}
+
+/** 📡️ Preserves the complete, duplicate-free inventory phase transition sequence. */
+function normalizationPhaseSequence(events: readonly TaxonomyProgress[]): readonly string[] {
+  return events.map(({ phase }) => phase).filter((phase, index, rows) => index === 0 || phase !== rows[index - 1]);
+}
+
 function artifactProjectionFixturePath(path: string): string {
   const marker = "/🗿️artifacts/";
   const index = path.indexOf(marker);
@@ -2907,6 +3397,17 @@ function artifactProjectionNormalizationFixture(name: string, references = false
   } : undefined);
 }
 
+function scopedUnrelatedProjectionStaleFixture(name: string): Readonly<{ fixture: NormalizationFixture; externalPath: string; staleToken: string }> {
+  const externalPath = `🧪️external-${name}/🗿️artifacts/📐️cad/📝️.md`;
+  let staleToken = "";
+  const fixture = normalizationFixture(`scoped-stale-${name}`, { "🟦️component.ts": "export const scoped = true;\n" }, ({ repoRoot }) => {
+    const schema = JSON.parse(readFileSync(join(repoRoot, NORMALIZATION_SCHEMA_REL), "utf8")) as { semanticPathProjectionReferenceConsumerContracts: Record<string, { projectionContractId: string; staleMarkers: string[] }> };
+    staleToken = Object.values(schema.semanticPathProjectionReferenceConsumerContracts).find((contract) => contract.projectionContractId === "artifact-example-model-catalog-v1")!.staleMarkers[0]!;
+    normalizationWriteFiles(repoRoot, { [externalPath]: "# Unrelated clean owner\n" });
+  });
+  return { fixture, externalPath, staleToken };
+}
+
 function expectNormalizationApplyFailure(run: () => TaxonomyApplyResult): void {
   let failed = false;
   try {
@@ -2919,9 +3420,48 @@ function expectNormalizationApplyFailure(run: () => TaxonomyApplyResult): void {
 }
 
 describe("taxonomy normalization", () => {
+  test("a minimal CAD catalog commits and re-inventories without source hierarchy authority", () => {
+    const cad = projectionGolden("artifact-example-model-catalog-v1");
+    const member = cad.mappings.find(({ sourcePath }) => sourcePath.includes("/🎬️actions/") && sourcePath.slice(cad.sourceRoot.length + 1).split("/").length === 3)!;
+    const model = member.sourcePath.slice(cad.sourceRoot.length + 1).split("/")[0]!;
+    const manifest = cad.mappings.find(({ sourcePath }) => sourcePath === `${cad.sourceRoot}/${model}/🔣️modelDefinition.json`)!;
+    const fixture = normalizationFixture("minimal-cad-canonical", Object.fromEntries([manifest, member].map(({ sourcePath }) => [artifactProjectionFixturePath(sourcePath), readFileSync(join(getWorkspaceRoot(), sourcePath), "utf8")])));
+    try {
+      const retainedDirectory = join(fixture.workspace, dirname(artifactProjectionFixturePath(cad.sourceRoot)), "🔤️fonts");
+      mkdirSync(retainedDirectory);
+      const { plan } = normalizationPlan(fixture);
+      expect(plan.moves).toHaveLength(2);
+      expect(plan.unresolved).toEqual([]);
+      const before = normalizationWorkspaceSnapshot(fixture.workspace);
+      const rolledBack = applyTaxonomyPlan(plan, { repoRoot: fixture.root, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest, injectFailureAt: "after-edits" });
+      expect(rolledBack.state).toBe("rolled-back");
+      expect(normalizationWorkspaceSnapshot(fixture.workspace)).toEqual(before);
+      const committed = applyTaxonomyPlan(plan, { repoRoot: fixture.root, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest });
+      expect({ state: committed.state, error: JSON.parse(readFileSync(committed.journalPath, "utf8")).error ?? null }).toEqual({ state: "committed", error: null });
+      expect(existsSync(join(fixture.workspace, artifactProjectionFixturePath(cad.sourceRoot)))).toBe(false);
+      expect(lstatSync(retainedDirectory).isDirectory()).toBe(true);
+      const second = normalizationPlan(fixture).plan;
+      expect(second.moves).toEqual([]);
+      expect(second.edits).toEqual([]);
+      expect(second.unresolved).toEqual([]);
+      const leaf = join(fixture.workspace, artifactProjectionFixturePath(member.destinationPath));
+      const original = readFileSync(leaf, "utf8");
+      writeFileSync(leaf, JSON.stringify({ id: "counterfeit", schema: "spatial.unknown", version: "1.0.0" }));
+      expect(normalizationPlan(fixture).plan.unresolved.some(({ code }) => code === "projection-authority-invalid")).toBe(true);
+      writeFileSync(leaf, original);
+      const profilePath = artifactProjectionFixturePath(cad.destinationRoot).replace("🪆️1-any", "🪆️2-any");
+      normalizationWriteFiles(fixture.workspace, { [`${profilePath}/${model}/🔣️.json`]: readFileSync(join(fixture.workspace, artifactProjectionFixturePath(manifest.destinationPath)), "utf8") });
+      expect(normalizationPlan(fixture).plan.unresolved.some(({ code }) => code === "projection-destination-unregistered")).toBe(true);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }, 120_000);
+
   test("all physical mutation catalogs close the strict source-to-canonical registry", () => {
     const workspace = getWorkspaceRoot();
-    const paths = fastGlob.sync("✏️s/🔌️plugins/**/🧪️oracle/🔣️component.json", { cwd: workspace, onlyFiles: true }).sort();
+    const paths = ownedFilePaths(join(workspace, "✏️s", "🔌️plugins"))
+      .filter((path) => path.endsWith("/🧪️oracle/🔣️component.json"))
+      .map((path) => `✏️s/🔌️plugins/${path}`);
     expect(paths).toEqual(nativeMutationCatalogPaths(workspace));
     const registrations: SemanticProjectionCatalogRegistration[] = [];
     for (const path of paths) {
@@ -2945,7 +3485,7 @@ describe("taxonomy normalization", () => {
     expect(new Set(canonicalTuples).size).toBe(canonicalTuples.length);
     expect(Math.max(...projectedBytes)).toBeLessThanOrEqual(taxonomy.collisionPolicy.maxPathBytes);
     expect(semanticProjectionCatalogProblems(registrations, taxonomy)).toEqual([]);
-  });
+  }, 15_000);
 
   test("the strict catalog helper rejects missing sources, unknown canonical members, duplicate bundles, and excess path bytes", () => {
     const taxonomy = loadTaxonomy();
@@ -2959,17 +3499,18 @@ describe("taxonomy normalization", () => {
     expect(problems([{ ...vector, scenarios: [{ id, directoryName: `🧪️${id}` }] }]).some((problem) => problem.includes("exceeds maxPathBytes"))).toBe(true);
   });
 
-  test("the language-agnostic mutation projection golden agrees with fast-glob discovery", () => {
+  test("the language-agnostic mutation projection golden agrees with owned filesystem discovery", () => {
     const root = mkdtempSync(join(tmpdir(), "mutation-projection-golden-"));
     try {
+      expect(MUTATION_PROJECTION_GOLDEN.sourceGlob).toBe(`🏅️standards/${MUTATION_PROJECTION_GOLDEN.standardDirectoryName}/🪆️subsets/${MUTATION_PROJECTION_GOLDEN.subsetDirectoryName}/🧬️schema/🧬️mutations/*/🧪️tests/*/🦀️component.rs`);
       for (const entry of MUTATION_PROJECTION_GOLDEN.cases) {
         const source = join(root, mutationGoldenSource(entry, "🦀️component.rs"));
         mkdirSync(resolve(source, ".."), { recursive: true });
         writeFileSync(source, "fixture\n");
       }
-      const thirdParty = fastGlob.sync(MUTATION_PROJECTION_GOLDEN.sourceGlob, { cwd: root, onlyFiles: true }).sort();
-      const languageAgnostic = MUTATION_PROJECTION_GOLDEN.cases.map((entry) => mutationGoldenSource(entry, "🦀️component.rs")).sort();
-      expect(thirdParty).toEqual(languageAgnostic);
+      const platformBoundary = ownedFilePaths(root).filter((path) => /^🏅️standards\/[^/]+\/🪆️subsets\/[^/]+\/🧬️schema\/🧬️mutations\/[^/]+\/🧪️tests\/[^/]+\/🦀️component\.rs$/u.test(path));
+      const languageAgnostic = MUTATION_PROJECTION_GOLDEN.cases.map((entry) => mutationGoldenSource(entry, "🦀️component.rs")).sort(ownedPathByteSort);
+      expect(platformBoundary).toEqual(languageAgnostic);
       expect(MUTATION_PROJECTION_GOLDEN.cases.map((entry) => mutationGoldenDestination(entry, "🦀️.rs"))).toEqual([
         "🧪️tests/🪆️1-any/🏷️change-annex/🧪️switches-to-national-annex-a/🦀️.rs",
         "🧪️tests/🪆️1-any/🌾️change-humidification-required-kg-h/🧪️required-humidification-becomes-3-point-5-kg-per-hour/🦀️.rs",
@@ -3036,7 +3577,7 @@ describe("taxonomy normalization", () => {
     try {
       const first = normalizationPlan(fixture).plan;
       expect(first.unresolved.filter((violation) => violation.severity === "error")).toEqual([]);
-      expect(applyTaxonomyPlan(first, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedPlanDigest: first.planDigest }).state).toBe("committed");
+      expect(applyTaxonomyPlan(first, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: first.baselineCommit, expectedPlanDigest: first.planDigest }).state).toBe("committed");
       const clean = normalizationPlan(fixture).plan;
       expect(clean.moves.filter((move) => move.rationaleRule === "artifact-mutation-test-projection-v1")).toEqual([]);
       expect(clean.unresolved.filter((violation) => violation.code === "projection-old-token-stale")).toEqual([]);
@@ -3137,22 +3678,48 @@ describe("taxonomy normalization", () => {
   test("rolls back and atomically applies CAD and Draw projections to an empty second plan", () => {
     const fixture = artifactProjectionNormalizationFixture("apply", true);
     try {
+      const sourceRoots = ARTIFACT_PROJECTION_GOLDEN.projections.map(({ sourceRoot }) => artifactProjectionFixturePath(sourceRoot));
+      const retainedRelative = `${dirname(sourceRoots[0]!)}/🔤️fonts`;
+      const retainedDirectory = join(fixture.workspace, retainedRelative);
+      mkdirSync(retainedDirectory);
+      if (process.platform !== "win32") for (const path of [...sourceRoots.map((path) => join(fixture.workspace, path)), retainedDirectory]) chmodSync(path, 0o750);
       const before = normalizationWorkspaceSnapshot(fixture.workspace);
       const plan = normalizationPlan(fixture).plan;
       expect(plan.unresolved.filter((entry) => entry.severity === "error")).toEqual([]);
-      const rolledBack = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedPlanDigest: plan.planDigest, injectFailureAt: "after-edits" });
+      const projectedNodes = new Set(Object.keys(before));
+      const candidateDirectories = new Set<string>();
+      for (const move of plan.moves) {
+        const source = move.sourcePath.slice(fixture.scope.length + 1), destination = move.destinationPath.slice(fixture.scope.length + 1);
+        projectedNodes.delete(source);
+        projectedNodes.add(destination);
+        for (let path = dirname(source); path !== "."; path = dirname(path)) candidateDirectories.add(path);
+        for (let path = dirname(destination); path !== "."; path = dirname(path)) projectedNodes.add(path);
+      }
+      const expectedPruned: string[] = [];
+      for (const path of [...candidateDirectories].sort((left, right) => right.split("/").length - left.split("/").length)) if (projectedNodes.has(path) && ![...projectedNodes].some((candidate) => candidate.startsWith(`${path}/`))) {
+        projectedNodes.delete(path);
+        expectedPruned.push(path);
+      }
+      const rolledBack = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest, injectFailureAt: "after-edits" });
       expect(rolledBack.state).toBe("rolled-back");
       expect(normalizationWorkspaceSnapshot(fixture.workspace)).toEqual(before);
       const cancelFile = join(fixture.ticketDir, "🛑️cancel");
       writeFileSync(cancelFile, "cancel\n");
-      expectNormalizationApplyFailure(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: join(fixture.ticketDir, "🧪️cancelled"), expectedPlanDigest: plan.planDigest, cancelFile }));
+      expectNormalizationApplyFailure(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest, cancelFile }));
       rmSync(cancelFile);
       expect(normalizationWorkspaceSnapshot(fixture.workspace)).toEqual(before);
-      const retryTicket = join(fixture.ticketDir, "🧪️retry");
-      mkdirSync(retryTicket, { recursive: true });
-      const applied = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, expectedPlanDigest: plan.planDigest });
-      expect(applied.state).toBe("committed");
-      expect(applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, expectedPlanDigest: plan.planDigest, resumeJournal: applied.journalPath }).state).toBe("committed");
+      const retryTicket = fixture.ticketDir;
+      const applied = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest });
+      expect({ state: applied.state, error: JSON.parse(readFileSync(applied.journalPath, "utf8")).error ?? null }).toEqual({ state: "committed", error: null });
+      expect(JSON.parse(readFileSync(applied.journalPath, "utf8")).attemptOrdinal).toBe("000002");
+      for (const path of sourceRoots) expect(existsSync(join(fixture.workspace, path))).toBe(false);
+      const after = normalizationWorkspaceSnapshot(fixture.workspace);
+      expect(Object.entries(before).filter(([path, entry]) => entry.startsWith("directory|") && !after[path]).map(([path]) => path).sort(projectionByteSort)).toEqual(expectedPruned.sort(projectionByteSort));
+      expect(fastGlob.sync("**/*", { cwd: fixture.workspace, onlyDirectories: true, dot: true, followSymbolicLinks: false }).sort(projectionByteSort)).toEqual(Object.entries(after).filter(([path, entry]) => path !== "." && entry.startsWith("directory|")).map(([path]) => path).sort(projectionByteSort));
+      expect(after[retainedRelative]).toBe(before[retainedRelative]);
+      for (const [path, entry] of Object.entries(before).filter(([, entry]) => entry.startsWith("directory|"))) if (after[path]) expect(after[path]).toBe(entry);
+      expect(lstatSync(fixture.ticketDir).isDirectory()).toBe(true);
+      expect(applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest, resumeJournal: applied.journalPath }).state).toBe("committed");
       for (const edit of plan.edits.filter((candidate) => /artifact-catalog|workspace-glob|path-collection/u.test(candidate.structuredLocation))) expect(readFileSync(join(fixture.repoRoot, edit.path), "utf8")).not.toContain(edit.oldValue);
       const second = normalizationPlan(fixture).plan;
       expect(second.moves.filter((move) => move.rationaleRule === "artifact-example-model-catalog-projection-v1" || move.rationaleRule === "artifact-editor-command-projection-v1")).toEqual([]);
@@ -3172,6 +3739,95 @@ describe("taxonomy normalization", () => {
       rmSync(fixture.root, { recursive: true, force: true });
     }
   }, 120_000);
+
+  test("rejects ignored and unplanned residual children in a projected source owner without following links", () => {
+    const fixture = artifactProjectionNormalizationFixture("source-residue", true);
+    try {
+      const sourceRoot = join(fixture.workspace, artifactProjectionFixturePath(projectionGolden("artifact-example-model-catalog-v1").sourceRoot));
+      const residue = join(sourceRoot, "🧪️unexpected");
+      const linkTarget = join(fixture.ticketDir, "🧪️link-target");
+      mkdirSync(linkTarget);
+      writeFileSync(join(linkTarget, "📝️.md"), "not followed\n");
+      writeFileSync(join(fixture.root, ".git", "info", "exclude"), `/${relative(fixture.root, residue).replaceAll("\\", "/")}/\n`);
+      const { plan } = normalizationPlan(fixture);
+      expect(plan.moves.length).toBeGreaterThan(0);
+      expect(plan.unresolved.filter(({ severity }) => severity === "error")).toEqual([]);
+      const before = normalizationWorkspaceSnapshot(fixture.workspace);
+      const targetBefore = normalizationWorkspaceSnapshot(linkTarget);
+      let injected = false;
+      const applied = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest, progress: (event) => {
+        if (event.phase !== "moves" || event.current !== event.total || injected) return;
+        injected = true;
+        mkdirSync(join(residue, "🧪️empty"), { recursive: true });
+        writeFileSync(join(residue, "📝️.md"), "ignored residual source\n");
+        symlinkSync(process.platform === "win32" ? linkTarget : relative(residue, linkTarget), join(residue, "🧪️link"), process.platform === "win32" ? "junction" : "dir");
+      } });
+      expect(injected).toBe(true);
+      normalizationGit(fixture.root, ["check-ignore", "--quiet", "--", relative(fixture.root, join(residue, "📝️.md"))]);
+      expect({ state: applied.state, error: JSON.parse(readFileSync(applied.journalPath, "utf8")).error }).toEqual({ state: "rolled-back", error: expect.stringContaining("projection-source-directory-stale") });
+      expect(readFileSync(join(residue, "📝️.md"), "utf8")).toBe("ignored residual source\n");
+      expect(lstatSync(join(residue, "🧪️empty")).isDirectory()).toBe(true);
+      expect(lstatSync(join(residue, "🧪️link")).isSymbolicLink()).toBe(true);
+      expect(normalizationWorkspaceSnapshot(linkTarget)).toEqual(targetBefore);
+      const after = normalizationWorkspaceSnapshot(fixture.workspace);
+      for (const [path, entry] of Object.entries(before)) expect(after[path]).toBe(entry);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }, 120_000);
+
+  test("rederives repeatable CAD and Draw source-tree authority before apply", () => {
+    const fixture = artifactProjectionNormalizationFixture("source-tree-repeatability", true);
+    try {
+      const first = normalizationPlan(fixture);
+      const second = normalizationPlan(fixture);
+      const sourceRows = (inventory: TaxonomyInventory) => inventory.entries.map(({ sourcePath, nodeKind, contentHash, mode, size, symlinkTarget }) => ({ sourcePath, nodeKind, contentHash, mode, size, symlinkTarget }));
+      expect(sourceRows(second.inventory)).toEqual(sourceRows(first.inventory));
+      expect(second.plan.sourceTreeDigest).toBe(first.plan.sourceTreeDigest);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }, 120_000);
+
+  test("rejects a changed explicit source-admission ticket before journal mutation", () => {
+    const fixture = normalizationFixture("source-authority-ticket", { "🧪️subject/🦀️component.rs": "pub const VALUE: i32 = 1;\n" }, ({ repoRoot, workspace }) => writeFileSync(join(repoRoot, ".gitignore"), `${relative(repoRoot, workspace).replaceAll("\\", "/")}/\n`));
+    try {
+      const { inventory, plan } = normalizationPlan(fixture);
+      expect(plan.unresolved.filter(({ severity }) => severity === "error")).toEqual([]);
+      const transactionTicket = join(fixture.ticketDir, "🧪️transaction-evidence");
+      mkdirSync(transactionTicket, { recursive: true });
+      const changedAdmission = inventoryTaxonomy({ ...fixture.options, ticketDir: transactionTicket });
+      expect(inventory.entries.map(({ sourcePath }) => sourcePath)).toEqual(["🧪️tests", fixture.scope, `${fixture.scope}/🧪️subject`, `${fixture.scope}/🧪️subject/🦀️component.rs`]);
+      expect(changedAdmission.entries).toEqual([]);
+      expect(changedAdmission.sourceTreeDigest).not.toBe(plan.sourceTreeDigest);
+      const before = normalizationWorkspaceSnapshot(fixture.ticketDir);
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: transactionTicket, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest })).toThrow("Plan source-tree digest cannot be rederived exactly");
+      expect(normalizationWorkspaceSnapshot(fixture.ticketDir)).toEqual(before);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  test("rejects changed and newly admitted in-scope sources before journal mutation", () => {
+    const stableRelative = "🧪️stable/📝️.md";
+    const fixture = normalizationFixture("source-authority-drift", { "🧪️subject/🦀️component.rs": "pub const VALUE: i32 = 1;\n", [stableRelative]: "original\n" }, ({ repoRoot, workspace }) => writeFileSync(join(repoRoot, ".gitignore"), `${relative(repoRoot, workspace).replaceAll("\\", "/")}/\n`));
+    try {
+      const { plan } = normalizationPlan(fixture);
+      expect(plan.unresolved.filter(({ severity }) => severity === "error")).toEqual([]);
+      expect(plan.moves.some(({ sourcePath }) => sourcePath === `${fixture.scope}/${stableRelative}`)).toBe(false);
+      writeFileSync(join(fixture.workspace, stableRelative), "changed physical source\n");
+      const changedBefore = normalizationWorkspaceSnapshot(fixture.ticketDir);
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest })).toThrow("Plan source-tree digest cannot be rederived exactly");
+      expect(normalizationWorkspaceSnapshot(fixture.ticketDir)).toEqual(changedBefore);
+      writeFileSync(join(fixture.workspace, stableRelative), "original\n");
+      normalizationWriteFiles(fixture.workspace, { "🧪️in-scope-extra/📝️.md": "new ignored but explicitly admitted source\n" });
+      const extraBefore = normalizationWorkspaceSnapshot(fixture.ticketDir);
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest })).toThrow("Plan source-tree digest cannot be rederived exactly");
+      expect(normalizationWorkspaceSnapshot(fixture.ticketDir)).toEqual(extraBefore);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }, 60_000);
 
   test("canonical JSON recursively sorts keys and contract-identified arrays", () => {
     const left = { z: 1, rows: [{ id: "b", value: 2 }, { id: "a", value: 1 }], nested: { z: false, a: true } };
@@ -3237,7 +3893,287 @@ describe("taxonomy normalization", () => {
     }
   });
 
-  test("inventory bytes are deterministic and its language-agnostic file census agrees with fast-glob", () => {
+  test("scoped Git pathspec rendering matches the language-neutral golden", () => {
+    expect(SCOPED_INVENTORY_PATHSPEC_GOLDEN.schemaVersion).toBe(1);
+    for (const row of SCOPED_INVENTORY_PATHSPEC_GOLDEN.cases) {
+      expect(taxonomyScopedGitPathspec(row.inputScope, SCOPED_INVENTORY_PATHSPEC_GOLDEN.opaqueExclusions)).toEqual({
+        normalizedScope: row.normalizedScope,
+        conservativePrefix: row.conservativePrefix,
+        positivePathspec: row.positivePathspec,
+        exclusionPathspecs: row.exclusionPathspecs,
+      });
+    }
+  });
+
+  test("scoped inventory preserves literal Unicode scope, third-party census, and closed phases", () => {
+    const literalRoot = "🧪️literal [x]*?!:";
+    const decomposedRoot = "🧪️cafe\u0301";
+    const fixture = normalizationFixture("scoped-pathspec", {
+      ".gitignore": "ignored/\n",
+      "🟦️component.ts": "export const tracked = true;\n",
+      [`${literalRoot}/🟦️component.ts`]: "export const literal = true;\n",
+      [`${decomposedRoot}/🟦️component.ts`]: "export const unicode = true;\n",
+    });
+    try {
+      normalizationWriteFiles(fixture.workspace, {
+        "🧪️untracked/🟦️component.ts": "export const untracked = true;\n",
+        "ignored/🟦️component.ts": "export const ignored = true;\n",
+      });
+      normalizationWriteFiles(fixture.repoRoot, { "🧪️unrelated/🟦️.ts": "export const unrelated = true;\n" });
+      const events: TaxonomyProgress[] = [];
+      const scopedOptions: TaxonomyInventoryOptions = fixture.options;
+      const inventory = inventoryTaxonomy({ ...scopedOptions, progress: (event) => events.push(event) });
+      const files = inventory.entries.filter((entry) => entry.nodeKind === "file").map((entry) => entry.sourcePath);
+      expect(files).toContain(`${fixture.scope}/🧪️untracked/🟦️component.ts`);
+      expect(files.some((path) => path.startsWith("🧪️unrelated/"))).toBe(false);
+      const thirdParty = fastGlob.sync("**/*", { cwd: fixture.workspace, dot: true, followSymbolicLinks: false, onlyFiles: true })
+        .map((path) => `${fixture.scope}/${path.replaceAll("\\", "/")}`)
+        .sort(ownedPathByteSort);
+      expect([...files].sort(ownedPathByteSort)).toEqual(thirdParty);
+      const phases = events.map((event) => event.phase).filter((phase, index, rows) => index === 0 || phase !== rows[index - 1]);
+      expect(phases).toEqual(["setup", "tracked-enumeration", "untracked-enumeration", "ignored-generator-admission", "explicit-ticket-admission", "directories", "files", "references", "complete"]);
+      for (const phase of ["tracked-enumeration", "untracked-enumeration", "ignored-generator-admission", "explicit-ticket-admission"]) expect(events.filter((event) => event.phase === phase).map((event) => [event.current, event.total])).toEqual([[0, 1], [1, 1]]);
+      for (const phase of ["directories", "files", "references"]) expect(events.find((event) => event.phase === phase)?.current).toBe(0);
+      const unicode = inventoryTaxonomy({ ...scopedOptions, scope: `${fixture.scope}/🧪️café` });
+      expect(unicode.entries.some((entry) => entry.sourcePath === `${fixture.scope}/${decomposedRoot}/🟦️component.ts`)).toBe(true);
+      const literal = inventoryTaxonomy({ ...scopedOptions, scope: `${fixture.scope}/${literalRoot}` });
+      expect(literal.entries.filter((entry) => entry.nodeKind === "file").map((entry) => entry.sourcePath)).toEqual([`${fixture.scope}/${literalRoot}/🟦️component.ts`]);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("an exact symlink leaf is inventoried without following target content", () => {
+    const fixture = normalizationFixture("scoped-symlink-leaf", { "🧪️target/📝️.md": "first\n" }, ({ workspace }) => symlinkSync("🧪️target/📝️.md", join(workspace, "🧪️link"), "file"));
+    try {
+      const scope = `${fixture.scope}/🧪️link`;
+      normalizationGit(fixture.repoRoot, ["add", "-f", "--", scope]);
+      expect(lstatSync(join(fixture.workspace, "🧪️link")).isSymbolicLink()).toBe(true);
+      const first = inventoryTaxonomy({ repoRoot: fixture.repoRoot, scope, workers: 1 });
+      const link = first.entries.find(({ sourcePath }) => sourcePath === scope);
+      expect(link?.nodeKind).toBe("symlink");
+      expect(link?.symlinkTarget).toBe("🧪️target/📝️.md");
+      writeFileSync(join(fixture.workspace, "🧪️target", "📝️.md"), "second and deliberately different\n");
+      const second = inventoryTaxonomy({ repoRoot: fixture.repoRoot, scope, workers: 1 });
+      expect(second.entries.find(({ sourcePath }) => sourcePath === scope)?.contentHash).toBe(link?.contentHash);
+      expect(second.entries.some(({ sourcePath }) => sourcePath.startsWith(`${scope}/`))).toBe(false);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("a scope below a symlink ancestor falls back to full Git enumeration and preserves the ancestor-only census", () => {
+    const fixture = normalizationFixture("scoped-symlink-ancestor", { "🧪️seed/📝️.md": "seed\n" }, ({ repoRoot, workspace }) => {
+      const target = join(repoRoot, "🧪️outside-target");
+      normalizationWriteFiles(target, { "🧪️child/📝️.md": "must not be followed\n" });
+      symlinkSync(process.platform === "win32" ? target : relative(workspace, target), join(workspace, "🧪️alias"), process.platform === "win32" ? "junction" : "dir");
+    });
+    try {
+      const scope = `${fixture.scope}/🧪️alias/🧪️child`;
+      normalizationGit(fixture.repoRoot, ["add", "-f", "--", `${fixture.scope}/🧪️alias`]);
+      const scoped = inventoryTaxonomy({ repoRoot: fixture.repoRoot, scope, workers: 1 });
+      const full = inventoryTaxonomy({ repoRoot: fixture.repoRoot, workers: 1 });
+      const expected = normalizationInventoryCensus({ ...full, entries: full.entries.filter(({ sourcePath }) => inScopeForTest(sourcePath, scope)) });
+      expect(normalizationInventoryCensus(scoped)).toEqual(expected);
+      expect(scoped.entries.filter(({ nodeKind }) => nodeKind !== "directory").map(({ sourcePath, nodeKind }) => ({ sourcePath, nodeKind }))).toEqual([{ sourcePath: `${fixture.scope}/🧪️alias`, nodeKind: "symlink" }]);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("an exact mode-160000 ancestor falls back without admitting nested-repository content", () => {
+    const fixture = normalizationFixture("scoped-gitlink-ancestor", { "🧪️seed/📝️.md": "seed\n" });
+    const gitlinkRelative = `${fixture.scope}/🧪️gitlink`;
+    const gitlink = join(fixture.workspace, "🧪️gitlink");
+    try {
+      mkdirSync(gitlink, { recursive: true });
+      normalizationGit(gitlink, ["init", "--quiet"]);
+      normalizationWriteFiles(gitlink, { "🧪️child/📝️.md": "nested sentinel\n" });
+      normalizationGit(fixture.repoRoot, ["update-index", "--add", "--cacheinfo", `160000,${fixture.baselineCommit},${gitlinkRelative}`]);
+      const scope = `${gitlinkRelative}/🧪️child`;
+      const scoped = inventoryTaxonomy({ repoRoot: fixture.repoRoot, scope, workers: 1 });
+      expect(scoped.entries.some(({ sourcePath }) => sourcePath === gitlinkRelative)).toBe(true);
+      expect(scoped.entries.some(({ sourcePath }) => sourcePath.startsWith(`${gitlinkRelative}/`))).toBe(false);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("standalone ignored-generator admission preserves scoped versus full census parity", () => {
+    const fixture = normalizationFixture("scoped-generator-admission", { "🧪️generator/🟦️.ts": "export const input = true;\n" }, ({ repoRoot, workspace }) => {
+      const owner = relative(repoRoot, join(workspace, "🧪️generator")).replaceAll("\\", "/");
+      const outputRoot = `${owner}/🤖️generated`;
+      const schemaPath = join(repoRoot, NORMALIZATION_SCHEMA_REL);
+      const taxonomy = JSON.parse(readFileSync(schemaPath, "utf8")) as { generatorContracts: Record<string, unknown> };
+      taxonomy.generatorContracts = Object.fromEntries(Object.entries({ ...taxonomy.generatorContracts, "fixture-scoped-generator": { ownership: "owned", ownerPath: owner, target: "@fixture/scoped:generate", previewTarget: "@fixture/scoped:preview-generated", checkTarget: "@fixture/scoped:check", inputPatterns: [`${owner}/🟦️.ts`], outputRoots: [{ path: outputRoot, inclusion: "ignored" }], reason: "Scoped inventory admission fixture" } }).sort(([left], [right]) => left.localeCompare(right)));
+      writeFileSync(schemaPath, `${JSON.stringify(taxonomy, null, 2)}\n`);
+      writeFileSync(join(repoRoot, ".gitignore"), `${outputRoot}\n`);
+      normalizationWriteFiles(repoRoot, { [`${outputRoot}/📝️.md`]: "owned ignored output\n" });
+    });
+    try {
+      const scope = `${fixture.scope}/🧪️generator/🤖️generated`;
+      const scoped = inventoryTaxonomy({ repoRoot: fixture.repoRoot, scope, workers: 1 });
+      const full = inventoryTaxonomy({ repoRoot: fixture.repoRoot, workers: 1 });
+      const expected = normalizationInventoryCensus({ ...full, entries: full.entries.filter(({ sourcePath }) => inScopeForTest(sourcePath, scope)) });
+      expect(normalizationInventoryCensus(scoped)).toEqual(expected);
+      expect(scoped.entries.some(({ sourcePath }) => sourcePath === `${scope}/📝️.md`)).toBe(true);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("standalone explicit-ticket admission preserves scoped versus full census parity", () => {
+    const fixture = normalizationFixture("scoped-ticket-admission", { ".gitignore": "🧪️explicit/\n", "🟦️.ts": "export const input = true;\n" }, ({ workspace }) => normalizationWriteFiles(workspace, { "🧪️explicit/📝️.md": "explicit ignored evidence\n" }));
+    try {
+      const scope = `${fixture.scope}/🧪️explicit`;
+      const scoped = inventoryTaxonomy({ ...fixture.options, scope });
+      const full = inventoryTaxonomy({ ...fixture.options, scope: undefined });
+      const withoutTicketAuthority = inventoryTaxonomy({ repoRoot: fixture.repoRoot, scope, workers: 1 });
+      const expected = normalizationInventoryCensus({ ...full, entries: full.entries.filter(({ sourcePath }) => inScopeForTest(sourcePath, scope)) });
+      expect(normalizationInventoryCensus(scoped)).toEqual(expected);
+      expect(scoped.entries.some(({ sourcePath }) => sourcePath === `${scope}/📝️.md`)).toBe(true);
+      expect(withoutTicketAuthority.entries.some(({ sourcePath }) => sourcePath === `${scope}/📝️.md`)).toBe(false);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("inventory cancellation is observed from every nonterminal frozen phase boundary", () => {
+    const fixture = normalizationFixture("scoped-phase-cancellation", { "🧪️subject/🟦️.ts": "export const value = true;\n" });
+    const cancelFile = join(fixture.root, "🛑️cancel");
+    try {
+      for (const phase of ["setup", "tracked-enumeration", "untracked-enumeration", "ignored-generator-admission", "explicit-ticket-admission", "directories", "files", "references"]) {
+        rmSync(cancelFile, { force: true });
+        expect(() => inventoryTaxonomy({ ...fixture.options, cancelFile, progress: (event) => { if (event.phase === phase && event.current === 0) writeFileSync(cancelFile, `${phase}\n`); } })).toThrow("Taxonomy operation cancelled");
+      }
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("unscoped inventory retains the frozen Git pathspec and canonical inventory bytes", () => {
+    const fixture = normalizationFixture("unscoped-regression", { "🧪️subject/🟦️.ts": "export const value = true;\n" });
+    try {
+      const options: TaxonomyInventoryOptions = { repoRoot: fixture.repoRoot, workers: 1 };
+      const first = inventoryTaxonomy(options);
+      const second = inventoryTaxonomy(options);
+      expect(canonicalJson(first)).toBe(canonicalJson(second));
+      expect(taxonomyScopedGitPathspec(undefined, SCOPED_INVENTORY_PATHSPEC_GOLDEN.opaqueExclusions)).toEqual({ normalizedScope: null, conservativePrefix: ".", positivePathspec: ".", exclusionPathspecs: [":(exclude,top,literal)compose", ":(exclude,top,literal)temp/compose"] });
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("reversed creation order preserves scoped canonical bytes and phase sequence", () => {
+    const fixture = normalizationFixture("scoped-order", { "🧪️seed/🟦️.ts": "export const seed = true;\n" });
+    const orderRoot = join(fixture.workspace, "🧪️order");
+    try {
+      normalizationWriteFiles(orderRoot, { "🧪️a/📝️.md": "a\n", "🧪️b/📝️.md": "b\n" });
+      const firstEvents: TaxonomyProgress[] = [];
+      const first = inventoryTaxonomy({ ...fixture.options, scope: `${fixture.scope}/🧪️order`, progress: (event) => firstEvents.push(event) });
+      rmSync(orderRoot, { recursive: true, force: true });
+      normalizationWriteFiles(orderRoot, { "🧪️b/📝️.md": "b\n", "🧪️a/📝️.md": "a\n" });
+      const secondEvents: TaxonomyProgress[] = [];
+      const second = inventoryTaxonomy({ ...fixture.options, scope: `${fixture.scope}/🧪️order`, progress: (event) => secondEvents.push(event) });
+      expect(canonicalJson(second)).toBe(canonicalJson(first));
+      expect(canonicalJson(secondEvents)).toBe(canonicalJson(firstEvents));
+      expect(normalizationPhaseSequence(secondEvents)).toEqual(normalizationPhaseSequence(firstEvents));
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+
+  test("root taxonomy inventory CLI writes phases only to stderr and canonical JSON only to stdout", () => {
+    const fixture = normalizationFixture("scoped-cli-purity", { "🧪️subject/🟦️.ts": "export const value = true;\n" });
+    try {
+      const scriptPath = join(getWorkspaceRoot(), "📜️script.ts");
+      const child = 'const [scriptPath,repoRoot,scope]=process.argv.slice(1);const {pathToFileURL}=await import("node:url");const {CleanScript}=await import(pathToFileURL(scriptPath).href);new CleanScript(repoRoot,repoRoot).run(["taxonomy","inventory","--scope",scope,"--workers","1","--format","json"]);';
+      const result = spawnSync("bun", ["-e", child, scriptPath, fixture.repoRoot, fixture.scope], { encoding: "utf8" });
+      expect(result.status).toBe(0);
+      const parsed = JSON.parse(result.stdout);
+      expect(result.stdout).toBe(`${canonicalJson(parsed)}\n`);
+      expect(result.stdout).not.toContain("[clean taxonomy progress]");
+      expect(result.stderr).toContain("[clean taxonomy progress] inventory setup 0/1");
+      expect(result.stderr).toContain("[clean taxonomy progress] inventory complete");
+      expect(result.stderr.split(/\r?\n/u).filter(Boolean).every((line) => line.startsWith("[clean taxonomy progress]"))).toBe(true);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  test("a scoped apply ignores unrelated stale projection tokens", () => {
+    const { fixture, externalPath, staleToken } = scopedUnrelatedProjectionStaleFixture("unrelated-stale");
+    try {
+      const plan = normalizationPlan(fixture).plan;
+      expect(plan.unresolved.filter((entry) => entry.severity === "error")).toEqual([]);
+      writeFileSync(join(fixture.repoRoot, externalPath), `# Unrelated\n\n${staleToken}\n`);
+      const result = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest });
+      expect(result.state).toBe("committed");
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  test("an exact ticket-important leaf scope ignores unrelated ticket evidence, rolls back, and commits its history projection", () => {
+    const content = "Historical ticket evidence.\n";
+    const fixture = normalizationFixture("ticket-important-history-apply", { "🟦️component.ts": "export const fixture = true;\n" }, ({ repoRoot, ticketDir }) => {
+      const source = join(repoRoot, TICKET_IMPORTANT_HISTORY_SOURCE_REL);
+      mkdirSync(dirname(source), { recursive: true });
+      writeFileSync(source, content);
+      normalizationWriteFiles(ticketDir, { "📓️unrelated/📝️.md": `Retained evidence names ${TICKET_IMPORTANT_HISTORY_SOURCE_REL}.\n` });
+    });
+    const options: TaxonomyInventoryOptions = { repoRoot: fixture.repoRoot, scope: TICKET_IMPORTANT_HISTORY_SOURCE_REL, ticketDir: fixture.ticketDir, workers: 1 };
+    try {
+      const inventory = inventoryTaxonomy(options);
+      const plan = planTaxonomy(inventory, { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [] });
+      expect(plan.unresolved.filter((entry) => entry.severity === "error")).toEqual([]);
+      expect(plan.moves.map((move) => [move.sourcePath, move.destinationPath, move.rationaleRule])).toEqual([[TICKET_IMPORTANT_HISTORY_SOURCE_REL, TICKET_IMPORTANT_HISTORY_DESTINATION_REL, "ticket-important-history-markdown-v1"]]);
+      expect(plan.evidenceRemovals).toEqual([]);
+      const rolledBack = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest, injectFailureAt: "before-verify" });
+      expect(rolledBack.state).toBe("rolled-back");
+      expect(readFileSync(join(fixture.repoRoot, TICKET_IMPORTANT_HISTORY_SOURCE_REL), "utf8")).toBe(content);
+      expect(existsSync(join(fixture.repoRoot, TICKET_IMPORTANT_HISTORY_DESTINATION_REL))).toBe(false);
+      const applied = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest });
+      expect(applied.state).toBe("committed");
+      expect(existsSync(join(fixture.repoRoot, TICKET_IMPORTANT_HISTORY_SOURCE_REL))).toBe(false);
+      expect(readFileSync(join(fixture.repoRoot, TICKET_IMPORTANT_HISTORY_DESTINATION_REL), "utf8")).toBe(content);
+      const second = planTaxonomy(inventoryTaxonomy(options), { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [] });
+      expect(second.moves).toEqual([]);
+      expect(second.evidenceRemovals).toEqual([]);
+      expect(second.unresolved.filter((entry) => entry.severity === "error")).toEqual([]);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }, 120_000);
+
+  test("exact CAD source scope plans declared external edits and rejects declared stale consumers before mutation", () => {
+    const fixture = artifactProjectionNormalizationFixture("declared-external", true);
+    try {
+      const cad = projectionGolden("artifact-example-model-catalog-v1");
+      const exactScope = `${fixture.scope}/${artifactProjectionFixturePath(cad.sourceRoot)}`;
+      const schemaPath = join(fixture.repoRoot, NORMALIZATION_SCHEMA_REL);
+      const schema = JSON.parse(readFileSync(schemaPath, "utf8")) as { semanticPathProjectionReferenceConsumerContracts: Record<string, { projectionContractId: string; sourcePathIdentities: string[]; sourcePathPattern: string; staleMarkers: string[] }> };
+      const contract = Object.values(schema.semanticPathProjectionReferenceConsumerContracts).find((entry) => entry.projectionContractId === cad.contractId)!;
+      const declaredStalePath = `${fixture.scope}/🧪️declared-external/🟦️.ts`;
+      contract.sourcePathIdentities.push(declaredStalePath);
+      contract.sourcePathPattern = `^(?:${contract.sourcePathIdentities.map((path) => path.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")).join("|")})$`;
+      normalizationWriteFiles(fixture.repoRoot, { [declaredStalePath]: `export const stale = ${JSON.stringify(contract.staleMarkers[0])};\n` });
+      writeFileSync(schemaPath, `${JSON.stringify(schema, null, 2)}\n`);
+      const inventory = inventoryTaxonomy({ ...fixture.options, scope: exactScope });
+      const plan = planTaxonomy(inventory, { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [] });
+      expect(plan.unresolved.filter((entry) => entry.code === "projection-old-token-stale" && entry.path === declaredStalePath)).toHaveLength(1);
+      expect(plan.moves.filter((move) => move.rationaleRule === cad.rationaleRule)).toHaveLength(cad.sourceFileCount);
+      expect(plan.edits.some((edit) => !inScopeForTest(edit.path, exactScope))).toBe(true);
+      expect(plan.edits.some((edit) => edit.path === declaredStalePath)).toBe(false);
+      const before = normalizationWorkspaceSnapshot(fixture.workspace);
+      expectNormalizationApplyFailure(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest }));
+      expect(normalizationWorkspaceSnapshot(fixture.workspace)).toEqual(before);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  test("inventory bytes are deterministic and its language-agnostic file census agrees with owned filesystem discovery", () => {
     const fixture = normalizationFixture("inventory", {
       ".hidden/🔣️config.json": "{}\n",
       "Cargo.toml": "[package]\nname = \"fixture\"\nversion = \"0.0.0\"\n",
@@ -3252,8 +4188,7 @@ describe("taxonomy normalization", () => {
       const second = inventoryTaxonomy(options);
       expect(canonicalJson(first)).toBe(canonicalJson(second));
       expect(progressEvents).toBeGreaterThan(0);
-      const expected = fastGlob
-        .sync("**/*", { cwd: fixture.workspace, dot: true, followSymbolicLinks: false, onlyFiles: true })
+      const expected = ownedFilePaths(fixture.workspace)
         .map((path) => `${fixture.scope}/${path.replaceAll("\\", "/")}`)
         .sort();
       const actual = first.entries.filter((entry) => entry.nodeKind === "file").map((entry) => entry.sourcePath).sort();
@@ -3437,7 +4372,7 @@ describe("taxonomy normalization", () => {
       expect(plan.moves.length).toBeGreaterThan(0);
       writeFileSync(join(fixture.workspace, "🦀️component.rs"), "pub const VALUE: i32 = 2;\n");
       const before = normalizationWorkspaceSnapshot(fixture.workspace);
-      expectNormalizationApplyFailure(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedPlanDigest: plan.planDigest }));
+      expectNormalizationApplyFailure(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest }));
       expect(normalizationWorkspaceSnapshot(fixture.workspace)).toEqual(before);
       expect(opaqueTreeDigest(fixture.repoRoot, "compose")).toEqual(fixture.opaqueDigest);
     } finally {
@@ -3455,7 +4390,7 @@ describe("taxonomy normalization", () => {
         const { plan } = normalizationPlan(fixture);
         expect(plan.moves.length).toBeGreaterThan(0);
         const before = normalizationWorkspaceSnapshot(fixture.workspace);
-        expectNormalizationApplyFailure(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedPlanDigest: plan.planDigest, injectFailureAt: failureStage }));
+        expectNormalizationApplyFailure(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest, injectFailureAt: failureStage }));
         expect(normalizationWorkspaceSnapshot(fixture.workspace)).toEqual(before);
         expect(opaqueTreeDigest(fixture.repoRoot, "compose")).toEqual(fixture.opaqueDigest);
       } finally {
@@ -3471,7 +4406,7 @@ describe("taxonomy normalization", () => {
       const before = normalizationWorkspaceSnapshot(cancelled.workspace);
       const cancelFile = join(cancelled.ticketDir, "cancel");
       writeFileSync(cancelFile, "cancel\n");
-      expectNormalizationApplyFailure(() => applyTaxonomyPlan(plan, { repoRoot: cancelled.repoRoot, ticketDir: cancelled.ticketDir, expectedPlanDigest: plan.planDigest, cancelFile }));
+      expectNormalizationApplyFailure(() => applyTaxonomyPlan(plan, { repoRoot: cancelled.repoRoot, ticketDir: cancelled.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest, cancelFile }));
       expect(normalizationWorkspaceSnapshot(cancelled.workspace)).toEqual(before);
       expect(opaqueTreeDigest(cancelled.repoRoot, "compose")).toEqual(cancelled.opaqueDigest);
     } finally {
@@ -3482,7 +4417,7 @@ describe("taxonomy normalization", () => {
     try {
       const { plan } = normalizationPlan(fixture);
       expect(plan.unresolved).toEqual([]);
-      const result = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedPlanDigest: plan.planDigest });
+      const result = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest });
       expect(result.planDigest).toBe(plan.planDigest);
       expect(result.appliedMoves).toBe(plan.moves.length);
       expect(result.appliedEdits).toBe(plan.edits.length);
@@ -3499,7 +4434,7 @@ describe("taxonomy normalization", () => {
     } finally {
       rmSync(fixture.root, { recursive: true, force: true });
     }
-  });
+  }, 120_000);
 });
 //#endregion 🧹️TaxonomyNormalization
 
@@ -3507,7 +4442,7 @@ describe("taxonomy normalization", () => {
 const GENERATOR_PREVIEW_GOLDEN = join(import.meta.dir, "🧫️fixtures", "🧪️generator-preview", "🔣️.json");
 
 describe("generator preview protocol", () => {
-  test("accepts the canonical language-neutral manifest and agrees with fast-glob inventory", () => {
+  test("accepts the canonical language-neutral manifest and agrees with owned filesystem inventory", () => {
     const canonical = `${canonicalJson(JSON.parse(readFileSync(GENERATOR_PREVIEW_GOLDEN, "utf8")))}\n`;
     const manifest = parseGeneratorPreviewManifest(canonical, "fixture-generator", ["🧪️workspace/🤖️generated"], ["compose"]);
     const root = mkdtempSync(join(tmpdir(), "generator-preview-parity-"));
@@ -3520,8 +4455,8 @@ describe("generator preview protocol", () => {
           writeFileSync(target, Buffer.from(node.bytesBase64, "base64"), { mode: node.mode });
         }
       }
-      const thirdParty = fastGlob.sync("🧪️workspace/🤖️generated{,/**/*}", { cwd: root, dot: true, followSymbolicLinks: false, onlyFiles: false }).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
-      expect(thirdParty).toEqual(manifest.nodes.map((node) => node.path));
+      const platformBoundary = ownedFilesystemEntries(join(root, "🧪️workspace", "🤖️generated"), true).map(({ path }) => path === "." ? "🧪️workspace/🤖️generated" : `🧪️workspace/🤖️generated/${path}`);
+      expect(platformBoundary).toEqual(manifest.nodes.map((node) => node.path));
       expect(manifest.staleRemovals).toEqual(["🧪️workspace/🤖️generated/old.txt"]);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -3620,13 +4555,13 @@ describe("generator preview protocol", () => {
       expect(plan.regenerations[0]?.preview.nodes.map((node) => node.path)).toEqual(plan.regenerations[0]?.outputs.map((node) => node.path));
       expect(plan.regenerations[0]?.staleRemovals).toEqual([`${fixture.scope}/🧪️generator/🤖️generated/old.txt`]);
       const before = normalizationWorkspaceSnapshot(fixture.workspace);
-      const rolledBack = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedPlanDigest: plan.planDigest, injectFailureAt: "after-edits" });
+      const rolledBack = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest, injectFailureAt: "after-edits" });
       expect(rolledBack.state).toBe("rolled-back");
       expect(normalizationWorkspaceSnapshot(fixture.workspace)).toEqual(before);
-      const retryTicket = join(fixture.ticketDir, "🧪️retry");
-      mkdirSync(retryTicket, { recursive: true });
-      const result = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, expectedPlanDigest: plan.planDigest });
+      const retryTicket = fixture.ticketDir;
+      const result = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest });
       expect(result.state).toBe("committed");
+      expect(JSON.parse(readFileSync(result.journalPath, "utf8")).attemptOrdinal).toBe("000002");
       const second = planTaxonomy(inventoryTaxonomy(fixture.options), { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [fixture.opaqueDigest] });
       expect(second.regenerations).toEqual([]);
       expect(second.unresolved).toEqual([]);
@@ -3659,18 +4594,18 @@ describe("taxonomy transaction dispositions v2", () => {
     expect(golden.journalStates).toHaveLength(11);
     expect(golden.affectedStateCases.map((row) => row.id)).toEqual(["remove-redundant-evidence", "retarget-no-follow-symlink"]);
     expect(new Set(golden.negativeDispositionCases.map((row) => row.expectedCode)).size).toBe(golden.negativeDispositionCases.length);
-    expect(fastGlob.sync(["**/*"], { cwd: resolve(goldenPath, ".."), dot: true, followSymbolicLinks: false, onlyFiles: true })).toEqual(["🔣️.json"]);
+    expect(ownedFilePaths(resolve(goldenPath, ".."))).toEqual(["🔣️.json"]);
     const root = mkdtempSync(join(tmpdir(), "transaction-golden-nofollow-"));
     try {
       mkdirSync(join(root, "evidence", "directory"), { recursive: true });
       writeFileSync(join(root, "evidence", "file.txt"), "sentinel\n");
       symlinkSync("../file.txt", join(root, "evidence", "link"));
       const native = noFollowTreeDigest(root, "evidence");
-      const thirdParty = fastGlob.sync("evidence{,/**/*}", { cwd: root, dot: true, followSymbolicLinks: false, onlyFiles: false }).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
+      const platformBoundary = ownedFilesystemEntries(join(root, "evidence"), true).map(({ path }) => path === "." ? "evidence" : `evidence/${path}`);
       expect(native.files).toBe(1);
       expect(native.directories).toBe(2);
       expect(native.symlinks).toBe(1);
-      expect(thirdParty).toEqual(["evidence", "evidence/directory", "evidence/file.txt", "evidence/link"]);
+      expect(platformBoundary).toEqual(["evidence", "evidence/directory", "evidence/file.txt", "evidence/link"]);
       expect(golden.virtualPreimageNodes.find((row) => row.state === "file")?.contentHash).toBe("b5f7e7d285029324d9b3acae19cc05099271454ac98bfc059a92b0581625cd51");
       expect(golden.virtualPreimageNodes.find((row) => row.state === "symlink")?.target).toBe("../file.txt");
     } finally {
@@ -3718,19 +4653,19 @@ describe("taxonomy transaction dispositions v2", () => {
       const deadPreparation = join(fixture.ticketDir, "🧾️taxonomy-transaction", `🔖️${plan.planDigest}`, "🔂️attempts", "🚧️prepare-000001-999999-00000000-0000-4000-8000-000000000001");
       mkdirSync(deadPreparation, { recursive: true });
       const before = noFollowTreeDigest(fixture.repoRoot, fixture.scope);
-      const rolledBack = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, injectFailureAt: "after-symlink-retargeting" });
+      const rolledBack = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, injectFailureAt: "after-symlink-retargeting" });
       expect(rolledBack.state).toBe("rolled-back");
       expect(existsSync(deadPreparation)).toBe(false);
       expect(noFollowTreeDigest(fixture.repoRoot, fixture.scope)).toEqual(before);
-      const retryTicket = join(fixture.ticketDir, "🧪️retry");
-      mkdirSync(retryTicket, { recursive: true });
-      const applied = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket });
+      const retryTicket = fixture.ticketDir;
+      const applied = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, expectedBaselineCommit: plan.baselineCommit });
       expect(applied.appliedSymlinkTargetEdits).toBe(1);
+      expect(applied.journalPath).toMatch(/🔢️000002\/🔣️\.json$/u);
       const terminalAttempt = resolve(applied.journalPath, "..");
       const deadLease = join(terminalAttempt, "🔒️lease");
       mkdirSync(deadLease);
-      writeFileSync(join(deadLease, "🔣️.json"), `${canonicalJson({ schemaVersion: 1, planDigest: plan.planDigest, attemptOrdinal: "000001", token: "00000000-0000-4000-8000-000000000002", pid: 999999 })}\n`);
-      const resumedCommitted = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, resumeJournal: applied.journalPath });
+      writeFileSync(join(deadLease, "🔣️.json"), `${canonicalJson({ schemaVersion: 1, planDigest: plan.planDigest, attemptOrdinal: "000002", token: "00000000-0000-4000-8000-000000000002", pid: 999999 })}\n`);
+      const resumedCommitted = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, expectedBaselineCommit: plan.baselineCommit, resumeJournal: applied.journalPath });
       expect(resumedCommitted.state).toBe("committed");
       expect(readdirSync(terminalAttempt)).toEqual(["🔣️.json"]);
       const second = planTaxonomy(inventoryTaxonomy(fixture.options), { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [fixture.opaqueDigest] });
@@ -3748,17 +4683,19 @@ describe("taxonomy transaction dispositions v2", () => {
       const planPath = join(fixture.ticketDir, "plan-v2.json");
       writeFileSync(planPath, `${canonicalJson(plan)}\n`);
       const modulePath = resolve(import.meta.dir, "../../🧹️normalization/🟦️.ts");
-      const child = `const [modulePath,planPath,repoRoot,ticketDir]=process.argv.slice(1);const {applyTaxonomyPlan}=await import(modulePath);const plan=JSON.parse(await Bun.file(planPath).text());applyTaxonomyPlan(plan,{repoRoot,ticketDir,progress:(row)=>{if(row.phase==="retargeting-symlinks")process.exit(73)}});`;
-      const interrupted = spawnSync("bun", ["-e", child, modulePath, planPath, fixture.repoRoot, fixture.ticketDir], { encoding: "utf8" });
+      const child = `const [modulePath,planPath,repoRoot,ticketDir,baseline]=process.argv.slice(1);const {applyTaxonomyPlan}=await import(modulePath);const plan=JSON.parse(await Bun.file(planPath).text());applyTaxonomyPlan(plan,{repoRoot,ticketDir,expectedBaselineCommit:baseline,progress:(row)=>{if(row.phase==="retargeting-symlinks")process.exit(73)}});`;
+      const interrupted = spawnSync("bun", ["-e", child, modulePath, planPath, fixture.repoRoot, fixture.ticketDir, plan.baselineCommit], { encoding: "utf8" });
       expect(interrupted.status).toBe(73);
-      const journals = fastGlob.sync("**/🧾️taxonomy-transaction/**/🔂️attempts/🔢️*/🔣️.json", { cwd: fixture.ticketDir, absolute: true });
+      const journals = ownedFilePaths(fixture.ticketDir)
+        .filter((path) => (path.startsWith("🧾️taxonomy-transaction/") || path.includes("/🧾️taxonomy-transaction/")) && /\/🔂️attempts\/🔢️[^/]+\/🔣️\.json$/u.test(path))
+        .map((path) => join(fixture.ticketDir, path));
       expect(journals).toHaveLength(1);
       const leasePath = join(resolve(journals[0], ".."), "🔒️lease", "🔣️.json");
       expect(existsSync(leasePath)).toBe(true);
       const leaseBytes = readFileSync(leasePath, "utf8");
       const lease = JSON.parse(leaseBytes) as { pid: number };
       writeFileSync(leasePath, `${canonicalJson({ ...lease, pid: process.pid })}\n`);
-      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, resumeJournal: journals[0] })).toThrow(/leased by active pid/u);
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, resumeJournal: journals[0] })).toThrow(/leased by active pid/u);
       writeFileSync(leasePath, leaseBytes);
       let journalBytes = readFileSync(journals[0], "utf8");
       let journal = JSON.parse(journalBytes) as { revision: number; state: string; stagingRoot: string; installedSymlinkTargetEditIds: string[] };
@@ -3769,7 +4706,7 @@ describe("taxonomy transaction dispositions v2", () => {
       mkdirSync(walRoot);
       writeFileSync(join(walRoot, "🔣️.json"), `${canonicalJson({ ...journal, revision: journal.revision + 1 })}\n`);
       writeFileSync(join(stageRoot, "unexpected"), "drift");
-      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, resumeJournal: journals[0] })).toThrow(/(?:unexpected|unauthorized) evidence/u);
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, resumeJournal: journals[0] })).toThrow(/(?:unexpected|unauthorized) evidence/u);
       expect(existsSync(walRoot)).toBe(true);
       expect(readFileSync(journals[0], "utf8")).toBe(journalBytes);
       rmSync(walRoot, { recursive: true });
@@ -3779,17 +4716,17 @@ describe("taxonomy transaction dispositions v2", () => {
       journal = JSON.parse(journalBytes) as typeof journal;
       mkdirSync(walRoot);
       writeFileSync(join(stageRoot, "unexpected"), "drift");
-      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, resumeJournal: journals[0] })).toThrow(/(?:unexpected|unauthorized) evidence/u);
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, resumeJournal: journals[0] })).toThrow(/(?:unexpected|unauthorized) evidence/u);
       expect(existsSync(walRoot)).toBe(true);
       rmSync(join(stageRoot, "unexpected"));
       writeFileSync(journals[0], JSON.stringify(journal, null, 2));
-      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, resumeJournal: journals[0] })).toThrow(/canonical JSON/u);
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, resumeJournal: journals[0] })).toThrow(/canonical JSON/u);
       writeFileSync(journals[0], `${canonicalJson({ ...journal, state: "staging" })}\n`);
-      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, resumeJournal: journals[0] })).toThrow(/impossible phase/u);
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, resumeJournal: journals[0] })).toThrow(/impossible phase/u);
       writeFileSync(journals[0], `${canonicalJson({ ...journal, stagingRoot: `${journal.stagingRoot}-forged` })}\n`);
-      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, resumeJournal: journals[0] })).toThrow(/(?:attempt|transaction) roots/u);
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, resumeJournal: journals[0] })).toThrow(/(?:attempt|transaction) roots/u);
       writeFileSync(journals[0], journalBytes);
-      const result = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, resumeJournal: journals[0] });
+      const result = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, resumeJournal: journals[0] });
       expect(result.state).toBe("committed");
       expect(readdirSync(resolve(journals[0], ".."))).toEqual(["🔣️.json"]);
       expect(planTaxonomy(inventoryTaxonomy(fixture.options), { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [] }).symlinkTargetEdits).toEqual([]);
@@ -3834,32 +4771,37 @@ describe("taxonomy transaction dispositions v2", () => {
       (removalTamper as { planDigest: string }).planDigest = taxonomyPlanDigest(removalTamper);
       expect(() => parseTaxonomyPlan(removalTamper)).toThrow();
       const before = noFollowTreeDigest(fixture.repoRoot, fixture.scope);
-      const cancellationTicket = join(fixture.ticketDir, "🧪️cancel-evidence-removal");
+      const cancellationTicket = fixture.ticketDir;
       const cancelFile = join(cancellationTicket, "cancel");
-      mkdirSync(cancellationTicket, { recursive: true });
-      const cancelled = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: cancellationTicket, cancelFile, progress: (row) => { if (row.phase === "staging-evidence-removals") writeFileSync(cancelFile, "cancel\n"); } });
+      const cancelled = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: cancellationTicket, expectedBaselineCommit: plan.baselineCommit, cancelFile, progress: (row) => { if (row.phase === "staging-evidence-removals") writeFileSync(cancelFile, "cancel\n"); } });
       expect(cancelled.state).toBe("rolled-back");
       rmSync(cancelFile, { force: true });
       expect(noFollowTreeDigest(fixture.repoRoot, fixture.scope)).toEqual(before);
-      const retryTicket = join(fixture.ticketDir, "🧪️retry-embedded");
-      mkdirSync(retryTicket, { recursive: true });
+      const retryTicket = fixture.ticketDir;
       const planArtifact = join(retryTicket, "📊️taxonomy-plan", "🔣️.json");
       mkdirSync(resolve(planArtifact, ".."), { recursive: true });
       writeFileSync(planArtifact, `${canonicalJson(plan)}\n`);
       const copiedConsumer = join(retryTicket, "🧪️consumer", "🔣️.json");
       mkdirSync(resolve(copiedConsumer, ".."), { recursive: true });
       writeFileSync(copiedConsumer, `${JSON.stringify({ path: plan.embeddedTicketRoots[0].sourceMetadataRoot })}\n`);
-      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket })).toThrow(/structured incoming reference/u);
-      expect(fastGlob.sync("**/🧾️taxonomy-transaction/**/🔣️.json", { cwd: retryTicket, absolute: true })).toEqual([]);
+      expect(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, expectedBaselineCommit: plan.baselineCommit })).toThrow(/structured incoming reference/u);
+      const priorAttempts = ownedFilePaths(retryTicket)
+        .filter((path) => (path.startsWith("🧾️taxonomy-transaction/") || path.includes("/🧾️taxonomy-transaction/")) && path.endsWith("/🔣️.json"))
+        .map((path) => join(retryTicket, path));
+      expect(priorAttempts).toHaveLength(1);
+      expect(JSON.parse(readFileSync(priorAttempts[0], "utf8")).state).toBe("rolled-back");
       rmSync(copiedConsumer);
-      expect(applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, injectFailureAt: "after-relocations" }).state).toBe("rolled-back");
-      const result = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket });
+      expect(applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, expectedBaselineCommit: plan.baselineCommit, injectFailureAt: "after-relocations" }).state).toBe("rolled-back");
+      const result = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, expectedBaselineCommit: plan.baselineCommit });
       expect(result.appliedEmbeddedTicketRootRelocations).toBe(4);
       expect(result.appliedEvidenceRemovals).toBe(2);
-      expect(result.journalPath).toMatch(/🔢️000002\/🔣️\.json$/u);
-      const attempts = fastGlob.sync("**/🧾️taxonomy-transaction/**/🔂️attempts/🔢️*/🔣️.json", { cwd: retryTicket, absolute: true }).sort();
-      expect(attempts).toHaveLength(2);
-      expect(attempts.map((path) => JSON.parse(readFileSync(path, "utf8")).state)).toEqual(["rolled-back", "committed"]);
+      expect(result.journalPath).toMatch(/🔢️000003\/🔣️\.json$/u);
+      const attempts = ownedFilePaths(retryTicket)
+        .filter((path) => (path.startsWith("🧾️taxonomy-transaction/") || path.includes("/🧾️taxonomy-transaction/")) && /\/🔂️attempts\/🔢️[^/]+\/🔣️\.json$/u.test(path))
+        .map((path) => join(retryTicket, path))
+        .sort(ownedPathByteSort);
+      expect(attempts).toHaveLength(3);
+      expect(attempts.map((path) => JSON.parse(readFileSync(path, "utf8")).state)).toEqual(["rolled-back", "rolled-back", "committed"]);
       const second = planTaxonomy(inventoryTaxonomy(fixture.options), { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [fixture.opaqueDigest] });
       expect(second.embeddedTicketRoots).toEqual([]);
       expect(second.embeddedTicketRootRelocations).toEqual([]);
@@ -3870,3 +4812,632 @@ describe("taxonomy transaction dispositions v2", () => {
   }, 60_000);
 });
 //#endregion 🧾️TransactionDispositionsV2
+
+//#region 🧬️DirectMutationOwnership
+describe("direct mutation ownership", () => {
+  const mutationRoot = (root: string, area = "✏️s") => join(root, area, "🔌️plugins", "🧪️probe", "🗿️artifacts", "🧪️artifact", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "🧬️schema", "🧬️mutations");
+
+  test("fails closed for missing, opaque, escaped, and symlinked explicit scopes", () => {
+    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../../🧪️tests/🧬️mutation-scope/🧫️fixtures/🔣️.json"), "utf8")) as {
+      schemaVersion: number;
+      mutationRoot: string;
+      aggregate: string;
+      acceptedSelections: string[];
+      missingSelections: string[];
+      rejectedSelections: string[];
+    };
+    const root = mkdtempSync(join(tmpdir(), "semio-direct-mutation-scope-"));
+    try {
+      expect(golden.schemaVersion).toBe(1);
+      const aggregate = `${golden.mutationRoot}/🦀️.rs`;
+      mkdirSync(join(root, golden.mutationRoot), { recursive: true });
+      writeFileSync(join(root, aggregate), golden.aggregate);
+      const oracleRoots = fastGlob.sync("**/🧬️mutations/🦀️.rs", { cwd: root, onlyFiles: true, followSymbolicLinks: false }).map((path) => path.slice(0, -"/🦀️.rs".length));
+      expect(oracleRoots).toEqual([golden.mutationRoot]);
+      for (const selection of golden.acceptedSelections) expect(policyMutationStructuralBreaches(root, [selection])).toEqual([]);
+      for (const selection of golden.missingSelections) {
+        expect(oracleRoots).not.toContain(selection.replaceAll("\\", "/"));
+        expect(() => policyMutationStructuralBreaches(root, [selection])).toThrow(/mutation.*scope/iu);
+      }
+      for (const selection of golden.rejectedSelections) expect(() => policyMutationStructuralBreaches(root, [selection])).toThrow(/mutation.*scope/iu);
+      const alias = join(root, "✏️s", "🧪️alias");
+      symlinkSync(process.platform === "win32" ? join(root, "✏️s", "🧪️probe") : "🧪️probe", alias, process.platform === "win32" ? "junction" : "dir");
+      expect(() => policyMutationStructuralBreaches(root, ["✏️s/🧪️alias/🧬️mutations"])).toThrow(/mutation.*scope/iu);
+      rmSync(join(root, aggregate));
+      expect(policyMutationStructuralBreaches(root, [golden.mutationRoot]).some(({ kind, priority }) => kind === "mutation/reachability" && priority === "high")).toBe(true);
+      mkdirSync(join(root, aggregate));
+      expect(policyMutationStructuralBreaches(root, [golden.mutationRoot]).some(({ kind, priority }) => kind === "mutation/reachability" && priority === "high")).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("recognizes exact leaf module identities in codecs without trusting comments or prefixes", () => {
+    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../../🧪️tests/🧬️mutation-scope/🧫️fixtures/🔣️.json"), "utf8")) as {
+      mutationRoot: string;
+      codecCases: { source: string; accepted: boolean }[];
+    };
+    const root = mkdtempSync(join(tmpdir(), "semio-direct-mutation-codec-identity-"));
+    try {
+      const leaf = `${golden.mutationRoot}/➕️insert-page`;
+      mkdirSync(join(root, leaf, "📝️text"), { recursive: true });
+      mkdirSync(join(root, golden.mutationRoot, "📝️text"), { recursive: true });
+      writeFileSync(join(root, golden.mutationRoot, "🦀️.rs"), "pub enum PageMutation { InsertPage(insert_page::InsertPage) }\n");
+      writeFileSync(join(root, leaf, "🦀️.rs"), "pub struct InsertPage; pub struct InsertPagePayload; impl MutationKind for InsertPage {}\n");
+      writeFileSync(join(root, leaf, "📝️text", "🦀️.rs"), "pub const OPCODE: &str = \"insert-page\";\n");
+      writeFileSync(join(root, leaf, "🔣️.json"), JSON.stringify({ schemaVersion: 1, owner: leaf, semanticKind: "insert-page", displayName: "Insert Page", emoji: "➕️", aggregateVariant: "InsertPage", payloadSchema: "🦀️.rs#InsertPage", textOpcode: "insert-page", binaryTag: null, invertibility: "explicit-mutation", diffParticipation: "detect", outcomeClasses: ["applied"], composition: "atomic", requiredLanguageSurfaces: ["rust", "text"] }));
+      const codec = join(root, golden.mutationRoot, "📝️text", "🦀️.rs");
+      for (const vector of golden.codecCases) {
+        writeFileSync(codec, vector.source);
+        const oracle = spawnSync("rustc", ["-Zunpretty=ast-tree", "--crate-name", "mutation_codec_probe", "--edition", "2021", codec], { encoding: "utf8" });
+        expect(oracle.status).toBe(0);
+        expect(oracle.stdout.includes("ident: insert_page#") || oracle.stdout.includes("ident: InsertPagePayload#") || oracle.stdout.includes('symbol: "insert-page"')).toBe(vector.accepted);
+        expect(policyMutationStructuralBreaches(root, [golden.mutationRoot]).filter(({ kind }) => kind === "mutation/language-parity").length === 0).toBe(vector.accepted);
+      }
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("recognizes a binary leaf tag only when its numeric identity equals the descriptor", () => {
+    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../../🧪️tests/🧬️mutation-scope/🧫️fixtures/🔣️.json"), "utf8")) as {
+      mutationRoot: string;
+      binaryCases: { source: string; accepted: boolean }[];
+    };
+    const root = mkdtempSync(join(tmpdir(), "semio-direct-mutation-binary-identity-"));
+    try {
+      const leaf = `${golden.mutationRoot}/➕️insert-page`;
+      mkdirSync(join(root, leaf, "💾️binary"), { recursive: true });
+      mkdirSync(join(root, golden.mutationRoot, "💾️binary"), { recursive: true });
+      writeFileSync(join(root, golden.mutationRoot, "🦀️.rs"), "pub enum PageMutation { InsertPage(insert_page::InsertPage) }\n");
+      writeFileSync(join(root, golden.mutationRoot, "💾️binary", "🦀️.rs"), "pub const REGISTRY: &[u8] = &[insert_page::binary::BINARY_TAG];\n");
+      writeFileSync(join(root, leaf, "🦀️.rs"), "pub struct InsertPage; impl MutationKind for InsertPage {}\n");
+      writeFileSync(join(root, leaf, "🔣️.json"), JSON.stringify({ schemaVersion: 1, owner: leaf, semanticKind: "insert-page", displayName: "Insert Page", emoji: "➕️", aggregateVariant: "InsertPage", payloadSchema: "🦀️.rs#InsertPage", textOpcode: null, binaryTag: 3, invertibility: "explicit-mutation", diffParticipation: "detect", outcomeClasses: ["applied"], composition: "atomic", requiredLanguageSurfaces: ["rust", "binary"] }));
+      const codec = join(root, leaf, "💾️binary", "🦀️.rs");
+      for (const vector of golden.binaryCases) {
+        writeFileSync(codec, vector.source);
+        const oracle = spawnSync("rustc", ["-Zunpretty=ast-tree", "--crate-name", "mutation_binary_probe", "--edition", "2021", codec], { encoding: "utf8" });
+        expect(oracle.status).toBe(0);
+        expect(oracle.stdout.includes('symbol: "3"')).toBe(vector.accepted);
+        expect(policyMutationStructuralBreaches(root, [golden.mutationRoot]).filter(({ kind }) => kind === "mutation/language-parity").length === 0).toBe(vector.accepted);
+      }
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects executable root aggregate codecs while preserving generic framing and unrelated syntax", () => {
+    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../../🧪️tests/🧬️mutation-codec-ownership/🧫️fixtures/🔣️.json"), "utf8")) as {
+      schemaVersion: number;
+      mutationRoot: string;
+      aggregate: string;
+      cases: { name: string; source: string; expected: string[] }[];
+    };
+    const root = mkdtempSync(join(tmpdir(), "semio-mutation-codec-ownership-"));
+    try {
+      expect(golden.schemaVersion).toBe(1);
+      const taxonomy = loadTaxonomy();
+      const rustComponent = canonicalPrimaryFilenameForKind(taxonomy.mutationComponentFileKindId, taxonomy);
+      const codec = join(root, golden.mutationRoot, "📝️text", rustComponent);
+      mkdirSync(dirname(codec), { recursive: true });
+      writeFileSync(join(root, golden.mutationRoot, rustComponent), golden.aggregate);
+      const compilerOutput = join(root, "📦️compiler-output");
+      mkdirSync(compilerOutput, { recursive: true });
+      const inspect = createRustMutationCodecOwnershipInspector(golden.aggregate);
+      for (const vector of golden.cases) {
+        writeFileSync(codec, vector.source);
+        const source = `${golden.aggregate}\n${vector.source}`;
+        const parserOracle = spawnSync("rustc", ["-Zunpretty=ast-tree", "--crate-name", "mutation_codec_ownership_probe", "--edition", "2021", "-"], { encoding: "utf8", input: source });
+        const compilerOracle = spawnSync("rustc", ["--crate-type=lib", "--crate-name", "mutation_codec_ownership_probe", "--edition", "2021", "--out-dir", compilerOutput, "-"], { encoding: "utf8", input: source });
+        expect(parserOracle.status).toBe(0);
+        expect(compilerOracle.status === 0).toBe(vector.expected.length === 0);
+        expect(inspect(vector.source).map(({ kind }) => kind)).toEqual(vector.expected);
+        expect(policyMutationStructuralBreaches(root, [golden.mutationRoot]).filter(({ kind }) => kind === "mutation/codec-ownership").length > 0).toBe(vector.expected.length > 0);
+      }
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects empty aggregates, inline variants, and orphaned direct folders", () => {
+    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../../🧪️tests/🧬️mutation-scope/🧫️fixtures/🔣️.json"), "utf8")) as {
+      mutationRoot: string;
+      aggregateCases: { source: string; kind: string; variantCount: number }[];
+    };
+    const root = mkdtempSync(join(tmpdir(), "semio-direct-mutation-aggregate-"));
+    try {
+      mkdirSync(join(root, golden.mutationRoot, "➕️insert-page"), { recursive: true });
+      const aggregate = join(root, golden.mutationRoot, "🦀️.rs");
+      for (const vector of golden.aggregateCases) {
+        writeFileSync(aggregate, vector.source);
+        const oracle = spawnSync("rustc", ["-Zunpretty=ast-tree", "--crate-name", "mutation_aggregate_probe", "--edition", "2021", aggregate], { encoding: "utf8" });
+        expect(oracle.status).toBe(0);
+        expect((oracle.stdout.match(/\bVariant \{/gu) ?? []).length).toBe(vector.variantCount);
+        const facts = inspectRustStructure(vector.source);
+        expect(facts.enums.flatMap((item) => item.variants)).toHaveLength(vector.variantCount);
+        expect(policyMutationStructuralBreaches(root, [golden.mutationRoot]).some(({ kind }) => kind === vector.kind)).toBe(true);
+      }
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects aggregate-state mutation inputs transitively while accepting semantic prior values", () => {
+    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../../🧪️tests/🧬️mutation-input-carriers/🧫️fixtures/🔣️.json"), "utf8")) as {
+      schemaVersion: number;
+      mutationRoot: string;
+      aggregate: string;
+      compilerPrelude: string;
+      compilerAssertion: string;
+      cases: { name: string; source: string; aggregate?: string; forbidden: boolean }[];
+    };
+    const root = mkdtempSync(join(tmpdir(), "semio-direct-mutation-input-"));
+    try {
+      expect(golden.schemaVersion).toBe(1);
+      const leaf = join(root, golden.mutationRoot, "➕️insert-page");
+      mkdirSync(leaf, { recursive: true });
+      for (const vector of golden.cases) {
+        writeFileSync(join(root, golden.mutationRoot, "🦀️.rs"), vector.aggregate ?? golden.aggregate);
+        writeFileSync(join(leaf, "🦀️.rs"), vector.source);
+        const oracle = spawnSync("rustc", ["--crate-name", "mutation_input_probe", "--edition", "2021", "--crate-type", "lib", "--emit=metadata", "-o", join(root, "oracle.rmeta"), "-"], { input: golden.compilerPrelude + vector.source + golden.compilerAssertion, encoding: "utf8" });
+        expect(oracle.status === 0).toBe(!vector.forbidden);
+        if (vector.forbidden) expect(oracle.stderr).toContain("E0277");
+        const breaches = policyMutationStructuralBreaches(root, [golden.mutationRoot]).filter(({ kind }) => kind === "mutation/no-generic-snapshot-fallback");
+        expect({ name: vector.name, forbidden: breaches.length > 0 }).toEqual({ name: vector.name, forbidden: vector.forbidden });
+        expect(breaches.every(({ priority }) => priority === "high")).toBe(true);
+      }
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("reports legacy nesting, inline root behavior, sentinels, and snapshot fallbacks at high severity", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-direct-mutation-policy-"));
+    try {
+      const mutations = mutationRoot(root);
+      const leaf = join(mutations, "➕️insert-page");
+      mkdirSync(join(leaf, "🦠️mutation"), { recursive: true });
+      writeFileSync(join(leaf, "🦠️mutation", "🦀️.rs"), "pub struct InsertPage;\n");
+      writeFileSync(join(mutations, "🦀️.rs"), "pub const KINDS: &[&str] = &[\"insert-page\"]; pub enum PdfMutation { NoMutation, SetSnapshot(Vec<u8>), InsertPage(InsertPage) } pub fn apply(m: PdfMutation) { match m { _ => {} } }\n");
+      const findings = policyMutationStructuralBreaches(root);
+      const kinds = new Set(findings.map(({ kind }) => kind));
+      for (const kind of ["mutation/direct-owner", "mutation/root-purity", "mutation/no-sentinel", "mutation/no-generic-snapshot-fallback"]) expect(kinds.has(kind)).toBe(true);
+      expect(findings.every(({ priority }) => priority === "high")).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("registers every architectural invariant as a high-severity structural policy", () => {
+    expect(MUTATION_STRUCTURAL_POLICY_KINDS).toEqual([
+      "mutation/direct-owner", "mutation/root-purity", "mutation/folder-variant-bijection", "mutation/descriptor-bijection", "mutation/reachability", "mutation/behavior-ownership", "mutation/codec-ownership", "mutation/wire-identity", "mutation/schema-parity", "mutation/language-parity", "mutation/catalog-parity", "mutation/no-hidden-generation", "mutation/no-sentinel", "mutation/no-generic-snapshot-fallback", "mutation/shared-helper-purity", "mutation/test-presence", "mutation/compose-exclusion",
+    ]);
+    const root = mkdtempSync(join(tmpdir(), "semio-direct-mutation-policy-catalog-"));
+    try {
+      const mutations = mutationRoot(root);
+      mkdirSync(join(mutations, "➕️insert-page"), { recursive: true });
+      writeFileSync(join(mutations, "🦀️.rs"), "pub enum ProbeMutation { InsertPage(InsertPage) }\n");
+      expect(policyMutationStructuralBreaches(root).every(({ priority }) => priority === "high")).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("requires one enabled reachable non-ignored leaf test proven by parsed Rust items", () => {
+    const fixturePath = join(import.meta.dir, "../../🧪️tests/🧬️mutation-test-presence/🧫️fixtures/🔣️.json");
+    const schemaPath = join(import.meta.dir, "../../🧪️tests/🧬️mutation-test-presence/🛂️schema.json");
+    const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { schemaVersion: 1; mutationRoot: string; leaf: string; cases: readonly { name: string; source: string; files: Readonly<Record<string, string>>; links: Readonly<Record<string, string>>; compilerAccepted: boolean; runnableTests: number; policyAccepted: boolean }[] };
+    expect(new Ajv({ allErrors: true, strict: true }).compile(JSON.parse(readFileSync(schemaPath, "utf8")))(fixture)).toBe(true);
+    const artifactDirectory = process.env.SEMIO_TEST_ARTIFACT_DIR?.trim();
+    const base = artifactDirectory ? resolve(getWorkspaceRoot(), artifactDirectory) : realpathSync(tmpdir());
+    const oracleTimeoutMs = 30_000;
+    mkdirSync(base, { recursive: true });
+    const root = mkdtempSync(join(base, "semio-mutation-test-presence-"));
+    try {
+      for (const vector of fixture.cases) {
+        const caseRoot = join(root, vector.name);
+        const mutations = join(caseRoot, fixture.mutationRoot);
+        const leaf = join(mutations, fixture.leaf);
+        mkdirSync(leaf, { recursive: true });
+        writeFileSync(join(leaf, "🦀️.rs"), vector.source);
+        for (const [path, source] of Object.entries(vector.files)) {
+          const target = resolve(leaf, path);
+          mkdirSync(dirname(target), { recursive: true });
+          writeFileSync(target, source);
+        }
+        for (const [path, target] of Object.entries(vector.links)) {
+          const link = resolve(leaf, path);
+          mkdirSync(dirname(link), { recursive: true });
+          symlinkSync(resolve(leaf, target), link, process.platform === "win32" ? "junction" : "dir");
+        }
+        const aggregate = join(mutations, "🦀️.rs");
+        writeFileSync(aggregate, `#[path = "${fixture.leaf}/🦀️.rs"] pub mod insert_page; pub enum ProbeMutation { InsertPage(insert_page::InsertPage) }\n`);
+        const executable = join(caseRoot, process.platform === "win32" ? "oracle.exe" : "oracle");
+        const compile = spawnSync("rustc", ["--test", "--edition", "2021", "--crate-name", "mutation_test_presence_oracle", aggregate, "-o", executable], { encoding: "utf8", timeout: oracleTimeoutMs });
+        writeFileSync(join(caseRoot, "compiler.stdout.log"), compile.stdout ?? "");
+        writeFileSync(join(caseRoot, "compiler.stderr.log"), compile.stderr ?? "");
+        expect(compile.signal).toBeNull();
+        expect(compile.status === 0).toBe(vector.compilerAccepted);
+        if (!vector.compilerAccepted) {
+          expect(policyMutationStructuralBreaches(caseRoot, [fixture.mutationRoot]).some(({ kind }) => kind === "mutation/test-presence")).toBe(true);
+          continue;
+        }
+        const execution = spawnSync(executable, ["--nocapture"], { encoding: "utf8", timeout: oracleTimeoutMs });
+        writeFileSync(join(caseRoot, "runtime.stdout.log"), execution.stdout ?? "");
+        writeFileSync(join(caseRoot, "runtime.stderr.log"), execution.stderr ?? "");
+        expect(execution.signal).toBeNull();
+        expect(execution.status).toBe(0);
+        expect(Number(/test result: ok\. (\d+) passed;/u.exec(execution.stdout)?.[1])).toBe(vector.runnableTests);
+        const accepted = policyMutationStructuralBreaches(caseRoot, [fixture.mutationRoot]).every(({ kind }) => kind !== "mutation/test-presence");
+        expect({ name: vector.name, runnable: vector.runnableTests, accepted }).toEqual({ name: vector.name, runnable: vector.runnableTests, accepted: vector.policyAccepted });
+      }
+    } finally {
+      if (!artifactDirectory) rmSync(root, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  test("accepts a direct authoritative leaf with optional facets and ignores the same violation under compose", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-direct-mutation-policy-"));
+    try {
+      const mutations = mutationRoot(root);
+      const leaf = join(mutations, "➕️insert-page");
+      mkdirSync(join(leaf, "🔺️diff"), { recursive: true });
+      mkdirSync(join(leaf, "↩️inverse"), { recursive: true });
+      mkdirSync(join(leaf, "🧪️tests"), { recursive: true });
+      writeFileSync(join(leaf, "🦀️.rs"), "pub struct InsertPage; pub const DESCRIPTOR: MutationDescriptor = descriptor(); impl MutationKind for InsertPage {}\n");
+      writeFileSync(join(leaf, "🔣️.json"), `${JSON.stringify({ schemaVersion: 1, owner: relative(root, leaf).replaceAll("\\", "/"), semanticKind: "insert-page", displayName: "Insert Page", emoji: "➕️", aggregateVariant: "InsertPage", payloadSchema: "🦀️.rs#InsertPage", textOpcode: null, binaryTag: null, invertibility: "explicit-mutation", diffParticipation: "detect", outcomeClasses: ["applied"], composition: "atomic", requiredLanguageSurfaces: ["rust"] }, null, 2)}\n`);
+      writeFileSync(join(leaf, "🔺️diff", "🦀️.rs"), "pub fn diff() {}\n");
+      writeFileSync(join(leaf, "↩️inverse", "🦀️.rs"), "pub fn inverse() {}\n");
+      writeFileSync(join(leaf, "🧪️tests", "🦀️.rs"), "#[test] fn applies() {}\n");
+      writeFileSync(join(mutations, "🦀️.rs"), "pub use super::insert_page::*; #[derive(Mutations)] pub enum PdfMutation { InsertPage(insert_page::InsertPage) }\n");
+      const opaque = mutationRoot(root, "compose");
+      mkdirSync(join(opaque, "❌️broken", "🦠️mutation"), { recursive: true });
+      writeFileSync(join(opaque, "❌️broken", "🦠️mutation", "🦀️.rs"), "pub struct Broken;\n");
+      expect(policyMutationStructuralBreaches(root).filter(({ kind }) => ["mutation/direct-owner", "mutation/root-purity", "mutation/descriptor-bijection", "mutation/no-sentinel", "mutation/no-generic-snapshot-fallback"].includes(kind))).toEqual([]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("scaffolds one direct mutation idempotently without overwriting implementation", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-direct-mutation-scaffold-"));
+    try {
+      const mutations = mutationRoot(root);
+      mkdirSync(mutations, { recursive: true });
+      writeFileSync(join(mutations, "🦀️.rs"), "pub enum ProbeMutation {}\n");
+      const first = newScaffoldMutationTree(root, relative(root, mutations).replaceAll("\\", "/"), "➕️insert-page", { text: true, binary: true, jsonSchema: true }, false);
+      expect(first.created).toContain(`${relative(root, mutations).replaceAll("\\", "/")}/➕️insert-page/🦀️.rs`);
+      const descriptor = JSON.parse(readFileSync(join(mutations, "➕️insert-page", "🔣️.json"), "utf8"));
+      expect(descriptor).toMatchObject({ schemaVersion: 1, owner: `${relative(root, mutations).replaceAll("\\", "/")}/➕️insert-page`, semanticKind: "insert-page", payloadSchema: "🧬️schema/🔣️.json", textOpcode: "insert-page", invertibility: "explicit-mutation", diffParticipation: "detect", outcomeClasses: ["applied"], requiredLanguageSurfaces: ["rust", "json-schema", "text", "binary"] });
+      const descriptorSchema = JSON.parse(readFileSync(join(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️mutation-descriptor.schema.json"), "utf8"));
+      const validateDescriptor = new Ajv({ allErrors: true, strict: true }).compile(descriptorSchema);
+      expect(validateDescriptor(descriptor)).toBe(true);
+      expect(validateJsonSchemaSubset(descriptorSchema, descriptor)).toEqual([]);
+      for (const candidate of [
+        { ...descriptor, binaryTag: -1 },
+        { ...descriptor, requiredLanguageSurfaces: ["typescript"] },
+        { ...descriptor, outcomeClasses: [] },
+        { ...descriptor, invertibility: "unclassified" },
+        { ...descriptor, compatibilityAlias: "legacy" },
+      ]) {
+        expect(validateJsonSchemaSubset(descriptorSchema, candidate).length === 0).toBe(validateDescriptor(candidate));
+      }
+      const payloadSchema = JSON.parse(readFileSync(join(mutations, "➕️insert-page", "🧬️schema/🔣️.json"), "utf8"));
+      expect(new Ajv({ allErrors: true, strict: true }).compile(payloadSchema)({})).toBe(true);
+      writeFileSync(join(mutations, "➕️insert-page", "🦀️.rs"), "pub struct Handwritten;\n");
+      const second = newScaffoldMutationTree(root, relative(root, mutations).replaceAll("\\", "/"), "➕️insert-page", { text: true, binary: true, jsonSchema: true }, false);
+      expect(second.created).toEqual([]);
+      expect(readFileSync(join(mutations, "➕️insert-page", "🦀️.rs"), "utf8")).toBe("pub struct Handwritten;\n");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("prepares AST-safe direct mutation scaffolds before one guarded publication", () => {
+    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../../🧪️tests/🧬️mutation-scaffolding/🧫️fixtures/🔣️.json"), "utf8")) as { schemaVersion: number; mutationRoot: string; name: string; attributedAggregate: string; malformedAggregate: string; ambiguousAggregate: string; wrongMountAggregate: string; privateMountAggregate: string; wrongVariantAggregate: string; scopedAggregate: string; unrelatedDocAggregate: string; nestedAggregateDecoy: string; nestedAggregateScopes: string; unmatchedAggregate: string };
+    const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧪️tests/🧬️mutation-scaffolding/🛂️schema.json"), "utf8"));
+    const root = mkdtempSync(join(tmpdir(), "semio-mutation-scaffold-transaction-"));
+    const snapshot = (): string => fastGlob.sync("**/*", { cwd: root, onlyFiles: true, followSymbolicLinks: false }).sort().map((path) => `${path}\0${readFileSync(join(root, path), "utf8")}`).join("\0");
+    const mutationRoot = join(root, golden.mutationRoot);
+    const aggregate = join(mutationRoot, "🦀️.rs");
+    const scaffold = (source: string, options: Record<string, unknown> = {}, dryRun = false, name = golden.name) => {
+      mkdirSync(mutationRoot, { recursive: true });
+      writeFileSync(aggregate, source);
+      return newScaffoldMutationTree(root, golden.mutationRoot, name, options as never, dryRun);
+    };
+    try {
+      expect(new Ajv({ allErrors: true, strict: true }).compile(schema)(golden)).toBe(true);
+      expect(inspectRustMutationAggregateSpan(golden.attributedAggregate)).toMatchObject({ enumName: "ProbeMutation" });
+      expect(inspectRustMutationAggregateSpan(golden.scopedAggregate)).toMatchObject({ declarationStart: 0, enumName: "ProbeMutation" });
+      expect(inspectRustMutationAggregateSpan(golden.unrelatedDocAggregate)).toMatchObject({ declarationStart: golden.unrelatedDocAggregate.indexOf("#[derive") });
+      expect(inspectRustMutationAggregateSpan(golden.nestedAggregateScopes)).toBeNull();
+      for (const source of [golden.malformedAggregate, golden.ambiguousAggregate, golden.nestedAggregateDecoy, golden.nestedAggregateScopes, golden.unmatchedAggregate]) {
+        mkdirSync(mutationRoot, { recursive: true });
+        writeFileSync(aggregate, source);
+        const before = snapshot();
+        expect(() => newScaffoldMutationTree(root, golden.mutationRoot, golden.name)).toThrow(/aggregate/i);
+        expect(snapshot()).toBe(before);
+      }
+      for (const source of [golden.wrongMountAggregate, golden.privateMountAggregate, golden.wrongVariantAggregate]) {
+        writeFileSync(aggregate, source);
+        const before = snapshot();
+        expect(() => newScaffoldMutationTree(root, golden.mutationRoot, golden.name)).toThrow(/existing (mount|variant)/i);
+        expect(snapshot()).toBe(before);
+      }
+      writeFileSync(aggregate, golden.attributedAggregate);
+      const beforeDryRun = snapshot();
+      const preview = newScaffoldMutationTree(root, golden.mutationRoot, golden.name, {}, true);
+      expect(preview.created).toContain(`${golden.mutationRoot}/${golden.name}/🦀️.rs`);
+      expect(snapshot()).toBe(beforeDryRun);
+      mkdirSync(join(mutationRoot, golden.name, "🦀️.rs"), { recursive: true });
+      const beforeBlockedTarget = snapshot();
+      expect(() => newScaffoldMutationTree(root, golden.mutationRoot, golden.name)).toThrow(/target is not a regular file/i);
+      expect(snapshot()).toBe(beforeBlockedTarget);
+      rmSync(join(mutationRoot, golden.name), { recursive: true, force: true });
+      newScaffoldMutationTree(root, golden.mutationRoot, golden.name);
+      const mounted = readFileSync(aggregate, "utf8");
+      expect(mounted.indexOf("pub mod insert_page;")).toBeLessThan(mounted.indexOf("#[derive(Clone, Debug)]"));
+      expect(mounted).toContain("InsertPage(insert_page::Mutation)");
+      const parser = spawnSync("rustc", ["-Zunpretty=ast-tree", "--crate-name", "mutation_scaffold_probe", "--edition", "2021", "-"], { encoding: "utf8", input: mounted });
+      expect(parser.status).toBe(0);
+      writeFileSync(join(mutationRoot, golden.name, "🦀️.rs"), "pub struct Handwritten;\n");
+      newScaffoldMutationTree(root, golden.mutationRoot, golden.name, {}, false);
+      expect(readFileSync(join(mutationRoot, golden.name, "🦀️.rs"), "utf8")).toBe("pub struct Handwritten;\n");
+      const unrelated = join(root, "unrelated.txt");
+      expect(() => scaffold(golden.attributedAggregate, { cancelled: () => { writeFileSync(unrelated, "kept\n"); return true; } }, false, "➖️remove-page")).toThrow(/cancel/i);
+      expect(readFileSync(unrelated, "utf8")).toBe("kept\n");
+      expect(existsSync(join(mutationRoot, "➖️remove-page"))).toBe(false);
+      writeFileSync(aggregate, golden.attributedAggregate);
+      const beforeFailure = snapshot();
+      let checks = 0;
+      expect(() => newScaffoldMutationTree(root, golden.mutationRoot, "✏️edit-page", { cancelled: () => {
+        checks += 1;
+        if (checks === 5) writeFileSync(aggregate, "pub enum ConcurrentMutation {}\n");
+        return false;
+      } }, false)).toThrow(/changed during publication/i);
+      expect(readFileSync(aggregate, "utf8")).toBe("pub enum ConcurrentMutation {}\n");
+      expect(existsSync(join(mutationRoot, "✏️edit-page"))).toBe(false);
+      expect(snapshot()).not.toBe(beforeFailure);
+      expect(snapshot()).toContain("🦀️.rs\u0000pub enum ConcurrentMutation {}\n");
+      writeFileSync(aggregate, golden.attributedAggregate);
+      rmSync(join(mutationRoot, golden.name), { recursive: true, force: true });
+      symlinkSync(join(root, "missing-leaf"), join(mutationRoot, golden.name), process.platform === "win32" ? "junction" : "file");
+      const beforeDanglingLink = snapshot();
+      expect(() => newScaffoldMutationTree(root, golden.mutationRoot, golden.name)).toThrow(/symlink/i);
+      expect(snapshot()).toBe(beforeDanglingLink);
+      rmSync(join(mutationRoot, golden.name));
+      const linkedRoot = `${root}-linked`;
+      symlinkSync(root, linkedRoot, process.platform === "win32" ? "junction" : "dir");
+      expect(() => newScaffoldMutationTree(linkedRoot, golden.mutationRoot, golden.name)).toThrow(/repository root.*regular directory/i);
+      rmSync(linkedRoot);
+      expect(() => newScaffoldMutationTree(root, "../escape/🧬️mutations", golden.name)).toThrow(/scope/i);
+      expect(() => newScaffoldMutationTree(root, `compose/${golden.mutationRoot}`, golden.name)).toThrow(/scope.*excluded/i);
+      expect(() => newScaffoldMutationTree(root, "✏️s/🧪️scaffold/not-a-mutation-owner", golden.name)).toThrow(/scope/i);
+      const linked = join(root, "✏️s", "🧪️linked");
+      mkdirSync(dirname(linked), { recursive: true });
+      symlinkSync(mutationRoot, linked, process.platform === "win32" ? "junction" : "dir");
+      expect(() => newScaffoldMutationTree(root, "✏️s/🧪️linked/🧬️mutations", golden.name)).toThrow(/scope/i);
+    } finally {
+      try { chmodSync(mutationRoot, 0o755); } catch {}
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("inventories direct and legacy records as stable language-neutral JSON validated by Ajv", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-direct-mutation-inventory-"));
+    try {
+      const mutations = mutationRoot(root);
+      mkdirSync(join(mutations, "➕️insert-page"), { recursive: true });
+      mkdirSync(join(mutations, "➖️remove-page", "🦠️mutation"), { recursive: true });
+      writeFileSync(join(mutations, "🦀️.rs"), "pub enum ProbeMutation { InsertPage(InsertPage), RemovePage(RemovePage) }\n");
+      writeFileSync(join(mutations, "➕️insert-page", "🦀️.rs"), 'pub struct InsertPage; impl MutationKind for InsertPage { const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "page", kind: "insert-page", record: "InsertedPage" }; }\n');
+      writeFileSync(join(mutations, "➖️remove-page", "🦠️mutation", "🦀️.rs"), "pub struct RemovePage;\n");
+      const inventory = inventoryMutationTaxonomy(root);
+      expect(inventory.records.map(({ state }) => state).sort()).toEqual(["direct", "legacy"]);
+      const validate = new Ajv({ strict: true }).compile({ type: "object", required: ["schemaVersion", "kind", "sourceTreeDigest", "roots", "sourceRoster", "records", "unresolved", "violations"], properties: { schemaVersion: { const: 2 }, kind: { const: "mutation" }, sourceTreeDigest: { type: "string", pattern: "^[a-f0-9]{64}$" }, roots: { type: "array" }, sourceRoster: { type: "array" }, records: { type: "array" }, unresolved: { type: "array" }, violations: { type: "array" } }, additionalProperties: false });
+      expect(validate(JSON.parse(JSON.stringify(inventory)))).toBe(true);
+      const plan = planMutationTaxonomy(inventory, "d03b1fdb6da7c4ea97043e5618d8f4098a43dff7");
+      expect(plan.moves).toEqual([{ source: `${relative(root, mutations).replaceAll("\\", "/")}/➖️remove-page/🦠️mutation/🦀️.rs`, destination: `${relative(root, mutations).replaceAll("\\", "/")}/➖️remove-page/🦀️.rs` }]);
+      expect(plan.unresolved).toEqual(expect.arrayContaining([expect.objectContaining({ path: `${relative(root, mutations).replaceAll("\\", "/")}/➖️remove-page` })]));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("resolves mutation consumers and schema-validated assignment evidence from a stable source index", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-mutation-inventory-consumers-"));
+    const fixturePath = join(import.meta.dir, "../../🧪️tests/🧬️mutation-inventory/🧫️fixtures/🔣️consumers.json");
+    const inventorySchemaPath = join(import.meta.dir, "../../🧪️tests/🧬️mutation-inventory/🛂️schema/🔣️inventory.json");
+    const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { schemaVersion: number; assignmentLedger: unknown; files: readonly { path: string; content: string }[] };
+    const fixtureSchema = { type: "object", required: ["schemaVersion", "assignmentLedger", "files"], properties: { schemaVersion: { const: 1 }, assignmentLedger: { type: "object" }, files: { type: "array", minItems: 2, items: { type: "object", required: ["path", "content"], properties: { path: { type: "string" }, content: { type: "string" } }, additionalProperties: false } } }, additionalProperties: false };
+    const taxonomy = loadTaxonomy();
+    const rustFilename = canonicalPrimaryFilenameForKind(taxonomy.componentFileKinds["🦀️rust"]!, taxonomy);
+    const typescriptFilename = canonicalPrimaryFilenameForKind(taxonomy.componentFileKinds["🟦️typescript"]!, taxonomy);
+    const jsonFilename = canonicalPrimaryFilenameForKind("json", taxonomy);
+    const taxonomyPath = (path: string) => path.replaceAll("🦀️.rs", rustFilename).replaceAll("🟦️.ts", typescriptFilename).replaceAll("🔣️.json", jsonFilename);
+    try {
+      expect(new Ajv({ strict: true }).compile(fixtureSchema)(fixture)).toBe(true);
+      for (const { path, content } of fixture.files) {
+        const target = join(root, taxonomyPath(path));
+        mkdirSync(dirname(target), { recursive: true });
+        writeFileSync(target, content.replaceAll("🦀️.rs", rustFilename).replaceAll("🟦️.ts", typescriptFilename).replaceAll("🔣️.json", jsonFilename));
+      }
+      const inventory = inventoryMutationTaxonomy(root, { assignmentLedger: fixture.assignmentLedger, assignmentLedgerPath: "ticket/📋️mutation-assignments.json" });
+      const inventorySchema = JSON.parse(readFileSync(inventorySchemaPath, "utf8"));
+      expect(new Ajv({ strict: true }).compile(inventorySchema)(JSON.parse(JSON.stringify(inventory)))).toBe(true);
+      const sourceRoster = fastGlob.sync("**/*", { cwd: root, onlyFiles: true, followSymbolicLinks: false, dot: true }).filter((path) => !path.startsWith("compose/")).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
+      expect(inventory.sourceRoster.filter(({ role }) => role === "source").map(({ path }) => path)).toEqual(sourceRoster);
+      expect(inventory.sourceRoster.some(({ path }) => path.startsWith("compose/"))).toBe(false);
+      const alpha = inventory.records.find(({ targetMutationDirectoryName }) => targetMutationDirectoryName === "➕️insert-page")!;
+      const beta = inventory.records.find(({ targetMutationDirectoryName }) => targetMutationDirectoryName === "✏️change-page")!;
+      const remove = inventory.records.find(({ targetMutationDirectoryName }) => targetMutationDirectoryName === "➖️remove-page")!;
+      expect(alpha.structuralState).toBe("direct");
+      expect(alpha.executionState).toBe("assigned");
+      expect(beta.executionState).toBe("conflicting");
+      expect(remove.executionState).toBe("unassigned");
+      expect(alpha.assignmentEvidence).toMatchObject({ status: "resolved", ledgerPath: null, rows: [{ terraExecutor: "TERRA-ALPHA-INSERT" }] });
+      expect(beta.assignmentEvidence).toMatchObject({ status: "conflicting" });
+      expect(remove.assignmentEvidence).toMatchObject({ status: "missing" });
+      expect(alpha.consumerEdges).toEqual(expect.arrayContaining([
+        expect.objectContaining({ sourcePath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🎮️command/🦀️.rs"), targetPath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🧬️mutations/➕️insert-page/🦀️.rs"), kind: "command", relation: "import" }),
+        expect.objectContaining({ sourcePath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/✏️editor/🟦️.ts"), targetPath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🧬️mutations/➕️insert-page/🟦️.ts"), kind: "editor", relation: "import" }),
+        expect.objectContaining({ sourcePath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/👁️viewer/🟦️.ts"), targetPath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🧬️mutations/➕️insert-page/🟦️.ts"), kind: "viewer", relation: "import" }),
+        expect.objectContaining({ sourcePath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/📚️catalog/🦀️.rs"), kind: "catalog", relation: "reexport" }),
+        expect.objectContaining({ sourcePath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/📋️registry/🦀️.rs"), kind: "registry", relation: "reexport" }),
+        expect.objectContaining({ sourcePath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🧬️operations/🦀️.rs"), kind: "sibling-operation" }),
+        expect.objectContaining({ sourcePath: "✏️s/🔌️plugins/🅰️alpha/🧪️tests/two-file/command.rs", targetPath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🧬️mutations/➕️insert-page/🦀️.rs"), kind: "test", relation: "import" }),
+        expect.objectContaining({ sourcePath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/📦️crate/command.rs"), targetPath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🧬️mutations/➕️insert-page/🦀️.rs"), kind: "leaf", relation: "import" }),
+        expect.objectContaining({ sourcePath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🧬️mutations/➕️insert-page/🦀️.rs"), targetPath: taxonomyPath("🧰️framework/🔨️modules/🅱️beta/🧬️mutations/✏️change-page/🦀️.rs"), kind: "cross-owner", relation: "import" }),
+      ]));
+      expect(alpha.consumerEdges.some(({ sourcePath }) => sourcePath.endsWith("🧪️identity-controls.rs"))).toBe(false);
+      expect(alpha.schemaAndLanguageSurfaces).toEqual([taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🧬️mutations/➕️insert-page/🟦️.ts")]);
+      expect(beta.schemaAndLanguageSurfaces).toEqual([taxonomyPath("🧰️framework/🔨️modules/🅱️beta/🧬️mutations/✏️change-page/🔣️.json")]);
+      expect(alpha.sharedHelpers).toEqual(["✏️s/🔌️plugins/🅰️alpha/🧰️helpers/🦀️page.rs"]);
+      expect(alpha.crossOwnerDependencies).toEqual([taxonomyPath("🧰️framework/🔨️modules/🅱️beta/🧬️mutations/✏️change-page/🦀️.rs")]);
+      expect(beta.consumerEdges).toEqual(expect.arrayContaining([expect.objectContaining({ sourcePath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/📦️crate/🎮️command/🦀️.rs"), kind: "command", relation: "import" })]));
+      expect(inventory.unresolved).toEqual(expect.arrayContaining([
+        expect.objectContaining({ path: "✏️s/🔌️plugins/🅰️alpha/🧬️mutations/➖️remove-page", reason: expect.stringMatching(/assignment/i) }),
+        expect.objectContaining({ path: "🧰️framework/🔨️modules/🅱️beta/🧬️mutations/✏️change-page", reason: expect.stringMatching(/conflicting/i) }),
+      ]));
+      const digest = inventory.sourceTreeDigest;
+      writeFileSync(join(root, taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🎮️command/🦀️.rs")), `#[path = "../🧬️mutations/➕️insert-page/${rustFilename}"] mod insert_page;\nuse insert_page::Mutation;\n// byte-only external consumer edit\n`);
+      expect(inventoryMutationTaxonomy(root, { assignmentLedger: fixture.assignmentLedger, assignmentLedgerPath: "ticket/📋️mutation-assignments.json" }).sourceTreeDigest).not.toBe(digest);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("proves direct leaf reachability through exact public canonical mounts and wrapped types", () => {
+    const fixturePath = join(import.meta.dir, "../../🧪️tests/🧬️mutation-reachability/🧫️fixtures/🔣️cases.json");
+    const schemaPath = join(import.meta.dir, "../../🧪️tests/🧬️mutation-reachability/🛂️schema/🔣️cases.json");
+    const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { cases: readonly { name: string; source: string; leafSource?: string; extraFiles?: readonly { path: string; source: string }[]; accepted: boolean }[] };
+    expect(new Ajv({ strict: true }).compile(JSON.parse(readFileSync(schemaPath, "utf8")))(fixture)).toBe(true);
+    const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    if (artifactRoot) mkdirSync(artifactRoot, { recursive: true });
+    const root = mkdtempSync(join(artifactRoot ?? tmpdir(), "semio-mutation-reachability-"));
+    const taxonomy = loadTaxonomy();
+    const rust = canonicalPrimaryFilenameForKind(taxonomy.componentFileKinds["🦀️rust"]!, taxonomy);
+    try {
+      for (const vector of fixture.cases) {
+        const caseRoot = join(root, vector.name);
+        const mutations = mutationRoot(caseRoot);
+        mkdirSync(join(mutations, "➕️insert-page"), { recursive: true });
+        writeFileSync(join(mutations, "➕️insert-page", rust), (vector.leafSource ?? "pub struct Mutation;\n").replaceAll("🦀️.rs", rust));
+        for (const file of vector.extraFiles ?? []) { const target = join(mutations, "➕️insert-page", file.path.replaceAll("🦀️.rs", rust)); mkdirSync(dirname(target), { recursive: true }); writeFileSync(target, file.source); }
+        writeFileSync(join(mutations, rust), vector.source.replaceAll("🦀️.rs", rust));
+        if (["public-canonical", "semantic-type-alias", "child-facet-reexport"].includes(vector.name)) {
+          const out = join(caseRoot, "🧪️compiler-artifacts");
+          mkdirSync(out, { recursive: true });
+          const compiled = spawnSync("rustc", ["--edition=2021", "--crate-name", "reachability_probe", "--crate-type", "lib", "--out-dir", out, join(mutations, rust)], { encoding: "utf8", timeout: 30_000 });
+          writeFileSync(join(out, "compiler.log"), `${compiled.stdout}\n${compiled.stderr}`);
+          if (compiled.status !== 0) throw new Error(`${vector.name}: ${compiled.stderr || compiled.error}`);
+        }
+        const relativeRoot = relative(caseRoot, mutations).replaceAll("\\", "/");
+        const reaches = policyMutationStructuralBreaches(caseRoot, [relativeRoot]).some(({ kind, scope }) => (kind === "mutation/reachability" && scope === `${relativeRoot}/➕️insert-page/${rust}`) || kind === "mutation/folder-variant-bijection");
+        expect(reaches).toBe(!vector.accepted);
+      }
+    } finally { if (!artifactRoot) rmSync(root, { recursive: true, force: true }); }
+  });
+
+  test("requires a fresh clean terminal verification before mutation apply can commit", () => {
+    const goldenPath = join(import.meta.dir, "../../🧪️tests/🧬️mutation-inventory/🧫️fixtures/🔣️.json");
+    const golden = JSON.parse(readFileSync(goldenPath, "utf8")) as { schemaVersion: number; baseline: string; cases: readonly string[] };
+    const validateGolden = new Ajv({ strict: true }).compile({ type: "object", required: ["schemaVersion", "baseline", "cases"], properties: { schemaVersion: { const: 1 }, baseline: { type: "string", pattern: "^[a-f0-9]{40}$" }, cases: { type: "array", items: { type: "string" }, minItems: 10 } }, additionalProperties: false });
+    expect(validateGolden(golden)).toBe(true);
+    expect(golden.cases).toEqual(["direct-violation-unresolved", "source-byte-change-invalidates-plan", "baseline-mismatch-rejects", "cancellation-never-commits", "current-violation-zero-move-rejects", "fresh-clean-terminal-verification-commits", "virtual-compose-excluded", "symlink-source-rejected", "mid-inventory-source-change-retries", "empty-root-invalidates-plan"]);
+    const root = mkdtempSync(join(tmpdir(), "semio-mutation-terminality-"));
+    const ticket = join(root, ".🧬semio", "🦑️repo", "🎫️tickets", "🎆️26", "🌙️08", "☀️12", "TERMINALITY");
+    const planPath = join(ticket, "plan.json");
+    const applyPath = join(ticket, "📊️taxonomy-apply", "🔣️.json");
+    const options = (plan: string, cancelFile?: string) => ({ baseline: golden.baseline, cancelFile, failOnWarning: false, format: "json" as const, kind: "mutation" as const, plan });
+    const writePlan = (plan: unknown) => {
+      mkdirSync(dirname(planPath), { recursive: true });
+      writeFileSync(planPath, `${canonicalJson(plan)}\n`);
+    };
+    try {
+      const directViolation = {
+        schemaVersion: 1 as const,
+        kind: "mutation" as const,
+        sourceTreeDigest: "a".repeat(64),
+        roots: ["✏️s/🧪️probe/🧬️mutations"],
+        records: [{ mutationRootPath: "✏️s/🧪️probe/🧬️mutations", targetMutationDirectoryName: "➕️insert-page", state: "direct" as const, violationClasses: ["mutation/behavior-ownership"], evidence: [] }],
+        violations: [{ id: "behavior", kind: "mutation/behavior-ownership", scope: "✏️s/🧪️probe/🧬️mutations/➕️insert-page", summary: "behavior remains at root", priority: "high" as const, reason: "direct leaves own behavior", solution: "move behavior" }],
+      };
+      expect(planMutationTaxonomy(directViolation as any, golden.baseline).unresolved).toEqual(expect.arrayContaining([expect.objectContaining({ path: "✏️s/🧪️probe/🧬️mutations/➕️insert-page" })]));
+
+      const mutations = mutationRoot(root);
+      mkdirSync(mutations, { recursive: true });
+      writeFileSync(join(mutations, "🦀️.rs"), "pub enum ProbeMutation {}\n");
+      const sourceRoster = fastGlob.sync("**/🧬️mutations/🦀️.rs", { cwd: root, onlyFiles: true, followSymbolicLinks: false });
+      expect(sourceRoster).toEqual([`${relative(root, mutations).replaceAll("\\", "/")}/🦀️.rs`]);
+      const binarySource = join(mutations, "🔢source.bin");
+      writeFileSync(binarySource, Buffer.from([0, 1, 0]));
+      const nulDigest = inventoryMutationTaxonomy(root).sourceTreeDigest;
+      writeFileSync(binarySource, Buffer.from([0, 2, 0]));
+      expect(inventoryMutationTaxonomy(root).sourceTreeDigest).not.toBe(nulDigest);
+      const staleInventory = inventoryMutationTaxonomy(root);
+      const stalePlan = planMutationTaxonomy(staleInventory, golden.baseline);
+      writePlan(stalePlan);
+      writeFileSync(join(mutations, "🦀️.rs"), "pub enum ProbeMutation {}\n// source-byte-only change\n");
+      expect(inventoryMutationTaxonomy(root).sourceTreeDigest).not.toBe(staleInventory.sourceTreeDigest);
+      expect(() => runMutationTaxonomyCli(root, "apply", options(planPath), ticket)).toThrow(/inventory digest/u);
+      expect(existsSync(applyPath)).toBe(false);
+      let mutateDuringInventory = true;
+      const stableInventory = inventoryMutationTaxonomy(root, { afterFactsCollected: () => {
+        if (!mutateDuringInventory) return;
+        mutateDuringInventory = false;
+        writeFileSync(join(mutations, "🦀️.rs"), "pub enum ProbeMutation {}\n// source-byte-only change during facts\n");
+      } });
+      expect(stableInventory.sourceTreeDigest).toBe(inventoryMutationTaxonomy(root).sourceTreeDigest);
+
+      rmSync(mutations, { recursive: true, force: true });
+      const opaqueMutations = join(root, "compose", "🧬️mutations");
+      mkdirSync(opaqueMutations, { recursive: true });
+      writeFileSync(join(opaqueMutations, "🦀️.rs"), "pub enum OpaqueMutation {}\n");
+      expect(inventoryMutationTaxonomy(root).roots).toEqual([]);
+      rmSync(join(root, "compose"), { recursive: true, force: true });
+
+      mkdirSync(mutations, { recursive: true });
+      writeFileSync(join(mutations, "🦀️.rs"), "pub enum ProbeMutation {}\n");
+      symlinkSync(process.platform === "win32" ? mutations : "🦀️.rs", join(mutations, process.platform === "win32" ? "🧬️alias" : "🦀️alias.rs"), process.platform === "win32" ? "junction" : "file");
+      expect(() => inventoryMutationTaxonomy(root)).toThrow(/symlink/u);
+      rmSync(mutations, { recursive: true, force: true });
+
+      const cleanInventory = inventoryMutationTaxonomy(root);
+      const cleanPlan = planMutationTaxonomy(cleanInventory, golden.baseline);
+      writePlan(cleanPlan);
+      expect(() => runMutationTaxonomyCli(root, "apply", { ...options(planPath), baseline: "b".repeat(40) }, ticket)).toThrow(/baseline/u);
+      expect(existsSync(applyPath)).toBe(false);
+      mkdirSync(mutations, { recursive: true });
+      expect(inventoryMutationTaxonomy(root).sourceTreeDigest).not.toBe(cleanInventory.sourceTreeDigest);
+      expect(() => runMutationTaxonomyCli(root, "apply", options(planPath), ticket)).toThrow(/inventory digest/u);
+      expect(existsSync(applyPath)).toBe(false);
+      rmSync(mutations, { recursive: true, force: true });
+
+      const cancelFile = join(ticket, "cancel");
+      writeFileSync(cancelFile, "cancel\n");
+      expect(() => runMutationTaxonomyCli(root, "apply", options(planPath, cancelFile), ticket)).toThrow(/cancelled/u);
+      expect(existsSync(applyPath)).toBe(false);
+      rmSync(cancelFile);
+
+      mkdirSync(mutations, { recursive: true });
+      writeFileSync(join(mutations, "🦀️.rs"), "pub enum ProbeMutation {}\n");
+      mkdirSync(join(mutations, "➕️insert-page", "🦠️mutation"), { recursive: true });
+      writeFileSync(join(mutations, "➕️insert-page", "🦠️mutation", "🦀️.rs"), "pub struct InsertPage;\n");
+      const violatingInventory = inventoryMutationTaxonomy(root);
+      const unsigned = { schemaVersion: 1 as const, kind: "mutation" as const, baselineCommit: golden.baseline, inventoryDigest: violatingInventory.sourceTreeDigest, moves: [], unresolved: [] };
+      writePlan({ ...unsigned, planDigest: createHash("sha256").update(canonicalJson(unsigned)).digest("hex") });
+      expect(() => runMutationTaxonomyCli(root, "apply", options(planPath), ticket)).toThrow(/terminal verification/u);
+      expect(existsSync(applyPath)).toBe(false);
+
+      rmSync(mutations, { recursive: true, force: true });
+      const terminalInventory = inventoryMutationTaxonomy(root);
+      writePlan(planMutationTaxonomy(terminalInventory, golden.baseline));
+      runMutationTaxonomyCli(root, "apply", options(planPath), ticket);
+      expect(JSON.parse(readFileSync(applyPath, "utf8"))).toMatchObject({ schemaVersion: 1, kind: "mutation", state: "committed", inventoryDigest: terminalInventory.sourceTreeDigest, terminalVerification: { clean: true, violations: [] } });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+//#endregion 🧬️DirectMutationOwnership

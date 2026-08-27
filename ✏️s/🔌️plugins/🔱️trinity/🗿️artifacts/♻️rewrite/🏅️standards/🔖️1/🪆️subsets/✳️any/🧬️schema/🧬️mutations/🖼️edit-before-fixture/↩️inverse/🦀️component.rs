@@ -3,7 +3,7 @@ use crate::artifacts::rewrite::mutations::{edit_before_fixture, RewriteRuleMutat
 use crate::artifacts::rewrite::RewriteSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::mutation::EditBeforeFixture, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
+pub fn inverse(_payload: &super::EditBeforeFixture, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
     vec![edit_before_fixture(base.before_fixture_json.clone())]
 }
 //#endregion 🔖️Inverse

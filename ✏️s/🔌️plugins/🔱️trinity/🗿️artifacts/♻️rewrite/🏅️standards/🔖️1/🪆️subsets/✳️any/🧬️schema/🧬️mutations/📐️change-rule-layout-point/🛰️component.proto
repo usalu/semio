@@ -1,0 +1,5 @@
+syntax = "proto3";
+package semio.s.trinity.rewrite.mutation.change_rule_layout_point;
+// change-rule-layout-point / ChangeRuleLayoutPoint
+message ChangeRuleLayoutPointValue { double x = 1; double y = 2; }
+message ChangeRuleLayoutPoint { string key = 1; ChangeRuleLayoutPointValue new_point = 2; }

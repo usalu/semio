@@ -29,7 +29,8 @@ use crate::editor::puzzle5d::terminology::{puzzle5d_is_de_locale, puzzle5d_label
 use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PasteAnchor, PastePlacement, UiDirtyScope};
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactPresentation, ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob,
-    ArtifactReservedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, EphemeralEmit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, IconName,
+    ArtifactReservedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, EphemeralEmit, Fault,
+    GranularityDefinition, HierarchyProvider, HoverSpec, IconName,
     InteractionDefinition, InteractionRef, InteractionTarget, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation,
     PluginCloseStep, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, UiNode, UiTreeItemNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID,
     SET_ACTIVE_UTILITY_ACTION_ID,
@@ -42,7 +43,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::LazyLock;
 use store::EngineHandles;
 
@@ -93,8 +93,6 @@ fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
     serde_json::to_string(&projection).unwrap_or_else(|error| panic!("serialize {label} example fixture: {error}"))
 }
 
-static PUZZLE5D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
-
 const PUZZLE5D_RESERVED_RAW_BYTES: usize = 65_536;
 const PUZZLE5D_RESERVED_ITEMS: usize = 4_096;
 const PUZZLE5D_RESERVED_OUTPUT_BYTES: usize = 1_048_576;
@@ -106,8 +104,23 @@ const PUZZLE5D_IMPORT_MUTATION_ITEMS: usize = PUZZLE5D_IMPORT_SEMANTIC_ITEMS * 2
 const PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE: usize = semio_framework_job::JOB_PAYLOAD_PAGE_BYTES / std::mem::size_of::<Puzzle5dMutation>();
 const PUZZLE5D_IMPORT_MUTATION_PAGES: usize = (PUZZLE5D_IMPORT_MUTATION_ITEMS + PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE - 1) / PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE;
 
+macro_rules! puzzle5d_reserved_publication {
+    ("copy") => {
+        &[ArtifactToolPublicationContract { tool_id: "copy", lanes: &[ArtifactToolPublicationLane::HostOnly] }]
+    };
+    ("cut") => {
+        &[ArtifactToolPublicationContract { tool_id: "cut", lanes: &[ArtifactToolPublicationLane::Artifact] }]
+    };
+    ("paste") => {
+        &[ArtifactToolPublicationContract { tool_id: "paste", lanes: &[ArtifactToolPublicationLane::Artifact] }]
+    };
+    ("import-media") => {
+        &[ArtifactToolPublicationContract { tool_id: "import-media", lanes: &[ArtifactToolPublicationLane::Artifact] }]
+    };
+}
+
 macro_rules! puzzle5d_reserved_factory {
-    ($factory:ident, $tool:literal, $schema:literal) => {
+    ($factory:ident, $tool:tt, $schema:literal) => {
         struct $factory {
             keys: [ToolFactoryKey; 1],
         }
@@ -148,6 +161,7 @@ macro_rules! puzzle5d_reserved_factory {
             type Owner = EditorApp<Puzzle5dPlayApp>;
             const TOOL_IDS: &'static [&'static str] = &[$tool];
             const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA;
+            const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = puzzle5d_reserved_publication!($tool);
         }
     };
 }
@@ -169,14 +183,48 @@ pub fn puzzle5d_interaction_select(granularity: &str, id: &str) -> ActionDescrip
     puzzle5d_action(INTERACTION_SELECT_ACTION_ID, Some(json!({ "domainId": PUZZLE5D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })))
 }
 
-pub fn next_part_id() -> String {
-    let next = PUZZLE5D_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
-    format!("part-{next}")
+#[derive(Clone, Debug, Default)]
+pub struct Puzzle5dFreshIds {
+    occupied_parts: HashSet<String>,
+    occupied_fasteners: HashSet<String>,
+    part_cursor: u64,
+    fastener_cursor: u64,
 }
 
-pub fn next_fastener_id() -> String {
-    let next = PUZZLE5D_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
-    format!("fastener-{next}")
+impl Puzzle5dFreshIds {
+    pub fn from_document(document: &Puzzle5dDocument) -> Self {
+        Self {
+            occupied_parts: document.parts.iter().map(|part| part.id.clone()).collect(),
+            occupied_fasteners: document.fasteners.iter().map(|fastener| fastener.id.clone()).collect(),
+            ..Self::default()
+        }
+    }
+
+    pub fn observe_part(&mut self, id: &str) {
+        self.occupied_parts.insert(id.to_string());
+    }
+
+    pub fn observe_fastener(&mut self, id: &str) {
+        self.occupied_fasteners.insert(id.to_string());
+    }
+
+    pub fn next_part(&mut self) -> String {
+        next_scoped_id("part", &mut self.part_cursor, &mut self.occupied_parts)
+    }
+
+    pub fn next_fastener(&mut self) -> String {
+        next_scoped_id("fastener", &mut self.fastener_cursor, &mut self.occupied_fasteners)
+    }
+}
+
+fn next_scoped_id(prefix: &str, cursor: &mut u64, occupied: &mut HashSet<String>) -> String {
+    loop {
+        *cursor = cursor.saturating_add(1);
+        let candidate = format!("{prefix}-{cursor}");
+        if occupied.insert(candidate.clone()) {
+            return candidate;
+        }
+    }
 }
 //#endregion 🔖️Constants
 
@@ -633,7 +681,7 @@ pub fn add_palette_part(envelope: &mut Puzzle5dScene, part_kind: &str, x: f64, y
         .parts
         .first()
         .map_or([x * flat_to_world, -y * flat_to_world, 0.0], |peer| [peer.part_3d.origin[0] + (x - peer.part_2d.x) * flat_to_world, peer.part_3d.origin[1] - (y - peer.part_2d.y) * flat_to_world, peer.part_3d.origin[2]]);
-    let id = next_part_id();
+    let id = Puzzle5dFreshIds::from_document(&envelope.document).next_part();
     let mesh_url = resolve_part_kind_mesh_url(part_kind, envelope.document.kind_catalogs.as_ref());
     let grips = grips_from_templates(&envelope.document, part_kind);
     envelope.document.parts.push(Puzzle5dPart {
@@ -1115,13 +1163,14 @@ fn paste_delta_2d(fragment_parts: &[Puzzle5dPart], target_parts: &[Puzzle5dPart]
 }
 
 /// 🧮️ Materializes a copied fragment at 2D delta `delta` (applied verbatim to the 3D origin's x/y
-/// too) — fresh ids (via `next_part_id`/`next_fastener_id`) dodge collisions with the live document,
+/// too) — document-scoped fresh ids dodge collisions with the live document,
 /// and fastener endpoints are remapped onto the fresh part ids.
-fn paste_selection_local(fragment_parts: &[Puzzle5dPart], fragment_fasteners: &[Puzzle5dFastener], delta: (f64, f64)) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
+fn paste_selection_local(document: &Puzzle5dDocument, fragment_parts: &[Puzzle5dPart], fragment_fasteners: &[Puzzle5dFastener], delta: (f64, f64)) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
+    let mut fresh_ids = Puzzle5dFreshIds::from_document(document);
     let mut id_map: HashMap<String, String> = HashMap::new();
     let mut fresh_parts = Vec::with_capacity(fragment_parts.len());
     for part in fragment_parts {
-        let fresh_id = next_part_id();
+        let fresh_id = fresh_ids.next_part();
         id_map.insert(part.id.clone(), fresh_id.clone());
         let mut next = part.clone();
         next.id = fresh_id;
@@ -1134,7 +1183,7 @@ fn paste_selection_local(fragment_parts: &[Puzzle5dPart], fragment_fasteners: &[
     let mut fresh_fasteners = Vec::with_capacity(fragment_fasteners.len());
     for fastener in fragment_fasteners {
         let mut next = fastener.clone();
-        next.id = next_fastener_id();
+        next.id = fresh_ids.next_fastener();
         next.source = rewrite_grip_ref_local(&fastener.source, &id_map);
         next.target = rewrite_grip_ref_local(&fastener.target, &id_map);
         fresh_fasteners.push(next);
@@ -1492,6 +1541,7 @@ mod puzzle5d_retained_retirement_laws {
         .all(|marker| source.contains(marker))
             && source.matches("Puzzle5dImportStage::PartVortices").count() == 2
             && source.matches("Puzzle5dImportStage::CatalogMutation").count() == 2
+            && source.matches("puzzle5d_retire_part_kind_step").count() == 4
             && !source.contains("self.initial_catalogs")
             && !source.contains("self.compatibility_mutations")
             && !source.contains("part_index: HashMap")
@@ -2079,6 +2129,7 @@ enum Puzzle5dPasteStage {
     Decode,
     FragmentParts,
     TargetParts,
+    TargetFasteners,
     MaterializeParts,
     MaterializeFasteners,
     Complete,
@@ -2102,6 +2153,7 @@ struct Puzzle5dPasteJob {
     placement: PastePlacement,
     delta: (f64, f64),
     id_map: HashMap<String, String>,
+    fresh_ids: Puzzle5dFreshIds,
     mutations: Vec<Puzzle5dMutation>,
     completion: Option<ArtifactToolCompletion<EditorApp<Puzzle5dPlayApp>>>,
     commit: Puzzle5dCommitEnvelope,
@@ -2130,6 +2182,7 @@ impl Puzzle5dPasteJob {
             placement: PastePlacement::default(),
             delta: (0.0, 0.0),
             id_map: HashMap::new(),
+            fresh_ids: Puzzle5dFreshIds::default(),
             mutations: Vec::new(),
             completion: Some(request.completion),
             commit: Puzzle5dCommitEnvelope::new(),
@@ -2207,6 +2260,9 @@ impl InteractiveJob for Puzzle5dPasteJob {
                 let rows = self.snapshot.as_ref().and_then(|snapshot| snapshot.0.get("parts")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]);
                 if let Some(row) = rows.get(self.cursor) {
                     self.cursor += 1;
+                    if let Some(id) = row.get("id").and_then(Value::as_str) {
+                        self.fresh_ids.observe_part(id);
+                    }
                     self.target_sum.0 += row.get("2d").and_then(|value| value.get("x")).and_then(Value::as_f64).unwrap_or_default();
                     self.target_sum.1 += row.get("2d").and_then(|value| value.get("y")).and_then(Value::as_f64).unwrap_or_default();
                     self.target_count += 1;
@@ -2217,6 +2273,18 @@ impl InteractiveJob for Puzzle5dPasteJob {
                     } else {
                         (self.target_sum.0 / self.target_count as f64 - self.source_sum.0 / self.fragment_parts.len() as f64 + offset.0, self.target_sum.1 / self.target_count as f64 - self.source_sum.1 / self.fragment_parts.len() as f64 + offset.1)
                     };
+                    self.stage = Puzzle5dPasteStage::TargetFasteners;
+                    self.cursor = 0;
+                }
+            }
+            Puzzle5dPasteStage::TargetFasteners => {
+                let rows = self.snapshot.as_ref().and_then(|snapshot| snapshot.0.get("fasteners")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]);
+                if let Some(row) = rows.get(self.cursor) {
+                    self.cursor += 1;
+                    if let Some(id) = row.get("id").and_then(Value::as_str) {
+                        self.fresh_ids.observe_fastener(id);
+                    }
+                } else {
                     self.stage = Puzzle5dPasteStage::MaterializeParts;
                     self.cursor = 0;
                 }
@@ -2224,7 +2292,7 @@ impl InteractiveJob for Puzzle5dPasteJob {
             Puzzle5dPasteStage::MaterializeParts => {
                 if let Some(part) = self.fragment_parts.get(self.cursor).cloned() {
                     self.cursor += 1;
-                    let fresh_id = next_part_id();
+                    let fresh_id = self.fresh_ids.next_part();
                     self.id_map.insert(part.id.clone(), fresh_id.clone());
                     let mut next = part;
                     next.id = fresh_id;
@@ -2251,7 +2319,7 @@ impl InteractiveJob for Puzzle5dPasteJob {
                         Err(error) => return puzzle5d_job_fault(cx, error.to_string()),
                     };
                     self.mutations.push(crate::artifacts::puzzle5d::mutations::connect_grips(
-                        next_fastener_id(),
+                        self.fresh_ids.next_fastener(),
                         rewrite_grip_ref_local(&fastener.source, &self.id_map),
                         rewrite_grip_ref_local(&fastener.target, &self.id_map),
                         fastener.fastener_kind,
@@ -3240,7 +3308,8 @@ impl InteractiveJob for Puzzle5dImportJob {
             }
             Puzzle5dImportStage::CatalogMutation => {
                 if self.catalog_changed {
-                    if let Err(error) = self.push_mutation(crate::artifacts::puzzle5d::mutations::replace_kind_catalogs(Some(std::mem::take(&mut self.catalogs)))) {
+                    let mutation = crate::artifacts::puzzle5d::mutations::replace_kind_catalogs(Some(std::mem::take(&mut self.catalogs)));
+                    if let Err(error) = self.push_mutation(mutation) {
                         return puzzle5d_job_fault(cx, error);
                     }
                     self.catalog_changed = false;
@@ -3368,7 +3437,9 @@ impl ArtifactReservedJob for Puzzle5dImportJob {
             };
         }
         for page in &mut self.mutation_pages {
-            retire_backing!(page);
+            if let Some(step) = puzzle5d_retire_vec_backing(page, maximum_bytes)? {
+                return Ok(step);
+            }
         }
         retire_backing!(self.compatibility);
         retire_backing!(self.catalogs.parts);
@@ -3787,7 +3858,8 @@ impl Puzzle5dPlayApp {
                 return;
             }
         }
-        let id = payload.get("nodeId").and_then(|value| value.as_str()).map_or_else(next_part_id, str::to_string);
+        let mut fresh_ids = Puzzle5dFreshIds::from_document(&envelope.document);
+        let id = payload.get("nodeId").and_then(|value| value.as_str()).map_or_else(|| fresh_ids.next_part(), str::to_string);
         let x = payload.get("x").and_then(|value| value.as_f64()).unwrap_or(120.0);
         let y = payload.get("y").and_then(|value| value.as_f64()).unwrap_or(120.0);
         let mesh_url = resolve_part_kind_mesh_url(&node_kind, envelope.document.kind_catalogs.as_ref());
@@ -3806,7 +3878,7 @@ impl Puzzle5dPlayApp {
             if let Some(grip) = part.grips.first() {
                 let target = puzzle5d_grip_full_id(&part.id, &grip.id);
                 envelope.document.fasteners.push(Puzzle5dFastener {
-                    id: payload.get("edgeId").and_then(|value| value.as_str()).map_or_else(next_fastener_id, str::to_string),
+                    id: payload.get("edgeId").and_then(|value| value.as_str()).map_or_else(|| fresh_ids.next_fastener(), str::to_string),
                     source,
                     target,
                     fastener_kind: None,
@@ -3861,8 +3933,13 @@ impl Puzzle5dPlayApp {
                     let source = payload.get("source").and_then(|value| value.as_str()).unwrap_or("").to_string();
                     let target = payload.get("target").and_then(|value| value.as_str()).unwrap_or("").to_string();
                     if !source.is_empty() && !target.is_empty() && !envelope.document.fasteners.iter().any(|entry| entry.source == source && entry.target == target || entry.source == target && entry.target == source) {
+                        let id = payload
+                            .get("id")
+                            .and_then(|value| value.as_str())
+                            .map(str::to_string)
+                            .unwrap_or_else(|| Puzzle5dFreshIds::from_document(&envelope.document).next_fastener());
                         envelope.document.fasteners.push(Puzzle5dFastener {
-                            id: payload.get("id").and_then(|value| value.as_str()).map_or_else(next_fastener_id, str::to_string),
+                            id,
                             source,
                             target,
                             fastener_kind: payload.get("edgeKind").and_then(|value| value.as_str()).map(str::to_string),
@@ -3988,49 +4065,15 @@ fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args:
 
 //#region 🧵️RetainedCommands
 pub(crate) const PUZZLE5D_RETAINED_TOOL_IDS: &[&str] = &[
-    "addBrushObject",
-    "addBrushPart",
-    "addNode",
-    "addPartKind",
-    "applyBoardEvents",
     "canvasPointerDown",
-    "createFastener",
-    "cycleBrushCandidate",
-    "deleteFastener",
-    "editFastener",
-    "engagementAbort",
-    "engagementControlSelect",
-    "engagementInput",
-    "engagementSubmit",
-    "focusSelection",
-    "patchFastener",
-    "patchGrip",
-    "patchPart",
-    "proximityConnect",
-    "registerBrushMesh",
-    "retargetFastener",
-    "rotateSelection",
-    "scaleSelection",
-    "selectSameKind",
-    "setActiveExample",
-    "setBrushPlacementOverlapBudget",
-    "setCamera",
-    "setCamera2d",
-    "setCamera3d",
-    "setFillCount",
-    "setGridFactor",
-    "setGridSnapEnabled",
-    "setLodMode",
-    "setObjectKindWeight",
-    "setSuggestionOffset",
-    "setSunAzimuth",
-    "setSunElevation",
-    "setSunIntensity",
-    "setVortexKindWeight",
-    "toggleSun",
-    "translateSelection",
     "worldPointerDown",
-    "worldRelocate",
+    "deleteSelection",
+    "duplicateSelection",
+    "importComposeKit",
+    "selectSameKindSelection",
+    "setFixtureJson",
+    "setSelectionFlag",
+    "zoomToSelection",
 ];
 const PUZZLE5D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.5d.tool-command.v1";
 
@@ -4049,6 +4092,12 @@ fn puzzle5d_retained_reduce(
     interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
 ) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation>, Fault> {
+    if command.action_id() == "selectSameKindSelection" {
+        return Err(Fault::from("puzzle5d selectSameKindSelection is fail-closed: ArtifactEditor has no route-specific interaction-selection publication primitive"));
+    }
+    if command.action_id() == "importComposeKit" {
+        return Err(Fault::from("puzzle5d importComposeKit is fail-closed: no owner-qualified Compose-kit media value is present on this command route; use import-media kit:in"));
+    }
     let empty_selection = protocol::DomainSelection::default();
     let selection = interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN).unwrap_or(&empty_selection);
     Ok(with_puzzle5d_app(|app| app.handle_action_impl(command.action_id(), command.args(), command.window_id(), snapshot, config, selection)))
@@ -7813,17 +7862,17 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     }
 }
 
-struct BoundedFirstStepCommandJobFactory {
+struct Puzzle5dRetainedCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
 }
 
-impl BoundedFirstStepCommandJobFactory {
+impl Puzzle5dRetainedCommandJobFactory {
     fn new(controller_id: &str) -> Self {
         Self { keys: PUZZLE5D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
     }
 }
 
-impl ToolJobFactory for BoundedFirstStepCommandJobFactory {
+impl semio_framework::ToolJobFactory for Puzzle5dRetainedCommandJobFactory {
     type Payload = crate::retained_command::RetainedPuzzleCommandPayload<EditorApp<Puzzle5dPlayApp>>;
     type Job = crate::retained_command::RetainedPuzzleCommandJob<EditorApp<Puzzle5dPlayApp>>;
 
@@ -7869,12 +7918,307 @@ impl ToolJobFactory for BoundedFirstStepCommandJobFactory {
     }
 }
 
-impl ArtifactOwnedToolJobFactory for BoundedFirstStepCommandJobFactory {
-    type Owner = EditorApp<Puzzle5dPlayApp>;
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle5dRetainedCommandJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<Puzzle5dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = PUZZLE5D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
+        ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "duplicateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "importComposeKit", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "selectSameKindSelection", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "setFixtureJson", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setSelectionFlag", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "zoomToSelection", lanes: &[ArtifactToolPublicationLane::Config] },
+    ];
 }
 //#endregion 🧵️RetainedCommands
+
+//#region 📬️StorePreparation
+struct Puzzle5dStorePreparationFactory;
+
+struct Puzzle5dStorePreparation {
+    base: Option<store::SnapshotRead<Puzzle5dPlaySnapshot>>,
+    mutation: Option<Puzzle5dMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    candidate: Option<(Puzzle5dPlaySnapshot, Vec<Puzzle5dMutation>, Puzzle5dMutation)>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<Puzzle5dPlaySnapshot, Puzzle5dMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    phase: u8,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn puzzle5d_store_edit(
+    forward: Puzzle5dMutation,
+    inverse: Vec<Puzzle5dMutation>,
+    description: Option<String>,
+    authority: &store::ArtifactStoreOneItemLiveAuthority,
+) -> protocol::Edit<Puzzle5dMutation> {
+    let id = format!("puzzle5d-retained-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<Puzzle5dPlaySnapshot, Puzzle5dMutation> for Puzzle5dStorePreparationFactory {
+    fn preflight(&self, _mutation: &Puzzle5dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Puzzle5d Store preparation rejected its lane or description envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<Puzzle5dPlaySnapshot, Puzzle5dMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Puzzle5dPlaySnapshot, Puzzle5dMutation>>, store::ArtifactStoreOneItemPreparationRequest<Puzzle5dPlaySnapshot, Puzzle5dMutation>> {
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(Puzzle5dStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            candidate: None,
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            phase: 0,
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<Puzzle5dPlaySnapshot, Puzzle5dMutation> for Puzzle5dStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        use protocol::{Mutation as _, MutationDiff as _};
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() || self.phase >= 2 {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        match self.phase {
+            0 => {
+                let base = self.base.as_ref().ok_or_else(|| "Puzzle5d preparation lost its exact base root".to_string())?;
+                let mutation = self.mutation.take().ok_or_else(|| "Puzzle5d preparation lost its mutation owner".to_string())?;
+                let inverse = mutation.inverse(base.get());
+                let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|_| "Puzzle5d mutation could not produce its post root".to_string())?;
+                self.candidate = Some((post, inverse, mutation));
+                self.phase = 1;
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: [0; 32] };
+                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
+            }
+            1 => {
+                let (post, inverse, mutation) = self.candidate.take().ok_or_else(|| "Puzzle5d preparation lost its semantic candidate".to_string())?;
+                let authority = self.authority.as_ref().ok_or_else(|| "Puzzle5d preparation lost its Store authority".to_string())?;
+                let prepared = authority.prepare_one_item(puzzle5d_store_edit(mutation, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+                self.phase = 2;
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 1, digest: prepared.edit_digest() };
+                self.prepared = Some(prepared);
+                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+            }
+            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)),
+        }
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Puzzle5dPlaySnapshot, Puzzle5dMutation>> {
+        self.prepared.as_ref()
+    }
+
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Puzzle5dPlaySnapshot, Puzzle5dMutation>> {
+        self.prepared.take()
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("Puzzle5d preparation could not return its exact base root".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+    }
+}
+
+struct Puzzle5dConfigStorePreparationFactory;
+
+struct Puzzle5dConfigStorePreparation {
+    base: Option<store::SnapshotRead<Puzzle5dConfig>>,
+    mutation: Option<Puzzle5dConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<Puzzle5dConfig, Puzzle5dConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<Puzzle5dConfig, Puzzle5dConfigMutation> for Puzzle5dConfigStorePreparationFactory {
+    fn preflight(&self, _mutation: &Puzzle5dConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Puzzle5d config Store preparation rejected its lane or description envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<Puzzle5dConfig, Puzzle5dConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Puzzle5dConfig, Puzzle5dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Puzzle5dConfig, Puzzle5dConfigMutation>> {
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+        {
+            return Err(request);
+        }
+        Ok(Box::new(Puzzle5dConfigStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<Puzzle5dConfig, Puzzle5dConfigMutation> for Puzzle5dConfigStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        use protocol::{Mutation as _, MutationDiff as _};
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "Puzzle5d config preparation lost its exact base root".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "Puzzle5d config preparation lost its mutation owner".to_string())?;
+        let inverse = mutation.inverse(base.get());
+        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|_| "Puzzle5d config mutation could not produce its post root".to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Puzzle5d config preparation lost its Store authority".to_string())?;
+        let id = format!("puzzle5d-config-retained-{}", authority.next_sequence_number());
+        let edit = protocol::Edit {
+            id: id.clone(),
+            actor: Some(authority.actor().to_string()),
+            forwards: vec![mutation],
+            inverse,
+            mutation_meta: vec![protocol::MutationMeta {
+                mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+                dependencies: Vec::new(),
+                base_version: authority.base_applied_edit_count() as u64,
+                author_id: Some(protocol::ActorId(authority.actor().to_string())),
+                timestamp: authority.next_clock(),
+                undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+                payload_hash: None,
+                semantic_kind: None,
+                label: None,
+                group_id: None,
+                origin: Default::default(),
+            }],
+            description: self.description.take(),
+            coalesce_key: None,
+            sequence_number: authority.next_sequence_number(),
+            started_at: String::new(),
+            finished_at: None,
+        };
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Puzzle5dConfig, Puzzle5dConfigMutation>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Puzzle5dConfig, Puzzle5dConfigMutation>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() { return Err("Puzzle5d config preparation could not return its exact base root".into()); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.authority.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️StorePreparation
 
 impl ArtifactEditor for Puzzle5dPlayApp {
     const DIALECT: semio_framework_plugin::app::Dialect = crate::artifacts::puzzle5d::PUZZLE5D_DIALECT;
@@ -7891,22 +8235,32 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
     type Command = Puzzle5dCommand;
 
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(Puzzle5dStorePreparationFactory))
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(Puzzle5dConfigStorePreparationFactory))
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<Puzzle5dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
         controller: "s.puzzle.puzzle5d@1/*#editor",
         document_schema: "puzzle.5d",
-        factory: "BoundedFirstStepCommandJobFactory",
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 512, 1, 262_144, 7_500),
+        factory: "Puzzle5dRetainedCommandJobFactory",
+        factory_type: Puzzle5dRetainedCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::resumable(8_192, 512, 1, 262_144, 7_500, 1, 1),
         tools: [
-            "addBrushObject", "addBrushPart", "addNode", "addPartKind", "applyBoardEvents", "canvasPointerDown",
-            "createFastener", "cycleBrushCandidate", "deleteFastener", "editFastener", "engagementAbort",
-            "engagementControlSelect", "engagementInput", "engagementSubmit", "focusSelection", "patchFastener",
-            "patchGrip", "patchPart", "proximityConnect", "registerBrushMesh", "retargetFastener", "rotateSelection",
-            "scaleSelection", "selectSameKind", "setActiveExample", "setBrushPlacementOverlapBudget", "setCamera",
-            "setCamera2d", "setCamera3d", "setFillCount", "setGridFactor", "setGridSnapEnabled", "setLodMode",
-            "setObjectKindWeight", "setSuggestionOffset", "setSunAzimuth", "setSunElevation", "setSunIntensity",
-            "setVortexKindWeight", "toggleSun", "translateSelection", "worldPointerDown", "worldRelocate"
+            "canvasPointerDown",
+            "worldPointerDown",
+            "deleteSelection",
+            "duplicateSelection",
+            "importComposeKit",
+            "selectSameKindSelection",
+            "setFixtureJson",
+            "setSelectionFlag",
+            "zoomToSelection"
         ]
     }
 
@@ -7916,7 +8270,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         registry.register(Puzzle5dCutJobFactory::new(&controller_id))?;
         registry.register(Puzzle5dPasteJobFactory::new(&controller_id))?;
         registry.register(Puzzle5dImportJobFactory::new(&controller_id))?;
-        registry.register(BoundedFirstStepCommandJobFactory::new(&controller_id))
+        registry.register(Puzzle5dRetainedCommandJobFactory::new(&controller_id))
     }
 
     fn build_tool_job(request: semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
@@ -7978,6 +8332,9 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     }
 
     fn build_reserved_tool_job(mut request: ArtifactReservedToolJobRequest<EditorApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
+        if !["copy", "cut", "paste", "import-media"].contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
         let raw = std::mem::take(&mut request.raw_wire);
         request.raw_wire = match puzzle5d_preflight_reserved_wire(raw, request.contract.max_raw_wire_bytes) {
             Ok(raw) => raw,
@@ -8011,7 +8368,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
             "import-media" => {
                 let (port, media) = match &request.input {
                     ArtifactReservedToolInput::Media { port, media } => (port.clone(), media.clone()),
-                    _ => return Err(Fault::from("puzzle5d import requires media input")),
+                    _ => return Err(Fault::from("puzzle5d import-media requires media input")),
                 };
                 ArtifactReservedToolJob::new(Puzzle5dImportJob::new(request, port, media))
             }
@@ -8096,7 +8453,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let before = doc.snapshot.0.clone();
         let document: Puzzle5dDocument = serde_json::from_value(before.clone()).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
         let delta = paste_delta_2d(&fragment_parts, &document.parts, placement);
-        let (fresh_parts, fresh_fasteners) = paste_selection_local(&fragment_parts, &fragment_fasteners, delta);
+        let (fresh_parts, fresh_fasteners) = paste_selection_local(&document, &fragment_parts, &fragment_fasteners, delta);
         let mut after = document;
         after.parts.extend(fresh_parts);
         after.fasteners.extend(fresh_fasteners);
@@ -8184,7 +8541,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     }
 
     /// 🧵️ The synchronous editor callback is deliberately closed: production import enters only
-    /// through `Puzzle5dImportJobFactory` and `build_reserved_tool_job`, which own the resumable state.
+    /// remains batch-only until an artifact-lane preparation owner can retire its publication roots.
     fn import_media(_port: &str, _media: &Media, _doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, MediaError> {
         Err(MediaError::NotImplemented)
     }
@@ -8340,6 +8697,7 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(inspection::definition())
             // 🔧️ Document-mutating operations (emit VCS operations through the before/after document delta).
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importComposeKit", LocalizedLabel::native("Import Compose Kit", "Compose-Baukasten importieren"), ActionKind::Mutation) })
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
             .mutation("addPartKind", LocalizedLabel::native("Add Part", "Teil hinzufügen"))
@@ -8389,49 +8747,56 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setGridFactor", LocalizedLabel::native("Set Grid Factor", "Rasterfaktor festlegen"))
             .view_action("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"))
             .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"))
-            .action_interactive_job("addBrushObject", InteractiveJobClassification::Migrated)
-            .action_interactive_job("addBrushPart", InteractiveJobClassification::Migrated)
-            .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
-            .action_interactive_job("addPartKind", InteractiveJobClassification::Migrated)
-            .action_interactive_job("applyBoardEvents", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addBrushObject", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addBrushPart", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addNode", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addPartKind", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("applyBoardEvents", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
-            .action_interactive_job("createFastener", InteractiveJobClassification::Migrated)
-            .action_interactive_job("cycleBrushCandidate", InteractiveJobClassification::Migrated)
-            .action_interactive_job("deleteFastener", InteractiveJobClassification::Migrated)
-            .action_interactive_job("editFastener", InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementAbort", InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementControlSelect", InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
-            .action_interactive_job("focusSelection", InteractiveJobClassification::Migrated)
-            .action_interactive_job("patchFastener", InteractiveJobClassification::Migrated)
-            .action_interactive_job("patchGrip", InteractiveJobClassification::Migrated)
-            .action_interactive_job("patchPart", InteractiveJobClassification::Migrated)
-            .action_interactive_job("proximityConnect", InteractiveJobClassification::Migrated)
-            .action_interactive_job("registerBrushMesh", InteractiveJobClassification::Migrated)
-            .action_interactive_job("retargetFastener", InteractiveJobClassification::Migrated)
-            .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
-            .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
-            .action_interactive_job("selectSameKind", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setBrushPlacementOverlapBudget", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setCamera2d", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setCamera3d", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setFillCount", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setGridFactor", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setGridSnapEnabled", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLodMode", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setObjectKindWeight", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSuggestionOffset", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSunAzimuth", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSunElevation", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setVortexKindWeight", InteractiveJobClassification::Migrated)
-            .action_interactive_job("toggleSun", InteractiveJobClassification::Migrated)
-            .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("duplicateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("createFastener", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("cycleBrushCandidate", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("deleteFastener", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("editFastener", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementAbort", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementControlSelect", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementInput", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementSubmit", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("focusSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("importComposeKit", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchFastener", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("patchGrip", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("patchPart", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("proximityConnect", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("registerBrushMesh", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("retargetFastener", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("rotateSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("scaleSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("selectSameKind", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("selectSameKindSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setBrushPlacementOverlapBudget", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setCamera", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setCamera2d", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setCamera3d", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setFillCount", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setFixtureJson", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridFactor", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setGridSnapEnabled", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setSelectionFlag", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLodMode", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setObjectKindWeight", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setSuggestionOffset", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setSunAzimuth", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setSunElevation", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setSunIntensity", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setVortexKindWeight", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("toggleSun", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("translateSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("worldPointerDown", InteractiveJobClassification::Migrated)
-            .action_interactive_job("worldRelocate", InteractiveJobClassification::Migrated)
+            .action_interactive_job("worldRelocate", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("zoomToSelection", InteractiveJobClassification::Migrated)
             // 📝️ Staged argument forms for the brush create actions (P1).
             .action_args("addPartKind", vec![
                 ActionArgDef::select("partKind", puzzle5d_localized(|l| l.kind), vec![ActionArgOption::new("Part", puzzle5d_localized(|l| l.part))]).default_value("Part"),
@@ -8569,7 +8934,7 @@ pub(crate) mod testkit {
     }
 
     pub fn projection_of(app: &Puzzle5dApp) -> Value {
-        semio_framework::io::resolve_ready(app.snapshot()).expect("projection").0
+        app.snapshot().expect("projection").0
     }
 
     pub fn part_count(app: &Puzzle5dApp) -> usize {
@@ -8606,6 +8971,32 @@ mod tests {
     use super::*;
     use protocol::MutationDiff;
     use semio_framework_plugin::{ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, PluginApp, UiMenuRef};
+
+    #[test]
+    fn retained_publication_contracts_are_an_exact_nonempty_tool_bijection() {
+        let exact = |contracts: &[ArtifactToolPublicationContract]| {
+            let ids = contracts.iter().map(|contract| contract.tool_id).collect::<std::collections::BTreeSet<_>>();
+            ids == PUZZLE5D_RETAINED_TOOL_IDS.iter().copied().collect()
+                && ids.len() == contracts.len()
+                && contracts.iter().all(|contract| !contract.lanes.is_empty() && (!contract.lanes.contains(&ArtifactToolPublicationLane::HostOnly) || contract.lanes.len() == 1))
+        };
+        let contracts = <Puzzle5dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
+        assert!(exact(contracts));
+        assert!(!exact(&contracts[..contracts.len() - 1]));
+        let mut duplicate = contracts.to_vec();
+        let copied = duplicate[1];
+        duplicate[0] = copied;
+        assert!(!exact(&duplicate));
+        let reserved = [
+            <Puzzle5dCopyJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS[0],
+            <Puzzle5dCutJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS[0],
+            <Puzzle5dPasteJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS[0],
+            <Puzzle5dImportJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS[0],
+        ];
+        assert_eq!(reserved.iter().map(|contract| contract.tool_id).collect::<Vec<_>>(), vec!["copy", "cut", "paste", "import-media"]);
+        assert_eq!(reserved[0].lanes, &[ArtifactToolPublicationLane::HostOnly]);
+        assert!(reserved[1..].iter().all(|contract| contract.lanes == &[ArtifactToolPublicationLane::Artifact]));
+    }
 
     #[test]
     fn retained_import_media_has_no_live_synchronous_fallback() {
@@ -8941,7 +9332,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn puzzle5d_play_projection_pack_round_trips() {
         let app = app();
-        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&semio_framework::io::resolve_ready(app.snapshot()).expect("projection"));
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
     }
     //#endregion 🔖️Pack
 

@@ -1,8 +1,0 @@
-/** 🦠️ bind-primitive-material: cohesive atomic mesh mutation. */
-import type { GltfJson, GltfSnapshot, GltfPrimitive, GltfMorphTarget } from '../../../📸️snapshot/🟦️component.ts';
-import { run, reject, positionIn, itemIndex, permutation, moveItem, type GltfLeafResult, type GltfMutationRejection } from '../../🔒️top-level-private/🟦️component.ts';
-export const GltfBindPrimitiveMaterialDescriptor = { id: 's.stdio.gltf.mutation.bind-primitive-material.v1', version: 1, kind: 'bind', touchedPaths: ["document/meshes/*/primitives/*/material"], referencePolicy: 'validates material identity before binding' } as const;
-export interface GltfBindPrimitiveMaterialPayload { mesh: number; primitive: number; material: number }
-export type GltfBindPrimitiveMaterialResult = GltfLeafResult;
-export const validateGltfBindPrimitiveMaterial = (payload: GltfBindPrimitiveMaterialPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const mesh = itemIndex(payload.mesh, base.document.meshes.length, 'document/meshes'); if (mesh) return mesh; const primitive = itemIndex(payload.primitive, base.document.meshes[payload.mesh]!.primitives.length, `document/meshes/${payload.mesh}/primitives`); if (primitive) return primitive; const material = itemIndex(payload.material, base.document.materials.length, 'document/materials'); if (material) return material; return undefined; };
-export const applyGltfBindPrimitiveMaterial = (base: GltfSnapshot, payload: GltfBindPrimitiveMaterialPayload): GltfBindPrimitiveMaterialResult => run(base, payload, validateGltfBindPrimitiveMaterial, (next, payload) => { next.document.meshes[payload.mesh]!.primitives[payload.primitive]!.material = payload.material; }, GltfBindPrimitiveMaterialDescriptor.touchedPaths);

@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
-  "_comment": "🧩️ PDF 1.4/✳️x's own contribution to the repository test platform: the ISO 15930 (PDF/X) conformance vocabulary this subset owns, and the reference implementation that performs it independently. The ✳️any subset owns the document vocabulary and registers `lopdf` under `pdf-1-4-mutate`; this file registers the same package under a distinct id and the `pdf-1-4-x-mutate` capability the conformance case (`mutate-pdf-1-4-x`) tags, because reusing a neighbour's entry fails the contract with `oracle-capability-mismatch`.",
+  "_comment": "🧬️ Exact 2-leaf PDF 1.4/X catalog. Reference lopdf never links the subject implementation.",
   "oracles": [
     {
       "id": "lopdf-pdf-1-4-x-mutate",
@@ -17,7 +17,7 @@
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/J-F-Liu/lopdf",
-      "rationale": "`lopdf` both READS and WRITES the one axis check_pdf_x_conformance can honestly check on PDF 1.4's object-graph-less snapshot (page.width and page.height — whether the page has a strictly positive MediaBox), on a real document, which makes it a genuine second producer rather than a parser standing in for one — so every scenario is @mode-differential. Registered under its own id and capability so this subset's 4-kind conformance catalog is measured against a reference surveyed for that capability rather than borrowing the ✳️any subset's document-vocabulary entry.",
+      "rationale": "Independently reads all pages through lopdf, applies this subset's concrete page operations, reconstructs document bytes, and verifies inverse closure against the original projection.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
     }
   ],
@@ -28,10 +28,31 @@
       "capability": "pdf-1-4-x-mutate",
       "standardDirectoryName": "🔖️1.4",
       "subsetDirectoryName": "✳️x",
-      "vectors": [],
+      "vectors": [
+        {
+          "mutationId": "set-page-size",
+          "sourceMutationDirectoryName": "📐️set-page-size",
+          "mutationDirectoryName": "📐️set-page-size",
+          "scenarios": [
+            {
+              "id": "round-trips-the-concrete-inverse",
+              "directoryName": "round-trips-the-concrete-inverse"
+            }
+          ]
+        },
+        {
+          "mutationId": "collapse-page-size",
+          "sourceMutationDirectoryName": "📉️collapse-page-size",
+          "mutationDirectoryName": "📉️collapse-page-size",
+          "scenarios": [
+            {
+              "id": "round-trips-the-concrete-inverse",
+              "directoryName": "round-trips-the-concrete-inverse"
+            }
+          ]
+        }
+      ],
       "kinds": [
-        "no-mutation",
-        "set-snapshot",
         "set-page-size",
         "collapse-page-size"
       ]

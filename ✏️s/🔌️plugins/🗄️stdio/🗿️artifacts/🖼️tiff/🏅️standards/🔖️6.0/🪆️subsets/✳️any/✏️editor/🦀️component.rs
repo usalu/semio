@@ -61,7 +61,7 @@ impl ArtifactEditor for TiffAnyEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            TiffAnyEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![TiffMutation::SetPixels { pixels: pixels.clone() }])),
+            TiffAnyEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![TiffMutation::ReplacePixels(crate::artifacts::tiff::schema::mutations::ReplacePixelsMutation { pixels: pixels.clone() })])),
         }
     }
 

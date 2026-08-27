@@ -406,7 +406,7 @@ export type CapabilityEffects = { reads: Array<ResourceSelector>, writes: Array<
             typescript: r####"/**
  * @emoji ⚙️ Preview/undo/idempotency/cancellation shape of one capability invocation.
  */
-export type CapabilityExecution = { preview: PreviewMode, undo: UndoMode, idempotency: IdempotencyMode, expectedRevision: boolean, cancellable: boolean, class: ExecutionClass, };"####,
+export type CapabilityExecution = { preview: PreviewMode, undo: UndoMode, idempotency: IdempotencyMode, expectedRevision: boolean, cancellable: boolean, class: ExecutionClass, interactiveJob: "unclassified" | "migrated" | "batchOnlyPendingRewrite" | "forbiddenFromUi" | "deleted", };"####,
         },
         SchemaMetadata {
             name: "CapabilityId",

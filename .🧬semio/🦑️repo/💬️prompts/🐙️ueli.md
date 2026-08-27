@@ -75,6 +75,16 @@ Everything end to end.
 
 ---
 
+Persisted state is event sourced/materialized/projected   
+
+---
+
+All mutations must be explicit part of the folder tree and not be opaque inside the implementions. such as `mutations/<mutation>/🦀component.rs`
+violations e.g.
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧬️schema/🧬️mutations/🦀️component.rs
+
+---
+
 Our testing 
 use [FRAME3DD](https://sourceforge.net/p/frame3dd/code/HEAD/tree/trunk/) to 
 

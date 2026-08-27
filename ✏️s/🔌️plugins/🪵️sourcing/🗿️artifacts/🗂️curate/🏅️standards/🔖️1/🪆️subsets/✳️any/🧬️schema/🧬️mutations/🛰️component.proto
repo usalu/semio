@@ -1,27 +1,9 @@
 syntax = "proto3";
 package semio.s.sourcing.curate.mutation;
 
-// 🧬️ Curate mutation schema — the closed semantic vocabulary derived from `CurateSnapshot.curated`
-// (the id-keyed curation selection). `stock` is not represented: it is a bulk-populated reference
-// catalogue, never hand-authored item-by-item.
-
-message CuratedItem {
-  string object_id = 1;
-  uint32 count = 2;
-}
-
-message CreateCuratedItem {
-  CuratedItem item = 1;
-}
-
-message DeleteCuratedItem {
-  string object_id = 1;
-}
-
-message ChangeCuratedItemCount {
-  string object_id = 1;
-  uint32 new_count = 2;
-}
+import "🌱create-curated-item/🛰️component.proto";
+import "🗑️delete-curated-item/🛰️component.proto";
+import "🔢change-curated-item-count/🛰️component.proto";
 
 message SourcingMutation {
   oneof mutation {

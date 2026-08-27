@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff construction for `change-exaggeration`.
-use super::mutation::ChangeExaggeration;
+use super::ChangeExaggeration;
 use crate::artifacts::gisterrain::diff::GisTerrainDiff;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 

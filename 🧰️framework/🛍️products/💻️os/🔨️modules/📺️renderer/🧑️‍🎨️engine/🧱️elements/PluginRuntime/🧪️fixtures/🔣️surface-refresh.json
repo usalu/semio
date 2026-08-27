@@ -1,0 +1,31 @@
+{
+  "acknowledgement": { "surfaces": ["main", "catalogue"], "maxUnacknowledged": 1 },
+  "quiescent": { "instance": 7, "requested": ["main", "catalogue"], "published": ["main"], "missing": ["7:catalogue"] },
+  "cases": [
+    {
+      "name": "windows and panels share exact body-key surface ownership",
+      "request": {
+        "viewState": {},
+        "windows": [{ "key": "main-window", "bodyKey": "main" }],
+        "panels": [{ "key": "catalogue-tab", "bodyKey": "catalogue" }, { "key": "main-tab", "bodyKey": "main" }]
+      },
+      "bodyKeys": ["main", "catalogue"],
+      "windowKeys": ["main-window"],
+      "panelKeys": ["catalogue-tab", "main-tab"]
+    },
+    {
+      "name": "panel-only refresh does not need a window probe",
+      "request": { "viewState": {}, "panels": [{ "key": "inspection" }] },
+      "bodyKeys": ["inspection"],
+      "windowKeys": [],
+      "panelKeys": ["inspection"]
+    },
+    {
+      "name": "empty refresh has no surface work",
+      "request": { "viewState": {} },
+      "bodyKeys": [],
+      "windowKeys": [],
+      "panelKeys": []
+    }
+  ]
+}

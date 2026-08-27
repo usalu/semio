@@ -1,0 +1,7 @@
+/** 🦠️ create-skin executable structural glTF command. */
+import type { GltfOrthographic, GltfPerspective, GltfSnapshot } from '../../📸️snapshot/🟦️component.ts';
+import { clone, insert, order, position, reject, remove, relocate, reorder, repair, type GltfMutationRejection, type GltfStructuralResult } from '../../🔨️modules/🧬️mutation-support/🗂️top-level-collections/🟦️component.ts';
+export const GltfCreateSkinDescriptor = { id: 's.stdio.gltf.mutation.create-skin.v1', version: 1, touchedPathPattern: 'document/skins', referencePolicy: 'all typed skin references are remapped, repaired, or rejected' } as const;
+export interface GltfCreateSkinPayload { position: number }
+export const validateGltfCreateSkin = (payload: GltfCreateSkinPayload, base: GltfSnapshot): GltfMutationRejection | undefined => { const index = position(payload.position, base.document.skins.length, 'document/skins', true); if (index) return index;    return undefined; };
+export const applyGltfCreateSkin = (base: GltfSnapshot, payload: GltfCreateSkinPayload): GltfStructuralResult => { const rejection = validateGltfCreateSkin(payload, base); if (rejection) return { accepted: false, rejection }; try { const next = clone(base); insert(next, 'skins', payload.position, { joints: [] }); return { accepted: true, snapshot: clone(next) }; } catch (error) { return { accepted: false, rejection: typeof error === 'object' && error && 'code' in error ? error as GltfMutationRejection : reject('gltf.mutation.apply-failed', 'document/skins', String(error)) }; } };

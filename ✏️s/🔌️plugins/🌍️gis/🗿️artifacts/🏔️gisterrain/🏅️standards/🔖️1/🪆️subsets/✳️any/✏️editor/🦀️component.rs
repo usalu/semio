@@ -18,7 +18,7 @@ use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolF
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ui_text, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
+    ui_text, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
     InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
 };
 use serde_json::Value;
@@ -135,9 +135,10 @@ fn gis3d_retained_contract() -> ToolExecutionContract {
 
 fn gis3d_retained_extent(command: &Gis3dCommand, _snapshot: &GisTerrainSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     let bytes = match command {
-        Gis3dCommand::SetExaggeration(_) => 0,
-        Gis3dCommand::SetCamera(payload) => payload.camera_json.len(),
-        Gis3dCommand::SetLocale(payload) => payload.value.len(),
+        Gis3dCommand::SetExaggeration(payload) if payload.exaggeration.is_finite() => 0,
+        Gis3dCommand::SetCamera(payload) if serde_json::from_str::<Value>(&payload.camera_json).is_ok_and(|camera| camera.is_object()) => payload.camera_json.len(),
+        Gis3dCommand::SetLocale(payload) if matches!(payload.value.as_str(), "en" | "en-US" | "de" | "de-DE") => payload.value.len(),
+        _ => return None,
     };
     (bytes <= GIS3D_RETAINED_RAW_BYTES).then_some(GIS3D_RETAINED_WORK_ITEMS)
 }
@@ -206,8 +207,246 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Gis3dCommandJobFact
     type Owner = semio_framework_plugin::EditorApp<Gis3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = GIS3D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
+        ArtifactToolPublicationContract { tool_id: "setExaggeration", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
+    ];
 }
 //#endregion 🧵️RetainedCommands
+
+//#region 📬️StorePreparation
+const GIS3D_STORE_MAXIMUM_BYTES: usize = 32_768;
+
+type Gis3dPrepareOne<P, M> = fn(&P, M) -> Result<(P, Vec<M>, M, usize), String>;
+
+struct Gis3dOneItemPreparation<P, M> {
+    base: Option<store::SnapshotRead<P>>,
+    mutation: Option<M>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    candidate: Option<(P, Vec<M>, M, usize)>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<P, M>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    prepare: Gis3dPrepareOne<P, M>,
+    phase: u8,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn gis3d_store_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
+    let id = format!("{prefix}-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+
+fn gis3d_bounded_serialized_bytes<T: serde::Serialize>(value: &T) -> Result<usize, String> {
+    struct Counter(usize);
+    impl std::io::Write for Counter {
+        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+            self.0 = self.0.checked_add(bytes.len()).filter(|total| *total <= GIS3D_STORE_MAXIMUM_BYTES).ok_or_else(|| std::io::Error::other("GIS terrain Store root exceeds its fixed envelope"))?;
+            Ok(bytes.len())
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+    let mut counter = Counter(0);
+    serde_json::to_writer(&mut counter, value).map_err(|error| error.to_string())?;
+    Ok(counter.0)
+}
+
+fn prepare_gis3d_artifact(base: &GisTerrainSnapshot, mutation: GisTerrainMutation) -> Result<(GisTerrainSnapshot, Vec<GisTerrainMutation>, GisTerrainMutation, usize), String> {
+    use protocol::{Mutation as _, MutationDiff as _};
+    if !matches!(&mutation, GisTerrainMutation::ChangeExaggeration(payload) if payload.new_exaggeration.is_finite()) {
+        return Err("GIS terrain Artifact preparation only admits ChangeExaggeration".into());
+    }
+    let retained_bytes = gis3d_bounded_serialized_bytes(base)?;
+    let inverse = mutation.inverse(base);
+    let post = mutation.diff(base).into_parts().0.apply(base).map_err(|_| "GIS terrain Artifact mutation could not produce its post root".to_string())?;
+    Ok((post, inverse, mutation, retained_bytes))
+}
+
+fn prepare_gis3d_config(base: &Gis3dConfig, mutation: Gis3dConfigMutation) -> Result<(Gis3dConfig, Vec<Gis3dConfigMutation>, Gis3dConfigMutation, usize), String> {
+    use protocol::{Mutation as _, MutationDiff as _};
+    let valid = match &mutation {
+        Gis3dConfigMutation::SetCamera { camera_json } => camera_json.len() <= GIS3D_RETAINED_RAW_BYTES && serde_json::from_str::<Value>(camera_json).is_ok_and(|camera| camera.is_object()),
+        Gis3dConfigMutation::SetLocale { value } => matches!(value.as_str(), "en" | "en-US" | "de" | "de-DE"),
+    };
+    if !valid {
+        return Err("GIS terrain Config preparation rejected its exact mutation envelope".into());
+    }
+    let retained_bytes = gis3d_bounded_serialized_bytes(base)?;
+    let inverse = mutation.inverse(base);
+    let post = mutation.diff(base).into_parts().0.apply(base).map_err(|_| "GIS terrain Config mutation could not produce its post root".to_string())?;
+    Ok((post, inverse, mutation, retained_bytes))
+}
+
+impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for Gis3dOneItemPreparation<P, M>
+where
+    P: Send + Sync + 'static,
+    M: serde::Serialize + Send + 'static,
+{
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() || self.phase >= 2 {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        match self.phase {
+            0 => {
+                let base = self.base.as_ref().ok_or_else(|| "GIS terrain preparation lost its exact base root".to_string())?;
+                let mutation = self.mutation.take().ok_or_else(|| "GIS terrain preparation lost its mutation owner".to_string())?;
+                self.candidate = Some((self.prepare)(base.get(), mutation)?);
+                self.phase = 1;
+                let completed_bytes = self.candidate.as_ref().map_or(0, |candidate| candidate.3);
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: completed_bytes as u64, digest: [0; 32] };
+                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
+            }
+            1 => {
+                let (post, inverse, forward, completed_bytes) = self.candidate.take().ok_or_else(|| "GIS terrain preparation lost its semantic candidate".to_string())?;
+                let authority = self.authority.as_ref().ok_or_else(|| "GIS terrain preparation lost its Store authority".to_string())?;
+                let prepared = authority.prepare_one_item(gis3d_store_edit("gis-terrain-retained", forward, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+                self.phase = 2;
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: completed_bytes as u64, digest: prepared.edit_digest() };
+                self.prepared = Some(prepared);
+                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+            }
+            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)),
+        }
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> {
+        self.prepared.as_ref()
+    }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> {
+        self.prepared.take()
+    }
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("GIS terrain preparation could not return its exact base root".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+    }
+}
+
+struct Gis3dArtifactStorePreparationFactory;
+struct Gis3dConfigStorePreparationFactory;
+
+fn begin_gis3d_preparation<P, M>(
+    request: store::ArtifactStoreOneItemPreparationRequest<P, M>,
+    prepare: Gis3dPrepareOne<P, M>,
+) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>>
+where
+    P: Send + Sync + 'static,
+    M: serde::Serialize + Send + 'static,
+{
+    if request.lane != store::HistoryLane::Document
+        || request.operation != request.authority.operation()
+        || request.generation != request.authority.generation()
+        || request.base_revision != request.authority.base_revision()
+        || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+    {
+        return Err(request);
+    }
+    Ok(Box::new(Gis3dOneItemPreparation {
+        base: Some(request.base),
+        mutation: Some(request.mutation),
+        description: request.description,
+        authority: Some(request.authority),
+        candidate: None,
+        prepared: None,
+        checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+        prepare,
+        phase: 0,
+        cancelled: false,
+        closing: false,
+    }))
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<GisTerrainSnapshot, GisTerrainMutation> for Gis3dArtifactStorePreparationFactory {
+    fn preflight(&self, mutation: &GisTerrainMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document
+            || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES)
+            || !matches!(mutation, GisTerrainMutation::ChangeExaggeration(payload) if payload.new_exaggeration.is_finite())
+        {
+            return Err("GIS terrain Artifact preparation rejected its lane, description, or mutation".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 8 })
+    }
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<GisTerrainSnapshot, GisTerrainMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<GisTerrainSnapshot, GisTerrainMutation>>, store::ArtifactStoreOneItemPreparationRequest<GisTerrainSnapshot, GisTerrainMutation>> {
+        begin_gis3d_preparation(request, prepare_gis3d_artifact)
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<Gis3dConfig, Gis3dConfigMutation> for Gis3dConfigStorePreparationFactory {
+    fn preflight(&self, mutation: &Gis3dConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("GIS terrain Config preparation rejected its lane or description".into());
+        }
+        let retained_bytes = match mutation {
+            Gis3dConfigMutation::SetCamera { camera_json } if camera_json.len() <= GIS3D_RETAINED_RAW_BYTES && serde_json::from_str::<Value>(camera_json).is_ok_and(|camera| camera.is_object()) => camera_json.len(),
+            Gis3dConfigMutation::SetLocale { value } if matches!(value.as_str(), "en" | "en-US" | "de" | "de-DE") => value.len(),
+            _ => return Err("GIS terrain Config preparation rejected its exact mutation".into()),
+        };
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes })
+    }
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<Gis3dConfig, Gis3dConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Gis3dConfig, Gis3dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Gis3dConfig, Gis3dConfigMutation>> {
+        begin_gis3d_preparation(request, prepare_gis3d_config)
+    }
+}
+//#endregion 📬️StorePreparation
 
 impl ArtifactEditor for Gis3dPlayApp {
     type Snapshot = GisTerrainSnapshot;
@@ -226,12 +465,21 @@ impl ArtifactEditor for Gis3dPlayApp {
     const DIALECT: Dialect = crate::artifacts::gisterrain::GISTERRAIN_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;
 
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(Gis3dArtifactStorePreparationFactory))
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(Gis3dConfigStorePreparationFactory))
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<Gis3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
         controller: "s.gis.gisterrain@1/*#editor",
         document_schema: "gis.terrain",
         factory: "Gis3dCommandJobFactory",
+        factory_type: Gis3dCommandJobFactory,
         tools: {
             "setExaggeration" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "setCamera" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
@@ -322,7 +570,7 @@ impl ArtifactEditor for Gis3dPlayApp {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "map:in only accepts a Structured JSON payload".into()));
                 };
-                use crate::artifacts::gisterrain::mutations::change_imported_features::mutation::ChangeImportedFeatures;
+                use crate::artifacts::gisterrain::mutations::change_imported_features::ChangeImportedFeatures;
                 Ok(Emit::mutations(vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: json.clone() })]))
             }
             _ => Err(MediaError::NotImplemented),
@@ -351,7 +599,7 @@ impl ArtifactEditor for Gis3dPlayApp {
             }
             "setLocale" => {
                 let value = str_arg(&["value", "locale"]).unwrap_or_default();
-                if value.len() > GIS3D_RETAINED_RAW_BYTES {
+                if value.len() > GIS3D_RETAINED_RAW_BYTES || !matches!(value.as_str(), "en" | "en-US" | "de" | "de-DE") {
                     return Err(Fault::from("gis3d-command-payload-too-large"));
                 }
                 Ok(Gis3dCommand::SetLocale(set_locale::SetLocale { value }))
@@ -625,7 +873,7 @@ mod tests {
         let incoming = json!({ "positions": [{ "id": "imported-1", "lon": 1.0, "lat": 2.0 }] }).to_string();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.map".into(), json: incoming.clone() } };
         let emit = Gis3dPlayApp::import_media("map:in", &media, &doc).expect("map:in import");
-        use crate::artifacts::gisterrain::mutations::change_imported_features::mutation::ChangeImportedFeatures;
+        use crate::artifacts::gisterrain::mutations::change_imported_features::ChangeImportedFeatures;
         assert_eq!(emit.artifact_mutations, vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: incoming })]);
     }
 

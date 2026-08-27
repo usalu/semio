@@ -6,6 +6,11 @@
 //! and stay product-side.
 // 🚫️async: E1 pure accessor consumed by external-trait impls (serde/Display) — see R9
 
+//#region 🗂️OrderedOwnership
+#[path = "🗂️ordered/🦀️component.rs"]
+pub mod ordered;
+//#endregion 🗂️OrderedOwnership
+
 //#region 🔖️Value
 /// @emoji 🌱️ Dynamic JSON-equivalent literal for schema-less fields (`Shape::Value`).
 #[derive(Clone, Debug, PartialEq)]

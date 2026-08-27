@@ -383,10 +383,10 @@ pub fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
 /// ⚠️ `SetPixelData` reaches the same state for a DIFFERENT reason — the picture changed, not the
 /// table — and there the refusal is contested: the registered `image` reference implements the same
 /// declared kind by switching the document to 24-bit `BI_RGB`, so `mutate-bmp-v3`'s
-/// `mutate-set-pixel-data` row diverges (oracle `storage: direct`, subject an encode error). The
+/// `mutate-replace-pixel-data` row diverges (oracle `storage: direct`, subject an encode error). The
 /// declared kind (`../🧬️schema/🧬️mutations/🦀️component.rs`: "Replaces the whole decoded
 /// canonical-RGBA `pixels` buffer") says nothing about storage, so BOTH sides are extrapolating and
-/// neither is a codec bug. Specifying what `set-pixel-data` means for an indexed BMP — and making
+/// neither is a codec bug. Specifying what `replace-pixel-data` means for an indexed BMP — and making
 /// both sides implement that one meaning — is the fix; nothing here should be relaxed to hide it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_bmp(snap: &BmpSnapshot) -> Result<Vec<u8>, String> {
@@ -1004,7 +1004,7 @@ mod tests {
         let mut recolored = base.clone();
         recolored.palette[4] = BmpPaletteEntry { b: 1, g: 2, r: 3, reserved: 9 };
         let recolored_encoded = encode_bmp(&recolored).expect("encode after recolor");
-        assert_ne!(recolored_encoded, base_encoded, "set-palette-entry must change the re-encoded bytes");
+        assert_ne!(recolored_encoded, base_encoded, "replace-palette-entry must change the re-encoded bytes");
         assert_eq!(recolored_encoded.len(), base_encoded.len(), "recoloring in place must not change the file's overall length");
         let decoded_recolored = decode_bmp(&recolored_encoded).expect("decode after recolor");
         assert_eq!(decoded_recolored.palette, recolored.palette);

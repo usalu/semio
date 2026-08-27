@@ -6,9 +6,13 @@
   "projectType": "library",
   "tags": ["lang:rust", "role:framework", "family:replication"],
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/*.rs", "{projectRoot}/**/*"]
+    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/*.rs", "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*", "{projectRoot}/**/*"]
   },
   "targets": {
+    "test-source": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-source", "forwardAllArgs": true }
+    },
     "build": {
       "executor": "nx:run-commands",
       "options": { "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", "command": "bun ./📜️script.ts build", "forwardAllArgs": true }

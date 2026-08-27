@@ -1,5 +1,5 @@
 //! 🔺️ Diff fragment yielded by `EditText`.
-use super::mutation::EditText;
+use super::EditText;
 use crate::artifacts::writer::WriterDiff;
 use crate::artifacts::writer::WriterSnapshot;
 

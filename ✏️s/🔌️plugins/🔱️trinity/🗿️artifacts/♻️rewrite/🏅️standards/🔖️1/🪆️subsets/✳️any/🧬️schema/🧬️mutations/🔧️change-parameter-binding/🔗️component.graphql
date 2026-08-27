@@ -1,0 +1,3 @@
+# 🔧️ Direct change-parameter-binding / ChangeParameterBinding payload.
+scalar JSON
+input ChangeParameterBindingInput { key: String!, newValue: JSON! }

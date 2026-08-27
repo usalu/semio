@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.svg.mutation;
+// set-transform/SetTransform
+message SetTransformPayload { bytes path = 1; bytes transform = 2; }

@@ -2,6 +2,8 @@
 
 pub use crate::artifacts::gisterrain::schema::mutations::{apply_gis_terrain_mutation, inverse_gis_terrain_mutation, GisTerrainMutation};
 
+pub const TEXT_OPCODES: &[(&str, &str)] = &[("ChangeExaggeration", super::change_exaggeration::text::TEXT_OPCODE), ("ChangeImportedFeatures", super::change_imported_features::text::TEXT_OPCODE)];
+
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");

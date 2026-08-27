@@ -1,4 +1,4 @@
-(* 🧬️ Structured stdio.svg mutation text; canonical productions live in component.grammar.semio. *)
-document = keyword, [ " ", arguments ] ;
-keyword = "no-mutation" | "set-snapshot" | "set-declaration" | "set-doctype" | "insert-element" | "remove-element" | "set-element-name" | "set-attribute" | "set-text" | "set-view-box" | "set-transform" ;
-arguments = ? named tagged/hex mutation fields defined by component.grammar.semio ? ;
+(* 🧬️ Generic stdio.svg mutation frame. Direct identities: set-declaration, set-doctype, insert-element, remove-element, set-element-name, set-attribute, set-text, set-view-box, set-transform. *)
+document = "svg-mutation", " payload=", hex ;
+hex = hex-character, { hex-character } ;
+hex-character = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" ;

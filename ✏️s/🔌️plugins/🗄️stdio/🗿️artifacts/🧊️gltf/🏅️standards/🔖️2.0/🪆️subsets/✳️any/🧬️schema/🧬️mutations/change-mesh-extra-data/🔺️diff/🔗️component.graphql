@@ -1,6 +1,0 @@
-# change-mesh-extra-data diff facet.
-input GltfChangeMeshExtraDataPayloadV1 {
-  mesh: Int!
-  data: GltfDataPresenceInput!
-}
-type GltfChangeMeshExtraDataDiffV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

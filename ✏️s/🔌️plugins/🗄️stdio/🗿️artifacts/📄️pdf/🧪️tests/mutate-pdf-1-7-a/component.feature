@@ -76,8 +76,6 @@ Feature: Apply every typed ISO 19005-2 / ISO 19005-3 (PDF/A-2, PDF/A-3) conforma
     Then the oracle and the subject agree on the conformance-class projection
     Examples:
       | id                           | params                                                            |
-      | no-mutation                  | {}                                                                |
-      | set-snapshot                 | {"conformance": "stamped"}                                        |
       | insert-encryption-dictionary | {"version": 2, "revision": 3}                                     |
       | remove-encryption-dictionary | {"version": 2, "revision": 3}                                     |
       | insert-javascript-action     | {"script": "app.alert('this document phones home');"}             |
@@ -106,8 +104,6 @@ Feature: Apply every typed ISO 19005-2 / ISO 19005-3 (PDF/A-2, PDF/A-3) conforma
     Then the conformance-class projection is the one the document started from
     Examples:
       | id                           | params                                                            |
-      | no-mutation                  | {}                                                                |
-      | set-snapshot                 | {"conformance": "stamped"}                                        |
       | insert-encryption-dictionary | {"version": 2, "revision": 3}                                     |
       | remove-encryption-dictionary | {"version": 2, "revision": 3}                                     |
       | insert-javascript-action     | {"script": "app.alert('this document phones home');"}             |

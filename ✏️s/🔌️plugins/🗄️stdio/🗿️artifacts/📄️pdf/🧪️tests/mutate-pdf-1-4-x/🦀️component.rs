@@ -19,7 +19,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::
 /// 🧾️ Test-case-local mirror of the `pdf-1-4-x` catalog. Duplicated, not imported, from
 /// `../../🏅️standards/🔖️1.4/🪆️subsets/✳️x/🧬️schema/🧬️mutations/🦀️component.rs::KINDS` — that module
 /// lives in the SUBJECT crate, and the oracle role must not link the subject crate at all.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-page-size", "collapse-page-size"];
+const KINDS: &[&str] = &["set-page-size", "collapse-page-size"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -78,7 +78,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let base = mutable_input(ctx)?;
     let output = oracle_apply_mutation(&base, &spec)?;
     let projection = project_conformance(&output)?;
-    if spec.str("kind") != "no-mutation" && projection == project_conformance(&base)? {
+    if projection == project_conformance(&base)? {
         return Err(format!("mutate-{}: the mutation left the conformance projection unchanged — a mutation that is not observable proves nothing", spec.str("kind")));
     }
     Ok(Outcome::with_raw(output, projection))
@@ -122,66 +122,61 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::any::io::{decode_pdf, encode_pdf};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot;
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::x::schema::mutations::{apply_x_conformance_mutation, stamp_conformance, PdfX1Mutation};
-    use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::x::{oracle_inverse_spec, project_conformance};
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::x::schema::mutations::{apply_x_conformance_mutation, inverse_x_conformance_mutation, CollapsePageSize, PdfX1Mutation, SetPageSize};
+    use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::x::project_conformance;
 
-    fn decode(bytes: &[u8]) -> Result<PdfSnapshot, String> {
-        decode_pdf(bytes).map_err(|error| error.to_string())
-    }
-
-    fn encode(snapshot: &PdfSnapshot) -> Result<Vec<u8>, String> {
-        encode_pdf(snapshot).map_err(|error| error.to_string())
-    }
-
-    /// 🔀️ The same JSON mutation spec the oracle reads, turned into this repository's own typed
-    /// `PdfX1Mutation` — the only channel between the feature's parameters and the subject's codec.
-    fn mutation_from_spec(base: &PdfSnapshot, spec: &Json) -> Result<PdfX1Mutation, String> {
-        let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        let number = |key: &str| match params.get(key) {
-            Some(Json::Number(value)) => Some(*value),
-            _ => None,
+    fn mutation_from_spec(spec: &Json) -> Result<PdfX1Mutation, String> {
+        let params = spec.get("params").ok_or("Missing mutation parameters")?;
+        let number = |key| match params.get(key) {
+            Some(Json::Number(value)) if value.is_finite() => Ok(*value),
+            _ => Err(format!("{key} must be finite")),
         };
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => PdfX1Mutation::NoMutation,
-            "set-snapshot" => PdfX1Mutation::SetSnapshot { snapshot: stamp_conformance(base.clone(), params.str("conformance") == "stamped") },
-            "set-page-size" => PdfX1Mutation::SetPageSize { width: number("width").ok_or("set-page-size: `width` must be a number")?, height: number("height").ok_or("set-page-size: `height` must be a number")? },
-            "collapse-page-size" => PdfX1Mutation::CollapsePageSize,
-            other => return Err(format!("no subject rule for kind {other:?}")),
+            "set-page-size" => PdfX1Mutation::SetPageSize(SetPageSize { width: number("width")?, height: number("height")? }),
+            "collapse-page-size" => PdfX1Mutation::CollapsePageSize(CollapsePageSize {}),
+            other => return Err(format!("Unknown subject mutation {other:?}")),
         })
     }
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
-        let spec = ctx.doc_json()?;
-        let mut snapshot = decode(&mutable_input(ctx)?)?;
-        let mutation = mutation_from_spec(&snapshot, &spec)?;
-        apply_x_conformance_mutation(&mut snapshot, &mutation);
-        let output = encode(&snapshot)?;
+        let mut snapshot = decode_pdf(&mutable_input(ctx)?).map_err(|error| error.to_string())?;
+        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
+        let outcome = apply_x_conformance_mutation(&mut snapshot, &mutation);
+        if !outcome.messages().is_empty() {
+            return Err(format!("Mutation refused: {:?}", outcome.messages()));
+        }
+        let output = encode_pdf(&snapshot).map_err(|error| error.to_string())?;
         let projection = project_conformance(&output)?;
         Ok(Outcome::with_raw(output, projection))
     }
 
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
-        let spec = ctx.doc_json()?;
-        let base = mutable_input(ctx)?;
-        let mut snapshot = decode(&base)?;
-        let forward = mutation_from_spec(&snapshot, &spec)?;
-        apply_x_conformance_mutation(&mut snapshot, &forward);
-        let undo = oracle_inverse_spec(&base, &spec)?;
-        let backward = mutation_from_spec(&snapshot, &undo)?;
-        apply_x_conformance_mutation(&mut snapshot, &backward);
-        let output = encode(&snapshot)?;
+        let base = decode_pdf(&mutable_input(ctx)?).map_err(|error| error.to_string())?;
+        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
+        let inverse = inverse_x_conformance_mutation(&mutation, &base);
+        let mut snapshot = base.clone();
+        if !apply_x_conformance_mutation(&mut snapshot, &mutation).messages().is_empty() {
+            return Err("Forward mutation refused".into());
+        }
+        for step in inverse {
+            if !apply_x_conformance_mutation(&mut snapshot, &step).messages().is_empty() {
+                return Err("Inverse mutation refused".into());
+            }
+        }
+        if snapshot != base {
+            return Err("Concrete inverse did not restore the complete snapshot".into());
+        }
+        let output = encode_pdf(&snapshot).map_err(|error| error.to_string())?;
         let projection = project_conformance(&output)?;
         Ok(Outcome::with_raw(output, projection))
     }
 
-    /// 🔁️ Full semantic parse, re-serialized from the model alone.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
-        let snapshot = decode(&input)?;
-        let output = encode(&snapshot)?;
+        let snapshot = decode_pdf(&input).map_err(|error| error.to_string())?;
+        let output = encode_pdf(&snapshot).map_err(|error| error.to_string())?;
         if output == input {
-            return Err("byte pass-through: output is bit-identical to the input".to_string());
+            return Err("Byte pass-through instead of reconstruction".into());
         }
         let projection = project_conformance(&output)?;
         Ok(Outcome::with_raw(output, projection))

@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SetTextPayload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path",
+    "text"
+  ],
+  "properties": {
+    "path": {
+      "type": "array",
+      "items": {
+        "type": [
+          "object",
+          "integer"
+        ]
+      }
+    },
+    "text": {
+      "type": "string"
+    }
+  }
+}

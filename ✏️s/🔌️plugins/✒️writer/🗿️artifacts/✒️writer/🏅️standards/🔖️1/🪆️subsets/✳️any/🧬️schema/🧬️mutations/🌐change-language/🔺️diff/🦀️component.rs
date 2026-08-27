@@ -1,5 +1,5 @@
 //! 🔺️ Diff fragment yielded by `ChangeLanguage`.
-use super::mutation::ChangeLanguage;
+use super::ChangeLanguage;
 use crate::artifacts::writer::WriterDiff;
 use crate::artifacts::writer::WriterSnapshot;
 

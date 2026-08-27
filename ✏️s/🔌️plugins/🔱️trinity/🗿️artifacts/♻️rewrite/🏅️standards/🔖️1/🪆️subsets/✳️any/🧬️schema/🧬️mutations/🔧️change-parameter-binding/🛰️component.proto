@@ -1,0 +1,5 @@
+syntax = "proto3";
+package semio.s.trinity.rewrite.mutation.change_parameter_binding;
+// change-parameter-binding / ChangeParameterBinding
+import "google/protobuf/struct.proto";
+message ChangeParameterBinding { string key = 1; google.protobuf.Value new_value = 2; }

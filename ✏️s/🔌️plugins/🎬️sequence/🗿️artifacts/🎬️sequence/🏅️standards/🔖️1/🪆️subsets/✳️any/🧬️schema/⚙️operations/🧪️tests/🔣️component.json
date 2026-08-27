@@ -1,0 +1,50 @@
+{
+  "cases": [
+    {
+      "id": "ordered-step-edits-and-cascade-aware-edge-changes",
+      "before": {
+        "schema": "sequence.fixture",
+        "steps": [
+          {"id":"a","kind":"log.print","params":{"message":"old"},"x":0,"y":0,"slot":null,"collapsed":false},
+          {"id":"b","kind":"log.print","params":{},"x":10,"y":0,"slot":null,"collapsed":false},
+          {"id":"c","kind":"log.print","params":{},"x":20,"y":0,"slot":null,"collapsed":false}
+        ],
+        "edges": [
+          {"id":"cascade","from":"c","to":"a"},
+          {"id":"removed","from":"a","to":"b"},
+          {"id":"retargeted","from":"b","to":"a"}
+        ]
+      },
+      "after": {
+        "schema": "sequence.fixture",
+        "steps": [
+          {"id":"a","kind":"log.print","params":{"message":"new"},"x":1,"y":2,"slot":null,"collapsed":true},
+          {"id":"b","kind":"log.print","params":{},"x":11,"y":0,"slot":null,"collapsed":false},
+          {"id":"d","kind":"log.print","params":{},"x":30,"y":0,"slot":null,"collapsed":false}
+        ],
+        "edges": [
+          {"id":"retargeted","from":"b","to":"d"},
+          {"id":"created","from":"a","to":"d"}
+        ]
+      },
+      "expected": [
+        {"mutation":"deleteStep","id":"c"},
+        {"mutation":"moveStep","id":"a","x":1,"y":2},
+        {"mutation":"editStepParams","id":"a","params":{"message":"new"}},
+        {"mutation":"changeStepCollapsed","id":"a","collapsed":true},
+        {"mutation":"moveStep","id":"b","x":11,"y":0},
+        {"mutation":"createStep","step":{"id":"d","kind":"log.print","params":{},"x":30,"y":0,"slot":null,"collapsed":false}},
+        {"mutation":"disconnectSteps","id":"removed"},
+        {"mutation":"disconnectSteps","id":"retargeted"},
+        {"mutation":"connectSteps","id":"retargeted","from":"b","to":"d"},
+        {"mutation":"connectSteps","id":"created","from":"a","to":"d"}
+      ]
+    },
+    {
+      "id": "no-change-is-an-empty-plan",
+      "before": {"schema":"sequence.fixture","steps":[],"edges":[]},
+      "after": {"schema":"sequence.fixture","steps":[],"edges":[]},
+      "expected": []
+    }
+  ]
+}

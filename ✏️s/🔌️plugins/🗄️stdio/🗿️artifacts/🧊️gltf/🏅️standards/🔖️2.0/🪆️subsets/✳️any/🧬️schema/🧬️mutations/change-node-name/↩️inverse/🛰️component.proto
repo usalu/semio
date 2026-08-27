@@ -1,1 +1,0 @@
-syntax = "proto3"; package stdio.gltf.mutation; message GltfChangeNodeNameInverseOptionalStringV1 { oneof state { string present = 1; bool absent = 2; } } message GltfChangeNodeNameInverseV1 { uint32 node = 1; GltfChangeNodeNameInverseOptionalStringV1 before = 2; GltfChangeNodeNameInverseOptionalStringV1 after = 3; repeated string touched_paths = 4; }

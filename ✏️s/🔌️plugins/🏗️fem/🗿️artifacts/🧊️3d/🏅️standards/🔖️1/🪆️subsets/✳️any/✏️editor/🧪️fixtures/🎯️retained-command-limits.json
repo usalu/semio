@@ -1,0 +1,153 @@
+{
+  "version": 1,
+  "owner": "Fem3dPlayApp",
+  "controller": "s.fem.fem3d@1/*#editor",
+  "documentSchema": "fem.3d",
+  "factory": "Fem3dRetainedCommandJobFactory",
+  "limits": {
+    "rawBytes": 8192,
+    "checkpointBytes": 512,
+    "configValueBytes": 512,
+    "configBaseBytes": 512,
+    "commandStepBytes": 65536,
+    "storeStepBytes": 4096,
+    "workItems": 1,
+    "preparationPhases": 3
+  },
+  "routes": [
+    {
+      "id": "addNode",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Fresh-ID discovery scans nodes and artifact publication clones the whole FEM model."
+    },
+    {
+      "id": "addBar",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Node/material/section validation and fresh-ID discovery scan model collections before whole-root preparation."
+    },
+    {
+      "id": "addFrame",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Node/material/section validation and fresh-ID discovery scan model collections before whole-root preparation."
+    },
+    {
+      "id": "addMaterial",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Fresh-ID discovery scans materials and artifact publication clones the whole FEM model."
+    },
+    {
+      "id": "addSection",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Fresh-ID discovery scans sections and artifact publication clones the whole FEM model."
+    },
+    {
+      "id": "addSupport",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Node/support lookup scans model collections and whole-root preparation is not resumable."
+    },
+    {
+      "id": "addNodalLoad",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Load-case and load lookup clone/scan collections before whole-root artifact preparation."
+    },
+    {
+      "id": "addMemberUdl",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Member/load-case lookup clones or scans collections before whole-root artifact preparation."
+    },
+    {
+      "id": "addAreaLoad",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Area/load-case lookup clones or scans collections before whole-root artifact preparation."
+    },
+    {
+      "id": "addSolid",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Solid construction and fresh-ID discovery scan/allocate model collections before whole-root preparation."
+    },
+    {
+      "id": "addLoadCase",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Fresh-ID discovery scans load cases and artifact publication clones the whole FEM model."
+    },
+    {
+      "id": "addCombination",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Combination term parsing and ID discovery scan/allocate collections before whole-root preparation."
+    },
+    {
+      "id": "setSelfWeight",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Load-case lookup scans the case collection and artifact publication clones the whole FEM model."
+    },
+    {
+      "id": "setAnalysisSettings",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "The reducer is scalar but artifact publication clones the complete FEM model; no bounded root-scalar preparation exists."
+    },
+    {
+      "id": "removeSelection",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Nested selection/model scans assemble an unbounded removal batch and whole-model inverse/root state."
+    },
+    {
+      "id": "setActiveExample",
+      "disposition": "BatchOnlyPendingRewrite",
+      "lanes": [],
+      "blocker": "Builds and serializes an entire replacement FEM document into a host effect without a retained encoder owner."
+    },
+    {
+      "id": "setCamera",
+      "disposition": "Migrated",
+      "lanes": [
+        "Config"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "setResultDisplay",
+      "disposition": "Migrated",
+      "lanes": [
+        "Config"
+      ],
+      "blocker": ""
+    }
+  ],
+  "boundaryCases": [
+    {
+      "name": "empty",
+      "bytes": 0,
+      "accepted": true
+    },
+    {
+      "name": "config-value-limit",
+      "bytes": 512,
+      "accepted": true
+    },
+    {
+      "name": "config-value-overflow",
+      "bytes": 513,
+      "accepted": false
+    }
+  ],
+  "oracle": {
+    "library": "serde_json",
+    "scope": "test-only-existing-dependency",
+    "runtimeDependency": false
+  }
+}

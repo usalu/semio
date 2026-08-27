@@ -2534,8 +2534,8 @@ fn info_string(text: &str) -> PdfObject {
 /// resolved authoring lanes every `PdfMutation` in the page and metadata half of the vocabulary
 /// edits, and `objects`/`trailer` are the retained native carrier. Until this function existed the
 /// writer serialized the carrier alone, so `SetPageRotation`, `SetPageMediaBox`, `SetPageCropBox`,
-/// `SetPageContent`, `AppendPageContent`, `InsertPage`, `RemovePage`, `MovePage`, `SetInfo` and
-/// `SetSnapshot` all applied cleanly to the snapshot and then vanished on export — a mutation that
+/// `SetPageContent`, `AppendPageContent`, `InsertPage`, `RemovePage`, `MovePage`, and `SetInfo` all
+/// applied cleanly to the snapshot and then vanished on export — a mutation that
 /// reports as applied and cannot be read back out of the bytes. **The authored lanes are
 /// authoritative on export; the carrier supplies everything the authored lanes do not describe.**
 /// @see ../🧬️schema/📸️snapshot/🦀️component.rs — `PdfPage::text` states the same contract
@@ -2976,7 +2976,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn bachelor_thesis_logical_lifecycle_preserves_original_native_bytes() {
         use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
-        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, PdfMutation};
+        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, InsertPage, PdfMutation, SetInfo};
         use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfAnalyzer;
         use protocol::command::DiffAlgebra;
         use protocol::{DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
@@ -3019,7 +3019,7 @@ mod tests {
         assert_eq!(absorbed, base);
         assert_original("diff absorb native export", encode_pdf(&absorbed).expect("diff absorb native export"));
 
-        let mutation = PdfMutation::SetInfo { info: changed.info };
+        let mutation = PdfMutation::SetInfo(SetInfo { info: changed.info });
         let mutation_text = mutation.print_op();
         let mutation = PdfMutation::parse_op(&mutation_text).expect("mutation text roundtrip");
         let mutation_binary = mutation.encode_op().expect("mutation binary encode");
@@ -3083,7 +3083,7 @@ mod tests {
     mod conformance_laws {
         use super::*;
         use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{PdfDiff, PdfPathSegment};
-        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::PdfMutation;
+        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::*;
         use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::{diff, mutations, snapshot};
 
         use protocol::command::DiffAlgebra;
@@ -3093,26 +3093,27 @@ mod tests {
             ObjRef { num, gen }
         }
 
-        /// 🧹 Every `PdfMutation` variant (tags 0-14), incl. object-graph/path-addressing
+        /// 🧹 Every direct `PdfMutation` variant (tags 0-15), incl. object-graph/path-addressing
         /// variants that exercise `pdf-object`'s full recursive grammar (Array/Dict/Ref/Stream).
         fn demo_mutation_cases() -> Vec<PdfMutation> {
             vec![
-                PdfMutation::NoMutation,
-                PdfMutation::SetSnapshot { snapshot: demo_pdf17_snapshot() },
-                PdfMutation::InsertPage { index: 1, page: PdfPage { media_box: [0.0, 0.0, 100.0, 100.0], crop_box: Some([1.0, 1.0, 90.0, 90.0]), rotate: 90, text: "second".into() } },
-                PdfMutation::RemovePage { index: 0 },
-                PdfMutation::SetPageMediaBox { index: 0, media_box: [0.0, 0.0, 200.0, 300.0] },
-                PdfMutation::SetPageCropBox { index: 0, crop_box: Some([1.0, 1.0, 100.0, 100.0]) },
-                PdfMutation::SetPageCropBox { index: 0, crop_box: None },
-                PdfMutation::AppendPageContent { index: 0, text: "more\nlines".into() },
-                PdfMutation::SetInfo { info: PdfInfo { title: Some("Demo".into()), author: Some("Semio".into()), ..Default::default() } },
-                PdfMutation::InsertObject { id: oref(3, 0), value: PdfObject::Array(vec![PdfObject::Int(-5), PdfObject::Real(1.5.into()), PdfObject::Str(vec![0, 255]), PdfObject::Ref(oref(1, 0))]) },
-                PdfMutation::RemoveObject { id: oref(2, 0) },
-                PdfMutation::SetObjectValue { id: oref(1, 0), value: PdfObject::Stream { dict: vec![PdfDictEntry { key: "Length".into(), value: PdfObject::Int(2) }], data: vec![1, 2], filters: vec![PdfStreamFilter::Flate { predictor: None }] } },
-                PdfMutation::SetDictEntry { id: oref(1, 0), path: vec![PdfPathSegment::DictKey { key: "Kids".into() }, PdfPathSegment::ArrayIndex { index: 0 }], key: "Rotate".into(), value: PdfObject::Int(90) },
-                PdfMutation::RemoveDictEntry { id: oref(1, 0), path: vec![], key: "Type".into() },
-                PdfMutation::SetTrailerEntry { key: "Prev".into(), value: PdfObject::Int(100) },
-                PdfMutation::RemoveTrailerEntry { key: "Size".into() },
+                PdfMutation::InsertPage(InsertPage { index: 1, page: PdfPage { media_box: [0.0, 0.0, 100.0, 100.0], crop_box: Some([1.0, 1.0, 90.0, 90.0]), rotate: 90, text: "second".into() } }),
+                PdfMutation::RemovePage(RemovePage { index: 0 }),
+                PdfMutation::SetPageMediaBox(SetPageMediaBox { index: 0, media_box: [0.0, 0.0, 200.0, 300.0] }),
+                PdfMutation::SetPageCropBox(SetPageCropBox { index: 0, crop_box: Some([1.0, 1.0, 100.0, 100.0]) }),
+                PdfMutation::SetPageCropBox(SetPageCropBox { index: 0, crop_box: None }),
+                PdfMutation::AppendPageContent(AppendPageContent { index: 0, text: "more\nlines".into() }),
+                PdfMutation::SetInfo(SetInfo { info: PdfInfo { title: Some("Demo".into()), author: Some("Semio".into()), ..Default::default() } }),
+                PdfMutation::InsertObject(InsertObject { id: oref(3, 0), value: PdfObject::Array(vec![PdfObject::Int(-5), PdfObject::Real(1.5.into()), PdfObject::Str(vec![0, 255]), PdfObject::Ref(oref(1, 0))]) }),
+                PdfMutation::RemoveObject(RemoveObject { id: oref(2, 0) }),
+                PdfMutation::SetObjectValue(SetObjectValue { id: oref(1, 0), value: PdfObject::Stream { dict: vec![PdfDictEntry { key: "Length".into(), value: PdfObject::Int(2) }], data: vec![1, 2], filters: vec![PdfStreamFilter::Flate { predictor: None }] } }),
+                PdfMutation::SetDictEntry(SetDictEntry { id: oref(1, 0), path: vec![PdfPathSegment::DictKey { key: "Kids".into() }, PdfPathSegment::ArrayIndex { index: 0 }], key: "Rotate".into(), value: PdfObject::Int(90) }),
+                PdfMutation::RemoveDictEntry(RemoveDictEntry { id: oref(1, 0), path: vec![], key: "Type".into() }),
+                PdfMutation::SetTrailerEntry(SetTrailerEntry { key: "Prev".into(), value: PdfObject::Int(100) }),
+                PdfMutation::RemoveTrailerEntry(RemoveTrailerEntry { key: "Size".into() }),
+                PdfMutation::MovePage(MovePage { from: 0, to: 1 }),
+                PdfMutation::SetPageContent(SetPageContent { index: 0, text: "replacement".into() }),
+                PdfMutation::SetPageRotation(SetPageRotation { index: 0, rotation: 270 }),
             ]
         }
 

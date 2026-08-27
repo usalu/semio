@@ -1,13 +1,20 @@
 meta:
   id: stdio_tiff_mutation
   endian: le
-doc: |
-  protocol::OpBinary raw JSON encoding of TiffMutation (`#[serde(tag = "mutation")]`) — no
-  `.semio` envelope header (contrast with ../../📸️snapshot/💾️binary/, whose payload IS
-  wrapped). No length prefix: the whole op body IS the JSON document.
 seq:
-  - id: json_bytes
+  - id: format
     type: u1
-    repeat: eos
-    doc: UTF-8 JSON object bytes; the `"mutation"` tag selects one of 8 real variants (see
-      sibling ../📝️text/📖️component.grammar.semio for the field-level shape).
+    valid: 1
+  - id: tag
+    type: u1
+    enum: mutation_kind
+  - id: payload
+    size-eos: true
+enums:
+  mutation_kind:
+    2: change_byte_order
+    3: insert_ifd
+    4: remove_ifd
+    5: replace_tag
+    6: remove_tag
+    7: replace_pixels

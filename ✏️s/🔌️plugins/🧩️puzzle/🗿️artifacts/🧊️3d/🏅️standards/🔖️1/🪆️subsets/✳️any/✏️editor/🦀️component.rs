@@ -35,7 +35,8 @@ use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{
     apply_world3d_projection_action, apply_world3d_sun_action, mesh_from_kind, panel_tab_element_id, panel_tab_first_draggable_element_id, window_element_id, world3d_projection_action_moves_pose, world3d_projection_pose, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, AppIo, ArtifactEditor, ArtifactOwnedToolJobFactory,
-    ArtifactToolFactoryRegistry, ArtifactView, BuiltNode, ConfigView, Dialect, DialogDefinition, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef,
+    ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, BuiltNode, ConfigView, Dialect, DialogDefinition, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition,
+    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef,
     InteractionTarget, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode,
     NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolRef, UiNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID,
     SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
@@ -1826,6 +1827,8 @@ impl protocol::OpBinary for Puzzle3dCommand {
         "fillBuildTick",
         "registerBrushMesh",
         "worldPointerDown",
+        "setLocale",
+        "setTerminology",
     ];
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -2423,75 +2426,11 @@ fn puzzle3d_action_uses_precompute(action: &str) -> bool {
 }
 
 //#region 🧵️RetainedCommands
-pub(crate) const PUZZLE3D_RETAINED_TOOL_IDS: &[&str] = &[
-    "acceptSuggestion",
-    "addBrushObject",
-    "addObjectKind",
-    "addTargetVolume",
-    "closeVortexSuggestions",
-    "createAttraction",
-    "cycleBrushCandidate",
-    "cycleBrushCandidateBack",
-    "deleteAttraction",
-    "deleteSelection",
-    "deleteTargetVolume",
-    "duplicateSelection",
-    "engagementAbort",
-    "engagementControlSelect",
-    "engagementInput",
-    "engagementRepeatLast",
-    "engagementSubmit",
-    "fillBuildTick",
-    "focusSelection",
-    "hoverSuggestion",
-    "openAddObjectDialog",
-    "openVortexSuggestions",
-    "patchInspector",
-    "registerBrushMesh",
-    "relocateTargetVolume",
-    "rotateSelection",
-    "scaleSelection",
-    "selectSameKindSelection",
-    "setActiveExample",
-    "setBrushPlacementOverlapBudget",
-    "setCamera",
-    "setChunkSize",
-    "setFillCount",
-    "setFillCountStep",
-    "setFixtureJson",
-    "setGridSnapEnabled",
-    "setGridSpacing",
-    "setGridVisible",
-    "setLodAutomatic",
-    "setLodDepthVariable",
-    "setLodManual",
-    "setObjectKindWeight",
-    "setProjection",
-    "setProjectionParam",
-    "setProximityRadius",
-    "setSelectableKind",
-    "setSelectionFlag",
-    "setSunAzimuth",
-    "setSunElevation",
-    "setSunIntensity",
-    "setTargetVolumeFlag",
-    "setTransformGumballFlag",
-    "setVortexDirection",
-    "setVortexKindWeight",
-    "setVortexShow",
-    "setVoxelDims",
-    "suggestionsTick",
-    "toggleSun",
-    "transformBegin",
-    "transformEnd",
-    "translateSelection",
-    "worldPointerDown",
-    "worldRelocate",
-];
+pub(crate) const PUZZLE3D_RETAINED_TOOL_IDS: &[&str] = &["openAddObjectDialog", "worldPointerDown", "setLocale", "setTerminology"];
 const PUZZLE3D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.3d.fixture.tool-command.v1";
 
 fn puzzle3d_retained_extent(command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
-    if matches!(command.action_id(), "addTargetVolume" | "openAddObjectDialog") {
+    if matches!(command.action_id(), "addTargetVolume" | "openAddObjectDialog" | "worldPointerDown") {
         return Some(1);
     }
     let selection = interaction.selection.get(PUZZLE3D_INTERACTION_DOMAIN).map_or(0, |selection| selection.ids.len());
@@ -2514,6 +2453,9 @@ fn puzzle3d_retained_reduce(
 ) -> Result<Emit<Puzzle3dMutation, Puzzle3dConfigMutation>, Fault> {
     if command.action_id() == "openAddObjectDialog" {
         return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(120), dialog_id: "addObject".into(), args: None }));
+    }
+    if command.action_id() == "worldPointerDown" {
+        return Ok(Emit::default());
     }
     if command.action_id() == "addTargetVolume" {
         let Some(origin) = command.args().and_then(|args| args.get("origin")).and_then(value_as_vec3) else { return Ok(Emit::default()) };
@@ -2695,6 +2637,14 @@ impl Puzzle3dScalarConfigWork {
                 window_id,
                 value: args.and_then(|args| args.get("value")).and_then(Value::as_str).unwrap_or("").to_string(),
             }),
+            "setLocale" => {
+                let value = args.and_then(|args| args.get("value")).and_then(Value::as_str)?;
+                matches!(value, "en" | "en-US" | "de" | "de-DE").then(|| Puzzle3dConfigMutation::SetLocale { value: value.to_string() })
+            }
+            "setTerminology" => {
+                let value = args.and_then(|args| args.get("value")).and_then(Value::as_str)?;
+                matches!(value, "native" | "reuse").then(|| Puzzle3dConfigMutation::SetTerminology { value: value.to_string() })
+            }
             _ => None,
         }
     }
@@ -2705,7 +2655,10 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
         self.tool_id
     }
 
-    fn extent(&self, _command: &Puzzle3dCommand, _snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    fn extent(&self, command: &Puzzle3dCommand, _snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        if matches!(self.tool_id, "setLocale" | "setTerminology") && self.mutation(command, &Puzzle3dConfig::default()).is_none() {
+            return None;
+        }
         Some(2)
     }
 
@@ -6083,17 +6036,17 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
     }
 }
 
-struct BoundedFirstStepCommandJobFactory {
+struct Puzzle3dRetainedCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
 }
 
-impl BoundedFirstStepCommandJobFactory {
+impl Puzzle3dRetainedCommandJobFactory {
     fn new(controller_id: &str) -> Self {
         Self { keys: PUZZLE3D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
     }
 }
 
-impl ToolJobFactory for BoundedFirstStepCommandJobFactory {
+impl semio_framework::ToolJobFactory for Puzzle3dRetainedCommandJobFactory {
     type Payload = crate::retained_command::RetainedPuzzleCommandPayload<EditorApp<Puzzle3dPlayApp>>;
     type Job = crate::retained_command::RetainedPuzzleCommandJob<EditorApp<Puzzle3dPlayApp>>;
 
@@ -6139,12 +6092,233 @@ impl ToolJobFactory for BoundedFirstStepCommandJobFactory {
     }
 }
 
-impl ArtifactOwnedToolJobFactory for BoundedFirstStepCommandJobFactory {
-    type Owner = EditorApp<Puzzle3dPlayApp>;
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle3dRetainedCommandJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<Puzzle3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = PUZZLE3D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE3D_FIXTURE_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
+        ArtifactToolPublicationContract { tool_id: "openAddObjectDialog", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setTerminology", lanes: &[ArtifactToolPublicationLane::Config] },
+    ];
 }
 //#endregion 🧵️RetainedCommands
+
+//#region 📬️StorePreparation
+const PUZZLE3D_CONFIG_STORE_MAXIMUM_BYTES: usize = 32_768;
+
+struct Puzzle3dConfigStorePreparation {
+    base: Option<store::SnapshotRead<Puzzle3dConfig>>,
+    mutation: Option<Puzzle3dConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    candidate: Option<(Puzzle3dConfig, Vec<Puzzle3dConfigMutation>, Puzzle3dConfigMutation, usize)>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<Puzzle3dConfig, Puzzle3dConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    phase: u8,
+    cancelled: bool,
+    closing: bool,
+}
+
+struct Puzzle3dConfigStorePreparationFactory;
+
+fn puzzle3d_config_store_bounded_bytes(value: &Puzzle3dConfig) -> Result<usize, String> {
+    struct Counter(usize);
+    impl std::io::Write for Counter {
+        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+            self.0 = self
+                .0
+                .checked_add(bytes.len())
+                .filter(|total| *total <= PUZZLE3D_CONFIG_STORE_MAXIMUM_BYTES)
+                .ok_or_else(|| std::io::Error::other("Puzzle3d Config Store root exceeds its fixed envelope"))?;
+            Ok(bytes.len())
+        }
+
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+    let mut counter = Counter(0);
+    serde_json::to_writer(&mut counter, value).map_err(|error| error.to_string())?;
+    Ok(counter.0)
+}
+
+fn puzzle3d_config_store_mutation_bytes(mutation: &Puzzle3dConfigMutation) -> Option<usize> {
+    match mutation {
+        Puzzle3dConfigMutation::SetLocale { value } if matches!(value.as_str(), "en" | "en-US" | "de" | "de-DE") => Some(value.len()),
+        Puzzle3dConfigMutation::SetTerminology { value } if matches!(value.as_str(), "native" | "reuse") => Some(value.len()),
+        _ => None,
+    }
+}
+
+fn puzzle3d_config_store_edit(
+    forward: Puzzle3dConfigMutation,
+    inverse: Vec<Puzzle3dConfigMutation>,
+    description: Option<String>,
+    authority: &store::ArtifactStoreOneItemLiveAuthority,
+) -> protocol::Edit<Puzzle3dConfigMutation> {
+    let id = format!("puzzle3d-config-retained-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutation> for Puzzle3dConfigStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        use protocol::{Mutation as _, MutationDiff as _};
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() || self.phase >= 2 {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        match self.phase {
+            0 => {
+                let base = self.base.as_ref().ok_or_else(|| "Puzzle3d Config preparation lost its exact base root".to_string())?;
+                let mutation = self.mutation.take().ok_or_else(|| "Puzzle3d Config preparation lost its mutation owner".to_string())?;
+                if puzzle3d_config_store_mutation_bytes(&mutation).is_none() {
+                    return Err("Puzzle3d Config preparation rejected its exact mutation envelope".into());
+                }
+                let completed_bytes = puzzle3d_config_store_bounded_bytes(base.get())?;
+                let inverse = mutation.inverse(base.get());
+                let post = mutation
+                    .diff(base.get())
+                    .into_parts()
+                    .0
+                    .apply(base.get())
+                    .map_err(|_| "Puzzle3d Config mutation could not produce its post root".to_string())?;
+                self.candidate = Some((post, inverse, mutation, completed_bytes));
+                self.phase = 1;
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: completed_bytes as u64, digest: [0; 32] };
+                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
+            }
+            1 => {
+                let (post, inverse, mutation, completed_bytes) = self.candidate.take().ok_or_else(|| "Puzzle3d Config preparation lost its semantic candidate".to_string())?;
+                let authority = self.authority.as_ref().ok_or_else(|| "Puzzle3d Config preparation lost its Store authority".to_string())?;
+                let prepared = authority.prepare_one_item(
+                    puzzle3d_config_store_edit(mutation, inverse, self.description.take(), authority),
+                    std::sync::Arc::new(post),
+                )?;
+                self.phase = 2;
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: completed_bytes as u64, digest: prepared.edit_digest() };
+                self.prepared = Some(prepared);
+                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+            }
+            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)),
+        }
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Puzzle3dConfig, Puzzle3dConfigMutation>> {
+        self.prepared.as_ref()
+    }
+
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Puzzle3dConfig, Puzzle3dConfigMutation>> {
+        self.prepared.take()
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("Puzzle3d Config preparation could not return its exact base root".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<Puzzle3dConfig, Puzzle3dConfigMutation> for Puzzle3dConfigStorePreparationFactory {
+    fn preflight(
+        &self,
+        mutation: &Puzzle3dConfigMutation,
+        description: Option<&str>,
+        lane: store::HistoryLane,
+    ) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Puzzle3d Config preparation rejected its lane or description".into());
+        }
+        let retained_bytes = puzzle3d_config_store_mutation_bytes(mutation).ok_or_else(|| "Puzzle3d Config preparation rejected its exact mutation".to_string())?;
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes })
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<Puzzle3dConfig, Puzzle3dConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Puzzle3dConfig, Puzzle3dConfigMutation>> {
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(Puzzle3dConfigStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            candidate: None,
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            phase: 0,
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+//#endregion 📬️StorePreparation
 
 impl ArtifactEditor for Puzzle3dPlayApp {
     const DIALECT: Dialect = crate::artifacts::puzzle3d::PUZZLE3D_DIALECT;
@@ -6161,31 +6335,40 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
     type Command = Puzzle3dCommand;
 
+    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(Puzzle3dConfigStorePreparationFactory))
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<Puzzle3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
         controller: "s.puzzle.puzzle3d@1/*#editor",
         document_schema: "puzzle.3d.fixture",
-        factory: "BoundedFirstStepCommandJobFactory",
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 512, 1, 262_144, 7_500),
-        tools: [
-            "acceptSuggestion", "addBrushObject", "addObjectKind", "addTargetVolume", "closeVortexSuggestions", "createAttraction",
-            "cycleBrushCandidate", "cycleBrushCandidateBack", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection",
-            "engagementAbort", "engagementControlSelect", "engagementInput",
-            "engagementRepeatLast", "engagementSubmit", "fillBuildTick", "focusSelection", "hoverSuggestion", "openAddObjectDialog",
-            "openVortexSuggestions", "patchInspector", "registerBrushMesh", "relocateTargetVolume", "rotateSelection", "scaleSelection",
-            "selectSameKindSelection", "setActiveExample", "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setFillCount",
-            "setFillCountStep", "setFixtureJson", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setLodAutomatic",
-            "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius",
-            "setSelectableKind", "setSelectionFlag", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTargetVolumeFlag",
-            "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "suggestionsTick",
-            "toggleSun", "transformBegin", "transformEnd", "translateSelection", "worldPointerDown", "worldRelocate"
-        ]
+        factory: "Puzzle3dRetainedCommandJobFactory",
+        factory_type: Puzzle3dRetainedCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::resumable(8_192, 512, 1, 262_144, 7_500, 1, 1),
+        tools: ["openAddObjectDialog", "worldPointerDown", "setLocale", "setTerminology"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
-        let controller_id = registry.controller_id().to_string();
-        registry.register(BoundedFirstStepCommandJobFactory::new(&controller_id))
+        let controller = registry.controller_id().to_string();
+        registry.register(Puzzle3dRetainedCommandJobFactory::new(&controller))
     }
 
     fn build_tool_job(request: semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
@@ -6241,7 +6424,9 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             | "closeVortexSuggestions"
             | "hoverSuggestion"
             | "engagementControlSelect"
-            | "engagementInput" => Box::new(Puzzle3dScalarConfigWork::new(tool_id)),
+            | "engagementInput"
+            | "setLocale"
+            | "setTerminology" => Box::new(Puzzle3dScalarConfigWork::new(tool_id)),
             "worldPointerDown" | "transformBegin" | "transformEnd" => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(tool_id)),
             _ => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent)),
         };
@@ -6632,6 +6817,8 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .shell_action("openAddObjectDialog", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add {w}…"), |w| format!("{w} hinzufügen…")))
             // 👁️ Ephemeral view state — selection, hover, camera scratch, utility-parameter runtime.
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
+            .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
+            .view_action("setTerminology", LocalizedLabel::native("Set Terminology", "Terminologie festlegen"))
             .view_action("setProjection", LocalizedLabel::native("Set Projection", "Projektion festlegen"))
             .view_action("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"))
             .view_action("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"))
@@ -6769,69 +6956,71 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
                     ])
                     .submit_label(LocalizedLabel::native("Add", "Hinzufügen")),
             )
-            .action_interactive_job("acceptSuggestion", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("addBrushObject", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("addObjectKind", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("addTargetVolume", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("closeVortexSuggestions", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("createAttraction", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("cycleBrushCandidate", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("cycleBrushCandidateBack", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("deleteAttraction", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("deleteTargetVolume", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("duplicateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementAbort", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementControlSelect", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementRepeatLast", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("fillBuildTick", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("focusSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("hoverSuggestion", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("acceptSuggestion", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addBrushObject", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addObjectKind", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addTargetVolume", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("closeVortexSuggestions", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("createAttraction", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("cycleBrushCandidate", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("cycleBrushCandidateBack", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("deleteAttraction", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("deleteTargetVolume", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("duplicateSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementAbort", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementControlSelect", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementRepeatLast", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("fillBuildTick", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("focusSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("hoverSuggestion", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("openAddObjectDialog", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("openVortexSuggestions", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("patchInspector", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("registerBrushMesh", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("relocateTargetVolume", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("rotateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("scaleSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("selectSameKindSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setBrushPlacementOverlapBudget", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setChunkSize", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setFillCount", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job(set_fill_count::STEP_ACTION_ID, semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setFixtureJson", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setGridSnapEnabled", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setGridSpacing", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setGridVisible", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLodAutomatic", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLodDepthVariable", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLodManual", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setObjectKindWeight", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setProjection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setProjectionParam", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setProximityRadius", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSelectableKind", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSelectionFlag", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSunAzimuth", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSunElevation", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSunIntensity", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setTargetVolumeFlag", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setTransformGumballFlag", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setVortexDirection", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setVortexKindWeight", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setVortexShow", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setVoxelDims", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("suggestionsTick", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("toggleSun", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("transformBegin", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("transformEnd", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("translateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("openVortexSuggestions", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("patchInspector", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("registerBrushMesh", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("relocateTargetVolume", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("rotateSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("scaleSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("selectSameKindSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setBrushPlacementOverlapBudget", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setChunkSize", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setFillCount", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job(set_fill_count::STEP_ACTION_ID, semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setFixtureJson", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setGridSnapEnabled", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setGridSpacing", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setGridVisible", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setLocale", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLodAutomatic", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setLodDepthVariable", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setLodManual", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setObjectKindWeight", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setProjection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setProjectionParam", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setProximityRadius", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setSelectableKind", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setSelectionFlag", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setSunAzimuth", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setSunElevation", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setSunIntensity", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setTargetVolumeFlag", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setTerminology", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setTransformGumballFlag", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setVortexDirection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setVortexKindWeight", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setVortexShow", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setVoxelDims", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("suggestionsTick", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("toggleSun", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("transformBegin", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("transformEnd", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("translateSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("worldPointerDown", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("worldRelocate", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("worldRelocate", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .build_definition()
 }
 
@@ -6957,7 +7146,7 @@ pub(crate) mod testkit {
     }
 
     pub fn projection_of(app: &Puzzle3dApp) -> Value {
-        semio_framework::io::resolve_ready(app.snapshot()).expect("projection").value().clone()
+        app.snapshot().expect("projection").value().clone()
     }
 
     pub fn object_count(app: &Puzzle3dApp) -> usize {
@@ -7147,6 +7336,31 @@ pub(crate) mod testkit {
 mod tests {
     use super::testkit::*;
     use super::*;
+
+    #[test]
+    fn retained_publication_contracts_are_an_exact_nonempty_tool_bijection() {
+        let fixture: Value = serde_json::from_str(include_str!("../🧪️retained-jobs/🔣️component.json")).expect("Puzzle3D retained route fixture");
+        assert_eq!(fixture.get("toolIds"), Some(&json!(PUZZLE3D_RETAINED_TOOL_IDS)));
+        let manifest = create_puzzle3d_app();
+        for tool_id in PUZZLE3D_RETAINED_TOOL_IDS {
+            let actions = manifest.actions.iter().filter(|action| action.id == *tool_id).collect::<Vec<_>>();
+            assert_eq!(actions.len(), 1, "{tool_id} requires exactly one manifest declaration");
+            assert_eq!(actions[0].semantics.execution.interactive_job, semio_framework_plugin::InteractiveJobClassification::Migrated, "{tool_id}");
+        }
+        let exact = |contracts: &[ArtifactToolPublicationContract]| {
+            let ids = contracts.iter().map(|contract| contract.tool_id).collect::<std::collections::BTreeSet<_>>();
+            ids == PUZZLE3D_RETAINED_TOOL_IDS.iter().copied().collect()
+                && ids.len() == contracts.len()
+                && contracts.iter().all(|contract| !contract.lanes.is_empty() && (!contract.lanes.contains(&ArtifactToolPublicationLane::HostOnly) || contract.lanes.len() == 1))
+        };
+        let contracts = <Puzzle3dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
+        assert!(exact(contracts));
+        assert!(!exact(&contracts[..contracts.len() - 1]));
+        let mut duplicate = contracts.to_vec();
+        let copied = duplicate[1];
+        duplicate[0] = copied;
+        assert!(!exact(&duplicate));
+    }
 
     #[test]
     fn retained_command_catalog_excludes_framework_owned_shared_actions() {
@@ -7661,7 +7875,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn puzzle3d_play_projection_pack_round_trips() {
         let app = app();
-        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&semio_framework::io::resolve_ready(app.snapshot()).expect("projection"));
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -9209,8 +9423,8 @@ mod tests {
     async fn kit_in_import_media_upserts_object_and_vortex_kinds_into_meta_kind_catalogs() {
         let app = Puzzle3dPlayApp::default();
         let projection = Puzzle3dPlayApp::initial_snapshot();
-        let history = semio_framework::io::resolve_ready(semio_framework_plugin::HistoryView::empty());
-        let doc = semio_framework::io::resolve_ready(ArtifactView::new(&projection, &history));
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&projection, &history);
 
         let fragment = json!({
             "schema": "manifest",
@@ -9255,7 +9469,7 @@ mod tests {
     async fn kit_in_import_media_is_idempotent_on_repeated_delivery() {
         let app = Puzzle3dPlayApp::default();
         let projection = Puzzle3dPlayApp::initial_snapshot();
-        let history = semio_framework::io::resolve_ready(semio_framework_plugin::HistoryView::empty());
+        let history = semio_framework_plugin::HistoryView::empty();
         let mut current = projection.value().clone();
 
         let fragment = json!({
@@ -9269,7 +9483,7 @@ mod tests {
 
         for _ in 0..2 {
             let doc_projection = Puzzle3dPlaySnapshot::new(current.clone());
-            let doc = semio_framework::io::resolve_ready(ArtifactView::new(&doc_projection, &history));
+            let doc = ArtifactView::new(&doc_projection, &history);
             let emit = Puzzle3dPlayApp::import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
             for operation in &emit.artifact_mutations {
                 current = protocol::Mutation::<Value>::diff(operation, &current).diff().apply(&current).expect("valid mutation diff");

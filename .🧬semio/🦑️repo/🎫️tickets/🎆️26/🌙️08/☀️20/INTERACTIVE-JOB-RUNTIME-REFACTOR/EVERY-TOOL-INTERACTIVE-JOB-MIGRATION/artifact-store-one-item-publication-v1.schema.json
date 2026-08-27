@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/artifact-store-one-item-publication-v1.schema.json",
+  "type": "object",
+  "required": ["version", "capacities", "admissionCases", "authorityCases", "lifecycleCases", "publicationPhases"],
+  "properties": {
+    "$schema": { "const": "./artifact-store-one-item-publication-v1.schema.json" },
+    "version": { "const": 1 },
+    "capacities": {
+      "type": "object",
+      "required": ["historyItems", "maximumWorkItems", "maximumRetainedBytes", "maximumRetries", "closeItemsPerTurn", "closeBytesPerTurn"],
+      "properties": {
+        "historyItems": { "type": "integer", "minimum": 1 },
+        "maximumWorkItems": { "const": 65536 },
+        "maximumRetainedBytes": { "const": 1048576 },
+        "maximumRetries": { "const": 2 },
+        "closeItemsPerTurn": { "const": 1 },
+        "closeBytesPerTurn": { "type": "integer", "minimum": 1, "maximum": 1048576 }
+      },
+      "additionalProperties": false
+    },
+    "admissionCases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["id", "workItems", "retainedBytes", "accepted", "fuelAfter"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "workItems": { "type": "integer", "minimum": 0 },
+          "retainedBytes": { "type": "integer", "minimum": 0 },
+          "accepted": { "type": "boolean" },
+          "fuelAfter": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "authorityCases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["id", "authorityMatches", "digestOwner", "cursorFieldsExposed", "accepted"],
+        "properties": {
+          "id": { "enum": ["canonical-helper", "forged-digest", "forged-base-history"] },
+          "authorityMatches": { "type": "boolean" },
+          "digestOwner": { "enum": ["store", "domain"] },
+          "cursorFieldsExposed": { "type": "boolean" },
+          "accepted": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "lifecycleCases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["id", "baseGeneration", "liveGeneration", "baseRevision", "liveRevision", "expected"],
+            "properties": {
+              "id": { "const": "stale-generation" },
+              "baseGeneration": { "type": "integer", "minimum": 0 },
+              "liveGeneration": { "type": "integer", "minimum": 0 },
+              "baseRevision": { "type": "integer", "minimum": 0 },
+              "liveRevision": { "type": "integer", "minimum": 0 },
+              "expected": { "const": "fault" }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["id", "baseGeneration", "liveGeneration", "baseRevision", "liveRevision", "expected"],
+            "properties": {
+              "id": { "const": "stale-revision" },
+              "baseGeneration": { "type": "integer", "minimum": 0 },
+              "liveGeneration": { "type": "integer", "minimum": 0 },
+              "baseRevision": { "type": "integer", "minimum": 0 },
+              "liveRevision": { "type": "integer", "minimum": 0 },
+              "expected": { "const": "fault" }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["id", "cancelAt", "preparedAt", "expected"],
+            "properties": {
+              "id": { "const": "cancel-before-publish" },
+              "cancelAt": { "type": "integer", "minimum": 0 },
+              "preparedAt": { "type": "integer", "minimum": 0 },
+              "expected": { "const": "complete-empty" }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["id", "publishAt", "retryAttempts", "acknowledged", "expected"],
+            "properties": {
+              "id": { "const": "retry-then-ack" },
+              "publishAt": { "type": "integer", "minimum": 0 },
+              "retryAttempts": { "type": "integer", "minimum": 0, "maximum": 2 },
+              "acknowledged": { "const": true },
+              "expected": { "const": "complete-empty" }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["id", "publishAt", "retryAttempts", "acknowledged", "expected"],
+            "properties": {
+              "id": { "const": "retry-plus-one" },
+              "publishAt": { "type": "integer", "minimum": 0 },
+              "retryAttempts": { "type": "integer", "minimum": 3 },
+              "acknowledged": { "const": false },
+              "expected": { "const": "retry-exhausted" }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["id", "cancelAt", "retainedOwners", "expectedCloseTurns", "expected"],
+            "properties": {
+              "id": { "const": "interrupted-close" },
+              "cancelAt": { "type": "integer", "minimum": 0 },
+              "retainedOwners": { "type": "integer", "minimum": 1 },
+              "expectedCloseTurns": { "type": "integer", "minimum": 1 },
+              "expected": { "const": "complete-empty" }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "publicationPhases": {
+      "type": "array",
+      "minItems": 7,
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.writer.v1;
+
+message RenameWriter {
+  string new_id = 1;
+}

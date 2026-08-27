@@ -1,7 +1,0 @@
-# delete-morph-target inverse facet.
-input GltfDeleteMorphTargetPayloadV1 {
-  mesh: Int!
-  primitive: Int!
-  target: Int!
-}
-type GltfDeleteMorphTargetInverseV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

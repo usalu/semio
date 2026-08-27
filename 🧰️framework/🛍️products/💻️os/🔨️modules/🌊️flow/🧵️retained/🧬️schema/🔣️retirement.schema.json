@@ -1,0 +1,338 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.flow.retirement.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "grants",
+    "fixture",
+    "expected"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.flow.retirement.v1"
+    },
+    "grants": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4096
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "camera",
+        "widgets",
+        "synapses",
+        "layout"
+      ],
+      "properties": {
+        "schema": {
+          "const": "flow.fixture"
+        },
+        "camera": {
+          "$ref": "#/definitions/camera"
+        },
+        "widgets": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "id",
+                  "label",
+                  "value",
+                  "min",
+                  "max",
+                  "step"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "inputSlider"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "number"
+                  },
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  },
+                  "step": {
+                    "type": "number"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "id",
+                  "preview",
+                  "expanded"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "outputPreview"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "preview": {
+                    "$ref": "#/definitions/dictionary"
+                  },
+                  "expanded": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "id",
+                  "name",
+                  "tree",
+                  "flow"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "cluster"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "tree": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "neurons",
+                      "synapses"
+                    ],
+                    "properties": {
+                      "neurons": {
+                        "type": "array",
+                        "maxItems": 0
+                      },
+                      "synapses": {
+                        "type": "array",
+                        "maxItems": 0
+                      }
+                    }
+                  },
+                  "flow": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "camera",
+                      "nodes",
+                      "previews"
+                    ],
+                    "properties": {
+                      "camera": {
+                        "$ref": "#/definitions/camera"
+                      },
+                      "nodes": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "layout",
+                            "chrome"
+                          ],
+                          "properties": {
+                            "layout": {
+                              "$ref": "#/definitions/layout"
+                            },
+                            "chrome": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "kind",
+                                "label",
+                                "value",
+                                "min",
+                                "max",
+                                "step"
+                              ],
+                              "properties": {
+                                "kind": {
+                                  "const": "slider"
+                                },
+                                "label": {
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "type": "number"
+                                },
+                                "min": {
+                                  "type": "number"
+                                },
+                                "max": {
+                                  "type": "number"
+                                },
+                                "step": {
+                                  "type": "number"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "previews": {
+                        "type": "array",
+                        "maxItems": 0
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "synapses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "from",
+              "to",
+              "fromPort",
+              "toPort"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "fromPort": {
+                "type": "string"
+              },
+              "toPort": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "layout": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/layout"
+          }
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "releasedBytes",
+        "terminalEmpty"
+      ],
+      "properties": {
+        "releasedBytes": {
+          "type": "integer",
+          "minimum": 4097
+        },
+        "terminalEmpty": {
+          "const": true
+        }
+      }
+    }
+  },
+  "definitions": {
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "zoom": {
+          "type": "number"
+        }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "dictionary": {
+      "type": "object",
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/definitions/dictionary"
+          }
+        ]
+      }
+    }
+  }
+}

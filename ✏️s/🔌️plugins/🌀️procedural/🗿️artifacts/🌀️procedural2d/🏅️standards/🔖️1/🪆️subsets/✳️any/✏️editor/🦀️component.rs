@@ -19,12 +19,12 @@ use crate::editor::procedural2d::modes::generate::windows::{form, generations, p
 use crate::editor::procedural2d::modes::{edit, generate};
 use crate::editor::procedural2d::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::procedural2d::terminology::{procedural2d_labels, Procedural2dLabels};
-use flow::{with_process_flow_eval_session, FlowEvalSession};
-use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_job::InteractiveJobCloseStep;
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use flow::FlowEvalSession;
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
+use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect,
+    app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
+    ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect,
     DomainTopology, DraftView, Editor, EditorApp, Effect, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MediaClass,
     MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
 };
@@ -113,93 +113,16 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
-const PROCEDURAL2D_BOUNDED_TOOL_IDS: &[&str] = &["nodeGraphViewport", "setShowMode"];
-const PROCEDURAL2D_RESUMABLE_TOOL_IDS: &[&str] = &[
-    "nodeGraphEdit",
-    "moveMediaNode",
-    "addWidget",
-    "removeWidget",
-    "connectMediaPorts",
-    "reorganize",
-    "addGeneration",
-    "removeGeneration",
-    "renameGeneration",
-    "updateGenerationValues",
-    "generate",
-    "setEvalOutputs",
-    "canvasPointerDown",
-    "canvasPointerMove",
-    "canvasPointerUp",
-    "canvasWheel",
-    "selectGeneration",
-    "flowEvalTick",
-];
+const PROCEDURAL2D_BOUNDED_TOOL_IDS: &[&str] = &["nodeGraphViewport", "setShowMode", "generate", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasWheel"];
 const PROCEDURAL2D_RETAINED_PAYLOAD_SCHEMA: &str = "procedural.2d.tool-command.v1";
 const PROCEDURAL2D_RETAINED_RAW_BYTES: usize = 8_192;
-const PROCEDURAL2D_RETAINED_WORK_ITEMS: usize = 64;
-const PROCEDURAL2D_SCAN_BYTES: usize = 256;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Procedural2dCommandDisposition {
-    Bounded,
-    NodeGraph,
-    Media,
-    Reorganize,
-    Generate,
-    Canvas,
-    Flow,
-}
-
-fn procedural2d_command_disposition(tool_id: &str) -> Option<Procedural2dCommandDisposition> {
-    match tool_id {
-        "nodeGraphViewport" | "setShowMode" => Some(Procedural2dCommandDisposition::Bounded),
-        "nodeGraphEdit" | "addWidget" | "removeWidget" => Some(Procedural2dCommandDisposition::NodeGraph),
-        "moveMediaNode" | "connectMediaPorts" | "setEvalOutputs" => Some(Procedural2dCommandDisposition::Media),
-        "reorganize" => Some(Procedural2dCommandDisposition::Reorganize),
-        "addGeneration" | "removeGeneration" | "renameGeneration" | "updateGenerationValues" | "generate" | "selectGeneration" => Some(Procedural2dCommandDisposition::Generate),
-        "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "canvasWheel" => Some(Procedural2dCommandDisposition::Canvas),
-        "flowEvalTick" => Some(Procedural2dCommandDisposition::Flow),
-        _ => None,
-    }
-}
 
 fn procedural2d_bounded_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(PROCEDURAL2D_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500)
 }
 
-fn procedural2d_resumable_contract() -> ToolExecutionContract {
-    ToolExecutionContract::resumable(PROCEDURAL2D_RETAINED_RAW_BYTES, PROCEDURAL2D_RETAINED_WORK_ITEMS, 1, 16_384, 7_500, 1, 1)
-}
-
 fn procedural2d_bounded_extent(_command: &Procedural2dCommand, _snapshot: &Procedural2dSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     Some(1)
-}
-
-fn procedural2d_checked_sum(parts: impl IntoIterator<Item = usize>) -> Option<usize> {
-    parts.into_iter().try_fold(0usize, usize::checked_add).map(|extent| extent.max(1))
-}
-
-fn procedural2d_payload_units(command: &Procedural2dCommand) -> usize {
-    let bytes = match command {
-        Procedural2dCommand::NodeGraphEdit(payload) => payload.operations_json.len(),
-        Procedural2dCommand::SetEvalOutputs(payload) => payload.outputs_json.len(),
-        _ => 0,
-    };
-    bytes.div_ceil(PROCEDURAL2D_SCAN_BYTES)
-}
-
-fn procedural2d_resumable_extent(command: &Procedural2dCommand, snapshot: &Procedural2dSnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
-    let disposition = procedural2d_command_disposition(command.command_id())?;
-    let fixture = &snapshot.fixture;
-    let common = [fixture.widgets.len(), fixture.synapses.len(), fixture.layout.len()];
-    match disposition {
-        Procedural2dCommandDisposition::Bounded => Some(1),
-        Procedural2dCommandDisposition::NodeGraph => procedural2d_checked_sum(common.into_iter().chain([interaction.selection.get("graph").map_or(0, |selection| selection.ids.len()), procedural2d_payload_units(command)])),
-        Procedural2dCommandDisposition::Media | Procedural2dCommandDisposition::Reorganize | Procedural2dCommandDisposition::Canvas | Procedural2dCommandDisposition::Flow => {
-            procedural2d_checked_sum(common.into_iter().chain([procedural2d_payload_units(command)]))
-        }
-        Procedural2dCommandDisposition::Generate => procedural2d_checked_sum(common.into_iter().chain([snapshot.generation.generations.len(), procedural2d_payload_units(command)])),
-    }
 }
 
 fn procedural2d_retained_reduce(
@@ -207,165 +130,15 @@ fn procedural2d_retained_reduce(
     snapshot: &Procedural2dSnapshot,
     config: &Procedural2dConfig,
     history: &semio_framework_plugin::HistoryView,
-    interaction: &protocol::InteractionState,
+    _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     operation: &AppOperationContext,
 ) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, NoDraftMutation>, Fault> {
+    if !PROCEDURAL2D_BOUNDED_TOOL_IDS.contains(&command.command_id()) { return Err(Fault::from("procedural2d-command-retained-route-rejected")); }
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config };
-    with_process_flow_eval_session(|session| match command {
-        Procedural2dCommand::NodeGraphEdit(payload) => node_graph_edit::apply_selected(payload, &doc, &interaction.selection.get("graph").map_or(&[][..], |selection| selection.ids.as_slice())),
-        _ => command.dispatch(&doc, &cfg, session),
-    })
-}
-
-struct Procedural2dResumableCommandWork {
-    tool_id: &'static str,
-    disposition: Procedural2dCommandDisposition,
-    cursor: usize,
-    digest: u64,
-    complete: bool,
-    closing: bool,
-}
-
-impl Procedural2dResumableCommandWork {
-    fn new(tool_id: &'static str, disposition: Procedural2dCommandDisposition) -> Self {
-        Self { tool_id, disposition, cursor: 0, digest: 0xcbf2_9ce4_8422_2325, complete: false, closing: false }
-    }
-
-    fn observe_bytes(&mut self, bytes: &[u8]) {
-        self.digest ^= bytes.len() as u64;
-        if let Some(first) = bytes.first() {
-            self.digest = self.digest.rotate_left(7) ^ u64::from(*first);
-        }
-        if let Some(last) = bytes.last() {
-            self.digest = self.digest.rotate_left(11) ^ u64::from(*last);
-        }
-    }
-
-    fn observe_fixture(&mut self, snapshot: &Procedural2dSnapshot, interaction: &protocol::InteractionState, command: &Procedural2dCommand) {
-        let fixture = &snapshot.fixture;
-        let mut cursor = self.cursor;
-        if cursor < fixture.widgets.len() {
-            self.observe_bytes(crate::artifacts::procedural2d::widget_id(&fixture.widgets[cursor]).as_bytes());
-            return;
-        }
-        cursor -= fixture.widgets.len();
-        if cursor < fixture.synapses.len() {
-            self.observe_bytes(fixture.synapses[cursor].id.as_bytes());
-            return;
-        }
-        cursor -= fixture.synapses.len();
-        if cursor < fixture.layout.len() {
-            if let Some((id, _)) = fixture.layout.iter().nth(cursor) {
-                self.observe_bytes(id.as_bytes());
-            }
-            return;
-        }
-        cursor -= fixture.layout.len();
-        if matches!(self.disposition, Procedural2dCommandDisposition::Generate) {
-            if cursor < snapshot.generation.generations.len() {
-                self.observe_bytes(snapshot.generation.generations[cursor].id.as_bytes());
-                return;
-            }
-            cursor -= snapshot.generation.generations.len();
-        }
-        if matches!(self.disposition, Procedural2dCommandDisposition::NodeGraph) {
-            let selection = interaction.selection.get("graph").map_or(&[][..], |selection| selection.ids.as_slice());
-            if cursor < selection.len() {
-                self.observe_bytes(selection[cursor].as_bytes());
-                return;
-            }
-            cursor -= selection.len();
-        }
-        let payload = match command {
-            Procedural2dCommand::NodeGraphEdit(payload) => payload.operations_json.as_bytes(),
-            Procedural2dCommand::SetEvalOutputs(payload) => payload.outputs_json.as_bytes(),
-            _ => &[],
-        };
-        let start = cursor.saturating_mul(PROCEDURAL2D_SCAN_BYTES).min(payload.len());
-        let end = start.saturating_add(PROCEDURAL2D_SCAN_BYTES).min(payload.len());
-        self.observe_bytes(&payload[start..end]);
-    }
-}
-
-impl ArtifactCommandWork<EditorApp<Procedural2dPlayApp>> for Procedural2dResumableCommandWork {
-    fn tool_id(&self) -> &'static str {
-        self.tool_id
-    }
-
-    fn extent(&self, command: &Procedural2dCommand, snapshot: &Procedural2dSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Procedural2dPlayApp>>>) -> Option<usize> {
-        procedural2d_resumable_extent(command, snapshot, interaction)
-    }
-
-    fn step(
-        &mut self,
-        command: &Procedural2dCommand,
-        snapshot: &Procedural2dSnapshot,
-        config: &Procedural2dConfig,
-        history: &semio_framework_plugin::HistoryView,
-        interaction: &protocol::InteractionState,
-        hover: &semio_framework_plugin::app::InteractionHoverState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Procedural2dPlayApp>>>,
-        operation: &AppOperationContext,
-    ) -> Result<ArtifactCommandWorkStep<EditorApp<Procedural2dPlayApp>>, Fault> {
-        if self.complete {
-            return Err(Fault::from("procedural2d-retained-work-repeated"));
-        }
-        let extent = procedural2d_resumable_extent(command, snapshot, interaction).ok_or_else(|| Fault::from("procedural2d-retained-work-extent-overflow"))?;
-        if self.cursor > extent {
-            return Err(Fault::from("procedural2d-retained-checkpoint-cursor-out-of-range"));
-        }
-        if self.cursor < extent {
-            self.observe_fixture(snapshot, interaction, command);
-            self.cursor += 1;
-            return Ok(ArtifactCommandWorkStep::Progress { stage: "procedural2d-command-scan", preview: b"{\"en\":\"Scanning command inputs\",\"de\":\"Befehlseingaben werden gepr\xC3\xBCft\"}" });
-        }
-        self.complete = true;
-        procedural2d_retained_reduce(command, snapshot, config, history, interaction, hover, operation).map(ArtifactCommandWorkStep::Complete)
-    }
-
-    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
-        if target.len() < 24 {
-            return Err(Fault::from("procedural2d-retained-checkpoint-capacity"));
-        }
-        target[..4].copy_from_slice(b"P2C1");
-        target[4] = self.disposition as u8;
-        target[5] = u8::from(self.complete);
-        target[8..16].copy_from_slice(&(self.cursor as u64).to_le_bytes());
-        target[16..24].copy_from_slice(&self.digest.to_le_bytes());
-        Ok(24)
-    }
-
-    fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
-        if checkpoint.len() != 24 || &checkpoint[..4] != b"P2C1" || checkpoint[4] != self.disposition as u8 || checkpoint[5] > 1 {
-            return Err(Fault::from("procedural2d-retained-checkpoint-invalid"));
-        }
-        let cursor = u64::from_le_bytes(checkpoint[8..16].try_into().map_err(|_| Fault::from("procedural2d-retained-checkpoint-cursor"))?);
-        if cursor > usize::MAX as u64 {
-            return Err(Fault::from("procedural2d-retained-checkpoint-cursor"));
-        }
-        self.cursor = cursor as usize;
-        self.digest = u64::from_le_bytes(checkpoint[16..24].try_into().map_err(|_| Fault::from("procedural2d-retained-checkpoint-digest"))?);
-        self.complete = checkpoint[5] == 1;
-        Ok(())
-    }
-
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
-        if self.closing {
-            InteractiveJobCloseStep::Complete
-        } else {
-            InteractiveJobCloseStep::Blocked
-        }
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing
-    }
+    let mut session = FlowEvalSession::new();
+    command.dispatch(&doc, &cfg, &mut session)
 }
 
 struct Procedural2dBoundedCommandJobFactory {
@@ -378,7 +151,7 @@ impl Procedural2dBoundedCommandJobFactory {
     }
 }
 
-impl ToolJobFactory for Procedural2dBoundedCommandJobFactory {
+impl semio_framework::ToolJobFactory for Procedural2dBoundedCommandJobFactory {
     type Payload = ArtifactRetainedCommandPayload<EditorApp<Procedural2dPlayApp>>;
     type Job = ArtifactRetainedCommandJob<EditorApp<Procedural2dPlayApp>>;
 
@@ -416,69 +189,163 @@ impl ToolJobFactory for Procedural2dBoundedCommandJobFactory {
     }
 }
 
-impl ArtifactOwnedToolJobFactory for Procedural2dBoundedCommandJobFactory {
-    type Owner = EditorApp<Procedural2dPlayApp>;
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Procedural2dBoundedCommandJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<Procedural2dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = PROCEDURAL2D_BOUNDED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = PROCEDURAL_2D_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
+        ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setShowMode", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "generate", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "canvasPointerMove", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "canvasPointerUp", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "canvasWheel", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ];
 }
 
-struct Procedural2dResumableCommandJobFactory {
-    keys: Vec<ToolFactoryKey>,
-}
-
-impl Procedural2dResumableCommandJobFactory {
-    fn new(controller_id: &str) -> Self {
-        Self { keys: PROCEDURAL2D_RESUMABLE_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
-    }
-}
-
-impl ToolJobFactory for Procedural2dResumableCommandJobFactory {
-    type Payload = ArtifactRetainedCommandPayload<EditorApp<Procedural2dPlayApp>>;
-    type Job = ArtifactRetainedCommandJob<EditorApp<Procedural2dPlayApp>>;
-
-    fn keys(&self) -> &[ToolFactoryKey] {
-        &self.keys
-    }
-
-    fn payload_schema_id(&self) -> &str {
-        PROCEDURAL2D_RETAINED_PAYLOAD_SCHEMA
-    }
-
-    fn classification(&self) -> InteractiveJobClassification {
-        InteractiveJobClassification::Migrated
-    }
-
-    fn execution_contract(&self) -> ToolExecutionContract {
-        procedural2d_resumable_contract()
-    }
-
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
-
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > PROCEDURAL2D_RETAINED_RAW_BYTES || checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
-            return Err((ToolJobFactoryError::new("Procedural2d retained command rejects oversized wire or checkpoint owner"), input, checkpoint));
-        }
-        Ok(match checkpoint {
-            Some(checkpoint) => ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
-            None => ArtifactRetainedCommandJob::from_wire(payload, input),
-        })
-    }
-}
-
-impl ArtifactOwnedToolJobFactory for Procedural2dResumableCommandJobFactory {
-    type Owner = EditorApp<Procedural2dPlayApp>;
-    const TOOL_IDS: &'static [&'static str] = PROCEDURAL2D_RESUMABLE_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = PROCEDURAL_2D_SCHEMA;
-}
 //#endregion 🧵️RetainedCommands
+
+//#region 📬️ConfigStorePreparation
+const PROCEDURAL2D_CONFIG_TEXT_MAXIMUM_BYTES: usize = 128;
+const PROCEDURAL2D_CONFIG_PUBLICATION_MAXIMUM_BYTES: usize = 4_096;
+
+//#region 🎟️Admission
+fn procedural2d_config_text_bytes(config: &Procedural2dConfig) -> usize {
+    [config.show_mode.len(), config.selected_generation_id.as_ref().map_or(0, String::len), config.generation_preview_text.as_ref().map_or(0, String::len), config.locale.len()].into_iter().fold(0usize, usize::saturating_add)
+}
+
+fn procedural2d_config_publication_bytes(mutation: &Procedural2dConfigMutation) -> Result<usize, String> {
+    let bytes = match mutation {
+        Procedural2dConfigMutation::SetCamera { .. } => 0,
+        Procedural2dConfigMutation::SetShowMode { value } => value.len(),
+        _ => return Err("procedural2d-config-unsupported-mutation".into()),
+    };
+    if bytes > PROCEDURAL2D_CONFIG_TEXT_MAXIMUM_BYTES { return Err("procedural2d-config-text-envelope".into()); }
+    Ok(PROCEDURAL2D_CONFIG_PUBLICATION_MAXIMUM_BYTES)
+}
+
+struct Procedural2dConfigPreparationFactory;
+
+impl store::ArtifactStoreOneItemPreparationFactory<Procedural2dConfig, Procedural2dConfigMutation> for Procedural2dConfigPreparationFactory {
+    fn preflight(&self, mutation: &Procedural2dConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > 64) {
+            return Err("procedural2d-config-lane-or-description-envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: procedural2d_config_publication_bytes(mutation)? })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<Procedural2dConfig, Procedural2dConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Procedural2dConfig, Procedural2dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Procedural2dConfig, Procedural2dConfigMutation>> {
+        if request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > 64 || self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err() || procedural2d_config_text_bytes(request.base.get()) > PROCEDURAL2D_CONFIG_TEXT_MAXIMUM_BYTES {
+            return Err(request);
+        }
+        Ok(Box::new(Procedural2dConfigPreparation {
+            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+        }))
+    }
+}
+//#endregion 🎟️Admission
+
+//#region 🧵️Preparation
+struct Procedural2dConfigPreparation {
+    base: Option<store::SnapshotRead<Procedural2dConfig>>,
+    mutation: Option<Procedural2dConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<Procedural2dConfig, Procedural2dConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl store::ArtifactStoreOneItemPreparation<Procedural2dConfig, Procedural2dConfigMutation> for Procedural2dConfigPreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || grant.maximum_bytes < PROCEDURAL2D_CONFIG_PUBLICATION_MAXIMUM_BYTES || self.cancelled || self.closing { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.checkpoint.cursor != 0 { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        let base = self.base.as_ref().ok_or_else(|| "procedural2d-config-base-owner-missing".to_string())?;
+        let mutation = self.mutation.as_ref().ok_or_else(|| "procedural2d-config-mutation-owner-missing".to_string())?;
+        let mut next = base.get().clone();
+        let inverse = match mutation {
+            Procedural2dConfigMutation::SetCamera { camera } => { next.camera = camera.clone(); Procedural2dConfigMutation::SetCamera { camera: base.get().camera.clone() } }
+            Procedural2dConfigMutation::SetShowMode { value } => { next.show_mode = value.clone(); Procedural2dConfigMutation::SetShowMode { value: base.get().show_mode.clone() } }
+            _ => return Err("procedural2d-config-unsupported-mutation".into()),
+        };
+        if procedural2d_config_text_bytes(&next) > PROCEDURAL2D_CONFIG_TEXT_MAXIMUM_BYTES { return Err("procedural2d-config-post-text-envelope".into()); }
+        let authority = self.authority.as_ref().ok_or_else(|| "procedural2d-config-authority-missing".to_string())?;
+        let id = format!("procedural2d-config-{}", authority.next_sequence_number());
+        let edit = protocol::Edit {
+            id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![mutation.clone()], inverse: vec![inverse],
+            mutation_meta: vec![protocol::MutationMeta {
+                mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
+                author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+                payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+            }],
+            description: self.description.clone(), coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+        };
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(next))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: PROCEDURAL2D_CONFIG_PUBLICATION_MAXIMUM_BYTES as u64, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Procedural2dConfig, Procedural2dConfigMutation>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Procedural2dConfig, Procedural2dConfigMutation>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 || grant.maximum_bytes < PROCEDURAL2D_CONFIG_PUBLICATION_MAXIMUM_BYTES { return Ok(store::SnapshotRetirementStep::Blocked); }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: PROCEDURAL2D_CONFIG_PUBLICATION_MAXIMUM_BYTES });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() { return Err("procedural2d-config-base-retirement-rejected".into()); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.authority.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES }); }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 🧵️Preparation
+//#region 🧪️PreparationLaws
+#[cfg(test)]
+mod procedural2d_config_preparation_laws {
+    use super::*;
+    use store::{ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory};
+
+    #[test]
+    fn admitted_maximum_and_production_grant_make_bounded_progress() {
+        let factory = Procedural2dConfigPreparationFactory;
+        let maximum = Procedural2dConfigMutation::SetShowMode { value: "x".repeat(PROCEDURAL2D_CONFIG_TEXT_MAXIMUM_BYTES) };
+        assert_eq!(factory.preflight(&maximum, None, store::HistoryLane::Document).expect("maximum admission").retained_bytes, 4_096);
+        let overflow = Procedural2dConfigMutation::SetShowMode { value: "x".repeat(PROCEDURAL2D_CONFIG_TEXT_MAXIMUM_BYTES + 1) };
+        assert!(factory.preflight(&overflow, None, store::HistoryLane::Document).is_err());
+        assert!(factory.preflight(&maximum, Some(&"x".repeat(65)), store::HistoryLane::Document).is_err());
+        let mut work = Procedural2dConfigPreparation {
+            base: None, mutation: Some(maximum), description: None, authority: None, prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+        };
+        assert!(matches!(work.advance(store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 4_096 }), Ok(store::ArtifactStoreOneItemPreparationStep::Blocked)));
+        assert!(matches!(work.advance(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_095 }), Ok(store::ArtifactStoreOneItemPreparationStep::Blocked)));
+        work.cancel();
+        assert!(matches!(work.advance(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_096 }), Ok(store::ArtifactStoreOneItemPreparationStep::Blocked)));
+        work.begin_close();
+        assert!(matches!(work.close_step(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 0 }), Ok(store::SnapshotRetirementStep::Blocked)));
+        assert!(work.mutation.is_some());
+        assert!(matches!(work.close_step(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_096 }), Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 4_096 })));
+        assert!(work.terminal_is_empty());
+        assert!(matches!(work.close_step(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_096 }), Ok(store::SnapshotRetirementStep::Complete)));
+    }
+}
+//#endregion 🧪️PreparationLaws
+//#endregion 📬️ConfigStorePreparation
 
 //#region 🔖️Procedural2dPlayApp
 /// 🧪️ Unit struct apart from `eval_session`: every former runtime field lives in [`Procedural2dConfig`],
@@ -532,54 +399,42 @@ impl ArtifactEditor for Procedural2dPlayApp {
     const DIALECT: Dialect = PROCEDURAL2D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PROCEDURAL_2D_SCHEMA;
 
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(Procedural2dConfigPreparationFactory))
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<Procedural2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
         controller: "s.procedural.procedural2d@1/*#editor",
         document_schema: "procedural.2d",
-        factory: "BoundedFirstStepCommandJobFactory",
+        factory: "Procedural2dBoundedCommandJobFactory",
+        factory_type: Procedural2dBoundedCommandJobFactory,
         tools: {
-            "nodeGraphEdit" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "moveMediaNode" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "addWidget" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "removeWidget" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "connectMediaPorts" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "reorganize" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "addGeneration" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "removeGeneration" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "renameGeneration" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "updateGenerationValues" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
             "nodeGraphViewport" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "setShowMode" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "generate" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setEvalOutputs" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "canvasPointerDown" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "canvasPointerMove" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "canvasPointerUp" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "canvasWheel" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "selectGeneration" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "flowEvalTick" => semio_framework::ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "generate" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "canvasPointerDown" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "canvasPointerMove" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "canvasPointerUp" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "canvasWheel" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
         }
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
-        let controller_id = registry.controller_id().to_string();
-        registry.register(Procedural2dBoundedCommandJobFactory::new(&controller_id))?;
-        registry.register(Procedural2dResumableCommandJobFactory::new(&controller_id))
+        let controller = registry.controller_id().to_string();
+        registry.register(Procedural2dBoundedCommandJobFactory::new(&controller))
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        let Some(disposition) = procedural2d_command_disposition(&request.tool_id) else {
+        if !PROCEDURAL2D_BOUNDED_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
-        };
+        }
         if request.command.command_id() != request.tool_id {
             return Err(Fault::from("procedural2d-command-tool-mismatch"));
         }
         let tool_id = request.command.command_id();
-        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = match disposition {
-            Procedural2dCommandDisposition::Bounded => Box::new(BoundedArtifactCommandWork::new(tool_id, procedural2d_retained_reduce, procedural2d_bounded_extent)),
-            _ => Box::new(Procedural2dResumableCommandWork::new(tool_id, disposition)),
-        };
+        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, procedural2d_retained_reduce, procedural2d_bounded_extent));
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
@@ -599,7 +454,7 @@ impl ArtifactEditor for Procedural2dPlayApp {
             request.completion,
             Procedural2dCommand::command_id,
             PROCEDURAL2D_RETAINED_RAW_BYTES,
-            PROCEDURAL2D_RETAINED_WORK_ITEMS,
+            1,
             work,
         )?;
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
@@ -686,10 +541,11 @@ impl ArtifactEditor for Procedural2dPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, Fault> {
-        with_process_flow_eval_session(|session| match command {
-            Procedural2dCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction, session),
-            _ => command.dispatch(doc, cfg, session),
-        })
+        let mut session = FlowEvalSession::new();
+        match command {
+            Procedural2dCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction, &mut session),
+            _ => command.dispatch(doc, cfg, &mut session),
+        }
     }
 
     /// 🕹️ `graph`'s `HierarchyProvider::Topology` — every top-level widget is a "node" (root unless
@@ -729,23 +585,23 @@ impl ArtifactEditor for Procedural2dPlayApp {
     /// covers every mutation path (edits, undo/redo, remote operations) in one place instead of each
     /// action re-checking.
     fn pending_effects(doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>) -> Vec<Effect> {
-        with_process_flow_eval_session(|session| {
-            let host = crate::artifacts::procedural2d::schema::host_from_fixture_with_session(&doc.snapshot.fixture, session);
-            if session.sync(&host) {
-                vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(101), action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
-            } else {
-                Vec::new()
-            }
-        })
+        let mut session = FlowEvalSession::new();
+        let host = crate::artifacts::procedural2d::schema::host_from_fixture_with_session(&doc.snapshot.fixture, &session);
+        if session.sync(&host) {
+            vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(101), action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
+        } else {
+            Vec::new()
+        }
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = procedural2d_labels(config);
-        let node = with_process_flow_eval_session(|session| match body_key {
-            flow_window::PROCEDURAL2D_PLAY_BODY_MAIN => flow_window::render(document, config, session),
-            edit_preview::PROCEDURAL2D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, session),
+        let session = FlowEvalSession::new();
+        let node = match body_key {
+            flow_window::PROCEDURAL2D_PLAY_BODY_MAIN => flow_window::render(document, config, &session),
+            edit_preview::PROCEDURAL2D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, &session),
             generations::PROCEDURAL2D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, semio_framework_plugin::locale_from_str(&config.locale), semio_framework_plugin::Terminology::Native),
             form::PROCEDURAL2D_PLAY_BODY_GENERATE_FORM => form::render(document, &document.generation, labels),
             generate_preview::PROCEDURAL2D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(config, labels),
@@ -753,7 +609,7 @@ impl ArtifactEditor for Procedural2dPlayApp {
             catalogue_panel::PROCEDURAL2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             inspection_panel::PROCEDURAL2D_PLAY_BODY_INSPECTION => inspection_panel::render(document, config, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
-        })?;
+        }?;
         Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 
@@ -826,8 +682,8 @@ impl ArtifactEditor for Procedural2dPlayApp {
         for (widget_id_key, value) in object {
             let Some(number) = value.as_f64() else { continue };
             let Some(widget) = doc.snapshot.fixture.widgets.iter().find(|widget| crate::artifacts::procedural2d::widget_id(widget) == widget_id_key.as_str()) else { continue };
-            if let flow::Widget::InputSlider { id, min, max, step, .. } = widget {
-                operations.push(crate::artifacts::procedural2d::op::replace_widget(flow::Widget::InputSlider { id: id.clone(), value: number, min: *min, max: *max, step: *step }));
+            if let flow::Widget::InputSlider { id, label, min, max, step, .. } = widget {
+                operations.push(crate::artifacts::procedural2d::op::replace_widget(flow::Widget::InputSlider { id: id.clone(), label: label.clone(), value: number, min: *min, max: *max, step: *step }));
             }
         }
         Ok(Emit::mutations(operations))
@@ -880,26 +736,26 @@ pub fn create_procedural2d_app() -> semio_framework_plugin::AppDefinition {
         .view_action("canvasWheel", LocalizedLabel::native("Canvas Wheel", "Canvas-Mausrad"))
         .action_with(categorized_action("selectGeneration", LocalizedLabel::native("Select Generation", "Generation auswählen"), ActionKind::View, "methods"))
         .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), ActionKind::View) })
-        .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::Migrated)
-        .action_interactive_job("moveMediaNode", InteractiveJobClassification::Migrated)
-        .action_interactive_job("addWidget", InteractiveJobClassification::Migrated)
-        .action_interactive_job("removeWidget", InteractiveJobClassification::Migrated)
-        .action_interactive_job("connectMediaPorts", InteractiveJobClassification::Migrated)
-        .action_interactive_job("reorganize", InteractiveJobClassification::Migrated)
-        .action_interactive_job("addGeneration", InteractiveJobClassification::Migrated)
-        .action_interactive_job("removeGeneration", InteractiveJobClassification::Migrated)
-        .action_interactive_job("renameGeneration", InteractiveJobClassification::Migrated)
-        .action_interactive_job("updateGenerationValues", InteractiveJobClassification::Migrated)
+        .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("moveMediaNode", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("addWidget", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("removeWidget", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("connectMediaPorts", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("reorganize", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("addGeneration", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("removeGeneration", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("renameGeneration", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("updateGenerationValues", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
         .action_interactive_job("setShowMode", InteractiveJobClassification::Migrated)
         .action_interactive_job("generate", InteractiveJobClassification::Migrated)
-        .action_interactive_job("setEvalOutputs", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setEvalOutputs", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
         .action_interactive_job("canvasPointerMove", InteractiveJobClassification::Migrated)
         .action_interactive_job("canvasPointerUp", InteractiveJobClassification::Migrated)
         .action_interactive_job("canvasWheel", InteractiveJobClassification::Migrated)
-        .action_interactive_job("selectGeneration", InteractiveJobClassification::Migrated)
-        .action_interactive_job("flowEvalTick", InteractiveJobClassification::Migrated)
+        .action_interactive_job("selectGeneration", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("flowEvalTick", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("setLocale", InteractiveJobClassification::ForbiddenFromUi)
         // 📝️ Staged argument form for the palette-visible add-widget action (default materialized host-side).
         .action_args("addWidget", vec![
@@ -1007,9 +863,9 @@ mod tests {
         snapshot.fixture.layout.insert("move-target".into(), flow::WidgetLayout { x: 1.0, y: 2.0 });
         snapshot.fixture.layout.insert("clear-target".into(), flow::WidgetLayout { x: 3.0, y: 4.0 });
         for (id, name) in [("delete-generation", "Delete"), ("rename-generation", "Before Rename"), ("change-generation", "Change Value")] {
-            snapshot.generation.generations.push(flow::playbook::FormGeneration { id: id.into(), name: name.into(), values: serde_json::Map::new() });
+            snapshot.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(flow::playbook::FormGeneration { id: id.into(), name: name.into(), values: serde_json::Map::new() });
         }
-        snapshot.generation.selected_generation_id = Some("rename-generation".into());
+        snapshot.generation.cold_builder_mut().expect("unique cold generation owner").selected_generation_id = Some("rename-generation".into());
         snapshot
     }
 
@@ -1087,40 +943,6 @@ mod tests {
         }))
         .expect("schema-first P2 production fixture envelope");
         (wire, expected, expected_digest)
-    }
-
-    fn retained_snapshot(widget_count: usize) -> Procedural2dSnapshot {
-        let mut snapshot = Procedural2dSnapshot::default();
-        snapshot.fixture.widgets.clear();
-        snapshot.fixture.synapses.clear();
-        snapshot.fixture.layout.clear();
-        snapshot.generation.generations.clear();
-        snapshot.fixture.widgets.extend((0..widget_count).map(|index| Widget::InputNote { id: format!("retained-{index}"), text: String::new() }));
-        snapshot
-    }
-
-    fn retained_operation() -> AppOperationContext {
-        AppOperationContext { app_instance_id: 1, parent_document_id: "procedural2d-retained-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32] }
-    }
-
-    fn drive_resumable_work(
-        work: &mut Procedural2dResumableCommandWork,
-        command: &Procedural2dCommand,
-        snapshot: &Procedural2dSnapshot,
-        history: &semio_framework_plugin::HistoryView,
-    ) -> (usize, Emit<Procedural2dMutation, Procedural2dConfigMutation, NoDraftMutation>) {
-        let config = Procedural2dConfig::default();
-        let interaction = protocol::InteractionState::default();
-        let hover = semio_framework_plugin::InteractionHoverState::default();
-        let operation = retained_operation();
-        let mut progress = 0;
-        loop {
-            match work.step(command, snapshot, &config, history, &interaction, &hover, None, &operation).expect("retained work step") {
-                ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::Progress { .. } => progress += 1,
-                ArtifactCommandWorkStep::Complete(emit) => return (progress, emit),
-                ArtifactCommandWorkStep::CompleteWithEphemeral { emit, .. } => return (progress, emit),
-            }
-        }
     }
 
     fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Procedural2dPlayApp>>, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
@@ -1211,100 +1033,15 @@ mod tests {
     #[test]
     fn retained_route_dispositions_are_exact_and_exhaustive() {
         use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
-
-        let mut ids = PROCEDURAL2D_BOUNDED_TOOL_IDS.iter().chain(PROCEDURAL2D_RESUMABLE_TOOL_IDS).copied().collect::<Vec<_>>();
-        ids.sort_unstable();
-        ids.dedup();
-        assert_eq!(ids.len(), 20);
-        assert_eq!(PROCEDURAL2D_BOUNDED_TOOL_IDS, &["nodeGraphViewport", "setShowMode"]);
-        assert_eq!(PROCEDURAL2D_RESUMABLE_TOOL_IDS.len(), 18);
-        assert!(ids.iter().all(|tool_id| procedural2d_command_disposition(tool_id).is_some()));
-        assert_eq!(<Procedural2dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 20);
+        use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+        assert_eq!(PROCEDURAL2D_BOUNDED_TOOL_IDS.len(), 7);
+        assert_eq!(<Procedural2dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 7);
+        assert_eq!(Procedural2dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 7);
         assert_eq!(procedural2d_bounded_contract().shape, ToolExecutionShape::BoundedFirstStep);
-        assert_eq!(procedural2d_resumable_contract().shape, ToolExecutionShape::Resumable);
-        assert_eq!(procedural2d_resumable_contract().cancellation, ToolCancellationPolicy::PerOperation);
-        assert_eq!(procedural2d_resumable_contract().checkpoint_every_steps, 1);
-        assert_eq!(procedural2d_resumable_contract().progress_every_steps, 1);
-    }
-
-    #[test]
-    fn retained_resumable_extent_accepts_exact_maximum_and_rejects_max_plus_one() {
-        let command = Procedural2dCommand::Reorganize(reorganize::Reorganize {});
-        let interaction = protocol::InteractionState::default();
-        let exact = retained_snapshot(PROCEDURAL2D_RETAINED_WORK_ITEMS);
-        let rejected = retained_snapshot(PROCEDURAL2D_RETAINED_WORK_ITEMS + 1);
-        assert_eq!(procedural2d_resumable_extent(&command, &exact, &interaction), Some(PROCEDURAL2D_RETAINED_WORK_ITEMS));
-        assert!(procedural2d_resumable_extent(&command, &exact, &interaction).is_some_and(|extent| extent <= PROCEDURAL2D_RETAINED_WORK_ITEMS));
-        assert!(procedural2d_resumable_extent(&command, &rejected, &interaction).is_some_and(|extent| extent > PROCEDURAL2D_RETAINED_WORK_ITEMS));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn retained_resumable_progress_checkpoint_replay_and_close_are_exact() {
-        let command = Procedural2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {});
-        let snapshot = retained_snapshot(PROCEDURAL2D_RETAINED_WORK_ITEMS);
-        let history = semio_framework_plugin::HistoryView::empty().await;
-        let config = Procedural2dConfig::default();
-        let interaction = protocol::InteractionState::default();
-        let hover = semio_framework_plugin::InteractionHoverState::default();
-        let operation = retained_operation();
-        let mut uninterrupted = Procedural2dResumableCommandWork::new("canvasPointerMove", Procedural2dCommandDisposition::Canvas);
-        for _ in 0..11 {
-            assert!(matches!(uninterrupted.step(&command, &snapshot, &config, &history, &interaction, &hover, None, &operation).expect("checkpoint prefix"), ArtifactCommandWorkStep::Progress { .. }));
-        }
-        let mut checkpoint = [0u8; 24];
-        assert_eq!(uninterrupted.checkpoint(&mut checkpoint).expect("checkpoint"), checkpoint.len());
-        let mut replayed = Procedural2dResumableCommandWork::new("canvasPointerMove", Procedural2dCommandDisposition::Canvas);
-        replayed.restore(&checkpoint).expect("restore");
-        assert_eq!((replayed.cursor, replayed.digest), (uninterrupted.cursor, uninterrupted.digest));
-        let (uninterrupted_progress, uninterrupted_emit) = drive_resumable_work(&mut uninterrupted, &command, &snapshot, &history);
-        let (replayed_progress, replayed_emit) = drive_resumable_work(&mut replayed, &command, &snapshot, &history);
-        assert_eq!(uninterrupted_progress, PROCEDURAL2D_RETAINED_WORK_ITEMS - 11);
-        assert_eq!(replayed_progress, uninterrupted_progress);
-        assert!(uninterrupted_emit.artifact_mutations.is_empty() && uninterrupted_emit.config_mutations.is_empty() && uninterrupted_emit.effects.is_empty());
-        assert!(replayed_emit.artifact_mutations.is_empty() && replayed_emit.config_mutations.is_empty() && replayed_emit.effects.is_empty());
-        assert_eq!(replayed.close_step(0, 0), InteractiveJobCloseStep::Blocked);
-        replayed.begin_close();
-        assert_eq!(replayed.close_step(0, 0), InteractiveJobCloseStep::Complete);
-        assert!(replayed.terminal_is_empty());
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn retained_bounded_and_resumable_maximum_steps_stay_below_eight_milliseconds() {
-        let history = semio_framework_plugin::HistoryView::empty().await;
-        let config = Procedural2dConfig::default();
-        let interaction = protocol::InteractionState::default();
-        let hover = semio_framework_plugin::InteractionHoverState::default();
-        let operation = retained_operation();
-        let bounded = [
-            Procedural2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: "x".repeat(PROCEDURAL2D_RETAINED_RAW_BYTES) }),
-            Procedural2dCommand::SetShowMode(set_show_mode::SetShowMode { value: "x".repeat(PROCEDURAL2D_RETAINED_RAW_BYTES) }),
-        ];
-        let empty = retained_snapshot(0);
-        for command in &bounded {
-            let started = std::time::Instant::now();
-            procedural2d_retained_reduce(command, &empty, &config, &history, &interaction, &hover, &operation).expect("bounded reducer");
-            assert!(started.elapsed().as_micros() < 8_000, "bounded {} exceeded the interactive step ceiling", command.command_id());
-        }
-
-        let maximum = PROCEDURAL2D_RETAINED_WORK_ITEMS;
-        let fixtures = [
-            (Procedural2dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }), retained_snapshot(maximum - 1), Procedural2dCommandDisposition::NodeGraph),
-            (Procedural2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: "absent".into(), x: 0.0, y: 0.0 }), retained_snapshot(maximum), Procedural2dCommandDisposition::Media),
-            (Procedural2dCommand::Reorganize(reorganize::Reorganize {}), retained_snapshot(maximum), Procedural2dCommandDisposition::Reorganize),
-            (Procedural2dCommand::Generate(enter_generate::Generate {}), retained_snapshot(maximum), Procedural2dCommandDisposition::Generate),
-            (Procedural2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {}), retained_snapshot(maximum), Procedural2dCommandDisposition::Canvas),
-            (Procedural2dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}), retained_snapshot(maximum), Procedural2dCommandDisposition::Flow),
-        ];
-        for (command, snapshot, disposition) in fixtures {
-            let mut work = Procedural2dResumableCommandWork::new(command.command_id(), disposition);
-            loop {
-                let started = std::time::Instant::now();
-                let step = work.step(&command, &snapshot, &config, &history, &interaction, &hover, None, &operation).expect("maximum work step");
-                assert!(started.elapsed().as_micros() < 8_000, "resumable {} exceeded the interactive step ceiling", command.command_id());
-                if matches!(step, ArtifactCommandWorkStep::Complete(_) | ArtifactCommandWorkStep::CompleteWithEphemeral { .. }) {
-                    break;
-                }
-            }
+        assert_eq!(procedural2d_bounded_contract().cancellation, ToolCancellationPolicy::PerOperation);
+        assert!(PROCEDURAL2D_BOUNDED_TOOL_IDS.iter().all(|tool_id| Procedural2dBoundedCommandJobFactory::PUBLICATION_CONTRACTS.iter().any(|contract| contract.tool_id == *tool_id)));
+        for blocked in ["nodeGraphEdit", "moveMediaNode", "addWidget", "removeWidget", "connectMediaPorts", "reorganize", "addGeneration", "removeGeneration", "renameGeneration", "updateGenerationValues", "setEvalOutputs", "selectGeneration", "flowEvalTick", "setLocale"] {
+            assert!(!PROCEDURAL2D_BOUNDED_TOOL_IDS.contains(&blocked));
         }
     }
 

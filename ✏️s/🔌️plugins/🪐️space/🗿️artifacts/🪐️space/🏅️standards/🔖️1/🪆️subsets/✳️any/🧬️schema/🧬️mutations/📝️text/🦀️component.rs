@@ -2,6 +2,13 @@
 
 pub use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 
+pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
+    ("create-artifact", super::create_artifact::text::TEXT_OPCODE),
+    ("delete-artifact", super::delete_artifact::text::TEXT_OPCODE),
+    ("rename-artifact", super::rename_artifact::text::TEXT_OPCODE),
+    ("touch-artifact", super::touch_artifact::text::TEXT_OPCODE),
+];
+
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");

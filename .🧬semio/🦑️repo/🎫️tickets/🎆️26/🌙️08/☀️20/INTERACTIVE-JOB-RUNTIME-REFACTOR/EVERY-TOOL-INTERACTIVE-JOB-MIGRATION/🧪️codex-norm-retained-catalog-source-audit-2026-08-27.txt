@@ -1,0 +1,67 @@
+Norm retained-command source audit — 2026-08-27
+
+Scope resolution
+- Task shorthand: 13 editor component.rs files.
+- Explicit task list and repository reality: 15 editor component.rs files.
+- Audited editors: 15.
+- Audited command modules: 45 (three per editor).
+
+Source parity (Bun)
+{
+  "editors": 15,
+  "commands": 45,
+  "manifestBatchOnlyAnnotations": 45,
+  "retainedAnnotations": 0,
+  "factories": 0,
+  "publicationContracts": 0,
+  "oracleTests": 15,
+  "routeBodies": {
+    "evaluateNoOp": 15,
+    "selectedConfig": 15,
+    "setSnapshotWholeDocument": 15
+  },
+  "violations": []
+}
+
+Note: a raw text count finds 60 BatchOnlyPendingRewrite tokens because the 15
+owner-local tests also assert the disposition. The manifest count is 45.
+
+Ajv Draft 2020-12 validation
+{"canonical":"accepted","hostileRejected":4,"apps":15,"identities":45,"retained":0,"batchOnlyPendingRewrite":45}
+
+Hostile mutations rejected
+- nonempty forged HostOnly publication contract;
+- setSnapshot changed to migrated;
+- selected-check lane changed from config to host;
+- one app row removed.
+
+Official source verifier
+- Command:
+  bun ./📜️script.ts verify interactivity tool-jobs --format json --output
+  .../📊️codex-official-tool-jobs-norm-source-2026-08-27.json
+- Exit: 1, expected from repository-global gates outside the command cohort.
+- Self-tests: 486.
+- Norm acceptedCommandRows: 0.
+- Norm remainingCommands: 0; the 45 explicitly BatchOnlyPendingRewrite rows are
+  no longer reported as forged retained work or live unclassified commands.
+- Norm factoryContracts: 0, matching the exact empty publication-contract set.
+- Norm reserved import-media owners: 15, all failClosedPendingFactory.
+- Norm process-global payload candidates: 2, recorded below as explicit blockers.
+
+Process-global payload blockers
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🦀️component.rs:
+  EN1990_QK_SCRATCH is a thread-local HashMap containing composed-child q_k
+  payloads. Moving it honestly requires an instance/service-owned child resolver
+  available to ArtifactApp dispatch and reload; the source says that seam is absent.
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🦀️component.rs:
+  DIN18599_CLIMATE_SCRATCH is the equivalent thread-local composed-child climate
+  payload cache and has the same missing child-resolver ownership seam.
+- Immutable OnceLock language and I/O descriptor vectors were inspected and are
+  not mutable payload owners.
+
+Source hygiene
+- No stale bounded-view fixture references.
+- No Norm editor retained factory, proof macro, Migrated claim, or
+  PUBLICATION_CONTRACTS symbol remains.
+- git diff --check over ✏️s/🔌️plugins/📕️norm: clean.
+- Cargo, Nx, rustfmt, and native compiler tests: not run; compiler lease withheld.

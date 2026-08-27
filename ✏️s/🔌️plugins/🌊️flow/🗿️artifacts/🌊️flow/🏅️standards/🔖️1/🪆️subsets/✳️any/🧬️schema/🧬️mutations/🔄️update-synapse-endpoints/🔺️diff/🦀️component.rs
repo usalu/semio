@@ -6,7 +6,7 @@ use protocol::Identified;
 
 use super::mutation::UpdateSynapseEndpoints;
 
-pub async fn diff(payload: &UpdateSynapseEndpoints, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
+pub fn diff(payload: &UpdateSynapseEndpoints, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
     let mut scene = flow_working_scene(base);
     if !scene.synapses.iter().any(|synapse| synapse.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Synapse \"{}\" does not exist.", payload.id), [payload.id.clone()]);

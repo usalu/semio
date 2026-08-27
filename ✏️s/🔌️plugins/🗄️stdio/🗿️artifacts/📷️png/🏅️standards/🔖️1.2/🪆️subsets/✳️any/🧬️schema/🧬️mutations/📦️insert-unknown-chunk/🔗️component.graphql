@@ -1,0 +1,3 @@
+# 🧬️ insert-unknown-chunk/InsertUnknownChunk
+scalar InsertUnknownChunkMutationValue
+input InsertUnknownChunkMutation { index: Int! chunk: InsertUnknownChunkMutationValue! }

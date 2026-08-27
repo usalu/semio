@@ -135,8 +135,8 @@ impl FlowWheelPlan {
 pub struct FlowHost {
     pub fixture: FlowFixture,
     pub dag: DagHost,
-    pub outputs: HashMap<String, Dictionary>,
-    export_payloads: HashMap<String, Dictionary>,
+    pub outputs: BTreeMap<String, Dictionary>,
+    export_payloads: BTreeMap<String, Dictionary>,
     pub last_eval_json: String,
     eval_bridge: Option<EvalBridge>,
     host_catalogue_json: String,
@@ -186,8 +186,8 @@ impl FlowHost {
         let mut host = Self {
             fixture,
             dag: DagHost::from_fixture(DagFixture { schema: "dag.fixture".into(), camera: dag::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
-            outputs: HashMap::new(),
-            export_payloads: HashMap::new(),
+            outputs: BTreeMap::new(),
+            export_payloads: BTreeMap::new(),
             last_eval_json: String::new(),
             eval_bridge: None,
             host_catalogue_json: String::new(),
@@ -237,7 +237,7 @@ impl FlowHost {
         // scene resync reloads fixture content (hover, eval tick, remote operations, …).
         let camera = self.fixture.camera.clone();
         fixture.camera = camera;
-        self.fixture = fixture;
+        std::mem::replace(&mut self.fixture, fixture).retire_cold();
         if !preserve_eval {
             self.outputs.clear();
             self.export_payloads.clear();
@@ -457,9 +457,8 @@ impl FlowHost {
             let Some((id, x, y)) = self.dag.pointer_plan_move(&plan, index) else {
                 continue;
             };
-            if let Some(layout) = self.fixture.layout.get_mut(id) {
-                layout.x = x;
-                layout.y = y;
+            if self.fixture.layout.contains_key(id) {
+                self.fixture.layout.insert(id.to_owned(), WidgetLayout { x, y });
             }
         }
         self.dag.apply_pointer_plan(&plan);
@@ -515,9 +514,13 @@ impl FlowHost {
         let descriptor: WidgetDescriptor = serde_json::from_str(descriptor_json)?;
         let id: String = "__ghost__".into();
         let widget = widget_from_descriptor(&descriptor, id.clone(), &self.kind_infos);
-        let mut layout = BTreeMap::new();
+        let mut layout = crate::OrderedMap::new();
         layout.insert(id, WidgetLayout { x: world_x, y: world_y });
         let mut node = widget_to_dag_node(&widget, 0, &layout, &[], &self.kind_infos);
+        widget.retire_cold();
+        let mut retirement = crate::retained::FlowRetirement::default();
+        retirement.push(crate::retained::FlowOwner::Layouts(layout));
+        retirement.retire_cold();
         fit_node_size(&mut node);
         self.ghost_node = Some(node.clone());
         self.dag.set_ghost_node(Some(node));
@@ -819,13 +822,19 @@ impl FlowHost {
     pub fn make_space(&mut self, anchor_id: &str, dx: f64, dy: f64) -> Result<(), FlowCoreError> {
         self.begin_change();
         let anchor_x = self.fixture.layout.get(anchor_id).map(|layout| layout.x).ok_or_else(|| FlowCoreError::UnknownWidgetLayout(anchor_id.to_string()))?;
-        for (widget_id, layout) in &mut self.fixture.layout {
+        let previous = std::mem::take(&mut self.fixture.layout);
+        for (widget_id, layout) in &previous {
+            let mut layout = layout.clone();
             if layout.x > anchor_x {
                 layout.x += dx;
                 layout.y += dy;
             }
             let _ = self.dag.set_widget_position(widget_id, layout.x, layout.y);
+            self.fixture.layout.insert(widget_id.clone(), layout);
         }
+        let mut retirement = crate::retained::FlowRetirement::default();
+        retirement.push(crate::retained::FlowOwner::Layouts(previous));
+        retirement.retire_cold();
         Ok(())
     }
 
@@ -1193,7 +1202,7 @@ impl FlowHost {
         seeds
     }
 
-    fn apply_preview_outputs(&mut self, outputs: &HashMap<String, Dictionary>) {
+    fn apply_preview_outputs(&mut self, outputs: &BTreeMap<String, Dictionary>) {
         for widget in &mut self.fixture.widgets {
             if let Widget::OutputPreview { id, preview, .. } = widget {
                 if let Some(out) = outputs.get(id) {
@@ -1209,7 +1218,7 @@ impl FlowHost {
         self.dag.fit_preview_sizes();
     }
 
-    fn apply_export_outputs(&mut self, outputs: &HashMap<String, Dictionary>) {
+    fn apply_export_outputs(&mut self, outputs: &BTreeMap<String, Dictionary>) {
         for widget in &self.fixture.widgets {
             if let Widget::OutputExport { id, .. } = widget {
                 if let Some(out) = outputs.get(id) {
@@ -1252,7 +1261,7 @@ impl FlowHost {
                 }
                 (Widget::OutputPreview { preview, expanded, .. }, DagNodeKind::Preview { content, expanded: dag_expanded, .. }) => {
                     *content = dag_preview_content_from_dict(preview);
-                    *dag_expanded = expanded.clone();
+                    *dag_expanded = expanded.iter().cloned().collect();
                 }
                 (Widget::OutputAction { action, .. }, DagNodeKind::Action { label, .. }) => {
                     *label = action.clone();
@@ -1427,7 +1436,7 @@ impl FlowHost {
                     *src = dag_src.clone();
                 }
                 (Widget::OutputPreview { expanded, .. }, DagNodeKind::Preview { expanded: dag_expanded, .. }) => {
-                    *expanded = dag_expanded.clone();
+                    std::mem::replace(expanded, dag_expanded.iter().cloned().collect()).retire_cold();
                 }
                 (Widget::OutputAction { action, .. }, DagNodeKind::Action { label, .. }) => {
                     *action = label.clone();
@@ -1493,15 +1502,9 @@ impl FlowHost {
     pub fn set_slider_value(&mut self, widget_id: &str, value: f64) {
         self.begin_change();
         for widget in &mut self.fixture.widgets {
-            if let Widget::InputSlider { id, value: v, min, max, step, .. } = widget {
+            if let Widget::InputSlider { id, .. } = widget {
                 if id == widget_id {
-                    if value < *min || value > *max {
-                        let (new_min, new_max, new_step) = sensible_slider_range(value);
-                        *min = new_min;
-                        *max = new_max;
-                        *step = new_step;
-                    }
-                    *v = value.clamp(*min, *max);
+                    crate::set_widget_slider_value(widget, value);
                 }
             }
         }
@@ -1996,7 +1999,7 @@ impl FlowHost {
             return false;
         };
         restored.camera = camera;
-        self.fixture = restored;
+        std::mem::replace(&mut self.fixture, restored).retire_cold();
         self.rebuild_dag();
         true
     }
@@ -2014,7 +2017,7 @@ impl FlowHost {
             return false;
         };
         restored.camera = camera;
-        self.fixture = restored;
+        std::mem::replace(&mut self.fixture, restored).retire_cold();
         self.rebuild_dag();
         true
     }
@@ -2032,11 +2035,12 @@ impl FlowHost {
 }
 
 /// 🧹 Incremental exact-owner retirement for one retained flow host.
-pub struct FlowHostRetirement {
+#[doc(hidden)]
+pub struct FlowHostRetirementState {
     fixture: FlowFixture,
     dag: Option<dag::DagHostRetirement>,
-    outputs: HashMap<String, Dictionary>,
-    export_payloads: HashMap<String, Dictionary>,
+    outputs: BTreeMap<String, Dictionary>,
+    export_payloads: BTreeMap<String, Dictionary>,
     last_eval_json: String,
     eval_bridge: Option<EvalBridge>,
     host_catalogue_json: String,
@@ -2049,9 +2053,16 @@ pub struct FlowHostRetirement {
     pending_history_baseline: Option<FlowFixture>,
     pending_extension_eval: Option<neural::PendingExtensionEval>,
     interaction_projection: Option<dag::DagInteractionProjection>,
+    domain: crate::retained::FlowRetirement,
+    neural: neural::ValueRetirement,
     terminal: bool,
     faulted: bool,
 }
+
+/// 🔒️ Host ownership is guarded until every retained field has crossed its close boundary.
+pub struct FlowHostRetirement { state: std::mem::ManuallyDrop<FlowHostRetirementState> }
+impl std::ops::Deref for FlowHostRetirement { type Target = FlowHostRetirementState; fn deref(&self) -> &Self::Target { &self.state } }
+impl std::ops::DerefMut for FlowHostRetirement { fn deref_mut(&mut self) -> &mut Self::Target { &mut self.state } }
 
 impl FlowHostRetirement {
     pub fn new(host: FlowHost) -> Self {
@@ -2082,7 +2093,7 @@ impl FlowHostRetirement {
             interaction_revision: _,
             interaction_projection,
         } = host;
-        Self {
+        Self { state: std::mem::ManuallyDrop::new(FlowHostRetirementState {
             fixture,
             dag: Some(dag::DagHostRetirement::new(dag)),
             outputs,
@@ -2099,71 +2110,66 @@ impl FlowHostRetirement {
             pending_history_baseline,
             pending_extension_eval,
             interaction_projection,
+            domain: crate::retained::FlowRetirement::default(),
+            neural: neural::ValueRetirement::default(),
             terminal: false,
             faulted: false,
-        }
+        }) }
     }
 
     pub fn close_step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> bool {
-        if context.should_yield() || self.faulted {
-            return false;
-        }
-        if let Some(dag) = self.dag.as_mut() {
+        use crate::os_store::ErasedSnapshotRetirement;
+        use crate::retained::FlowOwner;
+        let state = &mut *self.state;
+        if context.should_yield() || state.faulted { return false; }
+        if let Some(dag) = state.dag.as_mut() {
             if dag.close_step() {
-                if !dag.terminal_is_empty() {
-                    self.faulted = true;
-                    return false;
-                }
-                self.dag = None;
+                if !dag.terminal_is_empty() { state.faulted = true; return false; }
+                state.dag = None;
             }
-            context.consume_fuel(1);
-            return false;
-        }
-        if self.fixture.widgets.pop().is_some()
-            || self.fixture.synapses.pop().is_some()
-            || self.fixture.layout.pop_last().is_some()
-            || self.fixture.schema.pop().is_some()
-            || self.outputs.extract_if(|_, _| true).next().is_some()
-            || self.export_payloads.extract_if(|_, _| true).next().is_some()
-            || self.last_eval_json.pop().is_some()
-            || self.eval_bridge.take().is_some()
-            || self.host_catalogue_json.pop().is_some()
-            || self.kind_infos.extract_if(|_, _| true).next().is_some()
-            || self.previous_snapshot.take().is_some()
-            || self.previous_channels.take().is_some()
-            || self.ghost_node.take().is_some()
-            || self.pending_extension_eval.take().is_some()
-            || self.interaction_projection.take().is_some()
-            || self.pending_history_baseline.take().is_some()
-        {
-            context.consume_fuel(1);
-            return false;
-        }
-        if let Some(cache) = self.neural_cache.as_mut() {
-            if cache.close_step() {
-                if !cache.terminal_nonopaque_is_empty() {
-                    self.faulted = true;
-                    return false;
-                }
-                self.neural_cache = None;
+        } else if !state.domain.is_empty() {
+            if state.domain.close_step(1, 4096).is_err() { state.faulted = true; }
+        } else if !state.neural.terminal_is_empty() {
+            state.neural.close_step(1, 4096);
+        } else if let Some(widget) = state.fixture.widgets.pop() {
+            state.domain.push(FlowOwner::Widget(widget));
+        } else if let Some(synapse) = state.fixture.synapses.pop() {
+            state.domain.push(FlowOwner::Specs(vec![synapse]));
+        } else if !state.fixture.layout.is_empty() {
+            state.domain.push(FlowOwner::Layouts(std::mem::take(&mut state.fixture.layout)));
+        } else if !state.fixture.schema.is_empty() {
+            state.domain.text(std::mem::take(&mut state.fixture.schema));
+        } else if let Some((key, value)) = state.outputs.pop_first() {
+            state.neural.text(key); state.neural.push_dictionary(value);
+        } else if let Some((key, value)) = state.export_payloads.pop_first() {
+            state.neural.text(key); state.neural.push_dictionary(value);
+        } else if state.last_eval_json.capacity() != 0 {
+            state.domain.text(std::mem::take(&mut state.last_eval_json));
+        } else if state.host_catalogue_json.capacity() != 0 {
+            state.domain.text(std::mem::take(&mut state.host_catalogue_json));
+        } else if let Some((key, value)) = state.kind_infos.extract_if(|_, _| true).next() {
+            state.neural.text(key); state.neural.push_operator(value);
+        } else if let Some(snapshot) = state.previous_snapshot.take() {
+            state.neural.push_snapshot(snapshot);
+        } else if let Some(channels) = state.previous_channels.take() {
+            state.neural.push_channels(channels);
+        } else if let Some(fixture) = state.pending_history_baseline.take() {
+            state.domain.push(FlowOwner::Fixture(fixture));
+        } else if let Some(pending) = state.pending_extension_eval.take() {
+            state.neural.text(pending.extension_id); state.neural.text(pending.operator_id); state.neural.text(pending.input_json);
+        } else if state.eval_bridge.take().is_some() || state.ghost_node.take().is_some() || state.interaction_projection.take().is_some() {
+        } else if let Some(cache) = state.neural_cache.as_mut() {
+            if matches!(cache.close_step(1, 4096), neural::ValueRetirementStep::Complete) {
+                if !cache.terminal_nonopaque_is_empty() { state.faulted = true; return false; }
+                state.neural_cache = None;
             }
-            context.consume_fuel(1);
-            return false;
-        }
-        if let Some(store) = self.history_store.as_mut() {
-            match store.close_owned_step(1, 4_096) {
-                Ok(SnapshotRetirementStep::Complete) if store.close_owned_terminal_is_empty() => {
-                    self.history_store = None;
-                }
-                Ok(_) => {}
-                Err(_) => self.faulted = true,
+        } else if let Some(store) = state.history_store.as_mut() {
+            match store.close_owned_step(1, 4096) {
+                Ok(SnapshotRetirementStep::Complete) if store.close_owned_terminal_is_empty() => state.history_store = None,
+                Ok(_) => {}, Err(_) => state.faulted = true,
             }
-            context.consume_fuel(1);
-            return false;
-        }
-        self.terminal = true;
-        context.consume_fuel(1);
-        true
+        } else { state.terminal = true; context.consume_fuel(1); return true; }
+        context.consume_fuel(1); false
     }
 
     pub fn terminal_nonopaque_is_empty(&self) -> bool {
@@ -2188,22 +2194,29 @@ impl FlowHostRetirement {
             && self.pending_history_baseline.is_none()
             && self.pending_extension_eval.is_none()
             && self.interaction_projection.is_none()
+            && self.domain.is_empty()
+            && self.neural.terminal_is_empty()
     }
 }
 
 impl Drop for FlowHostRetirement {
     fn drop(&mut self) {
-        debug_assert!(self.terminal_nonopaque_is_empty(), "FlowHostRetirement must reach terminal-empty before release");
+        if !self.terminal_nonopaque_is_empty() { assert!(std::thread::panicking(), "FlowHostRetirement must reach terminal-empty before release"); return; }
+        unsafe { std::mem::ManuallyDrop::drop(&mut self.state); }
     }
 }
 
 // #region 🔖️EvalSession
+#[cfg(test)]
+#[path = "🧹️retirement/🧪️component.rs"]
+mod session_retirement_tests;
+
 use std::sync::atomic::{AtomicU64, Ordering as AtomicOrdering};
 
 /// ⏱️ Max cache-missed neuron dispatches per `flowEvalTick` — keeps one dispatch from blocking the worker while still converging small graphs in a single tick.
 pub const FLOW_EVAL_TICK_STEP_BUDGET: usize = 512;
 
-static FLOW_SESSION_GEOMETRY: LazyLock<Mutex<HashMap<u64, HashSet<String>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+static FLOW_SESSION_GEOMETRY: LazyLock<Mutex<HashMap<u64, BTreeSet<String>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 static NEXT_FLOW_SESSION_ID: AtomicU64 = AtomicU64::new(1);
 
 fn sync_flow_geometry_retention() {
@@ -2225,21 +2238,33 @@ pub enum NodeEvalStatus {
 }
 
 /// 🧵️ In-process evaluation session: neural cache, incremental baseline, eval output, and status — one per app instance, never serialized.
-pub struct FlowEvalSession {
+#[doc(hidden)]
+pub struct FlowEvalSessionState {
     session_id: u64,
-    neural_cache: Arc<NeuralCache>,
+    neural_cache: Option<Arc<NeuralCache>>,
     previous_snapshot: Option<TreeSnapshot>,
     previous_channels: Option<EvalChannels>,
     eval_json: String,
     status_json: String,
     tick_scheduled: bool,
-    live_geometry_handles: HashSet<String>,
+    live_geometry_handles: BTreeSet<String>,
     /// 🧊 Tessellated preview meshes keyed by geometry handle — filled via extension `tessellate`
     /// because runtime-installable brep owns the kernel that minted the handles.
-    preview_mesh_json_by_handle: HashMap<String, String>,
+    preview_mesh_json_by_handle: BTreeMap<String, String>,
     /// ⏳ In-flight tessellate requests keyed by `nodeHash` forwarded through `InvokeExtension`.
-    pending_tessellate_by_hash: HashMap<u64, String>,
+    pending_tessellate_by_hash: BTreeMap<u64, String>,
+    retiring_cache: Option<neural::NeuralCacheRetirement>,
+    retirement: neural::ValueRetirement,
+    retiring_collections: std::collections::LinkedList<SessionCollectionOwner>,
+    closing: bool,
 }
+
+enum SessionCollectionOwner { Handles(BTreeSet<String>), Meshes(BTreeMap<String, String>), Pending(BTreeMap<u64, String>) }
+
+/// 🔒️ Evaluation ownership stays guarded until every collection, domain, cache, and byte frontier is empty.
+pub struct FlowEvalSession { state: std::mem::ManuallyDrop<FlowEvalSessionState> }
+impl std::ops::Deref for FlowEvalSession { type Target = FlowEvalSessionState; fn deref(&self) -> &Self::Target { &self.state } }
+impl std::ops::DerefMut for FlowEvalSession { fn deref_mut(&mut self) -> &mut Self::Target { &mut self.state } }
 
 impl Default for FlowEvalSession {
     fn default() -> Self {
@@ -2249,31 +2274,33 @@ impl Default for FlowEvalSession {
 
 impl Drop for FlowEvalSession {
     fn drop(&mut self) {
-        if let Ok(mut map) = FLOW_SESSION_GEOMETRY.lock() {
-            map.remove(&self.session_id);
-        }
-        sync_flow_geometry_retention();
+        if !self.terminal_is_empty() { assert!(std::thread::panicking(), "FlowEvalSession must finish explicit close before drop"); return; }
+        unsafe { std::mem::ManuallyDrop::drop(&mut self.state); }
     }
 }
 
 impl FlowEvalSession {
     pub fn new() -> Self {
-        Self {
+        Self { state: std::mem::ManuallyDrop::new(FlowEvalSessionState {
             session_id: NEXT_FLOW_SESSION_ID.fetch_add(1, AtomicOrdering::Relaxed),
-            neural_cache: Arc::new(NeuralCache::new()),
+            neural_cache: Some(Arc::new(NeuralCache::new())),
             previous_snapshot: None,
             previous_channels: None,
             eval_json: String::new(),
             status_json: "{}".into(),
             tick_scheduled: false,
-            live_geometry_handles: HashSet::new(),
-            preview_mesh_json_by_handle: HashMap::new(),
-            pending_tessellate_by_hash: HashMap::new(),
-        }
+            live_geometry_handles: BTreeSet::new(),
+            preview_mesh_json_by_handle: BTreeMap::new(),
+            pending_tessellate_by_hash: BTreeMap::new(),
+            retiring_cache: None,
+            retirement: neural::ValueRetirement::default(),
+            retiring_collections: std::collections::LinkedList::new(),
+            closing: false,
+        }) }
     }
 
     pub fn neural_cache(&self) -> Arc<NeuralCache> {
-        self.neural_cache.clone()
+        self.neural_cache.as_ref().expect("live Flow evaluation session owns its neural cache").clone()
     }
 
     pub fn install_baseline_into(&self, host: &mut FlowHost) {
@@ -2282,12 +2309,14 @@ impl FlowEvalSession {
 
     pub fn capture_baseline_from(&mut self, host: &FlowHost) {
         let (snapshot, channels) = host.eval_baseline();
-        self.previous_snapshot = snapshot;
-        self.previous_channels = channels;
-        if let Some(channels) = self.previous_channels.as_ref() {
-            self.live_geometry_handles = collect_live_geometry_handles_from_channels(channels).into_iter().collect();
+        let state = &mut *self.state;
+        if let Some(previous) = std::mem::replace(&mut state.previous_snapshot, snapshot) { state.retirement.push_snapshot(previous); }
+        if let Some(previous) = std::mem::replace(&mut state.previous_channels, channels) { state.retirement.push_channels(previous); }
+        if let Some(channels) = state.previous_channels.as_ref() {
+            let next = collect_live_geometry_handles_from_channels(channels).into_iter().collect();
+            state.retiring_collections.push_back(SessionCollectionOwner::Handles(std::mem::replace(&mut state.live_geometry_handles, next)));
             if let Ok(mut map) = FLOW_SESSION_GEOMETRY.lock() {
-                map.insert(self.session_id, self.live_geometry_handles.clone());
+                if let Some(previous) = map.insert(state.session_id, state.live_geometry_handles.clone()) { state.retiring_collections.push_back(SessionCollectionOwner::Handles(previous)); }
             }
             sync_flow_geometry_retention();
         }
@@ -2331,16 +2360,17 @@ impl FlowEvalSession {
     }
 
     pub fn set_eval_json(&mut self, eval_json: String) {
-        self.eval_json = eval_json;
-        self.tick_scheduled = false;
-        self.previous_snapshot = None;
-        self.previous_channels = None;
-        self.status_json = "{}".into();
-        self.live_geometry_handles.clear();
-        self.preview_mesh_json_by_handle.clear();
-        self.pending_tessellate_by_hash.clear();
+        let state = &mut *self.state;
+        state.retirement.text(std::mem::replace(&mut state.eval_json, eval_json));
+        state.tick_scheduled = false;
+        if let Some(previous) = state.previous_snapshot.take() { state.retirement.push_snapshot(previous); }
+        if let Some(previous) = state.previous_channels.take() { state.retirement.push_channels(previous); }
+        state.retirement.text(std::mem::replace(&mut state.status_json, "{}".into()));
+        state.retiring_collections.push_back(SessionCollectionOwner::Handles(std::mem::take(&mut state.live_geometry_handles)));
+        state.retiring_collections.push_back(SessionCollectionOwner::Meshes(std::mem::take(&mut state.preview_mesh_json_by_handle)));
+        state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.pending_tessellate_by_hash)));
         if let Ok(mut map) = FLOW_SESSION_GEOMETRY.lock() {
-            map.remove(&self.session_id);
+            if let Some(previous) = map.remove(&state.session_id) { state.retiring_collections.push_back(SessionCollectionOwner::Handles(previous)); }
         }
         sync_flow_geometry_retention();
     }
@@ -2350,7 +2380,8 @@ impl FlowEvalSession {
     }
 
     pub fn seed_node_cache(&self, node_hash: u64, output_json: &str) -> Result<(), FlowCoreError> {
-        seed_flow_eval_node_cache(&self.neural_cache, node_hash, output_json)
+        let cache = self.neural_cache.as_deref().expect("live Flow evaluation session owns its neural cache");
+        seed_flow_eval_node_cache(cache, node_hash, output_json)
     }
 
     /// 🧊 Preview mesh JSON previously resolved through the owning geometry extension.
@@ -2390,6 +2421,87 @@ impl FlowEvalSession {
         self.preview_mesh_json_by_handle.insert(handle, output_json.to_string());
         true
     }
+
+    /// 🧹 Begins exact incremental retirement of this instance-owned evaluation session.
+    pub fn begin_close(&mut self) {
+        self.closing = true;
+        self.tick_scheduled = false;
+        if let Ok(mut map) = FLOW_SESSION_GEOMETRY.lock() {
+            if let Some(previous) = map.remove(&self.session_id) { self.retiring_collections.push_back(SessionCollectionOwner::Handles(previous)); }
+        }
+        sync_flow_geometry_retention();
+    }
+
+    /// 📄 Releases at most one retained owner under the caller's close-page grant.
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        use semio_framework_job::InteractiveJobCloseStep as Step;
+        let state = &mut *self.state;
+        if !state.closing || maximum_items == 0 || maximum_bytes == 0 { return Step::Blocked; }
+        if !state.retirement.terminal_is_empty() {
+            return match state.retirement.close_step(maximum_items, maximum_bytes) {
+                neural::ValueRetirementStep::Pending { released_items, released_bytes } => Step::Pending { released_items, released_bytes },
+                neural::ValueRetirementStep::Complete => Step::Pending { released_items: 1, released_bytes: 0 },
+                neural::ValueRetirementStep::Blocked => Step::Blocked,
+            };
+        }
+        if let Some(owner) = state.retiring_collections.pop_front() {
+            match owner {
+                SessionCollectionOwner::Handles(mut values) => {
+                    if let Some(value) = values.pop_first() { state.retirement.text(value); }
+                    if !values.is_empty() { state.retiring_collections.push_front(SessionCollectionOwner::Handles(values)); }
+                }
+                SessionCollectionOwner::Meshes(mut values) => {
+                    if let Some((key, value)) = values.pop_first() { state.retirement.text(key); state.retirement.text(value); }
+                    if !values.is_empty() { state.retiring_collections.push_front(SessionCollectionOwner::Meshes(values)); }
+                }
+                SessionCollectionOwner::Pending(mut values) => {
+                    if let Some((_, value)) = values.pop_first() { state.retirement.text(value); }
+                    if !values.is_empty() { state.retiring_collections.push_front(SessionCollectionOwner::Pending(values)); }
+                }
+            }
+            return Step::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if !state.preview_mesh_json_by_handle.is_empty() {
+            state.retiring_collections.push_back(SessionCollectionOwner::Meshes(std::mem::take(&mut state.preview_mesh_json_by_handle)));
+        } else if !state.pending_tessellate_by_hash.is_empty() {
+            state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.pending_tessellate_by_hash)));
+        } else if !state.live_geometry_handles.is_empty() {
+            state.retiring_collections.push_back(SessionCollectionOwner::Handles(std::mem::take(&mut state.live_geometry_handles)));
+        } else if let Some(snapshot) = state.previous_snapshot.take() {
+            state.retirement.push_snapshot(snapshot);
+        } else if let Some(channels) = state.previous_channels.take() {
+            state.retirement.push_channels(channels);
+        } else if state.eval_json.capacity() != 0 {
+            state.retirement.text(std::mem::take(&mut state.eval_json));
+        } else if state.status_json.capacity() != 0 {
+            state.retirement.text(std::mem::take(&mut state.status_json));
+        } else if let Some(cache) = state.neural_cache.take() {
+            state.retiring_cache = Some(neural::NeuralCacheRetirement::new(cache));
+        } else if let Some(cache) = state.retiring_cache.as_mut() {
+            match cache.close_step(maximum_items, maximum_bytes) {
+                neural::ValueRetirementStep::Pending { released_items, released_bytes } => return Step::Pending { released_items, released_bytes },
+                neural::ValueRetirementStep::Blocked => return Step::Blocked,
+                neural::ValueRetirementStep::Complete => { assert!(cache.terminal_nonopaque_is_empty()); state.retiring_cache = None; }
+            }
+        } else { return Step::Complete; }
+        Step::Pending { released_items: 1, released_bytes: 0 }
+    }
+
+    /// ✅️ Proves that every retained evaluation owner has crossed the close boundary.
+    pub fn terminal_is_empty(&self) -> bool {
+        self.closing
+            && self.neural_cache.is_none()
+            && self.previous_snapshot.is_none()
+            && self.previous_channels.is_none()
+            && self.eval_json.capacity() == 0
+            && self.status_json.capacity() == 0
+            && self.live_geometry_handles.is_empty()
+            && self.preview_mesh_json_by_handle.is_empty()
+            && self.pending_tessellate_by_hash.is_empty()
+            && self.retiring_cache.is_none()
+            && self.retirement.terminal_is_empty()
+            && self.retiring_collections.is_empty()
+    }
 }
 
 fn preview_mesh_json_has_geometry(output_json: &str) -> bool {
@@ -2424,23 +2536,6 @@ pub fn flow_host_with_session(fixture: &FlowFixture, session: &FlowEvalSession) 
     }
     host
 }
-
-//#region 🔖️ProcessSession
-/// 🧠 Process-local eval session — `ArtifactApp::handle`/`render`/`pending_effects` are receiverless
-/// (B1), so the off-main-thread eval driver cannot live on the app ZST. One session per plugin wasm
-/// instance is correct for the playground/single-document hosts; multi-instance hosts must graduate
-/// this to an instance-keyed map when that lands.
-static PROCESS_FLOW_EVAL_SESSION: Mutex<Option<FlowEvalSession>> = Mutex::new(None);
-
-/// 🧠 Runs `body` with the process-local [`FlowEvalSession`], creating it on first use.
-pub fn with_process_flow_eval_session<R>(body: impl FnOnce(&mut FlowEvalSession) -> R) -> R {
-    let mut guard = PROCESS_FLOW_EVAL_SESSION.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-    if guard.is_none() {
-        *guard = Some(FlowEvalSession::new());
-    }
-    body(guard.as_mut().expect("session installed above"))
-}
-//#endregion 🔖️ProcessSession
 
 fn build_flow_status_json(host: &FlowHost, remaining: &[String]) -> String {
     let eval: serde_json::Value = serde_json::from_str(&host.last_eval_json).unwrap_or(serde_json::json!({}));
@@ -2587,7 +2682,13 @@ mod tests {
         Err(EvalError::UnknownKind(kind.into()))
     }
 
-    /// 🧪️ Installs first-party light flow extension manifests + real in-process ops for fixture tests.
+    fn complete_fixture_registration<T>(future: impl std::future::Future<Output = T>) -> T {
+        match std::pin::pin!(future).as_mut().poll(&mut std::task::Context::from_waker(std::task::Waker::noop())) {
+            std::task::Poll::Ready(value) => value,
+            std::task::Poll::Pending => panic!("fixture registration must not depend on external work"),
+        }
+    }
+
     /// 🧪️ Installs first-party light (+brep) flow extension manifests and real in-process ops for fixture tests.
     fn install_first_party_light_flow_extensions_for_tests() {
         use std::sync::Once;
@@ -2600,7 +2701,7 @@ mod tests {
                 ("flow-extension-logic", semio_s_plugin_flow_extension_logic::extension_manifest_json()),
                 ("flow-extension-dictionary", semio_s_plugin_flow_extension_dictionary::extension_manifest_json()),
                 ("flow-extension-list", semio_s_plugin_flow_extension_list::extension_manifest_json()),
-                ("flow-extension-brep", semio_s_plugin_flow_extension_brep::extension_manifest_json()),
+                ("flow-extension-brep", complete_fixture_registration(semio_s_plugin_flow_extension_brep::extension_manifest_json())),
             ] {
                 install_flow_extension_manifest(plugin_id, &manifest);
             }
@@ -2612,7 +2713,7 @@ mod tests {
             semio_s_plugin_flow_extension_logic::register(&mut registry);
             semio_s_plugin_flow_extension_dictionary::register(&mut registry);
             semio_s_plugin_flow_extension_list::register(&mut registry);
-            semio_s_plugin_flow_extension_brep::register(&mut registry);
+            complete_fixture_registration(semio_s_plugin_flow_extension_brep::register(&mut registry));
             registry.finalize();
             state.registry = std::sync::Arc::new(registry);
             state.generation += 1;
@@ -2808,6 +2909,15 @@ mod tests {
         assert!(!pending.contains(&"slider".to_string()));
     }
 
+    #[test]
+    fn flow_eval_session_seeds_its_retained_neural_cache() {
+        let session = FlowEvalSession::new();
+        let expected = Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(42.0)));
+        let output_json = serde_json::to_string(&expected).unwrap();
+        session.seed_node_cache(17, &output_json).unwrap();
+        assert_eq!(session.neural_cache().get(17), Some(expected));
+    }
+
     /// 🧵️ Builds a two-computable-node chain (`add` -> `pass`, replacing `add`'s direct link to
     /// `preview`) on top of the default fixture, for tests that need more than one node to step
     /// through with a budgeted `evaluate_step`.
@@ -2930,7 +3040,7 @@ mod tests {
             test_math_bridge(kind, input)
         }));
         host.set_neuron_kind_infos_json(&test_kind_infos_json());
-        let slider_b_id = host.add_widget(r#"{"kind":"inputSlider","value":1.0}"#, 400.0, 0.0).unwrap();
+        let slider_b_id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":1.0}"#, 400.0, 0.0).unwrap();
         let pass_id = host.add_widget(r#"{"kind":"neuron","id":"pass","neuronKind":"math.passThrough","params":{},"input_ports":[],"preview":false}"#, 600.0, 0.0).unwrap();
         host.connect_ports(&slider_b_id, "number", &pass_id, "number").unwrap();
         host.evaluate_internal();
@@ -2968,10 +3078,10 @@ mod tests {
 
     #[test]
     fn collect_live_geometry_handles_includes_input_channels() {
-        let mut outputs = HashMap::new();
+        let mut outputs = BTreeMap::new();
         outputs.insert("box".into(), Dictionary::with_schema("geometry").insert("handle", NeuralValue::Atom(Atom::String("solid-box".into()))).insert("kind", NeuralValue::Atom(Atom::String("solid".into()))));
         outputs.insert("volume".into(), Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(12.0))));
-        let mut inputs = HashMap::new();
+        let mut inputs = BTreeMap::new();
         inputs.insert("volume".into(), Dictionary::new().insert("geometry", NeuralValue::Dictionary(Dictionary::with_schema("geometry").insert("handle", NeuralValue::Atom(Atom::String("solid-box".into()))))));
         let channels = EvalChannels { outputs, inputs };
         let handles = collect_live_geometry_handles_from_channels(&channels);
@@ -2987,7 +3097,7 @@ mod tests {
         assert!(!host.outputs.is_empty());
     }
 
-    fn collect_live_geometry_handles(outputs: &HashMap<String, Dictionary>) -> Vec<String> {
+    fn collect_live_geometry_handles(outputs: &BTreeMap<String, Dictionary>) -> Vec<String> {
         let mut handles = Vec::new();
         for dict in outputs.values() {
             collect_geometry_handles_from_dictionary(dict, &mut handles);
@@ -2999,7 +3109,7 @@ mod tests {
 
     #[test]
     fn collect_live_geometry_handles_traverses_nested_dictionaries() {
-        let mut outputs = HashMap::new();
+        let mut outputs = BTreeMap::new();
         outputs.insert("box".into(), Dictionary::with_schema("geometry").insert("handle", NeuralValue::Atom(Atom::String("solid-1".into()))).insert("kind", NeuralValue::Atom(Atom::String("solid".into()))));
         outputs.insert("nested".into(), Dictionary::new().insert("child", NeuralValue::Dictionary(Dictionary::with_schema("face").insert("handle", NeuralValue::Atom(Atom::String("face-2".into()))))));
         let handles = collect_live_geometry_handles(&outputs);
@@ -3008,13 +3118,13 @@ mod tests {
 
     #[test]
     fn collect_live_drawing_handles_traverses_list_values() {
-        let mut outputs = HashMap::new();
+        let mut outputs = BTreeMap::new();
         outputs.insert(
             "get".into(),
             Dictionary::new()
                 .insert("value", NeuralValue::Dictionary(Dictionary::with_schema("list").insert("0", NeuralValue::Dictionary(Dictionary::with_schema("draw.drawing").insert("handle", NeuralValue::Atom(Atom::String("drawing-2".into()))))))),
         );
-        let channels = EvalChannels { outputs, inputs: HashMap::new() };
+        let channels = EvalChannels { outputs, inputs: BTreeMap::new() };
         assert_eq!(collect_live_drawing_handles_from_channels(&channels), vec![String::from("drawing-2")]);
     }
 
@@ -3236,7 +3346,7 @@ mod tests {
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             widgets: vec![Widget::Neuron { id: "add".into(), neuron_kind: "math.add".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: true }],
             synapses: vec![],
-            layout: BTreeMap::new(),
+            layout: crate::OrderedMap::new(),
         });
         let node = host.dag.fixture.nodes.iter().find(|node| node.id == "add").expect("add node");
         let input_ids: Vec<&str> = node.inputs().iter().map(|port| port.id.as_str()).collect();
@@ -3309,7 +3419,7 @@ mod tests {
         install_first_party_light_flow_extensions_for_tests();
         let mut host = host_with_test_bridge();
         host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
-        host.replace_fixture(<FlowFixture as crate::os_store::ArtifactDsl>::parse_dsl(include_str!("../../../📚️examples/🌊️default.flow")).expect("fixture"));
+        host.replace_fixture(<FlowFixture as crate::os_store::ArtifactDsl>::parse_dsl(include_str!("../📚️examples/🌊️default.flow.dsl.semio")).expect("fixture"));
         assert!(!host.dag.fixture.edges.is_empty(), "synapses should become dag edges");
         let add = host.dag.fixture.nodes.iter().find(|node| node.id == "add").expect("add node");
         assert_eq!(add.inputs().len(), 2);
@@ -3353,8 +3463,8 @@ mod tests {
     /// mechanism directly (the same one `FlowHost::undo`/`redo` are built on) — add a widget, undo,
     /// confirm it's gone, redo, confirm it's back — in place of the old test's direct assertions on a
     /// hand-rolled `Vec<FlowFixture>` snapshot stack.
-    #[test]
-    fn undo_redo_add_widget() {
+    #[semio_framework_async_macros::async_test]
+    async fn undo_redo_add_widget() {
         let mut host = host_with_test_bridge();
         let fixture_before = host.fixture.clone();
         let count_before = fixture_before.widgets.len();
@@ -3365,16 +3475,16 @@ mod tests {
         assert!(!operations.is_empty(), "add_widget must diff into vcs operations");
 
         let envelope: FlowEnvelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "test", fixture_before, None);
-        let mut store = FlowStore::new(envelope).expect("valid flow store fixture");
-        store.dispatch(ArtifactCommand::Apply { mutations: operations, description: None }).expect("apply add-widget operations");
+        let mut store = FlowStore::new(envelope).await.expect("valid flow store fixture");
+        store.dispatch(ArtifactCommand::Apply { mutations: operations, description: None }).await.expect("apply add-widget operations");
         assert_eq!(store.snapshot().expect("projection").widgets.len(), count_before + 1);
 
-        store.dispatch(ArtifactCommand::Undo).expect("undo");
+        store.dispatch(ArtifactCommand::Undo).await.expect("undo");
         let after_undo = store.snapshot().expect("projection");
         assert_eq!(after_undo.widgets.len(), count_before);
         assert!(!after_undo.widgets.iter().any(|w| widget_id_for(w) == id));
 
-        store.dispatch(ArtifactCommand::Redo).expect("redo");
+        store.dispatch(ArtifactCommand::Redo).await.expect("redo");
         let after_redo = store.snapshot().expect("projection");
         assert!(after_redo.widgets.iter().any(|w| widget_id_for(w) == id));
     }
@@ -3398,7 +3508,7 @@ mod tests {
     fn replace_fixture_preserves_live_camera() {
         let mut host = host_with_test_bridge();
         host.set_camera(120.0, -45.0, 1.75);
-        host.replace_fixture(FlowFixture { schema: "flow.fixture".into(), camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, widgets: vec![Widget::InputNote { id: "note".into(), text: "hello".into() }], synapses: vec![], layout: BTreeMap::new() });
+        host.replace_fixture(FlowFixture { schema: "flow.fixture".into(), camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, widgets: vec![Widget::InputNote { id: "note".into(), text: "hello".into() }], synapses: vec![], layout: crate::OrderedMap::new() });
         assert_eq!(host.fixture.camera.x, 120.0);
         assert_eq!(host.fixture.camera.y, -45.0);
         assert!((host.fixture.camera.zoom - 1.75).abs() < 1e-9);
@@ -3433,17 +3543,17 @@ mod tests {
             schema: "flow.fixture".into(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             widgets: vec![
-                Widget::InputSlider { id: "a".into(), value: 1.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
-                Widget::InputSlider { id: "b".into(), value: 2.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
+                Widget::InputSlider { id: "a".into(), label: "A".into(), value: 1.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
+                Widget::InputSlider { id: "b".into(), label: "B".into(), value: 2.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
                 Widget::Neuron { id: "merge".into(), neuron_kind: "dictionary.merge".into(), params: Dictionary::new(), input_ports: vec!["0".into(), "1".into()], output_ports: vec![], preview: true },
-                Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new(), expanded: BTreeSet::new() },
+                Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new(), expanded: crate::OrderedSet::new() },
             ],
             synapses: vec![
                 SynapseSpec { id: "s1".into(), from: "a".into(), to: "merge".into(), from_port: "number".into(), to_port: "0".into() },
                 SynapseSpec { id: "s2".into(), from: "b".into(), to: "merge".into(), from_port: "number".into(), to_port: "1".into() },
                 SynapseSpec { id: "s3".into(), from: "merge".into(), to: "preview".into(), from_port: "dictionary".into(), to_port: String::new() },
             ],
-            layout: BTreeMap::new(),
+            layout: crate::OrderedMap::new(),
         });
         host.set_eval_bridge_fn(Box::new(test_dictionary_merge_bridge));
         host.set_neuron_kind_infos_json(
@@ -3489,7 +3599,7 @@ mod tests {
     #[test]
     fn add_slider_widget_with_explicit_range() {
         let mut host = host_with_test_bridge();
-        let id = host.add_widget(r#"{"kind":"inputSlider","value":10.2,"min":10.2,"max":15.0,"step":0.1}"#, 0.0, 0.0).unwrap();
+        let id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":10.2,"min":10.2,"max":15.0,"step":0.1}"#, 0.0, 0.0).unwrap();
         let widget = host.fixture.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
         let Widget::InputSlider { value, min, max, step, .. } = widget else {
             panic!("expected slider widget");
@@ -3590,7 +3700,7 @@ mod tests {
     #[test]
     fn add_slider_widget_with_single_value_uses_sensible_range() {
         let mut host = host_with_test_bridge();
-        let id = host.add_widget(r#"{"kind":"inputSlider","value":5.0}"#, 0.0, 0.0).unwrap();
+        let id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":5.0}"#, 0.0, 0.0).unwrap();
         let widget = host.fixture.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
         let Widget::InputSlider { value, min, max, step, .. } = widget else {
             panic!("expected slider widget");
@@ -3604,7 +3714,7 @@ mod tests {
     #[test]
     fn add_slider_widget_with_decimal_value_uses_matching_step() {
         let mut host = host_with_test_bridge();
-        let id = host.add_widget(r#"{"kind":"inputSlider","value":1.3}"#, 0.0, 0.0).unwrap();
+        let id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":1.3}"#, 0.0, 0.0).unwrap();
         let widget = host.fixture.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
         let Widget::InputSlider { value, min, max, step, .. } = widget else {
             panic!("expected slider widget");
@@ -3626,7 +3736,7 @@ mod tests {
     #[test]
     fn add_slider_widget_with_two_decimal_places_uses_finer_step() {
         let mut host = host_with_test_bridge();
-        let id = host.add_widget(r#"{"kind":"inputSlider","value":1.25}"#, 0.0, 0.0).unwrap();
+        let id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":1.25}"#, 0.0, 0.0).unwrap();
         let widget = host.fixture.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
         let Widget::InputSlider { step, .. } = widget else {
             panic!("expected slider widget");
@@ -3637,7 +3747,7 @@ mod tests {
     #[test]
     fn set_slider_value_expands_bounds_when_out_of_range() {
         let mut host = host_with_test_bridge();
-        let id = host.add_widget(r#"{"kind":"inputSlider","value":3.0,"min":0.0,"max":10.0,"step":1.0}"#, 0.0, 0.0).unwrap();
+        let id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":3.0,"min":0.0,"max":10.0,"step":1.0}"#, 0.0, 0.0).unwrap();
         host.set_slider_value(&id, 12.0);
         let widget = host.fixture.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
         let Widget::InputSlider { value, min, max, .. } = widget else {
@@ -3721,9 +3831,13 @@ mod tests {
         assert_eq!(overlay_ghost_rows.len(), 3);
         let placed_node = {
             let widget = widget_from_descriptor(&serde_json::from_str::<WidgetDescriptor>(descriptor).unwrap(), "placed".into(), &host.kind_infos);
-            let mut layout = BTreeMap::new();
+            let mut layout = crate::OrderedMap::new();
             layout.insert("placed".into(), WidgetLayout { x: 80.0, y: 80.0 });
             let mut node = widget_to_dag_node(&widget, 0, &layout, &[], &host.kind_infos);
+            widget.retire_cold();
+            let mut retirement = crate::retained::FlowRetirement::default();
+            retirement.push(crate::retained::FlowOwner::Layouts(layout));
+            retirement.retire_cold();
             fit_node_size(&mut node);
             node
         };
@@ -3848,8 +3962,8 @@ mod tests {
         host.set_viewport(800, 600, 1.0);
         host.pointer_down_screen(120.0, 120.0, 0, false, false, false, false);
         assert!(host.ghost_node.is_none());
-        host.set_ghost_widget(r#"{"kind":"inputSlider"}"#, 0.0, 0.0).unwrap();
-        let _ = host.add_widget(r#"{"kind":"inputSlider"}"#, 40.0, 40.0).unwrap();
+        host.set_ghost_widget(r#"{"kind":"inputSlider","label":"Number"}"#, 0.0, 0.0).unwrap();
+        let _ = host.add_widget(r#"{"kind":"inputSlider","label":"Number"}"#, 40.0, 40.0).unwrap();
         assert!(host.ghost_node.is_none());
         assert_eq!(host.fixture.widgets.iter().filter(|w| widget_id_for(w).starts_with("slider")).count(), 2);
         assert_eq!(host.dag.fixture.nodes.iter().filter(|n| n.id == "slider").count(), 1);
@@ -4100,7 +4214,7 @@ mod tests {
     #[test]
     fn add_widget_with_explicit_id() {
         let mut host = host_with_test_bridge();
-        let id = host.add_widget(r#"{"kind":"inputSlider","id":"custom_slider","value":2.0}"#, 0.0, 0.0).unwrap();
+        let id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","id":"custom_slider","value":2.0}"#, 0.0, 0.0).unwrap();
         assert_eq!(id, "custom_slider");
     }
 
@@ -4171,7 +4285,7 @@ mod tests {
     fn variable_relay_evaluates_through_flow_host() {
         let mut host = host_with_test_bridge();
         let variable_id = host.add_widget(r#"{"kind":"variable","name":"width","schema":"number"}"#, 0.0, 0.0).unwrap();
-        let slider_id = host.add_widget(r#"{"kind":"inputSlider","value":4.0}"#, -200.0, 0.0).unwrap();
+        let slider_id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":4.0}"#, -200.0, 0.0).unwrap();
         host.connect_ports(&slider_id, "number", &variable_id, "width").unwrap();
         let eval_json = host.evaluate().expect("evaluate");
         let parsed: serde_json::Value = serde_json::from_str(&eval_json).expect("eval json");
@@ -4228,9 +4342,9 @@ mod tests {
   "schema": "flow.fixture",
   "camera": { "x": 140, "y": -60, "zoom": 2.2 },
   "widgets": [
-    { "kind": "inputSlider", "id": "width", "value": 2, "min": 0.1, "max": 10, "step": 0.1 },
-    { "kind": "inputSlider", "id": "height", "value": 2, "min": 0.1, "max": 10, "step": 0.1 },
-    { "kind": "inputSlider", "id": "distance", "value": 3, "min": 0.1, "max": 10, "step": 0.1 },
+    { "kind": "inputSlider", "id": "width", "label": "Width", "value": 2, "min": 0.1, "max": 10, "step": 0.1 },
+    { "kind": "inputSlider", "id": "height", "label": "Height", "value": 2, "min": 0.1, "max": 10, "step": 0.1 },
+    { "kind": "inputSlider", "id": "distance", "label": "Distance", "value": 3, "min": 0.1, "max": 10, "step": 0.1 },
     {
       "kind": "neuron",
       "id": "rect",
@@ -4316,9 +4430,9 @@ mod tests {
   "schema": "flow.fixture",
   "camera": { "x": 140, "y": -60, "zoom": 2.2 },
   "widgets": [
-    { "kind": "inputSlider", "id": "width", "value": 2, "min": 0.1, "max": 10, "step": 0.1 },
-    { "kind": "inputSlider", "id": "height", "value": 2, "min": 0.1, "max": 10, "step": 0.1 },
-    { "kind": "inputSlider", "id": "distance", "value": 3, "min": 0.1, "max": 10, "step": 0.1 },
+    { "kind": "inputSlider", "id": "width", "label": "Width", "value": 2, "min": 0.1, "max": 10, "step": 0.1 },
+    { "kind": "inputSlider", "id": "height", "label": "Height", "value": 2, "min": 0.1, "max": 10, "step": 0.1 },
+    { "kind": "inputSlider", "id": "distance", "label": "Distance", "value": 3, "min": 0.1, "max": 10, "step": 0.1 },
     {
       "kind": "neuron",
       "id": "rect",

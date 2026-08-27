@@ -1,2 +1,0 @@
-# unbind-node-skin diff typed facet.
-input GltfUnbindNodeSkinDiffV1 { operation: GltfUnbindNodeSkinPayloadV1!, after: Int, touchedPaths: [String!]! }

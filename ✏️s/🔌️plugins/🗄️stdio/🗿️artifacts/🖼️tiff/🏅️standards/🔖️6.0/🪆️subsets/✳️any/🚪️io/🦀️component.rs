@@ -876,13 +876,13 @@ mod tests {
         assert_eq!(snapshot.ifds.len(), 1);
 
         let inserted = TiffIfd { pixels: Vec::new(), entries: vec![TiffTag { tag: 270, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("inserted page".into()) }] };
-        apply_tiff_mutation(&mut snapshot, &TiffMutation::InsertIfd { index: 1, ifd: inserted });
+        apply_tiff_mutation(&mut snapshot, &TiffMutation::InsertIfd(crate::artifacts::tiff::schema::mutations::InsertIfdMutation { index: 1, ifd: inserted }));
         let after_insert = decode_tiff(&encode_tiff(&snapshot).expect("encode after insert")).expect("decode after insert");
         assert_eq!(after_insert.ifds.len(), 2, "InsertIfd must add a real, decodable second directory");
         let tag = after_insert.ifds[1].entries.iter().find(|t| t.tag == 270).expect("inserted IFD's tag must survive the codec");
         assert_eq!(tag.values, TiffValues::Ascii("inserted page".into()));
 
-        apply_tiff_mutation(&mut snapshot, &TiffMutation::RemoveIfd { index: 1 });
+        apply_tiff_mutation(&mut snapshot, &TiffMutation::RemoveIfd(crate::artifacts::tiff::schema::mutations::RemoveIfdMutation { index: 1 }));
         let after_remove = decode_tiff(&encode_tiff(&snapshot).expect("encode after remove")).expect("decode after remove");
         assert_eq!(after_remove.ifds.len(), 1, "RemoveIfd must genuinely drop the directory from the encoded chain");
     }

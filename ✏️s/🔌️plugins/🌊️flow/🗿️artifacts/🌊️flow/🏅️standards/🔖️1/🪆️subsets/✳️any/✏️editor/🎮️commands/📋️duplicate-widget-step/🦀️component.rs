@@ -11,7 +11,7 @@ pub use duplicate_widget::DuplicateWidgetStep;
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub async fn handle(payload: &DuplicateWidgetStep, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, eval: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-    duplicate_widget::handle_step(payload, doc, cfg, eval).await
+pub fn handle(payload: &DuplicateWidgetStep, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, eval: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    duplicate_widget::handle_step(payload, doc, cfg, eval)
 }
 //#endregion 🔖️Handler

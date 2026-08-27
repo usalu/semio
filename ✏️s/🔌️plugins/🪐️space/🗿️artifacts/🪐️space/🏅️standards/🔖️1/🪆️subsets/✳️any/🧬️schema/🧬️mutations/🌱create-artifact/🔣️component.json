@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact",
+  "semanticKind": "create-artifact",
+  "displayName": "Create Artifact",
+  "emoji": "🌱",
+  "aggregateVariant": "CreateArtifact",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "create-artifact",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": ["applied", "fatal"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "typescript", "json-schema", "text", "binary"]
+}

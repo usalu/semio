@@ -1,0 +1,2 @@
+# 🖼️ Direct edit-before-fixture / EditBeforeFixture payload.
+input EditBeforeFixtureInput { newBeforeFixtureJson: String! }

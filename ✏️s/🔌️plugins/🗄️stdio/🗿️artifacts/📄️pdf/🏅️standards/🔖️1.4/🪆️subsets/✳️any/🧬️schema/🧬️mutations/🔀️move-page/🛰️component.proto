@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.stdio.pdf.v1_4.mutations;
+
+// 🔀️ move-page payload.
+message MovePage {
+  uint64 from = 1;
+  uint64 to = 2;
+}

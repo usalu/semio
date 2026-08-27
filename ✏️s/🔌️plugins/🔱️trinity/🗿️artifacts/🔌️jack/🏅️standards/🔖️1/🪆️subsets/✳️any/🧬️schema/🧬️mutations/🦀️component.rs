@@ -1,21 +1,22 @@
-//! ⚡️ `trinity.graph` artifact — semantic document mutation dispatch enum + validation laws
-//! (constitutional: op). Every variant is a single-field tuple wrapping a handcrafted
-//! `protocol::MutationKind` payload (see the `🧬️mutations/<slug>/` triad leaves);
-//! `#[derive(dsl::Mutations)]` generates `impl protocol::Mutation<JackSnapshot>` and
-//! `impl protocol::SemanticMutation<JackSnapshot>` from those payloads — no hand-written
-//! diff/inverse dispatch here. Whole-fixture replace (the old `SetFixture`) is banned; loading a
-//! preset/import routes through `Effect::LoadDocument` (see `editor::jack::reset_document_effect`),
-//! never through this enum.
+//! ⚡️ `trinity.graph` semantic mutation aggregate.
+//!
+//! Every variant wraps the payload owned by its direct `<mutation>/🦀️component.rs` leaf.
 
 use crate::artifacts::jack::diff::JackDiff;
-use crate::artifacts::jack::{EntityRef, JackSnapshot, PropertyBag, PropertyValue, TRINITY_GRAPH_SCHEMA};
-use protocol::Mutation;
+use crate::artifacts::jack::JackSnapshot;
 use serde::{Deserialize, Serialize};
-use store::{create_document_envelope, ArtifactCommand, ArtifactEnvelope, ArtifactStore};
 
-//#region 🔖️Mutations
-/// 🧮️ Semantic trinity graph mutation vocabulary: id-keyed node/edge create+delete (cascade-capturing),
-/// rename/move on nodes, and a generic node-or-edge data-property change/remove pair.
+pub use super::change_data_property::{change_data_property, ChangeDataProperty};
+pub use super::create_edge::{create_edge, CreateEdge};
+pub use super::create_node::{create_node, CreateNode};
+pub use super::delete_edge::{delete_edge, DeleteEdge};
+pub use super::delete_node::{delete_node, DeleteNode};
+pub use super::move_node::{move_node, MoveNode};
+pub use super::remove_data_property::{remove_data_property, RemoveDataProperty};
+pub use super::rename_node::{rename_node, RenameNode};
+
+//#region 🔖️Aggregate
+/// 🧮️ Semantic trinity graph mutation vocabulary.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = JackSnapshot, diff = JackDiff, schema = "s.trinity.jack")]
@@ -29,557 +30,63 @@ pub enum TrinityGraphMutation {
     ChangeDataProperty(ChangeDataProperty),
     RemoveDataProperty(RemoveDataProperty),
 }
-//#endregion 🔖️Mutations
+//#endregion 🔖️Aggregate
 
-pub use super::change_data_property::mutation::{change_data_property, ChangeDataProperty};
-pub use super::create_edge::mutation::{create_edge, CreateEdge};
-pub use super::create_node::mutation::{create_node, CreateNode};
-pub use super::delete_edge::mutation::{delete_edge, DeleteEdge};
-pub use super::delete_node::mutation::{delete_node, DeleteNode};
-pub use super::move_node::mutation::{move_node, MoveNode};
-pub use super::remove_data_property::mutation::{remove_data_property, RemoveDataProperty};
-pub use super::rename_node::mutation::{rename_node, RenameNode};
-
-/// 🏷️ Kebab-case spelling of every [`TrinityGraphMutation`] variant, in declaration order — the
-/// vocabulary the `jack-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
-/// `mutate-jack-1`'s exhaustive case measures itself against. Eight kinds: node and edge lifecycle,
-/// the two node scalars a canvas can edit (`rename`, `move`), and one `change`/`remove` pair over
-/// the property bag that BOTH nodes and edges carry — which is why those two verbs address an
-/// `EntityRef` rather than a node id. There is no `set-snapshot`: whole-document replace reaches the
-/// store through its non-history path instead. [`kinds_match_the_enum_and_the_catalog`] keeps this
-/// list honest against the enum, since the framework never parses Rust.
-pub const KINDS: &[&str] = &["create-node", "delete-node", "create-edge", "delete-edge", "rename-node", "move-node", "change-data-property", "remove-data-property"];
-
-//#region 🌉️ExternalCodecBridge
-/// 📥️ Decodes this facet's internally-tagged (`{"mutation": "moveNode", …}`) JSON projection —
-/// exactly the shape the committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json`
-/// specification vectors and `mutate-jack-1`'s own `Examples` payloads carry, snake_case payload
-/// fields (`new_name`, `new_value`) and the `{"entity": "node", "id": …}` `EntityRef` tag included —
-/// into a real [`TrinityGraphMutation`]. The test adapter cannot reach `serde_json` (the generated
-/// host links only `semio-repo-test-host` and this crate) and cannot name this crate's private
-/// `protocol`/`store` extern-crate aliases either, so the bridge belongs here rather than there.
-pub fn decode_trinity_graph_mutation_json(text: &str) -> Result<TrinityGraphMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
-}
-
-/// ▶️ Applies `mutation` in place and returns every diagnostic it raised as `(code, severity)`
-/// pairs. Half of this vocabulary's committed vectors are NO-OP vectors — an `applied` outcome
-/// carrying a `Warning`-level `mutation.no-op` — and half are refusals at two different severities,
-/// so the pair is the evidence rather than a side channel.
-pub fn apply_trinity_graph_mutation_reporting(snapshot: &mut JackSnapshot, mutation: &TrinityGraphMutation) -> Vec<(String, String)> {
-    let outcome = <TrinityGraphMutation as protocol::Mutation<JackSnapshot>>::diff(mutation, snapshot).apply_to(snapshot);
-    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
-}
-
-/// ↩️ The mutation's OWN computed undo steps, which is what an `inverse-<kind>` scenario has to
-/// apply for the metamorphic law to mean anything.
-pub fn inverse_trinity_graph_mutation_steps(mutation: &TrinityGraphMutation, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
-    <TrinityGraphMutation as protocol::Mutation<JackSnapshot>>::inverse(mutation, base)
-}
-//#endregion 🌉️ExternalCodecBridge
-
-//#region 🔖️Store
-pub type TrinityGraphEnvelope = ArtifactEnvelope<JackSnapshot, TrinityGraphMutation>;
-pub type TrinityGraphStore = ArtifactStore<JackSnapshot, TrinityGraphMutation>;
-
-pub fn create_trinity_graph_envelope(id: &str, fixture: JackSnapshot) -> TrinityGraphEnvelope {
-    create_document_envelope(TRINITY_GRAPH_SCHEMA, id, fixture, None)
-}
-//#endregion 🔖️Store
-
-//#region 🔖️Validation
-/// 🛡️ Pre-flight manifest/reference validation for one operation against `fixture` — distinct from
-/// `diff`/`inverse` (which assume a validated operation); kept centralized because it cross-checks
-/// against the compile-time `Manifest`, not a single sparse-diff concern.
-pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, fixture: &JackSnapshot) -> Result<(), crate::artifacts::jack::TrinityRamError> {
-    use crate::artifacts::jack::TrinityRamError;
-    let scene = crate::artifacts::jack::jack_working_scene(fixture);
-    match operation {
-        TrinityGraphMutation::CreateNode(payload) => {
-            let node = &payload.node;
-            if scene.nodes.iter().any(|existing| existing.id == node.id) {
-                return Err(TrinityRamError::NodeAlreadyExists(node.id.clone()));
-            }
-            validate_node_kind_trinity(&fixture.manifest, &node.kind)?;
-            if let Some(node_def) = fixture.manifest.node_kind(&node.kind) {
-                for port in &node.ports {
-                    validate_port_kind_trinity(&fixture.manifest, &port.kind)?;
-                    if !node_def.port_kinds.is_empty() && !node_def.port_kinds.iter().any(|p| p == &port.kind) {
-                        return Err(TrinityRamError::PortKindNotDeclaredOnMutation { node_id: node.id.clone(), port_id: port.id.clone(), port_kind: port.kind.clone(), node_kind: node.kind.clone() });
-                    }
-                }
-            }
-        }
-        TrinityGraphMutation::DeleteNode(payload) => {
-            if !scene.nodes.iter().any(|node| node.id == payload.id) {
-                return Err(TrinityRamError::NodeNotFound(payload.id.clone()));
-            }
-        }
-        TrinityGraphMutation::CreateEdge(payload) => {
-            let edge = &payload.edge;
-            if scene.edges.iter().any(|existing| existing.id == edge.id) {
-                return Err(TrinityRamError::EdgeAlreadyExists(edge.id.clone()));
-            }
-            validate_edge_kind_trinity(&fixture.manifest, &edge.kind)?;
-            validate_edge_properties_trinity(&fixture.manifest, &edge.kind, &edge.properties)?;
-            let source_node = crate::artifacts::jack::port_node_id(&edge.source).ok_or_else(|| TrinityRamError::InvalidSourcePortKey(edge.source.clone()))?;
-            let target_node = crate::artifacts::jack::port_node_id(&edge.target).ok_or_else(|| TrinityRamError::InvalidTargetPortKey(edge.target.clone()))?;
-            if !scene.nodes.iter().any(|node| node.id == source_node) {
-                return Err(TrinityRamError::SourceNodeNotFound(source_node.to_string()));
-            }
-            if !scene.nodes.iter().any(|node| node.id == target_node) {
-                return Err(TrinityRamError::TargetNodeNotFound(target_node.to_string()));
-            }
-        }
-        TrinityGraphMutation::DeleteEdge(payload) => {
-            if !scene.edges.iter().any(|edge| edge.id == payload.id) {
-                return Err(TrinityRamError::EdgeNotFound(payload.id.clone()));
-            }
-        }
-        TrinityGraphMutation::RenameNode(payload) => {
-            if !scene.nodes.iter().any(|node| node.id == payload.id) {
-                return Err(TrinityRamError::NodeNotFound(payload.id.clone()));
-            }
-        }
-        TrinityGraphMutation::MoveNode(payload) => {
-            if !scene.nodes.iter().any(|node| node.id == payload.id) {
-                return Err(TrinityRamError::NodeNotFound(payload.id.clone()));
-            }
-        }
-        TrinityGraphMutation::ChangeDataProperty(payload) => {
-            validate_set_data_property(fixture, &payload.entity, &payload.key, &payload.new_value)?;
-        }
-        TrinityGraphMutation::RemoveDataProperty(payload) => {
-            validate_clear_data_property(fixture, &payload.entity, &payload.key)?;
-        }
-    }
-    Ok(())
-}
-
-fn validate_clear_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
-    use crate::artifacts::jack::TrinityRamError;
-    let scene = crate::artifacts::jack::jack_working_scene(fixture);
-    match entity {
-        EntityRef::Node(id) => {
-            scene.nodes.iter().find(|node| node.id == *id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
-        }
-        EntityRef::Edge(id) => {
-            scene.edges.iter().find(|edge| edge.id == *id).ok_or_else(|| TrinityRamError::EdgeNotFound(id.clone()))?;
-        }
-    }
-    let _ = key;
-    Ok(())
-}
-
-fn validate_set_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str, value: &PropertyValue) -> Result<(), crate::artifacts::jack::TrinityRamError> {
-    use crate::artifacts::jack::TrinityRamError;
-    let scene = crate::artifacts::jack::jack_working_scene(fixture);
-    let (defs, path_prefix) = match entity {
-        EntityRef::Node(id) => {
-            let node = scene.nodes.iter().find(|node| node.id == *id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
-            (fixture.manifest.node_kind(&node.kind).map(|def| &def.properties[..]), format!("nodes/{id}/properties/{key}"))
-        }
-        EntityRef::Edge(id) => {
-            let edge = scene.edges.iter().find(|edge| edge.id == *id).ok_or_else(|| TrinityRamError::EdgeNotFound(id.clone()))?;
-            (fixture.manifest.edge_kind(&edge.kind).map(|def| &def.properties[..]), format!("edges/{id}/properties/{key}"))
-        }
-    };
-    let Some(defs) = defs else {
-        return Err(TrinityRamError::UnknownEntityKind { path: path_prefix });
-    };
-    if !defs.iter().any(|def| def.name == key) {
-        return Err(TrinityRamError::UnknownPropertyAtPath { path: path_prefix, key: key.to_string() });
-    }
-    let mut bag = PropertyBag::new();
-    bag.insert(key.to_string(), value.clone());
-    validate_property_bag_trinity(&path_prefix, defs, &bag)
-}
-
-fn validate_node_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
-    if manifest.node_kind(kind).is_some() {
-        Ok(())
-    } else {
-        Err(crate::artifacts::jack::TrinityRamError::UnknownNodeKind { kind: kind.to_string() })
-    }
-}
-
-fn validate_edge_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
-    if manifest.edge_kind(kind).is_some() {
-        Ok(())
-    } else {
-        Err(crate::artifacts::jack::TrinityRamError::UnknownEdgeKind { kind: kind.to_string() })
-    }
-}
-
-fn validate_port_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
-    if manifest.port_kind(kind).is_some() {
-        Ok(())
-    } else {
-        Err(crate::artifacts::jack::TrinityRamError::UnknownPortKind { kind: kind.to_string() })
-    }
-}
-
-fn validate_edge_properties_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str, properties: &PropertyBag) -> Result<(), crate::artifacts::jack::TrinityRamError> {
-    let Some(def) = manifest.edge_kind(kind) else {
-        return validate_edge_kind_trinity(manifest, kind);
-    };
-    validate_property_bag_trinity(&format!("edges/{kind}/properties"), &def.properties, properties)
-}
-
-fn validate_property_bag_trinity(path: &str, defs: &[crate::artifacts::jack::PropertyDef], bag: &PropertyBag) -> Result<(), crate::artifacts::jack::TrinityRamError> {
-    use crate::artifacts::jack::{PropertyKind, TrinityRamError};
-    for def in defs {
-        if def.kind == PropertyKind::Derived {
-            continue;
-        }
-        let Some(value) = bag.get(&def.name) else {
-            continue;
-        };
-        if !property_value_matches_type_trinity(value, def) {
-            return Err(TrinityRamError::PropertyTypeMismatch { path: path.to_string(), name: def.name.clone(), value_type: def.value_type.id() });
-        }
-    }
-    for key in bag.keys() {
-        if !defs.iter().any(|def| def.name == *key) {
-            return Err(TrinityRamError::UnknownPropertyInBag { path: path.to_string(), key: key.clone() });
-        }
-    }
-    Ok(())
-}
-
-fn property_value_matches_type_trinity(value: &PropertyValue, def: &crate::artifacts::jack::PropertyDef) -> bool {
-    match value {
-        PropertyValue::Null => def.value_type.id() == "null",
-        PropertyValue::Bool(_) => def.value_type.id() == "boolean",
-        PropertyValue::Number(_) => {
-            let id = def.value_type.id();
-            id == "decimal" || id == "integer" || id == "number"
-        }
-        PropertyValue::String(_) => {
-            let id = def.value_type.id();
-            id == "string" || id == "text"
-        }
-        PropertyValue::Object(_) => {
-            let id = def.value_type.id();
-            id.starts_with("schema:") || id == "object"
-        }
-        PropertyValue::Array(_) => def.value_type.id() == "array",
-    }
-}
-//#endregion 🔖️Validation
-
-//#region 🔖️BatchHelpers
-/// ▶️ Diff-based apply of one mutation — thin `Mutation::diff` + `MutationDiff::apply` delegate (P6:
-/// no per-variant hand match here anymore; each kind's real logic lives in its own triad `🔺️diff` leaf).
-pub fn apply_trinity_graph_mutation(snapshot: &mut JackSnapshot, mutation: &TrinityGraphMutation) -> protocol::MutationApplyResult<()> {
-    let outcome = mutation.diff(snapshot);
-    let next = protocol::MutationDiff::apply(outcome.diff(), snapshot)?;
-    *snapshot = next;
-    Ok(())
-}
-
-pub fn inverse_trinity_graph_mutation(projection: &JackSnapshot, mutation: &TrinityGraphMutation) -> Vec<TrinityGraphMutation> {
-    mutation.inverse(projection)
-}
-
-/// ▶️ Validates then applies a batch of operations, failing atomically on the first invalid one.
-pub fn apply_trinity_graph_mutations(fixture: JackSnapshot, operations: &[TrinityGraphMutation]) -> Result<JackSnapshot, crate::artifacts::jack::TrinityRamError> {
-    let mut snapshot = fixture;
-    for operation in operations {
-        validate_trinity_graph_operation(operation, &snapshot)?;
-        apply_trinity_graph_mutation(&mut snapshot, operation)?;
-    }
-    Ok(snapshot)
-}
-
-/// ▶️ Validates a batch incrementally, then dispatches it as one VCS edit.
-pub fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, operations: Vec<TrinityGraphMutation>) -> Result<(), crate::artifacts::jack::TrinityRamError> {
-    if operations.is_empty() {
-        return Ok(());
-    }
-    let mut snapshot = store.snapshot()?;
-    for operation in &operations {
-        validate_trinity_graph_operation(operation, &snapshot)?;
-        apply_trinity_graph_mutation(&mut snapshot, operation)?;
-    }
-    store.dispatch(ArtifactCommand::Apply { mutations: operations, description: None }).map_err(crate::artifacts::jack::TrinityRamError::from).map(|_| ())
-}
-//#endregion 🔖️BatchHelpers
-
-//#region 🧪️Tests
+//#region 🧪️StructuralCorrespondence
 #[cfg(test)]
-mod tests {
+mod structural_correspondence_tests {
     use super::*;
-    use crate::artifacts::jack::{Camera, Manifest, PortDirection};
-    use protocol::MutationDiff;
     use protocol::SemanticMutation;
 
-    /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed catalog
-    /// — must agree, in spelling AND in order. The framework never parses Rust, so without this test
-    /// `KINDS` could drift from the enum and the catalog could keep measuring `mutate-jack-1`
-    /// against a vocabulary the artifact no longer has.
     #[test]
-    fn kinds_match_the_enum_and_the_catalog() {
-        let descriptors = TrinityGraphMutation::kinds();
-        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared variant");
-        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
-            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+    fn direct_owners_descriptors_and_language_neutral_catalog_correspond() {
+        let direct_owners = [
+            ("change-data-property", "ChangeDataProperty", "🔧️change-data-property", 6),
+            ("create-edge", "CreateEdge", "🔗️create-edge", 2),
+            ("create-node", "CreateNode", "🌱️create-node", 0),
+            ("delete-edge", "DeleteEdge", "✂️delete-edge", 3),
+            ("delete-node", "DeleteNode", "🗑️delete-node", 1),
+            ("move-node", "MoveNode", "📍️move-node", 5),
+            ("remove-data-property", "RemoveDataProperty", "🧹️remove-data-property", 7),
+            ("rename-node", "RenameNode", "✏️rename-node", 4),
+        ];
+        let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
+        let descriptor_kinds: Vec<_> = TrinityGraphMutation::kinds().iter().map(|descriptor| descriptor.kind).collect();
+        let catalog_source = std::fs::read_to_string(mutation_root.join("../../🧪️oracle/🔣️component.json")).expect("language-neutral oracle catalog");
+        let catalog: serde_json::Value = serde_json::from_str(&catalog_source).expect("language-neutral oracle catalog must be valid JSON");
+        let mutation_catalog = &catalog["mutationCatalogs"][0];
+        let catalog_kinds: Vec<_> = mutation_catalog["kinds"].as_array().expect("catalog kinds").iter().map(|kind| kind.as_str().expect("string kind")).collect();
+        assert_eq!(descriptor_kinds, catalog_kinds);
+        let vectors = mutation_catalog["vectors"].as_array().expect("catalog vectors");
+        for (kind, aggregate_variant, directory, binary_tag) in direct_owners {
+            let owner = mutation_root.join(directory);
+            let source = std::fs::read_to_string(owner.join("🦀️component.rs")).expect("direct Rust owner");
+            let descriptor_source = std::fs::read_to_string(owner.join("🔣️component.json")).expect("direct language-neutral descriptor");
+            let descriptor: serde_json::Value = serde_json::from_str(&descriptor_source).expect("direct descriptor must be valid JSON");
+            assert!(descriptor_kinds.contains(&kind), "direct owner {directory} must have a derived descriptor");
+            assert!(source.contains("protocol::MutationKind"), "direct owner {directory} must implement its payload");
+            assert!(!source.contains(concat!("::", "mutation")), "direct owner {directory} must not route through a nested mutation module");
+            assert_eq!(descriptor["semanticKind"], kind);
+            assert_eq!(descriptor["aggregateVariant"], aggregate_variant);
+            assert_eq!(descriptor["payloadSchema"], "🔣️payload.schema.json");
+            assert_eq!(descriptor["textOpcode"], kind);
+            assert_eq!(descriptor["binaryTag"], binary_tag);
+            assert_eq!(descriptor["invertibility"], "explicit-mutation");
+            assert_eq!(descriptor["diffParticipation"], "detect");
+            assert_eq!(descriptor["composition"], "atomic");
+            assert_eq!(descriptor["requiredLanguageSurfaces"], serde_json::json!(["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]));
+            assert!(descriptor["owner"].as_str().expect("descriptor owner").ends_with(&format!("/🧬️mutations/{directory}")));
+            assert!(!descriptor["outcomeClasses"].as_array().expect("descriptor outcome classes").is_empty());
+            let payload_schema_source = std::fs::read_to_string(owner.join("🔣️payload.schema.json")).expect("direct JSON payload schema");
+            let payload_schema: serde_json::Value = serde_json::from_str(&payload_schema_source).expect("direct payload schema must be valid JSON");
+            assert_eq!(payload_schema["title"], aggregate_variant);
+            for surface in ["🟦️component.ts", "🔗️component.graphql", "🛰️component.proto", "📝️text/🦀️component.rs", "💾️binary/🦀️component.rs"] {
+                let surface_source = std::fs::read_to_string(owner.join(surface)).expect("direct mutation surface");
+                assert!(surface_source.contains(kind) || surface_source.contains(aggregate_variant), "direct surface {directory}/{surface} must identify its semantic mutation");
+            }
+            assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory), "direct owner {directory} must correspond to the JSON catalog");
         }
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
-        for kind in KINDS {
-            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
-        }
-        assert!(!manifest.contains("\"set-snapshot\""), "whole-document replace is not a mutation here — the catalog must not smuggle it back in");
+        assert!(!catalog_kinds.contains(&"set-snapshot"));
     }
-
-    fn mini_fixture() -> JackSnapshot {
-        JackSnapshot::with_content(
-            JackSnapshot::SCHEMA.into(),
-            "mini".into(),
-            Some("nakagin".into()),
-            Manifest::nakagin_default(),
-            Camera::default(),
-            vec![
-                Node {
-                    id: "root".into(),
-                    kind: "Piece".into(),
-                    name: "core".into(),
-                    x: 0.0,
-                    y: 0.0,
-                    width: 80.0,
-                    height: 40.0,
-                    properties: PropertyBag::new(),
-                    ports: vec![Port { id: "out-a".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
-                },
-                Node {
-                    id: "child".into(),
-                    kind: "Piece".into(),
-                    name: "capsule".into(),
-                    x: 120.0,
-                    y: 0.0,
-                    width: 80.0,
-                    height: 40.0,
-                    properties: PropertyBag::new(),
-                    ports: vec![Port { id: "in-a".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
-                },
-            ],
-            vec![Edge {
-                id: "e1".into(),
-                kind: "Connection".into(),
-                source: "root@out-a".into(),
-                target: "child@in-a".into(),
-                properties: {
-                    let mut p = PropertyBag::new();
-                    p.insert("u".into(), PropertyValue::Number(1.2));
-                    p.insert("v".into(), PropertyValue::Number(-0.6));
-                    p
-                },
-            }],
-            Some("root".into()),
-        )
-    }
-
-    fn mini_node(id: &str, x: f64, y: f64, ports: Vec<Port>) -> Node {
-        Node { id: id.into(), kind: "Piece".into(), name: id.into(), x, y, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_op_rejects_port_kind_not_declared_on_operation() {
-        let mut fixture = mini_fixture();
-        fixture.manifest = Manifest {
-            node_kinds: vec![graph::manifest::TrinityNodeKindDef { name: "Piece".into(), properties: vec![], port_kinds: vec!["Connector".into()] }],
-            edge_kinds: vec![graph::manifest::TrinityEdgeKindDef { name: "Connection".into(), properties: vec![] }],
-            port_kinds: vec![
-                graph::manifest::TrinityPortKindDef { name: "Connector".into(), direction: PortDirection::Out, properties: vec![] },
-                graph::manifest::TrinityPortKindDef { name: "Other".into(), direction: PortDirection::In, properties: vec![] },
-            ],
-        };
-        let op = create_node(mini_node("new", 0.0, 0.0, vec![Port { id: "p".into(), kind: "Other".into(), direction: PortDirection::In, properties: PropertyBag::new() }]));
-        let err = validate_trinity_graph_operation(&op, &fixture).expect_err("bad port kind");
-        assert!(matches!(err, crate::artifacts::jack::TrinityRamError::PortKindNotDeclaredOnMutation { .. }));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_op_create_edge_rejects_invalid_port_keys() {
-        let fixture = mini_fixture();
-        let bad_source = create_edge(Edge { id: "e2".into(), kind: "Connection".into(), source: "noAt".into(), target: crate::artifacts::jack::port_key("child", "in-a"), properties: PropertyBag::new() });
-        assert!(matches!(validate_trinity_graph_operation(&bad_source, &fixture), Err(crate::artifacts::jack::TrinityRamError::InvalidSourcePortKey(_))));
-        let bad_target = create_edge(Edge { id: "e3".into(), kind: "Connection".into(), source: crate::artifacts::jack::port_key("root", "out-a"), target: "noAt".into(), properties: PropertyBag::new() });
-        assert!(matches!(validate_trinity_graph_operation(&bad_target, &fixture), Err(crate::artifacts::jack::TrinityRamError::InvalidTargetPortKey(_))));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_op_create_edge_rejects_missing_source_and_target_nodes() {
-        let fixture = mini_fixture();
-        let missing_source = create_edge(Edge { id: "e2".into(), kind: "Connection".into(), source: crate::artifacts::jack::port_key("ghost", "out"), target: crate::artifacts::jack::port_key("child", "in-a"), properties: PropertyBag::new() });
-        assert!(matches!(validate_trinity_graph_operation(&missing_source, &fixture), Err(crate::artifacts::jack::TrinityRamError::SourceNodeNotFound(_))));
-        let missing_target = create_edge(Edge { id: "e3".into(), kind: "Connection".into(), source: crate::artifacts::jack::port_key("root", "out-a"), target: crate::artifacts::jack::port_key("ghost", "in"), properties: PropertyBag::new() });
-        assert!(matches!(validate_trinity_graph_operation(&missing_target, &fixture), Err(crate::artifacts::jack::TrinityRamError::TargetNodeNotFound(_))));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_op_rejects_duplicate_node_and_edge_ids() {
-        let fixture = mini_fixture();
-        let dup_node = create_node(mini_node("root", 0.0, 0.0, vec![]));
-        assert!(matches!(validate_trinity_graph_operation(&dup_node, &fixture), Err(crate::artifacts::jack::TrinityRamError::NodeAlreadyExists(_))));
-        let dup_edge = create_edge(Edge { id: "e1".into(), kind: "Connection".into(), source: crate::artifacts::jack::port_key("root", "out-a"), target: crate::artifacts::jack::port_key("child", "in-a"), properties: PropertyBag::new() });
-        assert!(matches!(validate_trinity_graph_operation(&dup_edge, &fixture), Err(crate::artifacts::jack::TrinityRamError::EdgeAlreadyExists(_))));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_op_rejects_missing_entities_on_delete_rename_reposition() {
-        let fixture = mini_fixture();
-        assert!(matches!(validate_trinity_graph_operation(&delete_node("ghost".into()), &fixture), Err(crate::artifacts::jack::TrinityRamError::NodeNotFound(_))));
-        assert!(matches!(validate_trinity_graph_operation(&delete_edge("ghost".into()), &fixture), Err(crate::artifacts::jack::TrinityRamError::EdgeNotFound(_))));
-        assert!(matches!(validate_trinity_graph_operation(&rename_node("ghost".into(), "x".into()), &fixture), Err(crate::artifacts::jack::TrinityRamError::NodeNotFound(_))));
-        assert!(matches!(validate_trinity_graph_operation(&move_node("ghost".into(), 0.0, 0.0), &fixture), Err(crate::artifacts::jack::TrinityRamError::NodeNotFound(_))));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_op_set_data_property_rejects_unknown_entity_kind() {
-        let fixture = mini_fixture();
-        let mut nodes = fixture.nodes();
-        nodes[0].kind = "Ghost".into();
-        let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), nodes, fixture.edges(), fixture.root_node_id.clone());
-        let err = validate_trinity_graph_operation(&change_data_property(EntityRef::Node("root".into()), "label".into(), PropertyValue::String("x".into())), &fixture).expect_err("unknown entity kind");
-        assert!(matches!(err, crate::artifacts::jack::TrinityRamError::UnknownEntityKind { .. }));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_op_set_data_property_rejects_unknown_property_key() {
-        let fixture = mini_fixture();
-        let err = validate_trinity_graph_operation(&change_data_property(EntityRef::Node("root".into()), "bogus".into(), PropertyValue::Null), &fixture).expect_err("unknown key");
-        assert!(matches!(err, crate::artifacts::jack::TrinityRamError::UnknownPropertyAtPath { .. }));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_op_set_data_property_rejects_type_mismatch() {
-        let fixture = mini_fixture();
-        let err = validate_trinity_graph_operation(&change_data_property(EntityRef::Node("root".into()), "label".into(), PropertyValue::Number(1.0)), &fixture).expect_err("type mismatch");
-        assert!(matches!(err, crate::artifacts::jack::TrinityRamError::PropertyTypeMismatch { .. }));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_op_clear_data_property_rejects_missing_entities() {
-        let fixture = mini_fixture();
-        assert!(matches!(validate_trinity_graph_operation(&remove_data_property(EntityRef::Node("ghost".into()), "label".into()), &fixture), Err(crate::artifacts::jack::TrinityRamError::NodeNotFound(_))));
-        assert!(matches!(validate_trinity_graph_operation(&remove_data_property(EntityRef::Edge("ghost".into()), "u".into()), &fixture), Err(crate::artifacts::jack::TrinityRamError::EdgeNotFound(_))));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn apply_trinity_graph_mutations_applies_valid_sequence_and_rejects_invalid() {
-        let fixture = mini_fixture();
-        let ok = apply_trinity_graph_mutations(fixture.clone(), &[rename_node("root".into(), "renamed".into())]).expect("rename applies");
-        assert_eq!(ok.nodes().iter().find(|n| n.id == "root").unwrap().name, "renamed");
-
-        let err = apply_trinity_graph_mutations(fixture, &[delete_node("ghost".into())]).expect_err("missing node");
-        assert!(matches!(err, crate::artifacts::jack::TrinityRamError::NodeNotFound(_)));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn document_text_round_trip_graph_store() {
-        let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
-        dispatch_trinity_graph_mutations(&mut store, vec![rename_node("root".into(), "renamed".into())]).expect("apply");
-        ::store::os_store::test_support::assert_document_text_round_trip(&store);
-        ::store::os_store::test_support::assert_document_pack_round_trip(&store);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn dispatch_trinity_graph_mutations_noop_on_empty() {
-        let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
-        let generation_before = store.generation();
-        dispatch_trinity_graph_mutations(&mut store, vec![]).expect("empty ops ok");
-        assert_eq!(store.generation(), generation_before);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_op_reposition_and_rename_undo_restore_prior_values() {
-        let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
-        dispatch_trinity_graph_mutations(&mut store, vec![move_node("root".into(), 50.0, 60.0)]).expect("reposition");
-        assert_eq!(store.snapshot().unwrap().nodes().iter().find(|n| n.id == "root").unwrap().x, 50.0);
-        store.dispatch(ArtifactCommand::Undo).expect("undo reposition");
-        assert_eq!(store.snapshot().unwrap().nodes().iter().find(|n| n.id == "root").unwrap().x, 0.0);
-
-        dispatch_trinity_graph_mutations(&mut store, vec![rename_node("root".into(), "renamed".into())]).expect("rename");
-        store.dispatch(ArtifactCommand::Undo).expect("undo rename");
-        assert_eq!(store.snapshot().unwrap().nodes().iter().find(|n| n.id == "root").unwrap().name, "core");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_op_delete_edge_undo_recreates_edge() {
-        let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
-        dispatch_trinity_graph_mutations(&mut store, vec![delete_edge("e1".into())]).expect("delete edge");
-        assert!(store.snapshot().unwrap().edges().is_empty());
-        store.dispatch(ArtifactCommand::Undo).expect("undo delete edge");
-        assert_eq!(store.snapshot().unwrap().edges().len(), 1);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_op_delete_node_undo_restores_node_and_incident_edges() {
-        let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
-        dispatch_trinity_graph_mutations(&mut store, vec![delete_node("root".into())]).expect("delete node");
-        let projection = store.snapshot().unwrap();
-        assert_eq!(projection.nodes().len(), 1);
-        assert!(projection.edges().is_empty());
-        store.dispatch(ArtifactCommand::Undo).expect("undo delete node");
-        let projection = store.snapshot().unwrap();
-        assert_eq!(projection.nodes().len(), 2);
-        assert_eq!(projection.edges().len(), 1);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn graph_op_set_and_clear_data_property_undo_round_trip() {
-        let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
-        dispatch_trinity_graph_mutations(&mut store, vec![change_data_property(EntityRef::Node("root".into()), "label".into(), PropertyValue::String("first".into()))]).expect("set");
-        dispatch_trinity_graph_mutations(&mut store, vec![change_data_property(EntityRef::Node("root".into()), "label".into(), PropertyValue::String("second".into()))]).expect("set again");
-        store.dispatch(ArtifactCommand::Undo).expect("undo second set");
-        let value = store.snapshot().unwrap().nodes().iter().find(|n| n.id == "root").unwrap().properties.get("label").cloned();
-        assert_eq!(value, Some(PropertyValue::String("first".into())));
-
-        dispatch_trinity_graph_mutations(&mut store, vec![remove_data_property(EntityRef::Node("root".into()), "label".into())]).expect("clear");
-        assert!(!store.snapshot().unwrap().nodes().iter().find(|n| n.id == "root").unwrap().properties.contains_key("label"));
-        store.dispatch(ArtifactCommand::Undo).expect("undo clear");
-        let value = store.snapshot().unwrap().nodes().iter().find(|n| n.id == "root").unwrap().properties.get("label").cloned();
-        assert_eq!(value, Some(PropertyValue::String("first".into())));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn dispatch_registers_semantic_descriptors() {
-        register_trinity_graph_mutation_descriptors();
-        for kind in <TrinityGraphMutation as protocol::SemanticMutation<JackSnapshot>>::kinds() {
-            assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
-        }
-        assert_eq!(<TrinityGraphMutation as protocol::SemanticMutation<JackSnapshot>>::kinds().len(), 8);
-    }
-
-    //#region 🧪️OutcomeLaws
-    /// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family (`assert_outcome_policy_matrix` is not yet
-    /// landed in `📡️spr/🧪️testkit` — TODO(1-D testkit laws pending) once it lands).
-    #[semio_framework_async_macros::async_test]
-    async fn delete_missing_node_is_a_target_missing_error() {
-        let base = mini_fixture();
-        protocol::testkit::assert_missing_target_is_error(&base, &TrinityGraphMutation::DeleteNode(DeleteNode { id: "does-not-exist".into() }));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn rename_missing_node_is_a_target_missing_error() {
-        let base = mini_fixture();
-        protocol::testkit::assert_missing_target_is_error(&base, &TrinityGraphMutation::RenameNode(RenameNode { id: "does-not-exist".into(), new_name: "New".into() }));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn create_node_duplicate_id_never_applies() {
-        let base = mini_fixture();
-        let duplicate = TrinityGraphMutation::CreateNode(CreateNode { node: mini_node("root", 0.0, 0.0, vec![]) });
-        protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn create_edge_duplicate_id_never_applies() {
-        let base = mini_fixture();
-        let duplicate = TrinityGraphMutation::CreateEdge(CreateEdge { edge: Edge { id: "e1".into(), kind: "Connection".into(), source: "root@out-a".into(), target: "child@in-a".into(), properties: PropertyBag::new() } });
-        protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
-    }
-    //#endregion 🧪️OutcomeLaws
 }
-//#endregion 🧪️Tests
+//#endregion 🧪️StructuralCorrespondence

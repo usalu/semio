@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["schemaVersion", "canonicalLocator", "childLocator", "cases", "startCases", "anchorCases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "canonicalLocator": { "type": "string", "minLength": 1 },
+    "childLocator": { "type": "string", "minLength": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 16,
+      "items": {
+        "type": "object",
+        "required": ["name", "manifest", "target", "expected", "reason"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "manifest": { "type": "object" },
+          "target": { "enum": ["regular", "file-symlink", "directory-symlink", "manifest-symlink"] },
+          "expected": { "enum": ["resolve", "reject"] },
+          "reason": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "startCases": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "type": "object",
+        "required": ["name", "entry", "nx", "expected", "reason"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "entry": { "enum": ["root", "linked-child", "child", "compose", "compose-parent-root", "compose-parent-start", "root-nul", "root-drive-relative", "symlink-parent"] },
+          "nx": { "enum": ["regular", "missing"] },
+          "expected": { "enum": ["resolve", "reject"] },
+          "reason": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "anchorCases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["name", "nx", "project", "reason"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "nx": { "enum": ["regular", "symlink"] },
+          "project": { "enum": ["regular", "missing", "symlink"] },
+          "reason": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -3,6 +3,9 @@
 use crate::artifacts::model::schema::mutations::text::EnergyModelMutation;
 use protocol::OpBinary;
 
+/// 🧾️ Direct-owner binary tags in aggregate declaration order.
+pub const BINARY_TAG_REGISTRY: &[(&str, u32)] = &[("ReplaceModel", super::replace_model::binary::BINARY_TAG)];
+
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
@@ -27,7 +30,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: "{}".to_string() });
+        let operation = EnergyModelMutation::ReplaceModel(replace_model::ReplaceModel { new_model_json: "{}".to_string() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -35,7 +38,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn replace_model_round_trips() {
-        let operation = EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: r#"{"name":"demo"}"#.to_string() });
+        let operation = EnergyModelMutation::ReplaceModel(replace_model::ReplaceModel { new_model_json: r#"{"name":"demo"}"#.to_string() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
     }
 }

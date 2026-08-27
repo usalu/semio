@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.png.mutation;
+// 🧬️ change-physical-dims/ChangePhysicalDims; complex fields follow the direct payload schema.
+message ChangePhysicalDimsMutation { bytes phys = 1; }

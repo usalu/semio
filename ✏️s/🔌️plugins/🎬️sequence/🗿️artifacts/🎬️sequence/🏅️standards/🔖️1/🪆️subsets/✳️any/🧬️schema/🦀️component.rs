@@ -35,7 +35,7 @@ impl Default for SequenceArtifact {
     fn default() -> Self {
         Self {
             schema: SEQUENCE_DOCUMENT_SCHEMA.into(),
-            content: crate::artifacts::sequence::sequence_content_child_handle_and_cache(Vec::new(), Vec::new()),
+            content: crate::artifacts::sequence::sequence_content_child_with_owner(Vec::new(), Vec::new()),
             last_run_json: String::new(),
             orientation: "leftRight".into(),
             camera: SequenceCamera::default(),

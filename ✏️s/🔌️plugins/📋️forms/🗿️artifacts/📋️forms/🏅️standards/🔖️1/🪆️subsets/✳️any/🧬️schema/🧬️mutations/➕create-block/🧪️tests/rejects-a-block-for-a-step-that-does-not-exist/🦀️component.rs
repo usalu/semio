@@ -43,7 +43,7 @@ async fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
     let snapshot = apply_form_edit_mutation(&base, &mutation()).expect("an empty diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "create-block/rejects-a-block-for-a-step-that-does-not-exist: applied state differs from committed after-snapshot");
-    assert_eq!((&snapshot.structure.child_id, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a rejected create must not mint new structure/results handles");
+    assert_eq!((&mut snapshot.structure, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a rejected create must not mint new structure/results handles");
 }
 
 /// 🚨️ A missing owning step is FATAL `mutation.invariant` — `create-block`'s signature answer, and

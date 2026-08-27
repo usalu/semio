@@ -7,7 +7,7 @@ use crate::editor::flow::terminology::FlowPlayLabels;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub async fn measure(config: &FlowConfig, labels: &FlowPlayLabels) -> WindowMeasure {
+pub fn measure(config: &FlowConfig, labels: &FlowPlayLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: "flow-play-measures.grid".into(),
         label: labels.grid.into(),

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/sequence/sequence/mutation/edit-step-params/payload.json",
+  "title": "EditStepParams",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "params"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "params": {
+      "type": "object"
+    }
+  }
+}

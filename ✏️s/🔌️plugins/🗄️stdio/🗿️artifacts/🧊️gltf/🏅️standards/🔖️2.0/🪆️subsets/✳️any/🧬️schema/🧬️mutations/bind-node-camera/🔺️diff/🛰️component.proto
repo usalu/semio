@@ -1,3 +1,0 @@
-// bind-node-camera diff typed facet.
-syntax = "proto3"; package stdio.gltf.mutation;
-message GltfBindNodeCameraDiffV1 { GltfBindNodeCameraPayloadV1 operation=1; optional uint32 after=2; repeated string touched_paths=3; }

@@ -1,0 +1,4 @@
+"""🏷️ Direct rename-writer payload."""
+input RenameWriterInput {
+  newId: String!
+}

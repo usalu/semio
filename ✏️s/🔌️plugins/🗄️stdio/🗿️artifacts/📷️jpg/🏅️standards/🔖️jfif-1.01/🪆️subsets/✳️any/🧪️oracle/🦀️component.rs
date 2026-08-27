@@ -252,13 +252,7 @@ mod oracles {
     /// carries the claim.
     fn apply_kind(doc: &mut OracleDoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "no-mutation" => {}
-            "set-snapshot" => {
-                doc.width = number(params, "width", 2.0).max(1.0) as u32;
-                doc.height = number(params, "height", 2.0).max(1.0) as u32;
-                doc.rgba = solid_fill(doc.width, doc.height, fill_of(params));
-            }
-            "set-jfif-header" => {
+            "change-jfif-header" => {
                 let version = params.array("version");
                 let component = |index: usize, fallback: u8| {
                     version
@@ -278,7 +272,7 @@ mod oracles {
                 doc.x_density = number(params, "xDensity", doc.x_density as f64) as u16;
                 doc.y_density = number(params, "yDensity", doc.y_density as f64) as u16;
             }
-            "set-quant-table" | "remove-quant-table" | "set-huffman-table" | "remove-huffman-table" | "set-restart-interval" => {}
+            "replace-quant-table" | "remove-quant-table" | "replace-huffman-table" | "remove-huffman-table" | "change-restart-interval" => {}
             "insert-other-segment" => {
                 let at = (number(params, "index", 0.0).max(0.0) as usize).min(doc.other_segments.len());
                 doc.other_segments.insert(at, (number(params, "marker", 226.0) as u8, hex_decode(&text(params, "data"))?));
@@ -289,8 +283,8 @@ mod oracles {
                     doc.other_segments.remove(at);
                 }
             }
-            "set-pixels" => doc.rgba = solid_fill(doc.width, doc.height, fill_of(params)),
-            "set-re-encode-quality" => doc.quality = number(params, "quality", DEFAULT_QUALITY as f64).clamp(1.0, 100.0) as u8,
+            "replace-pixels" => doc.rgba = solid_fill(doc.width, doc.height, fill_of(params)),
+            "change-re-encode-quality" => doc.quality = number(params, "quality", DEFAULT_QUALITY as f64).clamp(1.0, 100.0) as u8,
             other => return Err(format!("mutation kind {other:?} has no oracle implementation")),
         }
         Ok(())
@@ -325,9 +319,8 @@ mod oracles {
         let original = decode(original_input)?;
         let mut doc = decode(mutated)?;
         match kind.as_str() {
-            "no-mutation" | "set-quant-table" | "remove-quant-table" | "set-huffman-table" | "remove-huffman-table" | "set-restart-interval" => {}
-            "set-snapshot" => doc = original,
-            "set-jfif-header" => {
+            "replace-quant-table" | "remove-quant-table" | "replace-huffman-table" | "remove-huffman-table" | "change-restart-interval" => {}
+            "change-jfif-header" => {
                 doc.version = original.version;
                 doc.density_units = original.density_units;
                 doc.x_density = original.x_density;
@@ -340,12 +333,12 @@ mod oracles {
                 }
             }
             "remove-other-segment" => doc.other_segments = original.other_segments,
-            "set-pixels" => {
+            "replace-pixels" => {
                 doc.rgba = original.rgba;
                 doc.width = original.width;
                 doc.height = original.height;
             }
-            "set-re-encode-quality" => doc.quality = original.quality,
+            "change-re-encode-quality" => doc.quality = original.quality,
             other => return Err(format!("mutation kind {other:?} has no oracle inverse")),
         }
         encode(&doc)
@@ -385,7 +378,7 @@ mod oracles {
     /// encoder-independent witness of the re-encode quality: `image`'s `new_with_quality` and this
     /// subset's own `scale_quality` implement the SAME IJG mapping (`q < 50 ? 5000/q : 200 - 2q`,
     /// `clamp((base * scale + 50) / 100, 1, 255)`) over the SAME Annex K.1 base tables, and both
-    /// emit them through the same §B.2.4.1 zigzag. Without it `set-re-encode-quality` was not
+    /// emit them through the same §B.2.4.1 zigzag. Without it `change-re-encode-quality` was not
     /// observable at all: measured on this fixture, a pass through quality 50 moves at most 10 014
     /// pixels between luma buckets and quality 5 at most 55 570 — both far inside the slack.
     pub fn project(input: &[u8]) -> Result<Json, String> {

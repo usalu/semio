@@ -1,0 +1,3 @@
+# 🧬️ replace-palette-entry/ReplacePaletteEntry
+scalar ReplacePaletteEntryMutationValue
+input ReplacePaletteEntryMutation { index: Int! entry: ReplacePaletteEntryMutationValue! }

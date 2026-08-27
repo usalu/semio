@@ -1,24 +1,86 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.json/mutation.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "JsonMutation",
-  "$defs": {
-    "JsonValue": { "$ref": "../📸️snapshot/🔣️component.json#/$defs/JsonValue" },
-    "JsonSnapshot": { "$ref": "../📸️snapshot/🔣️component.json" },
-    "JsonPathSegment": {
-      "oneOf": [
-        { "type": "object", "required": ["kind", "value"], "properties": { "kind": { "const": "key" }, "value": { "type": "string" } } },
-        { "type": "object", "required": ["kind", "value"], "properties": { "kind": { "const": "index" }, "value": { "type": "integer", "minimum": 0 } } }
-      ]
-    },
-    "JsonPath": { "type": "array", "items": { "$ref": "#/$defs/JsonPathSegment" } }
-  },
   "oneOf": [
-    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
-    { "type": "object", "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "$ref": "#/$defs/JsonSnapshot" } } },
-    { "type": "object", "required": ["mutation", "path", "key", "value"], "properties": { "mutation": { "const": "setMember" }, "path": { "$ref": "#/$defs/JsonPath" }, "key": { "type": "string" }, "value": { "$ref": "#/$defs/JsonValue" } } },
-    { "type": "object", "required": ["mutation", "path", "key"], "properties": { "mutation": { "const": "removeMember" }, "path": { "$ref": "#/$defs/JsonPath" }, "key": { "type": "string" } } },
-    { "type": "object", "required": ["mutation", "path", "index", "value"], "properties": { "mutation": { "const": "insertArrayElement" }, "path": { "$ref": "#/$defs/JsonPath" }, "index": { "type": "integer", "minimum": 0 }, "value": { "$ref": "#/$defs/JsonValue" } } },
-    { "type": "object", "required": ["mutation", "path", "index"], "properties": { "mutation": { "const": "removeArrayElement" }, "path": { "$ref": "#/$defs/JsonPath" }, "index": { "type": "integer", "minimum": 0 } } },
-    { "type": "object", "required": ["mutation", "path", "value"], "properties": { "mutation": { "const": "setScalar" }, "path": { "$ref": "#/$defs/JsonPath" }, "value": { "$ref": "#/$defs/JsonValue" } } }
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "set-member"
+        },
+        "payload": {
+          "$ref": "✏️set-member/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "remove-member"
+        },
+        "payload": {
+          "$ref": "🗑️remove-member/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "insert-array-element"
+        },
+        "payload": {
+          "$ref": "📥️insert-array-element/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "remove-array-element"
+        },
+        "payload": {
+          "$ref": "🗑️remove-array-element/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "set-scalar"
+        },
+        "payload": {
+          "$ref": "✏️set-scalar/🔣️payload.schema.json"
+        }
+      }
+    }
   ]
 }

@@ -1,2 +1,0 @@
-# bind-node-mesh inverse typed facet.
-input GltfBindNodeMeshInverseV1 { operation: GltfBindNodeMeshPayloadV1!, before: Int, touchedPaths: [String!]! }

@@ -1,13 +1,8 @@
 //! ⚖️ Imperative artifact — state-patch-representation wire codec + laws (was: constitutional
 //! `protocol`).
 //!
-//! `ImperativeMutation` has no shared kernel crate to implement `protocol::OpBinary` for it directly (see
-//! `🗿️artifacts/📜️imperative/🦀️component.rs`'s module doc), so this component owns the full mirror-struct
-//! machinery: `ImperativeMutationDsl` flattens `PathRef` into bare `owner`/`slot` fields (and the step
-//! payload through the existing `StepNodeDsl`/`ValueDsl` mirrors) and routes through
-//! `#[derive(dsl::DslEnum)]` for the actual text/binary codegen — `Step`/`Dictionary` are foreign kernel
-//! types with no `dsl::DslRecord` support, so `ImperativeMutation`'s own payload structs (see the
-//! `🧬️mutations/<slug>/🦠️mutation/` leaves) cannot derive it either.
+//! Each direct text leaf owns its flattened wire record and domain conversion. This aggregate
+//! keeps only framing and ordered registry lookup; declaration order preserves the binary tags.
 //!
 //! The app's typed `ImperativeCommand` enum — which used to share the old `📡️protocol` crate with this
 //! codec — is an APP concern, not an artifact one: it now lives in the sibling `✏️editor` surface's
@@ -20,44 +15,20 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protoc
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::imperative::dsl::{dictionary_to_value_dsl_map, step_node_dsl_to_step, step_to_step_node_dsl, value_dsl_map_to_dictionary, StepNodeDsl, ValueDsl};
-use crate::artifacts::imperative::mutations::{create_step, delete_step, edit_step_params, reorder_steps, ImperativeMutation};
-use crate::artifacts::imperative::PathRef;
+use crate::artifacts::imperative::mutations::ImperativeMutation;
 use protocol::OpBinary;
-use std::collections::BTreeMap;
+
+pub const BINARY_TAG_REGISTRY: &[(&str, u8)] =
+    &[("create-step", super::create_step::binary::BINARY_TAG), ("delete-step", super::delete_step::binary::BINARY_TAG), ("reorder-steps", super::reorder_steps::binary::BINARY_TAG), ("edit-step-params", super::edit_step_params::binary::BINARY_TAG)];
 
 //#region 🔖️OpText
-/// ✂️ Local mirror of `ImperativeMutation` — flattens `PathRef` into bare `owner`/`slot`
-/// `Option<String>` fields (printed bare when the value lexes as a bare ident, per the engine's
-/// default `Shape::Text` behavior — no per-field opt-in needed) since a `store::Mutation` grammar is
-/// a genuinely tagged enum (`#[derive(dsl::DslEnum)]` requires an enum), not the single generic
-/// struct-plus-op-payload shape the old pre-migration mutation type used.
+/// ✂️ Ordered wire aggregate of direct leaf-owned records.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
-enum ImperativeMutationDsl {
-    CreateStep {
-        owner: Option<String>,
-        slot: Option<String>,
-        #[dsl(statements)]
-        item: Box<StepNodeDsl>,
-    },
-    DeleteStep {
-        owner: Option<String>,
-        slot: Option<String>,
-        id: String,
-    },
-    ReorderSteps {
-        owner: Option<String>,
-        slot: Option<String>,
-        id: String,
-        #[dsl(key = "to")]
-        to_index: usize,
-    },
-    EditStepParams {
-        owner: Option<String>,
-        slot: Option<String>,
-        id: String,
-        params: BTreeMap<String, ValueDsl>,
-    },
+pub(crate) enum ImperativeMutationDsl {
+    CreateStep(super::create_step::text::CreateStepText),
+    DeleteStep(super::delete_step::text::DeleteStepText),
+    ReorderSteps(super::reorder_steps::text::ReorderStepsText),
+    EditStepParams(super::edit_step_params::text::EditStepParamsText),
 }
 
 //#region 🔖️HandcraftedOpCodecs
@@ -93,23 +64,14 @@ impl OpBinary for ImperativeMutationDsl {
 //#endregion 🔖️HandcraftedOpCodecs
 
 fn imperative_operation_to_dsl(operation: &ImperativeMutation) -> ImperativeMutationDsl {
-    match operation {
-        ImperativeMutation::CreateStep(payload) => ImperativeMutationDsl::CreateStep { owner: payload.path_ref.owner.clone(), slot: payload.path_ref.slot.clone(), item: Box::new(step_to_step_node_dsl(&payload.step)) },
-        ImperativeMutation::DeleteStep(payload) => ImperativeMutationDsl::DeleteStep { owner: payload.path_ref.owner.clone(), slot: payload.path_ref.slot.clone(), id: payload.id.clone() },
-        ImperativeMutation::ReorderSteps(payload) => ImperativeMutationDsl::ReorderSteps { owner: payload.path_ref.owner.clone(), slot: payload.path_ref.slot.clone(), id: payload.id.clone(), to_index: payload.to_index },
-        ImperativeMutation::EditStepParams(payload) => {
-            ImperativeMutationDsl::EditStepParams { owner: payload.path_ref.owner.clone(), slot: payload.path_ref.slot.clone(), id: payload.id.clone(), params: dictionary_to_value_dsl_map(&payload.new_params) }
-        }
-    }
+    let converters: &[fn(&ImperativeMutation) -> Option<ImperativeMutationDsl>] = &[super::create_step::text::to_dsl, super::delete_step::text::to_dsl, super::reorder_steps::text::to_dsl, super::edit_step_params::text::to_dsl];
+    converters.iter().find_map(|convert| convert(operation)).expect("every mutation has a direct text owner")
 }
 
 fn imperative_operation_from_dsl(dsl_op: ImperativeMutationDsl) -> ImperativeMutation {
-    match dsl_op {
-        ImperativeMutationDsl::CreateStep { owner, slot, item } => create_step(PathRef { owner, slot }, step_node_dsl_to_step(*item)),
-        ImperativeMutationDsl::DeleteStep { owner, slot, id } => delete_step(PathRef { owner, slot }, id),
-        ImperativeMutationDsl::ReorderSteps { owner, slot, id, to_index } => reorder_steps(PathRef { owner, slot }, id, to_index),
-        ImperativeMutationDsl::EditStepParams { owner, slot, id, params } => edit_step_params(PathRef { owner, slot }, id, value_dsl_map_to_dictionary(&params)),
-    }
+    let converters: &[fn(ImperativeMutationDsl) -> Result<ImperativeMutation, ImperativeMutationDsl>] =
+        &[super::create_step::text::from_dsl, super::delete_step::text::from_dsl, super::reorder_steps::text::from_dsl, super::edit_step_params::text::from_dsl];
+    converters.iter().fold(Err(dsl_op), |operation, convert| operation.or_else(convert)).expect("every wire record has a direct mutation owner")
 }
 
 impl protocol::OpText for ImperativeMutation {
@@ -151,7 +113,21 @@ pub fn decode_op(bytes: &[u8]) -> Result<ImperativeMutation, protocol::ProtocolE
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::imperative::ImperativeSnapshot;
+    use crate::artifacts::imperative::mutations::{create_step, delete_step, edit_step_params, reorder_steps};
+    use crate::artifacts::imperative::{ImperativeSnapshot, PathRef};
+
+    #[test]
+    fn direct_wire_records_preserve_keyword_fields_and_tag_order() {
+        let expected = [("create-step", &["owner", "slot", "item"][..]), ("delete-step", &["owner", "slot", "id"][..]), ("reorder-steps", &["owner", "slot", "id", "to"][..]), ("edit-step-params", &["owner", "slot", "id", "params"][..])];
+        let variants = <ImperativeMutationDsl as dsl::DslVariants>::variants();
+        assert_eq!(variants.len(), expected.len());
+        for (index, ((keyword, spec), (expected_keyword, expected_fields))) in variants.iter().zip(expected.iter()).enumerate() {
+            assert_eq!(keyword.as_str(), *expected_keyword);
+            assert_eq!(BINARY_TAG_REGISTRY[index], (*expected_keyword, index as u8));
+            let fields: Vec<_> = spec().fields.into_iter().map(|field| field.key).collect();
+            assert_eq!(fields, expected_fields.iter().map(|field| (*field).to_owned()).collect::<Vec<_>>());
+        }
+    }
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {

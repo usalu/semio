@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.png.mutation;
+// 🧬️ change-srgb-intent/ChangeSrgbIntent; complex fields follow the direct payload schema.
+message ChangeSrgbIntentMutation { bytes srgb = 1; }

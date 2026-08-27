@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/sequence/sequence/mutation/move-step/payload.json",
+  "title": "MoveStep",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "x",
+    "y"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "x": {
+      "type": "number"
+    },
+    "y": {
+      "type": "number"
+    }
+  }
+}

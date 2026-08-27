@@ -14,7 +14,7 @@ pub struct MoveMediaNode {
     pub y: f64,
 }
 
-pub async fn handle(payload: &MoveMediaNode, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub fn handle(payload: &MoveMediaNode, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     let operations = host_operations(doc.snapshot, cfg.snapshot, session, |host| {
         host.begin_change();
         host.move_widget(&payload.node_id, payload.x, payload.y).is_ok()

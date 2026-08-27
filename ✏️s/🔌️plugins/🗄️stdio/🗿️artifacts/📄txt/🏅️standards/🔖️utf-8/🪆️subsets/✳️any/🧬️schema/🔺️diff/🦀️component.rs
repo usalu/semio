@@ -2,8 +2,8 @@
 //! `lines` triple. No `snapshot: Option<TxtSnapshot>` full-replace slot anywhere, incl. SetSnapshot
 //! (its diff is `TxtDiff::between(base, next)`, field-by-field, same as every other mutation).
 
-use crate::artifacts::txt::schema::snapshot::LineEnding;
 use crate::artifacts::txt::TxtSnapshot;
+use crate::artifacts::txt::schema::snapshot::LineEnding;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 // 🧭️ `DiffAlgebra` isn't yet on the `protocol` facade's curated re-export list (S1 added the
 // trait but the facade wasn't updated — see s1-spine-report.md) so it's reached via the
@@ -272,11 +272,7 @@ impl MutationDiff<TxtSnapshot> for TxtDiff {
             (None, Some(l2)) => Some(l2),
             (Some(l1), Some(l2)) => {
                 let merged = absorb_pair(&l1, &l2);
-                if merged.is_empty() {
-                    None
-                } else {
-                    Some(merged)
-                }
+                if merged.is_empty() { None } else { Some(merged) }
             }
         };
     }
@@ -334,12 +330,6 @@ impl DiffAlgebra<TxtSnapshot> for TxtDiff {
     }
 }
 
-/// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation -- no full-replace
-/// slot, same `between` machinery every other mutation's diff ultimately composes from.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &TxtSnapshot, snapshot: &TxtSnapshot) -> TxtDiff {
-    TxtDiff::between(base, snapshot)
-}
 //#endregion 🔖️Diff
 
 //#region 🧪️Tests

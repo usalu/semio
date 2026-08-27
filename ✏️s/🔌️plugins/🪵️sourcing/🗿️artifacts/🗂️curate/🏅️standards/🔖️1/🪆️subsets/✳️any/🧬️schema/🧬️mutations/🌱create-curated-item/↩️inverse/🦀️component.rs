@@ -4,7 +4,7 @@ use crate::artifacts::curate::mutations::SourcingMutation;
 use crate::artifacts::curate::CurateSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::mutation::CreateCuratedItem, _base: &CurateSnapshot) -> Vec<SourcingMutation> {
-    vec![crate::artifacts::curate::mutations::delete_curated_item::mutation::delete_curated_item(payload.item.object_id.clone())]
+pub fn inverse(payload: &super::CreateCuratedItem, _base: &CurateSnapshot) -> Vec<SourcingMutation> {
+    vec![crate::artifacts::curate::mutations::delete_curated_item::delete_curated_item(payload.item.object_id.clone())]
 }
 //#endregion 🔖️Inverse

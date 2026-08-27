@@ -14,11 +14,12 @@ use crate::editor::home::commands::set_active_panel_tab;
 use crate::editor::home::commands::{bind_space_file, create_studio, import_space, open_space};
 use crate::editor::home::commands::{copy_invite_link, create_space, delete_space, fold_directory_events, presence_heartbeat, rename_space, set_client, share_space};
 use crate::editor::home::commands::{delete_virtual_file_system_node, go_home, navigate_virtual_file_system_node};
-use crate::editor::home::config::HomeConfig;
+use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use crate::editor::home::presence::{HomePresence, HomePresenceMutation};
 use semio_framework_plugin::app::Dialect;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{app_commands, create_tab_stack_layout, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, FaultOrigin, Label, LocalizedLabel, NoDraft, NoDraftMutation, UiNode};
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+use semio_framework_plugin::{app_commands, create_tab_stack_layout, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, Fault, FaultOrigin, Label, LocalizedLabel, NoDraft, NoDraftMutation, UiNode};
 use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionRef, DialogDefinition};
 use serde_json::Value;
 use store::EngineHandles;
@@ -54,6 +55,257 @@ app_commands! {
 }
 //#endregion 🔖️HomeCommand
 
+//#region 🧵️RetainedCommands
+const HOME_RETAINED_TOOL_IDS: &[&str] = &[
+    "openSpace", "navigateVirtualFileSystemNode", "goHome", "setActivePanelTab", "createSpace", "deleteSpace", "shareSpace", "copyInviteLink", "presenceHeartbeat", "setClient",
+];
+const HOME_RETAINED_PAYLOAD_SCHEMA: &str = "space.home.tool-command.v1";
+const HOME_RETAINED_RAW_BYTES: usize = 8_192;
+const HOME_RETAINED_WORK_ITEMS: usize = 1;
+const HOME_CONFIG_VALUE_BYTES: usize = 512;
+const HOME_CONFIG_BASE_BYTES: usize = 512;
+const HOME_CONFIG_STEP_BYTES: usize = 4_096;
+const HOME_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "openSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "navigateVirtualFileSystemNode", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "goHome", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "setActivePanelTab", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "createSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "deleteSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "shareSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "copyInviteLink", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "presenceHeartbeat", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "setClient", lanes: &[ArtifactToolPublicationLane::Config] },
+];
+
+fn home_retained_contract() -> ToolExecutionContract {
+    ToolExecutionContract::resumable(HOME_RETAINED_RAW_BYTES, 64, 1, 65_536, 7_500, 1, 1)
+}
+
+fn home_retained_extent(command: &HomeCommand, _snapshot: &SHomeSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    let admitted = match command {
+        HomeCommand::OpenSpace(payload) => payload.space_id.len(),
+        HomeCommand::NavigateVirtualFileSystemNode(payload) => payload.node_id.len(),
+        HomeCommand::GoHome(_) | HomeCommand::PresenceHeartbeat(_) => 0,
+        HomeCommand::SetActivePanelTab(payload) => payload.tab_id.len(),
+        HomeCommand::CreateSpace(payload) => payload.name.len().saturating_add(payload.kind.len()).saturating_add(payload.visibility.len()),
+        HomeCommand::DeleteSpace(payload) => payload.space_id.len(),
+        HomeCommand::ShareSpace(payload) => payload.space_id.len().saturating_add(payload.email.len()).saturating_add(payload.role.len()),
+        HomeCommand::CopyInviteLink(payload) => payload.space_id.len().saturating_add(payload.role.len()),
+        HomeCommand::SetClient(payload) => payload.client_id.len().saturating_add(payload.client_name.len()),
+        _ => return None,
+    };
+    let limit = if matches!(command, HomeCommand::SetActivePanelTab(_) | HomeCommand::SetClient(_)) { HOME_CONFIG_VALUE_BYTES } else { HOME_RETAINED_RAW_BYTES };
+    (admitted <= limit).then_some(HOME_RETAINED_WORK_ITEMS)
+}
+
+fn home_retained_reduce(
+    command: &HomeCommand,
+    snapshot: &SHomeSnapshot,
+    config: &HomeConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> Result<Emit<crate::artifacts::home::op::SHomeMutation, HomeConfigMutation, NoDraftMutation>, Fault> {
+    if home_retained_extent(command, snapshot, _interaction).is_none() {
+        return Err(Fault::from("space-home-retained-route-mismatch"));
+    }
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+}
+
+struct HomeRetainedCommandJobFactory { keys: Vec<ToolFactoryKey> }
+
+impl HomeRetainedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: HOME_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for HomeRetainedCommandJobFactory {
+    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<HomeApp>>;
+    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<HomeApp>>;
+    fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
+    fn payload_schema_id(&self) -> &str { HOME_RETAINED_PAYLOAD_SCHEMA }
+    fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
+    fn execution_contract(&self) -> ToolExecutionContract { home_retained_contract() }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::new(payload))
+    }
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > HOME_RETAINED_RAW_BYTES || checkpoint.as_ref().is_some_and(|value| value.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
+            return Err((ToolJobFactoryError::new("Space Home retained command rejects an oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(match checkpoint {
+            Some(checkpoint) => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
+            None => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input),
+        })
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for HomeRetainedCommandJobFactory {
+    type Owner = EditorApp<HomeApp>;
+    const TOOL_IDS: &'static [&'static str] = HOME_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::home::S_HOME_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = HOME_RETAINED_PUBLICATION_CONTRACTS;
+}
+//#endregion 🧵️RetainedCommands
+
+//#region 📬️ConfigStorePreparation
+struct HomeConfigPreparationFactory;
+
+struct HomeConfigPreparation {
+    base: Option<store::SnapshotRead<HomeConfig>>,
+    mutation: Option<HomeConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    candidate: Option<(HomeConfig, HomeConfigMutation, HomeConfigMutation)>,
+    sealed_candidate: Option<(HomeConfig, protocol::Edit<HomeConfigMutation>)>,
+    serialized_bytes: Option<usize>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<HomeConfig, HomeConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn home_config_retained_bytes(config: &HomeConfig) -> usize {
+    config.active_panel_tab.len().saturating_add(config.locale.len()).saturating_add(config.directory_json.len()).saturating_add(config.client_id.len()).saturating_add(config.client_name.len())
+}
+
+fn home_config_edit(forward: HomeConfigMutation, inverse: HomeConfigMutation, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<HomeConfigMutation> {
+    let id = format!("space-home-retained-{}-{}", authority.operation().0, authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![forward], inverse: vec![inverse],
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+        }],
+        description, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+    }
+}
+
+struct HomeConfigByteCounter { bytes: usize }
+
+impl std::io::Write for HomeConfigByteCounter {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        if self.bytes.saturating_add(bytes.len()) > HOME_CONFIG_STEP_BYTES { return Err(std::io::Error::from(std::io::ErrorKind::InvalidData)); }
+        self.bytes += bytes.len();
+        Ok(bytes.len())
+    }
+    fn flush(&mut self) -> std::io::Result<()> { Ok(()) }
+}
+
+fn home_config_edit_bytes(edit: &protocol::Edit<HomeConfigMutation>) -> Result<usize, String> {
+    let mut counter = HomeConfigByteCounter { bytes: 0 };
+    serde_json::to_writer(&mut counter, edit).map_err(|_| "Space Home config edit exceeds its serialized byte envelope".to_string())?;
+    Ok(counter.bytes)
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<HomeConfig, HomeConfigMutation> for HomeConfigPreparationFactory {
+    fn preflight(&self, mutation: &HomeConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        let mutation_bytes = match mutation {
+            HomeConfigMutation::SetActivePanelTab { tab_id } => tab_id.len(),
+            HomeConfigMutation::SetClient { client_id, client_name } => client_id.len().saturating_add(client_name.len()),
+            _ => return Err("Space Home config preparation rejects non-retained mutations".into()),
+        };
+        if lane != store::HistoryLane::Document || mutation_bytes > HOME_CONFIG_VALUE_BYTES || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Space Home config preparation rejected its lane or byte envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 3, retained_bytes: HOME_CONFIG_STEP_BYTES })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation>> {
+        let mutation_bytes = match &request.mutation {
+            HomeConfigMutation::SetActivePanelTab { tab_id } => tab_id.len(),
+            HomeConfigMutation::SetClient { client_id, client_name } => client_id.len().saturating_add(client_name.len()),
+            _ => return Err(request),
+        };
+        if request.lane != store::HistoryLane::Document || mutation_bytes > HOME_CONFIG_VALUE_BYTES || request.description.as_ref().is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+            return Err(request);
+        }
+        Ok(Box::new(HomeConfigPreparation {
+            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, sealed_candidate: None, serialized_bytes: None, prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation> for HomeConfigPreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || grant.maximum_bytes < HOME_CONFIG_STEP_BYTES || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        if self.candidate.is_none() && self.sealed_candidate.is_none() {
+            let base = self.base.as_ref().ok_or_else(|| "Space Home config preparation lost its exact base root".to_string())?.get();
+            let base_bytes = home_config_retained_bytes(base);
+            if base_bytes > HOME_CONFIG_BASE_BYTES { return Err("Space Home config base exceeds retained byte capacity".into()); }
+            let mutation = self.mutation.take().ok_or_else(|| "Space Home config preparation lost its mutation owner".to_string())?;
+            let mut post = base.clone();
+            let inverse = match &mutation {
+                HomeConfigMutation::SetActivePanelTab { tab_id } => HomeConfigMutation::SetActivePanelTab { tab_id: std::mem::replace(&mut post.active_panel_tab, tab_id.clone()) },
+                HomeConfigMutation::SetClient { client_id, client_name } => HomeConfigMutation::SetClient {
+                    client_id: std::mem::replace(&mut post.client_id, client_id.clone()),
+                    client_name: std::mem::replace(&mut post.client_name, client_name.clone()),
+                },
+                _ => return Err("Space Home config preparation received a non-retained mutation".into()),
+            };
+            self.candidate = Some((post, inverse, mutation));
+            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: base_bytes as u64, digest: [0; 32] };
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
+        }
+        if self.sealed_candidate.is_none() {
+            let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "Space Home config preparation lost its candidate".to_string())?;
+            let authority = self.authority.as_ref().ok_or_else(|| "Space Home config preparation lost its Store authority".to_string())?;
+            self.sealed_candidate = Some((post, home_config_edit(forward, inverse, self.description.take(), authority)));
+        }
+        if self.serialized_bytes.is_none() {
+            let (post, edit) = self.sealed_candidate.as_ref().ok_or_else(|| "Space Home config preparation lost its semantic edit".to_string())?;
+            let bytes = home_config_edit_bytes(edit)?;
+            if bytes.saturating_add(home_config_retained_bytes(post)).saturating_add(512) > HOME_CONFIG_STEP_BYTES {
+                return Err("Space Home config publication exceeds the 4096-byte complete envelope".into());
+            }
+            self.serialized_bytes = Some(bytes);
+            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.checkpoint.completed_bytes.saturating_add(bytes as u64), digest: [0; 32] };
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
+        }
+        let (post, edit) = self.sealed_candidate.take().ok_or_else(|| "Space Home config preparation lost its validated edit".to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Space Home config preparation lost its Store authority".to_string())?;
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 3, completed_items: 3, completed_bytes: self.checkpoint.completed_bytes.saturating_add(self.serialized_bytes.unwrap_or(0) as u64), digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<HomeConfig, HomeConfigMutation>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<HomeConfig, HomeConfigMutation>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if (self.prepared.is_some() || self.sealed_candidate.is_some() || self.candidate.is_some() || self.mutation.is_some() || self.description.is_some()) && grant.maximum_bytes < HOME_CONFIG_STEP_BYTES { return Ok(store::SnapshotRetirementStep::Blocked); }
+        if self.prepared.take().is_some() || self.sealed_candidate.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: HOME_CONFIG_STEP_BYTES }); }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() { return Err("Space Home config preparation could not return its exact base root".into()); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            let bytes = authority.actor().len();
+            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.sealed_candidate.is_none() && self.prepared.is_none() }
+}
+//#endregion 📬️ConfigStorePreparation
+
 //#region 🔖️HomeApp
 /// 🧪️ Unit struct — the Home launcher holds catalog bootstrap ports plus per-session studio port
 /// bindings for folder/file-backed studios.
@@ -75,6 +327,62 @@ impl ArtifactEditor for HomeApp {
 
     const DIALECT: Dialect = crate::artifacts::home::HOME_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::home::S_HOME_DOCUMENT_SCHEMA;
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(HomeConfigPreparationFactory))
+    }
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<HomeApp>,
+        owner_file: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s-home",
+        document_schema: "s.home",
+        factory: "HomeRetainedCommandJobFactory",
+        factory_type: HomeRetainedCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 65_536, 7_500),
+        tools: ["openSpace", "navigateVirtualFileSystemNode", "goHome", "setActivePanelTab", "createSpace", "deleteSpace", "shareSpace", "copyInviteLink", "presenceHeartbeat", "setClient"]
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(HomeRetainedCommandJobFactory::new(&controller))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !HOME_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id {
+            return Err(Fault::from("space-home-command-tool-mismatch"));
+        }
+        if home_retained_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
+            return Err(Fault::from("space-home-command-payload-too-large"));
+        }
+        let tool_id = request.command.command_id();
+        let work = Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, home_retained_reduce, home_retained_extent));
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            operation_context,
+            request.completion,
+            HomeCommand::command_id,
+            HOME_RETAINED_RAW_BYTES,
+            HOME_RETAINED_WORK_ITEMS,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
 
     async fn initial_snapshot() -> SHomeSnapshot {
         SHomeSnapshot::default()
@@ -250,6 +558,22 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .view_action("foldDirectoryEvents", LocalizedLabel::native("Fold Directory Events", "Verzeichnisereignisse einspielen"))
         .view_action("presenceHeartbeat", LocalizedLabel::native("Presence Heartbeat", "Präsenz-Heartbeat"))
         .view_action("setClient", LocalizedLabel::native("Set Client", "Client setzen"))
+        .action_interactive_job("createStudio", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("bindSpaceFile", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("importSpace", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("openSpace", InteractiveJobClassification::Migrated)
+        .action_interactive_job("navigateVirtualFileSystemNode", InteractiveJobClassification::Migrated)
+        .action_interactive_job("deleteVirtualFileSystemNode", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("goHome", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setActivePanelTab", InteractiveJobClassification::Migrated)
+        .action_interactive_job("createSpace", InteractiveJobClassification::Migrated)
+        .action_interactive_job("deleteSpace", InteractiveJobClassification::Migrated)
+        .action_interactive_job("renameSpace", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("shareSpace", InteractiveJobClassification::Migrated)
+        .action_interactive_job("copyInviteLink", InteractiveJobClassification::Migrated)
+        .action_interactive_job("foldDirectoryEvents", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("presenceHeartbeat", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setClient", InteractiveJobClassification::Migrated)
         .window_kind_action_refs(crate::editor::home::modes::explore::windows::main::S_HOME_WINDOW, vec![
             "createStudio".into(),
             "bindSpaceFile".into(),
@@ -293,6 +617,51 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    //#region 🧪️RetainedCommandEnvelope
+    #[test]
+    fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
+        use store::ArtifactStoreOneItemPreparationFactory as _;
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🎯️retained-command-limits.json")).expect("language-neutral retained fixture");
+        let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"] == "Migrated").map(|row| row["id"].as_str().expect("route id")).collect();
+        assert_eq!(migrated, HOME_RETAINED_TOOL_IDS);
+        assert_eq!(HOME_RETAINED_PUBLICATION_CONTRACTS.len(), migrated.len());
+        assert_eq!(fixture["limits"]["configValueBytes"].as_u64(), Some(HOME_CONFIG_VALUE_BYTES as u64));
+        assert_eq!(fixture["limits"]["storeStepBytes"].as_u64(), Some(HOME_CONFIG_STEP_BYTES as u64));
+        let factory = HomeConfigPreparationFactory;
+        for case in fixture["boundaryCases"].as_array().expect("boundary cases") {
+            let value = "x".repeat(case["bytes"].as_u64().expect("byte count") as usize);
+            let mutation = HomeConfigMutation::SetActivePanelTab { tab_id: value };
+            let encoded = serde_json::to_vec(&mutation).expect("third-party JSON encode");
+            let decoded: HomeConfigMutation = serde_json::from_slice(&encoded).expect("third-party JSON decode");
+            assert_eq!(decoded, mutation);
+            assert_eq!(factory.preflight(&decoded, None, store::HistoryLane::Document).is_ok(), case["accepted"].as_bool().expect("admission oracle"));
+        }
+    }
+
+    #[test]
+    fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
+        use std::io::Write as _;
+        use store::ArtifactStoreOneItemPreparation as _;
+        let value = "x".repeat(HOME_CONFIG_VALUE_BYTES);
+        let mut preparation = HomeConfigPreparation {
+            base: None, mutation: Some(HomeConfigMutation::SetActivePanelTab { tab_id: value }), description: None, authority: None, candidate: None, sealed_candidate: None, serialized_bytes: None, prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+        };
+        let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_096 };
+        preparation.cancel();
+        assert!(matches!(preparation.advance(grant).expect("cancelled step"), store::ArtifactStoreOneItemPreparationStep::Blocked));
+        preparation.begin_close();
+        assert!(matches!(preparation.close_step(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }).expect("undersized close"), store::SnapshotRetirementStep::Blocked));
+        assert!(matches!(preparation.close_step(grant).expect("bounded close"), store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 4_096 }));
+        assert!(matches!(preparation.close_step(grant).expect("terminal close"), store::SnapshotRetirementStep::Complete));
+        assert!(preparation.terminal_is_empty());
+        let mut counter = HomeConfigByteCounter { bytes: 0 };
+        assert_eq!(counter.write(&[0; 4_096]).expect("maximum serialized envelope"), 4_096);
+        assert!(counter.write(&[0]).is_err());
+    }
+    //#endregion 🧪️RetainedCommandEnvelope
+
     use semio_framework_os::{create_backbone_document, empty_space_snapshot, load_os_space_document, seed_os_space_catalog_if_empty, LocalStorageBackbonePort, OsSpaceDocument, SpaceKind, SpaceVisibility, S_SPACE_SCHEMA};
     use std::sync::Arc;
 

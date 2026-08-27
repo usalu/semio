@@ -1,0 +1,4 @@
+"""🗑️ Direct delete-curated-item payload."""
+input DeleteCuratedItemInput {
+  objectId: String!
+}

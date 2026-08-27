@@ -23,7 +23,7 @@ use semio_repo_test_host::Json;
 /// `KINDS` carries `kinds_const_matches_enum_variants_in_declaration_order`, which proves enum,
 /// constant and manifest never drift apart. Declared here rather than in the case adapter so the
 /// adapter, this module's own tests and any future host all read ONE list.
-pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-page", "remove-page", "set-page-media-box", "set-page-crop-box", "append-page-content", "set-info", "insert-object", "remove-object", "set-object-value", "set-dict-entry", "remove-dict-entry", "set-trailer-entry", "remove-trailer-entry", "move-page", "set-page-content", "set-page-rotation"];
+pub const KINDS: &[&str] = &["insert-page", "remove-page", "set-page-media-box", "set-page-crop-box", "append-page-content", "set-info", "insert-object", "remove-object", "set-object-value", "set-dict-entry", "remove-dict-entry", "set-trailer-entry", "remove-trailer-entry", "move-page", "set-page-content", "set-page-rotation"];
 
 /// 👁️ The ONE declared kind whose forward effect no semantic projection of a PDF can carry, with
 /// the reason and the fix.
@@ -306,7 +306,6 @@ mod oracles {
     /// contract at the Rust-model level.
     fn apply_kind(document: &mut Document, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "no-mutation" => {}
             "insert-page" => {
                 let page = params.get("page").cloned().unwrap_or(Json::Null);
                 let media_box = media_box_field(&page, "mediaBox").unwrap_or([0.0, 0.0, 612.0, 792.0]);
@@ -422,14 +421,11 @@ mod oracles {
     /// library instead.
     ///
     /// ⚠️ An unrecognised kind is an ERROR, never "the same mutation again": a fallback that hands
-    /// back `{kind, params}` unchanged is not an inverse, and while the case adapter merely
-    /// returned the projection it hid two declared kinds -- `set-info` and `set-snapshot`, both
-    /// routed away from [`apply_kind`] -- behind it.
+    /// back `{kind, params}` unchanged is not an inverse.
     fn inverse_spec(document: &Document, kind: &str, params: &Json) -> Result<Json, String> {
         let spec = |inverse_kind: &str, inverse_params: Json| Json::Object(vec![("kind".to_string(), Json::String(inverse_kind.to_string())), ("params".to_string(), inverse_params)]);
         let obj = |entries: Vec<(&str, Json)>| Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
         Ok(match kind {
-            "no-mutation" => spec("no-mutation", obj(vec![])),
             "set-info" => {
                 let mut entries = Vec::new();
                 if let Some(title) = info_entry(document, b"Title") {
@@ -439,13 +435,6 @@ mod oracles {
                     entries.push(("author", Json::String(author)));
                 }
                 spec("set-info", obj(entries))
-            }
-            "set-snapshot" => {
-                let mut entries = vec![("declaredVersion", Json::String(document.version.clone()))];
-                if let Some(title) = info_entry(document, b"Title") {
-                    entries.push(("title", Json::String(title)));
-                }
-                spec("set-snapshot", obj(entries))
             }
             "insert-page" => {
                 let clamped = usize_field(params, "index").min(document.get_pages().len());
@@ -467,7 +456,7 @@ mod oracles {
                         let page = obj(vec![("mediaBox", Json::Array(media_box.into_iter().map(|value| Json::Number(value as f64)).collect())), ("rotate", Json::Number(rotate as f64)), ("text", Json::String(text))]);
                         spec("insert-page", obj(vec![("index", Json::Number(index as f64)), ("page", page)]))
                     }
-                    None => spec("no-mutation", obj(vec![])),
+                    None => return Err(format!("remove-page index {index} has no inverse target")),
                 }
             }
             "set-page-media-box" => {
@@ -500,7 +489,7 @@ mod oracles {
                 let id = json_object_id(params);
                 match document.objects.get(&id) {
                     Some(value) => spec("insert-object", obj(vec![("id", params.get("id").cloned().unwrap_or(Json::Null)), ("value", object_to_json(value))])),
-                    None => spec("no-mutation", obj(vec![])),
+                    None => return Err(format!("remove-object id {id:?} has no inverse target")),
                 }
             }
             "set-object-value" => {
@@ -529,7 +518,7 @@ mod oracles {
                     Some(prior) => {
                         spec("set-dict-entry", obj(vec![("id", params.get("id").cloned().unwrap_or(Json::Null)), ("path", params.get("path").cloned().unwrap_or(Json::Array(vec![]))), ("key", Json::String(key)), ("value", object_to_json(prior))]))
                     }
-                    None => spec("no-mutation", obj(vec![])),
+                    None => return Err(format!("remove-dict-entry key {key:?} has no inverse target")),
                 }
             }
             "set-trailer-entry" => {
@@ -543,18 +532,17 @@ mod oracles {
                 let key = params.str("key");
                 match document.trailer.get(key.as_bytes()).ok() {
                     Some(prior) => spec("set-trailer-entry", obj(vec![("key", Json::String(key)), ("value", object_to_json(prior))])),
-                    None => spec("no-mutation", obj(vec![])),
+                    None => return Err(format!("remove-trailer-entry key {key:?} has no inverse target")),
                 }
             }
             "move-page" => {
                 let from = usize_field(params, "from");
                 let len = document.get_pages().len();
                 if from >= len {
-                    spec("no-mutation", obj(vec![]))
-                } else {
-                    let clamped_to = usize_field(params, "to").min(len.saturating_sub(1));
-                    spec("move-page", obj(vec![("from", Json::Number(clamped_to as f64)), ("to", Json::Number(from as f64))]))
+                    return Err(format!("move-page index {from} has no inverse target"));
                 }
+                let clamped_to = usize_field(params, "to").min(len.saturating_sub(1));
+                spec("move-page", obj(vec![("from", Json::Number(clamped_to as f64)), ("to", Json::Number(from as f64))]))
             }
             "set-page-content" => {
                 let index = usize_field(params, "index");
@@ -574,29 +562,12 @@ mod oracles {
     //#region 🔖️Routing
     /// 🧭️ `remove-page`/`set-info` route to the shared `document` module's own reference
     /// implementation (per the fleet brief: reuse/extend it rather than duplicating).
-    /// `set-snapshot` does NOT: `PdfMutation::SetSnapshot` clones the base snapshot and overrides
-    /// `declared_version`/`info.title`, leaving every other field alone, so the oracle must edit
-    /// the `/Info` dictionary IN PLACE. `oracle_replace_metadata` replaces the whole dictionary --
-    /// correct for `set-info`, whose `PdfInfo { title, author, ..Default::default() }` really does
-    /// discard the rest, and wrong for `set-snapshot`, where it silently dropped `/Author`.
     /// Every other kind mutates a freshly loaded [`Document`] directly via [`apply_kind`].
     pub fn apply_mutation(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
         match kind {
             "" => Err("mutation spec carries no `kind`".to_string()),
             "remove-page" => oracle_delete_page(input, usize_field(params, "index") as u32 + 1),
             "set-info" => oracle_replace_metadata(input, present_string(params, "title").as_deref(), present_string(params, "author").as_deref()),
-            "set-snapshot" => {
-                let mut document = Document::load_mem(input).map_err(|error| format!("lopdf could not parse the input: {error}"))?;
-                if let Some(title) = present_string(params, "title") {
-                    set_info_entry(&mut document, "Title", &title);
-                }
-                if let Some(version) = non_empty(params, "declaredVersion") {
-                    document.version = version;
-                }
-                let mut out = Vec::new();
-                document.save_to(&mut out).map_err(|error| format!("lopdf could not save: {error}"))?;
-                Ok(out)
-            }
             _ => {
                 let mut document = Document::load_mem(input).map_err(|error| format!("lopdf could not parse the input: {error}"))?;
                 apply_kind(&mut document, kind, params)?;
@@ -605,6 +576,14 @@ mod oracles {
                 Ok(out)
             }
         }
+    }
+
+    /// 🔄️ Parses and reserializes a document without routing through a synthetic mutation.
+    pub fn round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+        let mut document = Document::load_mem(input).map_err(|error| format!("lopdf could not parse the input: {error}"))?;
+        let mut out = Vec::new();
+        document.save_to(&mut out).map_err(|error| format!("lopdf could not save: {error}"))?;
+        Ok(out)
     }
 
     /// ↩️ Applies `{kind, params}` and then its computed inverse, in sequence, and returns the
@@ -616,17 +595,10 @@ mod oracles {
         apply_mutation(&mutated, &inverse.str("kind"), inverse.get("params").unwrap_or(&Json::Null))
     }
 
-    fn non_empty(value: &Json, key: &str) -> Option<String> {
-        match value.get(key) {
-            Some(Json::String(text)) if !text.is_empty() => Some(text.clone()),
-            _ => None,
-        }
-    }
-
     /// 🔤️ A spec field that is PRESENT as a string, empty or not. `/Title ()` and an absent
     /// `/Title` are different documents -- this fixture's own `/Info` carries both `/Title ()` and
     /// `/Author ()` -- so an inverse that has to restore an empty metadata value must be able to
-    /// ask for one, which [`non_empty`] cannot express.
+    /// ask for one.
     fn present_string(value: &Json, key: &str) -> Option<String> {
         match value.get(key) {
             Some(Json::String(text)) => Some(text.clone()),
@@ -643,28 +615,6 @@ mod oracles {
             _ => return None,
         };
         dictionary.get(key).ok()?.as_str().ok().map(|bytes| String::from_utf8_lossy(bytes).into_owned())
-    }
-
-    /// ✍️ Sets ONE `/Info` entry in place, leaving every other metadata field intact -- what
-    /// `PdfMutation::SetSnapshot` models, unlike `set-info`, which replaces the whole dictionary.
-    fn set_info_entry(document: &mut Document, key: &str, value: &str) {
-        match document.trailer.get(b"Info").ok().cloned() {
-            Some(Object::Reference(id)) => {
-                if let Ok(dictionary) = document.get_object_mut(id).and_then(Object::as_dict_mut) {
-                    dictionary.set(key, Object::string_literal(value));
-                }
-            }
-            Some(Object::Dictionary(mut dictionary)) => {
-                dictionary.set(key, Object::string_literal(value));
-                document.trailer.set("Info", Object::Dictionary(dictionary));
-            }
-            _ => {
-                let mut dictionary = Dictionary::new();
-                dictionary.set(key, Object::string_literal(value));
-                let id = document.add_object(Object::Dictionary(dictionary));
-                document.trailer.set("Info", Object::Reference(id));
-            }
-        }
     }
 
     /// 🪟️ How far the catalog rendering resolves indirect references before it stops. Three is what
@@ -826,6 +776,12 @@ pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8
     oracles::apply_mutation_inverse(input, &kind, &params)
 }
 
+/// 🔄️ Parses and reserializes through the independent implementation without a fake mutation.
+#[cfg(feature = "oracles")]
+pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+    oracles::round_trip(input)
+}
+
 /// 👁️ This subset's own semantic projection -- `document::project_pdf` augmented with per-page
 /// `/Rotate`. @see [`oracles::project_pdf_1_7`].
 #[cfg(feature = "oracles")]
@@ -841,6 +797,11 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation_inverse(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 
@@ -893,8 +854,6 @@ mod tests {
     /// failure there have the same cause and the same fix.
     fn params_for(kind: &str) -> Json {
         match kind {
-            "no-mutation" => json_object(vec![]),
-            "set-snapshot" => json_object(vec![("declaredVersion", text("2.0")), ("title", text("Wave 7 Snapshot Title"))]),
             "insert-page" => json_object(vec![("index", number(30.0)), ("page", json_object(vec![("mediaBox", Json::Array(vec![number(0.0), number(0.0), number(612.0), number(792.0)])), ("rotate", number(0.0)), ("text", text("Inserted page for wave 7 mutation testing"))]))]),
             "remove-page" => json_object(vec![("index", number(7.0))]),
             "set-page-media-box" => json_object(vec![("index", number(15.0)), ("mediaBox", Json::Array(vec![number(0.0), number(0.0), number(595.0), number(842.0)]))]),
@@ -936,7 +895,7 @@ mod tests {
             let forward = spec(kind);
             let mutated = oracle_apply_mutation(&original, &forward).unwrap_or_else(|error| panic!("{kind}: {error}"));
             let moved = project_pdf_1_7(&mutated).unwrap_or_else(|error| panic!("{kind}: projecting the result failed: {error}"));
-            if *kind != "no-mutation" && !UNOBSERVABLE.contains(kind) {
+            if !UNOBSERVABLE.contains(kind) {
                 assert_ne!(moved, base, "{kind} left the compared projection untouched, so its scenario would pass whether or not the mutation ran");
             }
             let restored = oracle_apply_mutation_inverse(&original, &forward).unwrap_or_else(|error| panic!("{kind}: inverse: {error}"));
@@ -980,7 +939,7 @@ mod tests {
     #[test]
     fn the_round_trip_is_projection_stable_and_not_a_byte_passthrough() {
         let original = fixture();
-        let rebuilt = oracle_apply_mutation(&original, &spec("no-mutation")).expect("the reference re-serializes the document");
+        let rebuilt = oracle_round_trip(&original).expect("the reference re-serializes the document");
         assert_ne!(rebuilt, original, "the reference rebuilds the file from its own object graph; identical bytes would mean the input was smuggled");
         assert_eq!(project_pdf_1_7(&rebuilt).unwrap(), project_pdf_1_7(&original).unwrap());
     }
@@ -1002,7 +961,7 @@ mod tests {
             assert!(manifest.contains(&format!("\"{kind}\"")), "the pdf-1-7-any catalog is missing {kind:?}");
             assert!(feature.contains(&format!("| {kind} ")) || feature.contains(&format!("| {kind}\n")), "the feature declares no Examples row for {kind:?}");
         }
-        assert_eq!(KINDS.len(), 18, "the pdf-1-7-any vocabulary declares eighteen kinds");
+        assert_eq!(KINDS.len(), 16, "the pdf-1-7-any vocabulary declares sixteen direct kinds");
     }
 }
 //#endregion 🧪️Tests

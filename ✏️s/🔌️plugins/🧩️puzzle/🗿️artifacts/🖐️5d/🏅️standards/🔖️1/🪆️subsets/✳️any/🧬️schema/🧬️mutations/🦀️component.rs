@@ -281,7 +281,7 @@ pub fn puzzle5d_snapshot_mutations(before: &Puzzle5dSnapshot, after: &Puzzle5dSn
 
 /// ▶️ Applies `mutation` via its diff.
 pub fn apply_puzzle5d_mutation(projection: &mut Puzzle5dSnapshot, mutation: &Puzzle5dMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _) = semio_framework::io::resolve_ready(vcs::apply_mutation(projection, mutation))?;
+    let (next, _) = vcs::apply_mutation(projection, mutation)?;
 
     *projection = next;
     Ok(())

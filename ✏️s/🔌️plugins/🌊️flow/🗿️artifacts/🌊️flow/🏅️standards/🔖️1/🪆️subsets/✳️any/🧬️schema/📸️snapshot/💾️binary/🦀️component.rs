@@ -10,12 +10,12 @@ use crate::artifacts::flow::FlowSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `FlowSnapshot` to its binary pack form.
-pub async fn encode(snapshot: &FlowSnapshot) -> Vec<u8> {
+pub fn encode(snapshot: &FlowSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(snapshot)
 }
 
 /// 📖️ Decodes a `FlowSnapshot` from its binary pack form.
-pub async fn decode(bytes: &[u8]) -> Result<FlowSnapshot, PackError> {
+pub fn decode(bytes: &[u8]) -> Result<FlowSnapshot, PackError> {
     <FlowSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 

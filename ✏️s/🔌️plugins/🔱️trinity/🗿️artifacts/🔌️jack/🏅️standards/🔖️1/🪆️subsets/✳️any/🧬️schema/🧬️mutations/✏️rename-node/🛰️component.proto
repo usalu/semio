@@ -1,0 +1,4 @@
+syntax = "proto3";
+package semio.s.trinity.jack.mutation.rename_node;
+// rename-node / RenameNode
+message RenameNode { string id = 1; string new_name = 2; }

@@ -1,47 +1,101 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.xml/mutation.xml",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "XmlMutation",
   "oneOf": [
-    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
-    { "type": "object", "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "type": "object" } } },
-    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "setDeclaration" }, "declaration": { "type": "object" } } },
-    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "setDoctype" }, "doctype": { "$ref": "https://semio.tech/schema/s.stdio.xml/snapshot.xml#/$defs/XmlDoctype" } } },
     {
       "type": "object",
-      "required": ["mutation", "path", "index", "node"],
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
       "properties": {
-        "mutation": { "const": "insertElement" },
-        "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
-        "index": { "type": "integer", "minimum": 0 },
-        "node": { "type": "object" }
+        "mutation": {
+          "const": "set-declaration"
+        },
+        "payload": {
+          "$ref": "✏️set-declaration/🔣️payload.schema.json"
+        }
       }
     },
     {
       "type": "object",
-      "required": ["mutation", "path", "index"],
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
       "properties": {
-        "mutation": { "const": "removeElement" },
-        "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
-        "index": { "type": "integer", "minimum": 0 }
+        "mutation": {
+          "const": "set-doctype"
+        },
+        "payload": {
+          "$ref": "✏️set-doctype/🔣️payload.schema.json"
+        }
       }
     },
     {
       "type": "object",
-      "required": ["mutation", "path", "name"],
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
       "properties": {
-        "mutation": { "const": "setAttribute" },
-        "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
-        "name": { "type": "string" },
-        "value": { "type": "string" }
+        "mutation": {
+          "const": "insert-element"
+        },
+        "payload": {
+          "$ref": "📥️insert-element/🔣️payload.schema.json"
+        }
       }
     },
     {
       "type": "object",
-      "required": ["mutation", "path", "text"],
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
       "properties": {
-        "mutation": { "const": "setText" },
-        "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
-        "text": { "type": "string" }
+        "mutation": {
+          "const": "remove-element"
+        },
+        "payload": {
+          "$ref": "🗑️remove-element/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "set-attribute"
+        },
+        "payload": {
+          "$ref": "✏️set-attribute/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "set-text"
+        },
+        "payload": {
+          "$ref": "✏️set-text/🔣️payload.schema.json"
+        }
       }
     }
   ]

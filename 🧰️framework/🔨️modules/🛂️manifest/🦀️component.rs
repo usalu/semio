@@ -6007,6 +6007,22 @@ mod app_label_tests {
     }
 
     #[semio_framework_async_macros::async_test]
+    async fn tutorial_document_track_language_neutral_serde_parity() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️tutorial-document-track.json")).unwrap();
+        let mut def = minimal_tutorial().await;
+        def.tracks.document = serde_json::from_value(fixture["document"].clone()).unwrap();
+        assert_eq!(serde_json::to_value(&def.tracks.document).unwrap(), fixture["document"]);
+        let tracks = serde_json::to_value(&def.tracks).unwrap();
+        assert_eq!(tracks.get("document"), Some(&fixture["document"]));
+        assert!(tracks.get("artifact").is_none());
+        for vector in fixture["cases"].as_array().unwrap() {
+            let slice = tutorial_slice(&def, vector["from"].as_f64().unwrap(), vector["to"].as_f64().unwrap());
+            assert_eq!(slice.forward, vector["forward"].as_bool().unwrap());
+            assert_eq!(serde_json::to_value(slice.document.iter().map(|event| event.at).collect::<Vec<_>>()).unwrap(), vector["expectedAt"]);
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn tutorial_slice_forward_and_reverse_cross_artifact_events() {
         let mut def = minimal_tutorial().await;
         def.tracks.document = vec![
@@ -6297,6 +6313,23 @@ mod app_label_tests {
         assert_eq!(serde_json::from_str::<AppRef>(&json).unwrap(), app_ref);
     }
     //#endregion 🔖️SurfaceTests
+
+    //#region 🎯️ActionSemanticsFixture
+    #[test]
+    fn action_semantics_defaults_match_language_neutral_fixture() {
+        #[derive(serde::Deserialize)]
+        struct Case {
+            kind: ActionKind,
+            semantics: ActionSemantics,
+        }
+        let cases: Vec<Case> = serde_json::from_str(include_str!("🧪️fixtures/🔣️action-semantics.json")).unwrap();
+        assert_eq!(cases.len(), 6);
+        for case in cases {
+            assert_eq!(ActionSemantics::for_kind(case.kind), case.semantics);
+            assert_eq!(case.semantics.execution.interactive_job, InteractiveJobClassification::Unclassified);
+        }
+    }
+    //#endregion 🎯️ActionSemanticsFixture
 
     #[cfg(feature = "typegen")]
     #[test]

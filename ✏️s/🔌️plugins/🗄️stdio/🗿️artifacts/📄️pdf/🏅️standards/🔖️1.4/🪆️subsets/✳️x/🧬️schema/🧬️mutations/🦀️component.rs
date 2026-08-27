@@ -1,212 +1,60 @@
-//! 🧬️ `PdfX1Mutation` — the ISO 15930 (PDF/X) CONFORMANCE vocabulary of `stdio.pdf` 1.4. Every
-//! variant's `diff()` is handcrafted directly against `base`, and every variant's `inverse()` is
-//! handcrafted, reading whatever pre-state it needs out of the base.
-//!
-//! **Why this vocabulary has four variants and not sixteen.** PDF 1.4's retained snapshot is the
-//! document's page tree — `PageDoc { width, height, text }` per page — with no object graph, and
-//! this subset's own `check_pdf_x_conformance` (`../../🦀️component.rs`) raises exactly two
-//! diagnostics: `stdio.pdf.x.degenerate-page-size` when the first page's width or height is not
-//! strictly positive, and
-//! `stdio.pdf.x.schema-gap-unverifiable`, which fires unconditionally to record that full ISO 15930
-//! conformance cannot be checked from this schema at all. The one movable axis is therefore PAGE
-//! GEOMETRY, and this vocabulary is that axis and nothing else. Declaring what the 1.7 `✳️x` subset
-//! legitimately owns — per-page `/TrimBox`, `/GTS_PDFX` output intents with a `/DestOutputProfile`,
-//! encryption dictionaries, font embedding — would be fabricating a vocabulary for a schema that
-//! cannot observe a single one of them.
-//!
-//! **And why it shares no variant with `1.4/✳️a`.** That sibling's `check_pdf_a_conformance` reads
-//! the first page's text and never looks at the geometry; this one reads the geometry and never
-//! looks at the text. Two subsets of one standard over one snapshot type, disjoint because their
-//! checkers read different fields of it.
-//!
-//! 📐️ **Which page.** ISO 15930's trim-geometry axis is read off page 1 here, the page this subset's
-//! reference implementation writes and reads too, and every variant addresses that page alone: the
-//! page count and every other page's geometry come through untouched. A verb that addressed an
-//! arbitrary page index would be a vocabulary this subset's checker cannot observe.
-//!
-//! @see ../../🧪️oracle/🔣️component.json — the mutation catalog `KINDS` is measured against.
-//! @see ../🦀️component.rs — `check_pdf_x_conformance`, the one axis this vocabulary derives from.
+//! 🧬️ Transparent PDF 1.4/X mutation registry and delegation.
 
-use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::diff::PdfDiff;
-use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot;
-use protocol::command::DiffAlgebra;
-use protocol::Mutation;
+use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
 use serde::{Deserialize, Serialize};
 
-//#region 🔖️Class
-/// 📐️ The geometry a class stamp writes: ISO 216 A4 in PDF user-space units, the real trim size this
-/// artifact's committed fixture is typeset at, rather than a made-up number.
-pub const CONFORMANT_WIDTH: f64 = 595.276;
-pub const CONFORMANT_HEIGHT: f64 = 841.89;
-//#endregion 🔖️Class
+//#region 🔖️Leaves
+#[path = "📐️set-page-size/🦀️component.rs"]
+pub mod set_page_size;
+pub use set_page_size::SetPageSize;
+#[path = "📉️collapse-page-size/🦀️component.rs"]
+pub mod collapse_page_size;
+pub use collapse_page_size::CollapsePageSize;
+pub use set_page_size::{CONFORMANT_HEIGHT, CONFORMANT_WIDTH};
+//#endregion 🔖️Leaves
 
-//#region 🔖️Mutations
-/// 📐️ Typed conformance mutation for `stdio.pdf` 1.4 under ISO 15930. Both non-baseline variants
-/// address the one axis `check_pdf_x_conformance` can honestly check.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+//#region 🔖️Aggregate
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[serde(tag = "mutation", content = "payload", rename_all = "kebab-case", deny_unknown_fields)]
+#[mutations(snapshot = PdfSnapshot, diff = PdfDiff, schema = "s.stdio.pdf.1.4.x")]
 pub enum PdfX1Mutation {
-    /// 🚫️ The identity element of the vocabulary.
-    #[default]
-    NoMutation,
-    /// 🔄️ Replaces the whole document. Build the target with [`stamp_conformance`].
-    SetSnapshot {
-        snapshot: PdfSnapshot,
-    },
-    /// 📐️ Sets the page to a strictly positive size — the state
-    /// `stdio.pdf.x.degenerate-page-size` stops firing in.
-    SetPageSize {
-        width: f64,
-        height: f64,
-    },
-    /// 📐️ Collapses the page's width to zero — the degenerate state
-    /// `stdio.pdf.x.degenerate-page-size` reports. Height is left alone, so the mutation moves
-    /// exactly the one dimension the checker's `width > 0.0 && height > 0.0` test needs to fail.
-    CollapsePageSize,
+    SetPageSize(SetPageSize),
+    CollapsePageSize(CollapsePageSize),
 }
 
-/// 🧾️ Kebab-case spelling of every `PdfX1Mutation` variant, in declaration order — the catalog
-/// `pdf-1-4-x` (`../../🧪️oracle/🔣️component.json`) is measured against this exact list.
-pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-page-size", "collapse-page-size"];
-//#endregion 🔖️Mutations
+//#endregion 🔖️Aggregate
 
-//#region 🔖️Stamp
-/// 🏅️ Stamps the one axis this subset owns into (or out of) its conformant state — the
-/// whole-document target `SetSnapshot` carries.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn stamp_conformance(base: PdfSnapshot, stamped: bool) -> PdfSnapshot {
-    let mut next = base;
-    let page = next.first_page_mut();
-    if stamped {
-        page.width = CONFORMANT_WIDTH;
-        page.height = CONFORMANT_HEIGHT;
-    } else {
-        page.width = 0.0;
-    }
-    next
-}
-//#endregion 🔖️Stamp
-
-//#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot` through its own diff — the diff is the single semantics
-/// source, never a separate imperative apply path.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+//#region 🔖️Delegation
+/// ▶️ Applies the authoritative leaf diff.
 pub fn apply_x_conformance_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfX1Mutation) -> protocol::MutationOutcome<PdfDiff> {
-    let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
-        Ok(next) => {
-            *snapshot = next;
-            outcome
-        }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
-    }
+    use protocol::Mutation;
+    mutation.diff(snapshot).apply_to(snapshot)
 }
-//#endregion 🔖️Apply
 
-//#region 🔖️MutationTrait
-impl Mutation<PdfSnapshot> for PdfX1Mutation {
-    type Diff = PdfDiff;
-
-    fn diff(&self, base: &PdfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
-        let mut next = base.clone();
-        match self {
-            Self::NoMutation => {}
-            Self::SetSnapshot { snapshot } => next = snapshot.clone(),
-            Self::SetPageSize { width, height } => {
-                let page = next.first_page_mut();
-                page.width = *width;
-                page.height = *height;
-            }
-            Self::CollapsePageSize => next.first_page_mut().width = 0.0,
-        }
-        protocol::MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next))
-    }
-
-    /// ↩️ Every undo reads the base's OWN geometry rather than assuming a stamp is bijective: a
-    /// document already typeset at some size would not be restored by the opposite stamp.
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<Self> {
-        vec![match self {
-            Self::NoMutation => Self::NoMutation,
-            Self::SetSnapshot { .. } => Self::SetSnapshot { snapshot: base.clone() },
-            Self::SetPageSize { .. } | Self::CollapsePageSize => {
-                let page = base.first_page().cloned().unwrap_or_default();
-                Self::SetPageSize { width: page.width, height: page.height }
-            }
-        }]
-    }
+/// ↩️ Returns concrete inverse operations owned by the selected leaf.
+pub fn inverse_x_conformance_mutation(mutation: &PdfX1Mutation, base: &PdfSnapshot) -> Vec<PdfX1Mutation> {
+    use protocol::Mutation;
+    mutation.inverse(base)
 }
-//#endregion 🔖️MutationTrait
+//#endregion 🔖️Delegation
 
-//#region 🧪️Tests
+//#region 🧪️Structure
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PageDoc;
-    use protocol::MutationDiff;
-
-    fn base() -> PdfSnapshot {
-        PdfSnapshot {
-            schema: crate::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA.into(),
-            pages: vec![PageDoc { width: 595.276, height: 841.89, text: "a real abstract".into() }, PageDoc { width: 841.89, height: 595.276, text: "a landscape page this vocabulary must never touch".into() }],
-        }
-    }
 
     #[test]
-    fn kinds_match_enum_and_catalog() {
-        fn kind_of(mutation: &PdfX1Mutation) -> &'static str {
-            match mutation {
-                PdfX1Mutation::NoMutation => "no-mutation",
-                PdfX1Mutation::SetSnapshot { .. } => "set-snapshot",
-                PdfX1Mutation::SetPageSize { .. } => "set-page-size",
-                PdfX1Mutation::CollapsePageSize => "collapse-page-size",
-            }
+    fn direct_descriptor_and_catalog_bijection() {
+        let kinds: Vec<_> = <PdfX1Mutation as protocol::SemanticMutation<PdfSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
+        let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🧬️schema/🧬️mutations");
+        let catalog: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(source.join("../../🧪️oracle/🔣️component.json")).unwrap()).unwrap();
+        assert_eq!(catalog["mutationCatalogs"][0]["kinds"], serde_json::json!(kinds));
+        let owners = ["📐️set-page-size", "📉️collapse-page-size"];
+        for (index, owner) in owners.iter().enumerate() {
+            let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(source.join(owner).join("🔣️component.json")).unwrap()).unwrap();
+            assert_eq!(descriptor["semanticKind"], kinds[index]);
+            assert!(source.join(owner).join("🦀️component.rs").is_file());
         }
-        let samples = [PdfX1Mutation::NoMutation, PdfX1Mutation::SetSnapshot { snapshot: PdfSnapshot::default() }, PdfX1Mutation::SetPageSize { width: 0.0, height: 0.0 }, PdfX1Mutation::CollapsePageSize];
-        assert_eq!(samples.iter().map(kind_of).collect::<Vec<_>>(), KINDS);
-
-        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
-        let needle = "\"kinds\": [";
-        let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
-        let end = start + manifest[start..].find(']').expect("kinds array is closed");
-        let declared: Vec<String> = manifest[start..end].split(',').map(|entry| entry.trim().trim_matches('"').trim().trim_matches('"').to_string()).filter(|entry| !entry.is_empty()).collect();
-        assert_eq!(declared, KINDS, "the oracle manifest's kinds must match PdfX1Mutation exactly");
-    }
-
-    #[test]
-    fn mutation_apply_inverse_round_trips_every_variant() {
-        let base = base();
-        for mutation in [
-            PdfX1Mutation::NoMutation,
-            PdfX1Mutation::SetSnapshot { snapshot: stamp_conformance(base.clone(), false) },
-            PdfX1Mutation::SetPageSize { width: 419.528, height: 595.276 },
-            PdfX1Mutation::CollapsePageSize,
-        ] {
-            let mut state = base.clone();
-            apply_x_conformance_mutation(&mut state, &mutation);
-            for undo in mutation.inverse(&base) {
-                state = undo.diff(&state).diff().apply(&state).expect("the inverse diff applies");
-            }
-            assert_eq!(state, base, "apply(inverse(m), apply(m, base)) must recover base for {mutation:?}");
-        }
-    }
-
-    /// 👁️ Every non-baseline variant genuinely moves the axis this subset's checker reads, and
-    /// `CollapsePageSize` really does flip the checker's own verdict.
-    #[test]
-    fn every_variant_moves_the_axis_the_checker_reads() {
-        let base = base();
-        for mutation in [PdfX1Mutation::SetSnapshot { snapshot: stamp_conformance(base.clone(), false) }, PdfX1Mutation::SetPageSize { width: 419.528, height: 595.276 }, PdfX1Mutation::CollapsePageSize] {
-            let mut state = base.clone();
-            apply_x_conformance_mutation(&mut state, &mutation);
-            let (moved, before) = (state.first_page().expect("page 1"), base.first_page().expect("page 1"));
-            assert_ne!((moved.width, moved.height), (before.width, before.height), "{mutation:?} must move page 1's geometry");
-            assert_eq!(state.pages.len(), base.pages.len(), "{mutation:?} addresses page 1 only and must never change the page count");
-            assert_eq!(state.pages[1], base.pages[1], "{mutation:?} addresses page 1 only and must leave every other page untouched");
-        }
-        let mut collapsed = base.clone();
-        apply_x_conformance_mutation(&mut collapsed, &PdfX1Mutation::CollapsePageSize);
-        let page = collapsed.first_page().expect("page 1");
-        assert!(!(page.width > 0.0 && page.height > 0.0), "CollapsePageSize must flip check_pdf_x_conformance's own degeneracy test");
     }
 }
-//#endregion 🧪️Tests
+//#endregion 🧪️Structure

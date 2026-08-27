@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "contract": "rust-physical-reference-context-v1",
+  "assertionMessages": {
+    "macros": { "assert": 1, "assert_eq": 2, "assert_ne": 2, "debug_assert": 1, "debug_assert_eq": 2, "debug_assert_ne": 2 },
+    "literal": "unescaped-normal-string-only",
+    "context": "exact-top-level-macro-argument",
+    "cases": [
+      { "id": "equal", "source": "fn check() { assert_eq!(left, right, \"committed fixtures/payload.json\"); }", "expected": [{ "macroName": "assert_eq", "value": "committed fixtures/payload.json" }] },
+      { "id": "nested", "source": "fn check() { assert!(f(1, 2), \"missing fixtures/payload.json\"); }", "expected": [{ "macroName": "assert", "value": "missing fixtures/payload.json" }] },
+      { "id": "qualified", "source": "fn check() { std::debug_assert_ne!(left, right, \"wrong fixtures/payload.json\",); }", "expected": [{ "macroName": "debug_assert_ne", "value": "wrong fixtures/payload.json" }] },
+      { "id": "format-argument", "source": "fn check() { assert_eq!(left, right, \"{} fixtures/payload.json\", actual); }", "expected": [{ "macroName": "assert_eq", "value": "{} fixtures/payload.json" }] },
+      { "id": "comment", "source": "fn check() {} // assert_eq!(left, right, \"fixtures/payload.json\");", "expected": [] },
+      { "id": "nested-comment", "source": "/* outer /* assert!(ready, \"fixtures/payload.json\"); */ end */ fn check() {}", "expected": [] },
+      { "id": "string-lookalike", "source": "const TEXT: &str = r#\"assert_eq!(left, right, \"fixtures/payload.json\");\"#;", "expected": [] },
+      { "id": "other-macro", "source": "fn check() { identity!(left, right, \"fixtures/payload.json\"); }", "expected": [] },
+      { "id": "nonliteral", "source": "fn check() { assert_eq!(left, right, concat!(\"fixtures/\", \"payload.json\")); }", "expected": [] },
+      { "id": "escaped", "source": "fn check() { assert_eq!(left, right, \"fixtures\\u{2f}payload.json\"); }", "expected": [] },
+      { "id": "raw", "source": "fn check() { assert_eq!(left, right, r#\"fixtures/payload.json\"#); }", "expected": [] }
+    ]
+  }
+}

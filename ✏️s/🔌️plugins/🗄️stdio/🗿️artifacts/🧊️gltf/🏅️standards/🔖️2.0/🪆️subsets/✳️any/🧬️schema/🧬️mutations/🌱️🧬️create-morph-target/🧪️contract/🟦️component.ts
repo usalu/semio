@@ -1,0 +1,6 @@
+/** 🧪️ Focused create-morph-target mutation-law probe. */
+import type { GltfSnapshot } from '../../../📸️snapshot/🟦️component.ts';
+import { applyGltfCreateMorphTarget, type GltfCreateMorphTargetPayload } from '../../create-morph-target/🟦️component.ts';
+import { deriveGltfCreateMorphTargetDiff } from '../../create-morph-target/🔺️diff/🟦️component.ts';
+import { deriveGltfCreateMorphTargetInverse } from '../../create-morph-target/↩️inverse/🟦️component.ts';
+export const assertGltfCreateMorphTargetLaws = (base: GltfSnapshot, payload: GltfCreateMorphTargetPayload) => { const applied = applyGltfCreateMorphTarget(base, payload); if (!applied.accepted) return applied; const replay = applyGltfCreateMorphTarget(base, payload); const direct = deriveGltfCreateMorphTargetDiff(base, payload); const undo = deriveGltfCreateMorphTargetInverse(base, payload); if (!replay.accepted || !direct.accepted || !undo.accepted || JSON.stringify(applied.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(applied.diff) !== JSON.stringify(replay.diff) || JSON.stringify(applied.touchedPaths) !== JSON.stringify(undo.touchedPaths)) throw new Error('create-morph-target violates replay, direct-diff, or undo determinism'); return { applied, direct, undo }; };

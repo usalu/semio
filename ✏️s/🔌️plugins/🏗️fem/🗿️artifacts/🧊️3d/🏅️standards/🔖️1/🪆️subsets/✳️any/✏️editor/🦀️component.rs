@@ -23,7 +23,8 @@ use crate::model::{Dof, ElementResult};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    built_text_node, create_default_layout, ActionArgDef, ActionArgOption, AppDefinition, AppIo, AppOperationContext, AppRenderOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry,
+    built_text_node, create_default_layout, ActionArgDef, ActionArgOption, AppDefinition, AppIo, AppOperationContext, AppRenderOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
+    ArtifactToolPublicationLane,
     ArtifactView, ConfigSpec, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, PluginCloseStep,
 };
 use serde_json::{json, Value};
@@ -71,17 +72,32 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
-const FEM3D_RETAINED_TOOL_IDS: &[&str] = &["setAnalysisSettings", "setCamera", "setResultDisplay"];
+const FEM3D_RETAINED_TOOL_IDS: &[&str] = &["setCamera", "setResultDisplay"];
 const FEM3D_RETAINED_PAYLOAD_SCHEMA: &str = "fem.3d.tool-command.v1";
 const FEM3D_RETAINED_RAW_BYTES: usize = 8_192;
-const FEM3D_RETAINED_WORK_ITEMS: usize = 4_096;
+const FEM3D_RETAINED_WORK_ITEMS: usize = 1;
+const FEM3D_CONFIG_VALUE_BYTES: usize = 512;
+const FEM3D_CONFIG_BASE_BYTES: usize = 512;
+const FEM3D_CONFIG_STEP_BYTES: usize = 4_096;
+const FEM3D_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setResultDisplay", lanes: &[ArtifactToolPublicationLane::Config] },
+];
 
 fn fem3d_retained_contract() -> ToolExecutionContract {
-    ToolExecutionContract::resumable(FEM3D_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500, 1, 1)
+    ToolExecutionContract::resumable(FEM3D_RETAINED_RAW_BYTES, 64, 1, 65_536, 7_500, 1, 1)
 }
 
-fn fem3d_retained_extent(_command: &Fem3dCommand, _snapshot: &Fem3dSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    Some(1)
+fn fem3d_retained_extent(command: &Fem3dCommand, _snapshot: &Fem3dSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    match command {
+        Fem3dCommand::SetCamera(payload) if payload.json.len() <= FEM3D_CONFIG_VALUE_BYTES => Some(1),
+        Fem3dCommand::SetResultDisplay(payload)
+            if payload.mode.len().saturating_add(payload.source_id.as_ref().map_or(0, String::len)) <= FEM3D_CONFIG_VALUE_BYTES =>
+        {
+            Some(1)
+        }
+        _ => None,
+    }
 }
 
 fn fem3d_retained_reduce(
@@ -93,7 +109,17 @@ fn fem3d_retained_reduce(
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     operation: &AppOperationContext,
 ) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation, NoDraftMutation>, Fault> {
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+    let document = ArtifactView::with_operation(snapshot, history, operation.clone());
+    let config = ConfigView { snapshot: config };
+    match command {
+        Fem3dCommand::SetCamera(payload) if payload.json.len() <= FEM3D_CONFIG_VALUE_BYTES => set_camera::handle(payload, &document, &config),
+        Fem3dCommand::SetResultDisplay(payload)
+            if payload.mode.len().saturating_add(payload.source_id.as_ref().map_or(0, String::len)) <= FEM3D_CONFIG_VALUE_BYTES =>
+        {
+            set_result_display::handle(payload, &document, &config)
+        }
+        _ => Err(Fault::from("fem3d-retained-route-mismatch")),
+    }
 }
 
 struct Fem3dRetainedCommandJobFactory {
@@ -151,8 +177,159 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Fem3dRetainedComman
     type Owner = semio_framework_plugin::EditorApp<Fem3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = FEM3D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem3d::FEM_3D_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = FEM3D_RETAINED_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
+
+//#region 📬️ConfigStorePreparation
+struct Fem3dConfigPreparationFactory;
+
+struct Fem3dConfigPreparation {
+    base: Option<store::SnapshotRead<Fem3dConfig>>,
+    mutation: Option<Fem3dConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    candidate: Option<(Fem3dConfig, Fem3dConfigMutation, Fem3dConfigMutation)>,
+    sealed_candidate: Option<(Fem3dConfig, protocol::Edit<Fem3dConfigMutation>)>,
+    serialized_bytes: Option<usize>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<Fem3dConfig, Fem3dConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn fem3d_config_retained_bytes(config: &Fem3dConfig) -> usize {
+    config.result_source_id.as_ref().map_or(0, String::len).saturating_add(config.result_mode.len()).saturating_add(config.camera.json.len()).saturating_add(std::mem::size_of::<u32>())
+}
+
+fn fem3d_config_edit(forward: Fem3dConfigMutation, inverse: Fem3dConfigMutation, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Fem3dConfigMutation> {
+    let id = format!("fem3d-retained-{}-{}", authority.operation().0, authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![forward], inverse: vec![inverse],
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+        }],
+        description, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+    }
+}
+
+struct Fem3dConfigByteCounter { bytes: usize }
+
+impl std::io::Write for Fem3dConfigByteCounter {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        if self.bytes.saturating_add(bytes.len()) > FEM3D_CONFIG_STEP_BYTES { return Err(std::io::Error::from(std::io::ErrorKind::InvalidData)); }
+        self.bytes += bytes.len();
+        Ok(bytes.len())
+    }
+    fn flush(&mut self) -> std::io::Result<()> { Ok(()) }
+}
+
+fn fem3d_config_edit_bytes(edit: &protocol::Edit<Fem3dConfigMutation>) -> Result<usize, String> {
+    let mut counter = Fem3dConfigByteCounter { bytes: 0 };
+    serde_json::to_writer(&mut counter, edit).map_err(|_| "FEM3d config edit exceeds its serialized byte envelope".to_string())?;
+    Ok(counter.bytes)
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<Fem3dConfig, Fem3dConfigMutation> for Fem3dConfigPreparationFactory {
+    fn preflight(&self, mutation: &Fem3dConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        let mutation_bytes = match mutation {
+            Fem3dConfigMutation::SetCamera { camera } => camera.json.len(),
+            Fem3dConfigMutation::SetResultDisplay { source_id, mode, .. } => source_id.as_ref().map_or(0, String::len).saturating_add(mode.len()),
+            Fem3dConfigMutation::Snapshot { .. } => return Err("FEM3d config preparation rejects whole-snapshot publication".into()),
+        };
+        if lane != store::HistoryLane::Document || mutation_bytes > FEM3D_CONFIG_VALUE_BYTES || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("FEM3d config preparation rejected its lane or byte envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 3, retained_bytes: FEM3D_CONFIG_STEP_BYTES })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<Fem3dConfig, Fem3dConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Fem3dConfig, Fem3dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Fem3dConfig, Fem3dConfigMutation>> {
+        let mutation_bytes = match &request.mutation {
+            Fem3dConfigMutation::SetCamera { camera } => camera.json.len(),
+            Fem3dConfigMutation::SetResultDisplay { source_id, mode, .. } => source_id.as_ref().map_or(0, String::len).saturating_add(mode.len()),
+            Fem3dConfigMutation::Snapshot { .. } => return Err(request),
+        };
+        if request.lane != store::HistoryLane::Document || mutation_bytes > FEM3D_CONFIG_VALUE_BYTES || request.description.as_ref().is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+            return Err(request);
+        }
+        Ok(Box::new(Fem3dConfigPreparation {
+            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, sealed_candidate: None, serialized_bytes: None, prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<Fem3dConfig, Fem3dConfigMutation> for Fem3dConfigPreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || grant.maximum_bytes < FEM3D_CONFIG_STEP_BYTES || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        if self.candidate.is_none() && self.sealed_candidate.is_none() {
+            let base = self.base.as_ref().ok_or_else(|| "FEM3d config preparation lost its exact base root".to_string())?.get();
+            if fem3d_config_retained_bytes(base) > FEM3D_CONFIG_BASE_BYTES { return Err("FEM3d config base exceeds retained byte capacity".into()); }
+            let mutation = self.mutation.take().ok_or_else(|| "FEM3d config preparation lost its mutation owner".to_string())?;
+            let mut post = base.clone();
+            let inverse = match &mutation {
+                Fem3dConfigMutation::SetCamera { camera } => Fem3dConfigMutation::SetCamera { camera: std::mem::replace(&mut post.camera, camera.clone()) },
+                Fem3dConfigMutation::SetResultDisplay { source_id, mode, mode_index } => Fem3dConfigMutation::SetResultDisplay {
+                    source_id: std::mem::replace(&mut post.result_source_id, source_id.clone()),
+                    mode: std::mem::replace(&mut post.result_mode, mode.clone()),
+                    mode_index: std::mem::replace(&mut post.result_mode_index, *mode_index),
+                },
+                Fem3dConfigMutation::Snapshot { .. } => return Err("FEM3d config preparation received a whole snapshot".into()),
+            };
+            self.candidate = Some((post, inverse, mutation));
+            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: fem3d_config_retained_bytes(base) as u64, digest: [0; 32] };
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
+        }
+        if self.sealed_candidate.is_none() {
+            let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "FEM3d config preparation lost its candidate".to_string())?;
+            let authority = self.authority.as_ref().ok_or_else(|| "FEM3d config preparation lost its Store authority".to_string())?;
+            self.sealed_candidate = Some((post, fem3d_config_edit(forward, inverse, self.description.take(), authority)));
+        }
+        if self.serialized_bytes.is_none() {
+            let (post, edit) = self.sealed_candidate.as_ref().ok_or_else(|| "FEM3d config preparation lost its semantic edit".to_string())?;
+            let bytes = fem3d_config_edit_bytes(edit)?;
+            if bytes.saturating_add(fem3d_config_retained_bytes(post)).saturating_add(512) > FEM3D_CONFIG_STEP_BYTES {
+                return Err("FEM3d config publication exceeds the 4096-byte complete envelope".into());
+            }
+            self.serialized_bytes = Some(bytes);
+            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.checkpoint.completed_bytes.saturating_add(bytes as u64), digest: [0; 32] };
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
+        }
+        let (post, edit) = self.sealed_candidate.take().ok_or_else(|| "FEM3d config preparation lost its validated edit".to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "FEM3d config preparation lost its Store authority".to_string())?;
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 3, completed_items: 3, completed_bytes: self.checkpoint.completed_bytes.saturating_add(self.serialized_bytes.unwrap_or(0) as u64), digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Fem3dConfig, Fem3dConfigMutation>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Fem3dConfig, Fem3dConfigMutation>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if (self.prepared.is_some() || self.sealed_candidate.is_some() || self.candidate.is_some() || self.mutation.is_some() || self.description.is_some()) && grant.maximum_bytes < FEM3D_CONFIG_STEP_BYTES { return Ok(store::SnapshotRetirementStep::Blocked); }
+        if self.prepared.take().is_some() || self.sealed_candidate.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: FEM3D_CONFIG_STEP_BYTES }); }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() { return Err("FEM3d config preparation could not return its exact base root".into()); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            let bytes = authority.actor().len();
+            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.sealed_candidate.is_none() && self.prepared.is_none() }
+}
+//#endregion 📬️ConfigStorePreparation
 
 //#region 🔖️Fem3dResultsJson
 /// 🎨️ Manual `crate::model::StaticResult` -> JSON bridge for `"results:out"` (see `export_media` below)
@@ -491,14 +668,19 @@ impl ArtifactEditor for Fem3dPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem3d::FEM_3D_SCHEMA;
 
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(Fem3dConfigPreparationFactory))
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<Fem3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
         controller: "s.fem.fem3d@1/*#editor",
         document_schema: "fem.3d",
         factory: "Fem3dRetainedCommandJobFactory",
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
-        tools: ["setAnalysisSettings", "setCamera", "setResultDisplay"]
+        factory_type: Fem3dRetainedCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 65_536, 7_500),
+        tools: ["setCamera", "setResultDisplay"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -512,6 +694,9 @@ impl ArtifactEditor for Fem3dPlayApp {
         }
         if request.command.command_id() != request.tool_id {
             return Err(Fault::from("fem3d-command-tool-mismatch"));
+        }
+        if fem3d_retained_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
+            return Err(Fault::from("fem3d-command-payload-too-large"));
         }
         let tool_id = request.command.command_id();
         let work = Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, fem3d_retained_reduce, fem3d_retained_extent));
@@ -772,7 +957,22 @@ pub fn create_fem3d_app() -> AppDefinition {
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
             .action_args("setResultDisplay", crate::app_surface::result_display_action_args())
-            .action_interactive_job("setAnalysisSettings", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addNode", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addBar", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addFrame", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addMaterial", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addSection", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addSupport", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addNodalLoad", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addMemberUdl", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addAreaLoad", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addSolid", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addLoadCase", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addCombination", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setSelfWeight", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setAnalysisSettings", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("removeSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("setResultDisplay", InteractiveJobClassification::Migrated)
             // 🎯️ Typed channel surface — `config_spec()`/`fem3d_io()` are this same information's single
@@ -835,6 +1035,51 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    //#region 🧪️RetainedCommandEnvelope
+    #[test]
+    fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
+        use store::ArtifactStoreOneItemPreparationFactory as _;
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🎯️retained-command-limits.json")).expect("language-neutral retained fixture");
+        let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"] == "Migrated").map(|row| row["id"].as_str().expect("route id")).collect();
+        assert_eq!(migrated, FEM3D_RETAINED_TOOL_IDS);
+        assert_eq!(FEM3D_RETAINED_PUBLICATION_CONTRACTS.len(), migrated.len());
+        assert_eq!(fixture["limits"]["configValueBytes"].as_u64(), Some(FEM3D_CONFIG_VALUE_BYTES as u64));
+        assert_eq!(fixture["limits"]["storeStepBytes"].as_u64(), Some(FEM3D_CONFIG_STEP_BYTES as u64));
+        let factory = Fem3dConfigPreparationFactory;
+        for case in fixture["boundaryCases"].as_array().expect("boundary cases") {
+            let value = "x".repeat(case["bytes"].as_u64().expect("byte count") as usize);
+            let mutation = Fem3dConfigMutation::SetCamera { camera: crate::artifacts::fem3d::FemCamera { json: value } };
+            let encoded = serde_json::to_vec(&mutation).expect("third-party JSON encode");
+            let decoded: Fem3dConfigMutation = serde_json::from_slice(&encoded).expect("third-party JSON decode");
+            assert_eq!(decoded, mutation);
+            assert_eq!(factory.preflight(&decoded, None, store::HistoryLane::Document).is_ok(), case["accepted"].as_bool().expect("admission oracle"));
+        }
+    }
+
+    #[test]
+    fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
+        use std::io::Write as _;
+        use store::ArtifactStoreOneItemPreparation as _;
+        let value = "x".repeat(FEM3D_CONFIG_VALUE_BYTES);
+        let mut preparation = Fem3dConfigPreparation {
+            base: None, mutation: Some(Fem3dConfigMutation::SetCamera { camera: crate::artifacts::fem3d::FemCamera { json: value } }), description: None, authority: None, candidate: None, sealed_candidate: None, serialized_bytes: None, prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+        };
+        let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_096 };
+        preparation.cancel();
+        assert!(matches!(preparation.advance(grant).expect("cancelled step"), store::ArtifactStoreOneItemPreparationStep::Blocked));
+        preparation.begin_close();
+        assert!(matches!(preparation.close_step(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }).expect("undersized close"), store::SnapshotRetirementStep::Blocked));
+        assert!(matches!(preparation.close_step(grant).expect("bounded close"), store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 4_096 }));
+        assert!(matches!(preparation.close_step(grant).expect("terminal close"), store::SnapshotRetirementStep::Complete));
+        assert!(preparation.terminal_is_empty());
+        let mut counter = Fem3dConfigByteCounter { bytes: 0 };
+        assert_eq!(counter.write(&[0; 4_096]).expect("maximum serialized envelope"), 4_096);
+        assert!(counter.write(&[0]).is_err());
+    }
+    //#endregion 🧪️RetainedCommandEnvelope
+
     use crate::editor::fem3d::testkit::{dispatch, fem3d_app, Fem3dApp};
     use semio_framework_plugin::testkit::assert_undo_redo_round_trip;
 

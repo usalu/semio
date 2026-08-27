@@ -692,10 +692,6 @@ impl Host {
         self.emit(Effect::SetActiveTool { tool_id: tool_id.into() }).await;
     }
 
-    pub async fn patch_world3d_chrome(&self, selection_json: impl Into<String>, vortices_json: Option<String>, document_selected_ids: Vec<String>, document_highlighted_ids: Option<Vec<String>>) {
-        self.emit(Effect::PatchWorld3dChrome { selection_json: selection_json.into(), vortices_json, document_selected_ids, document_highlighted_ids }).await;
-    }
-
     pub async fn replay_shell_command(&self, action_id: impl Into<String>, args: Option<DslValue>) {
         self.emit(Effect::ReplayShellCommand { action_id: action_id.into(), args }).await;
     }
@@ -998,9 +994,6 @@ fn kernel_effect_to_direct_wit(effect: Effect) -> direct::effects::Effect {
         Effect::SetPanel { panel_json } => wit_effects::Effect::SetPanel(wit_effects::SetPanelEffect { panel_json }),
         Effect::SetActiveUtility { window_id, utility_id } => wit_effects::Effect::SetActiveUtility(wit_effects::SetActiveUtilityEffect { window_id, utility_id }),
         Effect::SetActiveTool { tool_id } => wit_effects::Effect::SetActiveTool(wit_effects::SetActiveToolEffect { tool_id }),
-        Effect::PatchWorld3dChrome { selection_json, vortices_json, document_selected_ids, document_highlighted_ids } => {
-            wit_effects::Effect::PatchWorld3dChrome(wit_effects::PatchWorld3dChromeEffect { selection_json, vortices_json, document_selected_ids, document_highlighted_ids })
-        }
         Effect::ReplayShellCommand { action_id, args } => wit_effects::Effect::ReplayShellCommand(wit_effects::ReplayShellCommandEffect { action_id, args: args.map(|value| pack(&value)) }),
         Effect::DownloadMediaExport { filename, mime_type, data, encoding } => wit_effects::Effect::DownloadMediaExport(wit_effects::DownloadMediaExportEffect { filename, mime_type, data, encoding }),
         Effect::IconRenderExport { items } => wit_effects::Effect::IconRenderExport(wit_effects::IconRenderExportEffect { items: pack(&items) }),

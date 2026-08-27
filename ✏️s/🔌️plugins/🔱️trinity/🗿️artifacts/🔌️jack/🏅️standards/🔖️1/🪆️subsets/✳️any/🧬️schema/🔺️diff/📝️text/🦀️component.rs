@@ -162,7 +162,7 @@ impl MutationDiff<JackSnapshot> for JackDiff {
 /// content-addressed handle for the new `(nodes, edges)` scene and wraps it as a whole-handle-replace
 /// sparse diff. Mirrors `dag`'s `diff_replace_content` precedent exactly.
 pub fn diff_replace_content(nodes: Vec<Node>, edges: Vec<Edge>) -> JackDiff {
-    JackDiff { content: Some(crate::artifacts::jack::jack_content_child_handle_and_cache(nodes, edges)), ..Default::default() }
+    JackDiff { content: Some(crate::artifacts::jack::jack_content_child_with_owner(nodes, edges)), ..Default::default() }
 }
 //#endregion 🔖️Apply
 

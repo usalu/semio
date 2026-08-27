@@ -1,0 +1,2 @@
+# 🧬 set-line/SetLine
+input SetLinePayload { index: Int! text: String! }

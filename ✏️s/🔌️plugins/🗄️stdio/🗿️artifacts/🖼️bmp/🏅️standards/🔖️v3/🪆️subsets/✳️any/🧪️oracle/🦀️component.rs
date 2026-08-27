@@ -10,7 +10,7 @@
 //!
 //! An 8-bit BMP v3 is a colour TABLE plus per-pixel INDICES into it. `image::load_from_memory`
 //! resolves those to RGBA and throws both away, which is why the earlier revision of this module
-//! could not perform `insert-palette-entry`, `remove-palette-entry` or `set-palette-entry` at all
+//! could not perform `insert-palette-entry`, `remove-palette-entry` or `replace-palette-entry` at all
 //! and returned the document unchanged for each. `image` does expose the indexed layer:
 //! `BmpDecoder::set_indexed_color(true)` hands back the raw index buffer instead of resolved
 //! pixels, `BmpDecoder::get_palette` hands back the table, and `BmpEncoder::encode_with_palette`
@@ -196,7 +196,7 @@ mod oracles {
     /// 🔮️ Re-serializes the whole document with the registered `image` writer, then restores the
     /// three BITMAPINFOHEADER facts that writer emits as constants: both pixels-per-metre fields
     /// (hard-coded `0`) and the row order (always bottom-up). Without those patches
-    /// `set-header-fields` is accepted and silently discarded, which reports as a passing scenario.
+    /// `change-header-fields` is accepted and silently discarded, which reports as a passing scenario.
     pub fn encode(doc: &OracleDoc) -> Result<Vec<u8>, String> {
         let mut out = Vec::new();
         let bits_per_pixel = match &doc.content {
@@ -248,13 +248,7 @@ mod oracles {
     /// behaviour rather than diverging from it without reason.
     fn apply_kind(doc: &mut OracleDoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "no-mutation" => {}
-            "set-snapshot" => {
-                let width = num(params, "width").unwrap_or(1.0).max(1.0) as u32;
-                let height = num(params, "height").unwrap_or(1.0).max(1.0) as u32;
-                *doc = OracleDoc { width, height, top_down: false, x_pixels_per_meter: 0, y_pixels_per_meter: 0, content: Content::Direct { rgba: solid_rgba(width, height, fill_quad(params)) } };
-            }
-            "set-header-fields" => {
+            "change-header-fields" => {
                 if let Some(order) = params.get("rowOrder") {
                     doc.top_down = matches!(order, Json::String(value) if value == "top-down");
                 }
@@ -279,7 +273,7 @@ mod oracles {
                     palette.remove(at);
                 }
             }
-            "set-palette-entry" => {
+            "replace-palette-entry" => {
                 let entry = entry_of(params);
                 let at = index_of(params);
                 let palette = palette_mut(doc, kind)?;
@@ -287,7 +281,7 @@ mod oracles {
                     palette[at] = entry;
                 }
             }
-            "set-pixel-data" => {
+            "replace-pixel-data" => {
                 let quad = fill_quad(params);
                 doc.content = Content::Direct { rgba: solid_rgba(doc.width, doc.height, quad) };
             }
@@ -330,9 +324,8 @@ mod oracles {
         let original = decode(original_input)?;
         let mut doc = decode(mutated)?;
         match kind.as_str() {
-            "no-mutation" => {}
-            "set-snapshot" | "set-pixel-data" => doc = original,
-            "set-header-fields" => {
+            "replace-pixel-data" => doc = original,
+            "change-header-fields" => {
                 doc.top_down = original.top_down;
                 doc.x_pixels_per_meter = original.x_pixels_per_meter;
                 doc.y_pixels_per_meter = original.y_pixels_per_meter;
@@ -344,7 +337,7 @@ mod oracles {
                     palette.remove(at);
                 }
             }
-            "remove-palette-entry" | "set-palette-entry" => {
+            "remove-palette-entry" | "replace-palette-entry" => {
                 let restored = match original.content {
                     Content::Indexed { palette, .. } => palette,
                     Content::Direct { .. } => return Err(format!("{kind} addresses a colour table, and the original document is direct-colour")),
@@ -458,7 +451,7 @@ pub fn project_bmp_mutation(_input: &[u8]) -> Result<Json, String> {
 /// * the 233 real colours are ALL referenced (index 0 alone covers 5 659 668 of 5 975 040 pixels),
 ///   and this subset's semantics for a palette edit are "change the table, leave the picture alone"
 ///   — so an edit to a referenced entry orphans a colour and `encode_bmp` reports it rather than
-///   narrowing. Seven spare entries no pixel resolves to are what make `set-palette-entry` and
+///   narrowing. Seven spare entries no pixel resolves to are what make `replace-palette-entry` and
 ///   `remove-palette-entry` representable at all.
 /// * a full 256-entry table — what most real 8-bpp BMP writers emit — would give that slack and
 ///   then make `insert-palette-entry` unrepresentable, because 257 entries exceed what an 8-bit
@@ -531,3 +524,10 @@ mod fixture_derivation {
     }
 }
 //#endregion 🔖️FixtureDerivation
+
+//#region RoundTrip
+#[cfg(feature = "oracles")]
+pub fn oracle_identity_round_trip(input: &[u8]) -> Result<Vec<u8>, String> { oracles::encode(&oracles::decode(input)?) }
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_identity_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> { Err("the oracles feature is disabled".into()) }
+//#endregion RoundTrip

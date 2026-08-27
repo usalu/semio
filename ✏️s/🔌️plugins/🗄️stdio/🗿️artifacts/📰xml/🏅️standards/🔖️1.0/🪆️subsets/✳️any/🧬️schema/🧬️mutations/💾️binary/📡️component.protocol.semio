@@ -4,28 +4,7 @@ version 1
 schema stdio.xml
 start record
 
-# P2-FG1: REAL binary op frame, replacing F6's `print_op().into_bytes()` text-as-binary shortcut
-# (`../../🦀️component.rs`'s old `OpBinary::encode_op` -- see that file's `#region OpCodecs` for the
-# upgraded implementation). `XmlMutation` is a genuine data-carrying enum whose variants embed a
-# recursive `XmlNode`/`XmlNodePath` (a `Vec<usize>`-backed path) and, for `SetSnapshot`, a full
-# recursive `XmlSnapshot` -- no `DslField` impl exists or can exist for a data-carrying enum
-# (confirmed live, F6's own recon: adding `#[derive(dsl::DslOps)]` fails `DslField is not
-# satisfied` for `XmlNodePath`/`XmlNode`/`Option<XmlDeclaration>` simultaneously), so the generic
-# `format u8 | ordinal varint | record body` layout genuinely does not fit. Handcrafted instead:
-# `format u8` (`store::OP_BINARY_FORMAT` convention) + `tag u8` (the `XmlMutation` variant ordinal,
-# same 0-7 ordering as `print_xml_mutation`'s keyword match) as two REAL fixed fields, then the
-# variant's own path/index/node/declaration payload as one opaque trailing `bytes` chain.
-#
-# The recursive payload itself is real LEB128-varint-framed binary (`enc_xml_node_bin`/
-# `enc_node_path_bin` in the same `🦀️component.rs`, reusing `store::pack_rt::write_varint_u64` /
-# `store::ByteReader`) -- NOT re-modeled field-by-field here because `Prim::Ref` (the only construct
-# that could describe `XmlNode`'s self-recursion at the protocol-dialect level) unconditionally
-# errors during `walk_protocol` (the `protocol-prim-ref-recursion` mechanism gap, hit by every
-# stdio pilot's own recursive mutation/diff payload). This is the same honest-boundary treatment
-# the plan itself prescribes for a compressed payload segment -- opaque at the protocol layer,
-# genuinely structured (and round-trip-tested) at the Rust layer.
+# Direct descriptor identities and tags: set-declaration=1, set-doctype=2, insert-element=3, remove-element=4, set-attribute=5, set-text=6.
 framing record
-header fixed 2
-field format u8
-field tag u8
+header fixed 0
 chain payload bytes

@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.png.mutation;
+// 🧬️ change-background/ChangeBackground; complex fields follow the direct payload schema.
+message ChangeBackgroundMutation { bytes bkgd = 1; }

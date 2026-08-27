@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧬️schema/🧬️mutations/🌲️set-struct-tree-root",
+  "semanticKind": "set-struct-tree-root",
+  "displayName": "Set Struct Tree Root",
+  "emoji": "🌲️",
+  "aggregateVariant": "SetStructTreeRoot",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "set-struct-tree-root",
+  "binaryTag": 2,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

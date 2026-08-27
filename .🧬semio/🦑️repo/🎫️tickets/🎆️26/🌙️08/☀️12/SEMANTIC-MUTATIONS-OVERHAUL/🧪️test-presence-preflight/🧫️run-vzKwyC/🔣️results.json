@@ -1,0 +1,68 @@
+{
+  "mismatches": 7,
+  "results": [
+    {
+      "name": "empty-test-directory",
+      "runnable": 0,
+      "expected": false,
+      "accepted": true,
+      "findings": []
+    },
+    {
+      "name": "unmounted-test-file",
+      "runnable": 0,
+      "expected": false,
+      "accepted": true,
+      "findings": []
+    },
+    {
+      "name": "empty-test-module",
+      "runnable": 0,
+      "expected": false,
+      "accepted": true,
+      "findings": []
+    },
+    {
+      "name": "comment-and-string-decoy",
+      "runnable": 0,
+      "expected": false,
+      "accepted": true,
+      "findings": []
+    },
+    {
+      "name": "disabled-test-module",
+      "runnable": 0,
+      "expected": false,
+      "accepted": true,
+      "findings": []
+    },
+    {
+      "name": "ignored-only-law",
+      "runnable": 0,
+      "expected": false,
+      "accepted": true,
+      "findings": []
+    },
+    {
+      "name": "nested-function-decoy",
+      "runnable": 0,
+      "expected": false,
+      "accepted": true,
+      "findings": []
+    },
+    {
+      "name": "inline-law",
+      "runnable": 1,
+      "expected": true,
+      "accepted": true,
+      "findings": []
+    },
+    {
+      "name": "mounted-law",
+      "runnable": 1,
+      "expected": true,
+      "accepted": true,
+      "findings": []
+    }
+  ]
+}

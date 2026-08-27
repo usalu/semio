@@ -1,0 +1,6 @@
+{
+  "instance": 12,
+  "surfaces": { "ready": "12:ready", "deferred": "12:deferred", "queued": "12:queued", "active": "12:active", "terminal": "12:terminal" },
+  "terminalEmpty": true,
+  "stalePatch": false
+}

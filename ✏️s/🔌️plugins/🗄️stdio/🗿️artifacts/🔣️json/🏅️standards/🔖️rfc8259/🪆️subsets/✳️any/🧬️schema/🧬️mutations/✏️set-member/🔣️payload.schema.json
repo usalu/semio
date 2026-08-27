@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SetMemberPayload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path",
+    "key",
+    "value"
+  ],
+  "properties": {
+    "path": {
+      "type": "array",
+      "items": {
+        "type": [
+          "object",
+          "integer"
+        ]
+      }
+    },
+    "key": {
+      "type": "string"
+    },
+    "value": {}
+  }
+}

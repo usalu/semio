@@ -20,11 +20,6 @@ pub fn source() -> ExampleSource {
 /// call, never hand-authored independently of the real encoder.
 pub const PACK_BYTES: &[u8] = include_bytes!("🖼️assets/🎒️example.pack.semio");
 
-/// 📡️ P2-P3: genuine `OpBinary::encode_op` bytes of a real `TxtMutation::InsertLine{index:1,
-/// text:"x"}` — exercises the mutations facet's real binary op-frame
-/// (`format u8 | ordinal varint | record body`, ../../../🏅️standards/🔖️utf-8/🪆️subsets/✳️any/
-/// 🧬️schema/🧬️mutations/💾️binary/📡️component.protocol.semio).
-pub const SPR_BYTES: &[u8] = include_bytes!("🖼️assets/📡️example.spr.semio");
 
 #[cfg(test)]
 mod tests {

@@ -18,7 +18,7 @@
 //! straight from the committed payload — that identity is precisely the collision the guard tests.
 
 use crate::artifacts::forms::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::artifacts::forms::{cache_forms_steps, forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::artifacts::forms::{materialize_forms_steps, forms_steps, FormStep, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -36,11 +36,11 @@ fn expected_after() -> FormsSnapshot {
 /// 🌱 The committed `⬅️before`, with its composed children resolved to a scene holding exactly one
 /// step whose id and title are the committed payload's own `id`/`new_title`.
 fn before() -> FormsSnapshot {
-    let snapshot: FormsSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FormsSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let FormMutation::RenameStep(payload) = mutation() else {
         panic!("no-ops-when-the-step-already-carries-that-title's committed mutation must be a rename-step");
     };
-    cache_forms_steps(&snapshot.structure.child_id, vec![FormStep { id: payload.id.clone(), title: payload.new_title.clone(), description: None, blocks: Vec::new() }]);
+    materialize_forms_steps(&mut snapshot.structure, vec![FormStep { id: payload.id.clone(), title: payload.new_title.clone(), description: None, blocks: Vec::new() }]);
     snapshot
 }
 
@@ -51,7 +51,7 @@ async fn applies_to_committed_after() {
     let base = before();
     let snapshot = apply_form_edit_mutation(&base, &mutation()).expect("an identity diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "rename-step/no-ops-when-the-step-already-carries-that-title: applied state differs from committed after-snapshot");
-    assert_eq!((&snapshot.structure.child_id, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a refused rename must not re-mint the structure/results handles");
+    assert_eq!((&mut snapshot.structure, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a refused rename must not re-mint the structure/results handles");
     assert_eq!(forms_steps(&snapshot).first().map(|step| step.title.clone()), Some("Basics".to_string()), "the step keeps the title it already carried");
 }
 

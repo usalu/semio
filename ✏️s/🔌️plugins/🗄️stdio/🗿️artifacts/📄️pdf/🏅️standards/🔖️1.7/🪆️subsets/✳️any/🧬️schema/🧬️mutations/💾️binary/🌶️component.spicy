@@ -1,7 +1,7 @@
 module Stdio_pdf_1_7_Mutations;
 
-# Structural logical mutation frame. The payload is decoded by mutation-tag into varints,
-# length-prefixed semantic values, recursive COS objects, and typed stream-filter records.
+# Exact logical mutation frame. The direct-owner tag is 0 through 15 and the payload is canonical
+# aggregate JSON.
 public type Document = unit {
     format: uint8;
     mutation_tag: uint8;

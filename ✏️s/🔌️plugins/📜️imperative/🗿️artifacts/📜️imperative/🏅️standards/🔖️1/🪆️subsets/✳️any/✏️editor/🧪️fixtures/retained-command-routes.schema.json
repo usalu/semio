@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.dev/schema/imperative/retained-command-routes.v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "maximumRawBytes", "maximumWorkItems", "routes"],
+  "properties": {
+    "schema": { "const": "imperative.retained-command-routes.v1" },
+    "maximumRawBytes": { "type": "integer", "const": 8192 },
+    "maximumWorkItems": { "type": "integer", "const": 1 },
+    "routes": {
+      "type": "array",
+      "minItems": 11,
+      "maxItems": 11,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "disposition", "lanes", "reason"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "disposition": { "enum": ["migrated", "batch-only-pending-rewrite"] },
+          "lanes": { "type": "array", "items": { "enum": ["artifact", "config", "transient", "host-only"] }, "uniqueItems": true },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 pub const FLOW_EVAL_TICK_ACTION: &str = "flowEvalTick";
 
 /// 🧵️ The `Effect` that arms/continues the off-main-thread `flowEvalTick` chain.
-pub async fn eval_tick_effect() -> Effect {
+pub fn eval_tick_effect() -> Effect {
     Effect::DispatchAction { req: semio_framework_plugin::RequestId(106), action: FLOW_EVAL_TICK_ACTION.into(), args: None, delay_ms: 0 }
 }
 //#endregion 🔖️Constants
@@ -21,7 +21,7 @@ pub async fn eval_tick_effect() -> Effect {
 //#region 🔖️Arm
 /// 🧵️ Probes/arms the `flowEvalTick` chain via `FlowEvalSession::sync` — shared by `FlowCommand::Evaluate`,
 /// the `auto-evaluate` extension effect, and `FlowPlayApp::pending_effects`.
-pub async fn evaluate_result(fixture: &FlowSnapshot, config: &FlowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, FlowConfigMutation> {
+pub fn evaluate_result(fixture: &FlowSnapshot, config: &FlowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, FlowConfigMutation> {
     let host = host_from_snapshot(fixture, config, session);
     if session.sync(&host) {
         Emit { effects: vec![eval_tick_effect()], ..Default::default() }
@@ -46,7 +46,7 @@ pub struct FlowEvalResolve {
     pub output_json: String,
 }
 
-pub async fn handle(payload: &FlowEvalResolve, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub fn handle(payload: &FlowEvalResolve, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     let _ = session.seed_node_cache(payload.node_hash, &payload.output_json);
     Ok(Emit { effects: vec![eval_tick_effect()], ..Default::default() })
 }

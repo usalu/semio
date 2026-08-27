@@ -29,12 +29,14 @@ use crate::editor::animate::modes::main;
 use crate::editor::animate::modes::main::windows::tile_editor;
 use crate::editor::animate::panels::{artifact, catalogue, inspection};
 use crate::editor::animate::terminology::animate_present_labels;
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a bare
 // `AppDefinition`, not the old `App { definition, examples }` — there is no `.example(...)`/
 // `.workflow(...)` on this builder (see `🔖️Manifest` below for what got dropped, not silently).
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, Effect, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
+    ComponentTree, ConfigView, Dialect, DraftView, Editor, EditorApp, Effect, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
     InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
 };
 use serde_json::Value;
@@ -218,6 +220,246 @@ semio_framework_plugin::app_commands! {
 }
 //#endregion 🔖️Commands
 
+//#region 🧵️RetainedCommands
+const ANIMATE_PRESENT_RETAINED_TOOL_IDS: &[&str] = &["setActiveExample", "engagementInput", "setLocale", "noMutation"];
+const ANIMATE_PRESENT_RETAINED_PAYLOAD_SCHEMA: &str = "animate.present.tool-command.v1";
+const ANIMATE_PRESENT_RETAINED_RAW_BYTES: usize = 8_192;
+const ANIMATE_PRESENT_RETAINED_WORK_ITEMS: usize = 1;
+const ANIMATE_PRESENT_CONFIG_VALUE_BYTES: usize = 512;
+const ANIMATE_PRESENT_CONFIG_BASE_BYTES: usize = 512;
+const ANIMATE_PRESENT_CONFIG_STEP_BYTES: usize = 4_096;
+const ANIMATE_PRESENT_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "noMutation", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+];
+
+fn animate_present_retained_contract() -> ToolExecutionContract {
+    ToolExecutionContract::resumable(ANIMATE_PRESENT_RETAINED_RAW_BYTES, 64, 1, 65_536, 7_500, 1, 1)
+}
+
+fn animate_present_retained_extent(command: &PresentCommand, _snapshot: &PresentSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    match command {
+        PresentCommand::SetActiveExample(payload) if payload.example_id.len() <= ANIMATE_PRESENT_RETAINED_RAW_BYTES => Some(1),
+        PresentCommand::EngagementInput(payload) if payload.value.len() <= ANIMATE_PRESENT_CONFIG_VALUE_BYTES => Some(1),
+        PresentCommand::SetLocale(payload) if payload.value.len() <= ANIMATE_PRESENT_CONFIG_VALUE_BYTES => Some(1),
+        PresentCommand::NoOperation(_) => Some(1),
+        _ => None,
+    }
+}
+
+fn animate_present_retained_reduce(
+    command: &PresentCommand,
+    snapshot: &PresentSnapshot,
+    config: &PresentConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> Result<Emit<PresentMutation, PresentConfigMutation, NoDraftMutation>, Fault> {
+    let document = ArtifactView::with_operation(snapshot, history, operation.clone());
+    let config = ConfigView { snapshot: config };
+    let mut context = PresentDispatchCtx { selected_ids: Vec::new() };
+    match command {
+        PresentCommand::SetActiveExample(payload) if payload.example_id.len() <= ANIMATE_PRESENT_RETAINED_RAW_BYTES => set_active_example::handle(payload, &document, &config, &mut context),
+        PresentCommand::EngagementInput(payload) if payload.value.len() <= ANIMATE_PRESENT_CONFIG_VALUE_BYTES => engagement_input::handle(payload, &document, &config, &mut context),
+        PresentCommand::SetLocale(payload) if payload.value.len() <= ANIMATE_PRESENT_CONFIG_VALUE_BYTES => set_locale::handle(payload, &document, &config, &mut context),
+        PresentCommand::NoOperation(payload) => no_operation::handle(payload, &document, &config, &mut context),
+        _ => Err(Fault::from("animate-present-retained-route-mismatch")),
+    }
+}
+
+struct AnimatePresentRetainedCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl AnimatePresentRetainedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: ANIMATE_PRESENT_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for AnimatePresentRetainedCommandJobFactory {
+    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<AnimatePresentPlayApp>>;
+    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<AnimatePresentPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
+    fn payload_schema_id(&self) -> &str { ANIMATE_PRESENT_RETAINED_PAYLOAD_SCHEMA }
+    fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
+    fn execution_contract(&self) -> ToolExecutionContract { animate_present_retained_contract() }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::new(payload))
+    }
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > ANIMATE_PRESENT_RETAINED_RAW_BYTES || checkpoint.as_ref().is_some_and(|value| value.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
+            return Err((ToolJobFactoryError::new("Animate Present retained command rejects an oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(match checkpoint {
+            Some(checkpoint) => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
+            None => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input),
+        })
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for AnimatePresentRetainedCommandJobFactory {
+    type Owner = EditorApp<AnimatePresentPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = ANIMATE_PRESENT_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = PRESENT_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = ANIMATE_PRESENT_RETAINED_PUBLICATION_CONTRACTS;
+}
+//#endregion 🧵️RetainedCommands
+
+//#region 📬️ConfigStorePreparation
+struct AnimatePresentConfigPreparationFactory;
+
+struct AnimatePresentConfigPreparation {
+    base: Option<store::SnapshotRead<PresentConfig>>,
+    mutation: Option<PresentConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    candidate: Option<(PresentConfig, PresentConfigMutation, PresentConfigMutation)>,
+    sealed_candidate: Option<(PresentConfig, protocol::Edit<PresentConfigMutation>)>,
+    serialized_bytes: Option<usize>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<PresentConfig, PresentConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn animate_present_config_edit(forward: PresentConfigMutation, inverse: PresentConfigMutation, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<PresentConfigMutation> {
+    let id = format!("animate-present-retained-{}-{}", authority.operation().0, authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![forward], inverse: vec![inverse],
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+        }],
+        description, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+    }
+}
+
+struct AnimatePresentConfigByteCounter { bytes: usize }
+
+impl std::io::Write for AnimatePresentConfigByteCounter {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        if self.bytes.saturating_add(bytes.len()) > ANIMATE_PRESENT_CONFIG_STEP_BYTES { return Err(std::io::Error::from(std::io::ErrorKind::InvalidData)); }
+        self.bytes += bytes.len();
+        Ok(bytes.len())
+    }
+    fn flush(&mut self) -> std::io::Result<()> { Ok(()) }
+}
+
+fn animate_present_config_edit_bytes(edit: &protocol::Edit<PresentConfigMutation>) -> Result<usize, String> {
+    let mut counter = AnimatePresentConfigByteCounter { bytes: 0 };
+    serde_json::to_writer(&mut counter, edit).map_err(|_| "Animate Present config edit exceeds its serialized byte envelope".to_string())?;
+    Ok(counter.bytes)
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<PresentConfig, PresentConfigMutation> for AnimatePresentConfigPreparationFactory {
+    fn preflight(&self, mutation: &PresentConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        let mutation_bytes = match mutation {
+            PresentConfigMutation::SetEngagementInput { value } | PresentConfigMutation::SetLocale { value } => value.len(),
+        };
+        if lane != store::HistoryLane::Document || mutation_bytes > ANIMATE_PRESENT_CONFIG_VALUE_BYTES || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Animate Present config preparation rejected its lane or byte envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 3, retained_bytes: ANIMATE_PRESENT_CONFIG_STEP_BYTES })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<PresentConfig, PresentConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<PresentConfig, PresentConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<PresentConfig, PresentConfigMutation>> {
+        let mutation_bytes = match &request.mutation {
+            PresentConfigMutation::SetEngagementInput { value } | PresentConfigMutation::SetLocale { value } => value.len(),
+        };
+        if request.lane != store::HistoryLane::Document || mutation_bytes > ANIMATE_PRESENT_CONFIG_VALUE_BYTES || request.description.as_ref().is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+            return Err(request);
+        }
+        Ok(Box::new(AnimatePresentConfigPreparation {
+            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, sealed_candidate: None, serialized_bytes: None, prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<PresentConfig, PresentConfigMutation> for AnimatePresentConfigPreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || grant.maximum_bytes < ANIMATE_PRESENT_CONFIG_STEP_BYTES || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        if self.candidate.is_none() && self.sealed_candidate.is_none() {
+            let base = self.base.as_ref().ok_or_else(|| "Animate Present config preparation lost its exact base root".to_string())?.get();
+            let base_bytes = base.engagement_input.len().saturating_add(base.locale.len());
+            if base_bytes > ANIMATE_PRESENT_CONFIG_BASE_BYTES { return Err("Animate Present config base exceeds retained byte capacity".into()); }
+            let mutation = self.mutation.take().ok_or_else(|| "Animate Present config preparation lost its mutation owner".to_string())?;
+            let mut post = base.clone();
+            let inverse = match &mutation {
+                PresentConfigMutation::SetEngagementInput { value } => {
+                    post.engagement_input = value.clone();
+                    PresentConfigMutation::SetEngagementInput { value: base.engagement_input.clone() }
+                }
+                PresentConfigMutation::SetLocale { value } => {
+                    post.locale = value.clone();
+                    PresentConfigMutation::SetLocale { value: base.locale.clone() }
+                }
+            };
+            self.candidate = Some((post, inverse, mutation));
+            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: base_bytes as u64, digest: [0; 32] };
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
+        }
+        if self.sealed_candidate.is_none() {
+            let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "Animate Present config preparation lost its candidate".to_string())?;
+            let authority = self.authority.as_ref().ok_or_else(|| "Animate Present config preparation lost its Store authority".to_string())?;
+            self.sealed_candidate = Some((post, animate_present_config_edit(forward, inverse, self.description.take(), authority)));
+        }
+        if self.serialized_bytes.is_none() {
+            let (post, edit) = self.sealed_candidate.as_ref().ok_or_else(|| "Animate Present config preparation lost its semantic edit".to_string())?;
+            let bytes = animate_present_config_edit_bytes(edit)?;
+            if bytes.saturating_add(post.engagement_input.len().saturating_add(post.locale.len())).saturating_add(512) > ANIMATE_PRESENT_CONFIG_STEP_BYTES {
+                return Err("Animate Present config publication exceeds the 4096-byte complete envelope".into());
+            }
+            self.serialized_bytes = Some(bytes);
+            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.checkpoint.completed_bytes.saturating_add(bytes as u64), digest: [0; 32] };
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
+        }
+        let (post, edit) = self.sealed_candidate.take().ok_or_else(|| "Animate Present config preparation lost its validated edit".to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Animate Present config preparation lost its Store authority".to_string())?;
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 3, completed_items: 3, completed_bytes: self.checkpoint.completed_bytes.saturating_add(self.serialized_bytes.unwrap_or(0) as u64), digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<PresentConfig, PresentConfigMutation>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<PresentConfig, PresentConfigMutation>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if (self.prepared.is_some() || self.sealed_candidate.is_some() || self.candidate.is_some() || self.mutation.is_some() || self.description.is_some()) && grant.maximum_bytes < ANIMATE_PRESENT_CONFIG_STEP_BYTES { return Ok(store::SnapshotRetirementStep::Blocked); }
+        if self.prepared.take().is_some() || self.sealed_candidate.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: ANIMATE_PRESENT_CONFIG_STEP_BYTES }); }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() { return Err("Animate Present config preparation could not return its exact base root".into()); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            let bytes = authority.actor().len();
+            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.sealed_candidate.is_none() && self.prepared.is_none() }
+}
+//#endregion 📬️ConfigStorePreparation
+
 //#region 🔖️AnimatePresentPlayApp
 /// 🧪️ B1: unit struct — every former `AnimatePresentPlayRuntime` field now lives in
 /// `crate::editor::animate::config::PresentConfig` (see `ArtifactApp::Config`), written through
@@ -241,6 +483,62 @@ impl ArtifactEditor for AnimatePresentPlayApp {
 
     const DIALECT: Dialect = crate::artifacts::present::ANIMATE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PRESENT_DOCUMENT_SCHEMA;
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(AnimatePresentConfigPreparationFactory))
+    }
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<AnimatePresentPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.animate.present@1/*#editor",
+        document_schema: "animate.present",
+        factory: "AnimatePresentRetainedCommandJobFactory",
+        factory_type: AnimatePresentRetainedCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 65_536, 7_500),
+        tools: ["setActiveExample", "engagementInput", "setLocale", "noMutation"]
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(AnimatePresentRetainedCommandJobFactory::new(&controller))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !ANIMATE_PRESENT_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id {
+            return Err(Fault::from("animate-present-command-tool-mismatch"));
+        }
+        if animate_present_retained_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
+            return Err(Fault::from("animate-present-command-payload-too-large"));
+        }
+        let tool_id = request.command.command_id();
+        let work = Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, animate_present_retained_reduce, animate_present_retained_extent));
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            operation_context,
+            request.completion,
+            PresentCommand::command_id,
+            ANIMATE_PRESENT_RETAINED_RAW_BYTES,
+            ANIMATE_PRESENT_RETAINED_WORK_ITEMS,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         Some(crate::artifacts::present::spr::present_envelope_decode_owner_bundle())
@@ -374,6 +672,24 @@ pub fn create_animate_present_app() -> semio_framework_plugin::AppDefinition {
             // 🎛️ App-scope command — see `🎮️commands/🌐️seed-grid::reset_grid`'s doc comment for why this
             // isn't `seedGrid`/`clearTiles`.
             .app_command("resetGrid", LocalizedLabel::native("Reset to Default Grid", "Auf Standardraster zurücksetzen"), "document", ActionKind::Mutation)
+            .action_interactive_job("seedGrid", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addTile", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("deleteTile", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("deleteSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("renameTiles", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("patchTileCrops", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setSource", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setFrame", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+            .action_interactive_job("clearTiles", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementSubmit", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("resetGrid", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)
+            .action_interactive_job("canvasPointerDown", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
+            .action_interactive_job("noMutation", InteractiveJobClassification::Migrated)
+            .action_interactive_job("copyPrompt", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("exportVideoFromDeck", InteractiveJobClassification::BatchOnlyPendingRewrite)
             // 🕹️ The framework-owned "tiles" interaction domain (ticket
             // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — covers both the document panel
             // tree (`.interaction_domain("tiles")`) and the tile-editor canvas's pick selection;
@@ -453,6 +769,51 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    //#region 🧪️RetainedCommandEnvelope
+    #[test]
+    fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
+        use store::ArtifactStoreOneItemPreparationFactory as _;
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🎯️retained-command-limits.json")).expect("language-neutral retained fixture");
+        let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"] == "Migrated").map(|row| row["id"].as_str().expect("route id")).collect();
+        assert_eq!(migrated, ANIMATE_PRESENT_RETAINED_TOOL_IDS);
+        assert_eq!(ANIMATE_PRESENT_RETAINED_PUBLICATION_CONTRACTS.len(), migrated.len());
+        assert_eq!(fixture["limits"]["configValueBytes"].as_u64(), Some(ANIMATE_PRESENT_CONFIG_VALUE_BYTES as u64));
+        assert_eq!(fixture["limits"]["storeStepBytes"].as_u64(), Some(ANIMATE_PRESENT_CONFIG_STEP_BYTES as u64));
+        let factory = AnimatePresentConfigPreparationFactory;
+        for case in fixture["boundaryCases"].as_array().expect("boundary cases") {
+            let value = "x".repeat(case["bytes"].as_u64().expect("byte count") as usize);
+            let mutation = PresentConfigMutation::SetEngagementInput { value };
+            let encoded = serde_json::to_vec(&mutation).expect("third-party JSON encode");
+            let decoded: PresentConfigMutation = serde_json::from_slice(&encoded).expect("third-party JSON decode");
+            assert_eq!(decoded, mutation);
+            assert_eq!(factory.preflight(&decoded, None, store::HistoryLane::Document).is_ok(), case["accepted"].as_bool().expect("admission oracle"));
+        }
+    }
+
+    #[test]
+    fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
+        use std::io::Write as _;
+        use store::ArtifactStoreOneItemPreparation as _;
+        let value = "x".repeat(ANIMATE_PRESENT_CONFIG_VALUE_BYTES);
+        let mut preparation = AnimatePresentConfigPreparation {
+            base: None, mutation: Some(PresentConfigMutation::SetEngagementInput { value }), description: None, authority: None, candidate: None, sealed_candidate: None, serialized_bytes: None, prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+        };
+        let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_096 };
+        preparation.cancel();
+        assert!(matches!(preparation.advance(grant).expect("cancelled step"), store::ArtifactStoreOneItemPreparationStep::Blocked));
+        preparation.begin_close();
+        assert!(matches!(preparation.close_step(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }).expect("undersized close"), store::SnapshotRetirementStep::Blocked));
+        assert!(matches!(preparation.close_step(grant).expect("bounded close"), store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 4_096 }));
+        assert!(matches!(preparation.close_step(grant).expect("terminal close"), store::SnapshotRetirementStep::Complete));
+        assert!(preparation.terminal_is_empty());
+        let mut counter = AnimatePresentConfigByteCounter { bytes: 0 };
+        assert_eq!(counter.write(&[0; 4_096]).expect("maximum serialized envelope"), 4_096);
+        assert!(counter.write(&[0]).is_err());
+    }
+    //#endregion 🧪️RetainedCommandEnvelope
+
     use crate::editor::animate::testkit::present_app;
     use protocol::OpText;
     use semio_framework_plugin::testkit::meta;

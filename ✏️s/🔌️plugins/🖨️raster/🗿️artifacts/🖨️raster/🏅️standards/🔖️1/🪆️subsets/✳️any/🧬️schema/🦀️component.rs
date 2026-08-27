@@ -387,11 +387,11 @@ pub fn semio_fixture_snapshot() -> RasterSnapshot {
     let mut assets = RasterOwnedMap::new();
     // 🖼️ A real, decodable 2x2 RGBA PNG (not merely the PNG magic-number bytes the pre-migration
     // fixture embedded verbatim with no decode validation) — this migration routes every asset
-    // through the real `s.stdio.semio/v1/image` png codec (`mint_and_stash_asset`), so the fixture
+    // through the real `s.stdio.semio/v1/image` png codec (`mint_raster_asset_child`), so the fixture
     // must be genuinely decodable for `composite_scene_syncs_document_and_assets` to keep proving
     // real embedded pixels survive, not a decode-failure fallback.
     let emblem = RasterImageAsset { mime: "image/png".into(), data: base64::engine::general_purpose::STANDARD.decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP4z8DwHwyBNBgAAEnICfcD2WTxAAAAAElFTkSuQmCC").unwrap_or_default() };
-    assets.insert("semio-emblem".into(), crate::artifacts::raster::mint_and_stash_asset("semio-emblem", &emblem));
+    assets.insert("semio-emblem".into(), crate::artifacts::raster::mint_raster_asset_child("semio-emblem", &emblem));
     let mut params = RasterOwnedMap::new();
     params.insert("brightness".into(), dsl::to_dsl_value(&serde_json::json!(0.12)).expect("dsl value"));
     params.insert("contrast".into(), dsl::to_dsl_value(&serde_json::json!(0.08)).expect("dsl value"));

@@ -8,7 +8,7 @@ pub struct Pack;
 
 impl Operator for Pack {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output("dictionary", Dictionary::with_schema("dictionary").merge(input)))
+        Ok(channel_output("dictionary", neural_engine::ColdOwner::new(Dictionary::with_schema("dictionary")).merge(input)))
     }
 }
 // #endregion 🔖️Pack
@@ -115,11 +115,13 @@ impl Operator for Merge {
         if indices.len() < 2 {
             return Err(EvalError::MissingInput("items".into()));
         }
-        let mut merged = Dictionary::with_schema("dictionary");
+        let mut merged = neural_engine::ColdDictionaryBuilder::from_dictionary(Dictionary::with_schema("dictionary"));
         for index in indices {
-            merged = merged.merge(read_dict(items, &index.to_string())?);
+            for (key, value) in read_dict(items, &index.to_string())?.iter() {
+                merged.insert(key.clone(), value.clone());
+            }
         }
-        Ok(channel_output("dictionary", merged))
+        Ok(channel_output("dictionary", merged.finish()))
     }
 }
 // #endregion 🔖️Merge
@@ -237,7 +239,7 @@ pub fn register(registry: &mut Registry) {
 /// 📦️ Flow extension manifest JSON contributed to host catalogues.
 pub fn extension_manifest_json() -> String {
     use flow_extension_sdk::{build_manifest_json, FlowExtensionCommand};
-    build_manifest_json("dictionary", "Dictionary", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "dictionary.showHelp".into(), title: "Dictionary: Show Help".into() }], vec![])
+    build_manifest_json("dictionary", "Dictionary", "0.1.0", &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "dictionary.showHelp".into(), title: "Dictionary: Show Help".into() }], vec![])
 }
 
 /// 🌊️ Builds an in-process operator registry for this extension.
@@ -294,13 +296,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn manifest_lists_dictionary_operators() {
-        let json = build_manifest_json("dictionary", "Dictionary", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "dictionary.showHelp".into(), title: "Dictionary: Show Help".into() }], vec![]);
+        let json = build_manifest_json("dictionary", "Dictionary", "0.1.0", &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![FlowExtensionCommand { id: "dictionary.showHelp".into(), title: "Dictionary: Show Help".into() }], vec![]);
         assert!(json.contains("dictionary.get"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn evaluate_json_pack() {
-        let out_json = evaluate_json(&module_registry(), "dictionary.pack", &serde_json::to_string(&sample_dict()).unwrap());
+        let out_json = evaluate_json(&neural_engine::ColdOwner::new(module_registry()), "dictionary.pack", &serde_json::to_string(&sample_dict()).unwrap());
         let out: Dictionary = serde_json::from_str(&out_json).unwrap();
         let dictionary = out.get("dictionary").and_then(|v| v.as_dictionary()).expect("dictionary channel");
         assert_eq!(dictionary.schema(), Some("dictionary"));
@@ -357,7 +359,7 @@ mod extension_guest {
         let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
         semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
             let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string()))?;
-            Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
+            Ok(evaluate_json(&neural_engine::ColdOwner::new(module_registry()), &request.operator_id, &request.input_json).into_bytes())
         }))
     }
 

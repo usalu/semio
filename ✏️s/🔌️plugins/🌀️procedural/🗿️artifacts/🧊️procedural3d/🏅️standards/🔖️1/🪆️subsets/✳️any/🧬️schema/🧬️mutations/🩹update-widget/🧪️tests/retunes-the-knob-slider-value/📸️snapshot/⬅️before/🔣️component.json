@@ -14,6 +14,7 @@
       },
       {
         "kind": "inputSlider",
+        "label": "Knob",
         "id": "knob",
         "value": 3.0,
         "min": 0.0,

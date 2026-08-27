@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/sequence/sequence/mutation/move-step.json",
+  "title": "MoveStepMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "x",
+    "y"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "moveStep"
+    },
+    "id": {
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/move-step/payload.json#/properties/id"
+    },
+    "x": {
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/move-step/payload.json#/properties/x"
+    },
+    "y": {
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/mutation/move-step/payload.json#/properties/y"
+    }
+  }
+}

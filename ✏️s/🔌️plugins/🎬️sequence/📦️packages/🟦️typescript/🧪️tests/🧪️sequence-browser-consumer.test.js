@@ -36,13 +36,15 @@ function EntryBridge(targetMemory) {
   this.closed = false;
   this.terminalEmpty = false;
   this.exports = {
+    sequence_bridge_create() { return 1; },
+    sequence_bridge_destroy() { return 1; },
     sequence_bridge_allocate(length) {
       const pointer = cursor;
       cursor += Math.max(1, length);
       return pointer;
     },
     sequence_bridge_release() {},
-    sequence_bridge_send: (pointer, length) => {
+    sequence_bridge_send: (_owner, pointer, length) => {
       const request = new DataView(targetMemory.buffer, pointer, length);
       if (request.getUint8(0) !== 1) return -1;
       if (request.getUint8(1) === 5 && request.getUint8(2) === 2) return 1;
@@ -50,7 +52,7 @@ function EntryBridge(targetMemory) {
       outbound = reply(request.getBigUint64(4, true), request.getUint32(12, true));
       return 1;
     },
-    sequence_bridge_poll: (pointer, capacity) => {
+    sequence_bridge_poll: (_owner, pointer, capacity) => {
       if (!outbound) return this.closed ? -1 : 0;
       if (outbound.length > capacity) return outbound.length;
       new Uint8Array(targetMemory.buffer, pointer, outbound.length).set(outbound);

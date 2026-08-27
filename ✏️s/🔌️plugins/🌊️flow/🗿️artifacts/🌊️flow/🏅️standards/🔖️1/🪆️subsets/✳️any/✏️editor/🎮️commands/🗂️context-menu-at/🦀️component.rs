@@ -16,6 +16,6 @@ pub struct ContextMenuAt {
 /// now, only ever mutated by the framework's own injected `interactionSelect` handling, never by an app
 /// command's `Emit` (mirrors note's `add-block`) — a genuine no-operation, kept only because the shared
 /// `NodeGraph` canvas renderer (framework layer, unmigrated this wave) still dispatches it on right-click.
-pub async fn handle(_payload: &ContextMenuAt, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub fn handle(_payload: &ContextMenuAt, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     Ok(Emit::default())
 }

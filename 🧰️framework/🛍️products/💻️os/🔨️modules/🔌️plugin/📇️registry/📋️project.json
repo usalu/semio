@@ -17,6 +17,13 @@
         "command": "bun ./📜️script.ts preview-generated"
       }
     },
+    "check-generated": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+        "command": "bun ./📜️script.ts check-generated"
+      }
+    },
     "check": {
       "executor": "nx:run-commands",
       "options": {

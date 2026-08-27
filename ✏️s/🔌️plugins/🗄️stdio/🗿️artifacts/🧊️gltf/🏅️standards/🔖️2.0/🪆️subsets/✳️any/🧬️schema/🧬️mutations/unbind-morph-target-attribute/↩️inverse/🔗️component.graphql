@@ -1,8 +1,0 @@
-# unbind-morph-target-attribute inverse facet.
-input GltfUnbindMorphTargetAttributePayloadV1 {
-  mesh: Int!
-  primitive: Int!
-  target: Int!
-  semantic: String!
-}
-type GltfUnbindMorphTargetAttributeInverseV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

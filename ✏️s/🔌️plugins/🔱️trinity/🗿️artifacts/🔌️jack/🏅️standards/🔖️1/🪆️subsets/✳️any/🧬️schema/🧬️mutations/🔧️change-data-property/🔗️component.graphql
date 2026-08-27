@@ -1,0 +1,4 @@
+# 🔧️ Direct change-data-property / ChangeDataProperty payload.
+scalar JSON
+input ChangeDataPropertyEntityRefInput { entity: String!, id: String! }
+input ChangeDataPropertyInput { entity: ChangeDataPropertyEntityRefInput!, key: String!, newValue: JSON! }

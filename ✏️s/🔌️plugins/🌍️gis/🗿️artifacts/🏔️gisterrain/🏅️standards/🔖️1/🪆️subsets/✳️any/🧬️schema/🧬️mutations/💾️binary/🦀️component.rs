@@ -29,8 +29,8 @@ pub fn decode_op(bytes: &[u8]) -> Result<GisTerrainMutation, protocol::ProtocolE
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gisterrain::schema::mutations::change_exaggeration::mutation::ChangeExaggeration;
-    use crate::artifacts::gisterrain::schema::mutations::change_imported_features::mutation::ChangeImportedFeatures;
+    use crate::artifacts::gisterrain::schema::mutations::change_exaggeration::ChangeExaggeration;
+    use crate::artifacts::gisterrain::schema::mutations::change_imported_features::ChangeImportedFeatures;
     use crate::artifacts::gisterrain::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
 
     #[semio_framework_async_macros::async_test]

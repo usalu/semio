@@ -642,7 +642,10 @@ impl semio_framework_job::InteractiveJob for DrawGestureOperationJob {
             if input.terminal_is_empty() {
                 self.raw_input = None;
             }
-            return step;
+            return match step {
+                semio_framework_job::InteractiveJobCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                other => other,
+            };
         }
         if self.payload.take().is_some() {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
@@ -931,6 +934,7 @@ impl ArtifactEditor for DrawPlayApp {
         controller: "s.draw.draw@1/*#editor",
         document_schema: "draw.document",
         factory: "DrawGestureOperationJobFactory",
+        factory_type: DrawGestureOperationJobFactory,
         tools: {
             "canvasPointerDown" => semio_framework::ToolExecutionContract::resumable(8_192, 32, 1, 16_384, 7_500, 1, 1),
             "canvasPointerMove" => semio_framework::ToolExecutionContract::resumable(8_192, 32, 1, 16_384, 7_500, 1, 1),

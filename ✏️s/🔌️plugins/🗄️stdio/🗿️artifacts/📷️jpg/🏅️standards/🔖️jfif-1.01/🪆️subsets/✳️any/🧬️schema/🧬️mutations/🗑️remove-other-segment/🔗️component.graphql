@@ -1,0 +1,3 @@
+# 🧬️ remove-other-segment/RemoveOtherSegment
+scalar RemoveOtherSegmentMutationValue
+input RemoveOtherSegmentMutation { index: Int! }

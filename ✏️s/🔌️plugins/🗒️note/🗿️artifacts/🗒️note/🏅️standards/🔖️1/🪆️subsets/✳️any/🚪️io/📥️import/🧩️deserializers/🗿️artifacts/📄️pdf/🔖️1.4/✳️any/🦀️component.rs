@@ -3,7 +3,7 @@
 //! mapped into one text block (`stdio_gap`/foreign-lag fix carried over from the pre-migration free
 //! function — stdio's 1.7 multi-page model) — an honest `IoFidelity::Lossy` hop.
 
-use crate::artifacts::note::schema::{create_note_id, empty_note_snapshot};
+use crate::artifacts::note::schema::{create_note_id, empty_note_snapshot, NoteIdOwner};
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
@@ -23,8 +23,9 @@ impl Deserializer<NoteSnapshot> for PdfIntoNote {
             return Err(IoError { message: "PdfIntoNote: expected a binary pdf payload".to_string(), diagnostics: Vec::new() });
         };
         let pdf = decode_pdf(bytes).map_err(|error| IoError { message: format!("PdfIntoNote: decode failed: {error}"), diagnostics: Vec::new() })?;
+        let mut ids = NoteIdOwner::new(format!("pdf-import:{}", bytes.len()), 0);
         let mut snap = empty_note_snapshot();
-        snap.id = create_note_id("pdf-import");
+        snap.id = create_note_id(&mut ids, "pdf-import");
         snap.title = Some("Imported PDF".into());
         let page = pdf.pages.first().cloned().unwrap_or_default();
         let PdfPage { media_box: [x0, y0, x1, y1], text, .. } = page;

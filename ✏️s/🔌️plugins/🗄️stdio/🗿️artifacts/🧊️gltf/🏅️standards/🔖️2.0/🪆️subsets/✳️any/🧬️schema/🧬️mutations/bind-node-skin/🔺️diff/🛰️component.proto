@@ -1,3 +1,0 @@
-// bind-node-skin diff typed facet.
-syntax = "proto3"; package stdio.gltf.mutation;
-message GltfBindNodeSkinDiffV1 { GltfBindNodeSkinPayloadV1 operation=1; optional uint32 after=2; repeated string touched_paths=3; }

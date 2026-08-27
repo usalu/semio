@@ -1,7 +1,0 @@
-# reorder-primitive-attributes inverse facet.
-input GltfReorderPrimitiveAttributesPayloadV1 {
-  mesh: Int!
-  primitive: Int!
-  order: [String!]!
-}
-type GltfReorderPrimitiveAttributesInverseV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

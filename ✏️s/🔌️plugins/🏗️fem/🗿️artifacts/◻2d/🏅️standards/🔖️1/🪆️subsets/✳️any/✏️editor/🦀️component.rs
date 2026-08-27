@@ -22,7 +22,8 @@ use crate::model::{Dof, ElementResult};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::{
-    built_text_node, create_default_layout, ActionArgDef, ActionArgOption, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigSpec, ConfigView,
+    built_text_node, create_default_layout, ActionArgDef, ActionArgOption, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
+    ArtifactToolPublicationLane, ArtifactView, ConfigSpec, ConfigView,
     DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, PluginCloseStep,
 };
 use serde_json::{json, Value};
@@ -74,13 +75,13 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
-const FEM2D_RETAINED_TOOL_IDS: &[&str] = &["setAnalysisSettings", "setCamera", "setResultDisplay", "setLocale"];
+const FEM2D_RETAINED_TOOL_IDS: &[&str] = &["setCamera", "setResultDisplay", "setLocale"];
 const FEM2D_RETAINED_PAYLOAD_SCHEMA: &str = "fem.2d.tool-command.v1";
 const FEM2D_RETAINED_RAW_BYTES: usize = 8_192;
-const FEM2D_RETAINED_WORK_ITEMS: usize = 4_096;
+const FEM2D_RETAINED_WORK_ITEMS: usize = 1;
 
 fn fem2d_retained_contract() -> ToolExecutionContract {
-    ToolExecutionContract::resumable(FEM2D_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500, 1, 1)
+    ToolExecutionContract::bounded_first_step(FEM2D_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500)
 }
 
 fn fem2d_retained_extent(_command: &Fem2dCommand, _snapshot: &Fem2dSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
@@ -96,6 +97,7 @@ fn fem2d_retained_reduce(
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     operation: &AppOperationContext,
 ) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, NoDraftMutation>, Fault> {
+    if !FEM2D_RETAINED_TOOL_IDS.contains(&command.command_id()) { return Err(Fault::from("fem2d-command-retained-route-rejected")); }
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
 }
 
@@ -140,13 +142,10 @@ impl semio_framework::ToolJobFactory for Fem2dRetainedCommandJobFactory {
         input: semio_framework::action_bus::RetainedToolWireInput,
         checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
     ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > FEM2D_RETAINED_RAW_BYTES || checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
+        if input.declared_bytes() > FEM2D_RETAINED_RAW_BYTES || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("FEM2D retained command rejects an oversized wire or checkpoint owner"), input, checkpoint));
         }
-        Ok(match checkpoint {
-            Some(checkpoint) => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
-            None => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input),
-        })
+        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input))
     }
 }
 
@@ -154,8 +153,159 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Fem2dRetainedComman
     type Owner = semio_framework_plugin::EditorApp<Fem2dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = FEM2D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem2d::FEM_2D_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
+        ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setResultDisplay", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
+    ];
 }
 //#endregion 🧵️RetainedCommands
+
+//#region 📬️ConfigStorePreparation
+const FEM2D_CONFIG_TEXT_MAXIMUM_BYTES: usize = 128;
+const FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES: usize = 4_096;
+
+//#region 🎟️Admission
+fn fem2d_config_text_bytes(config: &Fem2dConfig) -> usize {
+    [config.result_source_id.as_ref().map_or(0, String::len), config.result_mode.len(), config.locale.len()].into_iter().fold(0usize, usize::saturating_add)
+}
+
+fn fem2d_config_publication_bytes(mutation: &Fem2dConfigMutation) -> Result<usize, String> {
+    let bytes = match mutation {
+        Fem2dConfigMutation::SetResultDisplay { source_id, mode, .. } => source_id.as_ref().map_or(0, String::len).saturating_add(mode.len()),
+        Fem2dConfigMutation::SetCamera { .. } => 0,
+        Fem2dConfigMutation::SetLocale { value } => value.len(),
+        _ => return Err("fem2d-config-unsupported-mutation".into()),
+    };
+    if bytes > FEM2D_CONFIG_TEXT_MAXIMUM_BYTES { return Err("fem2d-config-text-envelope".into()); }
+    Ok(FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES)
+}
+
+struct Fem2dConfigPreparationFactory;
+
+impl store::ArtifactStoreOneItemPreparationFactory<Fem2dConfig, Fem2dConfigMutation> for Fem2dConfigPreparationFactory {
+    fn preflight(&self, mutation: &Fem2dConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > 64) {
+            return Err("fem2d-config-lane-or-description-envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: fem2d_config_publication_bytes(mutation)? })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<Fem2dConfig, Fem2dConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Fem2dConfig, Fem2dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Fem2dConfig, Fem2dConfigMutation>> {
+        if request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > 64 || self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err() || fem2d_config_text_bytes(request.base.get()) > FEM2D_CONFIG_TEXT_MAXIMUM_BYTES {
+            return Err(request);
+        }
+        Ok(Box::new(Fem2dConfigPreparation {
+            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+        }))
+    }
+}
+//#endregion 🎟️Admission
+
+//#region 🧵️Preparation
+struct Fem2dConfigPreparation {
+    base: Option<store::SnapshotRead<Fem2dConfig>>,
+    mutation: Option<Fem2dConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<Fem2dConfig, Fem2dConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl store::ArtifactStoreOneItemPreparation<Fem2dConfig, Fem2dConfigMutation> for Fem2dConfigPreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || grant.maximum_bytes < FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES || self.cancelled || self.closing { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.checkpoint.cursor != 0 { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        let base = self.base.as_ref().ok_or_else(|| "fem2d-config-base-owner-missing".to_string())?;
+        let mutation = self.mutation.as_ref().ok_or_else(|| "fem2d-config-mutation-owner-missing".to_string())?;
+        let mut next = base.get().clone();
+        let inverse = match mutation {
+            Fem2dConfigMutation::SetResultDisplay { source_id, mode, mode_index } => {
+                next.result_source_id = source_id.clone(); next.result_mode = mode.clone(); next.result_mode_index = *mode_index;
+                Fem2dConfigMutation::SetResultDisplay { source_id: base.get().result_source_id.clone(), mode: base.get().result_mode.clone(), mode_index: base.get().result_mode_index }
+            }
+            Fem2dConfigMutation::SetCamera { camera } => { next.camera = camera.clone(); Fem2dConfigMutation::SetCamera { camera: base.get().camera.clone() } }
+            Fem2dConfigMutation::SetLocale { value } => { next.locale = value.clone(); Fem2dConfigMutation::SetLocale { value: base.get().locale.clone() } }
+            _ => return Err("fem2d-config-unsupported-mutation".into()),
+        };
+        if fem2d_config_text_bytes(&next) > FEM2D_CONFIG_TEXT_MAXIMUM_BYTES { return Err("fem2d-config-post-text-envelope".into()); }
+        let authority = self.authority.as_ref().ok_or_else(|| "fem2d-config-authority-missing".to_string())?;
+        let id = format!("fem2d-config-{}", authority.next_sequence_number());
+        let edit = protocol::Edit {
+            id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![mutation.clone()], inverse: vec![inverse],
+            mutation_meta: vec![protocol::MutationMeta {
+                mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
+                author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+                payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+            }],
+            description: self.description.clone(), coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+        };
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(next))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES as u64, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Fem2dConfig, Fem2dConfigMutation>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Fem2dConfig, Fem2dConfigMutation>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 || grant.maximum_bytes < FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES { return Ok(store::SnapshotRetirementStep::Blocked); }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() { return Err("fem2d-config-base-retirement-rejected".into()); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.authority.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES }); }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 🧵️Preparation
+//#region 🧪️PreparationLaws
+#[cfg(test)]
+mod fem2d_config_preparation_laws {
+    use super::*;
+    use store::{ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory};
+
+    #[test]
+    fn admitted_maximum_and_production_grant_make_bounded_progress() {
+        let factory = Fem2dConfigPreparationFactory;
+        let maximum = Fem2dConfigMutation::SetLocale { value: "x".repeat(FEM2D_CONFIG_TEXT_MAXIMUM_BYTES) };
+        assert_eq!(factory.preflight(&maximum, None, store::HistoryLane::Document).expect("maximum admission").retained_bytes, 4_096);
+        let overflow = Fem2dConfigMutation::SetLocale { value: "x".repeat(FEM2D_CONFIG_TEXT_MAXIMUM_BYTES + 1) };
+        assert!(factory.preflight(&overflow, None, store::HistoryLane::Document).is_err());
+        assert!(factory.preflight(&maximum, Some(&"x".repeat(65)), store::HistoryLane::Document).is_err());
+        let mut work = Fem2dConfigPreparation {
+            base: None, mutation: Some(maximum), description: None, authority: None, prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+        };
+        assert!(matches!(work.advance(store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 4_096 }), Ok(store::ArtifactStoreOneItemPreparationStep::Blocked)));
+        assert!(matches!(work.advance(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_095 }), Ok(store::ArtifactStoreOneItemPreparationStep::Blocked)));
+        work.cancel();
+        assert!(matches!(work.advance(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_096 }), Ok(store::ArtifactStoreOneItemPreparationStep::Blocked)));
+        work.begin_close();
+        assert!(matches!(work.close_step(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 0 }), Ok(store::SnapshotRetirementStep::Blocked)));
+        assert!(work.mutation.is_some());
+        assert!(matches!(work.close_step(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_096 }), Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 4_096 })));
+        assert!(work.terminal_is_empty());
+        assert!(matches!(work.close_step(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_096 }), Ok(store::SnapshotRetirementStep::Complete)));
+    }
+}
+//#endregion 🧪️PreparationLaws
+//#endregion 📬️ConfigStorePreparation
 
 //#region 🔖️ExportImportHelpers
 /// 👁️ B1: `cfg`-driven counterpart of the deleted `ResultDisplay` `RefCell` — converts the flat
@@ -290,14 +440,19 @@ impl ArtifactEditor for Fem2dPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem2d::FEM_2D_SCHEMA;
 
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(Fem2dConfigPreparationFactory))
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<Fem2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
         controller: "s.fem.fem2d@1/*#editor",
         document_schema: "fem.2d",
         factory: "Fem2dRetainedCommandJobFactory",
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
-        tools: ["setAnalysisSettings", "setCamera", "setResultDisplay", "setLocale"]
+        factory_type: Fem2dRetainedCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+        tools: ["setCamera", "setResultDisplay", "setLocale"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -574,7 +729,22 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
             .action_args("setResultDisplay", crate::app_surface::result_display_action_args())
             .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
-            .action_interactive_job("setAnalysisSettings", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addNode", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addBar", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addBeam", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addMaterial", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addSection", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addSupport", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addNodalLoad", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addMemberUdl", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addAreaLoad", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addRegion", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addLoadCase", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addCombination", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setSelfWeight", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setAnalysisSettings", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("removeSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("setResultDisplay", InteractiveJobClassification::Migrated)
             .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)

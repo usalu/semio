@@ -1,0 +1,33 @@
+{
+  "owner": "EditorApp<SequencePlayApp>",
+  "controller": "s.sequence.sequence@1/*#editor",
+  "documentSchema": "sequence.sequence",
+  "runtimeLaws": { "maximumStepMicros": 7500, "cancellation": "perOperation", "freshness": "validateImmediatelyBeforeExposure", "retirement": "boundedAbandonClose", "replay": "operationOwnedCheckpoint", "artifactStoreAuthority": true, "configStoreAuthority": true },
+  "locales": ["en", "de"],
+  "accessibility": { "progressAnnouncements": true, "cancellable": true, "keyboardReachable": true },
+  "customization": { "orientation": true, "locale": true, "viewport": true },
+  "persistentOracle": {
+    "reorganize": { "orientation": "leftRight", "nodes": ["a", "b", "c"], "edges": [["a", "b"], ["b", "c"]], "expected": [{ "id": "a", "x": 0, "y": 0 }, { "id": "b", "x": 280, "y": 0 }, { "id": "c", "x": 560, "y": 0 }] },
+    "nodeGraphEdit": { "baseSteps": [{ "id": "a", "kind": "state.set" }, { "id": "b", "kind": "log.print" }], "baseEdges": [{ "id": "e1", "from": "a", "to": "b" }], "targetSteps": [{ "id": "a", "kind": "math.add" }, { "id": "c", "kind": "log.print" }], "targetEdges": [{ "id": "e2", "from": "a", "to": "c" }], "expectedMutations": ["DeleteStep:b", "DeleteStep:a", "CreateStep:a", "CreateStep:c", "ConnectSteps:e2"] },
+    "run": { "nodes": ["set", "log"], "edges": [["set", "log"]], "expectedOrder": ["set", "log"] }
+  },
+  "routes": [
+    { "id": "addStep", "classification": "Migrated", "publicationLane": "Artifact", "contract": { "maximumRawBytes": 4096, "maximumUnits": 2, "checkpointBytes": 24, "replay": true, "abandonClose": true } },
+    { "id": "addStepToSlot", "classification": "Migrated", "publicationLane": "Artifact", "contract": { "maximumRawBytes": 4096, "maximumUnits": 2, "checkpointBytes": 24, "replay": true, "abandonClose": true } },
+    { "id": "addStepDropped", "classification": "Migrated", "publicationLane": "Artifact", "contract": { "maximumRawBytes": 4096, "maximumUnits": 2, "checkpointBytes": 24, "replay": true, "abandonClose": true } },
+    { "id": "removeStep", "classification": "Migrated", "publicationLane": "Artifact", "contract": { "maximumRawBytes": 4096, "maximumUnits": 2, "checkpointBytes": 24, "replay": true, "abandonClose": true } },
+    { "id": "deleteSelection", "classification": "Migrated", "publicationLane": "Artifact", "contract": { "maximumRawBytes": 4096, "maximumUnits": 2, "checkpointBytes": 24, "replay": true, "abandonClose": true } },
+    { "id": "moveStep", "classification": "Migrated", "publicationLane": "Artifact", "contract": { "maximumRawBytes": 4096, "maximumUnits": 2, "checkpointBytes": 24, "replay": true, "abandonClose": true } },
+    { "id": "connectSteps", "classification": "Migrated", "publicationLane": "Artifact", "contract": { "maximumRawBytes": 4096, "maximumUnits": 2, "checkpointBytes": 24, "replay": true, "abandonClose": true } },
+    { "id": "disconnectSteps", "classification": "Migrated", "publicationLane": "Artifact", "contract": { "maximumRawBytes": 4096, "maximumUnits": 2, "checkpointBytes": 24, "replay": true, "abandonClose": true } },
+    { "id": "setStepParams", "classification": "Migrated", "publicationLane": "Artifact", "contract": { "maximumRawBytes": 4096, "maximumUnits": 2, "checkpointBytes": 24, "replay": true, "abandonClose": true } },
+    { "id": "setStepCollapsed", "classification": "Migrated", "publicationLane": "Artifact", "contract": { "maximumRawBytes": 4096, "maximumUnits": 2, "checkpointBytes": 24, "replay": true, "abandonClose": true } },
+    { "id": "reorganize", "classification": "Migrated", "publicationLane": "Artifact", "contract": { "maximumRawBytes": 4096, "maximumUnits": 66049, "checkpointBytes": 24, "replay": true, "abandonClose": true } },
+    { "id": "nodeGraphEdit", "classification": "Migrated", "publicationLane": "Artifact", "contract": { "maximumRawBytes": 4096, "maximumUnits": 66049, "checkpointBytes": 24, "replay": true, "abandonClose": true } },
+    { "id": "setOrientation", "classification": "Migrated", "publicationLane": "Config", "contract": { "maximumRawBytes": 4096, "maximumUnits": 2, "checkpointBytes": 24, "replay": true, "abandonClose": true } },
+    { "id": "run", "classification": "Migrated", "publicationLane": "Config", "contract": { "maximumRawBytes": 4096, "maximumUnits": 66049, "checkpointBytes": 24, "replay": true, "abandonClose": true } },
+    { "id": "stop", "classification": "Migrated", "publicationLane": "Config", "contract": { "maximumRawBytes": 4096, "maximumUnits": 2, "checkpointBytes": 24, "replay": true, "abandonClose": true } },
+    { "id": "setViewport", "classification": "Migrated", "publicationLane": "Config", "contract": { "maximumRawBytes": 4096, "maximumUnits": 2, "checkpointBytes": 24, "replay": true, "abandonClose": true } },
+    { "id": "setLocale", "classification": "Migrated", "publicationLane": "Config", "contract": { "maximumRawBytes": 4096, "maximumUnits": 2, "checkpointBytes": 24, "replay": true, "abandonClose": true } }
+  ]
+}

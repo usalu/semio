@@ -1,0 +1,11 @@
+{
+  "name": "@semio-tech/neural-engine-rs",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine",
+  "projectType": "library", "tags": ["lang:rust", "role:product", "family:neural"],
+  "namedInputs": {"default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*"]},
+  "targets": {
+    "test": {"executor": "nx:run-commands", "options": {"cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test", "forwardAllArgs": true}},
+    "test-source": {"executor": "nx:run-commands", "options": {"cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-source", "forwardAllArgs": true}}
+  }
+}

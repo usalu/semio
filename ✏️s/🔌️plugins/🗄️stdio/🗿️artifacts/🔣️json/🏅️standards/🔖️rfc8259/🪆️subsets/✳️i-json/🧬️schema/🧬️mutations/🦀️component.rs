@@ -27,7 +27,10 @@
 //! @see `../🦀️component.rs` `derived_analysis::check_i_json_conformance` — the same four clauses as an acceptance gate
 
 use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::diff::JsonDiff;
-use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::mutations::{JsonMutation, JsonPath, JsonPathSegment};
+use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::mutations::{
+    InsertArrayElementMutation, InsertArrayElementPayload, JsonMutation, JsonPath, JsonPathSegment, RemoveArrayElementMutation, RemoveArrayElementPayload, RemoveMemberMutation,
+    RemoveMemberPayload, SetMemberMutation, SetMemberPayload, SetScalarMutation, SetScalarPayload,
+};
 use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::{JsonMember, JsonSnapshot, JsonValue};
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
@@ -208,11 +211,15 @@ type Refusal = (&'static str, String, Vec<String>);
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn lower(mutation: &JsonIJsonMutation, base: &JsonSnapshot) -> Result<JsonMutation, Refusal> {
     match mutation {
-        JsonIJsonMutation::NoMutation => Ok(JsonMutation::NoMutation),
-        JsonIJsonMutation::SetSnapshot { snapshot } => Ok(JsonMutation::SetSnapshot { snapshot: snapshot.clone() }),
-        JsonIJsonMutation::SetTopLevel { root } => Ok(JsonMutation::SetScalar { path: Vec::new(), value: root.to_value() }),
-        JsonIJsonMutation::UpsertMember { path, key, value } => Ok(JsonMutation::SetMember { path: path.clone(), key: key.clone(), value: value.clone() }),
-        JsonIJsonMutation::RemoveMember { path, key } => Ok(JsonMutation::RemoveMember { path: path.clone(), key: key.clone() }),
+        JsonIJsonMutation::NoMutation => Ok(JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: Vec::new(), value: base.value.clone() }))),
+        JsonIJsonMutation::SetSnapshot { snapshot } => Ok(JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: Vec::new(), value: snapshot.value.clone() }))),
+        JsonIJsonMutation::SetTopLevel { root } => Ok(JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: Vec::new(), value: root.to_value() }))),
+        JsonIJsonMutation::UpsertMember { path, key, value } => Ok(JsonMutation::SetMember(SetMemberMutation::Apply(SetMemberPayload {
+            path: path.clone(),
+            key: key.clone(),
+            value: value.clone(),
+        }))),
+        JsonIJsonMutation::RemoveMember { path, key } => Ok(JsonMutation::RemoveMember(RemoveMemberMutation::Apply(RemoveMemberPayload { path: path.clone(), key: key.clone() }))),
         JsonIJsonMutation::RenameMember { path, from, to } => {
             let Some(JsonValue::Object { members }) = resolve(&base.value, path) else {
                 return Err((CODE_TARGET_MISSING, format!("rename-member: no object at the addressed path, so member {from:?} cannot be renamed"), target_of(path)));
@@ -224,7 +231,7 @@ pub fn lower(mutation: &JsonIJsonMutation, base: &JsonSnapshot) -> Result<JsonMu
                 return Err((CODE_INVARIANT, format!("rename-member: the object already carries a member named {to:?} -- RFC 7493 §2.3 requires member names to be unique within one object, so this rename would create the duplicate the clause forbids"), target_of(path)));
             }
             let renamed = members.iter().map(|member| if &member.key == from { JsonMember { key: to.clone(), value: member.value.clone() } } else { member.clone() }).collect();
-            Ok(JsonMutation::SetScalar { path: path.clone(), value: JsonValue::Object { members: renamed } })
+            Ok(JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: path.clone(), value: JsonValue::Object { members: renamed } })))
         }
         JsonIJsonMutation::SetSafeNumber { path, lexeme } => {
             if !matches!(resolve(&base.value, path), Some(JsonValue::Number { .. })) {
@@ -233,7 +240,7 @@ pub fn lower(mutation: &JsonIJsonMutation, base: &JsonSnapshot) -> Result<JsonMu
             if !is_safe_number_lexeme(lexeme) {
                 return Err((CODE_INVARIANT, format!("set-safe-number: integer {lexeme} exceeds ±{MAX_SAFE_INTEGER_MAGNITUDE} = ±(2^53-1) and is not exactly representable as an IEEE-754 double -- RFC 7493 §2.2 forbids it in I-JSON"), target_of(path)));
             }
-            Ok(JsonMutation::SetScalar { path: path.clone(), value: JsonValue::Number { lexeme: lexeme.clone() } })
+            Ok(JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: path.clone(), value: JsonValue::Number { lexeme: lexeme.clone() } })))
         }
         JsonIJsonMutation::SetString { path, value } => {
             if !matches!(resolve(&base.value, path), Some(JsonValue::String { .. })) {
@@ -242,10 +249,16 @@ pub fn lower(mutation: &JsonIJsonMutation, base: &JsonSnapshot) -> Result<JsonMu
             if let Some(offending) = value.chars().find(|c| is_unicode_noncharacter(*c)) {
                 return Err((CODE_INVARIANT, format!("set-string: the value carries the Unicode noncharacter U+{:04X} -- RFC 7493 §2.4 forbids noncharacters in I-JSON text", offending as u32), target_of(path)));
             }
-            Ok(JsonMutation::SetScalar { path: path.clone(), value: JsonValue::String { value: value.clone() } })
+            Ok(JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: path.clone(), value: JsonValue::String { value: value.clone() } })))
         }
-        JsonIJsonMutation::InsertArrayElement { path, index, value } => Ok(JsonMutation::InsertArrayElement { path: path.clone(), index: *index, value: value.clone() }),
-        JsonIJsonMutation::RemoveArrayElement { path, index } => Ok(JsonMutation::RemoveArrayElement { path: path.clone(), index: *index }),
+        JsonIJsonMutation::InsertArrayElement { path, index, value } => Ok(JsonMutation::InsertArrayElement(InsertArrayElementMutation::Apply(InsertArrayElementPayload {
+            path: path.clone(),
+            index: *index,
+            value: value.clone(),
+        }))),
+        JsonIJsonMutation::RemoveArrayElement { path, index } => {
+            Ok(JsonMutation::RemoveArrayElement(RemoveArrayElementMutation::Apply(RemoveArrayElementPayload { path: path.clone(), index: *index })))
+        }
     }
 }
 //#endregion 🔖️Lowering
@@ -498,14 +511,20 @@ mod tests {
         let path = key("tags");
         assert_eq!(
             lower(&JsonIJsonMutation::UpsertMember { path: Vec::new(), key: "revision".to_string(), value: number("9") }, &snapshot),
-            Ok(JsonMutation::SetMember { path: Vec::new(), key: "revision".to_string(), value: number("9") })
+            Ok(JsonMutation::SetMember(SetMemberMutation::Apply(SetMemberPayload { path: Vec::new(), key: "revision".to_string(), value: number("9") })))
         );
-        assert_eq!(lower(&JsonIJsonMutation::RemoveMember { path: Vec::new(), key: "title".to_string() }, &snapshot), Ok(JsonMutation::RemoveMember { path: Vec::new(), key: "title".to_string() }));
+        assert_eq!(
+            lower(&JsonIJsonMutation::RemoveMember { path: Vec::new(), key: "title".to_string() }, &snapshot),
+            Ok(JsonMutation::RemoveMember(RemoveMemberMutation::Apply(RemoveMemberPayload { path: Vec::new(), key: "title".to_string() })))
+        );
         assert_eq!(
             lower(&JsonIJsonMutation::InsertArrayElement { path: path.clone(), index: 1, value: JsonValue::Null }, &snapshot),
-            Ok(JsonMutation::InsertArrayElement { path: path.clone(), index: 1, value: JsonValue::Null })
+            Ok(JsonMutation::InsertArrayElement(InsertArrayElementMutation::Apply(InsertArrayElementPayload { path: path.clone(), index: 1, value: JsonValue::Null })))
         );
-        assert_eq!(lower(&JsonIJsonMutation::RemoveArrayElement { path: path.clone(), index: 0 }, &snapshot), Ok(JsonMutation::RemoveArrayElement { path, index: 0 }));
+        assert_eq!(
+            lower(&JsonIJsonMutation::RemoveArrayElement { path: path.clone(), index: 0 }, &snapshot),
+            Ok(JsonMutation::RemoveArrayElement(RemoveArrayElementMutation::Apply(RemoveArrayElementPayload { path, index: 0 })))
+        );
     }
 }
 //#endregion 🧪️Tests

@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/artifact-ephemeral-one-item-publication-v1.schema.json",
+  "type": "object",
+  "required": ["$schema", "version", "lanes", "admissionCases", "lifecycleCases"],
+  "properties": {
+    "$schema": { "const": "./artifact-ephemeral-one-item-publication-v1.schema.json" },
+    "version": { "const": 1 },
+    "lanes": {
+      "type": "array",
+      "prefixItems": [{ "const": "presence" }, { "const": "transient" }],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "admissionCases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["id", "workItems", "retainedBytes", "preparationFactory", "retirementFactory", "accepted"],
+        "properties": {
+          "id": { "enum": ["empty", "single", "maximum", "maximum-plus-one-item", "maximum-plus-one-byte", "missing-preparation-factory", "missing-retirement-factory"] },
+          "workItems": { "type": "integer", "minimum": 0 },
+          "retainedBytes": { "type": "integer", "minimum": 0 },
+          "preparationFactory": { "type": "boolean" },
+          "retirementFactory": { "type": "boolean" },
+          "accepted": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "lifecycleCases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["id", "baseGeneration", "liveGeneration", "expected"],
+            "properties": {
+              "id": { "const": "stale-generation" },
+              "baseGeneration": { "type": "integer", "minimum": 0 },
+              "liveGeneration": { "type": "integer", "minimum": 0 },
+              "expected": { "const": "fault" }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["id", "cancelBeforePublish", "expected"],
+            "properties": {
+              "id": { "const": "cancel" },
+              "cancelBeforePublish": { "const": true },
+              "expected": { "const": "complete-empty" }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["id", "attempts", "acknowledged", "expected"],
+            "properties": {
+              "id": { "const": "retry-ack" },
+              "attempts": { "type": "integer", "minimum": 0, "maximum": 2 },
+              "acknowledged": { "const": true },
+              "expected": { "const": "complete-empty" }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["id", "retainedRoots", "itemsPerTurn", "expected"],
+            "properties": {
+              "id": { "const": "interrupted-close" },
+              "retainedRoots": { "type": "integer", "minimum": 1 },
+              "itemsPerTurn": { "const": 1 },
+              "expected": { "const": "complete-empty" }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["id", "movePreparedRoot", "generationDelta", "expected"],
+            "properties": {
+              "id": { "const": "single-publication" },
+              "movePreparedRoot": { "const": true },
+              "generationDelta": { "const": 1 },
+              "expected": { "const": "awaiting-ack" }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}

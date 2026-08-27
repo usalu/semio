@@ -187,7 +187,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn gesture_begin_live_commit_produces_single_undo_step() {
         let mut app = note_app();
-        let block = create_block_by_kind("text", 10.0, 10.0);
+        let mut ids = crate::artifacts::note::schema::NoteIdOwner::new("ink-test", 0);
+        let block = create_block_by_kind(&mut ids, "text", 10.0, 10.0);
         let new_id = block_id(&block).to_string();
 
         let begin_events = json!([

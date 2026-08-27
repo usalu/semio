@@ -7,7 +7,7 @@ use crate::editor::flow::terminology::FlowPlayLabels;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub async fn measure(config: &FlowConfig, labels: &FlowPlayLabels) -> WindowMeasure {
+pub fn measure(config: &FlowConfig, labels: &FlowPlayLabels) -> WindowMeasure {
     WindowMeasure::Slider {
         id: "flow-play-measures.proximity".into(),
         label: Some(labels.proximity_distance.into()),

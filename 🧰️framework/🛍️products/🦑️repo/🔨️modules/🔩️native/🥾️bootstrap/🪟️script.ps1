@@ -245,8 +245,8 @@ function Install-EditorExtensions {
     $vsixPath = Join-Path $RepoRoot "🧰️framework\🛍️products\🦑️repo\🔨️modules\💻️client\🧩️vscode\📦️packages\🟦️typescript\🧩️repo.vsix"
 
     $bunPathLocal = Get-CommandPathOrThrow -Label "bun" -Candidates @("bun.exe", "bun")
-    Invoke-RepoCommand -FilePath $bunPathLocal -ArgumentList @("nx", "run", "repo:build") -WorkingDirectory $RepoRoot
-    Invoke-RepoCommand -FilePath $bunPathLocal -ArgumentList @("nx", "run", "repo:build-vsix") -WorkingDirectory $RepoRoot
+    Invoke-RepoCommand -FilePath $bunPathLocal -ArgumentList @("nx", "run", "@semio-tech/repo-vscode:build") -WorkingDirectory $RepoRoot
+    Invoke-RepoCommand -FilePath $bunPathLocal -ArgumentList @("nx", "run", "@semio-tech/repo-vscode:build-vsix") -WorkingDirectory $RepoRoot
 
     foreach ($editorCli in $EditorCliPaths) {
         foreach ($extension in $recommendations) {

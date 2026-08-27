@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.png.mutation;
+// 🧬️ change-chromaticities/ChangeChromaticities; complex fields follow the direct payload schema.
+message ChangeChromaticitiesMutation { bytes chrm = 1; }

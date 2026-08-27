@@ -4,7 +4,7 @@ use crate::artifacts::flow::{flow_working_scene, FlowSnapshot};
 
 use super::mutation::ReorderSynapses;
 
-pub async fn inverse(payload: &ReorderSynapses, base: &FlowSnapshot) -> Vec<FlowMutation> {
+pub fn inverse(payload: &ReorderSynapses, base: &FlowSnapshot) -> Vec<FlowMutation> {
     let scene = flow_working_scene(base);
     let Some(original_index) = scene.synapses.iter().position(|synapse| synapse.id == payload.id) else {
         return Vec::new();

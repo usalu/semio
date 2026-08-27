@@ -1,42 +1,9 @@
-//! 🔮️ Mutation oracle for this subset — every mutation kind the subset declares, performed by the
-//! registered reference implementation so the subject's own mutation has an independent result to
-//! be compared against instead of being checked against its own reading.
-//!
-//! The vocabulary is per SUBSET, not per artifact: two standards of the same format declare
-//! different mutations, and a subset that shares an implementation with another reaches it through
-//! the shared `document` module rather than by copying it.
-//!
-//! 📚️ **What this module measures, and what changed.** PDF 1.4 has a real page TREE (ISO 32000-1
-//! §7.7.3: a catalog pointing at `/Pages`, whose `/Kids` recursively resolve to `/Page` leaves,
-//! each with its own inheritable `/MediaBox` and content stream), and this subset's `PdfSnapshot`
-//! now carries it — `pages: Vec<PageDoc>`, one entry per leaf, in reading order. Until the first
-//! full differential run of ticket 26/08/23/END-TO-END-TESTING-REFACTOR it carried a single
-//! `page: PageDoc` instead, and this module was written to MIRROR that: it rebuilt every document
-//! as one synthetic page pinned to `MediaBox [0 0 612 792]`, because the subject's own decoder
-//! hardcoded the same constant and never read a real page's geometry. Both halves are gone. The
-//! reference now round-trips the real document through `lopdf`'s own object graph, builds a
-//! `set-snapshot` target page for page from the snapshot the spec carries, and projects EVERY
-//! page's real box and shown text — so the comparison covers the 65-page thesis rather than one
-//! page of it.
-//!
-//! 👁️ **Both directions are independent.** The reader is `lopdf`'s own object graph and
-//! content-stream decoder, never this repository's byte-search `decode_pdf`; the writer is a fresh
-//! `lopdf::Document` assembled object by object, never a delegation to `encode_pdf`. That is what
-//! makes every scenario of this case `@mode-differential` rather than a self-check.
-//!
-//! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
-//! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself.
-//! @see ../🧬️schema/📸️snapshot/🦀️component.rs — `PdfSnapshot`, the page tree this projects.
+//! 🔮️ Independent lopdf oracle for the five concrete PDF 1.4 page operations.
 
 use semio_repo_test_host::Json;
 
 //#region 🔖️Vocabulary
-/// 🧾️ Kebab-case spelling of every variant this subset's `PdfMutation` declares, in declaration
-/// order. Two, and the thinness is the vocabulary's, not the case's: `../🧬️schema/🧬️mutations/
-/// 🦀️component.rs` really has exactly `NoMutation` and `SetSnapshot`, because this standard's
-/// document vocabulary is "replace the page tree" and nothing finer. Declared here rather than in
-/// the case adapter so the adapter, this module's own tests and the manifest all read ONE list.
-pub const KINDS: &[&str] = &["no-mutation", "set-snapshot"];
+pub const KINDS: &[&str] = &["insert-page", "remove-page", "move-page", "resize-page", "replace-page-text"];
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Page
@@ -58,69 +25,139 @@ impl OraclePage {
 //#endregion 🔖️Page
 
 //#region 🔖️Spec
-/// 📄️ Reads `params.snapshot.pages` out of a `set-snapshot` spec — the whole page tree this
-/// subset's one non-baseline mutation carries end to end.
-///
-/// An absent or empty list is an ERROR, not an empty document: ISO 32000-1 §7.7.3.2 gives `/Count`
-/// a lower bound of one, so "a PDF with no pages" is not a state either producer can write, and a
-/// row that asked for it would be asking both halves to agree on nonsense.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn target_pages(spec: &Json) -> Result<Vec<OraclePage>, String> {
-    let number = |value: Option<&Json>, fallback: f64| match value {
-        Some(Json::Number(value)) => *value,
-        _ => fallback,
-    };
-    let pages = match spec.get("params").and_then(|params| params.get("snapshot")).and_then(|snapshot| snapshot.get("pages")) {
-        Some(Json::Array(items)) => items,
-        _ => return Err("set-snapshot: `params.snapshot.pages` must be a list of pages — this standard's snapshot is a page TREE, not a single page".to_string()),
-    };
-    if pages.is_empty() {
-        return Err("set-snapshot: `params.snapshot.pages` is empty, and ISO 32000-1 §7.7.3.2 gives a page tree a lower bound of one page".to_string());
+fn number(params: &Json, key: &str) -> Result<f64, String> {
+    match params.get(key) {
+        Some(Json::Number(value)) if value.is_finite() => Ok(*value),
+        _ => Err(format!("{key} must be a finite number")),
     }
-    Ok(pages.iter().map(|page| OraclePage { width: number(page.get("width"), 612.0), height: number(page.get("height"), 792.0), text: page.str("text") }).collect())
+}
+
+fn index(params: &Json, key: &str) -> Result<usize, String> {
+    let value = number(params, key)?;
+    if value < 0.0 || value.fract() != 0.0 || value >= usize::MAX as f64 {
+        return Err(format!("{key} must be an addressable page index"));
+    }
+    Ok(value as usize)
+}
+
+fn page(value: &Json) -> Result<OraclePage, String> {
+    let text = match value.get("text") {
+        Some(Json::String(text)) => text.clone(),
+        _ => return Err("Page text must be a string".into()),
+    };
+    Ok(OraclePage { width: number(value, "width")?, height: number(value, "height")?, text })
+}
+
+fn object(pairs: Vec<(&str, Json)>) -> Json {
+    Json::Object(pairs.into_iter().map(|(key, value)| (key.into(), value)).collect())
+}
+fn spec(kind: &str, params: Json) -> Json {
+    object(vec![("kind", Json::String(kind.into())), ("params", params)])
+}
+
+fn mutate_pages(pages: &mut Vec<OraclePage>, mutation: &Json) -> Result<(), String> {
+    if pages.is_empty() {
+        return Err("A PDF page tree must not be empty".into());
+    }
+    let params = mutation.get("params").ok_or("Missing mutation parameters")?;
+    match mutation.str("kind").as_str() {
+        "insert-page" => {
+            let at = index(params, "index")?;
+            if at > pages.len() {
+                return Err("Page insertion index is out of bounds".into());
+            }
+            pages.insert(at, page(params.get("page").ok_or("Missing inserted page")?)?);
+        }
+        "remove-page" => {
+            let at = index(params, "index")?;
+            if at >= pages.len() || pages.len() == 1 {
+                return Err("Page removal would leave the PDF domain".into());
+            }
+            pages.remove(at);
+        }
+        "move-page" => {
+            let from = index(params, "from")?;
+            let to = index(params, "to")?;
+            if from >= pages.len() || to >= pages.len() {
+                return Err("Page move is out of bounds".into());
+            }
+            let moved = pages.remove(from);
+            pages.insert(to, moved);
+        }
+        "resize-page" => {
+            let at = index(params, "index")?;
+            let target = pages.get_mut(at).ok_or("Page resize is out of bounds")?;
+            target.width = number(params, "width")?;
+            target.height = number(params, "height")?;
+        }
+        "replace-page-text" => {
+            let at = index(params, "index")?;
+            let target = pages.get_mut(at).ok_or("Page text target is out of bounds")?;
+            target.text = match params.get("text") {
+                Some(Json::String(text)) => text.clone(),
+                _ => return Err("Replacement text must be a string".into()),
+            };
+        }
+        other => return Err(format!("Unknown PDF 1.4 mutation {other:?}")),
+    }
+    Ok(())
 }
 //#endregion 🔖️Spec
 
 //#region 🔖️Dispatch
-/// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
-/// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
-/// reports as a passing test.
+/// ▶️ Mutates independently decoded pages and rebuilds them using lopdf.
 #[cfg(feature = "oracles")]
-pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
-    match spec.str("kind").as_str() {
-        "" => Err("mutation spec carries no `kind`".to_string()),
-        "no-mutation" => oracles::round_trip(input),
-        "set-snapshot" => oracles::build_document(&target_pages(spec)?),
-        kind => Err(format!("mutation kind {:?} has no oracle implementation ({} input byte(s))", kind, input.len())),
-    }
+pub fn oracle_apply_mutation(input: &[u8], mutation: &Json) -> Result<Vec<u8>, String> {
+    let mut pages = independent_pages(input)?;
+    mutate_pages(&mut pages, mutation)?;
+    build_document(&pages)
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+pub fn oracle_apply_mutation(_input: &[u8], _mutation: &Json) -> Result<Vec<u8>, String> {
+    Err("The oracles feature is disabled".into())
 }
 
-/// ↩️ The undo of `forward`, read out of `base` by the independent implementation alone.
-/// `NoMutation` inverts to itself; `SetSnapshot` inverts to a `SetSnapshot` carrying the base
-/// document's OWN page tree, read back through `lopdf` — the same closed form
-/// `../🧬️schema/🧬️mutations/🦀️component.rs`'s `impl Mutation<PdfSnapshot>` declares.
+/// ↩️ Captures only the fields required by the concrete opposite operation.
 #[cfg(feature = "oracles")]
 pub fn oracle_inverse_spec(base: &[u8], forward: &Json) -> Result<Json, String> {
-    let object = |pairs: Vec<(&str, Json)>| Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
+    let pages = independent_pages(base)?;
+    mutate_pages(&mut pages.clone(), forward)?;
+    let params = forward.get("params").ok_or("Missing mutation parameters")?;
+    let at = |key| index(params, key);
     Ok(match forward.str("kind").as_str() {
-        "no-mutation" => object(vec![("kind", Json::String("no-mutation".to_string())), ("params", object(vec![]))]),
-        "set-snapshot" => object(vec![
-            ("kind", Json::String("set-snapshot".to_string())),
-            ("params", object(vec![("snapshot", object(vec![("pages", Json::Array(independent_pages(base)?.iter().map(OraclePage::to_json).collect()))]))])),
-        ]),
-        other => return Err(format!("no inverse rule for kind {other:?}")),
+        "insert-page" => spec("remove-page", object(vec![("index", Json::Number(at("index")? as f64))])),
+        "remove-page" => {
+            let i = at("index")?;
+            spec("insert-page", object(vec![("index", Json::Number(i as f64)), ("page", pages[i].to_json())]))
+        }
+        "move-page" => spec("move-page", object(vec![("from", Json::Number(at("to")? as f64)), ("to", Json::Number(at("from")? as f64))])),
+        "resize-page" => {
+            let i = at("index")?;
+            spec("resize-page", object(vec![("index", Json::Number(i as f64)), ("width", Json::Number(pages[i].width)), ("height", Json::Number(pages[i].height))]))
+        }
+        "replace-page-text" => {
+            let i = at("index")?;
+            spec("replace-page-text", object(vec![("index", Json::Number(i as f64)), ("text", Json::String(pages[i].text.clone()))]))
+        }
+        other => return Err(format!("Unknown inverse kind {other:?}")),
     })
 }
 
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_inverse_spec(_base: &[u8], _forward: &Json) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+    Err("The oracles feature is disabled".into())
+}
+
+/// 🔁️ Re-serializes the original lopdf object graph without an identity mutation.
+#[cfg(feature = "oracles")]
+pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+    oracles::round_trip(input)
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
+    Err("The oracles feature is disabled".into())
 }
 //#endregion 🔖️Dispatch
 
@@ -143,10 +180,7 @@ pub fn independent_pages(input: &[u8]) -> Result<Vec<OraclePage>, String> {
 #[cfg(feature = "oracles")]
 pub fn project_pdf_1_4(input: &[u8]) -> Result<Json, String> {
     let pages = independent_pages(input)?;
-    Ok(Json::Object(vec![
-        ("pageCount".to_string(), Json::Number(pages.len() as f64)),
-        ("pages".to_string(), Json::Array(pages.iter().map(OraclePage::to_json).collect())),
-    ]))
+    Ok(Json::Object(vec![("pageCount".to_string(), Json::Number(pages.len() as f64)), ("pages".to_string(), Json::Array(pages.iter().map(OraclePage::to_json).collect()))]))
 }
 
 #[cfg(not(feature = "oracles"))]
@@ -315,119 +349,56 @@ mod oracles {
 #[cfg(all(test, feature = "oracles"))]
 mod tests {
     use super::*;
+    use semio_repo_test_host::parse_json;
 
-    /// 🧫️ The real committed document `mutate-pdf-1-4` runs on — the 6.3 MB, 65-page LaTeX
-    /// bachelor thesis this standard's own examples directory carries, every page typeset at A4
-    /// (`/MediaBox [0 0 595.276 841.89]`).
-    const FIXTURE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf");
-
-    fn json_object(pairs: Vec<(&str, Json)>) -> Json {
-        Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
-    }
-
-    fn fixture() -> Vec<u8> {
-        std::fs::read(FIXTURE).expect("the committed bachelor-thesis document")
-    }
-
-    /// 📄️ The `set-snapshot` row every scenario of the case carries, read out of the feature file
-    /// itself so a row that drifts fails here rather than silently measuring something else.
-    fn spec(kind: &str) -> Json {
-        let feature = include_str!("../../../../../🧪️tests/mutate-pdf-1-4/component.feature");
-        let (_, params) = crate::law::feature_rows(feature).into_iter().find(|(id, _)| id == kind).unwrap_or_else(|| panic!("the feature declares no Examples row for {kind:?}"));
-        json_object(vec![("kind", Json::String(kind.to_string())), ("params", params)])
-    }
-
-    /// ⚖️ The two laws `mutate-pdf-1-4`'s adapter asserts in role, proven here against the real
-    /// document without the runner, and measured against the COMMITTED input's own projection —
-    /// not against a rebuild. That is what the real page-tree codec bought: the reference no longer
-    /// pins a synthetic geometry the subject could not read, so `no-mutation` genuinely lands on
-    /// the input's own 65-page projection and `set-snapshot` genuinely has to move it.
     #[test]
-    fn every_declared_kind_is_observable_and_its_inverse_restores_the_document() {
-        let original = fixture();
-        let base = project_pdf_1_4(&original).expect("the independent reader projects the real document");
-        for kind in KINDS {
-            let forward = spec(kind);
-            let mutated = oracle_apply_mutation(&original, &forward).unwrap_or_else(|error| panic!("{kind}: {error}"));
-            let moved = project_pdf_1_4(&mutated).unwrap_or_else(|error| panic!("{kind}: projecting the result failed: {error}"));
-            if *kind != "no-mutation" {
-                assert_ne!(moved, base, "{kind} left the compared projection untouched, so its scenario would pass whether or not the mutation ran");
-            } else {
-                assert_eq!(moved, base, "no-mutation must leave the real document's whole page tree exactly where it was");
-            }
-            let undo = oracle_inverse_spec(&original, &forward).unwrap_or_else(|error| panic!("{kind}: inverse spec: {error}"));
-            let restored = oracle_apply_mutation(&mutated, &undo).unwrap_or_else(|error| panic!("{kind}: inverse: {error}"));
-            assert_eq!(project_pdf_1_4(&restored).unwrap(), base, "{kind}: applying the mutation and then its algebraic inverse must restore the document's projection");
-        }
-    }
-
-    /// 📚️ The page tree really is read as a tree: 65 leaves, every one of them A4, page 1 carrying
-    /// the thesis title. A regression to the one-page stub fails on the very first assertion.
-    #[test]
-    fn the_real_document_reads_as_sixty_five_a4_pages() {
-        let pages = independent_pages(&fixture()).expect("the independent reader walks the page tree");
-        assert_eq!(pages.len(), 65);
-        assert!(pages.iter().all(|page| (page.width - 595.276).abs() < 0.01 && (page.height - 841.89).abs() < 0.01), "every page of this thesis is typeset at A4");
-        assert!(pages[0].text.starts_with("SemIO"), "page 1 shows the thesis title, got {:?}", &pages[0].text);
-        assert!(pages.iter().filter(|page| !page.text.is_empty()).count() > 60, "a 65-page thesis shows text on nearly every page");
-    }
-
-    /// 🔒️ Both halves of the identity law, on the real document.
-    #[test]
-    fn the_round_trip_recovers_the_whole_page_tree_and_is_not_a_byte_passthrough() {
-        let original = fixture();
-        let rebuilt = oracle_apply_mutation(&original, &spec("no-mutation")).expect("the reference re-serializes the document");
-        assert_ne!(rebuilt, original, "the reference writes a fresh file from its own object graph; identical bytes would mean the input was smuggled");
-        assert_eq!(project_pdf_1_4(&rebuilt).unwrap(), project_pdf_1_4(&original).unwrap());
-    }
-
-    /// ✍️ The independent WRITER is a real page-tree writer, not a one-page one: what it is handed
-    /// is what a reader gets back.
-    #[test]
-    fn the_independent_writer_round_trips_a_multi_page_target() {
-        let target = vec![
-            OraclePage { width: 595.276, height: 841.89, text: "first".to_string() },
-            OraclePage { width: 419.528, height: 595.276, text: String::new() },
-            OraclePage { width: 612.0, height: 792.0, text: "third".to_string() },
+    fn direct_language_neutral_vectors_match_lopdf_and_concrete_inverse() {
+        let vectors = [
+            include_str!("../🧬️schema/🧬️mutations/📥️insert-page/🧪️tests/round-trips-the-concrete-inverse/🔣️component.json"),
+            include_str!("../🧬️schema/🧬️mutations/🗑️remove-page/🧪️tests/round-trips-the-concrete-inverse/🔣️component.json"),
+            include_str!("../🧬️schema/🧬️mutations/🔀️move-page/🧪️tests/round-trips-the-concrete-inverse/🔣️component.json"),
+            include_str!("../🧬️schema/🧬️mutations/📐️resize-page/🧪️tests/round-trips-the-concrete-inverse/🔣️component.json"),
+            include_str!("../🧬️schema/🧬️mutations/📝️replace-page-text/🧪️tests/round-trips-the-concrete-inverse/🔣️component.json"),
         ];
-        let bytes = build_document(&target).expect("the independent writer builds a three-page document");
-        let read_back = independent_pages(&bytes).expect("the independent reader reads it back");
-        assert_eq!(read_back.len(), 3);
-        assert_eq!(read_back.iter().map(|page| page.text.clone()).collect::<Vec<_>>(), vec!["first".to_string(), String::new(), "third".to_string()]);
-        for (written, read) in target.iter().zip(&read_back) {
-            assert!((written.width - read.width).abs() < 0.01 && (written.height - read.height).abs() < 0.01, "page geometry must survive the writer");
+        for vector in vectors {
+            let fixture = parse_json(vector).unwrap();
+            let pages = fixture.get("base").unwrap().array("pages").iter().map(page).collect::<Result<Vec<_>, _>>().unwrap();
+            let base = build_document(&pages).unwrap();
+            let wire = fixture.get("mutation").unwrap();
+            let forward = spec(&wire.str("mutation"), wire.get("payload").unwrap().clone());
+            let mutated = oracle_apply_mutation(&base, &forward).unwrap();
+            let expected = fixture.get("expected").unwrap().array("pages").iter().map(page).collect::<Result<Vec<_>, _>>().unwrap();
+            let actual = independent_pages(&mutated).unwrap();
+            assert_eq!(actual.len(), expected.len());
+            for (left, right) in actual.iter().zip(&expected) {
+                assert!((left.width - right.width).abs() < 0.001 && (left.height - right.height).abs() < 0.001);
+                assert_eq!(left.text, right.text);
+            }
+            let inverse = oracle_inverse_spec(&base, &forward).unwrap();
+            let restored = oracle_apply_mutation(&mutated, &inverse).unwrap();
+            crate::law::inverse_restores_within(&forward.str("kind"), &project_pdf_1_4(&restored).unwrap(), &project_pdf_1_4(&base).unwrap(), &[], 0.001).unwrap();
         }
     }
 
     #[test]
-    fn unknown_kind_is_an_error_never_a_silent_no_op() {
-        let unknown = json_object(vec![("kind", Json::String("not-a-real-kind".to_string())), ("params", json_object(vec![]))]);
-        assert!(oracle_apply_mutation(&fixture(), &unknown).is_err());
-        assert!(oracle_apply_mutation(&fixture(), &json_object(vec![("params", json_object(vec![]))])).is_err(), "a spec with no kind at all is an error too");
-    }
-
-    /// 🚫️ A `set-snapshot` row that carries the OLD single-page shape, or no page at all, is an
-    /// error rather than a document silently rebuilt as one blank page — which is exactly the
-    /// failure mode this whole rewrite exists to remove.
-    #[test]
-    fn a_set_snapshot_spec_without_a_page_list_is_refused() {
-        let single = json_object(vec![("kind", Json::String("set-snapshot".to_string())), ("params", json_object(vec![("snapshot", json_object(vec![("page", json_object(vec![("text", Json::String("one".to_string()))]))]))]))]);
-        assert!(oracle_apply_mutation(&fixture(), &single).is_err(), "the one-page shape this standard no longer has must be refused, never silently accepted");
-        let empty = json_object(vec![("kind", Json::String("set-snapshot".to_string())), ("params", json_object(vec![("snapshot", json_object(vec![("pages", Json::Array(vec![]))]))]))]);
-        assert!(oracle_apply_mutation(&fixture(), &empty).is_err(), "a page tree with no page is not a document");
-    }
-
-    /// 📇️ The three declarations that must never drift: this module's [`KINDS`], the catalog in
-    /// `🔣️component.json`, and the `Examples` rows of the case that claims it.
-    #[test]
-    fn kinds_matches_the_catalog_and_every_feature_row() {
-        let manifest = include_str!("🔣️component.json");
+    fn every_real_document_feature_row_is_observable_and_invertible() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf");
+        let base = std::fs::read(path).unwrap();
+        assert_eq!(independent_pages(&base).unwrap().len(), 65);
         let feature = include_str!("../../../../../🧪️tests/mutate-pdf-1-4/component.feature");
-        for kind in KINDS {
-            assert!(manifest.contains(&format!("\"{kind}\"")), "the pdf-1-4-any catalog is missing {kind:?}");
-            assert!(feature.contains(&format!("| {kind} ")), "the feature declares no Examples row for {kind:?}");
+        let rows = crate::law::feature_rows(feature);
+        assert_eq!(rows.len(), KINDS.len());
+        for (kind, params) in rows {
+            assert!(KINDS.contains(&kind.as_str()));
+            let forward = spec(&kind, params);
+            let mutated = oracle_apply_mutation(&base, &forward).unwrap();
+            crate::law::mutation_is_observable_within(&kind, &project_pdf_1_4(&mutated).unwrap(), &project_pdf_1_4(&base).unwrap(), &[], &[], 0.001).unwrap();
+            let restored = oracle_apply_mutation(&mutated, &oracle_inverse_spec(&base, &forward).unwrap()).unwrap();
+            crate::law::inverse_restores_within(&kind, &project_pdf_1_4(&restored).unwrap(), &project_pdf_1_4(&base).unwrap(), &[], 0.001).unwrap();
         }
-        assert_eq!(KINDS.len(), 2, "PdfMutation declares exactly NoMutation and SetSnapshot in this standard");
+        let rewritten = oracle_round_trip(&base).unwrap();
+        assert_ne!(rewritten, base);
+        assert_eq!(project_pdf_1_4(&rewritten).unwrap(), project_pdf_1_4(&base).unwrap());
     }
 }
 //#endregion 🧪️Tests

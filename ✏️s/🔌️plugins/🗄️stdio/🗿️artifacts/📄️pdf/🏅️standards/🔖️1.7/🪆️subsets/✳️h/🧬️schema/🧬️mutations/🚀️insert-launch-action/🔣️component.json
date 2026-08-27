@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🧬️mutations/🚀️insert-launch-action",
+  "semanticKind": "insert-launch-action",
+  "displayName": "Insert Launch Action",
+  "emoji": "🚀️",
+  "aggregateVariant": "InsertLaunchAction",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "insert-launch-action",
+  "binaryTag": 4,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

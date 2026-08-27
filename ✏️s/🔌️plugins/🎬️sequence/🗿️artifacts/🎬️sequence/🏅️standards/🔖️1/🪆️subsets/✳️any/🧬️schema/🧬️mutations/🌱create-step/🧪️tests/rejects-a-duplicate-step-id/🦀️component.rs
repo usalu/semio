@@ -17,7 +17,7 @@
 
 use crate::artifacts::sequence::diff::SequenceDiff;
 use crate::artifacts::sequence::mutations::{apply_sequence_mutation, inverse_sequence_mutation, SequenceMutation};
-use crate::artifacts::sequence::{cache_sequence_content, SequenceSnapshot};
+use crate::artifacts::sequence::{SequenceSnapshot, SequenceWorkingScene};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -39,7 +39,7 @@ fn before() -> SequenceSnapshot {
     let SequenceMutation::CreateStep(payload) = mutation() else {
         panic!("rejects-a-duplicate-step-id's committed mutation must be a create-step");
     };
-    cache_sequence_content(&snapshot.content.child_id, vec![payload.step.clone()], Vec::new());
+    snapshot.content.set_local_owner(std::sync::Arc::new(SequenceWorkingScene { steps: vec![payload.step.clone()], edges: Vec::new() }));
     snapshot
 }
 

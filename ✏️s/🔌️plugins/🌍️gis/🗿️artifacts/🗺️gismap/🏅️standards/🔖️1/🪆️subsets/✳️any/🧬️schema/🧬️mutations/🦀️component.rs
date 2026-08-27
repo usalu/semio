@@ -185,7 +185,7 @@ mod tests {
 //#endregion 🔹Tests
 
 pub fn apply_gis_map_mutation(snapshot: &mut GisMapSnapshot, mutation: &GisMapMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _messages) = semio_framework_plugin::resolve_ready(vcs::apply_mutation(snapshot, mutation))?;
+    let (next, _messages) = vcs::apply_mutation(snapshot, mutation)?;
     // 🕸️ `drawing`/`value` are pure functions of `(positions, routes, regions)` — re-derive them
     // after every mutation so the composed children never drift from what they actually describe
     // (see `crate::artifacts::gismap::🦀️component.rs`'s `🔖️Composition` region doc).

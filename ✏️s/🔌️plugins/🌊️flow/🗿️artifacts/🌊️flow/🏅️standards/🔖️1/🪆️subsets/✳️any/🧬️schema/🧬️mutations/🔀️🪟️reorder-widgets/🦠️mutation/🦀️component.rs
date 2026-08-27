@@ -15,16 +15,16 @@ pub struct ReorderWidgets {
 impl MutationKind<FlowSnapshot, FlowMutation> for ReorderWidgets {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "widget", kind: "reorder-widgets", record: "ReorderedWidgets" };
 
-    async fn diff(&self, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
+    fn diff(&self, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {
+    fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Reorder widget \"{}\" to {}", self.id, self.to_index)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

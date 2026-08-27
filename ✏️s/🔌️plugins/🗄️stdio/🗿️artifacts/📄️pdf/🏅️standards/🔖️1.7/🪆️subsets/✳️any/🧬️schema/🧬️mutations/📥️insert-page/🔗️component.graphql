@@ -1,0 +1,5 @@
+# 📥️ Direct insert-page GraphQL payload.
+input InsertPageMutationInput {
+  index: Int
+  page: String
+}

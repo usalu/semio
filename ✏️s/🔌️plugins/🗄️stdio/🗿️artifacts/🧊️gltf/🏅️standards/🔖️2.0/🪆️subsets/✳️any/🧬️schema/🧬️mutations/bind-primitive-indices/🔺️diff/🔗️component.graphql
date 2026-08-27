@@ -1,7 +1,0 @@
-# bind-primitive-indices diff facet.
-input GltfBindPrimitiveIndicesPayloadV1 {
-  mesh: Int!
-  primitive: Int!
-  accessor: Int!
-}
-type GltfBindPrimitiveIndicesDiffV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

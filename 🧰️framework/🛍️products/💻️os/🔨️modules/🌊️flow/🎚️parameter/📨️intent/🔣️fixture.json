@@ -1,0 +1,19 @@
+{
+  "schema": "semio.flow.command.set-graph-parameter",
+  "cases": [
+    {"widgetId": "column-height", "value": 4.25},
+    {"widgetId": "profile-radius", "value": 0.4, "surfaceId": "generator.flow"},
+    {"widgetId": "side-count", "value": 8}
+  ],
+  "longWidgetId": {"unit": "🌊", "repetitions": 2048, "value": 4, "expectedBytes": 8192},
+  "retirement": {"grants": [0, 1, 4096], "surfaceUnit": "🎛️", "surfaceRepetitions": 1024, "cancelAt": [0, 1, 4, 4097], "terminalEmpty": true},
+  "rejected": [
+    {"widgetId": "column-height", "value": 4, "surfaceId": ""},
+    {"widgetId": "", "value": 4},
+    {"widgetId": "column-height", "value": "4"},
+    {"widgetId": "column-height", "value": 4, "documentJson": "{}"},
+    {"widgetId": "column-height", "value": 4, "fixtureJson": "{}"},
+    {"widgetId": "column-height", "value": 4, "operations": []},
+    {"value": 4}
+  ]
+}

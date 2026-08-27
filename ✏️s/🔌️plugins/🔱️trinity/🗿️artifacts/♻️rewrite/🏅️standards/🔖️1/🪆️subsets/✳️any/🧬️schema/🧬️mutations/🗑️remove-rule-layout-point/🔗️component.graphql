@@ -1,0 +1,2 @@
+# 🗑️ Direct remove-rule-layout-point / RemoveRuleLayoutPoint payload.
+input RemoveRuleLayoutPointInput { key: String! }

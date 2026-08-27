@@ -1,0 +1,4 @@
+"""✏️ Direct edit-text payload."""
+input EditTextInput {
+  text: String!
+}

@@ -41,7 +41,7 @@ async fn applies_to_committed_after() {
     let snapshot = apply_form_edit_mutation(&base, &mutation()).expect("change-form-title applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-form-title/titles-an-untitled-survey: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.title.as_deref(), Some("Site Survey"), "change-form-title must set the document title the payload carried");
-    assert_eq!((&snapshot.structure.child_id, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a title change must never re-mint the structure/results child handles");
+    assert_eq!((&mut snapshot.structure, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a title change must never re-mint the structure/results child handles");
 }
 
 /// ↩️ `change-form-title`'s inverse is BASE-derived, not payload-derived: it restores whatever the

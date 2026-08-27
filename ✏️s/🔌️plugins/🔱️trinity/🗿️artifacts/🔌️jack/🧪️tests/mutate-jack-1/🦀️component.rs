@@ -33,7 +33,7 @@ const KINDS: &[&str] = &["create-node", "delete-node", "create-edge", "delete-ed
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_trinity::artifacts::jack::standards::v1::subsets::any::schema::mutations::{apply_trinity_graph_mutation_reporting, decode_trinity_graph_mutation_json, inverse_trinity_graph_mutation_steps, TrinityGraphMutation};
+    use semio_s_plugin_trinity::artifacts::jack::standards::v1::subsets::any::schema::mutations::text::{apply_trinity_graph_mutation_reporting, decode_trinity_graph_mutation_json, inverse_trinity_graph_mutation_steps, TrinityGraphMutation};
     use semio_s_plugin_trinity::artifacts::jack::standards::v1::subsets::any::schema::snapshot::{decode_jack_snapshot_json, encode_jack_snapshot_json, jack_scene_summary, parse_jack_dsl, print_jack_dsl, JackSnapshot};
 
     //#region 🔖️Plan

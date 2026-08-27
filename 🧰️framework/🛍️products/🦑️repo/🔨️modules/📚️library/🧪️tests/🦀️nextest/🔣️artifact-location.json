@@ -1,0 +1,9 @@
+{
+  "schema": "nextest-artifact-location/v1",
+  "cases": [
+    { "value": "", "relative": null, "retain": false },
+    { "value": "   ", "relative": null, "retain": false },
+    { "value": "ticket/nextest", "relative": "ticket/nextest", "retain": true },
+    { "value": "  ticket/🧪️native  ", "relative": "ticket/🧪️native", "retain": true }
+  ]
+}

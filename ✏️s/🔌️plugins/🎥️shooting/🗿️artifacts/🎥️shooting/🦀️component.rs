@@ -515,23 +515,10 @@ pub async fn shooting_base64_encode(bytes: &[u8]) -> String {
     out
 }
 
-thread_local! {
-    /// 🧠️ Same-process working-scene cache, keyed by the composed child's own content-addressed
-    /// `child_id` — the `EngineRep`-shaped bridge every wave-4 exemplar uses since no `LinkResolver`/
-    /// child-dispatch seam reaches `ArtifactApp::handle` yet (checked directly against
-    /// `🔌️plugin/🦀️component.rs`, W1-owned, read-only for this wave). Populated only by
-    /// `shooting_set_emblem_from_base64` (the sole place this migration ever has literal emblem bytes in
-    /// hand — no mutation triad touches the emblem, see this region's own module doc comment), read by
-    /// `shooting_emblem_image`/`shooting_emblem_bytes`. Degrades to an honest `None`/empty on a cache
-    /// miss (a fresh process loading a persisted document, or a handle surviving a store-level undo/redo
-    /// that bypasses `ArtifactApp::handle`) — never fabricates data, matching every other exemplar's
-    /// documented staleness gap.
-    static SHOOTING_EMBLEM_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, SemioImageSnapshot>> = std::cell::RefCell::new(std::collections::HashMap::new());
-}
-
 /// 🌉️ WRITE direction, real: decodes `base64` (the plugin's existing raw-base64-payload convention,
 /// never a `data:` URI prefix — matches the pre-migration `emblem_base64` field's own callers),
-/// mints a content-addressed handle, caches the real content, and sets `snapshot.emblem`.
+/// mints a content-addressed handle, attaches the immutable content to that exact child owner, and
+/// sets `snapshot.emblem`. Independent snapshots cannot observe or replace one another's emblem.
 /// `None`/empty input clears the slot.
 pub async fn shooting_set_emblem_from_base64(snapshot: &mut ShootingSnapshot, base64: Option<&str>) {
     let bytes = base64.filter(|data| !data.is_empty()).and_then(shooting_base64_decode);
@@ -539,18 +526,17 @@ pub async fn shooting_set_emblem_from_base64(snapshot: &mut ShootingSnapshot, ba
         None => snapshot.emblem = None,
         Some(bytes) => {
             let content = shooting_emblem_image_from_bytes(bytes);
-            let handle = shooting_emblem_child_handle(&content);
-            SHOOTING_EMBLEM_SCRATCH.with(|cache| cache.borrow_mut().insert(handle.child_id.clone(), content));
+            let handle = shooting_emblem_child_handle(&content).with_local_owner(std::sync::Arc::new(content));
             snapshot.emblem = Some(handle);
         }
     }
 }
 
-/// 🌉️ READ direction: real for the same-process case (checks `SHOOTING_EMBLEM_SCRATCH` first);
-/// degrades to `None` on a cache miss — see this region's own doc comment for the documented gap.
+/// 🌉️ READ direction: retains the materialization owned by this exact child handle; degrades to
+/// `None` when a wire-decoded handle has not yet been materialized by the host child resolver.
 pub async fn shooting_emblem_image(snapshot: &ShootingSnapshot) -> Option<SemioImageSnapshot> {
     let handle = snapshot.emblem.as_ref()?;
-    SHOOTING_EMBLEM_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned())
+    handle.local_owner::<SemioImageSnapshot>().map(|content| content.as_ref().clone())
 }
 
 /// 🌉️ `shooting_emblem_image` + `shooting_emblem_bytes_from_image` in one call — the accessor
@@ -724,6 +710,18 @@ mod tests {
     async fn empty_snapshot_has_no_entities() {
         let snapshot = empty_shooting_snapshot();
         assert!(snapshot.assets.is_empty() && snapshot.shots.is_empty() && snapshot.saved_cameras.is_empty());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn emblem_materialization_is_owned_by_the_exact_snapshot_child() {
+        let mut first = empty_shooting_snapshot();
+        shooting_set_emblem_from_base64(&mut first, Some("AQID"));
+        let first_handle = first.emblem.as_ref().expect("materialized emblem child");
+        let mut second = empty_shooting_snapshot();
+        second.emblem = Some(store::ArtifactChild::new(first_handle.child_id.clone(), first_handle.target.clone()));
+
+        assert_eq!(shooting_emblem_bytes(&first), Some(vec![1, 2, 3]));
+        assert_eq!(shooting_emblem_bytes(&second), None, "a matching wire identity cannot read another snapshot's instance-owned payload");
     }
 }
 //#endregion 🧪️Tests

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SetScalarPayload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "path",
+    "value"
+  ],
+  "properties": {
+    "path": {
+      "type": "array",
+      "items": {
+        "type": [
+          "object",
+          "integer"
+        ]
+      }
+    },
+    "value": {}
+  }
+}

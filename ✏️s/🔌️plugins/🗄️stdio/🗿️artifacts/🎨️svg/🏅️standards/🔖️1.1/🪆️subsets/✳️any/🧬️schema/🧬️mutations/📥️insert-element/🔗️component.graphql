@@ -1,0 +1,2 @@
+# 🧬 insert-element/InsertElement
+input InsertElementPayload { parent: [Int!]! index: Int! node: MutationPayload! }

@@ -264,7 +264,7 @@ pub type Procedural3dStore = ArtifactStore<Procedural3dSnapshot, Procedural3dMut
 //#region 🔖️Apply
 /// 🎬️ Fallible in-place `vcs::apply_mutation` boundary.
 pub fn apply_procedural3d_mutation(projection: &mut Procedural3dSnapshot, mutation: &Procedural3dMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _) = semio_framework::io::resolve_ready(vcs::apply_mutation(projection, mutation))?;
+    let (next, _) = vcs::apply_mutation(projection, mutation)?;
 
     *projection = next;
     Ok(())

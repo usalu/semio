@@ -2,6 +2,7 @@
 /** @emoji 🎨️ `@semio-tech/framework-renderer-react` task router. */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runBunx, runVitest } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
 class TestScript extends BundleScript {
@@ -68,6 +69,6 @@ class LintScript extends BundleScript {
 }
 //#endregion 🔖️LintScript
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("lint", LintScript).register("typecheck", TypecheckScript);
+const router = new ScriptRouter(fileURLToPath(new URL(".", import.meta.url))).register("test", TestScript).register("lint", LintScript).register("typecheck", TypecheckScript);
 
 await runBundleScriptMain(router, import.meta.url);

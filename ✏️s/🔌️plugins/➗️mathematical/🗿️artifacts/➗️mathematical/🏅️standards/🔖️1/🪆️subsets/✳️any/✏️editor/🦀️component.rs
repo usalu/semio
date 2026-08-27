@@ -32,7 +32,7 @@ use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_plugin::{
-    ui_text, ActionArgDef, ActionArgOption, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media,
+    ui_text, ActionArgDef, ActionArgOption, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media,
     MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence,
 };
 use serde_json::{json, Value};
@@ -233,6 +233,16 @@ const MATHEMATICAL_MAX_EDIT_OPERATIONS: usize = 16;
 const MATHEMATICAL_MAX_DELETE_IDS: usize = 256;
 const MATHEMATICAL_MAX_TEXT_BYTES: usize = 256;
 const MATHEMATICAL_MAX_LOCALE_BYTES: usize = 64;
+
+const MATHEMATICAL_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "setDocument", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setAlgorithm", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setDirected", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setPoints", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
+];
 
 fn mathematical_contract() -> ToolExecutionContract {
     ToolExecutionContract::resumable(MATHEMATICAL_RETAINED_RAW_BYTES, 2_048, 1, MATHEMATICAL_RETAINED_WORK_ITEMS, 7_500, 1, 1)
@@ -1017,8 +1027,150 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for MathematicalCommand
     type Owner = semio_framework_plugin::EditorApp<MathematicalPlayApp>;
     const TOOL_IDS: &'static [&'static str] = MATHEMATICAL_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = MATHEMATICAL_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
+
+//#region 📬️StorePreparation
+struct MathematicalStorePreparationFactory<P, M> {
+    marker: std::marker::PhantomData<fn() -> (P, M)>,
+}
+
+impl<P, M> Default for MathematicalStorePreparationFactory<P, M> {
+    fn default() -> Self {
+        Self { marker: std::marker::PhantomData }
+    }
+}
+
+struct MathematicalStorePreparation<P, M> {
+    base: Option<store::SnapshotRead<P>>,
+    mutation: Option<M>,
+    description: Option<String>,
+    authority: Option<Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<P, M>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn mathematical_store_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
+    let id = format!("mathematical-retained-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+
+impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for MathematicalStorePreparationFactory<P, M>
+where
+    P: Clone + Send + Sync + 'static,
+    M: protocol::Mutation<P> + Send + Sync + 'static,
+    M::Diff: protocol::MutationDiff<P>,
+{
+    fn preflight(&self, _mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Mathematical Store preparation rejected its lane or description envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(MathematicalStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for MathematicalStorePreparation<P, M>
+where
+    P: Clone + Send + Sync + 'static,
+    M: protocol::Mutation<P> + Send + 'static,
+    M::Diff: protocol::MutationDiff<P>,
+{
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        use protocol::{Mutation as _, MutationDiff as _};
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "Mathematical preparation lost its exact base root".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "Mathematical preparation lost its mutation owner".to_string())?;
+        let inverse = mutation.inverse(base.get());
+        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Mathematical preparation lost its Store authority".to_string())?;
+        let prepared = authority.prepare_one_item(mathematical_store_edit(mutation, inverse, self.description.take(), authority), Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() { return Err("Mathematical preparation could not return its exact base root".into()); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️StorePreparation
 
 //#region 🔖️MathematicalPlayApp
 /// 🧪️ B1: unit struct — the former `MathPlayRuntime`/`self.runtime` field now lives in
@@ -1044,12 +1196,21 @@ impl ArtifactEditor for MathematicalPlayApp {
     const DIALECT: Dialect = MATHEMATICAL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;
 
+    fn build_artifact_store_one_item_preparation_factory() -> Option<Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(Arc::new(MathematicalStorePreparationFactory::<Self::Snapshot, Self::Mutation>::default()))
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(Arc::new(MathematicalStorePreparationFactory::<Self::Config, Self::ConfigMutation>::default()))
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<MathematicalPlayApp>,
         owner_file: "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
         controller: "s.mathematical.mathematical@1/*#editor",
         document_schema: "semio.mathematical/v1",
         factory: "MathematicalCommandJobFactory",
+        factory_type: MathematicalCommandJobFactory,
         tools: {
             "setDocument" => semio_framework::ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
             "setAlgorithm" => semio_framework::ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),

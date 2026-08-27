@@ -8,8 +8,12 @@
       "ecosystem": "rust",
       "package": "quick-xml",
       "version": "0.42",
-      "capabilities": ["xml-1-0-mutate"],
-      "comparisonProfiles": ["semantic-xml-v1"],
+      "capabilities": [
+        "xml-1-0-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-xml-v1"
+      ],
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/tafia/quick-xml",
@@ -33,20 +37,43 @@
       "subsetDirectoryName": "✳️any",
       "vectors": [
         {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📄set-snapshot",
-          "mutationDirectoryName": "📄set-snapshot",
-          "scenarios": [
-            {
-              "id": "retags-the-catalog-revision-and-rewrites-an-item-label",
-              "directoryName": "🧪️retags-the-catalog-revision-and-rewrites-an-item-label"
-            }
-          ]
+          "mutationId": "set-declaration",
+          "sourceMutationDirectoryName": "✏️set-declaration",
+          "mutationDirectoryName": "✏️set-declaration",
+          "scenarios": []
+        },
+        {
+          "mutationId": "set-doctype",
+          "sourceMutationDirectoryName": "✏️set-doctype",
+          "mutationDirectoryName": "✏️set-doctype",
+          "scenarios": []
+        },
+        {
+          "mutationId": "insert-element",
+          "sourceMutationDirectoryName": "📥️insert-element",
+          "mutationDirectoryName": "📥️insert-element",
+          "scenarios": []
+        },
+        {
+          "mutationId": "remove-element",
+          "sourceMutationDirectoryName": "🗑️remove-element",
+          "mutationDirectoryName": "🗑️remove-element",
+          "scenarios": []
+        },
+        {
+          "mutationId": "set-attribute",
+          "sourceMutationDirectoryName": "✏️set-attribute",
+          "mutationDirectoryName": "✏️set-attribute",
+          "scenarios": []
+        },
+        {
+          "mutationId": "set-text",
+          "sourceMutationDirectoryName": "✏️set-text",
+          "mutationDirectoryName": "✏️set-text",
+          "scenarios": []
         }
       ],
       "kinds": [
-        "no-mutation",
-        "set-snapshot",
         "set-declaration",
         "set-doctype",
         "insert-element",

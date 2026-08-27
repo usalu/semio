@@ -1,7 +1,7 @@
 //! 📜️ 📜️ Trinity Rewrite app command — `patch-nodes`.
 
 use crate::artifacts::jack::{Graph, JackSnapshot};
-use crate::artifacts::rewrite::mutations::rewrite_snapshot_mutations;
+use crate::artifacts::rewrite::rewrite_snapshot_mutations;
 use crate::artifacts::rewrite::op::RewriteRuleMutation;
 use crate::artifacts::rewrite::RewriteSnapshot;
 use crate::editor::rewrite::config::RewriteConfigMutation;

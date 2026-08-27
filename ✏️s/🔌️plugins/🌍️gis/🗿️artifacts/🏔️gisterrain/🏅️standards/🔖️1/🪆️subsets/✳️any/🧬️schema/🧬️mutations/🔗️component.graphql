@@ -1,6 +1,8 @@
-# 🧬️ GIS terrain mutation schema — artifact-lane fields only.
+# 🏔️ GIS terrain direct mutation aggregate.
+input ChangeExaggerationInput { newExaggeration: Float! }
+input ChangeImportedFeaturesInput { newImportedFeaturesJson: String! }
 
-type GisTerrainMutation {
-  exaggeration: Float! @state(class: ARTIFACT)
-  importedFeaturesJson: String! @state(class: ARTIFACT)
+input GisTerrainMutationInput {
+  changeExaggeration: ChangeExaggerationInput
+  changeImportedFeatures: ChangeImportedFeaturesInput
 }

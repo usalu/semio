@@ -46,7 +46,6 @@ import {
 import {
   AppChannelClient,
   type AppFrameValue,
-  type ArtifactPresencePeer,
   decodeConflictsFromWire,
   decodeFaultFromWire,
   decodeMergeReportFromWire,
@@ -55,6 +54,7 @@ import {
   encodePackValue,
   faultDisplayMessage,
 } from "@semio-tech/framework-os";
+import type { ArtifactPresencePeer } from "@semio-tech/framework-replication";
 import { type BuiltNode, type UiNodeRecord, type UiPatchOp, type UiSnapshot } from "@semio-tech/framework";
 import { applyUiPatch, emptyUiDocumentState, type UiDocumentState } from "../UiDocumentStore/🟦️component.tsx";
 import {
@@ -315,7 +315,7 @@ function commandIngressFaultDisplay(status: WireVariant | undefined): string {
   const fault = (status.val as { readonly fault?: unknown }).fault;
   const raw = fault && typeof fault === "object" && "val" in fault ? (fault as { readonly val?: unknown }).val : fault;
   const bytes = coerceWireBytes(raw);
-  const decoded = faultDisplayMessage(bytes, decodePackValue);
+  const decoded = faultDisplayMessage(Array.from(bytes), decodePackValue);
   if (decoded !== "unknown fault") return decoded;
   const text = new TextDecoder().decode(bytes).trim();
   return text.length > 0 ? text : decoded;
@@ -761,22 +761,31 @@ async function yieldPluginUiContinuation(): Promise<void> {
 /** 🔄️ Drives a reactor-owned continuation until its requested patch set is published or it
  * quiesces. UI reconciliation is deliberately incremental: the turn that marks surfaces dirty may
  * publish them across multiple MoreWork frames. A supplied empty `requiredSurfaceIds` means every
- * requested surface is already retained, so an unchanged refresh needs no continuation at all. */
-async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: Lane, requiredSurfaceIds?: ReadonlySet<string>): Promise<WireTurnResult> {
+ * requested surface is already retained, so an unchanged refresh needs no continuation at all.
+ * Accepted patches are acknowledged between turns to release bounded publication capacity. */
+async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: Lane, requiredSurfaceIds?: ReadonlySet<string>, acceptPatches?: (result: WireTurnResult) => readonly ShardEventEnvelope[]): Promise<WireTurnResult> {
   const results: WireTurnResult[] = [initial];
-  for (let continuation = 0; !hasRequiredUiPatches(results, requiredSurfaceIds) && wireTurnStatusTag(results.at(-1)?.status) === "more-work" && continuation < PLUGIN_UI_CONTINUATION_LIMIT; continuation += 1) {
-    results.push(await submitPluginTurn(actorId, [], lane));
+  let acknowledgements = acceptPatches?.(initial) ?? [];
+  for (let continuation = 0; (acknowledgements.length > 0 || (!hasRequiredUiPatches(results, requiredSurfaceIds) && wireTurnStatusTag(results.at(-1)?.status) === "more-work")) && continuation < PLUGIN_UI_CONTINUATION_LIMIT; continuation += 1) {
+    const continued = await submitPluginTurn(actorId, acknowledgements, lane);
+    results.push(continued);
+    acknowledgements = acceptPatches?.(continued) ?? [];
     if ((continuation + 1) % PLUGIN_UI_CONTINUATION_BATCH_SIZE === 0 && !hasRequiredUiPatches(results, requiredSurfaceIds) && wireTurnStatusTag(results.at(-1)?.status) === "more-work") {
       await yieldPluginUiContinuation();
     }
   }
-  if (!hasRequiredUiPatches(results, requiredSurfaceIds) && wireTurnStatusTag(results.at(-1)?.status) === "more-work") {
+  if (acknowledgements.length > 0 || (!hasRequiredUiPatches(results, requiredSurfaceIds) && wireTurnStatusTag(results.at(-1)?.status) === "more-work")) {
     const published = results.flatMap((result) => result.uiPatches.map(wirePatchSurfaceId).filter((surface): surface is string => surface !== null));
     throw new Error(
       `[DEBUG] PluginRuntime: actor ${actorId} did not publish its requested UI surfaces within ${PLUGIN_UI_CONTINUATION_LIMIT} continuations ` +
         `(required=${JSON.stringify([...(requiredSurfaceIds ?? [])])}, published=${JSON.stringify(published)}, ` +
         `effects=${results.reduce((count, result) => count + result.effects.length, 0)}, status=${wireTurnStatusTag(results.at(-1)?.status)})`,
     );
+  }
+  if (requiredSurfaceIds?.size && !hasRequiredUiPatches(results, requiredSurfaceIds)) {
+    const published = new Set(results.flatMap((result) => result.uiPatches.map(wirePatchSurfaceId).filter((surface): surface is string => surface !== null)));
+    const missing = [...requiredSurfaceIds].filter((surface) => !published.has(surface));
+    throw new Error(`[DEBUG] PluginRuntime: actor ${actorId} stopped without publishing requested UI surfaces (missing=${JSON.stringify(missing)}, status=${wireTurnStatusTag(results.at(-1)?.status)})`);
   }
   return {
     uiPatches: results.flatMap((result) => result.uiPatches),
@@ -798,6 +807,21 @@ function pluginSurfaceRef(instance: number, bodyKey: string): { readonly instanc
 
 function retainedSurfaceId(instance: number, bodyKey: string): string {
   return `${instance}:${bodyKey}`;
+}
+
+/** 🪟️ Requests each authored window or panel body once through the shared surface lifecycle. */
+function uiRefreshBodyKeys(request: PluginUiRefreshRequest): string[] {
+  return [...new Set([...(request.windows ?? []), ...(request.panels ?? [])].map((target) => target.bodyKey ?? target.key))];
+}
+
+/** 📬️ Projects retained bodies back to their requested window and panel keys. */
+function retainedUiRefreshResponse(instanceId: number, request: PluginUiRefreshRequest, retained: ReadonlyMap<string, RetainedSurface>): PluginUiRefreshResponse {
+  const project = (targets: PluginUiRefreshRequest["windows"]) => (targets ?? []).flatMap((target) => {
+    const surface = retained.get(retainedSurfaceId(instanceId, target.bodyKey ?? target.key));
+    const value = surface && retainedSurfaceToBuiltNode(surface);
+    return surface && value ? [{ key: target.key, hash: retainedSurfaceHash(retainedSurfaceToSnapshot(surface)), value }] : [];
+  });
+  return { windows: project(request.windows), panels: project(request.panels) };
 }
 
 function retainedSurfacesForActor(actorId: string): Map<string, RetainedSurface> {
@@ -890,9 +914,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           nextWake: [...results].reverse().find((turn) => turn.nextWake !== null)?.nextWake ?? null,
           commandIngress: results.at(-1)?.commandIngress,
         };
-        const ackEvents = patchAckEvents(retainTurnUiPatches(actorId, result));
-        if (ackEvents.length > 0) await submitTurn(actorId, ackEvents);
-        return result;
+        return settlePluginTurn(actorId, result, "Interactive", new Set(), (turn) => patchAckEvents(retainTurnUiPatches(actorId, turn)));
       });
       const outFrames: Uint8Array[] = [];
       const leftover: WireVariant[] = [];
@@ -917,7 +939,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       actorIdByInstance.set(instanceId, actorId);
       await registry.activate(pluginId, actorId, "manual" satisfies ActivationReason);
       eventSeq += 1;
-      const opened = await settlePluginTurn(
+      await settlePluginTurn(
         actorId,
         await submitTurn(actorId, [
           {
@@ -927,9 +949,8 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         ]),
         "Interactive",
         new Set(),
+        (turn) => patchAckEvents(retainTurnUiPatches(actorId, turn)),
       );
-      const ackEvents = patchAckEvents(retainTurnUiPatches(actorId, opened));
-      if (ackEvents.length > 0) await submitTurn(actorId, ackEvents);
       return instanceId;
     },
     destroyApp: async (instanceId) => {
@@ -964,45 +985,34 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
    * SAME turn's `TurnResult.uiPatches` produced (or the retained tree if nothing changed — the
    * `PatchTracker` on the guest side emits nothing for an unchanged body). Every requested window is
    * identified by its schema-owned body key; continuations drain until all surfaces missing from the
-   * retained actor state publish their first patch. Panels/engagements/measures/tools/labels have no
-   * wire path yet (matching `ProgramBridge/🧊️component.rs`'s native stubs, H3-wgpu-native). */
+   * retained actor state publish their first patch. Panels use the same authored-body surface path. */
   const refreshUi = async (instanceId: number, request: PluginUiRefreshRequest): Promise<PluginUiRefreshResponse> => {
-    const windowTargets = request.windows ?? [];
-    if (windowTargets.length === 0) return {};
+    const bodyKeys = uiRefreshBodyKeys(request);
+    if (bodyKeys.length === 0) return {};
     const actorId = requireActorId(instanceId);
     eventSeq += 1;
     const retainedBeforeRefresh = retainedWindowByActor.get(actorId);
-    const missingSurfaceIds = new Set(windowTargets.map((target) => retainedSurfaceId(instanceId, target.bodyKey ?? target.key)).filter((surfaceId) => !retainedBeforeRefresh?.has(surfaceId)));
+    const missingSurfaceIds = new Set(bodyKeys.map((bodyKey) => retainedSurfaceId(instanceId, bodyKey)).filter((surfaceId) => !retainedBeforeRefresh?.has(surfaceId)));
     // 🎯️ H1-react (terra-web-plugin-runtime) — a pointer-move-driven redraw burst hits this call
     // repeatedly for the SAME actor; "UserVisible" (below "Interactive", above "Background") lets a
     // real command preempt it, and the `"surface-visible"` coalesce key collapses the burst to the
     // single latest probe rather than queuing every intermediate one (see `submitPluginTurn`'s doc).
-    const result = await serializeCommandIngressForActor(actorId, async () => {
+    await serializeCommandIngressForActor(actorId, async () => {
       const settled = await settlePluginTurn(
         actorId,
         await submitTurn(
           actorId,
-          windowTargets.map((target) => ({ kind: "surface-visible", payload: { surface: pluginSurfaceRef(instanceId, target.bodyKey ?? target.key) } })),
+          bodyKeys.map((bodyKey) => ({ kind: "surface-visible", payload: { surface: pluginSurfaceRef(instanceId, bodyKey) } })),
           { lane: "UserVisible", coalesceKey: "surface-visible" },
         ),
         "UserVisible",
         missingSurfaceIds,
+        (turn) => patchAckEvents(retainTurnUiPatches(actorId, turn)),
       );
-      const ackEvents = patchAckEvents(retainTurnUiPatches(actorId, settled));
-      if (ackEvents.length > 0) await submitTurn(actorId, ackEvents, { lane: "UserVisible" });
       return settled;
     });
     const retained = retainedWindowByActor.get(actorId);
-    if (!retained) return {};
-    const windows = [];
-    for (const target of windowTargets) {
-      const surface = retained.get(retainedSurfaceId(instanceId, target.bodyKey ?? target.key));
-      if (!surface) continue;
-      const retainedRoot = retainedSurfaceToBuiltNode(surface);
-      if (!retainedRoot) continue;
-      windows.push({ key: target.key, hash: retainedSurfaceHash(retainedSurfaceToSnapshot(surface)), value: retainedRoot });
-    }
-    return { windows };
+    return retained ? retainedUiRefreshResponse(instanceId, request, retained) : {};
   };
 
   /** 🔁️ H1-react item 2 ("finish the invokeExtension branch") — the real `req`-correlated completion
@@ -1804,6 +1814,35 @@ if (import.meta.vitest) {
   });
 
   describe("instance-open retained UI lifecycle", () => {
+    it("refreshes window and panel surfaces from the language-agnostic ownership cases", async () => {
+      const { default: fixture } = await import("./🧪️fixtures/🔣️surface-refresh.json");
+      for (const testCase of fixture.cases) {
+        const bodyKeys = uiRefreshBodyKeys(testCase.request);
+        expect(bodyKeys, testCase.name).toEqual(testCase.bodyKeys);
+        const retained = new Map<string, RetainedSurface>();
+        for (const bodyKey of bodyKeys) {
+          const root: UiNodeRecord = {
+            id: 0, key: bodyKey, component: { type: "text", value: bodyKey, emphasize: null, dataAttributes: null },
+            layout: { kind: "leaf", width: "hug", height: "hug" }, style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" }, activity: "idle", disabled: false,
+            transition: null, accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false }, bindings: [], menu: null, children: [],
+          };
+          const { surface, desynced } = applyUiPatchToRetained(null, {
+            surface: bodyKey, revision: 1, baseRevision: 0,
+            ops: [{ type: "upsert", ...root }, { type: "setRoot", id: 0 }],
+          });
+          expect(desynced).toBe(false);
+          retained.set(retainedSurfaceId(7, bodyKey), surface!);
+        }
+        const response = retainedUiRefreshResponse(7, testCase.request, retained);
+        expect(response.windows?.map((entry) => entry.key)).toEqual(testCase.windowKeys);
+        expect(response.panels?.map((entry) => entry.key)).toEqual(testCase.panelKeys);
+        for (const entry of [...(response.windows ?? []), ...(response.panels ?? [])]) {
+          expect(entry.value).toMatchObject({ component: { type: "text" } });
+          expect(entry.hash).not.toBe("");
+        }
+      }
+    });
+
     it("acknowledges only patches that identify the exact retained surface", () => {
       expect(
         patchAckEvents([
@@ -1821,11 +1860,11 @@ if (import.meta.vitest) {
         key: "root",
         component: { type: "text", value: "ready", emphasize: null, dataAttributes: null },
         layout: { kind: "leaf", width: "hug", height: "hug" },
-        style: {},
+        style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" },
         activity: "idle",
         disabled: false,
         transition: null,
-        accessibility: {},
+        accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false },
         bindings: [],
         menu: null,
         children: [],
@@ -1834,8 +1873,6 @@ if (import.meta.vitest) {
       try {
         retainTurnUiPatches(actorId, {
           uiPatches: [{ revision: 1n, baseRevision: 0n, ops: [{ tag: "upsert", val: { node: Array.from(encodePackValue(root)) } }, { tag: "set-root", val: 0n }] }],
-          effects: [],
-          nextWake: null,
         });
         const retained = retainedWindowByActor.get(actorId)?.get("window");
         expect(retained).toMatchObject({ surface: "window", revision: 1, root: 0 });
@@ -2345,6 +2382,45 @@ if (import.meta.vitest) {
           expect(result.uiPatches).toHaveLength(1);
         },
       );
+    });
+
+    it("acknowledges each retained surface before requesting the next bounded publication", async () => {
+      const { default: fixture } = await import("./🧪️fixtures/🔣️surface-refresh.json");
+      const surfaces = fixture.acknowledgement.surfaces;
+      const submitted: string[][] = [];
+      await withFakeShardClient(
+        async (_actor, events) => {
+          const acknowledgements = events.filter((event) => event.kind === "patch-ack").map((event) => (event.payload as { surface: { surface: string } }).surface.surface);
+          submitted.push(acknowledgements);
+          return {
+            uiPatches: acknowledgements.includes(surfaces[0]!) ? [{ surface: pluginSurfaceRef(7, surfaces[1]!), revision: 1, baseRevision: 0, ops: [] }] : [],
+            effects: [], nextWake: null, status: { tag: "idle" },
+          };
+        },
+        async () => {
+          const result = await settlePluginTurn(
+            "bounded-panel-publication#1",
+            { uiPatches: [{ surface: pluginSurfaceRef(7, surfaces[0]!), revision: 1, baseRevision: 0, ops: [] }], effects: [], nextWake: null, status: { tag: "more-work" } },
+            "UserVisible",
+            new Set(surfaces.map((surface) => retainedSurfaceId(7, surface))),
+            (turn) => patchAckEvents(turn.uiPatches),
+          );
+          expect(submitted).toEqual(surfaces.map((surface) => [surface]));
+          expect(submitted.every((batch) => batch.length <= fixture.acknowledgement.maxUnacknowledged)).toBe(true);
+          expect(result.uiPatches.map((patch) => patch.surface?.surface)).toEqual(surfaces);
+        },
+      );
+    });
+
+    it("rejects an idle actor that did not publish a requested surface instead of retaining a loading placeholder", async () => {
+      const { default: fixture } = await import("./🧪️fixtures/🔣️surface-refresh.json");
+      const { instance, requested, published, missing } = fixture.quiescent;
+      await expect(settlePluginTurn(
+        "idle-missing-surface#1",
+        { uiPatches: published.map((surface) => ({ surface: pluginSurfaceRef(instance, surface), revision: 1, baseRevision: 0, ops: [] })), effects: [], nextWake: null, status: { tag: "idle" } },
+        "UserVisible",
+        new Set(requested.map((surface) => retainedSurfaceId(instance, surface))),
+      )).rejects.toThrow(`missing=${JSON.stringify(missing)}`);
     });
 
     it("does not chase background work during instance-open before a UI surface is requested", async () => {

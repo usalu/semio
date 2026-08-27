@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
-  "_comment": "🧩️ This subset's own contribution. `s.sequence.sequence` declares ONE mutation vocabulary across two facets — `🧬️schema/🧬️mutations` holds the dispatch enum and the per-kind triad leaves, `🚪️io/🧬️mutations` holds that same enum's text and binary wire codecs — so ONE catalog registers both. The `kinds` are the kebab spelling of `SequenceMutation`'s variants in declaration order; `../🧬️schema/🧬️mutations/🦀️component.rs`'s `KINDS` const and its `kinds_match_the_enum_and_the_catalog` test keep this file, that const and the enum in agreement.",
+  "_comment": "🎬️ One direct semantic vocabulary spans schema payloads and IO codecs. Direct descriptors and payload owners correspond to the transparent SequenceMutation aggregate, the leaf-derived vocabulary, and the reachable specification vectors below.",
   "oracles": [],
   "noOracleDecisions": [
     {
@@ -30,7 +30,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-step-is-already-collapsed",
-              "directoryName": "🧪️no-ops-when-the-step-is-already-collapsed"
+              "directoryName": "no-ops-when-the-step-is-already-collapsed"
             }
           ]
         },
@@ -41,7 +41,7 @@
           "scenarios": [
             {
               "id": "rejects-connecting-a-step-to-itself",
-              "directoryName": "🧪️rejects-connecting-a-step-to-itself"
+              "directoryName": "rejects-connecting-a-step-to-itself"
             }
           ]
         },
@@ -52,7 +52,7 @@
           "scenarios": [
             {
               "id": "rejects-a-duplicate-step-id",
-              "directoryName": "🧪️rejects-a-duplicate-step-id"
+              "directoryName": "rejects-a-duplicate-step-id"
             }
           ]
         },
@@ -63,7 +63,7 @@
           "scenarios": [
             {
               "id": "rejects-deleting-a-missing-step",
-              "directoryName": "🧪️rejects-deleting-a-missing-step"
+              "directoryName": "rejects-deleting-a-missing-step"
             }
           ]
         },
@@ -74,7 +74,7 @@
           "scenarios": [
             {
               "id": "rejects-disconnecting-a-missing-edge",
-              "directoryName": "🧪️rejects-disconnecting-a-missing-edge"
+              "directoryName": "rejects-disconnecting-a-missing-edge"
             }
           ]
         },
@@ -85,7 +85,7 @@
           "scenarios": [
             {
               "id": "rejects-when-the-new-id-already-exists",
-              "directoryName": "🧪️rejects-when-the-new-id-already-exists"
+              "directoryName": "rejects-when-the-new-id-already-exists"
             }
           ]
         },
@@ -96,7 +96,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-params-are-already-identical",
-              "directoryName": "🧪️no-ops-when-the-params-are-already-identical"
+              "directoryName": "no-ops-when-the-params-are-already-identical"
             }
           ]
         },
@@ -107,7 +107,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-step-is-already-at-that-position",
-              "directoryName": "🧪️no-ops-when-the-step-is-already-at-that-position"
+              "directoryName": "no-ops-when-the-step-is-already-at-that-position"
             }
           ]
         }

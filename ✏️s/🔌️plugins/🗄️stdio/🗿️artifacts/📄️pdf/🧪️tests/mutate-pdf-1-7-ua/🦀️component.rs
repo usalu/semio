@@ -22,7 +22,7 @@ use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::
 /// this loop registers handlers for both roles from one list. A mismatch is caught structurally: the
 /// contract phase fails with `mutation-kind-uncovered`/`mutation-kind-undeclared` if this list omits
 /// or invents a kind, and the runner fails every unregistered scenario id outright.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-mark-info", "remove-mark-info", "set-struct-tree-root", "remove-struct-tree-root", "set-lang", "remove-lang", "set-display-doc-title", "remove-display-doc-title", "set-info-title", "embed-font-file", "remove-font-file"];
+const KINDS: &[&str] = &["set-mark-info", "remove-mark-info", "set-struct-tree-root", "remove-struct-tree-root", "set-lang", "remove-lang", "set-display-doc-title", "remove-display-doc-title", "set-info-title", "embed-font-file", "remove-font-file"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -94,7 +94,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let base = arranged_input(ctx, &spec)?;
     let output = oracle_apply_mutation(&base, &spec)?;
     let projection = project_conformance(&output)?;
-    if spec.str("kind") != "no-mutation" && projection == project_conformance(&base)? {
+    if projection == project_conformance(&base)? {
         return Err(format!("mutate-{}: the mutation left the conformance-class projection unchanged — a mutation that is not observable proves nothing", spec.str("kind")));
     }
     Ok(Outcome::with_raw(output, projection))
@@ -142,9 +142,9 @@ mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::io::{decode_pdf, encode_pdf};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::conformance_support as support;
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::conformance_support as support;
     use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfSnapshot};
-    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::ua::schema::mutations::{apply_ua_conformance_mutation, stamp_conformance, PdfUaMutation};
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::ua::schema::mutations::{apply_ua_conformance_mutation, PdfUaMutation, SetMarkInfo, RemoveMarkInfo, SetStructTreeRoot, RemoveStructTreeRoot, SetLang, RemoveLang, SetDisplayDocTitle, RemoveDisplayDocTitle, SetInfoTitle, EmbedFontFile, RemoveFontFile};
     use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::ua::{oracle_inverse_spec, project_conformance};
 
     fn decode(bytes: &[u8]) -> Result<PdfSnapshot, String> {
@@ -189,19 +189,17 @@ mod subject {
     fn mutation_from_spec(base: &PdfSnapshot, spec: &Json) -> Result<PdfUaMutation, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => PdfUaMutation::NoMutation,
-            "set-snapshot" => PdfUaMutation::SetSnapshot { snapshot: stamp_conformance(base.clone(), params.str("conformance") == "stamped") },
-            "set-mark-info" => PdfUaMutation::SetMarkInfo { marked: matches!(params.get("marked"), Some(Json::Bool(true))) },
-            "remove-mark-info" => PdfUaMutation::RemoveMarkInfo,
-            "set-struct-tree-root" => PdfUaMutation::SetStructTreeRoot,
-            "remove-struct-tree-root" => PdfUaMutation::RemoveStructTreeRoot,
-            "set-lang" => PdfUaMutation::SetLang { lang: params.str("lang") },
-            "remove-lang" => PdfUaMutation::RemoveLang,
-            "set-display-doc-title" => PdfUaMutation::SetDisplayDocTitle { display: matches!(params.get("displayDocTitle"), Some(Json::Bool(true))) },
-            "remove-display-doc-title" => PdfUaMutation::RemoveDisplayDocTitle,
-            "set-info-title" => PdfUaMutation::SetInfoTitle { title: params.str("title") },
-            "embed-font-file" => PdfUaMutation::EmbedFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize, key: params.str("key"), program: program_reference(base, &params)? },
-            "remove-font-file" => PdfUaMutation::RemoveFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize },
+            "set-mark-info" => PdfUaMutation::SetMarkInfo(SetMarkInfo { marked: matches!(params.get("marked"), Some(Json::Bool(true))) }),
+            "remove-mark-info" => PdfUaMutation::RemoveMarkInfo(RemoveMarkInfo {}),
+            "set-struct-tree-root" => PdfUaMutation::SetStructTreeRoot(SetStructTreeRoot {}),
+            "remove-struct-tree-root" => PdfUaMutation::RemoveStructTreeRoot(RemoveStructTreeRoot {}),
+            "set-lang" => PdfUaMutation::SetLang(SetLang { lang: params.str("lang") }),
+            "remove-lang" => PdfUaMutation::RemoveLang(RemoveLang {}),
+            "set-display-doc-title" => PdfUaMutation::SetDisplayDocTitle(SetDisplayDocTitle { display: matches!(params.get("displayDocTitle"), Some(Json::Bool(true))) }),
+            "remove-display-doc-title" => PdfUaMutation::RemoveDisplayDocTitle(RemoveDisplayDocTitle {}),
+            "set-info-title" => PdfUaMutation::SetInfoTitle(SetInfoTitle { title: params.str("title") }),
+            "embed-font-file" => PdfUaMutation::EmbedFontFile(EmbedFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize, key: params.str("key"), program: program_reference(base, &params)? }),
+            "remove-font-file" => PdfUaMutation::RemoveFontFile(RemoveFontFile { descriptor_ordinal: params.get("descriptorOrdinal").and_then(number).unwrap_or(0.0) as usize }),
             other => return Err(format!("no subject rule for kind {other:?}")),
         })
     }

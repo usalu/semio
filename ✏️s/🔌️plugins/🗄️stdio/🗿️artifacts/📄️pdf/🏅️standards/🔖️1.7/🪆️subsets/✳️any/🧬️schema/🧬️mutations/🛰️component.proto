@@ -1,38 +1,23 @@
 syntax = "proto3";
 package semio.s_stdio_pdf_1_7.mutation;
 
-import "s_stdio_pdf_1_7_snapshot.proto"; // ObjRef, PdfObject, PdfInfo, PdfPage, PdfSnapshot
-import "s_stdio_pdf_1_7_diff.proto";     // PdfPathSegment
-
 message PdfMutation {
-  enum Kind {
-    NO_MUTATION = 0;
-    SET_SNAPSHOT = 1;
-    INSERT_PAGE = 2;
-    REMOVE_PAGE = 3;
-    SET_PAGE_MEDIA_BOX = 4;
-    SET_PAGE_CROP_BOX = 5;
-    APPEND_PAGE_CONTENT = 6;
-    SET_INFO = 7;
-    INSERT_OBJECT = 8;
-    REMOVE_OBJECT = 9;
-    SET_OBJECT_VALUE = 10;
-    SET_DICT_ENTRY = 11;
-    REMOVE_DICT_ENTRY = 12;
-    SET_TRAILER_ENTRY = 13;
-    REMOVE_TRAILER_ENTRY = 14;
+  oneof mutation {
+    InsertPageMutation insert_page = 1;
+    RemovePageMutation remove_page = 2;
+    SetPageMediaBoxMutation set_page_media_box = 3;
+    SetPageCropBoxMutation set_page_crop_box = 4;
+    AppendPageContentMutation append_page_content = 5;
+    SetInfoMutation set_info = 6;
+    InsertObjectMutation insert_object = 7;
+    RemoveObjectMutation remove_object = 8;
+    SetObjectValueMutation set_object_value = 9;
+    SetDictEntryMutation set_dict_entry = 10;
+    RemoveDictEntryMutation remove_dict_entry = 11;
+    SetTrailerEntryMutation set_trailer_entry = 12;
+    RemoveTrailerEntryMutation remove_trailer_entry = 13;
+    MovePageMutation move_page = 14;
+    SetPageContentMutation set_page_content = 15;
+    SetPageRotationMutation set_page_rotation = 16;
   }
-  Kind mutation = 1;
-  semio.s_stdio_pdf_1_7.snapshot.PdfSnapshot snapshot = 2;
-  uint64 index = 3;
-  semio.s_stdio_pdf_1_7.snapshot.PdfPage page = 4;
-  repeated double media_box = 5;
-  repeated double crop_box = 6;
-  bool has_crop_box = 7;
-  string text = 8;
-  semio.s_stdio_pdf_1_7.snapshot.PdfInfo info = 9;
-  semio.s_stdio_pdf_1_7.snapshot.ObjRef id = 10;
-  semio.s_stdio_pdf_1_7.snapshot.PdfObject value = 11;
-  repeated semio.s_stdio_pdf_1_7.diff.PdfPathSegment path = 12;
-  string key = 13;
 }

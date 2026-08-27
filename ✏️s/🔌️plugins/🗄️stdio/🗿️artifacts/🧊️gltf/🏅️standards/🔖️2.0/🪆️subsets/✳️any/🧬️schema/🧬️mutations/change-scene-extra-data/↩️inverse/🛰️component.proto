@@ -1,3 +1,0 @@
-// change-scene-extra-data inverse typed facet.
-syntax = "proto3"; package stdio.gltf.mutation;
-message GltfChangeSceneExtraDataInverseV1 { GltfChangeSceneExtraDataPayloadV1 operation=1; bytes before=2; repeated string touched_paths=3; }

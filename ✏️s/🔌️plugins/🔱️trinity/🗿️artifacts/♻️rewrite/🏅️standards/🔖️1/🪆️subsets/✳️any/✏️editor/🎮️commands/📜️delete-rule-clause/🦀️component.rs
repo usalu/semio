@@ -3,7 +3,7 @@
 use crate::editor::rewrite::config::RewriteConfigMutation;
 use crate::artifacts::jack::{Graph, JackSnapshot, PropertyValue};
 use crate::artifacts::rewrite::schema::{ParameterKind, Rhs};
-use crate::artifacts::rewrite::mutations::rewrite_snapshot_mutations;
+use crate::artifacts::rewrite::rewrite_snapshot_mutations;
 use crate::artifacts::rewrite::op::RewriteRuleMutation;
 use crate::artifacts::rewrite::RewriteSnapshot;
 use semio_framework_plugin::{Emit, Fault};

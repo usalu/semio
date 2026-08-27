@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s.stdio.pdf.1.7.h/mutation/set-info-author.json",
+  "title": "SetInfoAuthor",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "author"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setInfoAuthor"
+    },
+    "author": {
+      "type": "string"
+    }
+  }
+}

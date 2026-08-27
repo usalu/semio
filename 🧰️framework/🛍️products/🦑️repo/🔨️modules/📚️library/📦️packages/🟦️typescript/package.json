@@ -10,9 +10,11 @@
     "lint": "nx run @semio-tech/repo-lib:lint",
     "test": "nx run @semio-tech/repo-lib:test"
   },
+  "nx": {
+    "includedScripts": []
+  },
   "devDependencies": {
     "@types/node": "^22.19.6",
-    "fast-glob": "3.3.3",
     "typescript": "^5.9.3"
   }
 }

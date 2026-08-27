@@ -1,0 +1,23 @@
+{
+  "schema": "semio.plugin.tool-factory-proof.v1",
+  "join": ["ownerType", "controller", "documentSchema", "tool", "factoryType", "factoryTypeName", "payloadSchema", "executionContract", "liveBusRegistration"],
+  "cases": [
+    {"id": "exact-custom", "change": "none", "accepted": true},
+    {"id": "missing-type-witness", "change": "missingType", "accepted": false},
+    {"id": "wrong-type-witness", "change": "wrongType", "accepted": false},
+    {"id": "same-owner-different-factory", "change": "sameOwnerDifferentFactory", "accepted": false},
+    {"id": "wrong-type-name", "change": "wrongTypeName", "accepted": false},
+    {"id": "wrong-factory-name", "change": "wrongFactory", "accepted": false},
+    {"id": "wrong-owner", "change": "wrongOwner", "accepted": false},
+    {"id": "wrong-controller", "change": "wrongController", "accepted": false},
+    {"id": "wrong-document-schema", "change": "wrongDocumentSchema", "accepted": false},
+    {"id": "wrong-tool", "change": "wrongTool", "accepted": false},
+    {"id": "wrong-contract", "change": "wrongContract", "accepted": false},
+    {"id": "wrong-payload-schema", "change": "wrongPayloadSchema", "accepted": false},
+    {"id": "unregistered-factory", "change": "missingRegistration", "accepted": false},
+    {"id": "different-live-bus", "change": "differentBus", "accepted": false},
+    {"id": "registered-custom-with-generic-sentinel", "change": "sentinel", "accepted": false},
+    {"id": "duplicate-row", "change": "duplicate", "accepted": false}
+  ],
+  "cad": {"controller": "s.cad.cad@1/*#editor", "factory": "CadRetainedCommandJobFactory", "proofRows": 25, "injectedTool": "setActiveUtility", "closeItems": 1, "closeBytes": 4096}
+}

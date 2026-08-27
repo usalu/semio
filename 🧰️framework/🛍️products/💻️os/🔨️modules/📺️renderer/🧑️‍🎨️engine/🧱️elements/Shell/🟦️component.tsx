@@ -126,6 +126,14 @@ export type PluginPanelStatus = "available" | "installing" | "loaded" | "failed"
 
 export type PluginSupervisorState = "loaded" | "running" | "restarting" | "crashed" | "quarantined";
 
+/** 🧯️ Keeps terminal boot and recovery content visible through the layout's loading boundary. */
+export function resolvePluginCanvasStatus(hasSession: boolean, error: string | null, pluginStatus?: PluginPanelStatus, supervisor?: PluginSupervisorState): "loading" | undefined {
+  if (error || supervisor === "crashed" || supervisor === "quarantined") return undefined;
+  if (!hasSession) return "loading";
+  if (pluginStatus === "installing" || pluginStatus === "reloading") return "loading";
+  return undefined;
+}
+
 export type ActiveSession = {
   readonly pluginId: string;
   readonly instanceId: number;
@@ -458,6 +466,11 @@ type PanelState = {
   readonly size: number;
   readonly path: readonly string[];
 };
+
+function initialPanels(): Record<Anchor, PanelState> {
+  const panel = (): PanelState => ({ visible: false, size: DEFAULT_PANEL_WIDTH_PX, path: [] });
+  return { "top-left": panel(), "top-middle": panel(), "top-right": panel(), "right-middle": panel(), "bottom-right": panel(), "bottom-middle": panel(), "bottom-left": panel(), "left-middle": panel() };
+}
 
 type ShellLayoutState = {
   readonly panels: Record<Anchor, PanelState>;
@@ -1049,7 +1062,7 @@ export function initialShellState(_props: {
     actionPane: { foldedByWindowId: {}, expandedByWindowId: {}, stagedArgsByKey: {}, activeUtilityByWindowId: {}, activeToolId: null },
     commandPanel: { expandedCommandId: null, stagedArgsByCommandId: {} },
     layout: {
-      panels: Object.fromEntries(ANCHORS.map((anchor) => [anchor, { visible: false, size: DEFAULT_PANEL_WIDTH_PX, path: [] }])) as Record<Anchor, PanelState>,
+      panels: initialPanels(),
       dockOverride: null,
       panelPathMemory: {},
       treeOpenStates: {},
@@ -1145,7 +1158,7 @@ export class ShellFaultBoundary extends Component<ShellFaultBoundaryProps, Shell
           <p className="text-sm text-destructive">
             {this.props.fallbackLabel}: {this.state.message}
           </p>
-          {this.props.retry ? <Button className="mt-single" size="sm" text={shellLabel("ui.common.retry")} onClick={this.retry} /> : null}
+          {this.props.retry ? <Button className="mt-single" icon="rotate-ccw" text={shellLabel("ui.common.retry")} onClick={this.retry} /> : null}
         </div>
       );
     }

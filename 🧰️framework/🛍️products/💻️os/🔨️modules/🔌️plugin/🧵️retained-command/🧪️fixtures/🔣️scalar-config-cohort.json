@@ -1,0 +1,895 @@
+{
+  "schema": "semio.tool-job.scalar-config-cohort.v1",
+  "textMaximumBytes": 128,
+  "grantBytes": 4096,
+  "sources": [
+    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🦀️component.rs",
+    "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/📦️glue.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️component.rs",
+    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🦀️component.rs",
+    "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🦀️component.rs"
+  ],
+  "owners": [
+    {
+      "id": "fem2d",
+      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "prefix": "FEM2D",
+      "routes": [
+        {
+          "id": "setCamera",
+          "disposition": "Migrated",
+          "lanes": [
+            "Config"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "setResultDisplay",
+          "disposition": "Migrated",
+          "lanes": [
+            "Config"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "setLocale",
+          "disposition": "Migrated",
+          "lanes": [
+            "Config"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "addNode",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
+        },
+        {
+          "id": "addBar",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
+        },
+        {
+          "id": "addBeam",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
+        },
+        {
+          "id": "addMaterial",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
+        },
+        {
+          "id": "addSection",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
+        },
+        {
+          "id": "addSupport",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
+        },
+        {
+          "id": "addNodalLoad",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
+        },
+        {
+          "id": "addMemberUdl",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
+        },
+        {
+          "id": "addAreaLoad",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
+        },
+        {
+          "id": "addRegion",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
+        },
+        {
+          "id": "addLoadCase",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
+        },
+        {
+          "id": "addCombination",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
+        },
+        {
+          "id": "setSelfWeight",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
+        },
+        {
+          "id": "setAnalysisSettings",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
+        },
+        {
+          "id": "removeSelection",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Fem2dSnapshot owns deep Vec model roots; Artifact mutation inverse/diff/publication needs granular retained-root Store preparation."
+        },
+        {
+          "id": "setActiveExample",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Bundled example parsing and LoadDocument replacement are one-shot and mixed with Config reset; requires retained document replacement publication."
+        }
+      ]
+    },
+    {
+      "id": "procedural2d",
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "prefix": "PROCEDURAL2D",
+      "routes": [
+        {
+          "id": "nodeGraphViewport",
+          "disposition": "Migrated",
+          "lanes": [
+            "Config"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "setShowMode",
+          "disposition": "Migrated",
+          "lanes": [
+            "Config"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "generate",
+          "disposition": "Migrated",
+          "lanes": [
+            "Config"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "canvasPointerDown",
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "canvasPointerMove",
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "canvasPointerUp",
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "canvasWheel",
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "nodeGraphEdit",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
+        },
+        {
+          "id": "moveMediaNode",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
+        },
+        {
+          "id": "addWidget",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
+        },
+        {
+          "id": "removeWidget",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
+        },
+        {
+          "id": "connectMediaPorts",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
+        },
+        {
+          "id": "reorganize",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
+        },
+        {
+          "id": "addGeneration",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Generation projection and preview evaluate/clone the full generation state; needs retained generation/preview computation and exact mixed Artifact/Config preparation."
+        },
+        {
+          "id": "removeGeneration",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Generation projection and preview evaluate/clone the full generation state; needs retained generation/preview computation and exact mixed Artifact/Config preparation."
+        },
+        {
+          "id": "renameGeneration",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Generation projection and preview evaluate/clone the full generation state; needs retained generation/preview computation and exact mixed Artifact/Config preparation."
+        },
+        {
+          "id": "updateGenerationValues",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Generation projection and preview evaluate/clone the full generation state; needs retained generation/preview computation and exact mixed Artifact/Config preparation."
+        },
+        {
+          "id": "selectGeneration",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Generation projection and preview evaluate/clone the full generation state; needs retained generation/preview computation and exact mixed Artifact/Config preparation."
+        },
+        {
+          "id": "setEvalOutputs",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "FlowEvalSession is reconstructed per call; app-instance evaluator authority and retained evaluator state must own this route before it can be interactive."
+        },
+        {
+          "id": "flowEvalTick",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "FlowEvalSession is reconstructed per call; app-instance evaluator authority and retained evaluator state must own this route before it can be interactive."
+        },
+        {
+          "id": "setLocale",
+          "disposition": "ForbiddenFromUi",
+          "lanes": [],
+          "blocker": "Existing locale command is intentionally not exposed as a Procedural2d UI route."
+        }
+      ]
+    },
+    {
+      "id": "layout",
+      "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "prefix": "LAYOUT",
+      "routes": [
+        {
+          "id": "setActivePage",
+          "disposition": "Migrated",
+          "lanes": [
+            "Config"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "focusPreflightIssue",
+          "disposition": "Migrated",
+          "lanes": [
+            "Config"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "engagementInput",
+          "disposition": "Migrated",
+          "lanes": [
+            "Config"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "canvasPointerUp",
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "canvasDragOver",
+          "disposition": "Migrated",
+          "lanes": [
+            "Config"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "canvasDragLeave",
+          "disposition": "Migrated",
+          "lanes": [
+            "Config"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "setCamera",
+          "disposition": "Migrated",
+          "lanes": [
+            "Config"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "setLocale",
+          "disposition": "Migrated",
+          "lanes": [
+            "Config"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "engagementSubmit",
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "exportPng",
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "exportSvg",
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "exportPdf",
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "exportPackage",
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "addFrame",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "LayoutSnapshot owns deep page/frame/style roots; mutation cloning/diff and Artifact Store publication require retained per-item preparation."
+        },
+        {
+          "id": "addPage",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "LayoutSnapshot owns deep page/frame/style roots; mutation cloning/diff and Artifact Store publication require retained per-item preparation."
+        },
+        {
+          "id": "patchPage",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "LayoutSnapshot owns deep page/frame/style roots; mutation cloning/diff and Artifact Store publication require retained per-item preparation."
+        },
+        {
+          "id": "patchFrame",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "LayoutSnapshot owns deep page/frame/style roots; mutation cloning/diff and Artifact Store publication require retained per-item preparation."
+        },
+        {
+          "id": "canvasDrop",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "LayoutSnapshot owns deep page/frame/style roots; mutation cloning/diff and Artifact Store publication require retained per-item preparation."
+        },
+        {
+          "id": "canvasPointerDown",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Hit testing builds a full page display list before selection/hover effects; requires retained scene/hit-test cursor."
+        },
+        {
+          "id": "canvasPointerMove",
+          "disposition": "BatchOnlyPendingRewrite",
+          "lanes": [],
+          "blocker": "Hit testing builds a full page display list before selection/hover effects; requires retained scene/hit-test cursor."
+        }
+      ]
+    }
+  ],
+  "mutations": [
+    {
+      "owner": "fem2d",
+      "id": "SetCamera",
+      "base": {
+        "resultSourceId": null,
+        "resultMode": "static",
+        "resultModeIndex": 0,
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "locale": "en-US"
+      },
+      "changes": {
+        "camera": {
+          "x": 5,
+          "y": -3,
+          "zoom": 2
+        }
+      },
+      "expected": {
+        "resultSourceId": null,
+        "resultMode": "static",
+        "resultModeIndex": 0,
+        "camera": {
+          "x": 5,
+          "y": -3,
+          "zoom": 2
+        },
+        "locale": "en-US"
+      }
+    },
+    {
+      "owner": "fem2d",
+      "id": "SetResultDisplay",
+      "base": {
+        "resultSourceId": null,
+        "resultMode": "static",
+        "resultModeIndex": 0,
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "locale": "en-US"
+      },
+      "changes": {
+        "resultSourceId": "case-2",
+        "resultMode": "modal",
+        "resultModeIndex": 3
+      },
+      "expected": {
+        "resultSourceId": "case-2",
+        "resultMode": "modal",
+        "resultModeIndex": 3,
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "locale": "en-US"
+      }
+    },
+    {
+      "owner": "fem2d",
+      "id": "SetLocale",
+      "base": {
+        "resultSourceId": null,
+        "resultMode": "static",
+        "resultModeIndex": 0,
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "locale": "en-US"
+      },
+      "changes": {
+        "locale": "de-DE"
+      },
+      "expected": {
+        "resultSourceId": null,
+        "resultMode": "static",
+        "resultModeIndex": 0,
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "locale": "de-DE"
+      }
+    },
+    {
+      "owner": "procedural2d",
+      "id": "SetCamera",
+      "base": {
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "showMode": "preview",
+        "selectedGenerationId": null,
+        "generationPreviewText": null,
+        "locale": "en-US"
+      },
+      "changes": {
+        "camera": {
+          "x": 2,
+          "y": 4,
+          "zoom": 0.5
+        }
+      },
+      "expected": {
+        "camera": {
+          "x": 2,
+          "y": 4,
+          "zoom": 0.5
+        },
+        "showMode": "preview",
+        "selectedGenerationId": null,
+        "generationPreviewText": null,
+        "locale": "en-US"
+      }
+    },
+    {
+      "owner": "procedural2d",
+      "id": "SetShowMode",
+      "base": {
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "showMode": "preview",
+        "selectedGenerationId": null,
+        "generationPreviewText": null,
+        "locale": "en-US"
+      },
+      "changes": {
+        "showMode": "generate"
+      },
+      "expected": {
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "showMode": "generate",
+        "selectedGenerationId": null,
+        "generationPreviewText": null,
+        "locale": "en-US"
+      }
+    },
+    {
+      "owner": "layout",
+      "id": "SetActivePage",
+      "base": {
+        "activePageId": "page-1",
+        "dropPreview": {
+          "kind": "",
+          "x": 0,
+          "y": 0
+        },
+        "engagementInput": "",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "previewCamera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "locale": "en-US"
+      },
+      "changes": {
+        "activePageId": "page-2"
+      },
+      "expected": {
+        "activePageId": "page-2",
+        "dropPreview": {
+          "kind": "",
+          "x": 0,
+          "y": 0
+        },
+        "engagementInput": "",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "previewCamera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "locale": "en-US"
+      }
+    },
+    {
+      "owner": "layout",
+      "id": "SetDropPreview",
+      "base": {
+        "activePageId": "page-1",
+        "dropPreview": {
+          "kind": "",
+          "x": 0,
+          "y": 0
+        },
+        "engagementInput": "",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "previewCamera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "locale": "en-US"
+      },
+      "changes": {
+        "dropPreview": {
+          "kind": "rect",
+          "x": 5,
+          "y": 8
+        }
+      },
+      "expected": {
+        "activePageId": "page-1",
+        "dropPreview": {
+          "kind": "rect",
+          "x": 5,
+          "y": 8
+        },
+        "engagementInput": "",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "previewCamera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "locale": "en-US"
+      }
+    },
+    {
+      "owner": "layout",
+      "id": "SetEngagementInput",
+      "base": {
+        "activePageId": "page-1",
+        "dropPreview": {
+          "kind": "",
+          "x": 0,
+          "y": 0
+        },
+        "engagementInput": "",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "previewCamera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "locale": "en-US"
+      },
+      "changes": {
+        "engagementInput": "export svg"
+      },
+      "expected": {
+        "activePageId": "page-1",
+        "dropPreview": {
+          "kind": "",
+          "x": 0,
+          "y": 0
+        },
+        "engagementInput": "export svg",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "previewCamera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "locale": "en-US"
+      }
+    },
+    {
+      "owner": "layout",
+      "id": "SetCamera",
+      "base": {
+        "activePageId": "page-1",
+        "dropPreview": {
+          "kind": "",
+          "x": 0,
+          "y": 0
+        },
+        "engagementInput": "",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "previewCamera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "locale": "en-US"
+      },
+      "changes": {
+        "camera": {
+          "x": 1,
+          "y": 2,
+          "zoom": 3
+        }
+      },
+      "expected": {
+        "activePageId": "page-1",
+        "dropPreview": {
+          "kind": "",
+          "x": 0,
+          "y": 0
+        },
+        "engagementInput": "",
+        "camera": {
+          "x": 1,
+          "y": 2,
+          "zoom": 3
+        },
+        "previewCamera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "locale": "en-US"
+      }
+    },
+    {
+      "owner": "layout",
+      "id": "SetPreviewCamera",
+      "base": {
+        "activePageId": "page-1",
+        "dropPreview": {
+          "kind": "",
+          "x": 0,
+          "y": 0
+        },
+        "engagementInput": "",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "previewCamera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "locale": "en-US"
+      },
+      "changes": {
+        "previewCamera": {
+          "x": 4,
+          "y": 5,
+          "zoom": 6
+        }
+      },
+      "expected": {
+        "activePageId": "page-1",
+        "dropPreview": {
+          "kind": "",
+          "x": 0,
+          "y": 0
+        },
+        "engagementInput": "",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "previewCamera": {
+          "x": 4,
+          "y": 5,
+          "zoom": 6
+        },
+        "locale": "en-US"
+      }
+    },
+    {
+      "owner": "layout",
+      "id": "SetLocale",
+      "base": {
+        "activePageId": "page-1",
+        "dropPreview": {
+          "kind": "",
+          "x": 0,
+          "y": 0
+        },
+        "engagementInput": "",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "previewCamera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "locale": "en-US"
+      },
+      "changes": {
+        "locale": "de-DE"
+      },
+      "expected": {
+        "activePageId": "page-1",
+        "dropPreview": {
+          "kind": "",
+          "x": 0,
+          "y": 0
+        },
+        "engagementInput": "",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "previewCamera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "locale": "de-DE"
+      }
+    }
+  ]
+}

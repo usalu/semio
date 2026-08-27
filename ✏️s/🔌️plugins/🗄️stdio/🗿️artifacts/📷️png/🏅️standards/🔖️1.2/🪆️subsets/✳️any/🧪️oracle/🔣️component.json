@@ -37,33 +37,185 @@
       "subsetDirectoryName": "✳️any",
       "vectors": [
         {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📄set-snapshot",
-          "mutationDirectoryName": "📄set-snapshot",
+          "mutationId": "change-header",
+          "sourceMutationDirectoryName": "📐️change-header",
+          "mutationDirectoryName": "📐️change-header",
           "scenarios": [
             {
-              "id": "retunes-gamma-and-repaints-the-second-pixel",
-              "directoryName": "🧪️retunes-gamma-and-repaints-the-second-pixel"
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-palette",
+          "sourceMutationDirectoryName": "🎨️replace-palette",
+          "mutationDirectoryName": "🎨️replace-palette",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-transparency",
+          "sourceMutationDirectoryName": "👁️change-transparency",
+          "mutationDirectoryName": "👁️change-transparency",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-gamma",
+          "sourceMutationDirectoryName": "🌗️change-gamma",
+          "mutationDirectoryName": "🌗️change-gamma",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-chromaticities",
+          "sourceMutationDirectoryName": "🌈️change-chromaticities",
+          "mutationDirectoryName": "🌈️change-chromaticities",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-srgb-intent",
+          "sourceMutationDirectoryName": "🖌️change-srgb-intent",
+          "mutationDirectoryName": "🖌️change-srgb-intent",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-physical-dims",
+          "sourceMutationDirectoryName": "📏️change-physical-dims",
+          "mutationDirectoryName": "📏️change-physical-dims",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-timestamp",
+          "sourceMutationDirectoryName": "🕰️change-timestamp",
+          "mutationDirectoryName": "🕰️change-timestamp",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-background",
+          "sourceMutationDirectoryName": "🖼️change-background",
+          "mutationDirectoryName": "🖼️change-background",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-text-chunk",
+          "sourceMutationDirectoryName": "📥️insert-text-chunk",
+          "mutationDirectoryName": "📥️insert-text-chunk",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-text-chunk",
+          "sourceMutationDirectoryName": "🗑️remove-text-chunk",
+          "mutationDirectoryName": "🗑️remove-text-chunk",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-text-chunk",
+          "sourceMutationDirectoryName": "✏️replace-text-chunk",
+          "mutationDirectoryName": "✏️replace-text-chunk",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-pixels",
+          "sourceMutationDirectoryName": "🟪️replace-pixels",
+          "mutationDirectoryName": "🟪️replace-pixels",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-unknown-chunk",
+          "sourceMutationDirectoryName": "📦️insert-unknown-chunk",
+          "mutationDirectoryName": "📦️insert-unknown-chunk",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-unknown-chunk",
+          "sourceMutationDirectoryName": "📤️remove-unknown-chunk",
+          "mutationDirectoryName": "📤️remove-unknown-chunk",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
             }
           ]
         }
       ],
       "kinds": [
-        "no-mutation",
-        "set-snapshot",
-        "set-header",
-        "set-palette",
-        "set-transparency",
-        "set-gamma",
-        "set-chromaticities",
-        "set-srgb-intent",
-        "set-physical-dims",
-        "set-timestamp",
-        "set-background",
+        "change-header",
+        "replace-palette",
+        "change-transparency",
+        "change-gamma",
+        "change-chromaticities",
+        "change-srgb-intent",
+        "change-physical-dims",
+        "change-timestamp",
+        "change-background",
         "insert-text-chunk",
         "remove-text-chunk",
-        "set-text-chunk",
-        "set-pixels",
+        "replace-text-chunk",
+        "replace-pixels",
         "insert-unknown-chunk",
         "remove-unknown-chunk"
       ]

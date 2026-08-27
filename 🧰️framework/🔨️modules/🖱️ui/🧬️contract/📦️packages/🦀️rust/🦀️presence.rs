@@ -92,6 +92,19 @@ mod tests {
     use super::*;
 
     #[test]
+    fn presence_overlay_fixture_preserves_separate_own_flags() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️presence-overlay.json")).unwrap();
+        let cases = fixture["cases"].as_array().unwrap();
+        assert_eq!(cases.len(), 4);
+        for case in cases {
+            let update: PresenceUpdate = serde_json::from_value(case["update"].clone()).unwrap();
+            assert_eq!(serde_json::to_value(&update).unwrap(), case["update"]);
+            assert_eq!(serde_json::json!({ "selected": update.own.selected, "hovered": update.own.hovered, "previewed": update.own.previewed }), case["expected"]);
+            assert_eq!(update.node_key, "item:根,1");
+        }
+    }
+
+    #[test]
     fn activity_defaults_to_idle_and_round_trips() {
         assert_eq!(Activity::default(), Activity::Idle);
         for activity in [Activity::Waiting, Activity::Loading, Activity::Idle, Activity::Finished] {

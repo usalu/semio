@@ -5,7 +5,7 @@ use flow::FlowLayoutEntry;
 
 use super::mutation::MoveWidgets;
 
-pub async fn inverse(payload: &MoveWidgets, base: &FlowSnapshot) -> Vec<FlowMutation> {
+pub fn inverse(payload: &MoveWidgets, base: &FlowSnapshot) -> Vec<FlowMutation> {
     if payload.entries.is_empty() {
         return Vec::new();
     }

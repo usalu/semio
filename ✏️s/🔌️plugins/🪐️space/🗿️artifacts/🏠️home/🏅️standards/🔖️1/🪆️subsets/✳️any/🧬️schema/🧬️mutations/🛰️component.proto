@@ -1,11 +1,10 @@
 syntax = "proto3";
 package semio.s.space.home.mutation;
 
-// 🧬️ S Home mutation schema — artifact-lane fields only.
+import "🔢️change-catalog-generation/🛰️component.proto";
 
 message SHomeMutation {
-  // @state artifact
-  string schema = 1;
-  // @state artifact
-  uint64 catalog_generation = 2;
+  oneof mutation {
+    ChangeCatalogGeneration change_catalog_generation = 1;
+  }
 }

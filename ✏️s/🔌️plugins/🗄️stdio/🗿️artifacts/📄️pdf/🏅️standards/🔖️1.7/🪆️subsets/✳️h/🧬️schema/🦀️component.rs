@@ -22,7 +22,7 @@ pub mod mutations;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
-    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, PdfMutation};
+    use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, InsertPage, PdfMutation, SetInfo};
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};
     use crate::artifacts::pdf::standards::v1_7::subsets::h::schema::check_h_conformance;
     use dsl::Diagnostic;
@@ -43,13 +43,13 @@ pub mod derived_construction {
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_page(mut self, page: PdfPage) -> Self {
             let index = self.snapshot.pages.len();
-            apply_pdf_mutation(&mut self.snapshot, &PdfMutation::InsertPage { index, page });
+            apply_pdf_mutation(&mut self.snapshot, &PdfMutation::InsertPage(InsertPage { index, page }));
             self
         }
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_info(mut self, info: PdfInfo) -> Self {
-            apply_pdf_mutation(&mut self.snapshot, &PdfMutation::SetInfo { info });
+            apply_pdf_mutation(&mut self.snapshot, &PdfMutation::SetInfo(SetInfo { info }));
             self
         }
     }

@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "ticketsRoot": ".🧬semio/🦑️repo/🎫️tickets",
+  "tickets": [
+    { "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/OPEN", "manifest": "{\"status\":\"open\"}" },
+    { "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/CLOSED", "manifest": "{\"status\":\"closed\"}" },
+    { "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/MISSING", "manifest": null },
+    { "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/MALFORMED", "manifest": "{\"status\":\"closed\"" },
+    { "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/UNKNOWN", "manifest": "{\"status\":\"paused\"}" },
+    { "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/ARRAY", "manifest": "[\"closed\"]" },
+    { "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/NO-STATUS", "manifest": "{}" },
+    { "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/NESTED", "manifest": "{\"status\":\"closed\"}" },
+    { "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/NESTED/child", "manifest": "{\"status\":\"open\"}" },
+    { "path": "target/misplaced-repo/misplaced-tickets/Y/M/D/ACTIVE", "manifest": "{\"status\":\"open\"}" },
+    { "path": "build/misplaced-tickets/Y/M/D/MISSING", "manifest": null }
+  ],
+  "special": [
+    { "path": "alias", "kind": "symlink" },
+    { "path": "unreadable", "kind": "unreadable" },
+    { "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/CLOSED/link", "kind": "symlink" }
+  ],
+  "cases": [
+    { "name": "open-file", "candidate": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/OPEN/log.txt", "allowed": false },
+    { "name": "open-target", "candidate": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/OPEN/target", "allowed": false },
+    { "name": "closed-file", "candidate": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/CLOSED/log.txt", "allowed": true },
+    { "name": "closed-target", "candidate": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/CLOSED/target", "allowed": true },
+    { "name": "missing-manifest", "candidate": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/MISSING/target", "allowed": false },
+    { "name": "malformed-manifest", "candidate": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/MALFORMED/log.txt", "allowed": false },
+    { "name": "unknown-status", "candidate": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/UNKNOWN/log.txt", "allowed": false },
+    { "name": "array-manifest", "candidate": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/ARRAY/log.txt", "allowed": false },
+    { "name": "missing-status", "candidate": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/NO-STATUS/log.txt", "allowed": false },
+    { "name": "closed-parent-open-child", "candidate": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/NESTED", "allowed": false },
+    { "name": "closed-sibling-survives-projection", "candidate": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/NESTED/target", "allowed": true },
+    { "name": "year-parent", "candidate": ".🧬semio/🦑️repo/🎫️tickets/🎆️26", "allowed": false },
+    { "name": "build-parent-open-ticket", "candidate": "target", "allowed": false },
+    { "name": "misplaced-parent-open-ticket", "candidate": "target/misplaced-repo", "allowed": false },
+    { "name": "misplaced-missing-ticket", "candidate": "build", "allowed": false },
+    { "name": "symlink", "candidate": "alias", "allowed": false },
+    { "name": "symlink-ancestor", "candidate": "alias/target", "allowed": false },
+    { "name": "unreadable-tree", "candidate": "unreadable", "allowed": false },
+    { "name": "outside-prefix", "candidate": "../workspace-sibling/target", "allowed": false },
+    { "name": "workspace-root", "candidate": ".", "allowed": false }
+  ],
+  "reopened": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/CLOSED"
+}

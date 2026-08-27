@@ -1,0 +1,10 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#", "$id":"semio.flow.session-retirement", "type":"object", "additionalProperties":false,
+  "required":["schema","grants","text","preview","expected"],
+  "properties":{
+    "schema":{"const":"semio.flow.session-retirement"}, "grants":{"const":[1,64,4096]},
+    "text":{"type":"object","additionalProperties":false,"required":["text","repeat","reservedCapacity"],"properties":{"text":{"const":"🌊"},"repeat":{"const":4096},"reservedCapacity":{"const":65536}}},
+    "preview":{"type":"object","additionalProperties":false,"required":["text","repeat"],"properties":{"text":{"const":"高"},"repeat":{"const":1600}}},
+    "expected":{"type":"object","additionalProperties":false,"required":["releasedBytes","terminalOwners","zeroGrant"],"properties":{"releasedBytes":{"const":42405},"terminalOwners":{"const":0},"zeroGrant":{"const":"blocked"}}}
+  }
+}

@@ -96,7 +96,7 @@ async fn parse_wires_snapshot_body(body: &str) -> Result<WiresSnapshot, store::T
             return Err(to_text_error(format!("wires snapshot: unknown line {line:?}")));
         }
     }
-    let content = crate::artifacts::wires::wires_content_child_handle_and_cache(nodes, edges);
+    let content = crate::artifacts::wires::wires_content_child_with_owner(nodes, edges);
     Ok(WiresSnapshot { wires_fixture: wires_fixture.ok_or_else(|| to_text_error("wires snapshot: missing wires line".into()))?, content, camera: camera.unwrap_or_else(crate::artifacts::wires::empty_camera), meta: meta.unwrap_or(DslValue::Null) })
 }
 //#endregion 🔖️TextPrimitives

@@ -1,0 +1,2 @@
+# 🎯️ Direct edit-rhs / EditRhs payload.
+input EditRhsInput { newRhsJson: String! }

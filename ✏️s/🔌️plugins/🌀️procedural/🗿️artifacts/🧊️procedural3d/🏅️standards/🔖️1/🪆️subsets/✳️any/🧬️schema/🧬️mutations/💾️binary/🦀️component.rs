@@ -28,6 +28,7 @@ use crate::artifacts::procedural3d::mutations::update_widget::mutation::UpdateWi
 use crate::artifacts::procedural3d::schema::mutations::text::Procedural3dMutation;
 use crate::artifacts::procedural3d::schema::snapshot::Procedural3dSnapshot;
 use protocol::OpBinary;
+use store::ErasedSnapshotRetirement;
 
 //#region 🔖️OpTextMirror
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
@@ -582,7 +583,7 @@ pub fn procedural3d_retained_catalog_is_complete() -> bool {
 enum Procedural3dReplayDisplaced {
     Widget(flow::Widget),
     Synapse(flow::SynapseSpec),
-    Layout(flow::WidgetLayout),
+    Layout(std::sync::Arc<flow::WidgetLayout>),
     Camera(flow::CameraJson),
     Text(String),
     Generation(flow::playbook::FormGeneration),
@@ -591,20 +592,22 @@ enum Procedural3dReplayDisplaced {
 
 struct Procedural3dReplayRetirement {
     value: std::mem::ManuallyDrop<Option<Procedural3dReplayDisplaced>>,
+    domain: flow::retained::FlowRetirement,
 }
 
 impl store::ErasedSnapshotRetirement for Procedural3dReplayRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.domain.is_empty() { return self.domain.close_step(maximum_items, maximum_bytes); }
         if maximum_items == 0 || maximum_bytes < PROCEDURAL3D_OWNER_BYTES {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(value) = self.value.take() {
             match value {
-                Procedural3dReplayDisplaced::Widget(value) => drop(value),
-                Procedural3dReplayDisplaced::Synapse(value) => drop(value),
+                Procedural3dReplayDisplaced::Widget(value) => self.domain.push(flow::retained::FlowOwner::Widget(value)),
+                Procedural3dReplayDisplaced::Synapse(value) => self.domain.push(flow::retained::FlowOwner::Specs(vec![value])),
                 Procedural3dReplayDisplaced::Layout(value) => drop(value),
                 Procedural3dReplayDisplaced::Camera(value) => drop(value),
-                Procedural3dReplayDisplaced::Text(value) => drop(value),
+                Procedural3dReplayDisplaced::Text(value) => self.domain.text(value),
                 Procedural3dReplayDisplaced::Generation(value) => drop(value),
                 Procedural3dReplayDisplaced::Json(value) => drop(value),
             }
@@ -614,7 +617,7 @@ impl store::ErasedSnapshotRetirement for Procedural3dReplayRetirement {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.value.is_none()
+        self.value.is_none() && self.domain.is_empty()
     }
 }
 
@@ -625,7 +628,7 @@ impl Drop for Procedural3dReplayRetirement {
 }
 
 fn procedural3d_retire_displaced(value: Procedural3dReplayDisplaced) -> Option<Box<dyn store::ErasedSnapshotRetirement>> {
-    Some(Box::new(Procedural3dReplayRetirement { value: std::mem::ManuallyDrop::new(Some(value)) }))
+    Some(Box::new(Procedural3dReplayRetirement { value: std::mem::ManuallyDrop::new(Some(value)), domain: flow::retained::FlowRetirement::default() }))
 }
 
 /// 🔁️ Direct semantic replay table. It consumes the retained mutation and writes only the
@@ -680,7 +683,8 @@ fn procedural3d_apply_initialization_mutation(snapshot: &mut Procedural3dSnapsho
         }
         Procedural3dMutation::ChangeSchema(payload) => procedural3d_retire_displaced(Procedural3dReplayDisplaced::Text(std::mem::replace(&mut snapshot.fixture.schema, procedural3d_copy_string(&payload.new_schema)?))),
         Procedural3dMutation::CreateGeneration(payload) => {
-            if snapshot.generation.generations.iter().any(|entry| entry.id == payload.generation.id) {
+            let generation = snapshot.generation.cold_builder_mut()?;
+            if generation.generations.iter().any(|entry| entry.id == payload.generation.id) {
                 return Err("procedural3d-replay.generation-duplicate");
             }
             let mut selected = String::new();
@@ -688,16 +692,17 @@ fn procedural3d_apply_initialization_mutation(snapshot: &mut Procedural3dSnapsho
             for character in payload.generation.id.chars() {
                 selected.push(character);
             }
-            snapshot.generation.generations.push(procedural3d_copy_generation(&payload.generation)?);
-            snapshot.generation.selected_generation_id = Some(selected);
+            generation.generations.push(procedural3d_copy_generation(&payload.generation)?);
+            generation.selected_generation_id = Some(selected);
             None
         }
         Procedural3dMutation::DeleteGeneration(payload) => {
-            let index = snapshot.generation.generations.iter().position(|entry| entry.id == payload.id).ok_or("procedural3d-replay.generation-missing")?;
-            let removed = snapshot.generation.generations.remove(index);
-            if snapshot.generation.selected_generation_id.as_deref() == Some(payload.id.as_str()) {
+            let generation = snapshot.generation.cold_builder_mut()?;
+            let index = generation.generations.iter().position(|entry| entry.id == payload.id).ok_or("procedural3d-replay.generation-missing")?;
+            let removed = generation.generations.remove(index);
+            if generation.selected_generation_id.as_deref() == Some(payload.id.as_str()) {
                 let mut selected = None;
-                if let Some(first) = snapshot.generation.generations.first() {
+                if let Some(first) = generation.generations.first() {
                     let mut id = String::new();
                     id.try_reserve_exact(first.id.len()).map_err(|_| "procedural3d-replay.selected-generation-preflight")?;
                     for character in first.id.chars() {
@@ -705,16 +710,16 @@ fn procedural3d_apply_initialization_mutation(snapshot: &mut Procedural3dSnapsho
                     }
                     selected = Some(id);
                 }
-                snapshot.generation.selected_generation_id = selected;
+                generation.selected_generation_id = selected;
             }
             procedural3d_retire_displaced(Procedural3dReplayDisplaced::Generation(removed))
         }
         Procedural3dMutation::RenameGeneration(payload) => {
-            let entry = snapshot.generation.generations.iter_mut().find(|entry| entry.id == payload.id).ok_or("procedural3d-replay.generation-missing")?;
+            let entry = snapshot.generation.cold_builder_mut()?.generations.iter_mut().find(|entry| entry.id == payload.id).ok_or("procedural3d-replay.generation-missing")?;
             procedural3d_retire_displaced(Procedural3dReplayDisplaced::Text(std::mem::replace(&mut entry.name, procedural3d_copy_string(&payload.new_name)?)))
         }
         Procedural3dMutation::ChangeGenerationValue(payload) => {
-            let entry = snapshot.generation.generations.iter_mut().find(|entry| entry.id == payload.id).ok_or("procedural3d-replay.generation-missing")?;
+            let entry = snapshot.generation.cold_builder_mut()?.generations.iter_mut().find(|entry| entry.id == payload.id).ok_or("procedural3d-replay.generation-missing")?;
             entry.values.insert(procedural3d_copy_string(&payload.question_id)?, procedural3d_copy_json(&payload.new_value, 0)?).map(Procedural3dReplayDisplaced::Json).and_then(procedural3d_retire_displaced)
         }
     };
@@ -727,69 +732,88 @@ const PROCEDURAL3D_ENVELOPE_SNAPSHOT_PACK_BYTES: usize = store::ARTIFACT_ENVELOP
 
 struct Procedural3dRetainedSnapshotRetirement {
     value: std::mem::ManuallyDrop<Option<Procedural3dSnapshot>>,
+    flow: flow::retained::FlowRetirement,
+    generation: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
 }
 
 impl store::ErasedSnapshotRetirement for Procedural3dRetainedSnapshotRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-        if maximum_items == 0 || maximum_bytes < PROCEDURAL3D_ENVELOPE_SNAPSHOT_PACK_BYTES {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        if maximum_items == 0 || maximum_bytes == 0 {
+            return Ok(store::SnapshotRetirementStep::Blocked);
+        }
+        if let Some(generation) = self.generation.as_mut() {
+            let step = generation.close_step(maximum_items, maximum_bytes)?;
+            if matches!(step, store::SnapshotRetirementStep::Complete) { self.generation.take(); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: match step { store::SnapshotRetirementStep::Pending { released_bytes, .. } => released_bytes, _ => 0 } });
+        }
+        if !self.flow.is_empty() {
+            return self.flow.close_step(maximum_items, maximum_bytes);
         }
         if let Some(value) = self.value.take() {
-            drop(value);
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: PROCEDURAL3D_ENVELOPE_SNAPSHOT_PACK_BYTES });
+            self.flow.push(flow::retained::FlowOwner::Fixture(value.fixture));
+            *self.generation = Some(Box::new(value.generation.into_retirement()));
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         Ok(store::SnapshotRetirementStep::Complete)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.value.is_none()
+        self.value.is_none() && self.flow.is_empty() && self.generation.is_none()
     }
 }
 
 impl Drop for Procedural3dRetainedSnapshotRetirement {
     fn drop(&mut self) {
-        assert!(self.value.is_none(), "Procedural3d fresh snapshot retirement reached Drop before its <=4096-byte admitted root was released");
+        if !std::thread::panicking() { assert!(store::ErasedSnapshotRetirement::terminal_is_empty(self), "Procedural3d snapshot reached Drop before typed retirement"); }
     }
 }
 
 struct Procedural3dRetainedSnapshotRetirementFactory;
 
+pub(crate) fn procedural3d_retire_owned_snapshot(value: Procedural3dSnapshot) -> Box<dyn store::ErasedSnapshotRetirement> {
+    Box::new(Procedural3dRetainedSnapshotRetirement { value: std::mem::ManuallyDrop::new(Some(value)), flow: Default::default(), generation: std::mem::ManuallyDrop::new(None) })
+}
+
 impl store::ArtifactOwnedValueRetirementFactory<Procedural3dSnapshot> for Procedural3dRetainedSnapshotRetirementFactory {
     fn retire_owned(&self, value: Procedural3dSnapshot) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(Procedural3dRetainedSnapshotRetirement { value: std::mem::ManuallyDrop::new(Some(value)) })
+        procedural3d_retire_owned_snapshot(value)
     }
 }
 
 struct Procedural3dRetainedSnapshotArcRetirement {
     value: std::mem::ManuallyDrop<Option<std::sync::Arc<Procedural3dSnapshot>>>,
+    owned: Procedural3dRetainedSnapshotRetirement,
 }
 
 impl store::ErasedSnapshotRetirement for Procedural3dRetainedSnapshotArcRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-        if maximum_items == 0 || maximum_bytes < PROCEDURAL3D_ENVELOPE_SNAPSHOT_PACK_BYTES {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        if maximum_items == 0 || maximum_bytes == 0 {
+            return Ok(store::SnapshotRetirementStep::Blocked);
         }
         if let Some(value) = self.value.take() {
-            drop(value);
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: PROCEDURAL3D_ENVELOPE_SNAPSHOT_PACK_BYTES });
+            *self.owned.value = std::sync::Arc::into_inner(value);
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        Ok(store::SnapshotRetirementStep::Complete)
+        self.owned.close_step(maximum_items, maximum_bytes)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.value.is_none()
+        self.value.is_none() && self.owned.terminal_is_empty()
     }
 }
 
 impl Drop for Procedural3dRetainedSnapshotArcRetirement {
     fn drop(&mut self) {
-        assert!(self.value.is_none(), "Procedural3d Arc snapshot reached Drop before retained close");
+        if !std::thread::panicking() { assert!(store::ErasedSnapshotRetirement::terminal_is_empty(self), "Procedural3d Arc snapshot reached Drop before retained close"); }
     }
 }
 
 impl store::SnapshotRetirementFactory<Procedural3dSnapshot> for Procedural3dRetainedSnapshotRetirementFactory {
     fn retire(&self, snapshot: std::sync::Arc<Procedural3dSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(Procedural3dRetainedSnapshotArcRetirement { value: std::mem::ManuallyDrop::new(Some(snapshot)) })
+        Box::new(Procedural3dRetainedSnapshotArcRetirement {
+            value: std::mem::ManuallyDrop::new(Some(snapshot)),
+            owned: Procedural3dRetainedSnapshotRetirement { value: std::mem::ManuallyDrop::new(None), flow: Default::default(), generation: std::mem::ManuallyDrop::new(None) },
+        })
     }
 }
 
@@ -1287,12 +1311,12 @@ impl Procedural3dRetainedMutationOwner {
         let [first_dynamic, second_dynamic] = owner.dynamic;
         Ok(match owner.keyword.as_str() {
             "neuron" => flow::Widget::Neuron { id, neuron_kind: second, params: first_dictionary, input_ports: first_list, output_ports: second_list, preview: owner.boolean },
-            "input-slider" => flow::Widget::InputSlider { id, value, min, max, step },
+            "input-slider" => flow::Widget::InputSlider { id, label: second, value, min, max, step },
             "input-note" => flow::Widget::InputNote { id, text: second },
             "input-image" => flow::Widget::InputImage { id, src: second },
             "variable" => flow::Widget::Variable { id, name: second, schema: third },
             "output-preview" => {
-                let mut expanded = std::collections::BTreeSet::new();
+                let mut expanded = flow::OrderedSet::new();
                 for entry in first_list {
                     expanded.insert(entry);
                 }
@@ -1471,7 +1495,7 @@ impl Procedural3dRetainedMutationOwner {
                         }
                         Some(Procedural3dMutationFrame::Widget { field, owner }) => {
                             let field = field.take().ok_or("procedural3d-mutation.widget-number")?;
-                            *owner.numbers.get_mut(field.saturating_sub(1) as usize).ok_or("procedural3d-mutation.widget-number-field")? = f64::from_bits(bits);
+                            *owner.numbers.get_mut(field.checked_sub(2).ok_or("procedural3d-mutation.widget-number-field")? as usize).ok_or("procedural3d-mutation.widget-number-field")? = f64::from_bits(bits);
                         }
                         Some(Procedural3dMutationFrame::Layout { field, value }) => match field.take() {
                             Some(0) => value.x = f64::from_bits(bits),
@@ -2445,11 +2469,11 @@ fn procedural3d_copy_tree(source: &flow::neural::Tree, depth: usize) -> Result<f
 }
 
 fn procedural3d_copy_flow_ui(source: &flow::FlowGui) -> Result<flow::FlowGui, &'static str> {
-    let mut nodes = std::collections::BTreeMap::new();
+    let mut nodes = flow::OrderedMap::new();
     for (id, node) in &source.nodes {
         let chrome = match &node.chrome {
             flow::NodeChrome::Plain { preview } => flow::NodeChrome::Plain { preview: *preview },
-            flow::NodeChrome::Slider { min, max, step, value } => flow::NodeChrome::Slider { min: *min, max: *max, step: *step, value: *value },
+            flow::NodeChrome::Slider { label, min, max, step, value } => flow::NodeChrome::Slider { label: procedural3d_copy_string(label)?, min: *min, max: *max, step: *step, value: *value },
             flow::NodeChrome::Note { text } => flow::NodeChrome::Note { text: procedural3d_copy_string(text)? },
             flow::NodeChrome::Image { src } => flow::NodeChrome::Image { src: procedural3d_copy_string(src)? },
             flow::NodeChrome::Variable { name, schema } => flow::NodeChrome::Variable { name: procedural3d_copy_string(name)?, schema: procedural3d_copy_string(schema)? },
@@ -2463,7 +2487,7 @@ fn procedural3d_copy_flow_ui(source: &flow::FlowGui) -> Result<flow::FlowGui, &'
             Some(source) => Some(flow::FlowChannelRef { neuron: procedural3d_copy_string(&source.neuron)?, channel: procedural3d_copy_string(&source.channel)? }),
             None => None,
         };
-        let mut expanded = std::collections::BTreeSet::new();
+        let mut expanded = flow::OrderedSet::new();
         for value in &preview.expanded {
             expanded.insert(procedural3d_copy_string(value)?);
         }
@@ -2494,12 +2518,12 @@ fn procedural3d_copy_widget(source: &flow::Widget) -> Result<flow::Widget, &'sta
             }
             flow::Widget::Neuron { id: procedural3d_copy_string(id)?, neuron_kind: procedural3d_copy_string(neuron_kind)?, params: procedural3d_copy_dictionary(params, 0)?, input_ports: inputs, output_ports: outputs, preview: *preview }
         }
-        flow::Widget::InputSlider { id, value, min, max, step } => flow::Widget::InputSlider { id: procedural3d_copy_string(id)?, value: *value, min: *min, max: *max, step: *step },
+        flow::Widget::InputSlider { id, label, value, min, max, step } => flow::Widget::InputSlider { id: procedural3d_copy_string(id)?, label: procedural3d_copy_string(label)?, value: *value, min: *min, max: *max, step: *step },
         flow::Widget::InputNote { id, text } => flow::Widget::InputNote { id: procedural3d_copy_string(id)?, text: procedural3d_copy_string(text)? },
         flow::Widget::InputImage { id, src } => flow::Widget::InputImage { id: procedural3d_copy_string(id)?, src: procedural3d_copy_string(src)? },
         flow::Widget::Variable { id, name, schema } => flow::Widget::Variable { id: procedural3d_copy_string(id)?, name: procedural3d_copy_string(name)?, schema: procedural3d_copy_string(schema)? },
         flow::Widget::OutputPreview { id, preview, expanded } => {
-            let mut next_expanded = std::collections::BTreeSet::new();
+            let mut next_expanded = flow::OrderedSet::new();
             for value in expanded {
                 next_expanded.insert(procedural3d_copy_string(value)?);
             }
@@ -2539,12 +2563,12 @@ struct Procedural3dSnapshotCopyCursor {
 impl Procedural3dSnapshotCopyCursor {
     fn new(source: &Procedural3dSnapshot) -> Result<Self, &'static str> {
         let mut target = Procedural3dSnapshot {
-            fixture: flow::FlowFixture { schema: String::new(), camera: flow::CameraJson::default(), widgets: Vec::new(), synapses: Vec::new(), layout: std::collections::BTreeMap::new() },
-            generation: flow::playbook::GenerationPlayState::default(),
+            fixture: flow::FlowFixture { schema: String::new(), camera: flow::CameraJson::default(), widgets: Vec::new(), synapses: Vec::new(), layout: flow::OrderedMap::new() },
+            generation: flow::playbook::GenerationPlayState::default().into(),
         };
         target.fixture.widgets.try_reserve_exact(source.fixture.widgets.len()).map_err(|_| "procedural3d-initializer.widgets-preflight")?;
         target.fixture.synapses.try_reserve_exact(source.fixture.synapses.len()).map_err(|_| "procedural3d-initializer.synapses-preflight")?;
-        target.generation.generations.try_reserve_exact(source.generation.generations.len()).map_err(|_| "procedural3d-initializer.generations-preflight")?;
+        target.generation.cold_builder_mut()?.generations.try_reserve_exact(source.generation.generations.len()).map_err(|_| "procedural3d-initializer.generations-preflight")?;
         Ok(Self { target: std::mem::ManuallyDrop::new(Some(target)), phase: 0, index: 0, handed_back: false })
     }
 
@@ -2600,19 +2624,19 @@ impl Procedural3dSnapshotCopyCursor {
                 self.index = 0;
             }
             7 if self.index < source.generation.generations.len() => {
-                target.generation.generations.push(procedural3d_copy_generation(&source.generation.generations[self.index])?);
+                target.generation.cold_builder_mut()?.generations.push(procedural3d_copy_generation(&source.generation.generations[self.index])?);
                 digest.observe(source.generation.generations[self.index].id.as_bytes());
                 self.index += 1;
             }
             7 => {
-                target.generation.selected_generation_id = match source.generation.selected_generation_id.as_deref() {
+                target.generation.cold_builder_mut()?.selected_generation_id = match source.generation.selected_generation_id.as_deref() {
                     Some(value) => Some(procedural3d_copy_string(value)?),
                     None => None,
                 };
                 self.phase = 8;
             }
             8 => {
-                target.generation.preview_text = match source.generation.preview_text.as_deref() {
+                target.generation.cold_builder_mut()?.preview_text = match source.generation.preview_text.as_deref() {
                     Some(value) => Some(procedural3d_copy_string(value)?),
                     None => None,
                 };
@@ -2727,9 +2751,10 @@ fn procedural3d_observe_widget(digest: &mut store::ArtifactStoreInitializationDi
             }
             digest.observe(&[u8::from(*preview)]);
         }
-        flow::Widget::InputSlider { id, value, min, max, step } => {
+        flow::Widget::InputSlider { id, label, value, min, max, step } => {
             digest.observe(b"input-slider");
             digest.observe(id.as_bytes());
+            digest.observe(label.as_bytes());
             for value in [value, min, max, step] {
                 digest.observe(&value.to_bits().to_be_bytes());
             }

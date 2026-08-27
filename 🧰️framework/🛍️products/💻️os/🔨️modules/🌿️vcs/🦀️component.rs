@@ -141,6 +141,147 @@ pub struct Alternative {
 
 pub const ARTIFACT_HISTORY_LEDGER_CAPACITY: usize = 64;
 
+//#region 🧩️GroupHistoryVisibility
+/// 🪟 A shared decision bit used by prepared read roots; only its unique publisher can switch it.
+pub(crate) struct ArtifactGroupVisibility {
+    state: std::sync::atomic::AtomicU8,
+}
+
+pub(crate) struct ArtifactGroupReadDecision<'a> {
+    visibility: &'a ArtifactGroupVisibility,
+    committed: bool,
+}
+
+impl ArtifactGroupReadDecision<'_> {
+    pub(crate) fn committed_for(&self, visibility: &ArtifactGroupVisibility) -> Result<bool, ()> {
+        if std::ptr::eq(self.visibility, visibility) { Ok(self.committed) } else { Err(()) }
+    }
+}
+
+/// 🗝️ Unique low-level publication owner; preparation and freshness remain the Store coordinator's responsibility.
+pub(crate) struct ArtifactGroupVisibilityOwner {
+    view: std::sync::Arc<ArtifactGroupVisibility>,
+}
+
+impl ArtifactGroupVisibilityOwner {
+    pub(crate) fn new() -> Self {
+        Self { view: std::sync::Arc::new(ArtifactGroupVisibility { state: std::sync::atomic::AtomicU8::new(0) }) }
+    }
+
+    pub(crate) fn view(&self) -> std::sync::Arc<ArtifactGroupVisibility> {
+        std::sync::Arc::clone(&self.view)
+    }
+
+    pub(crate) fn commit(&mut self) -> bool {
+        self.view.state.compare_exchange(0, 1, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok()
+    }
+
+    pub(crate) fn abort(&mut self) -> bool {
+        self.view.state.compare_exchange(0, 2, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok()
+    }
+}
+
+impl Drop for ArtifactGroupVisibilityOwner {
+    fn drop(&mut self) {
+        let _ = self.abort();
+    }
+}
+
+impl ArtifactGroupVisibility {
+    pub(crate) fn capture(&self) -> ArtifactGroupReadDecision<'_> {
+        ArtifactGroupReadDecision { visibility: self, committed: self.committed() }
+    }
+
+    pub(crate) fn committed(&self) -> bool {
+        self.state.load(std::sync::atomic::Ordering::Acquire) == 1
+    }
+
+    pub(crate) fn pending(&self) -> bool {
+        self.state.load(std::sync::atomic::Ordering::Acquire) == 0
+    }
+}
+
+struct ArtifactHistoryGroupSuffix {
+    visibility: std::sync::Arc<ArtifactGroupVisibility>,
+    head: Option<u16>,
+    tail: Option<u16>,
+    len: usize,
+}
+
+#[cfg(test)]
+mod group_history_visibility_tests {
+    use super::*;
+
+    fn observed(ledger: &ArtifactHistoryLedger<i32>) -> serde_json::Value {
+        serde_json::to_value(ledger).expect("independent serializer sees the selected exact history")
+    }
+
+    #[test]
+    fn retained_group_history_switches_every_direct_reader_at_one_decision() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("./🧪️group-history.json")).expect("group history fixture");
+        let mut first = ArtifactHistoryLedger::new();
+        let mut second = ArtifactHistoryLedger::new();
+        first.try_push(0).expect("first seed");
+        second.try_push(-1).expect("second seed");
+        let mut owner = ArtifactGroupVisibilityOwner::new();
+        let view = owner.view();
+        for row in fixture["ordered"].as_array().expect("ordered fixture") {
+            let ledger = if row["member"] == "a" { &mut first } else { &mut second };
+            let reservation = ledger.reserve_group_one(&view).expect("exact suffix reservation");
+            ledger.stage_group_reserved(reservation, row["value"].as_i64().expect("value") as i32, &view).expect("one prepared history owner");
+            assert_eq!(observed(&first), fixture["members"][0]["before"]);
+            assert_eq!(observed(&second), fixture["members"][1]["before"]);
+            assert_eq!((first.len(), first.first(), first.last(), first.get(1)), (1, Some(&0), Some(&0), None));
+            assert_eq!(first.iter().rev().copied().collect::<Vec<_>>(), vec![0]);
+            assert!(first.reserve_one().is_err());
+            assert_eq!(first.last_mut(), None);
+        }
+        assert!(owner.commit());
+        assert!(!owner.commit());
+        assert!(!owner.abort());
+        assert_eq!(observed(&first), fixture["members"][0]["after"]);
+        assert_eq!(observed(&second), fixture["members"][1]["after"]);
+        assert_eq!((first.len(), first.last(), first.get(1)), (3, Some(&42), Some(&17)));
+        assert_eq!(first.iter().rev().copied().collect::<Vec<_>>(), vec![42, 17, 0]);
+        assert!(first.abort_group_one(&view).is_err());
+        first.adopt_group(&view).expect("first non-publishing adoption");
+        assert_eq!(observed(&second), fixture["members"][1]["after"]);
+        second.adopt_group(&view).expect("second non-publishing adoption");
+        assert_eq!(observed(&first), fixture["members"][0]["after"]);
+        while first.pop().is_some() {}
+        while second.pop().is_some() {}
+        assert!(first.terminal_is_empty() && second.terminal_is_empty());
+    }
+
+    #[test]
+    fn retained_group_history_abort_transfers_one_exact_owner_and_rejects_foreign_decisions() {
+        let mut ledger = ArtifactHistoryLedger::new();
+        ledger.try_push(0).expect("seed");
+        let mut owner = ArtifactGroupVisibilityOwner::new();
+        let view = owner.view();
+        let mut foreign = ArtifactGroupVisibilityOwner::new();
+        let wrong = foreign.view();
+        for value in [17, 42] {
+            let reservation = ledger.reserve_group_one(&view).expect("exact group reservation");
+            ledger.stage_group_reserved(reservation, value, &view).expect("exact staged owner");
+        }
+        assert!(ledger.reserve_group_one(&wrong).is_err());
+        assert!(foreign.abort());
+        assert!(ledger.abort_group_one(&wrong).is_err());
+        assert!(ledger.abort_group_one(&view).is_err());
+        assert!(owner.abort());
+        assert!(!owner.commit());
+        assert_eq!(ledger.abort_group_one(&view), Ok(Some(42)));
+        assert_eq!(observed(&ledger), serde_json::json!([0]));
+        assert_eq!(ledger.abort_group_one(&view), Ok(Some(17)));
+        assert!(!ledger.terminal_is_empty());
+        assert_eq!(ledger.abort_group_one(&view), Ok(None));
+        assert_eq!(ledger.pop(), Some(0));
+        assert!(ledger.terminal_is_empty());
+    }
+}
+//#endregion 🧩️GroupHistoryVisibility
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ArtifactHistoryKey {
     pub index: u16,
@@ -170,12 +311,13 @@ pub struct ArtifactHistoryLedger<T> {
     tail: Option<u16>,
     free_head: Option<u16>,
     reservation: Option<ArtifactHistoryReservation>,
+    group: Option<ArtifactHistoryGroupSuffix>,
     len: usize,
 }
 
 impl<T> ArtifactHistoryLedger<T> {
     pub fn new() -> Self {
-        Self { slots: std::mem::ManuallyDrop::new(Vec::with_capacity(ARTIFACT_HISTORY_LEDGER_CAPACITY)), head: None, tail: None, free_head: None, reservation: None, len: 0 }
+        Self { slots: std::mem::ManuallyDrop::new(Vec::with_capacity(ARTIFACT_HISTORY_LEDGER_CAPACITY)), head: None, tail: None, free_head: None, reservation: None, group: None, len: 0 }
     }
 
     fn slot(&self, index: u16) -> &ArtifactHistorySlot<T> {
@@ -191,6 +333,13 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     pub fn reserve_one(&mut self) -> Result<ArtifactHistoryReservation, ()> {
+        if self.group.is_some() {
+            return Err(());
+        }
+        self.reserve_slot()
+    }
+
+    fn reserve_slot(&mut self) -> Result<ArtifactHistoryReservation, ()> {
         if self.reservation.is_some() {
             return Err(());
         }
@@ -217,6 +366,19 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     pub fn insert_reserved(&mut self, reservation: ArtifactHistoryReservation, value: T) -> Result<ArtifactHistoryKey, (ArtifactHistoryReservation, T)> {
+        if self.group.is_some() {
+            return Err((reservation, value));
+        }
+        let key = self.insert_owned_slot(reservation, value, self.tail)?;
+        if self.head.is_none() {
+            self.head = Some(key.index);
+        }
+        self.tail = Some(key.index);
+        self.len += 1;
+        Ok(key)
+    }
+
+    fn insert_owned_slot(&mut self, reservation: ArtifactHistoryReservation, value: T, previous: Option<u16>) -> Result<ArtifactHistoryKey, (ArtifactHistoryReservation, T)> {
         if reservation.authority != self.authority() || self.reservation.as_ref() != Some(&reservation) {
             return Err((reservation, value));
         }
@@ -226,7 +388,6 @@ impl<T> ArtifactHistoryLedger<T> {
         if Some(index) == self.free_head {
             let free_next = self.slot(index).free_next;
             self.free_head = free_next;
-            let previous = self.tail;
             let slot = self.slot_mut(index);
             slot.generation = generation;
             slot.previous = previous;
@@ -234,18 +395,101 @@ impl<T> ArtifactHistoryLedger<T> {
             slot.free_next = None;
             slot.value = Some(value);
         } else if index as usize == self.slots.len() && self.slots.len() < ARTIFACT_HISTORY_LEDGER_CAPACITY {
-            self.slots.push(std::mem::MaybeUninit::new(ArtifactHistorySlot { generation, previous: self.tail, next: None, free_next: None, value: Some(value) }));
+            self.slots.push(std::mem::MaybeUninit::new(ArtifactHistorySlot { generation, previous, next: None, free_next: None, value: Some(value) }));
         } else {
             return Err((reservation, value));
         }
-        if let Some(tail) = self.tail {
+        if let Some(tail) = previous {
             self.slot_mut(tail).next = Some(index);
-        } else {
-            self.head = Some(index);
         }
-        self.tail = Some(index);
-        self.len += 1;
         Ok(ArtifactHistoryKey { index, generation })
+    }
+
+    pub(crate) fn reserve_group_one(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<ArtifactHistoryReservation, ()> {
+        if !visibility.pending() || self.group.as_ref().is_some_and(|group| !std::sync::Arc::ptr_eq(&group.visibility, visibility)) {
+            return Err(());
+        }
+        let reservation = self.reserve_slot()?;
+        if self.group.is_none() {
+            self.group = Some(ArtifactHistoryGroupSuffix { visibility: std::sync::Arc::clone(visibility), head: None, tail: None, len: 0 });
+        }
+        Ok(reservation)
+    }
+
+    pub(crate) fn stage_group_reserved(&mut self, reservation: ArtifactHistoryReservation, value: T, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<ArtifactHistoryKey, (ArtifactHistoryReservation, T)> {
+        let Some(group) = self.group.as_ref().filter(|group| std::sync::Arc::ptr_eq(&group.visibility, visibility) && visibility.pending()) else {
+            return Err((reservation, value));
+        };
+        let previous = group.tail.or(self.tail);
+        let key = self.insert_owned_slot(reservation, value, previous)?;
+        let group = self.group.as_mut().expect("validated group suffix remains owned");
+        if group.head.is_none() {
+            group.head = Some(key.index);
+        }
+        group.tail = Some(key.index);
+        group.len += 1;
+        Ok(key)
+    }
+
+    pub(crate) fn adopt_group(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<(), ()> {
+        if self.reservation.is_some() || !visibility.committed() || !self.group.as_ref().is_some_and(|group| std::sync::Arc::ptr_eq(&group.visibility, visibility)) {
+            return Err(());
+        }
+        let group = self.group.take().expect("validated group suffix remains owned");
+        self.head = self.head.or(group.head);
+        self.tail = group.tail.or(self.tail);
+        self.len += group.len;
+        Ok(())
+    }
+
+    pub(crate) fn abort_group_one(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<Option<T>, ()> {
+        if self.reservation.is_some() || visibility.pending() || visibility.committed() {
+            return Err(());
+        }
+        let group = self.group.as_ref().filter(|group| std::sync::Arc::ptr_eq(&group.visibility, visibility)).ok_or(())?;
+        let Some(index) = group.tail else {
+            self.group = None;
+            return Ok(None);
+        };
+        let previous = self.slot(index).previous;
+        if let Some(previous) = previous {
+            self.slot_mut(previous).next = None;
+        }
+        let free_head = self.free_head;
+        let value = {
+            let slot = self.slot_mut(index);
+            slot.previous = None;
+            slot.next = None;
+            slot.free_next = free_head;
+            slot.value.take().expect("aborted group slot retains its exact entry owner")
+        };
+        self.free_head = Some(index);
+        let group = self.group.as_mut().expect("validated aborted group remains owned");
+        group.len -= 1;
+        group.tail = if group.len == 0 { None } else { previous };
+        if group.len == 0 {
+            group.head = None;
+        }
+        Ok(Some(value))
+    }
+
+    fn visible_bounds(&self) -> (Option<u16>, Option<u16>, usize) {
+        match self.group.as_ref().filter(|group| group.visibility.committed()) {
+            Some(group) => (self.head.or(group.head), group.tail.or(self.tail), self.len + group.len),
+            None => (self.head, self.tail, self.len),
+        }
+    }
+
+    pub(crate) fn group_visibility(&self) -> Option<&ArtifactGroupVisibility> {
+        self.group.as_ref().map(|group| group.visibility.as_ref())
+    }
+
+    pub(crate) fn read_group(&self, decision: Option<&ArtifactGroupReadDecision<'_>>) -> Result<ArtifactHistoryIter<'_, T>, ()> {
+        let (front, back, remaining) = match self.group.as_ref() {
+            Some(group) if decision.ok_or(())?.committed_for(&group.visibility)? => (self.head.or(group.head), group.tail.or(self.tail), self.len + group.len),
+            _ => (self.head, self.tail, self.len),
+        };
+        Ok(ArtifactHistoryIter { ledger: self, front, back, remaining })
     }
 
     pub fn try_push(&mut self, value: T) -> Result<ArtifactHistoryKey, T> {
@@ -278,7 +522,7 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     pub fn remove_key(&mut self, key: ArtifactHistoryKey) -> Result<T, ArtifactHistoryKey> {
-        if self.reservation.is_some() {
+        if self.reservation.is_some() || self.group.is_some() {
             return Err(key);
         }
         if key.index as usize >= self.slots.len() {
@@ -320,14 +564,17 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     pub fn first(&self) -> Option<&T> {
-        self.head.and_then(|index| self.slot(index).value.as_ref())
+        self.visible_bounds().0.and_then(|index| self.slot(index).value.as_ref())
     }
 
     pub fn last(&self) -> Option<&T> {
-        self.tail.and_then(|index| self.slot(index).value.as_ref())
+        self.visible_bounds().1.and_then(|index| self.slot(index).value.as_ref())
     }
 
     pub fn last_mut(&mut self) -> Option<&mut T> {
+        if self.group.is_some() {
+            return None;
+        }
         let index = self.tail?;
         self.slot_mut(index).value.as_mut()
     }
@@ -341,27 +588,29 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     pub fn len(&self) -> usize {
-        self.len
+        self.visible_bounds().2
     }
 
     pub fn has_capacity(&self) -> bool {
-        self.reservation.is_none() && (self.free_head.is_some_and(|index| self.slot(index).generation != u32::MAX) || self.slots.len() < ARTIFACT_HISTORY_LEDGER_CAPACITY)
+        self.group.is_none() && self.reservation.is_none() && (self.free_head.is_some_and(|index| self.slot(index).generation != u32::MAX) || self.slots.len() < ARTIFACT_HISTORY_LEDGER_CAPACITY)
     }
 
     pub fn is_empty(&self) -> bool {
-        self.len == 0
+        self.len() == 0
     }
 
     pub fn iter(&self) -> ArtifactHistoryIter<'_, T> {
-        ArtifactHistoryIter { ledger: self, front: self.head, back: self.tail, remaining: self.len }
+        let (front, back, remaining) = self.visible_bounds();
+        ArtifactHistoryIter { ledger: self, front, back, remaining }
     }
 
     pub fn iter_mut(&mut self) -> ArtifactHistoryIterMut<'_, T> {
+        assert!(self.group.is_none(), "mutable history iteration requires its staged group to be adopted or aborted");
         ArtifactHistoryIterMut { slots: &mut *self.slots, front: self.head, back: self.tail, remaining: self.len, marker: std::marker::PhantomData }
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.len == 0 && self.head.is_none() && self.tail.is_none() && self.reservation.is_none()
+        self.len == 0 && self.head.is_none() && self.tail.is_none() && self.reservation.is_none() && self.group.is_none()
     }
 }
 
@@ -377,6 +626,21 @@ pub struct ArtifactHistoryIter<'a, T> {
     front: Option<u16>,
     back: Option<u16>,
     remaining: usize,
+}
+
+impl<T> Clone for ArtifactHistoryIter<'_, T> {
+    fn clone(&self) -> Self {
+        Self { ledger: self.ledger, front: self.front, back: self.back, remaining: self.remaining }
+    }
+}
+
+impl<T: Serialize> Serialize for ArtifactHistoryIter<'_, T> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeSeq;
+        let mut sequence = serializer.serialize_seq(Some(self.remaining))?;
+        for entry in self.clone() { sequence.serialize_element(entry)?; }
+        sequence.end()
+    }
 }
 
 impl<'a, T> Iterator for ArtifactHistoryIter<'a, T> {
@@ -495,7 +759,9 @@ impl<T: std::fmt::Debug> std::fmt::Debug for ArtifactHistoryLedger<T> {
 
 impl<T: PartialEq> PartialEq for ArtifactHistoryLedger<T> {
     fn eq(&self, other: &Self) -> bool {
-        self.len == other.len && self.iter().zip(other.iter()).all(|(left, right)| left == right)
+        let left = self.iter();
+        let right = other.iter();
+        left.len() == right.len() && left.zip(right).all(|(left, right)| left == right)
     }
 }
 
@@ -504,22 +770,54 @@ impl<T: Eq> Eq for ArtifactHistoryLedger<T> {}
 impl<T: Serialize> Serialize for ArtifactHistoryLedger<T> {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeSeq;
-        let mut sequence = serializer.serialize_seq(Some(self.len))?;
-        for entry in self {
+        let entries = self.iter();
+        let mut sequence = serializer.serialize_seq(Some(entries.len()))?;
+        for entry in entries {
             sequence.serialize_element(entry)?;
         }
         sequence.end()
     }
 }
 
-#[derive(Debug, PartialEq, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, PartialEq)]
 pub struct ArtifactVcs<P, Mutation> {
     pub initial_snapshot: P,
     pub edits: ArtifactHistoryLedger<Edit<Mutation>>,
     pub changes: ArtifactHistoryLedger<Change>,
     pub checkpoints: ArtifactHistoryLedger<Checkpoint>,
     pub alternatives: ArtifactHistoryLedger<Alternative>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ArtifactVcsRead<'a, P, Mutation> {
+    initial_snapshot: &'a P,
+    edits: ArtifactHistoryIter<'a, Edit<Mutation>>,
+    changes: ArtifactHistoryIter<'a, Change>,
+    checkpoints: ArtifactHistoryIter<'a, Checkpoint>,
+    alternatives: ArtifactHistoryIter<'a, Alternative>,
+}
+
+impl<P, Mutation> ArtifactVcs<P, Mutation> {
+    pub(crate) fn group_visibility(&self) -> Result<Option<&ArtifactGroupVisibility>, ()> {
+        let mut visibility: Option<&ArtifactGroupVisibility> = None;
+        for candidate in [self.edits.group_visibility(), self.changes.group_visibility(), self.checkpoints.group_visibility(), self.alternatives.group_visibility()].into_iter().flatten() {
+            if visibility.is_some_and(|owner| !std::ptr::eq(owner, candidate)) { return Err(()); }
+            visibility = Some(candidate);
+        }
+        Ok(visibility)
+    }
+
+    pub(crate) fn read_group(&self, decision: Option<&ArtifactGroupReadDecision<'_>>) -> Result<ArtifactVcsRead<'_, P, Mutation>, ()> {
+        Ok(ArtifactVcsRead { initial_snapshot: &self.initial_snapshot, edits: self.edits.read_group(decision)?, changes: self.changes.read_group(decision)?, checkpoints: self.checkpoints.read_group(decision)?, alternatives: self.alternatives.read_group(decision)? })
+    }
+}
+
+impl<P: Serialize, Mutation: Serialize> Serialize for ArtifactVcs<P, Mutation> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let decision = self.group_visibility().map_err(|()| serde::ser::Error::custom("VCS read contains different group visibility authorities"))?.map(ArtifactGroupVisibility::capture);
+        self.read_group(decision.as_ref()).map_err(|()| serde::ser::Error::custom("VCS read lost its exact captured visibility decision"))?.serialize(serializer)
+    }
 }
 //#endregion 🔖️Schemas
 //#region 🔖️Errors

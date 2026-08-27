@@ -210,7 +210,7 @@ impl RasterDiff {
                 for (key, value) in &assets.entries {
                     match value {
                         Some(asset) => {
-                            next.assets.insert(key.clone(), crate::artifacts::raster::mint_and_stash_asset(key, asset));
+                            next.assets.insert(key.clone(), crate::artifacts::raster::mint_raster_asset_child(key, asset));
                         }
                         None => unreachable!("Raster asset removal was rejected before snapshot ownership was cloned"),
                     }
@@ -363,7 +363,7 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
                 for (key, value) in &assets.entries {
                     match value {
                         Some(asset) => {
-                            next.assets.insert(key.clone(), crate::artifacts::raster::mint_and_stash_asset(key, asset));
+                            next.assets.insert(key.clone(), crate::artifacts::raster::mint_raster_asset_child(key, asset));
                         }
                         None => unreachable!("Raster asset removal was rejected before snapshot ownership was cloned"),
                     }

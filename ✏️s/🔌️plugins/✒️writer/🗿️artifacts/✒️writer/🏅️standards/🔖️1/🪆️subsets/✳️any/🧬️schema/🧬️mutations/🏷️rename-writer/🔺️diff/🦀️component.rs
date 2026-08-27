@@ -1,5 +1,5 @@
 //! 🔺️ Diff fragment yielded by `RenameWriter`.
-use super::mutation::RenameWriter;
+use super::RenameWriter;
 use crate::artifacts::writer::WriterDiff;
 use crate::artifacts::writer::WriterSnapshot;
 

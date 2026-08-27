@@ -6,7 +6,7 @@
 //! is a "replace this node" editor, not a structural insert/remove editor — `SetMember`/
 //! `RemoveMember`/`InsertArrayElement`/`RemoveArrayElement` stay unreachable through this window).
 
-use crate::artifacts::json::schema::mutations::{JsonPath, JsonPathSegment};
+use crate::artifacts::json::schema::mutations::{JsonPath, JsonPathSegment, SetScalarMutation, SetScalarPayload};
 use crate::artifacts::json::schema::snapshot::JsonValue;
 use crate::artifacts::json::{JsonMutation, JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 use crate::editor::json_i_json::modes::edit;
@@ -122,7 +122,7 @@ impl ArtifactEditor for JsonIJsonEditor {
     ) -> Result<Emit<Self::Mutation>, Fault> {
         let JsonIJsonIJsonEditorCommand::SetNode { node_id, value } = command;
         let Ok(path) = decode_path_id(node_id) else { return Ok(Emit::default()) };
-        Ok(Emit { artifact_mutations: vec![JsonMutation::SetScalar { path, value: JsonValue::String { value: value.clone() } }], description: Some(format!("Set node {node_id}")), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path, value: JsonValue::String { value: value.clone() } }))], description: Some(format!("Set node {node_id}")), ..Default::default() })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

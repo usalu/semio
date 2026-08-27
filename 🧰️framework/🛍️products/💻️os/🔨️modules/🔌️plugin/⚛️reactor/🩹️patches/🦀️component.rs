@@ -2,9 +2,11 @@
 
 use semio_framework_job::{CancelToken, Generation, OperationId, StepBudget, StepContext};
 use semio_framework_ui_contract as ui_contract;
+#[cfg(test)]
+use semio_framework_ui_runtime::ComponentTree;
 use semio_framework_ui_runtime::{
-    ComponentTree, ComponentTreeProducer, ComponentTreeProducerStep, SurfaceReconcileJob, SurfaceReconcileJobStep, SurfaceReconcilePublishedAck, SurfaceReconcileReadyPatch, SurfaceReconcileRejected, SurfaceReconcileReservation,
-    SurfaceReconcileTerminal, SurfaceReconciler, TreeNode, SURFACE_RECONCILE_ADMISSION_SLOTS,
+    ComponentTreeProducer, ComponentTreeProducerStep, SurfaceReconcileJob, SurfaceReconcileJobStep, SurfaceReconcilePublishedAck, SurfaceReconcileReadyPatch, SurfaceReconcileRejected, SurfaceReconcileReservation, SurfaceReconcileTerminal,
+    SurfaceReconciler, TreeNode, SURFACE_RECONCILE_ADMISSION_SLOTS,
 };
 use std::cell::RefCell;
 
@@ -75,6 +77,7 @@ struct RejectedSlot {
 
 struct ReadySlot {
     generation: u64,
+    instance: Option<u32>,
     authority: SurfaceReconcileReadyPatch,
 }
 
@@ -499,7 +502,7 @@ impl PatchTracker {
                             reconciler: producer.reconciler.take(),
                             reservation: producer.reservation.take(),
                             authority: Some(producer.authority),
-                            close: true,
+                            close: false,
                         });
                     } else {
                         slot.producer = Some(producer);
@@ -532,7 +535,7 @@ impl PatchTracker {
                     slot.reconciler = Some(reconciler);
                     if let Some(patch) = patch {
                         if let Some(ready_index) = ready_index {
-                            state.ready[ready_index] = Some(ReadySlot { generation: slot.generation, authority: patch });
+                            state.ready[ready_index] = Some(ReadySlot { generation: slot.generation, instance: surface_instance(slot.surface.as_ref()), authority: patch });
                         } else {
                             drop(patch);
                         }
@@ -556,15 +559,27 @@ impl PatchTracker {
         has_work(&self.state.borrow())
     }
 
+    /// 🚨️ Returns one mounted surface failure while retaining its incremental cleanup owner.
+    pub fn take_render_fault(&self) -> Option<(u32, String)> {
+        let mut state = self.state.borrow_mut();
+        for terminal in state.producer_terminals.iter_mut().flatten().filter(|terminal| !terminal.close) {
+            if let Some(fault) = terminal.authority.as_ref().and_then(|authority| authority.fault()) {
+                terminal.close = true;
+                return Some((terminal.instance.unwrap_or(0), format!("{}: {fault:?}", terminal.surface.as_ref())));
+            }
+        }
+        let terminal = state.terminals.iter_mut().flatten().find(|terminal| !terminal.close && terminal.authority.fault().is_some())?;
+        let fault = terminal.authority.fault().cloned()?;
+        let generation = terminal.authority.generation();
+        let instance = terminal.instance.unwrap_or(0);
+        terminal.close = true;
+        let surface = state.slots.iter().flatten().find(|slot| slot.generation == generation).map(|slot| slot.surface.as_ref()).unwrap_or("unknown surface");
+        Some((instance, format!("{surface}: {fault:?}")))
+    }
+
     pub fn take_ready_patch(&self) -> Option<SurfaceReconcileReadyPatch> {
         let mut state = self.state.borrow_mut();
-        let ready_generation = state
-            .ready
-            .iter()
-            .flatten()
-            .filter(|ready| !state.closing_instances.iter().flatten().any(|closing| ready.authority.surface().and_then(|surface| surface_instance(&surface.0)) == Some(closing.instance)))
-            .map(|ready| ready.generation)
-            .min()?;
+        let ready_generation = state.ready.iter().flatten().filter(|ready| !state.closing_instances.iter().flatten().any(|closing| ready.instance == Some(closing.instance))).map(|ready| ready.generation).min()?;
         let pending_generation = state.slots.iter().flatten().filter(|slot| slot.producer.is_some() || slot.job.is_some()).map(|slot| slot.generation).min();
         if pending_generation.is_some_and(|pending| pending < ready_generation) {
             return None;
@@ -577,7 +592,7 @@ impl PatchTracker {
         let generation = authority.generation();
         let mut state = self.state.borrow_mut();
         let Some(target) = state.ready.iter_mut().find(|slot| slot.is_none()) else { return Err(authority) };
-        *target = Some(ReadySlot { generation, authority });
+        *target = Some(ReadySlot { generation, instance: authority.surface().and_then(|surface| surface_instance(surface.as_ref())), authority });
         Ok(())
     }
 
@@ -678,7 +693,7 @@ impl PatchTracker {
                     return false;
                 }
             }
-            if let Some(ready_index) = state.ready.iter().position(|ready| ready.as_ref().is_some_and(|ready| ready.authority.surface().and_then(|surface| surface_instance(&surface.0)) == Some(closing.instance))) {
+            if let Some(ready_index) = state.ready.iter().position(|ready| ready.as_ref().is_some_and(|ready| ready.instance == Some(closing.instance))) {
                 let ready = state.ready[ready_index].as_mut().expect("matching ready patch");
                 if ready.authority.close_step() {
                     state.ready[ready_index] = None;
@@ -834,8 +849,8 @@ impl PatchTracker {
 
 fn has_work(state: &PatchTrackerState) -> bool {
     state.slots.iter().flatten().any(|slot| slot.producer.is_some() || slot.job.is_some())
-        || state.terminals.iter().flatten().any(|slot| slot.close)
-        || state.producer_terminals.iter().flatten().any(|slot| slot.close)
+        || state.terminals.iter().any(Option::is_some)
+        || state.producer_terminals.iter().any(Option::is_some)
         || state.deferred.iter().any(Option::is_some)
         || state.unadmitted.iter().any(Option::is_some)
         || state.closing_instances.iter().any(Option::is_some)
@@ -868,6 +883,12 @@ mod tests {
         let value = ui_contract::UiText::try_from_str(text).expect("bounded test text");
         let root = TreeNode::try_new(key, ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(value), emphasize: None, data_attributes: None })).unwrap_or_else(|_| panic!("bounded test tree"));
         ComponentTree { root }
+    }
+
+    fn tree_with_owned_child(text: &str) -> ComponentTree {
+        let mut tree = leaf("root", text);
+        tree.root.children.try_push(leaf("owned-child", text).root).expect("bounded owned child");
+        tree
     }
 
     fn finish(tracker: &PatchTracker) -> Option<ui_contract::UiPatch> {
@@ -941,18 +962,232 @@ mod tests {
     }
 
     #[test]
-    fn one_active_surface_does_not_wait_behind_sixty_three_empty_slots_between_steps() {
+    fn mounted_document_tree_publishes_nested_interactive_rows() {
+        use ui_contract::{Buildable, HasBase, HasChildren};
+        fn row(value: &serde_json::Value) -> ui_contract::BuiltNode {
+            let id = value["id"].as_str().unwrap();
+            let mut builder = ui_contract::tree_item(ui_contract::Label(ui_contract::UiText::try_from_str(id).unwrap())).try_id(id).ok().unwrap();
+            let action = |name: &str| serde_json::from_value(serde_json::json!({ "scope": "fixture", "name": name, "version": 1 })).unwrap();
+            let args = || serde_json::from_value(serde_json::json!({ "domainId": "fixture", "merge": "replace", "method": "pick", "targets": id })).unwrap();
+            builder = builder.try_on_with(ui_contract::Trigger::Activate, action("select"), args()).ok().unwrap();
+            for name in value["rowActions"].as_array().into_iter().flatten() {
+                let name = name.as_str().unwrap();
+                builder = builder
+                    .try_row_action(ui_contract::RowAction {
+                        icon: ui_contract::UiText::try_from_str(name).unwrap(),
+                        label: Some(ui_contract::Label(ui_contract::UiText::try_from_str(name).unwrap())),
+                        action: ui_contract::ActionBinding { trigger: ui_contract::Trigger::Activate, action: action(name), args: Some(args()), capability: None },
+                        placement: ui_contract::RowActionPlacement::Row,
+                    })
+                    .ok()
+                    .unwrap();
+            }
+            builder.try_children(value["children"].as_array().into_iter().flatten().map(row)).ok().unwrap().try_build().unwrap()
+        }
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️document-surface.json")).unwrap();
+        assert_eq!(ui_contract::UI_NODE_BINDINGS as u64, fixture["limits"]["nodeBindings"].as_u64().unwrap());
+        assert_eq!(semio_framework_ui_runtime::SurfaceReconcileLimits::default().max_bytes as u64, fixture["limits"]["surfaceBytes"].as_u64().unwrap());
+        assert_eq!(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES as u64, fixture["limits"]["pageBytes"].as_u64().unwrap());
+        assert_eq!(semio_framework_ui_runtime::SURFACE_RECONCILE_AGGREGATE_BYTES as u64, fixture["limits"]["aggregateBytes"].as_u64().unwrap());
+        let sections = fixture["sections"].as_array().unwrap().iter().map(|section| {
+            ui_contract::tree_section(ui_contract::Label(ui_contract::UiText::try_from_str(section["id"].as_str().unwrap()).unwrap()))
+                .try_id(section["id"].as_str().unwrap())
+                .ok()
+                .unwrap()
+                .try_children(section["rows"].as_array().unwrap().iter().map(row))
+                .ok()
+                .unwrap()
+                .try_build()
+                .unwrap()
+        });
+        let root = ui_contract::tree().try_id("document").ok().unwrap().try_children(sections).ok().unwrap().try_build().unwrap();
         let tracker = PatchTracker::new();
-        tracker.begin("main".into(), leaf("root", "a")).expect("admitted");
-        let mut patch = None;
-        for _ in 0..32 {
+        tracker.reserve_mounted(ui_contract::SurfaceId::try_from(fixture["surface"].as_str().unwrap()).unwrap()).unwrap().commit_source(root).unwrap();
+        let patch = finish(&tracker).unwrap_or_else(|| panic!("document never published: {:?}", tracker.state.borrow().terminals.iter().flatten().map(|slot| slot.authority.fault()).collect::<Vec<_>>()));
+        let nodes = patch.ops.iter().filter_map(|op| if let ui_contract::UiPatchOp::Upsert(node) = op { Some(node) } else { None }).collect::<Vec<_>>();
+        assert_eq!(nodes.len(), fixture["nodes"].as_u64().unwrap() as usize);
+        assert_eq!(nodes.iter().filter(|node| !node.bindings.is_empty()).count(), fixture["interactiveRows"].as_u64().unwrap() as usize);
+    }
+
+    #[test]
+    fn mounted_settings_controls_publish_with_authored_fields() {
+        use ui_contract::{Buildable, HasBase, HasChildren};
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️settings-surface.json")).expect("language-neutral settings");
+        let fields = fixture["fields"].as_array().unwrap();
+        let children = fields.iter().map(|field| {
+            let id = field["id"].as_str().unwrap();
+            let action = serde_json::from_value(serde_json::json!({ "scope": "fixture", "name": field["action"], "version": 1 })).unwrap();
+            let mut control =
+                ui_contract::BuiltNode::try_new(format!("{id}.control"), ui_contract::Component::NumberStepper(ui_contract::NumberStepperProps { value: field["value"].as_f64().unwrap(), step: field["step"].as_f64().unwrap(), uniform: false }))
+                    .ok()
+                    .unwrap();
+            control.bindings.try_push(ui_contract::ActionBinding { trigger: ui_contract::Trigger::Change, action, args: None, capability: None }).ok().unwrap();
+            ui_contract::field(ui_contract::Label(ui_contract::UiText::try_from_str(field["label"].as_str().unwrap()).unwrap())).try_id(id).ok().unwrap().try_child(control).ok().unwrap().try_build().unwrap()
+        });
+        let root = ui_contract::section(ui_contract::Label(ui_contract::UiText::try_from_str(fixture["label"].as_str().unwrap()).unwrap())).try_id("settings").ok().unwrap().default_open(true).try_children(children).ok().unwrap().try_build().unwrap();
+        let tracker = PatchTracker::new();
+        tracker.reserve_mounted(ui_contract::SurfaceId::try_from(fixture["surface"].as_str().unwrap()).unwrap()).unwrap().commit_source(root).unwrap();
+        let patch = finish(&tracker).unwrap_or_else(|| panic!("settings never published: {:?}", tracker.state.borrow().slots.iter().flatten().map(|slot| &slot.job).collect::<Vec<_>>()));
+        let controls = patch
+            .ops
+            .iter()
+            .filter_map(|op| match op {
+                ui_contract::UiPatchOp::Upsert(node) => match &node.component {
+                    ui_contract::Component::NumberStepper(props) => Some(serde_json::json!({ "value": props.value, "step": props.step, "action": node.bindings[0].action.name.as_str() })),
+                    _ => None,
+                },
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(controls, fields.iter().map(|field| serde_json::json!({ "value": field["value"], "step": field["step"], "action": field["action"] })).collect::<Vec<_>>());
+    }
+
+    #[test]
+    fn mounted_catalogue_publishes_every_section_beyond_thirty_two_nodes() {
+        use ui_contract::{Buildable, HasBase, HasChildren};
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️catalogue-surface.json")).unwrap();
+        let rows = fixture["rowsPerSection"].as_u64().unwrap();
+        let mut expected = std::collections::BTreeSet::new();
+        let sections = fixture["sections"].as_array().unwrap().iter().map(|section| {
+            let section = section.as_str().unwrap();
+            let children = (0..rows).map(|row| {
+                let key = format!("{section}.{row}");
+                expected.insert(key.clone());
+                leaf(&key, &key).root
+            });
+            ui_contract::tree_section(ui_contract::Label(ui_contract::UiText::try_from_str(section).unwrap())).try_id(section).ok().unwrap().try_children(children).ok().unwrap().try_build().unwrap()
+        });
+        let root = ui_contract::tree().try_id("catalogue").ok().unwrap().try_children(sections).ok().unwrap().try_build().unwrap();
+        assert_eq!(expected.len() as u64, fixture["expectedRows"].as_u64().unwrap());
+        let tracker = PatchTracker::new();
+        tracker.reserve_mounted(ui_contract::SurfaceId::try_from(fixture["surface"].as_str().unwrap()).unwrap()).unwrap().commit_source(root).unwrap();
+        let mut published = None;
+        for _ in 0..65_536 {
             tracker.drive_one();
             if let Some(owner) = tracker.take_ready_patch() {
-                patch = owner.publish().expect("ready owner retains its patch").0.into();
+                let (patch, authority) = owner.publish().expect("published catalogue");
+                let acknowledgement = authority.acknowledge(fixture["surface"].as_str().unwrap(), patch.revision.0).unwrap_or_else(|_| panic!("exact catalogue acknowledgement"));
+                tracker.mark_published_ack(acknowledgement).unwrap_or_else(|_| panic!("accepted catalogue acknowledgement"));
+                published = Some(patch);
                 break;
             }
+            if !tracker.has_work() { break; }
         }
-        assert!(patch.is_some(), "one leaf surface must reconcile within 32 active steps");
+        let fault = format!("{:?}", tracker.state.borrow().terminals.iter().flatten().map(|slot| slot.authority.fault()).collect::<Vec<_>>());
+        close_instance_to_empty(&tracker, 1);
+        let patch = published.unwrap_or_else(|| panic!("catalogue did not publish: {fault}"));
+        let nodes = patch.ops.iter().filter_map(|op| if let ui_contract::UiPatchOp::Upsert(node) = op { Some(node) } else { None }).collect::<Vec<_>>();
+        assert_eq!(nodes.len() as u64, fixture["expectedNodes"].as_u64().unwrap());
+        assert_eq!(nodes.iter().filter(|node| matches!(node.component, ui_contract::Component::Text(_))).map(|node| node.key.to_string()).collect::<std::collections::BTreeSet<_>>(), expected);
+    }
+
+    #[test]
+    fn mounted_catalogue_reports_producer_failure_once_before_cleanup() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️catalogue-surface.json")).unwrap();
+        let failure = &fixture["failure"];
+        let key = failure["key"].as_str().unwrap();
+        let mut root = leaf("catalogue", "Catalogue").root;
+        root.children.try_push(leaf(key, key).root).unwrap();
+        root.children.try_push(leaf(key, key).root).unwrap();
+        let tracker = PatchTracker::new();
+        tracker.reserve_mounted(ui_contract::SurfaceId::try_from(failure["surface"].as_str().unwrap()).unwrap()).unwrap().commit_source(root).unwrap();
+        let mut reported = None;
+        for _ in 0..4096 {
+            tracker.drive_one();
+            if let Some(fault) = tracker.take_render_fault() { reported = Some(fault); break; }
+        }
+        assert!(tracker.take_ready_patch().is_none());
+        assert!(tracker.take_render_fault().is_none());
+        close_instance_to_empty(&tracker, failure["instance"].as_u64().unwrap() as u32);
+        let (instance, reason) = reported.expect("producer fault must not disappear during cleanup");
+        assert_eq!(instance as u64, failure["instance"].as_u64().unwrap());
+        assert!(reason.contains(failure["surface"].as_str().unwrap()));
+        assert!(reason.contains(failure["reason"].as_str().unwrap()));
+    }
+
+    #[test]
+    fn mounted_catalogue_reports_reconcile_capacity_without_leaking_owners() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️catalogue-surface.json")).unwrap();
+        let failure = &fixture["capacityFailure"];
+        assert_eq!(ui_contract::UI_DOCUMENT_NODES as u64, failure["nodeLimit"].as_u64().unwrap());
+        let mut root = leaf("catalogue", "Catalogue").root;
+        for section in 0..failure["sections"].as_u64().unwrap() {
+            let mut child = leaf(&section.to_string(), "Section").root;
+            for row in 0..failure["rowsPerSection"].as_u64().unwrap() {
+                child.children.try_push(leaf(&row.to_string(), "Row").root).unwrap();
+            }
+            root.children.try_push(child).unwrap();
+        }
+        let tracker = PatchTracker::new();
+        tracker.reserve_mounted(ui_contract::SurfaceId::try_from(failure["surface"].as_str().unwrap()).unwrap()).unwrap().commit_source(root).unwrap();
+        let mut reported = None;
+        for _ in 0..65_536 {
+            tracker.drive_one();
+            if let Some(fault) = tracker.take_render_fault() { reported = Some(fault); break; }
+        }
+        assert!(tracker.take_ready_patch().is_none());
+        assert!(tracker.take_render_fault().is_none());
+        close_instance_to_empty(&tracker, failure["instance"].as_u64().unwrap() as u32);
+        let (instance, reason) = reported.expect("reconcile failure must not become an idle empty surface");
+        assert_eq!(instance as u64, failure["instance"].as_u64().unwrap());
+        assert!(reason.contains(failure["surface"].as_str().unwrap()));
+        assert!(reason.contains(failure["reason"].as_str().unwrap()));
+    }
+
+    #[test]
+    fn mounted_sources_publish_every_window_and_panel_tree() {
+        use ui_contract::{Buildable, HasBase, HasChildren};
+        let fixtures: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️mounted-surfaces.json")).expect("language-neutral surface fixtures");
+        let fixtures = fixtures.as_array().expect("surface list");
+        let tracker = PatchTracker::new();
+        for fixture in fixtures {
+            let surface = fixture["surface"].as_str().expect("surface key");
+            let children = fixture["children"].as_array().expect("child keys").iter().map(|key| {
+                let mut node = leaf(key.as_str().expect("child key"), "content").root;
+                let action = serde_json::from_value(fixture["action"].clone()).expect("language-neutral action");
+                node.bindings.try_push(ui_contract::ActionBinding { trigger: ui_contract::Trigger::Activate, action, args: None, capability: None }).expect("bounded binding");
+                node
+            });
+            let root = ui_contract::column().try_id(surface).ok().expect("bounded key").try_children(children).ok().expect("bounded children").try_build().expect("bounded root");
+            tracker.reserve_mounted(ui_contract::SurfaceId::try_from(surface).expect("bounded surface")).expect("mounted reservation").commit_source(root).expect("mounted producer");
+            let patch = finish(&tracker).unwrap_or_else(|| {
+                let state = tracker.state.borrow();
+                panic!(
+                    "surface {} never published: {:?}; terminals={}, rejected={}",
+                    fixture["surface"],
+                    state.slots.iter().flatten().map(|slot| (&slot.surface, slot.producer.as_ref().map(|producer| producer.authority.fault()), &slot.job, slot.reconciler.is_some())).collect::<Vec<_>>(),
+                    state.terminals.iter().flatten().count(),
+                    state.rejected.iter().flatten().count()
+                );
+            });
+            assert_eq!(patch.surface.0.as_str(), fixture["surface"].as_str().unwrap());
+            assert_eq!(patch.ops.iter().filter(|op| matches!(op, ui_contract::UiPatchOp::Upsert(..))).count(), 1 + fixture["children"].as_array().unwrap().len());
+            for op in &patch.ops {
+                if let ui_contract::UiPatchOp::Upsert(record) = op {
+                    if record.key.as_str() != surface {
+                        assert_eq!(serde_json::to_value(&record.bindings[0].action).expect("action wire oracle"), fixture["action"]);
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn one_active_surface_does_not_wait_behind_sixty_three_empty_slots_between_steps() {
+        let steps = [0, SURFACE_RECONCILE_ADMISSION_SLOTS - 1].map(|index| {
+            let tracker = PatchTracker::new();
+            tracker.begin("main".into(), leaf("root", "a")).expect("admitted");
+            tracker.state.borrow_mut().slots.swap(0, index);
+            for step in 1..=4_096 {
+                tracker.drive_one();
+                if let Some(owner) = tracker.take_ready_patch() {
+                    drop(owner.publish().expect("ready owner retains its patch"));
+                    return step;
+                }
+            }
+            panic!("active surface never published");
+        });
+        assert_eq!(steps[0], steps[1], "empty slots consume no reconcile opportunities");
     }
 
     #[test]
@@ -1001,10 +1236,10 @@ mod tests {
                 });
             }
         }
-        let tree = leaf("root", "exact");
-        let pointer = tree.root.key.as_ptr();
+        let tree = tree_with_owned_child("exact");
+        let pointer = tree.root.children.get(0).unwrap().key.as_ptr();
         let (_, returned) = tracker.begin("65:main".into(), tree).expect_err("cap + 1");
-        assert_eq!(returned.root.key.as_ptr(), pointer);
+        assert_eq!(returned.root.children.get(0).unwrap().key.as_ptr(), pointer);
     }
 
     #[test]
@@ -1018,13 +1253,14 @@ mod tests {
         assert!(tracker.state.borrow().unadmitted.iter().all(Option::is_none));
         assert!(tracker.state.borrow().slots.iter().flatten().any(|slot| slot.generation == generation && slot.job.is_some()));
 
-        for index in 0..SURFACE_RECONCILE_ADMISSION_SLOTS - 1 {
+        let capacity = semio_framework_ui_runtime::SURFACE_RECONCILE_AGGREGATE_BYTES / semio_framework_ui_runtime::SurfaceReconcileLimits::default().max_bytes;
+        for index in 0..capacity - 1 {
             tracker.retain_unadmitted(format!("{index}:queued"), leaf("root", "queued")).expect("fixed unadmitted slot");
         }
-        let overflow = leaf("root", "overflow");
-        let overflow_pointer = overflow.root.key.as_ptr();
+        let overflow = tree_with_owned_child("overflow");
+        let overflow_pointer = overflow.root.children.get(0).unwrap().key.as_ptr();
         let (_, returned) = tracker.retain_unadmitted("66:queued".into(), overflow).expect_err("cap + 1 returns the exact tree");
-        assert_eq!(returned.root.key.as_ptr(), overflow_pointer);
+        assert_eq!(returned.root.children.get(0).unwrap().key.as_ptr(), overflow_pointer);
         assert!(tracker.reserve_mounted(ui_contract::SurfaceId::try_from("67:mounted").expect("bounded surface")).is_err(), "render cannot materialize before a fixed slot exists");
     }
 
@@ -1097,8 +1333,11 @@ mod tests {
 
     #[test]
     fn close_retires_ready_deferred_unadmitted_active_and_terminal_owners_without_stale_publish() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️surface-close.json")).unwrap();
+        let instance = fixture["instance"].as_u64().unwrap() as u32;
+        let surface = |key: &str| fixture["surfaces"][key].as_str().unwrap();
         let tracker = PatchTracker::new();
-        tracker.begin("12:ready".into(), leaf("root", "ready")).expect("ready source");
+        tracker.begin(surface("ready").into(), leaf("root", "ready")).expect("ready source");
         for _ in 0..128 {
             tracker.drive_one();
             if tracker.state.borrow().ready.iter().any(Option::is_some) {
@@ -1106,25 +1345,25 @@ mod tests {
             }
         }
         assert!(tracker.state.borrow().ready.iter().any(Option::is_some));
-        assert!(tracker.defer(ui_contract::SurfaceId::try_from("12:deferred").expect("bounded surface")).is_ok());
-        tracker.retain_unadmitted("12:queued".into(), leaf("root", "queued")).expect("unadmitted");
-        tracker.begin("12:active".into(), leaf("root", "active")).expect("active");
+        assert!(tracker.defer(ui_contract::SurfaceId::try_from(surface("deferred")).expect("bounded surface")).is_ok());
+        tracker.retain_unadmitted(surface("queued").into(), leaf("root", "queued")).expect("unadmitted");
+        tracker.begin(surface("active").into(), leaf("root", "active")).expect("active");
         {
             let mut state = tracker.state.borrow_mut();
             let target = state.terminals.iter_mut().find(|slot| slot.is_none()).expect("terminal capacity");
-            let surface = ui_contract::SurfaceId::try_from("12:terminal").expect("bounded surface fixture");
-            *target = Some(TerminalSlot { instance: Some(12), authority: SurfaceReconcileTerminal::try_from_reconciler(SurfaceReconciler::new(surface), 90_012).expect("fixed terminal admission"), close: true });
+            let surface = ui_contract::SurfaceId::try_from(surface("terminal")).expect("bounded surface fixture");
+            *target = Some(TerminalSlot { instance: Some(instance), authority: SurfaceReconcileTerminal::try_from_reconciler(SurfaceReconciler::new(surface), 90_012).expect("fixed terminal admission"), close: true });
         }
-        tracker.begin_close_instance(12);
-        assert!(tracker.take_ready_patch().is_none(), "close prevents stale ready publication");
+        tracker.begin_close_instance(instance);
+        assert_eq!(tracker.take_ready_patch().is_some(), fixture["stalePatch"].as_bool().unwrap());
         for _ in 0..16_384 {
             tracker.close_step();
             if tracker.terminal_is_empty() {
                 break;
             }
         }
-        assert!(tracker.terminal_is_empty());
-        assert!(tracker.take_ready_patch().is_none());
+        assert_eq!(tracker.terminal_is_empty(), fixture["terminalEmpty"].as_bool().unwrap());
+        assert_eq!(tracker.take_ready_patch().is_some(), fixture["stalePatch"].as_bool().unwrap());
     }
 
     #[test]
@@ -1166,10 +1405,9 @@ mod tests {
     #[test]
     fn terminal_full_plus_matching_rejected_advances_capacity_before_conversion() {
         let tracker = PatchTracker::new();
-        for index in 0..=4 {
-            tracker.begin(format!("52:surface-{index}"), leaf("root", "rejected")).expect("fixed surface slot");
-        }
-        assert!(tracker.state.borrow().rejected.iter().any(Option::is_some), "aggregate cap produces an exact rejected owner");
+        let identifier_bytes = semio_framework_ui_runtime::SurfaceReconcileLimits::default().max_identifier_bytes;
+        tracker.begin(format!("52:{}", "x".repeat(identifier_bytes)), leaf("root", "rejected")).expect("fixed surface slot");
+        assert!(tracker.state.borrow().rejected.iter().any(Option::is_some), "identifier cap produces an exact rejected owner");
         saturate_terminals(&tracker, 52, 520_000);
         close_instance_to_empty(&tracker, 52);
     }
@@ -1204,14 +1442,14 @@ mod tests {
         }
         assert_eq!(tracker.begin("61:first".into(), leaf("root", "first")).expect("near maximum"), u64::MAX - 1);
         assert_eq!(tracker.retain_unadmitted("61:maximum".into(), leaf("root", "maximum")).expect("maximum once"), u64::MAX);
-        let refused = leaf("root", "post-maximum");
-        let refused_pointer = refused.root.key.as_ptr();
+        let refused = tree_with_owned_child("post-maximum");
+        let refused_pointer = refused.root.children.get(0).unwrap().key.as_ptr();
         let (_, refused) = tracker.begin("61:refused".into(), refused).expect_err("first post-maximum refuses");
-        assert_eq!(refused.root.key.as_ptr(), refused_pointer);
-        let repeated = leaf("root", "repeated");
-        let repeated_pointer = repeated.root.key.as_ptr();
+        assert_eq!(refused.root.children.get(0).unwrap().key.as_ptr(), refused_pointer);
+        let repeated = tree_with_owned_child("repeated");
+        let repeated_pointer = repeated.root.children.get(0).unwrap().key.as_ptr();
         let (_, repeated) = tracker.retain_unadmitted("61:repeated".into(), repeated).expect_err("repeated refusal is stable");
-        assert_eq!(repeated.root.key.as_ptr(), repeated_pointer);
+        assert_eq!(repeated.root.children.get(0).unwrap().key.as_ptr(), repeated_pointer);
         let state = tracker.state.borrow();
         assert_eq!(state.next_generation, u64::MAX);
         assert!(state.generation_exhausted);

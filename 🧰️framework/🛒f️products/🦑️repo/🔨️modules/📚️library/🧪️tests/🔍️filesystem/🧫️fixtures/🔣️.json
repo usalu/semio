@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schemaVersion": 1,
+  "directories": [".hidden", "target", "é"],
+  "files": [
+    { "path": ".hidden/🔣️.json", "content": "hidden\n" },
+    { "path": "alpha.txt", "content": "alpha\n" },
+    { "path": "target/poison.txt", "content": "must not appear below alias\n" },
+    { "path": "é/café.txt", "content": "distinct normalization forms\n" }
+  ],
+  "symlinks": [{ "path": "alias", "target": "target" }],
+  "expected": [
+    { "nodeKind": "directory", "path": ".hidden" },
+    { "nodeKind": "file", "path": ".hidden/🔣️.json" },
+    { "nodeKind": "symlink", "path": "alias" },
+    { "nodeKind": "file", "path": "alpha.txt" },
+    { "nodeKind": "directory", "path": "target" },
+    { "nodeKind": "file", "path": "target/poison.txt" },
+    { "nodeKind": "directory", "path": "é" },
+    { "nodeKind": "file", "path": "é/café.txt" }
+  ]
+}

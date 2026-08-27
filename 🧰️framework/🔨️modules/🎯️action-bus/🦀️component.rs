@@ -160,7 +160,7 @@ impl RetainedToolWireInput {
     }
 
     pub fn page(&self, index: usize) -> Option<&[u8]> {
-        self.sealed.then(|| self.pages.get(index).map(ToolWirePage::as_slice)).flatten()
+        (self.sealed && !self.closing).then(|| self.pages.get(index).map(ToolWirePage::as_slice)).flatten()
     }
 
     pub fn page_count(&self) -> usize {
@@ -177,18 +177,31 @@ impl RetainedToolWireInput {
 
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
         self.begin_close();
-        let Some(page) = self.pages.last() else { return semio_framework_job::InteractiveJobCloseStep::Complete };
-        if maximum_items == 0 || maximum_bytes < page.len() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        if self.terminal_is_empty() {
+            return semio_framework_job::InteractiveJobCloseStep::Complete;
         }
-        let released_bytes = page.len();
-        drop(self.pages.pop());
-        self.admitted_bytes = self.admitted_bytes.saturating_sub(released_bytes);
-        semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes }
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        }
+        if let Some(page) = self.pages.last_mut() {
+            if !page.is_empty() && maximum_bytes == 0 {
+                return semio_framework_job::InteractiveJobCloseStep::Blocked;
+            }
+            let released_bytes = maximum_bytes.min(page.len);
+            page.len -= released_bytes;
+            self.admitted_bytes = self.admitted_bytes.checked_sub(released_bytes).expect("retained wire byte accounting diverged");
+            let released_items = usize::from(page.is_empty());
+            if released_items != 0 {
+                self.pages.truncate(self.pages.len() - 1);
+            }
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        }
+        drop(std::mem::take(&mut self.pages));
+        semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.closing && self.pages.is_empty() && self.admitted_bytes == 0
+        self.closing && self.pages.is_empty() && self.pages.capacity() == 0 && self.admitted_bytes == 0
     }
 }
 
@@ -792,6 +805,10 @@ pub fn optional_json_to_dsl(args: Option<serde_json::Value>) -> Option<DslValue>
 }
 
 #[cfg(test)]
+#[path = "🧹️wire-retirement/🧪️component.rs"]
+mod wire_retirement_tests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use semio_framework_job::{allocate_operation_id, CommitCandidate, Generation, RevisionId};
@@ -1078,14 +1095,20 @@ mod tests {
                 if input.terminal_is_empty() {
                     self.input = None;
                 }
-                return step;
+                return match step {
+                    semio_framework_job::InteractiveJobCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                    other => other,
+                };
             }
             if let Some(output) = self.output.as_mut() {
                 let step = output.close_step(maximum_items, maximum_bytes);
                 if output.terminal_is_empty() {
                     self.output = None;
                 }
-                return step;
+                return match step {
+                    semio_framework_job::InteractiveJobCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                    other => other,
+                };
             }
             semio_framework_job::InteractiveJobCloseStep::Complete
         }

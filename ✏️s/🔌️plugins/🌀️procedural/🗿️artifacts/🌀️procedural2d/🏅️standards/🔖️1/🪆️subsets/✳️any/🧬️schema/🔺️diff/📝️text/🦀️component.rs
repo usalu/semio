@@ -63,7 +63,7 @@ pub(crate) fn apply_synapses_diff(synapses: &mut Vec<SynapseSpec>, diff: &Synaps
     }
 }
 
-fn apply_layout_diff(layout: &mut std::collections::BTreeMap<String, WidgetLayout>, diff: &LayoutDiff) {
+fn apply_layout_diff(layout: &mut flow::OrderedMap<WidgetLayout>, diff: &LayoutDiff) {
     for id in &diff.removed {
         layout.remove(id);
     }
@@ -110,7 +110,7 @@ impl Procedural2dDiff {
                 next.fixture = fixture.clone();
             }
             if let Some(generation) = &self.generation {
-                next.generation = generation.clone();
+                std::mem::replace(&mut next.generation, generation.clone()).retire_cold();
             }
             if let Some(list) = &self.selected_ids {
                 next.selected_ids = list.values.clone();
@@ -146,7 +146,7 @@ impl MutationDiff<Procedural2dSnapshot> for Procedural2dDiff {
                 next.fixture = fixture.clone();
             }
             if let Some(generation) = &self.generation {
-                next.generation = generation.clone();
+                std::mem::replace(&mut next.generation, generation.clone()).retire_cold();
             }
             next
         })
@@ -185,7 +185,7 @@ pub fn diff_fixture_from_helpers(base: &Procedural2dSnapshot, widgets: WidgetsDi
 /// 🏗️ Generation field delta after applying ordered generation mutations.
 pub fn diff_generation_from_ops(base: &Procedural2dSnapshot, ops: Vec<GenerationMutation>) -> Procedural2dDiff {
     let generation = apply_generation_helpers(&base.generation, &ops);
-    Procedural2dDiff { generation: Some(generation), ..Procedural2dDiff::default() }
+    Procedural2dDiff { generation: Some(generation.into()), ..Procedural2dDiff::default() }
 }
 //#endregion 🔖️Constructors
 

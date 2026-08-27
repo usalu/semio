@@ -1,6 +1,40 @@
-//! ⚡️ RewriteRule artifact — OpText/OpBinary codecs + grammar for `RewriteRuleMutation`.
+//! ⚡️ RewriteRule mutation text codec, registry, and external operation bridge.
 
-pub use crate::artifacts::rewrite::schema::mutations::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation, RewriteRuleMutation};
+use crate::artifacts::rewrite::RewriteSnapshot;
+
+pub use crate::artifacts::rewrite::schema::mutations::RewriteRuleMutation;
+pub use crate::artifacts::rewrite::schema::operations::{apply_rewrite_rule_mutation, create_rewrite_rule_envelope, dispatch_rewrite_rule_mutations, inverse_rewrite_rule_mutation, rewrite_snapshot_mutations, RewriteRuleEnvelope, RewriteRuleStore};
+
+//#region 🧾️DerivedRegistry
+/// 🧾️ Direct-owner text opcodes in aggregate declaration order.
+pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
+    ("EditBeforeFixture", super::edit_before_fixture::text::TEXT_OPCODE),
+    ("EditLhs", super::edit_lhs::text::TEXT_OPCODE),
+    ("EditRhs", super::edit_rhs::text::TEXT_OPCODE),
+    ("ChangeParameterBinding", super::change_parameter_binding::text::TEXT_OPCODE),
+    ("RemoveParameterBinding", super::remove_parameter_binding::text::TEXT_OPCODE),
+    ("ChangeRuleLayoutPoint", super::change_rule_layout_point::text::TEXT_OPCODE),
+    ("RemoveRuleLayoutPoint", super::remove_rule_layout_point::text::TEXT_OPCODE),
+];
+//#endregion 🧾️DerivedRegistry
+
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Decodes the internally tagged JSON projection.
+pub fn decode_rewrite_mutation_json(text: &str) -> Result<RewriteRuleMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// ▶️ Applies one mutation and returns its diagnostic code/severity pairs.
+pub fn apply_rewrite_mutation_reporting(snapshot: &mut RewriteSnapshot, mutation: &RewriteRuleMutation) -> Vec<(String, String)> {
+    let outcome = <RewriteRuleMutation as protocol::Mutation<RewriteSnapshot>>::diff(mutation, snapshot).apply_to(snapshot);
+    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
+}
+
+/// ↩️ Computes the mutation's own undo steps.
+pub fn inverse_rewrite_mutation_steps(mutation: &RewriteRuleMutation, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
+    <RewriteRuleMutation as protocol::Mutation<RewriteSnapshot>>::inverse(mutation, base)
+}
+//#endregion 🌉️ExternalCodecBridge
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

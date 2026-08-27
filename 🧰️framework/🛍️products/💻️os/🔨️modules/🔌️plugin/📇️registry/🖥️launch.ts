@@ -58,9 +58,9 @@ type DevLauncherEntry = {
 /** @emoji ✂️ Splits the seed file into the output skeleton (verbatim `configurations` text with
  * `"@generated:<variant>:<renderer>"` placeholders) and the parsed `devLaunchers` table. Both live in
  * one JSONC document; `DEV_LAUNCHERS_MARKER` is the exact, generator-authored boundary between them. */
-function readSeed(repoRoot: string): { readonly skeleton: string; readonly devLaunchers: Readonly<Record<string, DevLauncherEntry>> } {
+function readSeed(repoRoot: string, readText?: (path: string) => string): { readonly skeleton: string; readonly devLaunchers: Readonly<Record<string, DevLauncherEntry>> } {
   const seedPath = join(repoRoot, SEED_REL_PATH);
-  const raw = readFileSync(seedPath, "utf8");
+  const raw = readText ? readText(SEED_REL_PATH) : readFileSync(seedPath, "utf8");
   try {
     Bun.JSONC.parse(raw);
   } catch {
@@ -188,8 +188,8 @@ function renderUserEntries(launcher: DevLauncherEntry, playground: PlaygroundEnt
 //#region 🔖️Generate
 /** @emoji 🏗️ Renders the full `.vscode/launch.json` text: seed skeleton with every
  * `@generated:<variant>:<renderer>` placeholder substituted by a fresh, registry-ported entry. */
-export function generateLaunchJson(repoRoot: string, playgrounds: readonly PlaygroundEntry[]): string {
-  const { skeleton, devLaunchers } = readSeed(repoRoot);
+export function generateLaunchJson(repoRoot: string, playgrounds: readonly PlaygroundEntry[], readText?: (path: string) => string): string {
+  const { skeleton, devLaunchers } = readSeed(repoRoot, readText);
   const byVariant = new Map(playgrounds.map((entry) => [entry.variant, entry]));
   let out = skeleton;
   for (const [variant, launcher] of Object.entries(devLaunchers)) {

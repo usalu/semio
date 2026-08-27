@@ -1,0 +1,196 @@
+[
+  {
+    "kind": "mutation",
+    "semantics": {
+      "effects": {
+        "reads": [],
+        "writes": [
+          "artifact:{self}"
+        ],
+        "external": false,
+        "destructive": false,
+        "reversible": true
+      },
+      "policy": {
+        "scopes": [
+          "documents.write"
+        ],
+        "approval": "whenDestructive"
+      },
+      "execution": {
+        "preview": "diff",
+        "undo": {
+          "kind": "inverse"
+        },
+        "idempotency": "none",
+        "expectedRevision": true,
+        "cancellable": false,
+        "class": "interactive",
+        "interactiveJob": "unclassified"
+      },
+      "useWhen": [],
+      "examples": []
+    }
+  },
+  {
+    "kind": "view",
+    "semantics": {
+      "effects": {
+        "reads": [
+          "config:{self}"
+        ],
+        "writes": [],
+        "external": false,
+        "destructive": false,
+        "reversible": false
+      },
+      "policy": {
+        "scopes": [
+          "documents.read",
+          "shell.observe"
+        ],
+        "approval": "never"
+      },
+      "execution": {
+        "preview": "none",
+        "undo": {
+          "kind": "none"
+        },
+        "idempotency": "none",
+        "expectedRevision": false,
+        "cancellable": false,
+        "class": "interactive",
+        "interactiveJob": "unclassified"
+      },
+      "useWhen": [],
+      "examples": []
+    }
+  },
+  {
+    "kind": "interaction",
+    "semantics": {
+      "effects": {
+        "reads": [
+          "config:{self}"
+        ],
+        "writes": [],
+        "external": false,
+        "destructive": false,
+        "reversible": false
+      },
+      "policy": {
+        "scopes": [
+          "documents.read",
+          "shell.observe"
+        ],
+        "approval": "never"
+      },
+      "execution": {
+        "preview": "none",
+        "undo": {
+          "kind": "none"
+        },
+        "idempotency": "none",
+        "expectedRevision": false,
+        "cancellable": false,
+        "class": "interactive",
+        "interactiveJob": "unclassified"
+      },
+      "useWhen": [],
+      "examples": []
+    }
+  },
+  {
+    "kind": "history",
+    "semantics": {
+      "effects": {
+        "reads": [],
+        "writes": [],
+        "external": false,
+        "destructive": false,
+        "reversible": false
+      },
+      "policy": {
+        "scopes": [
+          "documents.write"
+        ],
+        "approval": "never"
+      },
+      "execution": {
+        "preview": "none",
+        "undo": {
+          "kind": "none"
+        },
+        "idempotency": "none",
+        "expectedRevision": false,
+        "cancellable": false,
+        "class": "interactive",
+        "interactiveJob": "unclassified"
+      },
+      "useWhen": [],
+      "examples": []
+    }
+  },
+  {
+    "kind": "clipboard",
+    "semantics": {
+      "effects": {
+        "reads": [],
+        "writes": [],
+        "external": false,
+        "destructive": false,
+        "reversible": false
+      },
+      "policy": {
+        "scopes": [
+          "shell.clipboard"
+        ],
+        "approval": "never"
+      },
+      "execution": {
+        "preview": "none",
+        "undo": {
+          "kind": "none"
+        },
+        "idempotency": "none",
+        "expectedRevision": false,
+        "cancellable": false,
+        "class": "interactive",
+        "interactiveJob": "unclassified"
+      },
+      "useWhen": [],
+      "examples": []
+    }
+  },
+  {
+    "kind": "shell",
+    "semantics": {
+      "effects": {
+        "reads": [],
+        "writes": [],
+        "external": false,
+        "destructive": false,
+        "reversible": false
+      },
+      "policy": {
+        "scopes": [
+          "shell.navigate"
+        ],
+        "approval": "never"
+      },
+      "execution": {
+        "preview": "none",
+        "undo": {
+          "kind": "none"
+        },
+        "idempotency": "none",
+        "expectedRevision": false,
+        "cancellable": false,
+        "class": "interactive",
+        "interactiveJob": "unclassified"
+      },
+      "useWhen": [],
+      "examples": []
+    }
+  }
+]

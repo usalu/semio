@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.jpg.mutation;
+// 🧬️ remove-other-segment/RemoveOtherSegment; complex fields follow the direct payload schema.
+message RemoveOtherSegmentMutation { uint64 index = 1; }

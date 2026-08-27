@@ -1,6 +1,6 @@
 //! 🔗️ `proximity-connect` command.
 
-use crate::editor::puzzle5d::{find_part_by_grip_full_id, next_fastener_id, puzzle5d_grip_full_id, world_grip_position, Puzzle5dActionCtx, Puzzle5dDocument, Puzzle5dFastener, PUZZLE5D_PROXIMITY_RADIUS};
+use crate::editor::puzzle5d::{find_part_by_grip_full_id, puzzle5d_grip_full_id, world_grip_position, Puzzle5dActionCtx, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dFreshIds, PUZZLE5D_PROXIMITY_RADIUS};
 use serde_json::Value;
 
 fn arg_str<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a str> {
@@ -69,6 +69,7 @@ pub fn proximity_connect(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) 
         return;
     };
     let mut fresh: Vec<Puzzle5dFastener> = Vec::new();
+    let mut fresh_ids = Puzzle5dFreshIds::from_document(&ctx.scene.document);
     for other in &ctx.scene.document.parts {
         if other.id == part_id {
             continue;
@@ -95,7 +96,7 @@ pub fn proximity_connect(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) 
             if !compatible {
                 continue;
             }
-            fresh.push(fastener_from_args(next_fastener_id(), peer_id, moved_grip_id.clone(), args));
+            fresh.push(fastener_from_args(fresh_ids.next_fastener(), peer_id, moved_grip_id.clone(), args));
         }
     }
     ctx.scene.document.fasteners.extend(fresh);

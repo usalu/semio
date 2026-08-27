@@ -270,7 +270,7 @@ pub fn raster_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Stri
         *image_key = Some(asset_key.clone());
     }
     let asset = RasterImageAsset { mime: "image/png".into(), data };
-    let handle = crate::artifacts::raster::mint_and_stash_asset(&asset_key, &asset);
+    let handle = crate::artifacts::raster::mint_raster_asset_child(&asset_key, &asset);
     let mut assets = crate::artifacts::raster::RasterOwnedMap::new();
     assets.insert(asset_key, handle).map_err(|rejected| rejected.reason.to_string())?;
     let document = RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: crate::artifacts::raster::schema::create_raster_id("dwg-import"), title: Some("DWG Import".into()), layers: vec![layer], assets };

@@ -444,6 +444,8 @@ pub enum Puzzle3dConfigMutation {
     SetBrushCandidateIndex { value: usize },
     SetWindowEngagementInput { window_id: String, value: String },
     SetActiveUtility { window_id: String, value: Option<String> },
+    SetLocale { value: String },
+    SetTerminology { value: String },
 }
 
 fn mutate_window_options(base: &Puzzle3dConfig, window_id: &str, mutate: impl FnOnce(&mut Puzzle3dWindowOptions)) -> Puzzle3dConfig {
@@ -527,6 +529,16 @@ impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
                 }
                 next
             }
+            Puzzle3dConfigMutation::SetLocale { value } => {
+                let mut next = _base.clone();
+                next.locale = value.clone();
+                next
+            }
+            Puzzle3dConfigMutation::SetTerminology { value } => {
+                let mut next = _base.clone();
+                next.terminology = value.clone();
+                next
+            }
         })
     }
 
@@ -558,6 +570,8 @@ impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
             Puzzle3dConfigMutation::SetBrushCandidateIndex { .. } => Puzzle3dConfigMutation::SetBrushCandidateIndex { value: base.brush_candidate_index },
             Puzzle3dConfigMutation::SetWindowEngagementInput { window_id, .. } => Puzzle3dConfigMutation::SetWindowEngagementInput { window_id: window_id.clone(), value: window_options(base, window_id).engagement_input },
             Puzzle3dConfigMutation::SetActiveUtility { window_id, .. } => Puzzle3dConfigMutation::SetActiveUtility { window_id: window_id.clone(), value: base.active_utility_by_window_id.get(window_id).cloned() },
+            Puzzle3dConfigMutation::SetLocale { .. } => Puzzle3dConfigMutation::SetLocale { value: base.locale.clone() },
+            Puzzle3dConfigMutation::SetTerminology { .. } => Puzzle3dConfigMutation::SetTerminology { value: base.terminology.clone() },
         }]
     }
 }

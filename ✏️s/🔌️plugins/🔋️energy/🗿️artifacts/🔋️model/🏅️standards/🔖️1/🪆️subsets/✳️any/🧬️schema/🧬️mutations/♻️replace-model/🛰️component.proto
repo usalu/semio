@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.energy.model.mutation;
+
+// ♻️ Direct replace-model payload.
+message ReplaceModel {
+  string new_model_json = 1;
+}

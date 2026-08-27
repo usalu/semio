@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.local/schemas/norm-retained-command-dispositions.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "publicationContracts", "routes", "apps", "expected", "oracle"],
+  "properties": {
+    "$schema": { "const": "https://json-schema.org/draft/2020-12/schema" },
+    "schemaVersion": { "const": 1 },
+    "publicationContracts": { "type": "array", "maxItems": 0 },
+    "routes": {
+      "type": "array",
+      "prefixItems": [
+        { "$ref": "#/$defs/setSnapshot" },
+        { "$ref": "#/$defs/evaluate" },
+        { "$ref": "#/$defs/setSelectedCheckIndex" }
+      ],
+      "items": false,
+      "minItems": 3
+    },
+    "apps": {
+      "type": "array",
+      "prefixItems": [
+        { "$ref": "#/$defs/din4108" }, { "$ref": "#/$defs/din16798" }, { "$ref": "#/$defs/din18599" },
+        { "$ref": "#/$defs/en1990" }, { "$ref": "#/$defs/en1991" }, { "$ref": "#/$defs/en1992" },
+        { "$ref": "#/$defs/en1993" }, { "$ref": "#/$defs/en1994" }, { "$ref": "#/$defs/en1995" },
+        { "$ref": "#/$defs/en1996" }, { "$ref": "#/$defs/en1997" }, { "$ref": "#/$defs/en1998" },
+        { "$ref": "#/$defs/en1999" }, { "$ref": "#/$defs/iso16757" }, { "$ref": "#/$defs/vdi3805" }
+      ],
+      "items": false,
+      "minItems": 15
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["apps", "routesPerApp", "identities", "retained", "batchOnlyPendingRewrite"],
+      "properties": {
+        "apps": { "const": 15 }, "routesPerApp": { "const": 3 }, "identities": { "const": 45 },
+        "retained": { "const": 0 }, "batchOnlyPendingRewrite": { "const": 45 }
+      }
+    },
+    "oracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["library", "scope", "ownedInterface", "runtimeDependency"],
+      "properties": {
+        "library": { "const": "serde_json" },
+        "scope": { "const": "test-only-existing-dependency" },
+        "ownedInterface": { "const": "NormRetainedDispositionOracle" },
+        "runtimeDependency": { "const": false }
+      }
+    }
+  },
+  "$defs": {
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "emittedLanes", "execution", "admission", "blocker"],
+      "properties": {
+        "id": { "type": "string" },
+        "emittedLanes": { "type": "array", "items": { "enum": ["artifact", "config", "presence", "transient", "child", "host"] }, "uniqueItems": true },
+        "execution": { "enum": ["bounded", "resumable", "placeholder"] },
+        "admission": { "const": "batchOnlyPendingRewrite" },
+        "blocker": { "type": "string", "minLength": 24 }
+      }
+    },
+    "setSnapshot": { "allOf": [{ "$ref": "#/$defs/route" }, { "type": "object", "properties": { "id": { "const": "setSnapshot" }, "emittedLanes": { "const": ["artifact"] }, "execution": { "const": "resumable" } } }] },
+    "evaluate": { "allOf": [{ "$ref": "#/$defs/route" }, { "type": "object", "properties": { "id": { "const": "evaluate" }, "emittedLanes": { "const": [] }, "execution": { "const": "placeholder" } } }] },
+    "setSelectedCheckIndex": { "allOf": [{ "$ref": "#/$defs/route" }, { "type": "object", "properties": { "id": { "const": "setSelectedCheckIndex" }, "emittedLanes": { "const": ["config"] }, "execution": { "const": "bounded" } } }] },
+    "app": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["variant", "controller", "documentSchema"],
+      "properties": { "variant": { "type": "string" }, "controller": { "type": "string" }, "documentSchema": { "type": "string" } }
+    },
+    "din4108": { "allOf": [{ "$ref": "#/$defs/app" }, { "type": "object", "properties": { "variant": { "const": "din4108" }, "controller": { "const": "s.norm.din4108@1/*#editor" }, "documentSchema": { "const": "semio.norm.din4108/v1" } } }] },
+    "din16798": { "allOf": [{ "$ref": "#/$defs/app" }, { "type": "object", "properties": { "variant": { "const": "din16798" }, "controller": { "const": "s.norm.din16798@1/*#editor" }, "documentSchema": { "const": "semio.norm.din16798/v1" } } }] },
+    "din18599": { "allOf": [{ "$ref": "#/$defs/app" }, { "type": "object", "properties": { "variant": { "const": "din18599" }, "controller": { "const": "s.norm.din18599@1/*#editor" }, "documentSchema": { "const": "semio.norm.din18599/v1" } } }] },
+    "en1990": { "allOf": [{ "$ref": "#/$defs/app" }, { "type": "object", "properties": { "variant": { "const": "en1990" }, "controller": { "const": "s.norm.en1990@1/*#editor" }, "documentSchema": { "const": "semio.norm.en1990/v1" } } }] },
+    "en1991": { "allOf": [{ "$ref": "#/$defs/app" }, { "type": "object", "properties": { "variant": { "const": "en1991" }, "controller": { "const": "s.norm.en1991@1/*#editor" }, "documentSchema": { "const": "semio.norm.en1991/v1" } } }] },
+    "en1992": { "allOf": [{ "$ref": "#/$defs/app" }, { "type": "object", "properties": { "variant": { "const": "en1992" }, "controller": { "const": "s.norm.en1992@1/*#editor" }, "documentSchema": { "const": "semio.norm.en1992/v1" } } }] },
+    "en1993": { "allOf": [{ "$ref": "#/$defs/app" }, { "type": "object", "properties": { "variant": { "const": "en1993" }, "controller": { "const": "s.norm.en1993@1/*#editor" }, "documentSchema": { "const": "semio.norm.en1993/v1" } } }] },
+    "en1994": { "allOf": [{ "$ref": "#/$defs/app" }, { "type": "object", "properties": { "variant": { "const": "en1994" }, "controller": { "const": "s.norm.en1994@1/*#editor" }, "documentSchema": { "const": "semio.norm.en1994/v1" } } }] },
+    "en1995": { "allOf": [{ "$ref": "#/$defs/app" }, { "type": "object", "properties": { "variant": { "const": "en1995" }, "controller": { "const": "s.norm.en1995@1/*#editor" }, "documentSchema": { "const": "semio.norm.en1995/v1" } } }] },
+    "en1996": { "allOf": [{ "$ref": "#/$defs/app" }, { "type": "object", "properties": { "variant": { "const": "en1996" }, "controller": { "const": "s.norm.en1996@1/*#editor" }, "documentSchema": { "const": "semio.norm.en1996/v1" } } }] },
+    "en1997": { "allOf": [{ "$ref": "#/$defs/app" }, { "type": "object", "properties": { "variant": { "const": "en1997" }, "controller": { "const": "s.norm.en1997@1/*#editor" }, "documentSchema": { "const": "semio.norm.en1997/v1" } } }] },
+    "en1998": { "allOf": [{ "$ref": "#/$defs/app" }, { "type": "object", "properties": { "variant": { "const": "en1998" }, "controller": { "const": "s.norm.en1998@1/*#editor" }, "documentSchema": { "const": "semio.norm.en1998/v1" } } }] },
+    "en1999": { "allOf": [{ "$ref": "#/$defs/app" }, { "type": "object", "properties": { "variant": { "const": "en1999" }, "controller": { "const": "s.norm.en1999@1/*#editor" }, "documentSchema": { "const": "semio.norm.en1999/v1" } } }] },
+    "iso16757": { "allOf": [{ "$ref": "#/$defs/app" }, { "type": "object", "properties": { "variant": { "const": "iso16757" }, "controller": { "const": "s.norm.iso16757@1/*#editor" }, "documentSchema": { "const": "semio.norm.iso16757/v1" } } }] },
+    "vdi3805": { "allOf": [{ "$ref": "#/$defs/app" }, { "type": "object", "properties": { "variant": { "const": "vdi3805" }, "controller": { "const": "s.norm.vdi3805@1/*#editor" }, "documentSchema": { "const": "semio.norm.vdi3805/v1" } } }] }
+  }
+}

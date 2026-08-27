@@ -1,0 +1,2 @@
+# 🧬 remove-array-element/RemoveArrayElement
+input RemoveArrayElementPayload { path: [MutationPathSegment!]! index: Int! }

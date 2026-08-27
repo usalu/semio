@@ -92,21 +92,11 @@ pub fn din18599_climate_data_from_table(table: &semio_s_plugin_stdio::artifacts:
 //#endregion 🔖️Converters
 
 //#region 🔖️WorkingScene
-thread_local! {
-    /// 🌱 Ephemeral, session-side cache of the live `climate` data behind a composed-child handle —
-    /// NEVER persisted (matches the `EngineRep` contract). No `LinkResolver`/child-dispatch seam exists
-    /// in `ArtifactApp::handle` yet (checked directly against `🔌️plugin/🦀️component.rs`, W1-owned,
-    /// read-only — same standing gap every prior wave's report documents), so this is the only way a
-    /// persisted content-addressed handle round-trips to the real climate data within one process —
-    /// mirrors `➗️mathematical`'s `MATH_SCRATCH`/en1990's `EN1990_QK_SCRATCH`.
-    ///
-    /// ⚠️ Same documented staleness gap as every prior exemplar: a fresh process (a store-level
-    /// undo/redo past this session's history, or a genuinely reloaded persisted `.din18599` document)
-    /// sees a `climate` handle whose cache entry was never populated — `din18599_climate` fails soft to
-    /// an all-zero `MonthlyClimate` rather than panicking. Every energy-balance calculation this
-    /// artifact performs already routes through `din18599_climate`, so the gap is visibly zeroed, not
-    /// silently wrong-but-plausible. Not a fix for the missing resolver — a bridge until one lands.
-    static DIN18599_CLIMATE_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, MonthlyClimate>> = std::cell::RefCell::new(std::collections::HashMap::new());
+/// 🌱 Ephemeral representation of one exact DIN 18599 climate child. It is not serialized
+/// and retires with the child owner; equal wire identities never share climate data.
+#[derive(Clone, Debug)]
+pub struct Din18599ClimateWorkingData {
+    pub climate: MonthlyClimate,
 }
 
 fn din18599_climate_scene_id(climate: &MonthlyClimate) -> String {
@@ -121,24 +111,17 @@ fn din18599_climate_target() -> store::os_io::ArtifactRef {
     store::os_io::ArtifactRef { artifact_id: "din18599-climate".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
 }
 
-/// 🏗️ Mints the composed-child handle for a `MonthlyClimate` value AND seeds the scratch cache in
-/// one call — the standard way every mutation-diff/fixture builder in this artifact creates
-/// `climate` field values; never construct this handle without also caching, or
-/// `din18599_climate` will read back all-zero.
+/// 🏗️ Mints the composed-child handle and transfers the climate into that exact owner.
 pub fn din18599_climate_child_from_data(climate: &MonthlyClimate) -> Din18599ClimateChild {
     let scene_id = din18599_climate_scene_id(climate);
-    DIN18599_CLIMATE_SCRATCH.with(|cache| {
-        cache.borrow_mut().insert(scene_id.clone(), climate.clone());
-    });
-    store::ArtifactChild::new(scene_id, din18599_climate_target())
+    store::ArtifactChild::new(scene_id, din18599_climate_target()).with_local_owner(std::sync::Arc::new(Din18599ClimateWorkingData { climate: climate.clone() }))
 }
 
 /// 🔎 The live `MonthlyClimate` behind a snapshot's composed child — the single read call site
-/// every energy-balance/compliance/inference/mutation-diff call path in this artifact now uses
-/// instead of the old `.climate` field. All-zero (never a panic) on a cache miss, per this
-/// region's own doc comment.
+/// every energy-balance/compliance/inference/mutation-diff call path in this artifact now uses. A
+/// wire-only child fails soft until its child document is materialized by the host.
 pub fn din18599_climate(snapshot: &Din18599Snapshot) -> MonthlyClimate {
-    DIN18599_CLIMATE_SCRATCH.with(|cache| cache.borrow().get(&snapshot.climate.child_id).cloned()).unwrap_or(MonthlyClimate { theta_e_c: [0.0; 12], g_h_w_m2: [0.0; 12] })
+    snapshot.climate.local_owner::<Din18599ClimateWorkingData>().map(|data| data.climate.clone()).unwrap_or(MonthlyClimate { theta_e_c: [0.0; 12], g_h_w_m2: [0.0; 12] })
 }
 //#endregion 🔖️WorkingScene
 //#endregion 🔖️Composition
@@ -284,3 +267,36 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
         .as_slice()
 }
 //#endregion 🪪️Declaration
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    trait Din18599ChildOwnerOracle {
+        fn expected() -> serde_json::Value;
+    }
+
+    struct SerdeJsonDin18599ChildOwnerOracle;
+
+    impl Din18599ChildOwnerOracle for SerdeJsonDin18599ChildOwnerOracle {
+        fn expected() -> serde_json::Value {
+            serde_json::from_str(include_str!("🧪️fixtures/🎯️child-owner-isolation.json")).expect("language-neutral DIN 18599 child-owner fixture")
+        }
+    }
+
+    #[test]
+    fn climate_working_data_is_owned_by_the_exact_child() {
+        let owned = din18599_climate_child_from_data(&MonthlyClimate { theta_e_c: [1.0; 12], g_h_w_m2: [2.0; 12] });
+        let wire = serde_json::to_vec(&owned).expect("DIN 18599 child wire identity");
+        let reconstructed: Din18599ClimateChild = serde_json::from_slice(&wire).expect("DIN 18599 child wire roundtrip");
+        let observed = serde_json::json!({
+            "ownedHasPayload": owned.local_owner::<Din18599ClimateWorkingData>().is_some(),
+            "wireIdentityMatches": owned == reconstructed,
+            "wireHasPayload": reconstructed.local_owner::<Din18599ClimateWorkingData>().is_some(),
+        });
+
+        assert_eq!(observed, SerdeJsonDin18599ChildOwnerOracle::expected());
+    }
+}
+//#endregion 🧪️Tests

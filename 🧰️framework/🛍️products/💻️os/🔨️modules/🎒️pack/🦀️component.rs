@@ -11,6 +11,10 @@ use crate::os_dsl;
 //#region 🔖️Value
 /// 🔢️ The schema-driven record value codec stays os-side because it speaks `os_dsl::schema`.
 pub use crate::os_pack::value::*;
+
+#[path = "🔎️scalar-witness/🦀️component.rs"]
+pub mod scalar_witness;
+pub use scalar_witness::{ScalarRecordField, ScalarRecordView, ScalarRecordWireStep, ScalarRecordWireWitness};
 //#endregion 🔖️Value
 
 //#region 🔖️Encode

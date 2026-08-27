@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "entry"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "entry": {
+      "$ref": "#/$defs/BmpPaletteEntry"
+    }
+  },
+  "$defs": {
+    "BmpRowOrder": {
+      "type": "string",
+      "enum": [
+        "bottomUp",
+        "topDown"
+      ]
+    },
+    "BmpPaletteEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "b",
+        "g",
+        "r",
+        "reserved"
+      ],
+      "properties": {
+        "b": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "g": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "r": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "reserved": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    }
+  },
+  "title": "ReplacePaletteEntryMutation"
+}

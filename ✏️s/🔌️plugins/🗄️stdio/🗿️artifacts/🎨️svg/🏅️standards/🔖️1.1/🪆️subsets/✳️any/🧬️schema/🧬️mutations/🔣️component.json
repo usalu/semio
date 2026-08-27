@@ -1,78 +1,149 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.svg/mutation.svg",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "SvgMutation",
   "oneOf": [
-    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
-    { "type": "object", "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "type": "object" } } },
-    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "setDeclaration" }, "declaration": { "type": "object" } } },
-    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "setDoctype" }, "doctype": { "$ref": "https://semio.tech/schema/s.stdio.xml/snapshot.xml#/$defs/XmlDoctype" } } },
     {
       "type": "object",
-      "required": ["mutation", "parent", "index", "node"],
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
       "properties": {
-        "mutation": { "const": "insertElement" },
-        "parent": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
-        "index": { "type": "integer", "minimum": 0 },
-        "node": { "type": "object" }
-      }
-    },
-    {
-      "type": "object",
-      "required": ["mutation", "parent", "index"],
-      "properties": {
-        "mutation": { "const": "removeElement" },
-        "parent": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
-        "index": { "type": "integer", "minimum": 0 }
-      }
-    },
-    {
-      "type": "object",
-      "required": ["mutation", "path", "name"],
-      "properties": {
-        "mutation": { "const": "setElementName" },
-        "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
-        "name": { "type": "string" }
-      }
-    },
-    {
-      "type": "object",
-      "required": ["mutation", "path", "name"],
-      "properties": {
-        "mutation": { "const": "setAttribute" },
-        "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
-        "name": { "type": "string" },
-        "value": { "type": "string" }
-      }
-    },
-    {
-      "type": "object",
-      "required": ["mutation", "path", "text"],
-      "properties": {
-        "mutation": { "const": "setText" },
-        "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
-        "text": { "type": "string" }
-      }
-    },
-    {
-      "type": "object",
-      "required": ["mutation", "path"],
-      "properties": {
-        "mutation": { "const": "setViewBox" },
-        "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
-        "viewBox": {
-          "type": "object",
-          "required": ["minX", "minY", "width", "height"],
-          "properties": { "minX": { "type": "number" }, "minY": { "type": "number" }, "width": { "type": "number" }, "height": { "type": "number" } }
+        "mutation": {
+          "const": "set-declaration"
+        },
+        "payload": {
+          "$ref": "✏️set-declaration/🔣️payload.schema.json"
         }
       }
     },
     {
       "type": "object",
-      "required": ["mutation", "path"],
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
       "properties": {
-        "mutation": { "const": "setTransform" },
-        "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
-        "transform": { "type": "array", "items": { "type": "object" } }
+        "mutation": {
+          "const": "set-doctype"
+        },
+        "payload": {
+          "$ref": "✏️set-doctype/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "insert-element"
+        },
+        "payload": {
+          "$ref": "📥️insert-element/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "remove-element"
+        },
+        "payload": {
+          "$ref": "🗑️remove-element/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "set-element-name"
+        },
+        "payload": {
+          "$ref": "✏️set-element-name/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "set-attribute"
+        },
+        "payload": {
+          "$ref": "✏️set-attribute/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "set-text"
+        },
+        "payload": {
+          "$ref": "✏️set-text/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "set-view-box"
+        },
+        "payload": {
+          "$ref": "✏️set-view-box/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "set-transform"
+        },
+        "payload": {
+          "$ref": "✏️set-transform/🔣️payload.schema.json"
+        }
       }
     }
   ]

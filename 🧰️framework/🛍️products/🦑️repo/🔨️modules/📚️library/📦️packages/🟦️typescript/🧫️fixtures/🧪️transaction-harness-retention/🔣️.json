@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "launcherPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+  "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️transaction-v2/🟦️.test.ts",
+  "absoluteBundleExpression": "bundle",
+  "runIdExpression": "runId",
+  "runIdEntropyCall": "crypto.randomUUID()",
+  "retentionFunction": "retainFixture",
+  "fixturePrefix": "🧪️s-transaction-v2-",
+  "cases": [
+    { "name": "🧪️s-transaction-v2-retained", "parent": "ticket", "accepted": true },
+    { "name": "unowned", "parent": "ticket", "accepted": false },
+    { "name": "🧪️s-transaction-v2-outside", "parent": "outside", "accepted": false },
+    { "name": "🧪️s-transaction-v2-nested", "parent": "nested", "accepted": false }
+  ]
+}

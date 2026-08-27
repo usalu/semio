@@ -20,7 +20,7 @@
 //! of, exactly as it is for a genuine move.
 
 use crate::artifacts::forms::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::artifacts::forms::{cache_forms_steps, forms_steps, FormQuestion, FormStep, FormsDiff, FormsSnapshot};
+use crate::artifacts::forms::{materialize_forms_steps, forms_steps, FormQuestion, FormStep, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -62,11 +62,11 @@ fn block(id: &str, label: &str) -> FormQuestion {
 /// 🌱 The committed `⬅️before`, with its composed children resolved to a single step holding two
 /// blocks — the committed payload's own `q-site-name` first, at the index it asks to move to.
 fn before() -> FormsSnapshot {
-    let snapshot: FormsSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FormsSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let FormMutation::MoveBlockToStep(payload) = mutation() else {
         panic!("no-ops-when-the-block-stays-at-its-index-in-its-own-step's committed mutation must be a move-block-to-step");
     };
-    cache_forms_steps(&snapshot.structure.child_id, vec![FormStep { id: payload.step_id.clone(), title: "Basics".into(), description: None, blocks: vec![block(&payload.block_id, "Site name"), block("q-visit-date", "Visit date")] }]);
+    materialize_forms_steps(&mut snapshot.structure, vec![FormStep { id: payload.step_id.clone(), title: "Basics".into(), description: None, blocks: vec![block(&payload.block_id, "Site name"), block("q-visit-date", "Visit date")] }]);
     snapshot
 }
 
@@ -77,7 +77,7 @@ async fn applies_to_committed_after() {
     let base = before();
     let snapshot = apply_form_edit_mutation(&base, &mutation()).expect("an identity diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "move-block-to-step/no-ops-when-the-block-stays-at-its-index-in-its-own-step: applied state differs from committed after-snapshot");
-    assert_eq!((&snapshot.structure.child_id, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a refused move must not re-mint the structure/results handles");
+    assert_eq!((&mut snapshot.structure, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a refused move must not re-mint the structure/results handles");
     assert_eq!(forms_steps(&snapshot).first().map(|step| step.blocks.iter().map(|block| block.id.clone()).collect::<Vec<_>>()), Some(vec!["q-site-name".to_string(), "q-visit-date".to_string()]), "the step keeps its original block order");
 }
 

@@ -1,0 +1,30 @@
+{
+  "schema": "semio.store.canonical-reader.v1",
+  "sourceFixture": "canonical-borrowed-map",
+  "grants": [
+    0,
+    1,
+    7,
+    4096
+  ],
+  "expectedByteLength": 4964,
+  "expectedJsonSha256": "c6f612c4cbe854362771a36663b370c076bfc602846f224edb74c8a97a8eb878",
+  "lifecycle": [
+    "zero-grant",
+    "before-poll-cancel",
+    "mid-key-cancel",
+    "complete",
+    "transfer-root",
+    "close"
+  ],
+  "hostiles": [
+    "early-root-transfer",
+    "root-rebound",
+    "root-drop-before-frame",
+    "non-send-iterator",
+    "closing-zero-depth-bound-root",
+    "unclosed-drop",
+    "double-panic"
+  ],
+  "expectedRootDrops": 1
+}

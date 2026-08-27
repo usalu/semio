@@ -5,6 +5,22 @@
     "default": ["{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/**/*.rs", "{projectRoot}/**/*"]
   },
   "targets": {
+    "test-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-source",
+        "forwardAllArgs": true
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

@@ -9,7 +9,7 @@
 //! ReplaceModel` (decode the working `Model`, apply the edit, re-encode — the same "swap `structure`+
 //! `zones` together" shape every other `ReplaceModel` caller uses).
 
-use crate::artifacts::model::mutations::replace_model::mutation::ReplaceModel;
+use crate::artifacts::model::mutations::replace_model::ReplaceModel;
 use crate::artifacts::model::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
 use crate::editor::model::modes::edit;
 use crate::editor::model::modes::edit::windows::{simulation, structure, zones};

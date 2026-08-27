@@ -14,7 +14,7 @@
 
 use crate::artifacts::wires::mutations::{ChangeNodeShape, WiresMutation};
 use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
-use crate::artifacts::wires::{cache_wires_content, WiresDiff, WiresSnapshot};
+use crate::artifacts::wires::{materialize_wires_content, WiresDiff, WiresSnapshot};
 use dsl::DslValue;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
@@ -28,11 +28,11 @@ fn board_entries(board: &DslValue, key: &str) -> Vec<DslValue> {
 }
 
 /// 🌱 The committed `⬅️before` with its composed content child resolved into the working-scene
-/// cache, seeded from the snapshot's own persisted `wiresFixture.board` mirror.
+/// child owner, materialized from the snapshot's own persisted `wiresFixture.board` mirror.
 fn before() -> WiresSnapshot {
-    let snapshot: WiresSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: WiresSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let board = snapshot.wires_fixture.get("board").cloned().unwrap_or(DslValue::Null);
-    cache_wires_content(&snapshot.content.child_id, board_entries(&board, "nodes"), board_entries(&board, "edges"));
+    materialize_wires_content(&mut snapshot.content, board_entries(&board, "nodes"), board_entries(&board, "edges"));
     snapshot
 }
 fn expected_after() -> WiresSnapshot {

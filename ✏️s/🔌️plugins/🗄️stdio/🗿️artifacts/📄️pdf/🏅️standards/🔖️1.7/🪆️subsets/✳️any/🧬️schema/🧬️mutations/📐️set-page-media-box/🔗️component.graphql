@@ -1,0 +1,5 @@
+# 📐️ Direct set-page-media-box GraphQL payload.
+input SetPageMediaBoxMutationInput {
+  index: Int
+  mediaBox: [String!]
+}

@@ -1,0 +1,9 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7.mutation.remove_dict_entry;
+
+// 🚫️ Direct remove-dict-entry protobuf payload.
+message RemoveDictEntryMutation {
+  bytes id = 1;
+  repeated string path = 2;
+  string key = 3;
+}

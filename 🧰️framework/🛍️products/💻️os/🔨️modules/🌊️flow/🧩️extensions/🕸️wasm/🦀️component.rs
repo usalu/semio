@@ -1,6 +1,6 @@
 //! 🔌️ Shared wasm extension glue for flow modules.
 
-use neural_engine::{inject_channel_defaults, Dictionary, OperatorInfo, Registry, Schema};
+use neural_engine::{inject_channel_defaults, ColdOwner, ColdRetire, Dictionary, OperatorInfo, Registry, Schema};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖️Manifest
@@ -61,7 +61,7 @@ pub struct FlowExtensionSetting {
 /// 📦️ Builds a `flow.extension` JSON manifest from registry catalogue metadata.
 #[allow(clippy::too_many_arguments, reason = "manifest needs id+name+version+registry+activation_events+widgets+commands+settings together; a params struct would ripple into every flow/module/*/rs call site outside this ticket's scope")]
 pub fn build_manifest_json(id: &str, name: &str, version: &str, registry: &Registry, activation_events: Vec<String>, widgets: Vec<FlowExtensionWidget>, commands: Vec<FlowExtensionCommand>, settings: Vec<FlowExtensionSetting>) -> String {
-    let manifest = FlowExtensionManifest {
+    let mut manifest = FlowExtensionManifest {
         schema: "flow.extension".into(),
         id: id.into(),
         name: name.into(),
@@ -69,7 +69,10 @@ pub fn build_manifest_json(id: &str, name: &str, version: &str, registry: &Regis
         activation_events,
         contributes: FlowExtensionContributes { schemas: registry.schema_catalogue(), operators: registry.operator_catalogue(), widgets, commands, settings },
     };
-    serde_json::to_string(&manifest).unwrap_or_else(|_| "{}".into())
+    let encoded = serde_json::to_string(&manifest).unwrap_or_else(|_| "{}".into());
+    std::mem::take(&mut manifest.contributes.schemas).retire_cold();
+    std::mem::take(&mut manifest.contributes.operators).retire_cold();
+    encoded
 }
 // #endregion 🔖️Manifest
 
@@ -80,12 +83,12 @@ pub fn evaluate_json(registry: &Registry, kind_id: &str, input_json: &str) -> St
         Ok(d) => d,
         Err(err) => return serde_json::json!({ "error": err.to_string() }).to_string(),
     };
-    let input = match registry.operator_info(kind_id) {
+    let input = ColdOwner::new(match registry.operator_info(kind_id) {
         Some(info) => inject_channel_defaults(input, info),
         None => input,
-    };
+    });
     match registry.dispatch(kind_id, &input) {
-        Ok(out) => serde_json::to_string(&out).unwrap_or_else(|_| "{}".into()),
+        Ok(out) => serde_json::to_string(&ColdOwner::new(out)).unwrap_or_else(|_| "{}".into()),
         Err(err) => serde_json::json!({ "error": err.to_string() }).to_string(),
     }
 }
@@ -96,13 +99,15 @@ pub fn evaluate_function_json(registry: &Registry, tree_json: &str, in_dict_json
         Ok(tree) => tree,
         Err(err) => return serde_json::json!({ "error": err.to_string() }).to_string(),
     };
+    let tree = ColdOwner::new(tree);
     let in_dict: Dictionary = match serde_json::from_str(in_dict_json) {
         Ok(dict) => dict,
         Err(err) => return serde_json::json!({ "error": err.to_string() }).to_string(),
     };
     let evaluator = neural_engine::Evaluator::new(registry);
+    let in_dict = ColdOwner::new(in_dict);
     match evaluator.evaluate_function(&tree, &in_dict) {
-        Ok(out) => serde_json::to_string(&out).unwrap_or_else(|_| "{}".into()),
+        Ok(out) => serde_json::to_string(&ColdOwner::new(out)).unwrap_or_else(|_| "{}".into()),
         Err(err) => serde_json::json!({ "error": err.to_string() }).to_string(),
     }
 }

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact",
+  "semanticKind": "delete-artifact",
+  "displayName": "Delete Artifact",
+  "emoji": "🗑️",
+  "aggregateVariant": "DeleteArtifact",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "delete-artifact",
+  "binaryTag": 1,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": ["applied", "error"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "typescript", "json-schema", "text", "binary"]
+}

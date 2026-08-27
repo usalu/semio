@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.jpg.mutation;
+// 🧬️ replace-quant-table/ReplaceQuantTable; complex fields follow the direct payload schema.
+message ReplaceQuantTableMutation { bytes table = 1; }

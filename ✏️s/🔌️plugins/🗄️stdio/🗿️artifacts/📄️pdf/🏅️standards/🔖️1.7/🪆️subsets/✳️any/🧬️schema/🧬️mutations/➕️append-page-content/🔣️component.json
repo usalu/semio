@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️append-page-content",
+  "semanticKind": "append-page-content",
+  "displayName": "Append Page Content",
+  "emoji": "➕️",
+  "aggregateVariant": "AppendPageContent",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "append-page-content",
+  "binaryTag": 4,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

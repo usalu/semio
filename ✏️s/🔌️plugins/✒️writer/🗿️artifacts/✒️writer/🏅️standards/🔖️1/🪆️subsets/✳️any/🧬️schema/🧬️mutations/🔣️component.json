@@ -1,35 +1,12 @@
 {
-  "$id": "https://semio.tech/schema/s/writer/writer/mutation.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/writer/1/any/mutation.json",
   "title": "WriterMutation",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "schema",
-    "id",
-    "languageId",
-    "uri",
-    "text"
+  "oneOf": [
+    {"$ref": "./🏷️rename-writer/🔣️payload.schema.json"},
+    {"$ref": "./🔗change-uri/🔣️payload.schema.json"},
+    {"$ref": "./🌐change-language/🔣️payload.schema.json"},
+    {"$ref": "./✏️edit-text/🔣️payload.schema.json"}
   ],
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "id": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "languageId": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "uri": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "text": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    }
-  }
+  "x-semio-mutationKinds": ["rename-writer", "change-uri", "change-language", "edit-text"]
 }

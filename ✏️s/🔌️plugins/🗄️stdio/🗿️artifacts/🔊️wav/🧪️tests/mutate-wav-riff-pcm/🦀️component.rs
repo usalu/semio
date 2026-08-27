@@ -1,10 +1,10 @@
 //! 🦀️ WAV RIFF-PCM exhaustive mutation case — Rust adapter.
 //!
 //! Every scenario copies the immutable real recording into the case work directory first; the
-//! committed fixture is never written to. `oracle` drives the registered `hound` reference
+//! committed fixture is never written to. `oracle` drives the registered owned PCM16 reference
 //! implementation (this subset's own `🧪️oracle/🦀️component.rs`), `subject` drives this repository's
 //! own decode → mutate → encode round trip, and both results are read back by the SAME independent
-//! `hound`-based projector before the `semantic-audio-v1` profile compares them. The subject half is
+//! independent projector before the `semantic-audio-v1` profile compares them. The subject half is
 //! gated behind the generated host's `sut` feature so the oracle-only run never compiles the local
 //! implementation.
 
@@ -28,7 +28,7 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
-/// 🔮️ Applies the declared mutation with `hound` and projects the result independently.
+/// 🔮️ Applies the declared mutation with the owned oracle and projects the result independently.
 /// 👁️ `@id-mutate`: applies the row's kind with the registered reference implementation and ASSERTS
 /// the result is distinguishable from the untouched fixture. The exemption list is empty — every
 /// kind this vocabulary declares reaches the compared projection — so a kind that stops moving it
@@ -43,10 +43,10 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// ↩️ The inverse law, asserted rather than assumed: `hound` applies the row's kind, then the
+/// ↩️ The inverse law, asserted rather than assumed: the owned oracle applies the row's kind, then the
 /// reference's own computed inverse on top of that result, and the rewritten recording must project
 /// back onto the pristine original. Returning the untouched original (what this used to do) asserted
-/// nothing — the scenario passed whenever `hound` merely parsed the fixture.
+/// nothing — the scenario passed whenever the oracle merely parsed the fixture.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
@@ -58,7 +58,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(restored, projection))
 }
 
-/// 🔁️ The identity round trip, asserted rather than assumed: `hound` decodes the `fmt `/`data` pair
+/// 🔁️ The identity round trip, asserted rather than assumed: the owned oracle decodes the `fmt `/`data` pair
 /// and writes a fresh file from the decoded model alone, and the semantic projection — format
 /// block, every decoded sample, every retained chunk — must survive that unchanged.
 ///

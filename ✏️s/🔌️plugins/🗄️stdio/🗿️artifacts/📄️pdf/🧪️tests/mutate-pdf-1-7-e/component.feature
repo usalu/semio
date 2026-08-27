@@ -74,8 +74,6 @@ Feature: Apply every typed ISO 24517-1:2008 (PDF/E-1) conformance-class mutation
     Then the oracle and the subject agree on the conformance-class projection
     Examples:
       | id                           | params                                                            |
-      | no-mutation                  | {}                                                                |
-      | set-snapshot                 | {"conformance": "stamped"}                                        |
       | insert-encryption-dictionary | {"version": 2, "revision": 3}                                     |
       | remove-encryption-dictionary | {"version": 2, "revision": 3}                                     |
       | insert-javascript-action     | {"script": "app.alert('this document phones home');"}             |
@@ -102,8 +100,6 @@ Feature: Apply every typed ISO 24517-1:2008 (PDF/E-1) conformance-class mutation
     Then the conformance-class projection is the one the document started from
     Examples:
       | id                           | params                                                            |
-      | no-mutation                  | {}                                                                |
-      | set-snapshot                 | {"conformance": "stamped"}                                        |
       | insert-encryption-dictionary | {"version": 2, "revision": 3}                                     |
       | remove-encryption-dictionary | {"version": 2, "revision": 3}                                     |
       | insert-javascript-action     | {"script": "app.alert('this document phones home');"}             |

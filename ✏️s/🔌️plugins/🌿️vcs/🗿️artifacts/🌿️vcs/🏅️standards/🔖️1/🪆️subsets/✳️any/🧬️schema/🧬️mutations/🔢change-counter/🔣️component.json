@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter",
+  "semanticKind": "change-counter",
+  "displayName": "Change Counter",
+  "emoji": "🔢",
+  "aggregateVariant": "ChangeCounter",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": null,
+  "binaryTag": null,
+  "invertibility": "self",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema"
+  ]
+}

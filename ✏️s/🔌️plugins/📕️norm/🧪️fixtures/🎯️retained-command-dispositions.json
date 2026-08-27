@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schemaVersion": 1,
+  "publicationContracts": [],
+  "routes": [
+    {
+      "id": "setSnapshot",
+      "emittedLanes": ["artifact"],
+      "execution": "resumable",
+      "admission": "batchOnlyPendingRewrite",
+      "blocker": "Whole-document DSL parsing and semantic diffing need a persistent byte/item cursor plus exact artifact Store preparation authority."
+    },
+    {
+      "id": "evaluate",
+      "emittedLanes": [],
+      "execution": "placeholder",
+      "admission": "batchOnlyPendingRewrite",
+      "blocker": "The current reducer is an inert placeholder, so it has no honest retained completion to publish."
+    },
+    {
+      "id": "setSelectedCheckIndex",
+      "emittedLanes": ["config"],
+      "execution": "bounded",
+      "admission": "batchOnlyPendingRewrite",
+      "blocker": "The exact Config Store one-item preparation factory is absent from every Norm editor owner."
+    }
+  ],
+  "apps": [
+    { "variant": "din4108", "controller": "s.norm.din4108@1/*#editor", "documentSchema": "semio.norm.din4108/v1" },
+    { "variant": "din16798", "controller": "s.norm.din16798@1/*#editor", "documentSchema": "semio.norm.din16798/v1" },
+    { "variant": "din18599", "controller": "s.norm.din18599@1/*#editor", "documentSchema": "semio.norm.din18599/v1" },
+    { "variant": "en1990", "controller": "s.norm.en1990@1/*#editor", "documentSchema": "semio.norm.en1990/v1" },
+    { "variant": "en1991", "controller": "s.norm.en1991@1/*#editor", "documentSchema": "semio.norm.en1991/v1" },
+    { "variant": "en1992", "controller": "s.norm.en1992@1/*#editor", "documentSchema": "semio.norm.en1992/v1" },
+    { "variant": "en1993", "controller": "s.norm.en1993@1/*#editor", "documentSchema": "semio.norm.en1993/v1" },
+    { "variant": "en1994", "controller": "s.norm.en1994@1/*#editor", "documentSchema": "semio.norm.en1994/v1" },
+    { "variant": "en1995", "controller": "s.norm.en1995@1/*#editor", "documentSchema": "semio.norm.en1995/v1" },
+    { "variant": "en1996", "controller": "s.norm.en1996@1/*#editor", "documentSchema": "semio.norm.en1996/v1" },
+    { "variant": "en1997", "controller": "s.norm.en1997@1/*#editor", "documentSchema": "semio.norm.en1997/v1" },
+    { "variant": "en1998", "controller": "s.norm.en1998@1/*#editor", "documentSchema": "semio.norm.en1998/v1" },
+    { "variant": "en1999", "controller": "s.norm.en1999@1/*#editor", "documentSchema": "semio.norm.en1999/v1" },
+    { "variant": "iso16757", "controller": "s.norm.iso16757@1/*#editor", "documentSchema": "semio.norm.iso16757/v1" },
+    { "variant": "vdi3805", "controller": "s.norm.vdi3805@1/*#editor", "documentSchema": "semio.norm.vdi3805/v1" }
+  ],
+  "expected": {
+    "apps": 15,
+    "routesPerApp": 3,
+    "identities": 45,
+    "retained": 0,
+    "batchOnlyPendingRewrite": 45
+  },
+  "oracle": {
+    "library": "serde_json",
+    "scope": "test-only-existing-dependency",
+    "ownedInterface": "NormRetainedDispositionOracle",
+    "runtimeDependency": false
+  }
+}

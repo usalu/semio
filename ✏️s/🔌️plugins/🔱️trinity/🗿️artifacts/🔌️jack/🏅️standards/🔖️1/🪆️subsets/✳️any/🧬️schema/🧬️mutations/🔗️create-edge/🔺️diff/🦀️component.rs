@@ -3,7 +3,7 @@ use crate::artifacts::jack::diff::{diff_replace_content, JackDiff};
 use crate::artifacts::jack::JackSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::CreateEdge, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
+pub fn diff(payload: &super::CreateEdge, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
     let scene = crate::artifacts::jack::jack_working_scene(base);
     if scene.edges.iter().any(|edge| edge.id == payload.edge.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An edge with id \"{}\" already exists.", payload.edge.id), [payload.edge.id.clone()]);

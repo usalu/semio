@@ -1,30 +1,9 @@
 syntax = "proto3";
-package semio.s_stdio_tiff.mutation;
-
-import "s_stdio_tiff/snapshot.proto";
-
-message SetSnapshot { semio.s_stdio_tiff.snapshot.TiffSnapshot snapshot = 1; }
-message SetByteOrder { semio.s_stdio_tiff.snapshot.TiffByteOrder byte_order = 1; }
-message InsertIfd { uint64 index = 1; semio.s_stdio_tiff.snapshot.TiffIfd ifd = 2; }
-message RemoveIfd { uint64 index = 1; }
-message SetTag {
-  uint64 ifd_index = 1;
-  uint32 tag = 2;
-  semio.s_stdio_tiff.snapshot.TiffFieldType kind = 3;
-  semio.s_stdio_tiff.snapshot.TiffValues values = 4;
-}
-message RemoveTag { uint64 ifd_index = 1; uint32 tag = 2; }
-message SetPixels { bytes pixels = 1; }
-
-message TiffMutation {
-  oneof mutation {
-    bool no_mutation = 1;
-    SetSnapshot set_snapshot = 2;
-    SetByteOrder set_byte_order = 3;
-    InsertIfd insert_ifd = 4;
-    RemoveIfd remove_ifd = 5;
-    SetTag set_tag = 6;
-    RemoveTag remove_tag = 7;
-    SetPixels set_pixels = 8;
-  }
-}
+package stdio.tiff.mutation;
+import "🧭️change-byte-order/🛰️component.proto";
+import "📥️insert-ifd/🛰️component.proto";
+import "📤️remove-ifd/🛰️component.proto";
+import "🏷️replace-tag/🛰️component.proto";
+import "🗑️remove-tag/🛰️component.proto";
+import "🟪️replace-pixels/🛰️component.proto";
+message TiffMutation { oneof mutation { ChangeByteOrderMutation change_byte_order = 2; InsertIfdMutation insert_ifd = 3; RemoveIfdMutation remove_ifd = 4; ReplaceTagMutation replace_tag = 5; RemoveTagMutation remove_tag = 6; ReplacePixelsMutation replace_pixels = 7; } }

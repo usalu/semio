@@ -4,12 +4,12 @@ use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use flow::FlowEvalSession;
 use semio_framework::kernel::{Effect, UiDirtyScope};
-use semio_framework_plugin::{ArtifactView, ChildEmit, ConfigView, Emit, Fault, FaultCode, FaultOrigin, RequestId};
+use semio_framework_plugin::app::ChildEmit;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, RequestId};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef, SemioFlowSnapshot};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::sync::atomic::{AtomicU64, Ordering};
 
 //#region 🔖️Constants
 pub const DUPLICATE_WIDGET_STEP_ACTION_ID: &str = "duplicateWidgetStep";
@@ -18,7 +18,6 @@ const MAX_CHECKPOINT_BYTES: usize = 4_096;
 const MAX_WIDGET_ID_BYTES: usize = 256;
 const MAX_NODE_PARAMS: usize = 32;
 const MAX_NODE_ENCODED_BYTES: usize = 3_072;
-static NEXT_DUPLICATE_WIDGET_REQUEST: AtomicU64 = AtomicU64::new(30_000);
 //#endregion 🔖️Constants
 
 //#region 🔖️Payloads
@@ -163,8 +162,16 @@ fn advance_search(mut step: DuplicateWidgetStep, scene: &SemioFlowSnapshot) -> S
 //#endregion 🔖️Search
 
 //#region 🔖️Continuation
+fn request_id(payload: &DuplicateWidgetStep) -> u64 {
+    let mut digest = 0xcbf2_9ce4_8422_2325_u64 ^ payload.generation;
+    for byte in payload.operation_id.bytes().chain(payload.phase.bytes()).chain(payload.candidate_id.bytes()) {
+        digest = (digest ^ u64::from(byte)).wrapping_mul(0x1000_0000_01b3);
+    }
+    digest ^ payload.scan_index.rotate_left(17) ^ payload.suffix.rotate_left(31)
+}
+
 fn queue(payload: &DuplicateWidgetStep) -> Effect {
-    Effect::DispatchAction { req: RequestId(NEXT_DUPLICATE_WIDGET_REQUEST.fetch_add(1, Ordering::Relaxed)), action: DUPLICATE_WIDGET_STEP_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(json!(payload))), delay_ms: 0 }
+    Effect::DispatchAction { req: RequestId(request_id(payload)), action: DUPLICATE_WIDGET_STEP_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(json!(payload))), delay_ms: 0 }
 }
 
 fn yield_step(step: DuplicateWidgetStep) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
@@ -182,10 +189,10 @@ fn checkpoint_generation(json: &str) -> Option<u64> {
     serde_json::from_str::<DuplicateWidgetStep>(json).ok().map(|step| step.generation)
 }
 
-async fn commit_duplicate(generation: u64, child_id: &str, node: FlowNode, source_id: String, new_id: String, synapse_id: String) -> Emit<FlowMutation, FlowConfigMutation> {
+fn commit_duplicate(generation: u64, child_id: &str, node: FlowNode, source_id: String, new_id: String, synapse_id: String) -> Emit<FlowMutation, FlowConfigMutation> {
     let edge = FlowEdge { id: synapse_id, from: PortRef { node: source_id, port: String::new() }, to: PortRef { node: new_id, port: String::new() }, kind: "data".into() };
     Emit {
-        child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, vec![SemioFlowMutation::InsertNode { node }, SemioFlowMutation::InsertEdge { edge }]).await],
+        child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, vec![SemioFlowMutation::InsertNode { node }, SemioFlowMutation::InsertEdge { edge }])],
         coalesce_key: Some(format!("duplicateWidget:{generation}")),
         config_mutations: vec![FlowConfigMutation::SetDuplicateWidgetProgress { json: String::new() }],
         ui_scope: UiDirtyScope::Full,
@@ -193,7 +200,7 @@ async fn commit_duplicate(generation: u64, child_id: &str, node: FlowNode, sourc
     }
 }
 
-pub async fn advance_duplicate_widget(payload: &DuplicateWidgetStep, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub fn advance_duplicate_widget(payload: &DuplicateWidgetStep, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     let operation = doc.operation()?;
     if cfg.snapshot.duplicate_widget_progress_json.len() > MAX_CHECKPOINT_BYTES {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("flow.duplicate-widget.checkpoint-invalid"), "the stored Flow continuation exceeds 4,096 UTF-8 bytes"));
@@ -219,13 +226,13 @@ pub async fn advance_duplicate_widget(payload: &DuplicateWidgetStep, doc: &Artif
     {
         return Ok(Emit::default());
     }
-    if revision_id(doc.children.revision("content", &payload.child_id).await?) != payload.child_revision {
+    if revision_id(doc.children.revision("content", &payload.child_id)?) != payload.child_revision {
         return Ok(Emit { config_mutations: vec![FlowConfigMutation::CancelDuplicateWidget { generation: payload.generation }], ..Default::default() });
     }
-    let scene = doc.children.typed_read::<SemioFlowSnapshot>("content", &payload.child_id).await?;
+    let scene = doc.children.typed_read::<SemioFlowSnapshot>("content", &payload.child_id)?;
     match advance_search(payload.clone(), &scene) {
         SearchOutcome::Yield(next) => yield_step(next),
-        SearchOutcome::Commit { node, source_id, new_id, synapse_id } => Ok(commit_duplicate(payload.generation, &payload.child_id, node, source_id, new_id, synapse_id).await),
+        SearchOutcome::Commit { node, source_id, new_id, synapse_id } => Ok(commit_duplicate(payload.generation, &payload.child_id, node, source_id, new_id, synapse_id)),
         SearchOutcome::Busy => Err(Fault::new(FaultOrigin::App, FaultCode::new("flow.duplicate-widget.busy"), "the source widget exceeds the bounded duplicate envelope")),
         SearchOutcome::Cancel => Ok(Emit { config_mutations: vec![FlowConfigMutation::SetDuplicateWidgetProgress { json: String::new() }], ..Default::default() }),
     }
@@ -233,13 +240,13 @@ pub async fn advance_duplicate_widget(payload: &DuplicateWidgetStep, doc: &Artif
 //#endregion 🔖️Continuation
 
 //#region 🔖️Handlers
-pub async fn handle(payload: &DuplicateWidget, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _eval: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub fn handle(payload: &DuplicateWidget, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _eval: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     if payload.widget_id.is_empty() || payload.widget_id.len() > MAX_WIDGET_ID_BYTES {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("flow.duplicate-widget.busy"), "the Flow widget id must fit the 256-byte admission envelope"));
     }
-    doc.children.typed_read::<SemioFlowSnapshot>("content", &doc.snapshot.content.child_id).await?;
+    doc.children.typed_read::<SemioFlowSnapshot>("content", &doc.snapshot.content.child_id)?;
     let operation = doc.operation()?;
-    let child_revision = revision_id(doc.children.revision("content", &doc.snapshot.content.child_id).await?);
+    let child_revision = revision_id(doc.children.revision("content", &doc.snapshot.content.child_id)?);
     let step = DuplicateWidgetStep {
         app_id: operation.app_instance_id.to_string(),
         document_id: operation.parent_document_id.clone(),
@@ -259,8 +266,8 @@ pub async fn handle(payload: &DuplicateWidget, doc: &ArtifactView<'_, FlowSnapsh
     Ok(emit)
 }
 
-pub async fn handle_step(payload: &DuplicateWidgetStep, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _eval: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
-    advance_duplicate_widget(payload, doc, cfg).await
+pub fn handle_step(payload: &DuplicateWidgetStep, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, _eval: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+    advance_duplicate_widget(payload, doc, cfg)
 }
 //#endregion 🔖️Handlers
 

@@ -1,0 +1,63 @@
+Space retained catalog source audit — 2026-08-26
+
+Scope
+- owner: SpaceApp
+- owner file: ✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs
+- controller: s-play
+- document schema: os.workflow
+- factory: SpaceCommandJobFactory
+
+Bun + AJV 2020 fixture validation
+{"schema":"valid","routes":40,"bounded":["setActiveExample","importSpacePack","goHome","navigateVirtualFileSystemNode"],"resumable":36,"unique":true}
+
+Exact publication contract validation
+- contracts: setActiveExample=HostOnly, importSpacePack=HostOnly, goHome=HostOnly, navigateVirtualFileSystemNode=HostOnly
+- source/fixture parity: true
+- hostile wrong-lane fixture rejected: true
+- hostile missing-contract fixture rejected: true
+- hostile extra-contract fixture rejected: true
+- hostile wrong-tool fixture rejected: true
+
+Independent source parity
+{
+  "routes": 40,
+  "bounded": ["setActiveExample", "importSpacePack", "goHome", "navigateVirtualFileSystemNode"],
+  "checks": {
+    "routes40": true,
+    "fixtureRoutes": true,
+    "boundedFixture": true,
+    "proofs": true,
+    "manifest": true,
+    "qualifiedFactory": true,
+    "directOwner": true,
+    "exactRegistration": true,
+    "ownerBuilder": true,
+    "engineGlobalRegistry": true
+  }
+}
+
+Bounded route-body audit
+{"id":"setActiveExample","global":false,"codec":false,"document":false,"loop":false,"hostEffect":1}
+{"id":"importSpacePack","global":false,"codec":false,"document":false,"loop":false,"hostEffect":1}
+{"id":"goHome","global":false,"codec":false,"document":false,"loop":false,"hostEffect":1}
+{"id":"navigateVirtualFileSystemNode","global":false,"codec":false,"document":false,"loop":false,"hostEffect":1}
+
+Official verifier
+- latest command: bun ./📜️script.ts verify interactivity tool-jobs --format json --output <ticket>/📊️codex-official-tool-jobs-shooting-source-2026-08-27.json
+- latest exit: 1, expected repository-global red after mandatory publication-contract validation
+- Space owner-local retained routes recognized: setActiveExample, importSpacePack, goHome, navigateVirtualFileSystemNode
+- Space-scoped forged/publication failures: 0
+- Space remaining rows: 40
+- reason for the four owner-local rows: owner-local retained route exists but full prepare/job/commit operation is not bounded
+- interpretation: source owner/factory/proof wiring is recognized; central full-operation admission remains fail-closed pending coordinator-owned runtime gate closure
+
+Compiler/runtime status
+- Cargo: not run (exclusive compiler lease not granted)
+- Nx: not run (exclusive compiler lease not granted)
+- Rust unit/runtime tests: pending compiler lease
+- rustfmt: not run (compiler/formatter lease not granted)
+
+Known process-global blocker
+- ✏️s/🔌️plugins/🪐️space/🦀️component.rs: shared_studio_ports retains a process-global REGISTRY of Arc<dyn OsBackbonePort>.
+- Required owner seam: host-created, instance-scoped port-catalog service threaded into Home and Studio operation context.
+- No claim of global-state closure is made.

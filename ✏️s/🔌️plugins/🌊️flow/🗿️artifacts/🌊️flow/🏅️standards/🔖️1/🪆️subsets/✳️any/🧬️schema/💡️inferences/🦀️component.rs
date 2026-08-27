@@ -23,7 +23,7 @@ pub struct FlowInference {
 }
 
 impl protocol::Inference<FlowSnapshot> for FlowInference {
-    async fn infer(snapshot: &FlowSnapshot) -> Self {
+    fn infer(snapshot: &FlowSnapshot) -> Self {
         let fixture = snapshot.to_fixture();
         Self { topology: compute_flow_topology(&fixture.widgets, &fixture.synapses) }
     }
@@ -41,13 +41,13 @@ impl Default for FlowInference {
 }
 
 impl protocol::InferenceSpec<FlowSnapshot> for FlowInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.flow.flow.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.flow.flow.inference.topology", reads: &["content"] }]
     }
 }
@@ -63,7 +63,7 @@ impl ArtifactInferrer for crate::artifacts::flow::standards::v1::subsets::any::s
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.flow.flow.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `flow_artifact_schema_descriptor`'s registration.
-pub async fn flow_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn flow_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.flow.flow.inference",
         inference: schema::FacetLeaves {
@@ -86,7 +86,7 @@ mod tests {
 
     async fn chain_snapshot() -> FlowSnapshot {
         let mut fixture = FlowSnapshot::default().to_fixture();
-        fixture.widgets = vec![Widget::InputSlider { id: "a".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 }, Widget::InputSlider { id: "b".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 }];
+        fixture.widgets = vec![Widget::InputSlider { id: "a".into(), label: "A".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 }, Widget::InputSlider { id: "b".into(), label: "B".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 }];
         fixture.synapses = vec![flow::SynapseSpec { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: String::new(), to_port: String::new() }];
         FlowSnapshot::from_fixture(fixture)
     }

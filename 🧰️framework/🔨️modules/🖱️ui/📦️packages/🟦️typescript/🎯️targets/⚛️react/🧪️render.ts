@@ -8,6 +8,7 @@ export interface UiTestRenderResult {
   readonly container: HTMLElement;
   getByRole(role: string, options?: UiTestQueryOptions): HTMLElement;
   getByText(text: string | RegExp, options?: UiTestQueryOptions): HTMLElement;
+  rerender(node: unknown): void;
   unmount(): void;
 }
 
@@ -36,6 +37,7 @@ export function render(node: unknown): UiTestRenderResult {
     container: result.container,
     getByRole: (role, options) => result.getByRole(role, options as Parameters<typeof result.getByRole>[1]),
     getByText: (value, options) => result.getByText(value, options as Parameters<typeof result.getByText>[1]),
+    rerender: (next) => result.rerender(next as Parameters<typeof result.rerender>[0]),
     unmount: result.unmount,
   };
 }
@@ -64,6 +66,21 @@ export const fireEvent = {
   },
   keyDown(target: Element, init?: UiTestEventInit): boolean {
     return testingFireEvent.keyDown(target, init);
+  },
+  keyUp(target: Element, init?: UiTestEventInit): boolean {
+    return testingFireEvent.keyUp(target, init);
+  },
+  pointerDown(target: Element, init?: UiTestEventInit): boolean {
+    return testingFireEvent.pointerDown(target, init);
+  },
+  pointerMove(target: Element, init?: UiTestEventInit): boolean {
+    return testingFireEvent.pointerMove(target, init);
+  },
+  pointerUp(target: Element, init?: UiTestEventInit): boolean {
+    return testingFireEvent.pointerUp(target, init);
+  },
+  pointerCancel(target: Element, init?: UiTestEventInit): boolean {
+    return testingFireEvent.pointerCancel(target, init);
   },
 };
 

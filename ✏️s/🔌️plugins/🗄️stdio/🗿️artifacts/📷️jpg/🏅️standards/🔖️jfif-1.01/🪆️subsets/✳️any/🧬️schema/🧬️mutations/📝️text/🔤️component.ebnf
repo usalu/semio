@@ -1,3 +1,6 @@
-(* ebnf stdio.jpg mutations -- JSON per the sibling JSON Schema facet, no custom textual grammar
-   (OpText::print_op/parse_op both go through serde_json directly) *)
-document = jsonValue ;
+(* Direct text registry; payload productions are owned by each leaf. *)
+mutation = opcode, { " ", argument } ;
+opcode = "change-jfif-header" | "replace-quant-table" | "remove-quant-table" | "replace-huffman-table" | "remove-huffman-table" | "change-restart-interval" | "insert-other-segment" | "remove-other-segment" | "replace-pixels" | "change-re-encode-quality" ;
+argument = name, "=", value ;
+name = letter, { letter | digit | "-" } ;
+value = character, { character } ;

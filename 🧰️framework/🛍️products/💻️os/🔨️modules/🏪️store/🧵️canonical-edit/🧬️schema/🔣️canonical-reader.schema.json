@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.store.canonical-reader.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "sourceFixture",
+    "grants",
+    "expectedByteLength",
+    "expectedJsonSha256",
+    "lifecycle",
+    "hostiles",
+    "expectedRootDrops"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.store.canonical-reader.v1"
+    },
+    "sourceFixture": {
+      "const": "canonical-borrowed-map"
+    },
+    "grants": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4096
+      }
+    },
+    "expectedByteLength": {
+      "const": 4964
+    },
+    "expectedJsonSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "lifecycle": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "zero-grant",
+          "before-poll-cancel",
+          "mid-key-cancel",
+          "complete",
+          "transfer-root",
+          "close"
+        ]
+      },
+      "minItems": 6,
+      "maxItems": 6,
+      "uniqueItems": true
+    },
+    "hostiles": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "early-root-transfer",
+          "root-rebound",
+          "root-drop-before-frame",
+          "non-send-iterator",
+          "closing-zero-depth-bound-root",
+          "unclosed-drop",
+          "double-panic"
+        ]
+      },
+      "minItems": 7,
+      "maxItems": 7,
+      "uniqueItems": true
+    },
+    "expectedRootDrops": {
+      "const": 1
+    }
+  }
+}

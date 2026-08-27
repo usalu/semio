@@ -1086,6 +1086,11 @@ async function buildPluginCatalog(
   return { failedPluginIds: failed };
 }
 
+/** 🛑 Rejects incomplete explicit builds after every target has been attempted. */
+function assertPluginCatalogComplete(failedPluginIds: readonly string[]): void {
+  if (failedPluginIds.length > 0) throw new Error(`plugin catalog build failed: ${failedPluginIds.join(", ")}`);
+}
+
 export async function ensurePluginRegistry(filterPlugin?: string): Promise<void> {
   const registryScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts");
   if (runCmdStatus("bun", [registryScript, "generate"], { cwd: repoRoot }) !== 0) throw new Error("plugin registry generation failed");
@@ -1147,10 +1152,8 @@ async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonl
  * variant's own isolated dev/build) can call this directly per variant instead of shelling out to this
  * script's own CLI once per variant.
  *
- * @emoji 🧯️ Best-effort, same as `buildPluginsStreaming` below: one crate's compiler error no longer
- * aborts the whole catalog (`buildPlugin` used to `throw` mid-loop, so `plugin s` never got past the
- * first broken crate) — every target is attempted, failures are collected, and a summary line is
- * printed at the end naming exactly which crates produced a `.wasm` and which did not. */
+ * Every target is attempted before the summary reports failures. Unlike the streaming dev build,
+ * an incomplete explicit build rejects so callers cannot mistake stale artifacts for fresh outputs. */
 export async function buildPlugins(filterPlugin?: string): Promise<void> {
   ensureAppleDeveloperDir();
   const targets = await preparePluginBuildTargets(filterPlugin);
@@ -1160,6 +1163,7 @@ export async function buildPlugins(filterPlugin?: string): Promise<void> {
   if (failedPluginIds.length > 0) {
     console.log(`plugin catalog build failures (${failedPluginIds.length}): ${failedPluginIds.join(", ")}`);
   }
+  assertPluginCatalogComplete(failedPluginIds);
 }
 
 /** @emoji 🌊️ Host-plugin-first, best-effort variant of `buildPlugins` for the dev runner's streaming
@@ -5532,27 +5536,39 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
   });
 
   describe("rewriteJcoAsyncResultLifting", () => {
-    it("matches wit-bindgen's indirect callback ABI for jco-generated compound task results", () => {
+    it("checks the resolved callback memory", () => {
       const jcoGenerated = `function taskReturn(ctx) {
   const memory = ctx.getMemoryFn();
   if (!ctx.memory) {
       _debugLog('missing memory despite indirect param usage', { ctx });
   }
-}
-const trampoline0 = taskReturn.bind(null, {
-  useDirectParams: true,
-  getMemoryFn: () => null,
-});
-const trampoline22 = taskReturn.bind(null, {
-  useDirectParams: true,
-  getMemoryFn: () => memory0,
-});`;
+}`;
       const rewritten = rewriteJcoAsyncResultLifting(jcoGenerated);
       expect(rewritten).toContain("if (!memory) {");
-      expect(rewritten).toContain("useDirectParams: false,\n  getMemoryFn: () => memory0,");
-      expect(rewritten).toContain("useDirectParams: true,\n  getMemoryFn: () => null,");
       expect(rewriteJcoAsyncResultLifting(rewritten)).toBe(rewritten);
     });
+
+    it("preserves direct descriptor and job results and lifts large turn results indirectly", async () => {
+      const { execFileSync } = await import("node:child_process");
+      const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧪️fixtures/🔣️async-results.json");
+      const generated = execFileSync("node", ["--input-type=module", "--eval", `
+        import { parse, transpile } from "@bytecodealliance/jco";
+        import { readFileSync } from "node:fs";
+        const fixture = JSON.parse(readFileSync(process.argv[1], "utf8"));
+        const results = [];
+        for (const test of fixture.cases) {
+          const wat = fixture.componentTemplate.replace("{{type}}", test.type).replace("{{params}}", test.params.join(" "));
+          const { files } = await transpile(await parse(wat), { name: test.id, noTypescript: true });
+          results.push({ ...test, source: new TextDecoder().decode(files[test.id + ".js"]) });
+        }
+        console.log(JSON.stringify(results));
+      `, fixturePath], { cwd: repoRoot, encoding: "utf8", timeout: 20_000, maxBuffer: 8 * 1024 * 1024 });
+      for (const test of JSON.parse(generated)) {
+        const rewritten = rewriteJcoAsyncResultLifting(test.source);
+        expect(rewritten.match(/taskReturn\.bind\([\s\S]*?useDirectParams: (true|false)/)?.[1], test.id).toBe(String(test.direct));
+        expect(rewriteJcoAsyncResultLifting(rewritten), test.id).toBe(rewritten);
+      }
+    }, 30_000);
   });
 
   describe("rewritePreview2ShimImportSource", () => {
@@ -5612,6 +5628,11 @@ const trampoline22 = taskReturn.bind(null, {
   });
 
   describe("buildPluginCatalog (T-P8: cargo stage serial, materialize stage bounded-parallel)", () => {
+    it("rejects incomplete explicit builds instead of accepting stale plugin artifacts", () => {
+      expect(() => assertPluginCatalogComplete([])).not.toThrow();
+      expect(() => assertPluginCatalogComplete(["cargo-fails", "materialize-fails"])).toThrow("plugin catalog build failed: cargo-fails, materialize-fails");
+    });
+
     const fakeTarget = (pluginId: string): PluginRegistryEntry => ({
       pluginId,
       cratePath: "",

@@ -1,3 +1,0 @@
-// change-scene-name diff typed facet.
-syntax = "proto3"; package stdio.gltf.mutation;
-message GltfChangeSceneNameDiffV1 { GltfChangeSceneNamePayloadV1 operation=1; optional string after=2; repeated string touched_paths=3; }

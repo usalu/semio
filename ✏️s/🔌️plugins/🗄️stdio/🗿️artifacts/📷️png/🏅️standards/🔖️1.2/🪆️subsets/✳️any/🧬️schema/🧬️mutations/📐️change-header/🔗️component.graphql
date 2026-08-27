@@ -1,0 +1,3 @@
+# 🧬️ change-header/ChangeHeader
+scalar ChangeHeaderMutationValue
+input ChangeHeaderMutation { width: Int! height: Int! bitDepth: Int! colorType: ChangeHeaderMutationValue! interlace: Boolean! }

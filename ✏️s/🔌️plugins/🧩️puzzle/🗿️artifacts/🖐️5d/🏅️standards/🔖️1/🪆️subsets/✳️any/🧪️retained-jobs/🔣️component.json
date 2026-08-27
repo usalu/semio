@@ -3,7 +3,8 @@
   "owner": "puzzle5d",
   "documentSchema": "puzzle.5d",
   "payloadSchema": "puzzle.5d.tool-command.v1",
-  "toolIds": [
+  "toolIds": ["canvasPointerDown", "worldPointerDown"],
+  "evidenceToolIds": [
     "addBrushObject", "addBrushPart", "addNode", "addPartKind", "applyBoardEvents", "canvasPointerDown",
     "createFastener", "cycleBrushCandidate", "deleteFastener", "editFastener", "engagementAbort", "engagementControlSelect",
     "engagementInput", "engagementSubmit", "focusSelection", "patchFastener", "patchGrip", "patchPart", "proximityConnect",

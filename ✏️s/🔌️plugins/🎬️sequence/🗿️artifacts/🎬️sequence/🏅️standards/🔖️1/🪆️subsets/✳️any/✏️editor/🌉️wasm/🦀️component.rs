@@ -8,7 +8,6 @@ use crate::editor::sequence::SequenceHost;
 use infinite_board_port_directed_dag::DagLayoutOptions;
 use protocol::{SequenceBridge, SequenceDomain, SequenceFailure, SequencePayloadReader};
 use semio_framework::abi::{AbiErrorCode, AbiMessage, AbiPort, AbiPortPoll, AbiWorkBudget, decode_abi_message, encode_abi_message};
-use std::cell::RefCell;
 
 //#region 🔖️DomainAdapter
 
@@ -322,9 +321,42 @@ struct RetainedMessage {
     bytes: Vec<u8>,
 }
 
-thread_local! {
-    static BRIDGE: RefCell<SequenceBridge<SequenceDomainAdapter>> = RefCell::new(SequenceBridge::new(SequenceDomainAdapter::default));
-    static RETAINED: RefCell<Option<RetainedMessage>> = const { RefCell::new(None) };
+/// 🌉 One caller-owned bridge instance. The protocol queue and undersized-poll payload are retained
+/// by this exact owner, never by process-global or thread-global storage.
+pub struct SequenceBridgeOwner {
+    bridge: SequenceBridge<SequenceDomainAdapter>,
+    retained: Option<RetainedMessage>,
+}
+
+impl SequenceBridgeOwner {
+    fn new() -> Self {
+        Self { bridge: SequenceBridge::new(SequenceDomainAdapter::default), retained: None }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.retained.is_none() && self.bridge.terminal_is_empty()
+    }
+}
+
+unsafe fn sequence_bridge_owner<'a>(owner: *mut SequenceBridgeOwner) -> Option<&'a mut SequenceBridgeOwner> {
+    unsafe { owner.as_mut() }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn sequence_bridge_create() -> *mut SequenceBridgeOwner {
+    Box::into_raw(Box::new(SequenceBridgeOwner::new()))
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn sequence_bridge_destroy(owner: *mut SequenceBridgeOwner) -> i32 {
+    let Some(owner_ref) = (unsafe { owner.as_ref() }) else {
+        return -1;
+    };
+    if !owner_ref.terminal_is_empty() {
+        return 0;
+    }
+    drop(unsafe { Box::from_raw(owner) });
+    1
 }
 
 #[unsafe(no_mangle)]
@@ -346,7 +378,10 @@ pub unsafe extern "C" fn sequence_bridge_release(pointer: *mut u8, capacity: usi
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn sequence_bridge_send(pointer: *const u8, length: usize, byte_credit: usize) -> i32 {
+pub unsafe extern "C" fn sequence_bridge_send(owner: *mut SequenceBridgeOwner, pointer: *const u8, length: usize, byte_credit: usize) -> i32 {
+    let Some(owner) = (unsafe { sequence_bridge_owner(owner) }) else {
+        return -1;
+    };
     if pointer.is_null() || length == 0 || length > protocol::SEQUENCE_MAX_REQUEST_BYTES + 32 {
         return -1;
     }
@@ -354,47 +389,48 @@ pub unsafe extern "C" fn sequence_bridge_send(pointer: *const u8, length: usize,
     let Ok(message) = decode_abi_message(bytes) else {
         return -1;
     };
-    BRIDGE.with(|bridge| bridge.borrow_mut().try_send(message, AbiWorkBudget::credits(byte_credit)).map(|_| 1).unwrap_or(-1))
+    owner.bridge.try_send(message, AbiWorkBudget::credits(byte_credit)).map(|_| 1).unwrap_or(-1)
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn sequence_bridge_poll(pointer: *mut u8, capacity: usize, byte_credit: usize) -> i32 {
+pub unsafe extern "C" fn sequence_bridge_poll(owner: *mut SequenceBridgeOwner, pointer: *mut u8, capacity: usize, byte_credit: usize) -> i32 {
+    let Some(owner) = (unsafe { sequence_bridge_owner(owner) }) else {
+        return -1;
+    };
     if pointer.is_null() || capacity == 0 {
         return -1;
     }
-    RETAINED.with(|retained| {
-        if retained.borrow().is_none() {
-            match BRIDGE.with(|bridge| bridge.borrow_mut().poll(AbiWorkBudget::credits(byte_credit))) {
-                Ok(AbiPortPoll::Message(message)) => {
-                    let bytes = encode_abi_message(&message);
-                    *retained.borrow_mut() = Some(RetainedMessage { _message: message, bytes });
-                }
-                Ok(AbiPortPoll::Pending) => return 0,
-                Ok(AbiPortPoll::Closed) | Err(_) => return -1,
+    if owner.retained.is_none() {
+        match owner.bridge.poll(AbiWorkBudget::credits(byte_credit)) {
+            Ok(AbiPortPoll::Message(message)) => {
+                let bytes = encode_abi_message(&message);
+                owner.retained = Some(RetainedMessage { _message: message, bytes });
             }
+            Ok(AbiPortPoll::Pending) => return 0,
+            Ok(AbiPortPoll::Closed) | Err(_) => return -1,
         }
-        let mut retained = retained.borrow_mut();
-        let value = retained.as_ref().expect("retained Sequence message");
-        if value.bytes.len() > capacity {
-            return i32::try_from(value.bytes.len()).unwrap_or(-1);
-        }
-        unsafe { std::ptr::copy_nonoverlapping(value.bytes.as_ptr(), pointer, value.bytes.len()) };
-        let length = value.bytes.len();
-        retained.take();
-        i32::try_from(length).unwrap_or(-1)
-    })
+    }
+    let value = owner.retained.as_ref().expect("retained Sequence message");
+    if value.bytes.len() > capacity {
+        return i32::try_from(value.bytes.len()).unwrap_or(-1);
+    }
+    unsafe { std::ptr::copy_nonoverlapping(value.bytes.as_ptr(), pointer, value.bytes.len()) };
+    let length = value.bytes.len();
+    owner.retained = None;
+    i32::try_from(length).unwrap_or(-1)
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn sequence_bridge_begin_close() {
-    RETAINED.with(|retained| retained.borrow_mut().take());
-    BRIDGE.with(|bridge| bridge.borrow_mut().begin_close());
+pub unsafe extern "C" fn sequence_bridge_begin_close(owner: *mut SequenceBridgeOwner) {
+    if let Some(owner) = unsafe { sequence_bridge_owner(owner) } {
+        owner.retained = None;
+        owner.bridge.begin_close();
+    }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn sequence_bridge_terminal_is_empty() -> i32 {
-    let retained_empty = RETAINED.with(|retained| retained.borrow().is_none());
-    i32::from(retained_empty && BRIDGE.with(|bridge| bridge.borrow().terminal_is_empty()))
+pub unsafe extern "C" fn sequence_bridge_terminal_is_empty(owner: *mut SequenceBridgeOwner) -> i32 {
+    unsafe { sequence_bridge_owner(owner) }.map_or(0, |owner| i32::from(owner.terminal_is_empty()))
 }
 
 //#endregion 🌉️LinearMemory

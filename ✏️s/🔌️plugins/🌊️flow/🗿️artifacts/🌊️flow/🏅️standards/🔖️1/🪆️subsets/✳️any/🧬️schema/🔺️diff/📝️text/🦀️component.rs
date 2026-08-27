@@ -15,7 +15,7 @@ use protocol::MutationDiff;
 //#region 🔹Apply
 impl FlowDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &FlowArtifact) -> protocol::MutationApplyResult<FlowArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &FlowArtifact) -> protocol::MutationApplyResult<FlowArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -78,7 +78,7 @@ impl FlowDiff {
 }
 
 impl MutationDiff<FlowSnapshot> for FlowDiff {
-    async fn apply(&self, snapshot: &FlowSnapshot) -> protocol::MutationApplyResult<FlowSnapshot> {
+    fn apply(&self, snapshot: &FlowSnapshot) -> protocol::MutationApplyResult<FlowSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -96,7 +96,7 @@ impl MutationDiff<FlowSnapshot> for FlowDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -131,7 +131,7 @@ impl MutationDiff<FlowSnapshot> for FlowDiff {
 
 //#region 🔹Helpers
 /// 📄 Whole-snapshot replacement diff.
-pub async fn diff_set_snapshot(snapshot: &FlowSnapshot) -> FlowDiff {
+pub fn diff_set_snapshot(snapshot: &FlowSnapshot) -> FlowDiff {
     FlowDiff { artifact: Some(Box::new(FlowArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 
@@ -141,7 +141,7 @@ pub async fn diff_set_snapshot(snapshot: &FlowSnapshot) -> FlowDiff {
 /// capture. Every one of the nine widget/synapse mutation triads' `🔺️diff` leaf reads the CURRENT
 /// scene off `base` (via `flow_working_scene`), applies its own specific semantics to that scene,
 /// then calls this shared builder — mirrors writer's `diff_set_text`.
-pub async fn diff_replace_content(widgets: Vec<flow::Widget>, synapses: Vec<flow::SynapseSpec>, layout: std::collections::BTreeMap<String, flow::WidgetLayout>) -> FlowDiff {
+pub fn diff_replace_content(widgets: Vec<flow::Widget>, synapses: Vec<flow::SynapseSpec>, layout: flow::OrderedMap<flow::WidgetLayout>) -> FlowDiff {
     FlowDiff { content: Some(crate::artifacts::flow::flow_content_child_handle_and_cache(widgets, synapses, layout)), ..Default::default() }
 }
 //#endregion 🔹Helpers

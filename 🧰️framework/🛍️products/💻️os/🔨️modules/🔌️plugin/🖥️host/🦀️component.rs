@@ -2536,9 +2536,6 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, Plu
         E::SetPanel(inner) => Effect::SetPanel { panel_json: inner.panel_json },
         E::SetActiveUtility(inner) => Effect::SetActiveUtility { window_id: inner.window_id, utility_id: inner.utility_id },
         E::SetActiveTool(inner) => Effect::SetActiveTool { tool_id: inner.tool_id },
-        E::PatchWorld3dChrome(inner) => {
-            Effect::PatchWorld3dChrome { selection_json: inner.selection_json, vortices_json: inner.vortices_json, document_selected_ids: inner.document_selected_ids, document_highlighted_ids: inner.document_highlighted_ids }
-        }
         E::ReplayShellCommand(inner) => {
             let args = match inner.args {
                 Some(bytes) => decode_dsl(&bytes).await,

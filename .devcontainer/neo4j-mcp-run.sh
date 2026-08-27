@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: AGPL-3.0-only
 #region 🔖️Neo4jMcpRun
-# 🗄️Delegates to root `script.ts dev mcp neo4j …` (same as IDE MCP configs).
+# 🗄️Delegates to root `📜️script.ts dev mcp neo4j …` (same as IDE MCP configs).
 set -euo pipefail
 if [ -f /etc/profile.d/99-compose-neo4j-mcp.sh ]; then
   # shellcheck source=/dev/null

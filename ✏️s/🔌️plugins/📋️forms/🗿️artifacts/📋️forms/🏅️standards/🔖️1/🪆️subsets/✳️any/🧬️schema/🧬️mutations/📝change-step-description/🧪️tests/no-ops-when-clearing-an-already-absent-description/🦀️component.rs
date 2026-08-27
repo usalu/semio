@@ -20,7 +20,7 @@
 //! case's own fixture value and is deliberately arbitrary — `change-step-description` never reads it.
 
 use crate::artifacts::forms::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::artifacts::forms::{cache_forms_steps, forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::artifacts::forms::{materialize_forms_steps, forms_steps, FormStep, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -38,11 +38,11 @@ fn expected_after() -> FormsSnapshot {
 /// 🌱 The committed `⬅️before`, with its composed children resolved to a scene holding one step
 /// whose id and (absent) description are the committed payload's own.
 fn before() -> FormsSnapshot {
-    let snapshot: FormsSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FormsSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let FormMutation::ChangeStepDescription(payload) = mutation() else {
         panic!("no-ops-when-clearing-an-already-absent-description's committed mutation must be a change-step-description");
     };
-    cache_forms_steps(&snapshot.structure.child_id, vec![FormStep { id: payload.id.clone(), title: "Basics".into(), description: payload.new_description.clone(), blocks: Vec::new() }]);
+    materialize_forms_steps(&mut snapshot.structure, vec![FormStep { id: payload.id.clone(), title: "Basics".into(), description: payload.new_description.clone(), blocks: Vec::new() }]);
     snapshot
 }
 
@@ -53,7 +53,7 @@ async fn applies_to_committed_after() {
     let base = before();
     let snapshot = apply_form_edit_mutation(&base, &mutation()).expect("an identity diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "change-step-description/no-ops-when-clearing-an-already-absent-description: applied state differs from committed after-snapshot");
-    assert_eq!((&snapshot.structure.child_id, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a refused description change must not re-mint the structure/results handles");
+    assert_eq!((&mut snapshot.structure, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a refused description change must not re-mint the structure/results handles");
     assert!(forms_steps(&snapshot).first().expect("the seeded scene holds the addressed step").description.is_none(), "the step still has no description at all");
 }
 

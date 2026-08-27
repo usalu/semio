@@ -20,7 +20,7 @@ const FLOW_PLAY_SURFACE_MAIN: &str = "flow.play.main";
 /// 🧱️ Stitched into the app manifest by `crate::editor::flow::create_flow_app`. `options.measures` stays
 /// empty here on purpose: flow's measures are config-derived and rebuilt per frame by
 /// [`window_measures`], not frozen into the manifest.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: FLOW_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Flow", "Flow"),
@@ -40,17 +40,17 @@ pub async fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
-pub async fn window_measures(config: &FlowConfig, labels: &FlowPlayLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(config: &FlowConfig, labels: &FlowPlayLabels) -> Vec<WindowMeasure> {
     vec![options::lod::measure(config, labels), options::proximity::measure(config, labels), options::grid::measure(config, labels)]
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Workflow
-pub async fn split_endpoint(endpoint: &str) -> (String, String) {
+pub fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
-pub async fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let nodes: Vec<NodeGraphNodeRecord> = fixture
         .nodes
         .iter()
@@ -80,7 +80,7 @@ pub async fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeReco
 //#endregion 🔖️Workflow
 
 //#region 🔖️Render
-pub async fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> UiNode {
+pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession) -> UiNode {
     let host = host_from_snapshot(fixture, config, session);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
     let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };

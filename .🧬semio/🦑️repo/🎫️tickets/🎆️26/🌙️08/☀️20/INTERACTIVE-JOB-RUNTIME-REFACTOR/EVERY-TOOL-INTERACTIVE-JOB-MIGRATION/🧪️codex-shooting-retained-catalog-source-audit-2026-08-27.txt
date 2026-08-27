@@ -1,0 +1,64 @@
+Shooting retained catalog source-only audit — 2026-08-27
+
+Scope
+- owner: semio_framework_plugin::EditorApp<ShootingPlayApp>
+- owner file: ✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs
+- controller: s.shooting.shooting@1/*#editor
+- document schema: shooting.shooting
+- factory: ShootingCommandJobFactory
+
+Bun + AJV 2020 fixture validation
+{"schema":"valid","routes":39,"bounded":["loadRequest","importAssetRequest"],"resumable":37,"migrated":["loadRequest","importAssetRequest"],"failClosed":37,"unique":true}
+
+Exact publication contract validation
+- contracts: loadRequest=HostOnly, importAssetRequest=HostOnly
+- source/fixture parity: true
+- hostile wrong-lane fixture rejected: true
+- hostile missing-contract fixture rejected: true
+- hostile extra-contract fixture rejected: true
+- hostile wrong-tool fixture rejected: true
+
+Independent source parity
+{
+  "routes": 39,
+  "bounded": ["loadRequest", "importAssetRequest"],
+  "checks": {
+    "exactCommandIdentitySet": true,
+    "split2And37": true,
+    "fixtureAdmission": true,
+    "manifest": true,
+    "proofs": true,
+    "publicationContracts": true,
+    "qualifiedOwner": true,
+    "exactRegistration": true,
+    "ownerBuilder": true,
+    "instanceOwnedEmblemPayload": true
+  }
+}
+
+Bounded route-body audit
+{"id":"loadRequest","requestFileOpen":1,"document":false,"config":false,"iteration":false,"global":false,"payloadClone":false}
+{"id":"importAssetRequest","requestFileOpen":1,"document":false,"config":false,"iteration":false,"global":false,"payloadClone":false}
+
+Process-global payload audit
+- removed: SHOOTING_EMBLEM_SCRATCH thread-local HashMap
+- replacement: each ShootingEmblemChild owns its immutable SemioImageSnapshot through ArtifactChild::with_local_owner
+- hostile regression: a second snapshot reconstructed with the same child identity but without its own local materialization observes no payload
+- remaining OnceLock values in Shooting are immutable language/composer registries, not mutable payload owners
+
+Official verifier
+- command: bun ./📜️script.ts verify interactivity tool-jobs --format json --output <ticket>/📊️codex-official-tool-jobs-shooting-source-2026-08-27.json
+- exit: 1, expected global red
+- explicit Shooting factory recognized: true
+- owner-local retained routes recognized: loadRequest, importAssetRequest
+- Shooting-scoped forged/publication failures: 0
+- Shooting remaining rows: 39
+- reason for the two owner-local rows: owner-local retained route exists but full prepare/job/commit operation is not bounded
+- interpretation: owner-local wiring and publication contracts are recognized; central Store/full-operation admission remains fail-closed
+
+Source hygiene
+- scoped git diff --check exit: 0
+- Cargo: not run; compiler lease held by Store agent
+- Nx: not run; compiler lease held by Store agent
+- rustfmt: not run; compiler/formatter lease not granted
+- Rust unit/runtime tests: pending compiler lease

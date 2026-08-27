@@ -12,11 +12,11 @@
 //! branches reach no hash at all, so those are what this tree pins until child resolution lands.
 //!
 //! 🌱 `create-node` is the one dag verb with no rejection on an EMPTY scene, so this case seeds the
-//! working-scene cache for the committed handle with the very node the committed mutation payload
+//! exact child owner for the committed handle with the very node the committed mutation payload
 //! carries — the collision the `mutation.duplicate-id` Fatal guards against.
 
 use crate::artifacts::dag::mutations::{apply_dag_mutation, inverse_dag_mutation, DagMutation};
-use crate::artifacts::dag::{cache_dag_content, DagDiff, DagSnapshot};
+use crate::artifacts::dag::{DagDiff, DagSnapshot, DagWorkingScene};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -34,11 +34,11 @@ fn expected_after() -> DagSnapshot {
 /// node the committed payload tries to create. Nothing here is invented: the seeded node IS the
 /// mutation JSON's own `node`.
 fn before() -> DagSnapshot {
-    let snapshot: DagSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: DagSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
     let DagMutation::CreateNode(payload) = mutation() else {
         panic!("rejects-a-duplicate-node-id's committed mutation must be a create-node");
     };
-    cache_dag_content(&snapshot.content.child_id, vec![payload.node.clone()], Vec::new());
+    snapshot.content.set_local_owner(std::sync::Arc::new(DagWorkingScene { nodes: vec![payload.node.clone()], edges: Vec::new() }));
     snapshot
 }
 

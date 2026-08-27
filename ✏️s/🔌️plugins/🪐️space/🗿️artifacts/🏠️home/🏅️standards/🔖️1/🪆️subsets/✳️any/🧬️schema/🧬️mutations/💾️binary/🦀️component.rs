@@ -9,6 +9,8 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 use crate::artifacts::home::schema::mutations::text::SHomeMutation;
 use protocol::OpBinary;
 
+pub const BINARY_TAGS: &[(&str, u8)] = &[("ChangeCatalogGeneration", super::change_catalog_generation::binary::BINARY_TAG)];
+
 /// 📦️ Encodes an `SHomeMutation` to its binary command form.
 pub async fn encode_op(operation: &SHomeMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()

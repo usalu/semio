@@ -1,0 +1,6 @@
+# 🔗 connect-steps direct payload.
+input ConnectStepsInput {
+  id: String!
+  from: String!
+  to: String!
+}

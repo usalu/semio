@@ -14,12 +14,13 @@
 //! `mutationCatalogs[0].kinds` — the `kinds_manifest_law` test there is what keeps those two honest;
 //! this third copy is test-harness wiring, not vocabulary.
 
+use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::any::oracle_identity_round_trip;
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_tiff};
 use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-byte-order", "insert-ifd", "remove-ifd", "set-tag", "remove-tag", "set-pixels"];
+const KINDS: &[&str] = &["change-byte-order", "insert-ifd", "remove-ifd", "replace-tag", "remove-tag", "replace-pixels"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -31,13 +32,13 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 
-/// 🧩️ `set-pixels`' payload is full-resolution real RGBA8 (this fixture decodes to 23M+ bytes), far
+/// 🧩️ `replace-pixels`' payload is full-resolution real RGBA8 (this fixture decodes to 23M+ bytes), far
 /// too large for an inline feature-file hex literal — its row instead carries
 /// `{"pixelsFixture": "local://…"}`, resolved here into the literal `pixels` hex key
 /// `oracle_apply_mutation` (and the subject's own parser below) expect. Every other kind's spec
 /// passes through untouched.
 fn resolve_spec(ctx: &Context, spec: Json) -> Result<Json, String> {
-    if spec.str("kind") != "set-pixels" {
+    if spec.str("kind") != "replace-pixels" {
         return Ok(spec);
     }
     let fixture_uri = spec
@@ -47,10 +48,10 @@ fn resolve_spec(ctx: &Context, spec: Json) -> Result<Json, String> {
             Json::String(s) => Some(s.clone()),
             _ => None,
         })
-        .ok_or("set-pixels spec needs params.pixelsFixture")?;
+        .ok_or("replace-pixels spec needs params.pixelsFixture")?;
     let bytes = ctx.fixture_bytes(&fixture_uri)?;
     let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-    Ok(Json::Object(vec![("kind".to_string(), Json::String("set-pixels".to_string())), ("params".to_string(), Json::Object(vec![("pixels".to_string(), Json::String(hex))]))]))
+    Ok(Json::Object(vec![("kind".to_string(), Json::String("replace-pixels".to_string())), ("params".to_string(), Json::Object(vec![("pixels".to_string(), Json::String(hex))]))]))
 }
 //#endregion 🔖️Input
 
@@ -58,7 +59,7 @@ fn resolve_spec(ctx: &Context, spec: Json) -> Result<Json, String> {
 /// 👁️ `@id-mutate`: applies the row's kind with the registered reference implementation and ASSERTS
 /// the result is distinguishable from the untouched fixture. The exemption list is empty — every
 /// kind this vocabulary declares reaches the compared projection — so a kind that stops moving it
-/// fails here rather than reporting a green identical to `no-mutation`'s.
+/// fails here rather than reporting a green identical to an unchanged round trip's.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = resolve_spec(ctx, ctx.doc_json()?)?;
     let input = mutable_input(ctx)?;
@@ -99,8 +100,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// itself still binds on the SUBJECT side, whose encoder did not write this fixture.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
-    let no_mutation = Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(Vec::new()))]);
-    let output = oracle_apply_mutation(&input, &no_mutation)?;
+    let output = oracle_identity_round_trip(&input)?;
     let before = project_tiff(&input)?;
     let after = project_tiff(&output)?;
     law::round_trip_preserves(&after, &before)?;
@@ -223,48 +223,23 @@ mod subject {
         let p_num = |key: &str| -> Option<f64> { params.and_then(|p| j_num(p, key)) };
         let p_str = |key: &str| -> Option<&str> { params.and_then(|p| j_str(p, key)) };
         Ok(match kind.as_str() {
-            "no-mutation" => TiffMutation::NoMutation,
-            "set-byte-order" => TiffMutation::SetByteOrder { byte_order: if p_str("byteOrder") == Some("big-endian") { TiffByteOrder::BigEndian } else { TiffByteOrder::LittleEndian } },
+            "change-byte-order" => TiffMutation::ChangeByteOrder(semio_s_plugin_stdio::artifacts::tiff::schema::mutations::ChangeByteOrderMutation { byte_order: if p_str("byteOrder") == Some("big-endian") { TiffByteOrder::BigEndian } else { TiffByteOrder::LittleEndian } }),
             "insert-ifd" => {
                 let index = p_num("index").ok_or("insert-ifd needs `index`")? as usize;
                 let ifd_json = params.and_then(|p| p.get("ifd")).ok_or("insert-ifd needs `ifd`")?;
                 let (ifd, _strip) = ifd_from_json(ifd_json)?;
-                TiffMutation::InsertIfd { index, ifd }
+                TiffMutation::InsertIfd(semio_s_plugin_stdio::artifacts::tiff::schema::mutations::InsertIfdMutation { index, ifd })
             }
-            "remove-ifd" => TiffMutation::RemoveIfd { index: p_num("index").ok_or("remove-ifd needs `index`")? as usize },
-            "set-tag" => {
-                let ifd_index = p_num("ifdIndex").ok_or("set-tag needs `ifdIndex`")? as usize;
-                let tag = p_num("tag").ok_or("set-tag needs `tag`")? as u16;
-                let type_code = p_num("type").ok_or("set-tag needs `type`")? as u16;
-                let values = params.and_then(|p| p.get("values")).ok_or("set-tag needs `values`")?;
-                TiffMutation::SetTag { ifd_index, tag, kind: TiffFieldType::from_u16(type_code)?, values: values_from_json(type_code, values)? }
+            "remove-ifd" => TiffMutation::RemoveIfd(semio_s_plugin_stdio::artifacts::tiff::schema::mutations::RemoveIfdMutation { index: p_num("index").ok_or("remove-ifd needs `index`")? as usize }),
+            "replace-tag" => {
+                let ifd_index = p_num("ifdIndex").ok_or("replace-tag needs `ifdIndex`")? as usize;
+                let tag = p_num("tag").ok_or("replace-tag needs `tag`")? as u16;
+                let type_code = p_num("type").ok_or("replace-tag needs `type`")? as u16;
+                let values = params.and_then(|p| p.get("values")).ok_or("replace-tag needs `values`")?;
+                TiffMutation::ReplaceTag(semio_s_plugin_stdio::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index, tag, kind: TiffFieldType::from_u16(type_code)?, values: values_from_json(type_code, values)? })
             }
-            "remove-tag" => TiffMutation::RemoveTag { ifd_index: p_num("ifdIndex").ok_or("remove-tag needs `ifdIndex`")? as usize, tag: p_num("tag").ok_or("remove-tag needs `tag`")? as u16 },
-            "set-pixels" => TiffMutation::SetPixels { pixels: hex_decode(p_str("pixels").ok_or("set-pixels needs `pixels`")?)? },
-            "set-snapshot" => {
-                let ifds_json = match params.and_then(|p| p.get("ifds")) {
-                    Some(Json::Array(items)) => items,
-                    _ => return Err("set-snapshot needs an `ifds` array".to_string()),
-                };
-                let mut ifds: Vec<TiffIfd> = Vec::new();
-                let mut pixels = Vec::new();
-                for ifd_json in ifds_json {
-                    let (mut ifd, strip) = ifd_from_json(ifd_json)?;
-                    // 🥇 IFD 0's raster is the snapshot's own canonical RGBA `pixels` (see `TiffIfd::pixels`),
-                    // so its `ifd.pixels` stays empty and the supplied RGB strip is widened into that field
-                    // instead. Every later directory keeps the raw strip it was given, which is what lets the
-                    // encoder emit that directory's required StripOffsets/RowsPerStrip/StripByteCounts triple.
-                    if ifds.is_empty() {
-                        if let Some(strip) = strip {
-                            pixels = strip.chunks_exact(3).flat_map(|px| [px[0], px[1], px[2], 255]).collect();
-                        }
-                        ifd.pixels = Vec::new();
-                    }
-                    ifds.push(ifd);
-                }
-                let byte_order = if p_str("byteOrder") == Some("big-endian") { TiffByteOrder::BigEndian } else { TiffByteOrder::LittleEndian };
-                TiffMutation::SetSnapshot { snapshot: TiffSnapshot { schema: "stdio.tiff".to_string(), byte_order, ifds, pixels } }
-            }
+            "remove-tag" => TiffMutation::RemoveTag(semio_s_plugin_stdio::artifacts::tiff::schema::mutations::RemoveTagMutation { ifd_index: p_num("ifdIndex").ok_or("remove-tag needs `ifdIndex`")? as usize, tag: p_num("tag").ok_or("remove-tag needs `tag`")? as u16 }),
+            "replace-pixels" => TiffMutation::ReplacePixels(semio_s_plugin_stdio::artifacts::tiff::schema::mutations::ReplacePixelsMutation { pixels: hex_decode(p_str("pixels").ok_or("replace-pixels needs `pixels`")?)? }),
             other => return Err(format!("subject: unrecognized mutation kind {other:?}")),
         })
     }
@@ -277,27 +252,7 @@ mod subject {
     /// `protocol` crate as an extra direct dependency of this generated test crate for no gain: the
     /// mutation this scenario actually puts under test is still `apply_tiff_mutation`, exercised in
     /// BOTH directions below.
-    fn inverse_of(mutation: &TiffMutation, base: &TiffSnapshot) -> TiffMutation {
-        match mutation {
-            TiffMutation::NoMutation => TiffMutation::NoMutation,
-            TiffMutation::SetSnapshot { .. } => TiffMutation::SetSnapshot { snapshot: base.clone() },
-            TiffMutation::SetByteOrder { .. } => TiffMutation::SetByteOrder { byte_order: base.byte_order },
-            TiffMutation::InsertIfd { index, .. } => TiffMutation::RemoveIfd { index: (*index).min(base.ifds.len()) },
-            TiffMutation::RemoveIfd { index } => match base.ifds.get(*index) {
-                Some(ifd) => TiffMutation::InsertIfd { index: *index, ifd: ifd.clone() },
-                None => TiffMutation::NoMutation,
-            },
-            TiffMutation::SetTag { ifd_index, tag, .. } => match base.ifds.get(*ifd_index).and_then(|ifd| ifd.entries.iter().find(|t| t.tag == *tag)) {
-                Some(existing) => TiffMutation::SetTag { ifd_index: *ifd_index, tag: *tag, kind: existing.kind, values: existing.values.clone() },
-                None => TiffMutation::RemoveTag { ifd_index: *ifd_index, tag: *tag },
-            },
-            TiffMutation::RemoveTag { ifd_index, tag } => match base.ifds.get(*ifd_index).and_then(|ifd| ifd.entries.iter().find(|t| t.tag == *tag)) {
-                Some(existing) => TiffMutation::SetTag { ifd_index: *ifd_index, tag: *tag, kind: existing.kind, values: existing.values.clone() },
-                None => TiffMutation::NoMutation,
-            },
-            TiffMutation::SetPixels { .. } => TiffMutation::SetPixels { pixels: base.pixels.clone() },
-        }
-    }
+    fn inverse_of(mutation: &TiffMutation, base: &TiffSnapshot) -> Vec<TiffMutation> { semio_s_plugin_stdio::artifacts::tiff::schema::mutations::inverse_tiff_mutation(mutation, base) }
     //#endregion 🔖️Inverse
 
     //#region 🔖️Handlers
@@ -329,8 +284,7 @@ mod subject {
         let base = decode_tiff(&input).map_err(|error| format!("decode_tiff failed: {error:?}"))?;
         let mut snapshot = base.clone();
         apply_tiff_mutation(&mut snapshot, &mutation);
-        let inverse = inverse_of(&mutation, &base);
-        apply_tiff_mutation(&mut snapshot, &inverse);
+        for inverse in inverse_of(&mutation, &base) { apply_tiff_mutation(&mut snapshot, &inverse); }
         let output = encode_tiff(&snapshot).map_err(|error| format!("encode_tiff failed: {error:?}"))?;
         let projection = project_tiff(&output)?;
         Ok(Outcome::with_raw(output, projection))

@@ -1,0 +1,9 @@
+syntax = "proto3";
+package semio.s.sequence.sequence.mutation;
+
+message DuplicateStep {
+  string source_id = 1;
+  string new_id = 2;
+  double x = 3;
+  double y = 4;
+}

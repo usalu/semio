@@ -20,9 +20,12 @@ use crate::editor::remodel::panels::{calibration as calibration_panel, document,
 use crate::editor::remodel::presence::{RemodelPresence, RemodelPresenceMutation};
 use crate::editor::remodel::terminology::remodel_labels;
 use base64::Engine as _;
+use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, AppIo, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, GlbExporter, GranularityDefinition,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView, Editor,
+    EditorApp, Emit, Fault, FaultCode, FaultOrigin, GlbExporter, GranularityDefinition,
     HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MergeMode,
     MeshExporter, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
@@ -471,6 +474,94 @@ mod args_bridge {
 #[derive(Default)]
 pub struct RemodelPlayApp;
 
+//#region 🧵️RetainedCommands
+const REMODEL_BOUNDED_TOOL_IDS: &[&str] = &["importFrames", "importVideo"];
+const REMODEL_RETAINED_PAYLOAD_SCHEMA: &str = "remodel.scene.tool-command.v1";
+const REMODEL_BOUNDED_RAW_BYTES: usize = 65_536;
+const REMODEL_BOUNDED_WORK_ITEMS: usize = 1;
+
+fn remodel_bounded_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(REMODEL_BOUNDED_RAW_BYTES, 64, REMODEL_BOUNDED_WORK_ITEMS, 262_144, 7_500)
+}
+
+fn remodel_bounded_extent(command: &RemodelCommand, _snapshot: &RemodelSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    REMODEL_BOUNDED_TOOL_IDS.contains(&command.command_id()).then_some(REMODEL_BOUNDED_WORK_ITEMS)
+}
+
+fn remodel_bounded_reduce(
+    command: &RemodelCommand,
+    snapshot: &RemodelSnapshot,
+    config: &RemodelConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> Result<Emit<RemodelMutation, RemodelConfigMutation, NoDraftMutation>, Fault> {
+    if !REMODEL_BOUNDED_TOOL_IDS.contains(&command.command_id()) {
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("remodel.retained.route"), "the bounded Remodel reducer rejects resumable routes"));
+    }
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+}
+
+struct RemodelCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl RemodelCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: REMODEL_BOUNDED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for RemodelCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<RemodelPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<RemodelPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        REMODEL_RETAINED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        remodel_bounded_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > REMODEL_BOUNDED_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("bounded Remodel command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for RemodelCommandJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<RemodelPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = REMODEL_BOUNDED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = REMODEL_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importFrames", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importVideo", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    ];
+}
+//#endregion 🧵️RetainedCommands
+
 impl ArtifactEditor for RemodelPlayApp {
     type Snapshot = RemodelSnapshot;
     type Mutation = RemodelMutation;
@@ -493,13 +584,54 @@ impl ArtifactEditor for RemodelPlayApp {
         owner_file: "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
         controller: "s.remodel.remodel@1/*#editor",
         document_schema: "remodel.scene",
-        factory: "BoundedFirstStepCommandJobFactory",
+        factory: "RemodelCommandJobFactory",
+        factory_type: RemodelCommandJobFactory,
         tools: {
-            "runReconstruction" => semio_framework::ToolExecutionContract::bounded_first_step(1_114_112, 1_024, 1_024, 4_096, 7_500),
-            "retryStage" => semio_framework::ToolExecutionContract::bounded_first_step(1_114_112, 1_024, 1_024, 4_096, 7_500),
-            "runStage" => semio_framework::ToolExecutionContract::bounded_first_step(1_114_112, 1_024, 1_024, 4_096, 7_500),
-            "advanceReconstruction" => semio_framework::ToolExecutionContract::bounded_first_step(1_114_112, 1_024, 1_024, 4_096, 7_500),
+            "importFrames" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "importVideo" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
         }
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(RemodelCommandJobFactory::new(&controller))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !REMODEL_BOUNDED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("remodel.retained.tool-mismatch"), "Remodel command does not match its exact registered tool"));
+        }
+        if remodel_bounded_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("remodel.retained.extent"), "Remodel bounded route exceeded its declared work extent"));
+        }
+        let tool_id = request.command.command_id();
+        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, remodel_bounded_reduce, remodel_bounded_extent));
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id,
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            request.context,
+            operation_context,
+            request.completion,
+            RemodelCommand::command_id,
+            REMODEL_BOUNDED_RAW_BYTES,
+            REMODEL_BOUNDED_WORK_ITEMS,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
     async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
@@ -693,10 +825,6 @@ pub fn create_remodel_app() -> AppDefinition {
             .mutation("retryStage", LocalizedLabel::native("Retry", "Wiederholen"))
             .mutation("runStage", LocalizedLabel::native("Run Stage", "Stufe ausführen"))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(run_reconstruction::ADVANCE_RECONSTRUCTION_ACTION_ID, LocalizedLabel::native("Advance Reconstruction", "Rekonstruktion fortsetzen"), ActionKind::Mutation) })
-            .action_interactive_job("runReconstruction", InteractiveJobClassification::Migrated)
-            .action_interactive_job("retryStage", InteractiveJobClassification::Migrated)
-            .action_interactive_job("runStage", InteractiveJobClassification::Migrated)
-            .action_interactive_job(run_reconstruction::ADVANCE_RECONSTRUCTION_ACTION_ID, InteractiveJobClassification::Migrated)
             .action_args("runStage", vec![ActionArgDef::select(
                 "stage",
                 LocalizedLabel::native("Stage", "Stufe"),
@@ -873,6 +1001,11 @@ pub fn create_remodel_app() -> AppDefinition {
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("sculpt", LocalizedLabel::native("Sculpt", "Formen"), "paintbrush") })
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("measure", LocalizedLabel::native("Measure", "Messen"), "scaling") })
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("gcpPlace", LocalizedLabel::native("Place GCP", "Passpunkt setzen"), "crosshair") })
+            // 🧵️ Only fixture-classified O(1) config/view and host-request reducers are admitted here.
+            // Every document mutation, reconstruction step, payload decode, calibration traversal, QC
+            // encoding, and cancellation route remains fail-closed until resumable work is mounted.
+            .action_interactive_job("importFrames", InteractiveJobClassification::Migrated)
+            .action_interactive_job("importVideo", InteractiveJobClassification::Migrated)
             // 🎯️ Typed channel surface — `io()` is this same information's single source of truth,
             // reused here rather than duplicated.
             .io(remodel_io())
@@ -939,6 +1072,81 @@ mod tests {
     use protocol::{OpBinary, OpText};
     use semio_framework_plugin::testkit;
     use semio_framework_plugin::{EditorApp, HistoryView};
+
+    //#region 🧪️RetainedCatalogOracle
+    #[derive(Debug, PartialEq, Eq)]
+    struct RemodelRetainedCatalogSummary {
+        routes: usize,
+        bounded: usize,
+        resumable: usize,
+        unique: bool,
+        bounded_ids: std::collections::BTreeSet<String>,
+        host_only_ids: std::collections::BTreeSet<String>,
+    }
+
+    trait RemodelRetainedCatalogOracle {
+        fn summarize(&self, fixture: &str) -> RemodelRetainedCatalogSummary;
+    }
+
+    struct SerdeJsonRemodelRetainedCatalogOracle;
+
+    impl RemodelRetainedCatalogOracle for SerdeJsonRemodelRetainedCatalogOracle {
+        fn summarize(&self, fixture: &str) -> RemodelRetainedCatalogSummary {
+            let document: serde_json::Value = serde_json::from_str(fixture).expect("language-neutral retained catalog fixture");
+            let routes = document.get("routes").and_then(serde_json::Value::as_array).expect("routes array");
+            let bounded = routes.iter().filter(|route| route.get("execution").and_then(serde_json::Value::as_str) == Some("bounded")).count();
+            let resumable = routes.iter().filter(|route| route.get("execution").and_then(serde_json::Value::as_str) == Some("resumable")).count();
+            let ids: std::collections::BTreeSet<&str> = routes.iter().filter_map(|route| route.get("id").and_then(serde_json::Value::as_str)).collect();
+            let bounded_ids = routes
+                .iter()
+                .filter(|route| route.get("execution").and_then(serde_json::Value::as_str) == Some("bounded"))
+                .filter_map(|route| route.get("id").and_then(serde_json::Value::as_str).map(str::to_string))
+                .collect::<std::collections::BTreeSet<_>>();
+            let host_only_ids = document
+                .get("publicationContracts")
+                .and_then(serde_json::Value::as_array)
+                .expect("publication contracts array")
+                .iter()
+                .filter(|contract| contract.get("lanes").and_then(serde_json::Value::as_array).is_some_and(|lanes| lanes.as_slice() == [serde_json::Value::String("hostOnly".into())]))
+                .filter_map(|contract| contract.get("toolId").and_then(serde_json::Value::as_str).map(str::to_string))
+                .collect::<std::collections::BTreeSet<_>>();
+            RemodelRetainedCatalogSummary { routes: routes.len(), bounded, resumable, unique: ids.len() == routes.len(), bounded_ids, host_only_ids }
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_command_catalog_matches_the_serde_json_oracle() {
+        let oracle = SerdeJsonRemodelRetainedCatalogOracle.summarize(include_str!("🧪️fixtures/🎯️retained-command-limits.json"));
+        let command_ids: std::collections::BTreeSet<&str> = every_command().iter().map(RemodelCommand::command_id).collect();
+        let bounded_ids: std::collections::BTreeSet<&str> = REMODEL_BOUNDED_TOOL_IDS.iter().copied().collect();
+        let bounded_owned = bounded_ids.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
+        let host_only_ids = <RemodelCommandJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
+            .iter()
+            .filter(|contract| contract.lanes == [semio_framework_plugin::ArtifactToolPublicationLane::HostOnly])
+            .map(|contract| contract.tool_id.to_string())
+            .collect::<std::collections::BTreeSet<_>>();
+        let subject = RemodelRetainedCatalogSummary {
+            routes: command_ids.len(),
+            bounded: bounded_ids.len(),
+            resumable: command_ids.difference(&bounded_ids).count(),
+            unique: bounded_ids.len() == REMODEL_BOUNDED_TOOL_IDS.len() && bounded_ids.is_subset(&command_ids),
+            bounded_ids: bounded_owned.clone(),
+            host_only_ids,
+        };
+        assert_eq!(oracle, RemodelRetainedCatalogSummary { routes: 41, bounded: 2, resumable: 39, unique: true, bounded_ids: bounded_owned.clone(), host_only_ids: bounded_owned });
+        assert_eq!(subject, oracle);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
+        let fixture = include_str!("🧪️fixtures/🎯️retained-command-limits.json");
+        let expected = REMODEL_BOUNDED_TOOL_IDS.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
+        let wrong_lane = fixture.replacen("\"hostOnly\"", "\"artifact\"", 1);
+        let wrong_tool = fixture.replacen("\"importFrames\"", "\"forgedImport\"", 1);
+        assert_ne!(SerdeJsonRemodelRetainedCatalogOracle.summarize(&wrong_lane).host_only_ids, expected);
+        assert_ne!(SerdeJsonRemodelRetainedCatalogOracle.summarize(&wrong_tool).host_only_ids, expected);
+    }
+    //#endregion 🧪️RetainedCatalogOracle
 
     //#region 🔖️CommandSurface
     /// ⚡️ One representative value per `RemodelCommand` row, in declaration (= binary ordinal) order —

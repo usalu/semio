@@ -1,11 +1,6 @@
-(* TiffMutation's wire text IS its JSON serialization (protocol::OpText — serde_json,
-   #[serde(tag = "mutation")]); this names the real 8 variant tags, not RFC 8259's own
-   JSON grammar. *)
-mutation = "{", '"mutation"', ":", variant tag, { ",", member }, "}" ;
-variant tag = '"noMutation"' | '"setSnapshot"' | '"setByteOrder"' | '"insertIfd"'
-            | '"removeIfd"' | '"setTag"' | '"removeTag"' | '"setPixels"' ;
-member = string, ":", json value ;
-json value = "{", [ member, { ",", member } ], "}"
-           | "[", { json value }, "]"
-           | string | integer | bool | "null" ;
-bool = "true" | "false" ;
+(* Direct text registry; payload productions are owned by each leaf. *)
+mutation = opcode, { " ", argument } ;
+opcode = "change-byte-order" | "insert-ifd" | "remove-ifd" | "replace-tag" | "remove-tag" | "replace-pixels" ;
+argument = name, "=", value ;
+name = letter, { letter | digit | "-" } ;
+value = character, { character } ;

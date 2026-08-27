@@ -11,7 +11,6 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-import { getSketchpadDistCandidatePaths, isLikelyKitJsonFilePath, resolveSketchpadDistPath } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts";
 import {
   buildCliTreeArgs,
   buildEntityEmojiPattern,
@@ -36,7 +35,7 @@ import {
   TreeNodeData,
   treeNodeDisplayLabel,
   treeNodeToItem,
-} from "./extension";
+} from "./🟦️extension";
 
 // #endregion 🔌️Adapters
 
@@ -1966,36 +1965,6 @@ suite("CodeLens Behavior Test Suite", function () {
 
       assert.deepStrictEqual(missingScopes, [], `missing native Analyze CodeLens scopes in ${testCase.label} source ${document.uri.fsPath}: ${missingScopes.join(", ")}`);
     }
-  });
-});
-
-suite("Compose VS Code Kit Editor Test Suite", () => {
-  test("Kit file detection matches compose kit naming conventions", () => {
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/asset/compose/metabolism.kit.json"), true);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/asset/compose/metabolism/wip/initialKit/kit.compose.json"), true);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/asset/compose/kit-metabolism.json"), true);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/asset/compose/metabolism.kit.embedded.compose.json"), true);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/compose/jsonschema/kit.json"), false);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/asset/compose/metabolism.kit.diff.compose.json"), false);
-  });
-
-  test("Sketchpad dist resolution prefers bundled assets and falls back to workspace sketchpad dist", () => {
-    const fixtureRoot = fs.mkdtempSync(path.join(getWorkspaceRoot(), ".tmp-compose-vscode-"));
-    const extensionPath = path.join(fixtureRoot, "extension");
-    const bundledDistPath = path.join(extensionPath, "sketchpad-dist");
-    const workspaceDistPath = path.join(fixtureRoot, "sketchpad", "dist");
-    fs.mkdirSync(bundledDistPath, { recursive: true });
-    fs.mkdirSync(workspaceDistPath, { recursive: true });
-    fs.writeFileSync(path.join(workspaceDistPath, "webview.html"), "<html>workspace</html>");
-
-    const candidatePaths = getSketchpadDistCandidatePaths(extensionPath);
-    assert.deepStrictEqual(candidatePaths, [bundledDistPath, workspaceDistPath]);
-    assert.strictEqual(resolveSketchpadDistPath(extensionPath), workspaceDistPath);
-
-    fs.writeFileSync(path.join(bundledDistPath, "webview.html"), "<html>bundled</html>");
-    assert.strictEqual(resolveSketchpadDistPath(extensionPath), bundledDistPath);
-
-    fs.rmSync(fixtureRoot, { recursive: true, force: true });
   });
 });
 

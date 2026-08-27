@@ -24,6 +24,7 @@ pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Procedural2dSnapshot>,
     let fixture = &doc.snapshot.fixture;
     let descriptor = match payload.kind.as_str() {
         "neuron" => json!({ "kind": "neuron", "neuronKind": payload.neuron_kind.clone().unwrap_or_else(|| "math.add".into()) }).to_string(),
+        "inputSlider" => json!({ "kind": "inputSlider", "label": "" }).to_string(),
         other => json!({ "kind": other }).to_string(),
     };
     let mut host = host_from_fixture(fixture);

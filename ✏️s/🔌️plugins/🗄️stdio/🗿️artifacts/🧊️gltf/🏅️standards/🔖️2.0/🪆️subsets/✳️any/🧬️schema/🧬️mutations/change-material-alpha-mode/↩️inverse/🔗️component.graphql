@@ -1,1 +1,0 @@
-input GltfChangeMaterialAlphaModeInverseV1Input { material: Int!, expectedAlphaMode: GltfChangeMaterialAlphaModeValue!, alphaMode: GltfChangeMaterialAlphaModeValue!, touchedPaths: [String!]! }

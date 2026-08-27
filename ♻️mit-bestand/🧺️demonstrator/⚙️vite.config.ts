@@ -42,6 +42,7 @@ export default defineConfig({
   publicDir: path.join(playDir, "public"),
   assetsInclude: ["**/*.wasm"],
   worker: { format: "es" },
+  define: { "import.meta.vitest": "undefined" },
   resolve: {
     alias: [
       ...playgroundSceneHostResolveAliases(repoRoot),

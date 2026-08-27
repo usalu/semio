@@ -2444,7 +2444,7 @@ pub fn node_graph_pointer_up(surface_id: &str, controller_id: &str, inner: Rect,
 
 struct GraphInteractionSnapshot {
     node_ids: Vec<String>,
-    hover_json: String,
+    hovered_id: Option<String>,
     viewport_json: String,
 }
 
@@ -2476,13 +2476,12 @@ fn graph_plan_fault(fault: flow::dag::DagInteractionPlanFault) -> ui_wgpu::wgpu:
 }
 
 fn graph_projection_snapshot(node_ids: Vec<String>, hovered_id: Option<String>, camera: [f64; 3]) -> Result<GraphInteractionSnapshot, ui_wgpu::wgpu::BoundedActionFault> {
-    let hover_json = hovered_id.map(|id| json!({ "nodeId": id }).to_string()).unwrap_or_else(|| "null".into());
     let viewport_json = json!({ "x": camera[0], "y": camera[1], "zoom": camera[2] }).to_string();
     let mut parts = Vec::with_capacity(node_ids.len() + 2);
-    parts.extend([hover_json.as_str(), viewport_json.as_str()]);
+    parts.extend([hovered_id.as_deref().unwrap_or_default(), viewport_json.as_str()]);
     parts.extend(node_ids.iter().map(String::as_str));
     ui_wgpu::wgpu::checked_action_string_bytes(&parts)?;
-    Ok(GraphInteractionSnapshot { node_ids, hover_json, viewport_json })
+    Ok(GraphInteractionSnapshot { node_ids, hovered_id, viewport_json })
 }
 
 fn plan_node_graph_pointer(surface_id: &str, intent: flow::dag::DagPointerIntent) -> Result<Option<(NodeGraphPointerPlan, GraphInteractionSnapshot)>, ui_wgpu::wgpu::BoundedActionFault> {
@@ -2554,46 +2553,56 @@ fn graph_interaction_snapshot(entry: &EngineSurface, camera: Option<[f64; 3]>) -
 }
 
 fn write_graph_interaction_actions(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, surface_id: &str, controller_id: &str, snapshot: GraphInteractionSnapshot) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
-    let select_action = "nodeGraphSelect";
-    let select_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, select_action, "surfaceId", surface_id, "nodeIds"])? + snapshot.node_ids.iter().map(String::len).sum::<usize>();
+    let select_action = "interactionSelect";
+    let select_targets = serde_json::to_string(&snapshot.node_ids.iter().map(|id| json!({ "granularity": "node", "id": id })).collect::<Vec<_>>()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+    let select_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, select_action, "domainId", "graph", "targets", select_targets.as_str(), "merge", "replace", "method", "pick"])?;
     batch.action(controller_id, select_action, select_bytes, |builder| {
         builder.begin_object(None)?;
-        builder.string(Some("surfaceId"), surface_id)?;
-        builder.begin_array(Some("nodeIds"))?;
-        for id in &snapshot.node_ids {
-            builder.string(None, id)?;
-        }
-        builder.end_container()?;
+        builder.string(Some("domainId"), "graph")?;
+        builder.string(Some("targets"), &select_targets)?;
+        builder.string(Some("merge"), "replace")?;
+        builder.string(Some("method"), "pick")?;
         builder.end_container()
     })?;
-    for (action, key, value) in [("nodeGraphHover", "hoverJson", snapshot.hover_json.as_str()), ("nodeGraphViewport", "viewportJson", snapshot.viewport_json.as_str())] {
-        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, action, "surfaceId", surface_id, key, value])?;
-        batch.action(controller_id, action, bytes, |builder| {
-            builder.begin_object(None)?;
-            builder.string(Some("surfaceId"), surface_id)?;
-            builder.string(Some(key), value)?;
-            builder.end_container()
-        })?;
-    }
+    let hover_action = "interactionHover";
+    let hover_targets = serde_json::to_string(&snapshot.hovered_id.iter().map(|id| json!({ "granularity": "node", "id": id })).collect::<Vec<_>>()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+    let hover_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, hover_action, "domainId", "graph", "channel", "pointer", "targets", hover_targets.as_str()])?;
+    batch.action(controller_id, hover_action, hover_bytes, |builder| {
+        builder.begin_object(None)?;
+        builder.string(Some("domainId"), "graph")?;
+        builder.string(Some("channel"), "pointer")?;
+        builder.string(Some("targets"), &hover_targets)?;
+        builder.end_container()
+    })?;
+    let viewport_action = "nodeGraphViewport";
+    let viewport_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, viewport_action, "surfaceId", surface_id, "viewportJson", snapshot.viewport_json.as_str()])?;
+    batch.action(controller_id, viewport_action, viewport_bytes, |builder| {
+        builder.begin_object(None)?;
+        builder.string(Some("surfaceId"), surface_id)?;
+        builder.string(Some("viewportJson"), &snapshot.viewport_json)?;
+        builder.end_container()
+    })?;
     Ok(())
 }
 
 #[cfg(test)]
 fn graph_interaction_actions(surface_id: &str, controller_id: &str, entry: &EngineSurface) -> Vec<ActionDescriptor> {
-    let (node_ids, hover_json, viewport_json) = match entry.node_graph.as_ref() {
+    let (node_ids, hovered_id, viewport_json) = match entry.node_graph.as_ref() {
         Some(NodeGraphEngine::Flow(host)) => {
             let ids: Vec<String> = serde_json::from_str(&host.selected_widget_ids_json()).unwrap_or_default();
-            (ids, host.hovered_widget_id().map(|id| json!({ "nodeId": id }).to_string()).unwrap_or_else(|| "null".into()), serde_json::to_string(&host.dag.fixture.camera).unwrap_or_else(|_| "{}".into()))
+            (ids, host.hovered_widget_id(), serde_json::to_string(&host.dag.fixture.camera).unwrap_or_else(|_| "{}".into()))
         }
         Some(NodeGraphEngine::Dag(host)) => {
             let ids: Vec<String> = serde_json::from_str(&host.selected_node_ids_json()).unwrap_or_default();
-            (ids, host.hovered_node_id().map(|id| json!({ "nodeId": id }).to_string()).unwrap_or_else(|| "null".into()), host.camera_json())
+            (ids, host.hovered_node_id(), host.camera_json())
         }
         None => return Vec::new(),
     };
+    let select_targets = serde_json::to_string(&node_ids.iter().map(|id| json!({ "granularity": "node", "id": id })).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into());
+    let hover_targets = serde_json::to_string(&hovered_id.iter().map(|id| json!({ "granularity": "node", "id": id })).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into());
     vec![
-        graph_action(controller_id, surface_id, "nodeGraphSelect", json!({ "surfaceId": surface_id, "nodeIds": node_ids })),
-        graph_action(controller_id, surface_id, "nodeGraphHover", json!({ "surfaceId": surface_id, "hoverJson": hover_json })),
+        graph_action(controller_id, surface_id, "interactionSelect", json!({ "domainId": "graph", "targets": select_targets, "merge": "replace", "method": "pick" })),
+        graph_action(controller_id, surface_id, "interactionHover", json!({ "domainId": "graph", "channel": "pointer", "targets": hover_targets })),
         graph_action(controller_id, surface_id, "nodeGraphViewport", json!({ "surfaceId": surface_id, "viewportJson": viewport_json })),
     ]
 }

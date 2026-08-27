@@ -1,1 +1,0 @@
-input GltfChangeNodeNameInverseV1 { node: Int!, before: String, after: String, touchedPaths: [String!]! }

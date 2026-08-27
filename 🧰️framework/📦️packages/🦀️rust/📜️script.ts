@@ -5,6 +5,21 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join, relative } from "node:path";
 
+//#region 🧹️WireRetirement
+class WireRetirementSourceScript extends BundleScript {
+  async run(): Promise<void> {
+    const { testWireRetirementFixture } = await import("../../🔨️modules/🎯️action-bus/🧹️wire-retirement/📜️script.ts");
+    testWireRetirementFixture();
+  }
+}
+class WireRetirementNativeScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    await runCargoTestBudgeted(["semio-framework"], this.repoRoot, rest.length ? rest : ["--lib", "retained_wire_input_small_grants_retire_initialized_bytes_and_backing_allocation"]);
+  }
+}
+//#endregion 🧹️WireRetirement
+
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
@@ -78,6 +93,6 @@ class CheckScript extends BundleScript {
 }
 //#endregion 🔖️Typegen
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

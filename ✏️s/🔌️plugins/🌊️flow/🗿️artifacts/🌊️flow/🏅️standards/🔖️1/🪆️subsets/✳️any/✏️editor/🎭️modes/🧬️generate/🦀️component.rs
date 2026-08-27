@@ -8,7 +8,7 @@ pub const FLOW_PLAY_MODE_GENERATE: &str = "generate";
 pub const FLOW_PLAY_LAYOUT_GENERATE: &str = "flow-generate";
 
 //#region 🔖️Definition
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     let mode_command = |id, en, de, kind| {
         let mut command = CommandDefinition::bounded_catalog(id, LocalizedLabel::native(en, de), "generation", kind);
         command.in_palette = false;
@@ -31,7 +31,7 @@ pub async fn definition() -> ModeDefinition {
 }
 
 /// 🪟️ The three-window generate layout, registered as an app-level named layout.
-pub async fn layout() -> NamedLayout {
+pub fn layout() -> NamedLayout {
     create_named_layout(
         FLOW_PLAY_LAYOUT_GENERATE,
         "Generate",

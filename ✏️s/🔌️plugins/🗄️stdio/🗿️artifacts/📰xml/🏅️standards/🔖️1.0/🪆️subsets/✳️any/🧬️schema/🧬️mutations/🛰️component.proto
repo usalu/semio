@@ -1,61 +1,9 @@
 syntax = "proto3";
-package semio.s_stdio_xml.mutation;
-
-import "s_stdio_xml/snapshot.proto";
-
-message XmlNodePath {
-  repeated uint64 segments = 1;
-}
-
-message XmlMutation {
-  oneof mutation {
-    NoMutation no_mutation = 1;
-    SetSnapshot set_snapshot = 2;
-    SetDeclaration set_declaration = 3;
-    SetDoctype set_doctype = 4;
-    InsertElement insert_element = 5;
-    RemoveElement remove_element = 6;
-    SetAttribute set_attribute = 7;
-    SetText set_text = 8;
-  }
-}
-
-message NoMutation {}
-
-message SetSnapshot {
-  semio.s_stdio_xml.snapshot.XmlSnapshot snapshot = 1;
-}
-
-message SetDeclaration {
-  optional semio.s_stdio_xml.snapshot.XmlDeclaration declaration = 1;
-}
-
-message SetDoctype {
-  optional XmlDoctype doctype = 1;
-}
-
-// ➕️ Inserts `node` at `index` among the children of the element addressed by `path` (the PARENT).
-message InsertElement {
-  XmlNodePath path = 1;
-  uint64 index = 2;
-  semio.s_stdio_xml.snapshot.XmlNode node = 3;
-}
-
-// ➖️ Removes the child at `index` among the children of the element addressed by `path` (the PARENT).
-message RemoveElement {
-  XmlNodePath path = 1;
-  uint64 index = 2;
-}
-
-// 🏷️ Sets (or, if `value` is unset, removes) attribute `name` on the element addressed by `path`.
-message SetAttribute {
-  XmlNodePath path = 1;
-  string name = 2;
-  optional string value = 3;
-}
-
-// 🔤️ Sets the literal text of the `Text` node addressed by `path`.
-message SetText {
-  XmlNodePath path = 1;
-  string text = 2;
-}
+package stdio.xml.mutation;
+import "✏️set-declaration/🛰️component.proto";
+import "✏️set-doctype/🛰️component.proto";
+import "📥️insert-element/🛰️component.proto";
+import "🗑️remove-element/🛰️component.proto";
+import "✏️set-attribute/🛰️component.proto";
+import "✏️set-text/🛰️component.proto";
+message XmlMutation { oneof mutation { SetDeclarationPayload set_declaration = 1; SetDoctypePayload set_doctype = 2; InsertElementPayload insert_element = 3; RemoveElementPayload remove_element = 4; SetAttributePayload set_attribute = 5; SetTextPayload set_text = 6; } }

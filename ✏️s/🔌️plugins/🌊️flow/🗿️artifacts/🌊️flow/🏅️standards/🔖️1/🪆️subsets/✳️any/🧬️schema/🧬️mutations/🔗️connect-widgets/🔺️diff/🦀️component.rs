@@ -7,7 +7,7 @@ use protocol::Identified;
 
 use super::mutation::ConnectWidgets;
 
-pub async fn diff(payload: &ConnectWidgets, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
+pub fn diff(payload: &ConnectWidgets, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
     let mut scene = flow_working_scene(base);
     if scene.synapses.iter().any(|synapse| synapse.id == payload.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A synapse with id \"{}\" already exists.", payload.id), [payload.id.clone()]);

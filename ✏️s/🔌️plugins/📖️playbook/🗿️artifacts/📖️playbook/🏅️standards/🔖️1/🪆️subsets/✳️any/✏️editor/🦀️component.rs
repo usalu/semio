@@ -18,12 +18,12 @@ use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use crate::editor::playbook::engine::{playbook_io, PlaybookChapterPayload};
 use crate::editor::playbook::modes::builder;
 use crate::editor::playbook::modes::builder::windows::builder as builder_window;
-use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, EditorApp, Emit,
-    Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation,
+    ActionArgDef, ActionArgOption, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition,
+    InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation,
     SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
 };
 use store::EngineHandles;
@@ -93,24 +93,31 @@ fn playbook_blocks_topology(spec: &PlaybookSnapshot) -> DomainTopology {
 #[derive(Default)]
 pub struct PlaybookPlayApp;
 
-//#region 🧵️RetainedViewCommands
-const PLAYBOOK_RETAINED_VIEW_TOOL_IDS: &[&str] = &["setLocale", "setContributions"];
-const PLAYBOOK_RETAINED_VIEW_PAYLOAD_SCHEMA: &str = "playbook.program.view-command.v1";
-const PLAYBOOK_RETAINED_VIEW_RAW_BYTES: usize = 8_192;
+//#region 🧵️RetainedCommands
+const PLAYBOOK_RETAINED_TOOL_IDS: &[&str] = &["setLocale", "setContributions"];
+const PLAYBOOK_RETAINED_PAYLOAD_SCHEMA: &str = "playbook.program.tool-command.v1";
+const PLAYBOOK_RETAINED_RAW_BYTES: usize = 8_192;
+const PLAYBOOK_RETAINED_WORK_ITEMS: usize = 64;
 
-fn playbook_retained_view_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(PLAYBOOK_RETAINED_VIEW_RAW_BYTES, 2, 1, 16_384, 2_000)
+const PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
+];
+
+fn playbook_retained_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(PLAYBOOK_RETAINED_RAW_BYTES, 64, PLAYBOOK_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
 }
 
-fn playbook_retained_view_wire_admitted(bytes: usize, has_checkpoint: bool) -> bool {
-    bytes <= PLAYBOOK_RETAINED_VIEW_RAW_BYTES && !has_checkpoint
+fn playbook_retained_extent(command: &PlaybookCommand, _snapshot: &PlaybookSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    let bytes = match command {
+        PlaybookCommand::SetLocale(payload) => payload.value.len(),
+        PlaybookCommand::SetContributions(payload) => payload.json.len(),
+        _ => return None,
+    };
+    (bytes <= PLAYBOOK_RETAINED_RAW_BYTES).then_some(1)
 }
 
-fn playbook_retained_view_extent(command: &PlaybookCommand, _snapshot: &PlaybookSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    PLAYBOOK_RETAINED_VIEW_TOOL_IDS.contains(&command.command_id()).then_some(1)
-}
-
-fn playbook_retained_view_reduce(
+fn playbook_retained_reduce(
     command: &PlaybookCommand,
     snapshot: &PlaybookSnapshot,
     config: &PlaybookConfig,
@@ -122,39 +129,25 @@ fn playbook_retained_view_reduce(
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
 }
 
-struct PlaybookViewCommandJobFactory {
+struct PlaybookRetainedCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
 }
 
-impl PlaybookViewCommandJobFactory {
+impl PlaybookRetainedCommandJobFactory {
     fn new(controller: &str) -> Self {
-        Self { keys: PLAYBOOK_RETAINED_VIEW_TOOL_IDS.iter().map(|tool| ToolFactoryKey::new(controller, *tool)).collect() }
+        Self { keys: PLAYBOOK_RETAINED_TOOL_IDS.iter().map(|tool| ToolFactoryKey::new(controller, *tool)).collect() }
     }
 }
 
-impl semio_framework::ToolJobFactory for PlaybookViewCommandJobFactory {
+impl ToolJobFactory for PlaybookRetainedCommandJobFactory {
     type Payload = ArtifactRetainedCommandPayload<EditorApp<PlaybookPlayApp>>;
     type Job = ArtifactRetainedCommandJob<EditorApp<PlaybookPlayApp>>;
 
-    fn keys(&self) -> &[ToolFactoryKey] {
-        &self.keys
-    }
-
-    fn payload_schema_id(&self) -> &str {
-        PLAYBOOK_RETAINED_VIEW_PAYLOAD_SCHEMA
-    }
-
-    fn classification(&self) -> InteractiveJobClassification {
-        InteractiveJobClassification::Migrated
-    }
-
-    fn execution_contract(&self) -> ToolExecutionContract {
-        playbook_retained_view_contract()
-    }
-
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
+    fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
+    fn payload_schema_id(&self) -> &str { PLAYBOOK_RETAINED_PAYLOAD_SCHEMA }
+    fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
+    fn execution_contract(&self) -> ToolExecutionContract { playbook_retained_contract() }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> { Ok(ArtifactRetainedCommandJob::new(payload)) }
 
     fn create_job_from_wire_pages_with_payload(
         &mut self,
@@ -163,19 +156,167 @@ impl semio_framework::ToolJobFactory for PlaybookViewCommandJobFactory {
         input: semio_framework::action_bus::RetainedToolWireInput,
         checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
     ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
-        if !playbook_retained_view_wire_admitted(input.declared_bytes(), checkpoint.is_some()) {
-            return Err((ToolJobFactoryError::new("Playbook view command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        if input.declared_bytes() > PLAYBOOK_RETAINED_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Playbook retained command rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
         Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
     }
 }
 
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for PlaybookViewCommandJobFactory {
+impl ArtifactOwnedToolJobFactory for PlaybookRetainedCommandJobFactory {
     type Owner = EditorApp<PlaybookPlayApp>;
-    const TOOL_IDS: &'static [&'static str] = PLAYBOOK_RETAINED_VIEW_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = "playbook.program";
+    const TOOL_IDS: &'static [&'static str] = PLAYBOOK_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = PLAYBOOK_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS;
 }
-//#endregion 🧵️RetainedViewCommands
+//#endregion 🧵️RetainedCommands
+
+//#region 📬️OneItemPreparation
+const PLAYBOOK_STORE_MAXIMUM_BYTES: usize = 32_768;
+
+struct PlaybookOneItemPreparationFactory<P, M>(std::marker::PhantomData<fn() -> (P, M)>);
+
+impl<P, M> Default for PlaybookOneItemPreparationFactory<P, M> {
+    fn default() -> Self { Self(std::marker::PhantomData) }
+}
+
+struct PlaybookOneItemPreparation<P, M> {
+    base: Option<store::SnapshotRead<P>>,
+    mutation: Option<M>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    candidate: Option<(P, Vec<M>, M, usize)>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<P, M>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    phase: u8,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn playbook_bounded_serialized_bytes<T: serde::Serialize>(value: &T) -> Result<usize, String> {
+    struct Counter(usize);
+    impl std::io::Write for Counter {
+        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+            self.0 = self.0.checked_add(bytes.len()).filter(|total| *total <= PLAYBOOK_STORE_MAXIMUM_BYTES).ok_or_else(|| std::io::Error::other("Playbook retained Store value exceeds its fixed envelope"))?;
+            Ok(bytes.len())
+        }
+        fn flush(&mut self) -> std::io::Result<()> { Ok(()) }
+    }
+    let mut counter = Counter(0);
+    serde_json::to_writer(&mut counter, value).map_err(|error| error.to_string())?;
+    Ok(counter.0)
+}
+
+fn playbook_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
+    let id = format!("playbook-retained-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+
+impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for PlaybookOneItemPreparationFactory<P, M>
+where
+    P: Clone + serde::Serialize + Send + Sync + 'static,
+    M: protocol::Mutation<P> + serde::Serialize + Send + Sync + 'static,
+    M::Diff: protocol::MutationDiff<P>,
+{
+    fn preflight(&self, mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Playbook retained preparation rejected its lane or description envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: playbook_bounded_serialized_bytes(mutation)? })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
+        if request.lane != store::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+            return Err(request);
+        }
+        Ok(Box::new(PlaybookOneItemPreparation {
+            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), phase: 0, cancelled: false, closing: false,
+        }))
+    }
+}
+
+impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for PlaybookOneItemPreparation<P, M>
+where
+    P: Clone + serde::Serialize + Send + Sync + 'static,
+    M: protocol::Mutation<P> + serde::Serialize + Send + 'static,
+    M::Diff: protocol::MutationDiff<P>,
+{
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.prepared.is_some() || self.phase >= 2 { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        match self.phase {
+            0 => {
+                let base = self.base.as_ref().ok_or_else(|| "Playbook retained preparation lost its exact base root".to_string())?;
+                let mutation = self.mutation.take().ok_or_else(|| "Playbook retained preparation lost its mutation owner".to_string())?;
+                let retained_bytes = playbook_bounded_serialized_bytes(base.get())?;
+                let inverse = mutation.inverse(base.get());
+                let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+                self.candidate = Some((post, inverse, mutation, retained_bytes));
+                self.phase = 1;
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: retained_bytes, digest: [0; 32] };
+                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
+            }
+            1 => {
+                let (post, inverse, mutation, retained_bytes) = self.candidate.take().ok_or_else(|| "Playbook retained preparation lost its semantic candidate".to_string())?;
+                let authority = self.authority.as_ref().ok_or_else(|| "Playbook retained preparation lost its Store authority".to_string())?;
+                let prepared = authority.prepare_one_item(playbook_one_item_edit(mutation, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+                self.phase = 2;
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: retained_bytes, digest: prepared.edit_digest() };
+                self.prepared = Some(prepared);
+                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+            }
+            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)),
+        }
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }); }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() { return Err("Playbook retained preparation could not return its exact base root".into()); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none() }
+}
+//#endregion 📬️OneItemPreparation
 
 impl ArtifactEditor for PlaybookPlayApp {
     type Snapshot = PlaybookSnapshot;
@@ -194,30 +335,35 @@ impl ArtifactEditor for PlaybookPlayApp {
     const DIALECT: Dialect = PLAYBOOK_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PLAYBOOK_DOCUMENT_SCHEMA;
 
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(PlaybookOneItemPreparationFactory::<Self::Config, Self::ConfigMutation>::default()))
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<PlaybookPlayApp>,
         owner_file: "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
         controller: "s.playbook.playbook@1/*#editor",
         document_schema: "playbook.program",
-        factory: "PlaybookViewCommandJobFactory",
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 2, 1, 16_384, 2_000),
+        factory: "PlaybookRetainedCommandJobFactory",
+        factory_type: PlaybookRetainedCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
         tools: ["setLocale", "setContributions"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
-        registry.register(PlaybookViewCommandJobFactory::new(&controller))
+        registry.register(PlaybookRetainedCommandJobFactory::new(&controller))
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !PLAYBOOK_RETAINED_VIEW_TOOL_IDS.contains(&request.tool_id.as_str()) {
+        if !PLAYBOOK_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
-        if request.command.command_id() != request.tool_id || playbook_retained_view_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
-            return Err(Fault::from("playbook-view-command-tool-mismatch"));
+        if request.command.command_id() != request.tool_id || playbook_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
+            return Err(Fault::from("playbook-retained-command-tool-mismatch-or-capacity"));
         }
         let tool_id = request.command.command_id();
-        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, playbook_retained_view_reduce, playbook_retained_view_extent));
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, playbook_retained_reduce, playbook_retained_extent));
         let operation = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
@@ -236,8 +382,8 @@ impl ArtifactEditor for PlaybookPlayApp {
             operation,
             request.completion,
             PlaybookCommand::command_id,
-            PLAYBOOK_RETAINED_VIEW_RAW_BYTES,
-            1,
+            PLAYBOOK_RETAINED_RAW_BYTES,
+            PLAYBOOK_RETAINED_WORK_ITEMS,
             work,
         )?;
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
@@ -334,13 +480,13 @@ pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
         .mutation("removeBlock", LocalizedLabel::native("Remove Block", "Baustein entfernen"))
         .mutation("moveBlock", LocalizedLabel::native("Move Block", "Baustein verschieben"))
         .mutation("updatePlaybook", LocalizedLabel::native("Update Playbook", "Playbook aktualisieren"))
-        .action_interactive_job("addStep", InteractiveJobClassification::Migrated)
-        .action_interactive_job("removeStep", InteractiveJobClassification::Migrated)
-        .action_interactive_job("moveStep", InteractiveJobClassification::Migrated)
-        .action_interactive_job("addBlock", InteractiveJobClassification::Migrated)
-        .action_interactive_job("removeBlock", InteractiveJobClassification::Migrated)
-        .action_interactive_job("moveBlock", InteractiveJobClassification::Migrated)
-        .action_interactive_job("updatePlaybook", InteractiveJobClassification::Migrated)
+        .action_interactive_job("addStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("removeStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("moveStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("addBlock", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("removeBlock", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("moveBlock", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("updatePlaybook", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
         .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
         // 📝️ Staged argument form for the panel-visible create action (block kind is a choice).
@@ -509,26 +655,6 @@ mod tests {
         ]
     }
     //#endregion 🔖️CommandSurface
-
-    //#region 🧵️RetainedViewCommands
-    #[semio_framework_async_macros::async_test]
-    async fn retained_view_command_fixture_matches_the_exact_factory_contract() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️fixtures/playbook-view-command-limits.json")).expect("language-neutral retained view command fixture");
-        let tools = fixture["tools"].as_array().expect("tools").iter().map(|tool| tool.as_str().expect("tool id")).collect::<Vec<_>>();
-        assert_eq!(tools, PLAYBOOK_RETAINED_VIEW_TOOL_IDS);
-        let limits = &fixture["limits"];
-        assert_eq!(limits["maximumRawBytes"], PLAYBOOK_RETAINED_VIEW_RAW_BYTES);
-        assert_eq!(limits["maximumDecodedItems"], 2);
-        assert_eq!(limits["maximumWorkUnits"], 1);
-        assert_eq!(limits["maximumOutputBytes"], 16_384);
-        assert_eq!(limits["maximumStepMicros"], 2_000);
-        assert_eq!(playbook_retained_view_contract(), ToolExecutionContract::bounded_first_step(8_192, 2, 1, 16_384, 2_000));
-        for case in fixture["cases"].as_array().expect("cases") {
-            let admitted = playbook_retained_view_wire_admitted(case["declaredBytes"].as_u64().expect("declared bytes") as usize, case["checkpoint"].as_bool().expect("checkpoint"));
-            assert_eq!(admitted, case["admitted"].as_bool().expect("admitted"), "{}", case["name"]);
-        }
-    }
-    //#endregion 🧵️RetainedViewCommands
 
     //#region 🔖️ManifestSanity
     #[semio_framework_async_macros::async_test]

@@ -1,0 +1,44 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7_vt.mutation;
+
+import "🔒️insert-encryption-dictionary/🛰️component.proto";
+import "🔓️remove-encryption-dictionary/🛰️component.proto";
+import "🏳️set-output-intent/🛰️component.proto";
+import "🧽️remove-output-intent/🛰️component.proto";
+import "📐️set-trim-box/🛰️component.proto";
+import "🧽️remove-trim-box/🛰️component.proto";
+import "🔤️embed-font-file/🛰️component.proto";
+import "🧺️remove-font-file/🛰️component.proto";
+import "📜️insert-javascript-action/🛰️component.proto";
+import "🚫️remove-javascript-action/🛰️component.proto";
+import "🚀️insert-launch-action/🛰️component.proto";
+import "🛬️remove-launch-action/🛰️component.proto";
+import "🎬️insert-media-annotation/🛰️component.proto";
+import "⏹️remove-media-annotation/🛰️component.proto";
+import "🗂️set-dpart-root/🛰️component.proto";
+import "🧹️remove-dpart-root/🛰️component.proto";
+import "🏷️set-dpart-metadata/🛰️component.proto";
+import "🗑️remove-dpart-metadata/🛰️component.proto";
+
+message PdfVtMutation {
+  oneof mutation {
+    semio.s_stdio_pdf_1_7_vt.mutation.insert_encryption_dictionary.InsertEncryptionDictionaryMutation insert_encryption_dictionary = 1;
+    semio.s_stdio_pdf_1_7_vt.mutation.remove_encryption_dictionary.RemoveEncryptionDictionaryMutation remove_encryption_dictionary = 2;
+    semio.s_stdio_pdf_1_7_vt.mutation.set_output_intent.SetOutputIntentMutation set_output_intent = 3;
+    semio.s_stdio_pdf_1_7_vt.mutation.remove_output_intent.RemoveOutputIntentMutation remove_output_intent = 4;
+    semio.s_stdio_pdf_1_7_vt.mutation.set_trim_box.SetTrimBoxMutation set_trim_box = 5;
+    semio.s_stdio_pdf_1_7_vt.mutation.remove_trim_box.RemoveTrimBoxMutation remove_trim_box = 6;
+    semio.s_stdio_pdf_1_7_vt.mutation.embed_font_file.EmbedFontFileMutation embed_font_file = 7;
+    semio.s_stdio_pdf_1_7_vt.mutation.remove_font_file.RemoveFontFileMutation remove_font_file = 8;
+    semio.s_stdio_pdf_1_7_vt.mutation.insert_javascript_action.InsertJavascriptActionMutation insert_javascript_action = 9;
+    semio.s_stdio_pdf_1_7_vt.mutation.remove_javascript_action.RemoveJavascriptActionMutation remove_javascript_action = 10;
+    semio.s_stdio_pdf_1_7_vt.mutation.insert_launch_action.InsertLaunchActionMutation insert_launch_action = 11;
+    semio.s_stdio_pdf_1_7_vt.mutation.remove_launch_action.RemoveLaunchActionMutation remove_launch_action = 12;
+    semio.s_stdio_pdf_1_7_vt.mutation.insert_media_annotation.InsertMediaAnnotationMutation insert_media_annotation = 13;
+    semio.s_stdio_pdf_1_7_vt.mutation.remove_media_annotation.RemoveMediaAnnotationMutation remove_media_annotation = 14;
+    semio.s_stdio_pdf_1_7_vt.mutation.set_dpart_root.SetDpartRootMutation set_dpart_root = 15;
+    semio.s_stdio_pdf_1_7_vt.mutation.remove_dpart_root.RemoveDpartRootMutation remove_dpart_root = 16;
+    semio.s_stdio_pdf_1_7_vt.mutation.set_dpart_metadata.SetDpartMetadataMutation set_dpart_metadata = 17;
+    semio.s_stdio_pdf_1_7_vt.mutation.remove_dpart_metadata.RemoveDpartMetadataMutation remove_dpart_metadata = 18;
+  }
+}

@@ -1,32 +1,8 @@
 syntax = "proto3";
-package semio.s_stdio_json.mutation;
-
-import "s_stdio_json_snapshot.proto"; // JsonValue, JsonSnapshot
-
-message JsonPathSegment {
-  enum Kind {
-    KEY = 0;
-    INDEX = 1;
-  }
-  Kind kind = 1;
-  string key = 2;
-  uint64 index = 3;
-}
-
-message JsonMutation {
-  enum Kind {
-    NO_MUTATION = 0;
-    SET_SNAPSHOT = 1;
-    SET_MEMBER = 2;
-    REMOVE_MEMBER = 3;
-    INSERT_ARRAY_ELEMENT = 4;
-    REMOVE_ARRAY_ELEMENT = 5;
-    SET_SCALAR = 6;
-  }
-  Kind mutation = 1;
-  semio.s_stdio_json.snapshot.JsonSnapshot snapshot = 2;
-  repeated JsonPathSegment path = 3;
-  string key = 4;
-  uint64 index = 5;
-  semio.s_stdio_json.snapshot.JsonValue value = 6;
-}
+package stdio.json.mutation;
+import "✏️set-member/🛰️component.proto";
+import "🗑️remove-member/🛰️component.proto";
+import "📥️insert-array-element/🛰️component.proto";
+import "🗑️remove-array-element/🛰️component.proto";
+import "✏️set-scalar/🛰️component.proto";
+message JsonMutation { oneof mutation { SetMemberPayload set_member = 1; RemoveMemberPayload remove_member = 2; InsertArrayElementPayload insert_array_element = 3; RemoveArrayElementPayload remove_array_element = 4; SetScalarPayload set_scalar = 5; } }

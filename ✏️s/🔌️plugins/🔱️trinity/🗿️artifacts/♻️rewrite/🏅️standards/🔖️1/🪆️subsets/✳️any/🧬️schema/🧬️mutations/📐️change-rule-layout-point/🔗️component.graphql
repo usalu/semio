@@ -1,0 +1,3 @@
+# 📐️ Direct change-rule-layout-point / ChangeRuleLayoutPoint payload.
+input ChangeRuleLayoutPointValueInput { x: Float!, y: Float! }
+input ChangeRuleLayoutPointInput { key: String!, newPoint: ChangeRuleLayoutPointValueInput! }

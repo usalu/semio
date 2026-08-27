@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.node-graph.pick-channel.v1",
+  "type": "array",
+  "minItems": 7,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["target", "channel"],
+    "properties": {
+      "target": {
+        "anyOf": [
+          { "type": "null" },
+          { "type": "object", "additionalProperties": false, "required": ["domain", "id"], "properties": { "domain": { "enum": ["node", "edge", "handle"] }, "id": { "type": "string" } } }
+        ]
+      },
+      "channel": {
+        "anyOf": [
+          { "type": "null" },
+          { "type": "object", "additionalProperties": false, "required": ["nodeId", "portId"], "properties": { "nodeId": { "type": "string", "minLength": 1 }, "portId": { "type": "string", "minLength": 1 } } }
+        ]
+      }
+    }
+  }
+}

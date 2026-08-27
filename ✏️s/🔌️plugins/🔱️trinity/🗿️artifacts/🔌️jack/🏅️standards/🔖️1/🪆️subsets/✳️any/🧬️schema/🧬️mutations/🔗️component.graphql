@@ -1,57 +1,26 @@
-# 🧬️ Jack mutation schema — artifact-lane fields only.
+# 🧬️ Jack direct mutation aggregate.
+scalar JSON
 
-type JackMutation {
-  schema: String! @state(class: ARTIFACT)
-  name: String! @state(class: ARTIFACT)
-  manifestId: String @state(class: ARTIFACT)
-  manifest: Manifest! @state(class: ARTIFACT)
-  camera: Camera! @state(class: ARTIFACT)
-  nodes: [Node!]! @state(class: ARTIFACT)
-  edges: [Edge!]! @state(class: ARTIFACT)
-  rootNodeId: String @state(class: ARTIFACT)
-}
+input JackMutationEntityRefInput { entity: String!, id: String! }
+input JackMutationPortInput { id: String!, kind: String!, direction: String!, properties: JSON! }
+input JackMutationNodeInput { id: String!, kind: String!, name: String!, x: Float!, y: Float!, width: Float!, height: Float!, properties: JSON!, ports: [JackMutationPortInput!]! }
+input JackMutationEdgeInput { id: String!, kind: String!, source: String!, target: String!, properties: JSON! }
+input ChangeDataPropertyInput { entity: JackMutationEntityRefInput!, key: String!, newValue: JSON! }
+input CreateEdgeInput { edge: JackMutationEdgeInput! }
+input CreateNodeInput { node: JackMutationNodeInput! }
+input DeleteEdgeInput { id: String! }
+input DeleteNodeInput { id: String! }
+input MoveNodeInput { id: String!, x: Float!, y: Float! }
+input RemoveDataPropertyInput { entity: JackMutationEntityRefInput!, key: String! }
+input RenameNodeInput { id: String!, newName: String! }
 
-type Camera {
-  x: Float!
-  y: Float!
-  zoom: Float!
-}
-
-type Port {
-  id: String!
-  kind: String!
-  direction: String!
-}
-
-type Node {
-  id: String!
-  kind: String!
-  name: String!
-  x: Float!
-  y: Float!
-  width: Float!
-  height: Float!
-  ports: [Port!]!
-}
-
-type Edge {
-  id: String!
-  kind: String!
-  source: String!
-  target: String!
-}
-
-type Manifest {
-  nodeKinds: [ManifestKind!]!
-  edgeKinds: [ManifestKind!]!
-  portKinds: [ManifestPortKind!]!
-}
-
-type ManifestKind {
-  name: String!
-}
-
-type ManifestPortKind {
-  name: String!
-  direction: String!
+input JackMutationInput {
+  changeDataProperty: ChangeDataPropertyInput
+  createEdge: CreateEdgeInput
+  createNode: CreateNodeInput
+  deleteEdge: DeleteEdgeInput
+  deleteNode: DeleteNodeInput
+  moveNode: MoveNodeInput
+  removeDataProperty: RemoveDataPropertyInput
+  renameNode: RenameNodeInput
 }

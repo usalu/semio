@@ -1,0 +1,232 @@
+{
+  "schemaVersion": 1,
+  "mappingSemantics": "preserve-relative-path-from-source-root-to-destination-root",
+  "pathBudgetBytes": 240,
+  "protectedOpaqueRoots": ["compose", "temp/compose"],
+  "censusExcludedEvidenceRoots": [".🧬semio"],
+  "censusExcludedEvidencePaths": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️nested-cargo-package-authority/🔣️.json"],
+  "packages": [
+    {
+      "id": "wgpu-renderer",
+      "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",
+      "destinationRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
+      "destinationRootBytes": 152,
+      "maxDestinationPathBytes": 209,
+      "admittedFileCount": 32,
+      "ignoredPhysicalRelativePaths": [".DS_Store", ".🦑️repo/**", "node_modules/**", "🟦️typescript/🟨️boot.js"],
+      "identity": {
+        "cargoPackageName": "semio-framework-os-renderer-wgpu",
+        "nodePackageName": "@semio-tech/framework-renderer-wgpu",
+        "nxProjectName": "@semio-tech/framework-renderer-wgpu"
+      },
+      "requiredManifestEvidence": {
+        "cargoManifestRelativePath": "Cargo.toml",
+        "cargoPackageMetadata": { "role": "framework", "id": "renderer-wgpu" },
+        "cargoBuildPath": "build.rs",
+        "cargoLibrary": { "crateTypes": ["cdylib", "rlib"], "path": "🦀️lib.rs" },
+        "cargoBinary": { "name": "semio-wgpu-native", "path": "📦️bin.rs", "requiredFeatures": ["native-bin"] },
+        "rootCargoWorkspaceMemberRequired": true,
+        "rootNodeWorkspaceMemberRequired": true,
+        "nodeManifestRelativePath": "package.json",
+        "nxManifestRelativePath": "📋️project.json",
+        "nxSourceRootMustEqualPackageRoot": true
+      },
+      "rejectWhen": [
+        "cargo-package-name-mismatch",
+        "cargo-metadata-mismatch",
+        "cargo-target-mismatch",
+        "root-cargo-workspace-member-missing",
+        "root-node-workspace-member-missing",
+        "node-package-name-mismatch",
+        "nx-project-name-mismatch",
+        "nx-source-root-mismatch",
+        "ignored-node-capture",
+        "destination-collision",
+        "path-budget-exceeded"
+      ],
+      "mappings": [
+        { "relativePath": "Cargo.toml", "destinationPathBytes": 163 },
+        { "relativePath": "Trunk.toml", "destinationPathBytes": 163 },
+        { "relativePath": "build.rs", "destinationPathBytes": 161 },
+        { "relativePath": "package.json", "destinationPathBytes": 165 },
+        { "relativePath": "🌐️index.html", "destinationPathBytes": 170 },
+        { "relativePath": "🎠️runtime.rs", "destinationPathBytes": 170 },
+        { "relativePath": "📋️project.json", "destinationPathBytes": 172 },
+        { "relativePath": "📜️script.ts", "destinationPathBytes": 169 },
+        { "relativePath": "📦️bin.rs", "destinationPathBytes": 166 },
+        { "relativePath": "📦️glue.rs", "destinationPathBytes": 167 },
+        { "relativePath": "📦️index.ts", "destinationPathBytes": 168 },
+        { "relativePath": "🟦️typescript/🐚️plugin-bridge.ts", "destinationPathBytes": 194 },
+        { "relativePath": "🟦️typescript/🟦️boot.ts", "destinationPathBytes": 185 },
+        { "relativePath": "🟦️typescript/🟨️frame-worker.js", "destinationPathBytes": 193 },
+        { "relativePath": "🟦️typescript/🧵️browser-frame-transport.ts", "destinationPathBytes": 204 },
+        { "relativePath": "🟦️typescript/🧵️browser-interactive-job-port.ts", "destinationPathBytes": 209 },
+        { "relativePath": "🟦️typescript/🧵️frame-worker.ts", "destinationPathBytes": 193 },
+        { "relativePath": "🟦️typescript/🧵️interactive-job-registry.ts", "destinationPathBytes": 205 },
+        { "relativePath": "🦀️browser_worker.rs", "destinationPathBytes": 177 },
+        { "relativePath": "🦀️deadlines.rs", "destinationPathBytes": 172 },
+        { "relativePath": "🦀️frame_job.rs", "destinationPathBytes": 172 },
+        { "relativePath": "🦀️kernel_seam.rs", "destinationPathBytes": 174 },
+        { "relativePath": "🦀️lib.rs", "destinationPathBytes": 166 },
+        { "relativePath": "🦀️os_host.rs", "destinationPathBytes": 170 },
+        { "relativePath": "🦀️render_snapshot.rs", "destinationPathBytes": 178 },
+        { "relativePath": "🦀️runtime_mailbox_core.rs", "destinationPathBytes": 183 },
+        { "relativePath": "🦀️surface_lane.rs", "destinationPathBytes": 175 },
+        { "relativePath": "🦀️winit_app.rs", "destinationPathBytes": 172 },
+        { "relativePath": "🧪️browser-frame-transport.test.ts", "destinationPathBytes": 191 },
+        { "relativePath": "🧪️browser-interactive-job-port.test.ts", "destinationPathBytes": 196 },
+        { "relativePath": "🧪️index.test.ts", "destinationPathBytes": 173 },
+        { "relativePath": "🧪️vitest.config.ts", "destinationPathBytes": 176 }
+      ]
+    },
+    {
+      "id": "jcoprobe-guest",
+      "sourceRoot": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest",
+      "destinationRoot": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/📦️packages/🦀️rust",
+      "destinationRootBytes": 115,
+      "maxDestinationPathBytes": 146,
+      "admittedFileCount": 4,
+      "ignoredPhysicalRelativePaths": [],
+      "identity": { "cargoPackageName": "semio-jcoprobe-guest" },
+      "requiredManifestEvidence": {
+        "cargoManifestRelativePath": "Cargo.toml",
+        "cargoPublish": false,
+        "emptyWorkspaceTableRequired": true,
+        "cargoLibrary": { "crateTypes": ["cdylib"], "path": "🦀️component.rs" },
+        "cargoLockRelativePath": "Cargo.lock",
+        "cargoLockVersion": 4,
+        "cargoLockGeneratedHeader": "# This file is automatically @generated by Cargo.",
+        "witDependency": { "name": "wit-bindgen", "version": "0.57.1", "features": ["macros", "async-spawn"] },
+        "componentRelativePath": "🦀️component.rs",
+        "witRelativePath": "🧬️schema/📜️world.wit",
+        "witPackage": "semio:jcoprobe@0.1.0",
+        "witWorld": "jcoprobe",
+        "cargoWorkspaceRootMustEqualPackageRoot": true
+      },
+      "rejectWhen": [
+        "cargo-package-name-mismatch",
+        "empty-workspace-table-missing",
+        "cargo-library-mismatch",
+        "cargo-lock-missing-or-sibling",
+        "cargo-lock-version-mismatch",
+        "component-missing",
+        "wit-world-missing",
+        "production-lookalike",
+        "destination-collision",
+        "path-budget-exceeded"
+      ],
+      "mappings": [
+        { "relativePath": "Cargo.lock", "destinationPathBytes": 126 },
+        { "relativePath": "Cargo.toml", "destinationPathBytes": 126 },
+        { "relativePath": "🦀️component.rs", "destinationPathBytes": 135 },
+        { "relativePath": "🧬️schema/📜️world.wit", "destinationPathBytes": 146 }
+      ]
+    }
+  ],
+  "referenceTokenTransforms": {
+    "wgpu-root": {
+      "sourceToken": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",
+      "destinationToken": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+    },
+    "wgpu-engine-relative": {
+      "sourceToken": "../../📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/",
+      "destinationToken": "../../📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/"
+    },
+    "wgpu-owner-glue": {
+      "sourceToken": "🎯️targets/🧊️wgpu/📦️glue.rs",
+      "destinationToken": "🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📦️glue.rs"
+    },
+    "wgpu-owner-runtime-shard": {
+      "sourceToken": "🎯️targets/🧊️wgpu/\n    /// 🎠️runtime.rs",
+      "destinationToken": "🎯️targets/🧊️wgpu/📦️packages/🦀️rust/\n    /// 🎠️runtime.rs"
+    },
+    "wgpu-owner-runtime-self": {
+      "sourceToken": "🎯️targets/🧊️wgpu/\n        /// 🎠️runtime.rs",
+      "destinationToken": "🎯️targets/🧊️wgpu/📦️packages/🦀️rust/\n        /// 🎠️runtime.rs"
+    },
+    "jco-root": {
+      "sourceToken": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest",
+      "destinationToken": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/📦️packages/🦀️rust"
+    },
+    "jco-prose": {
+      "sourceToken": "👽️guest/🧬️schema/📜️world.wit",
+      "destinationToken": "👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit"
+    }
+  },
+  "liveReferenceSummary": {
+    "wgpu-renderer": { "occurrenceCount": 191, "fileCount": 18, "authoredOccurrenceCount": 106, "authoredFileCount": 15, "generatedOccurrenceCount": 85, "generatedFileCount": 3 },
+    "jcoprobe-guest": { "occurrenceCount": 3, "fileCount": 3, "authoredOccurrenceCount": 2, "authoredFileCount": 2, "generatedOccurrenceCount": 1, "generatedFileCount": 1 }
+  },
+  "additionalReferenceEdits": [
+    {
+      "packageId": "wgpu-renderer",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/package.json",
+      "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/package.json",
+      "jsonPointer": "/repository/directory",
+      "sourceValue": "framework/product/os/module/renderer/wgpu",
+      "destinationValue": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
+      "countsTowardPathTokenSummary": false
+    }
+  ],
+  "preservedNonReferences": [
+    {
+      "packageId": "wgpu-renderer",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs",
+      "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📦️glue.rs",
+      "token": "../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/",
+      "occurrenceCount": 3,
+      "disposition": "preserve"
+    }
+  ],
+  "referenceConsumers": [
+    { "packageId": "wgpu-renderer", "path": ".storybook/scopes.ts", "transformId": "wgpu-root", "occurrenceCount": 2, "ownership": "authored" },
+    {
+      "packageId": "wgpu-renderer",
+      "path": ".vscode/launch.json",
+      "transformId": "wgpu-root",
+      "occurrenceCount": 65,
+      "ownership": "generated",
+      "generatorOwnerPaths": [".vscode/🧩️launch.seed.jsonc", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🖥️launch.ts"]
+    },
+    { "packageId": "wgpu-renderer", "path": ".vscode/🧩️launch.seed.jsonc", "transformId": "wgpu-root", "occurrenceCount": 42, "ownership": "authored" },
+    { "packageId": "wgpu-renderer", "path": "Cargo.toml", "transformId": "wgpu-root", "occurrenceCount": 1, "ownership": "authored" },
+    { "packageId": "wgpu-renderer", "path": "bun.lock", "transformId": "wgpu-root", "occurrenceCount": 2, "ownership": "generated", "generatorOwnerPaths": ["package.json"] },
+    { "packageId": "wgpu-renderer", "path": "package.json", "transformId": "wgpu-root", "occurrenceCount": 1, "ownership": "authored" },
+    { "packageId": "wgpu-renderer", "path": "📜️script.ts", "transformId": "wgpu-root", "occurrenceCount": 20, "ownership": "authored" },
+    { "packageId": "wgpu-renderer", "path": "🔒️dependencies.json", "transformId": "wgpu-root", "occurrenceCount": 18, "ownership": "generated", "generatorOwnerPaths": ["📜️script.ts"] },
+    {
+      "packageId": "wgpu-renderer",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📋️project.json",
+      "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📋️project.json",
+      "transformId": "wgpu-root",
+      "occurrenceCount": 16,
+      "ownership": "authored"
+    },
+    { "packageId": "wgpu-renderer", "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🖥️launch.ts", "transformId": "wgpu-root", "occurrenceCount": 1, "ownership": "authored" },
+    { "packageId": "wgpu-renderer", "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts", "transformId": "wgpu-root", "occurrenceCount": 1, "ownership": "authored" },
+    { "packageId": "wgpu-renderer", "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts", "transformId": "wgpu-root", "occurrenceCount": 4, "ownership": "authored" },
+    { "packageId": "wgpu-renderer", "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json", "transformId": "wgpu-root", "occurrenceCount": 5, "ownership": "authored" },
+    { "packageId": "wgpu-renderer", "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️component.rs", "transformId": "wgpu-engine-relative", "occurrenceCount": 5, "ownership": "authored" },
+    { "packageId": "wgpu-renderer", "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️component.rs", "transformId": "wgpu-owner-glue", "occurrenceCount": 5, "ownership": "authored" },
+    { "packageId": "wgpu-renderer", "path": "🧰️framework/🛍️products/💻️os/🖥️host/🎠️activation.rs", "transformId": "wgpu-owner-glue", "occurrenceCount": 1, "ownership": "authored" },
+    { "packageId": "wgpu-renderer", "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️component.rs", "transformId": "wgpu-owner-runtime-shard", "occurrenceCount": 1, "ownership": "authored" },
+    {
+      "packageId": "wgpu-renderer",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs",
+      "destinationPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📦️glue.rs",
+      "transformId": "wgpu-owner-runtime-self",
+      "occurrenceCount": 1,
+      "ownership": "authored"
+    },
+    { "packageId": "jcoprobe-guest", "path": "🔒️dependencies.json", "transformId": "jco-root", "occurrenceCount": 1, "ownership": "generated", "generatorOwnerPaths": ["📜️script.ts"] },
+    { "packageId": "jcoprobe-guest", "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json", "transformId": "jco-root", "occurrenceCount": 1, "ownership": "authored" },
+    {
+      "packageId": "jcoprobe-guest",
+      "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/🦀️component.rs",
+      "destinationPath": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️jcoprobe/👽️guest/📦️packages/🦀️rust/🦀️component.rs",
+      "transformId": "jco-prose",
+      "occurrenceCount": 1,
+      "ownership": "authored"
+    }
+  ]
+}

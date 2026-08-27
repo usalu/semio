@@ -1,0 +1,4 @@
+# 🗑️ Direct remove-tag payload.
+input RemoveTagInput {
+  tag: String!
+}

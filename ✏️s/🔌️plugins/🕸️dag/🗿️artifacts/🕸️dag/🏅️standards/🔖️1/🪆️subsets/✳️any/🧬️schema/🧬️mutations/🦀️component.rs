@@ -116,12 +116,11 @@ pub fn inverse_dag_mutation_steps(mutation: &DagMutation, base: &DagSnapshot) ->
 /// `mutation.duplicate-id` vector is only reachable once the id it collides with is actually
 /// present — which is precisely what
 /// `🌱create-node/🧪️tests/rejects-a-duplicate-node-id/🦀️component.rs::before` does with
-/// `cache_dag_content`. Exposed here because that seeding function is `async` and the scene type is
-/// unnameable from a test adapter, and because seeding FROM the committed payload is what keeps the
+/// its exact child owner. Exposed here because seeding from the committed payload is what keeps the
 /// vector free of any transcription: the seeded node IS the mutation JSON's own `node`.
-pub fn seed_dag_working_scene_with(snapshot: &DagSnapshot, mutation: &DagMutation) -> bool {
+pub fn seed_dag_working_scene_with(snapshot: &mut DagSnapshot, mutation: &DagMutation) -> bool {
     let DagMutation::CreateNode(payload) = mutation else { return false };
-    crate::artifacts::dag::cache_dag_content(&snapshot.content.child_id, vec![payload.node.clone()], Vec::new());
+    snapshot.content.set_local_owner(std::sync::Arc::new(crate::artifacts::dag::DagWorkingScene { nodes: vec![payload.node.clone()], edges: Vec::new() }));
     true
 }
 //#endregion 🌉️ExternalCodecBridge

@@ -386,8 +386,8 @@ fn absorb_ifds_opt(base: &mut Option<TiffIfdsDiff>, other: Option<TiffIfdsDiff>)
 /// `.added[].values`, and `DslField` has no impl for it (only `DslRecord`-derived structs and
 /// `DslScalar`-derived UNIT-only enums implement `DslField` — recon report §3a): `error[E0277]:
 /// the trait bound v6_0::…::TiffValues: DslField is not satisfied`. Same root cause independently
-/// blocks the Mutation side (`TiffMutation::SetTag.values`/`SetSnapshot.snapshot` recursively
-/// reach the same `TiffValues`). `DiffCodec` hand-rolled below (see `HandcraftedDiffCodec`).
+/// requires a direct typed codec for `ReplaceTagMutation.values`, which reaches the same
+/// `TiffValues`. `DiffCodec` is hand-rolled below (see `HandcraftedDiffCodec`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.tiff.diff")]
@@ -513,72 +513,22 @@ pub fn diff_set_snapshot(base: &TiffSnapshot, next: &TiffSnapshot) -> TiffDiff {
 // `NoMutation`/`SetSnapshot`, covered above).
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_byte_order(base: &TiffSnapshot, byte_order: TiffByteOrder) -> TiffDiff {
-    TiffDiff { byte_order: (base.byte_order != byte_order).then_some(byte_order), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_insert_ifd(base: &TiffSnapshot, index: usize, ifd: TiffIfd) -> TiffDiff {
-    let at = index.min(base.ifds.len());
-    TiffDiff { ifds: Some(TiffIfdsDiff { removed: vec![], modified: vec![], added: vec![TiffIfdAdded { index: at, ifd }] }), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_remove_ifd(base: &TiffSnapshot, index: usize) -> TiffDiff {
-    if index >= base.ifds.len() {
-        return TiffDiff::default();
-    }
-    TiffDiff { ifds: Some(TiffIfdsDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_tag(base: &TiffSnapshot, ifd_index: usize, tag: u16, kind: TiffFieldType, values: TiffValues) -> TiffDiff {
-    let Some(ifd) = base.ifds.get(ifd_index) else { return TiffDiff::default() };
-    let already = ifd.entries.iter().find(|t| t.tag == tag);
-    if let Some(existing) = already {
-        if existing.kind == kind && existing.values == values {
-            return TiffDiff::default();
-        }
-        TiffDiff {
-            ifds: Some(TiffIfdsDiff {
-                removed: vec![],
-                modified: vec![TiffIfdModified { index: ifd_index, diff: TiffIfdDiff { entries: TiffTagsDiff { removed: vec![], modified: vec![TiffTagModified { tag, kind, values }], added: vec![] }, pixels: None } }],
-                added: vec![],
-            }),
-            ..Default::default()
-        }
-    } else {
-        TiffDiff {
-            ifds: Some(TiffIfdsDiff {
-                removed: vec![],
-                modified: vec![TiffIfdModified { index: ifd_index, diff: TiffIfdDiff { entries: TiffTagsDiff { removed: vec![], modified: vec![], added: vec![TiffTagAdded { tag, kind, values }] }, pixels: None } }],
-                added: vec![],
-            }),
-            ..Default::default()
-        }
-    }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_remove_tag(base: &TiffSnapshot, ifd_index: usize, tag: u16) -> TiffDiff {
-    let Some(ifd) = base.ifds.get(ifd_index) else { return TiffDiff::default() };
-    if !ifd.entries.iter().any(|t| t.tag == tag) {
-        return TiffDiff::default();
-    }
-    TiffDiff {
-        ifds: Some(TiffIfdsDiff {
-            removed: vec![],
-            modified: vec![TiffIfdModified { index: ifd_index, diff: TiffIfdDiff { entries: TiffTagsDiff { removed: vec![tag], modified: vec![], added: vec![] }, pixels: None } }],
-            added: vec![],
-        }),
-        ..Default::default()
-    }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_pixels(base: &TiffSnapshot, pixels: Vec<u8>) -> TiffDiff {
-    TiffDiff { pixels: (base.pixels != pixels).then_some(pixels), ..Default::default() }
-}
+
 //#endregion 🔖️MutationDiffBuilders
 
 //#region 🔖️HandcraftedDiffCodec

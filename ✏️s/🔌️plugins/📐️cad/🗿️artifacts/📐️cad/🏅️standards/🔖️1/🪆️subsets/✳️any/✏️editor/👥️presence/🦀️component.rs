@@ -4,6 +4,9 @@ use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
+#[path = "♻️retirement/🦀️component.rs"]
+pub mod retirement;
+
 //#region 🔖️Presence
 /// 👥️ Shareable live CAD view state — camera, active utility, engagement step. Peer mesh
 /// selection/hover now broadcasts via the framework's typed `PresenceInteraction`, not here.

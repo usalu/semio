@@ -1,0 +1,6 @@
+/** 🧪️ Focused bind-primitive-indices mutation-law probe. */
+import type { GltfSnapshot } from '../../../📸️snapshot/🟦️component.ts';
+import { applyGltfBindPrimitiveIndices, type GltfBindPrimitiveIndicesPayload } from '../../bind-primitive-indices/🟦️component.ts';
+import { deriveGltfBindPrimitiveIndicesDiff } from '../../bind-primitive-indices/🔺️diff/🟦️component.ts';
+import { deriveGltfBindPrimitiveIndicesInverse } from '../../bind-primitive-indices/↩️inverse/🟦️component.ts';
+export const assertGltfBindPrimitiveIndicesLaws = (base: GltfSnapshot, payload: GltfBindPrimitiveIndicesPayload) => { const applied = applyGltfBindPrimitiveIndices(base, payload); if (!applied.accepted) return applied; const replay = applyGltfBindPrimitiveIndices(base, payload); const direct = deriveGltfBindPrimitiveIndicesDiff(base, payload); const undo = deriveGltfBindPrimitiveIndicesInverse(base, payload); if (!replay.accepted || !direct.accepted || !undo.accepted || JSON.stringify(applied.snapshot) !== JSON.stringify(replay.snapshot) || JSON.stringify(applied.diff) !== JSON.stringify(replay.diff) || JSON.stringify(applied.touchedPaths) !== JSON.stringify(undo.touchedPaths)) throw new Error('bind-primitive-indices violates replay, direct-diff, or undo determinism'); return { applied, direct, undo }; };

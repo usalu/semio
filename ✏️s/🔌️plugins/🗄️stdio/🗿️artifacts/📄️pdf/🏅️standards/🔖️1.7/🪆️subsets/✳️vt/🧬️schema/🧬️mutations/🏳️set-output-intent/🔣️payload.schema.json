@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s.stdio.pdf.1.7.vt/mutation/set-output-intent.json",
+  "title": "SetOutputIntent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "identifier"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setOutputIntent"
+    },
+    "identifier": {
+      "type": "string"
+    }
+  }
+}

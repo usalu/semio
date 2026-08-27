@@ -1,6 +1,6 @@
 {
-  "$id": "https://semio.tech/schema/stdio.bmp/mutations/text.json",
-  "title": "BmpMutationsText",
-  "type": "object",
-  "description": "The wire-text container for a serialized BmpMutation — the real tagged-variant shape is documented in ../📖️component.grammar.semio and mirrored in full at ../../🔣️component.json."
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BmpMutationText",
+  "type": "string",
+  "pattern": "^(?:change-header-fields|insert-palette-entry|remove-palette-entry|replace-palette-entry|replace-pixel-data)(?: |$)"
 }

@@ -99,7 +99,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn imperative_diff_absorb_whole_artifact_wins() {
-        let mut diff = ImperativeDiff { flow: Some(crate::artifacts::imperative::imperative_flow_child_handle_and_cache(&crate::artifacts::imperative::Path::new())), ..Default::default() };
+        let mut diff = ImperativeDiff { flow: Some(crate::artifacts::imperative::imperative_flow_child_with_owner(&crate::artifacts::imperative::Path::new())), ..Default::default() };
         let replacement = ImperativeDiff { artifact: Some(Box::new(ImperativeArtifact::default())), ..Default::default() };
         diff.absorb(replacement);
         assert!(diff.artifact.is_some());

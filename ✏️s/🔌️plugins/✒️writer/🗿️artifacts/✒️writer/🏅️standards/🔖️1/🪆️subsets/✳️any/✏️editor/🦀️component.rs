@@ -193,18 +193,6 @@ fn writer_ast_topology(document: &WriterSnapshot) -> DomainTopology {
 //#endregion 🔖️Interaction
 
 //#region 🔖️Commands
-mod record_tutorial {
-    use super::*;
-
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-    #[dsl(keyword = "record-tutorial")]
-    pub struct RecordTutorial {}
-
-    pub fn handle(_payload: &RecordTutorial, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
-        Ok(Emit::default())
-    }
-}
-
 semio_framework_plugin::app_commands! {
     /// 🎯️ `WriterPlayApp::Command` — the SOLE dispatch surface for writer's own behavior, assembled from
     /// the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id (`command_id()`,
@@ -236,7 +224,6 @@ semio_framework_plugin::app_commands! {
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
         "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
         "setLocale" as "locale" => set_locale::SetLocale,
-        "recordTutorial" as "record-tutorial" => record_tutorial::RecordTutorial,
     }
 }
 //#endregion 🔖️Commands
@@ -299,13 +286,6 @@ fn writer_context_menu_items(registry: &AppActionRegistry, text: Option<&Context
 const WRITER_COMMAND_TOOL_IDS: &[&str] = &[
     "textEdit",
     "setText",
-    "setCamera",
-    "requestCompletions",
-    "lintDocument",
-    "setEditorSelection",
-    "toggleLineNumbers",
-    "setEditorSetting",
-    "engagementInput",
     "setActiveExample",
     "setSnapshot",
     "openDocument",
@@ -313,9 +293,15 @@ const WRITER_COMMAND_TOOL_IDS: &[&str] = &[
     "setFixtureJson",
     "formatDocument",
     "commitRename",
+    "setCamera",
+    "requestCompletions",
+    "lintDocument",
+    "setEditorSelection",
+    "toggleLineNumbers",
+    "setEditorSetting",
+    "engagementInput",
     "engagementSubmit",
     "setLocale",
-    "recordTutorial",
 ];
 const WRITER_COMMAND_PAYLOAD_SCHEMA: &str = "writer.writer.tool-command.v1";
 const MAX_WRITER_COMMAND_RAW_BYTES: usize = 4_096;
@@ -323,6 +309,7 @@ const MAX_WRITER_COMMAND_DECODED_ITEMS: usize = 4_096;
 const MAX_WRITER_COMMAND_TEXT_BYTES: usize = 4_096;
 const MAX_WRITER_COMMAND_URI_BYTES: usize = 1_024;
 const MAX_WRITER_LOCALE_BYTES: usize = 64;
+const MAX_WRITER_EXAMPLE_ID_BYTES: usize = 64;
 
 struct WriterCommandToolPayload {
     command: WriterCommand,
@@ -364,11 +351,32 @@ impl WriterCommandToolJob {
         if matches!(command, WriterCommand::SetLocale(payload) if payload.value.len() > MAX_WRITER_LOCALE_BYTES) {
             return false;
         }
+        if matches!(command, WriterCommand::EngagementInput(payload) if payload.value.len() > MAX_WRITER_COMMAND_TEXT_BYTES) {
+            return false;
+        }
+        if matches!(command, WriterCommand::TextEdit(payload) if payload.text.len() > MAX_WRITER_COMMAND_TEXT_BYTES)
+            || matches!(command, WriterCommand::SetText(payload) if payload.text.len() > MAX_WRITER_COMMAND_TEXT_BYTES)
+            || matches!(command, WriterCommand::CommitRename(payload) if payload.text.len() > MAX_WRITER_COMMAND_TEXT_BYTES)
+        {
+            return false;
+        }
+        if matches!(command, WriterCommand::EngagementSubmit(payload) if payload.value.as_ref().unwrap_or(&config.engagement_input).len() > MAX_WRITER_COMMAND_TEXT_BYTES) {
+            return false;
+        }
+        if matches!(command, WriterCommand::SetActiveExample(payload) if payload.example_id.len() > MAX_WRITER_EXAMPLE_ID_BYTES) {
+            return false;
+        }
+        if matches!(command, WriterCommand::SetSnapshot(payload) if payload.json.len() > MAX_WRITER_COMMAND_TEXT_BYTES)
+            || matches!(command, WriterCommand::SetSnapshotJson(payload) if payload.json.len() > MAX_WRITER_COMMAND_TEXT_BYTES)
+            || matches!(command, WriterCommand::SetFixtureJson(payload) if payload.json.len() > MAX_WRITER_COMMAND_TEXT_BYTES)
+        {
+            return false;
+        }
         if matches!(command, WriterCommand::OpenDocument(payload) if payload.text.len() > MAX_WRITER_COMMAND_TEXT_BYTES || payload.uri.len() > MAX_WRITER_COMMAND_URI_BYTES) {
             return false;
         }
         let requires_text = match command {
-            WriterCommand::FormatDocument(_) | WriterCommand::CommitRename(_) => true,
+            WriterCommand::TextEdit(_) | WriterCommand::SetText(_) | WriterCommand::FormatDocument(_) | WriterCommand::CommitRename(_) => true,
             WriterCommand::EngagementSubmit(payload) => {
                 let value = payload.value.as_deref().unwrap_or(&config.engagement_input);
                 engagement_token_matches(value.trim(), "format")
@@ -493,7 +501,6 @@ impl WriterCommandToolJob {
                 Emit { artifact_mutations, config_mutations, ..Default::default() }
             }
             WriterCommand::SetLocale(payload) => Emit::config(vec![WriterConfigMutation::SetLocale { value: payload.value }]),
-            WriterCommand::RecordTutorial(_) => Emit::default(),
             _ => return Err("writer command job received an unregistered command"),
         })
     }
@@ -596,7 +603,10 @@ impl InteractiveJob for WriterCommandToolJob {
             if input.terminal_is_empty() {
                 self.raw_input = None;
             }
-            return step;
+            return match step {
+                InteractiveJobCloseStep::Complete => InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                other => other,
+            };
         }
         if self.command.is_some() {
             if maximum_items == 0 || maximum_bytes < MAX_WRITER_COMMAND_RAW_BYTES {
@@ -723,8 +733,372 @@ impl ArtifactOwnedToolJobFactory for WriterCommandJobFactory {
     type Owner = EditorApp<WriterPlayApp>;
     const TOOL_IDS: &'static [&'static str] = WRITER_COMMAND_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "textEdit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setText", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshot", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "openDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshotJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setFixtureJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "formatDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "commitRename", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "requestCompletions", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "lintDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setEditorSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "toggleLineNumbers", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setEditorSetting", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+    ];
 }
 //#endregion 🧵️InteractiveJobs
+
+//#region 📬️ConfigStorePreparation
+const WRITER_CONFIG_STORE_MAXIMUM_BYTES: usize = 8_192;
+
+struct WriterConfigStorePreparationFactory;
+
+struct WriterConfigStorePreparation {
+    base: Option<store::SnapshotRead<WriterConfig>>,
+    mutation: Option<WriterConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<WriterConfig, WriterConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn writer_config_retained_bytes(config: &WriterConfig) -> usize {
+    config.engagement_input.len().saturating_add(config.locale.len())
+}
+
+fn writer_config_mutation_retained_bytes(mutation: &WriterConfigMutation) -> usize {
+    match mutation {
+        WriterConfigMutation::Snapshot { config } => writer_config_retained_bytes(config),
+        WriterConfigMutation::SetEngagementInput { value } | WriterConfigMutation::SetLocale { value } => value.len(),
+        WriterConfigMutation::SetEditorSelection { .. }
+        | WriterConfigMutation::SetFormatSignal { .. }
+        | WriterConfigMutation::SetLintSignal { .. }
+        | WriterConfigMutation::SetRevision { .. }
+        | WriterConfigMutation::SetEditorSettings { .. }
+        | WriterConfigMutation::SetCamera { .. } => 0,
+    }
+}
+
+fn admit_writer_config_mutation(mutation: &WriterConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let retained_bytes = writer_config_mutation_retained_bytes(mutation);
+    if retained_bytes > WRITER_CONFIG_STORE_MAXIMUM_BYTES {
+        return Err("Writer config mutation exceeds its fixed retained preparation envelope".into());
+    }
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+}
+
+fn prepare_writer_config(base: &WriterConfig, mutation: WriterConfigMutation) -> Result<(WriterConfig, Vec<WriterConfigMutation>, WriterConfigMutation), String> {
+    admit_writer_config_mutation(&mutation)?;
+    if writer_config_retained_bytes(base) > WRITER_CONFIG_STORE_MAXIMUM_BYTES {
+        return Err("Writer config base exceeds its fixed retained preparation envelope".into());
+    }
+    let mut post = base.clone();
+    match &mutation {
+        WriterConfigMutation::Snapshot { config } => post = config.clone(),
+        WriterConfigMutation::SetEditorSelection { selection } => post.editor_selection = selection.clone(),
+        WriterConfigMutation::SetFormatSignal { value } => post.format_signal = *value,
+        WriterConfigMutation::SetLintSignal { value } => post.lint_signal = *value,
+        WriterConfigMutation::SetRevision { value } => post.revision = *value,
+        WriterConfigMutation::SetEditorSettings { settings } => post.editor_settings = settings.clone(),
+        WriterConfigMutation::SetEngagementInput { value } => post.engagement_input = value.clone(),
+        WriterConfigMutation::SetCamera { camera } => post.camera = camera.clone(),
+        WriterConfigMutation::SetLocale { value } => post.locale = value.clone(),
+    }
+    Ok((post, vec![WriterConfigMutation::Snapshot { config: base.clone() }], mutation))
+}
+
+fn writer_store_edit<M>(
+    prefix: &str,
+    forward: M,
+    inverse: Vec<M>,
+    description: Option<String>,
+    authority: &store::ArtifactStoreOneItemLiveAuthority,
+) -> protocol::Edit<M> {
+    let id = format!("{prefix}-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<WriterConfig, WriterConfigMutation> for WriterConfigStorePreparationFactory {
+    fn preflight(&self, mutation: &WriterConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Writer config preparation rejected its lane or description envelope".into());
+        }
+        admit_writer_config_mutation(mutation)
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<WriterConfig, WriterConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<WriterConfig, WriterConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<WriterConfig, WriterConfigMutation>> {
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(WriterConfigStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<WriterConfig, WriterConfigMutation> for WriterConfigStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "Writer config preparation lost its exact base root".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "Writer config preparation lost its mutation owner".to_string())?;
+        let (post, inverse, forward) = prepare_writer_config(base.get(), mutation)?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Writer config preparation lost its Store authority".to_string())?;
+        let edit = writer_store_edit("writer-config-retained", forward, inverse, self.description.take(), authority);
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<WriterConfig, WriterConfigMutation>> {
+        self.prepared.as_ref()
+    }
+
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<WriterConfig, WriterConfigMutation>> {
+        self.prepared.take()
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("Writer config preparation could not return its exact base root".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️ConfigStorePreparation
+
+//#region 📬️ArtifactStorePreparation
+const WRITER_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 32_768;
+
+struct WriterArtifactStorePreparationFactory;
+
+struct WriterArtifactStorePreparation {
+    base: Option<store::SnapshotRead<WriterSnapshot>>,
+    mutation: Option<WriterMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<WriterSnapshot, WriterMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn writer_snapshot_retained_bytes(snapshot: &WriterSnapshot) -> usize {
+    snapshot
+        .schema
+        .len()
+        .saturating_add(snapshot.id.len())
+        .saturating_add(snapshot.language_id.len())
+        .saturating_add(snapshot.uri.len())
+        .saturating_add(writer_text_owner(snapshot).len())
+}
+
+fn admit_writer_artifact_mutation(mutation: &WriterMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let WriterMutation::EditText(payload) = mutation else {
+        return Err("Writer retained Artifact preparation only admits the exact EditText cohort".into());
+    };
+    if payload.text.len() > MAX_WRITER_COMMAND_TEXT_BYTES {
+        return Err("Writer EditText exceeds its fixed retained preparation envelope".into());
+    }
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: payload.text.len() })
+}
+
+fn prepare_writer_artifact(base: &WriterSnapshot, mutation: WriterMutation) -> Result<(WriterSnapshot, Vec<WriterMutation>, WriterMutation), String> {
+    admit_writer_artifact_mutation(&mutation)?;
+    if writer_snapshot_retained_bytes(base) > WRITER_ARTIFACT_STORE_MAXIMUM_BYTES {
+        return Err("Writer Artifact base exceeds its fixed retained preparation envelope".into());
+    }
+    let inverse = crate::artifacts::writer::op::inverse_writer_mutation(base, &mutation);
+    let mut post = base.clone();
+    crate::artifacts::writer::op::apply_writer_mutation(&mut post, &mutation).map_err(|_| "Writer Artifact preparation could not apply its exact sparse diff".to_string())?;
+    Ok((post, inverse, mutation))
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<WriterSnapshot, WriterMutation> for WriterArtifactStorePreparationFactory {
+    fn preflight(&self, mutation: &WriterMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Writer Artifact preparation rejected its lane or description envelope".into());
+        }
+        admit_writer_artifact_mutation(mutation)
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<WriterSnapshot, WriterMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<WriterSnapshot, WriterMutation>>, store::ArtifactStoreOneItemPreparationRequest<WriterSnapshot, WriterMutation>> {
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(WriterArtifactStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<WriterSnapshot, WriterMutation> for WriterArtifactStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "Writer Artifact preparation lost its exact base root".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "Writer Artifact preparation lost its mutation owner".to_string())?;
+        let (post, inverse, forward) = prepare_writer_artifact(base.get(), mutation)?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Writer Artifact preparation lost its Store authority".to_string())?;
+        let edit = writer_store_edit("writer-artifact-retained", forward, inverse, self.description.take(), authority);
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<WriterSnapshot, WriterMutation>> {
+        self.prepared.as_ref()
+    }
+
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<WriterSnapshot, WriterMutation>> {
+        self.prepared.take()
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("Writer Artifact preparation could not return its exact base root".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️ArtifactStorePreparation
 
 //#region 🔖️WriterPlayApp
 /// 🧪️ B1: unit struct — every former `WriterPlayRuntime` field now lives in [`WriterConfig`], written
@@ -749,23 +1123,25 @@ impl ArtifactEditor for WriterPlayApp {
     const DIALECT: Dialect = crate::artifacts::writer::WRITER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
 
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(WriterArtifactStorePreparationFactory))
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(WriterConfigStorePreparationFactory))
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<WriterPlayApp>,
         owner_file: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
         controller: "s.writer.writer@1/*#editor",
         document_schema: "writer.document",
-        factory: "BoundedFirstStepCommandJobFactory",
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(4_096, 4_096, 1, 64, 2_000),
+        factory: "WriterCommandJobFactory",
+        factory_type: WriterCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::resumable(4_096, 4_096, 1, 64, 2_000, 1, 1),
         tools: [
             "textEdit",
             "setText",
-            "setCamera",
-            "requestCompletions",
-            "lintDocument",
-            "setEditorSelection",
-            "toggleLineNumbers",
-            "setEditorSetting",
-            "engagementInput",
             "setActiveExample",
             "setSnapshot",
             "openDocument",
@@ -773,9 +1149,15 @@ impl ArtifactEditor for WriterPlayApp {
             "setFixtureJson",
             "formatDocument",
             "commitRename",
+            "setCamera",
+            "requestCompletions",
+            "lintDocument",
+            "setEditorSelection",
+            "toggleLineNumbers",
+            "setEditorSetting",
+            "engagementInput",
             "engagementSubmit",
-            "setLocale",
-            "recordTutorial"
+            "setLocale"
         ]
     }
 
@@ -1001,7 +1383,6 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("commitRename", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
             .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
-            .action_interactive_job("recordTutorial", InteractiveJobClassification::Migrated)
             // 📝️ Staged argument forms: example choice + the dev JSON setters.
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
@@ -1142,28 +1523,54 @@ mod tests {
         let fixture: Value = serde_json::from_str(include_str!("📚️examples/🎬️demo-session/🧵️interactive-job-migration.json")).expect("language-neutral Writer migration fixture");
         assert_eq!(fixture["payloadSchema"], WRITER_COMMAND_PAYLOAD_SCHEMA);
         assert_eq!(fixture["maxRawWireBytes"], MAX_WRITER_COMMAND_RAW_BYTES);
-        assert_eq!(fixture["maxCurrentTextBytes"], MAX_WRITER_COMMAND_TEXT_BYTES);
-        assert_eq!(fixture["maxOpenDocumentUriBytes"], MAX_WRITER_COMMAND_URI_BYTES);
         assert_eq!(fixture["maxWorkUnitsPerStep"], 1);
+        assert_eq!(fixture["storePreparation"]["maxRetainedBytes"], WRITER_CONFIG_STORE_MAXIMUM_BYTES);
+        assert_eq!(fixture["storePreparation"]["workItemsPerAdvance"], 1);
+        assert_eq!(fixture["storePreparation"]["historyLane"], "Document");
+        assert_eq!(fixture["storePreparation"]["sealedByStore"], true);
         let actions = fixture["migrated"].as_array().expect("migrated action rows").iter().map(|row| row["action"].as_str().expect("action id")).collect::<Vec<_>>();
         assert_eq!(actions, WRITER_COMMAND_TOOL_IDS);
-        assert_eq!(fixture["textAdmissionCases"][0]["textBytes"], MAX_WRITER_COMMAND_TEXT_BYTES);
-        assert_eq!(fixture["textAdmissionCases"][1]["textBytes"], MAX_WRITER_COMMAND_TEXT_BYTES + 1);
-        assert_eq!(fixture["textAdmissionCases"][1]["fuelDelta"], 0);
-        assert_eq!(fixture["textAdmissionCases"][1]["cursorDelta"], 0);
-        assert_eq!(fixture["textAdmissionCases"][1]["ownersPreserved"], true);
+        assert_eq!(fixture["batchOnly"].as_array().map(Vec::len), Some(0));
+        assert_eq!(fixture["artifactPreparation"]["maxBaseBytes"], WRITER_ARTIFACT_STORE_MAXIMUM_BYTES);
+        assert_eq!(fixture["artifactPreparation"]["maxEditTextBytes"], MAX_WRITER_COMMAND_TEXT_BYTES);
+        assert_eq!(fixture["artifactPreparation"]["workItemsPerAdvance"], 1);
+        assert_eq!(fixture["artifactPreparation"]["sealedByStore"], true);
         assert_eq!(fixture["localeAdmissionCases"][0]["localeBytes"], MAX_WRITER_LOCALE_BYTES);
         assert_eq!(fixture["localeAdmissionCases"][1]["localeBytes"], MAX_WRITER_LOCALE_BYTES + 1);
         assert_eq!(fixture["localeAdmissionCases"][1]["fuelDelta"], 0);
         assert_eq!(fixture["localeAdmissionCases"][1]["cursorDelta"], 0);
         assert_eq!(fixture["localeAdmissionCases"][1]["ownersPreserved"], true);
-        assert_eq!(fixture["openDocumentAdmissionCases"][0]["textBytes"], MAX_WRITER_COMMAND_TEXT_BYTES);
-        assert_eq!(fixture["openDocumentAdmissionCases"][0]["uriBytes"], MAX_WRITER_COMMAND_URI_BYTES);
-        assert_eq!(fixture["openDocumentAdmissionCases"][1]["textBytes"], MAX_WRITER_COMMAND_TEXT_BYTES + 1);
-        assert_eq!(fixture["openDocumentAdmissionCases"][2]["uriBytes"], MAX_WRITER_COMMAND_URI_BYTES + 1);
-        assert_eq!(fixture["openDocumentAdmissionCases"][1]["ownersPreserved"], true);
-        assert_eq!(fixture["openDocumentAdmissionCases"][2]["ownersPreserved"], true);
         assert_eq!(fixture["requiredLifecycle"].as_array().map(Vec::len), Some(10));
+    }
+
+    #[test]
+    fn writer_config_store_preparation_is_exact_bounded_and_reversible() {
+        let base = WriterConfig { engagement_input: "format".into(), locale: "en-US".into(), revision: 7, ..WriterConfig::default() };
+        let mutation = WriterConfigMutation::SetLocale { value: "de-DE".into() };
+        let footprint = admit_writer_config_mutation(&mutation).expect("bounded config mutation");
+        assert_eq!(footprint.work_items, 1);
+        assert_eq!(footprint.retained_bytes, 5);
+        let (post, inverse, forward) = prepare_writer_config(&base, mutation.clone()).expect("exact one-item preparation");
+        assert_eq!(post.locale, "de-DE");
+        assert_eq!(post.engagement_input, base.engagement_input);
+        assert_eq!(forward, mutation);
+        assert_eq!(inverse, vec![WriterConfigMutation::Snapshot { config: base.clone() }]);
+        assert!(admit_writer_config_mutation(&WriterConfigMutation::SetEngagementInput { value: "x".repeat(WRITER_CONFIG_STORE_MAXIMUM_BYTES + 1) }).is_err());
+    }
+
+    #[test]
+    fn writer_artifact_store_preparation_is_exact_bounded_and_reversible() {
+        let base = crate::artifacts::writer::writer_snapshot_with_text(WRITER_DOCUMENT_SCHEMA, "writer", "plaintext", "writer://document", "before");
+        let mutation = WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: "after".into() });
+        let footprint = admit_writer_artifact_mutation(&mutation).expect("bounded Writer Artifact mutation");
+        assert_eq!(footprint.work_items, 1);
+        assert_eq!(footprint.retained_bytes, 5);
+        let (post, inverse, forward) = prepare_writer_artifact(&base, mutation.clone()).expect("exact Writer Artifact preparation");
+        assert_eq!(writer_text(&post), "after");
+        assert_eq!(forward, mutation);
+        assert_eq!(inverse, vec![WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: "before".into() })]);
+        assert!(admit_writer_artifact_mutation(&WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) })).is_err());
+        assert!(admit_writer_artifact_mutation(&WriterMutation::RenameWriter(crate::artifacts::writer::op::RenameWriter { new_id: "other".into() })).is_err());
     }
 
     #[test]
@@ -1190,7 +1597,6 @@ mod tests {
             WriterCommand::CommitRename(commit_rename::CommitRename { text: "renamed".into() }),
             WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("format".into()) }),
             WriterCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
-            WriterCommand::RecordTutorial(record_tutorial::RecordTutorial {}),
         ];
         for command in commands {
             let wire = <WriterCommand as protocol::OpBinary>::encode_op(&command).expect("owned protocol wire");
@@ -1222,6 +1628,8 @@ mod tests {
     #[test]
     fn bounded_text_admission_preserves_rejected_job_state_and_owners() {
         for command in [
+            WriterCommand::TextEdit(text_edit::TextEdit { text: "changed".into() }),
+            WriterCommand::SetText(set_text::SetText { text: "changed".into() }),
             WriterCommand::FormatDocument(format_document::FormatDocument {}),
             WriterCommand::CommitRename(commit_rename::CommitRename { text: "renamed".into() }),
             WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("format".into()) }),
@@ -1302,6 +1710,47 @@ mod tests {
             assert_eq!(rejected.command, rejected_command);
             assert!(Arc::ptr_eq(rejected.snapshot.as_ref().expect("snapshot owner"), rejected_snapshot.as_ref().expect("saved snapshot owner")));
             assert!(Arc::ptr_eq(rejected.config.as_ref().expect("config owner"), rejected_config.as_ref().expect("saved config owner")));
+        }
+    }
+
+    #[test]
+    fn bounded_host_load_and_engagement_admission_reject_plus_one_without_consuming_owners() {
+        let current: Arc<str> = Arc::from("");
+        let accepted = [
+            WriterCommand::TextEdit(text_edit::TextEdit { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
+            WriterCommand::SetText(set_text::SetText { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
+            WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "x".repeat(MAX_WRITER_EXAMPLE_ID_BYTES) }),
+            WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
+            WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
+            WriterCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
+            WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
+            WriterCommand::CommitRename(commit_rename::CommitRename { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
+            WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES)) }),
+        ];
+        for command in accepted {
+            let mut job = writer_command_job(command, current.clone());
+            assert!(job.admit_text());
+        }
+        let rejected = [
+            WriterCommand::TextEdit(text_edit::TextEdit { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
+            WriterCommand::SetText(set_text::SetText { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
+            WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "x".repeat(MAX_WRITER_EXAMPLE_ID_BYTES + 1) }),
+            WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
+            WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
+            WriterCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
+            WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
+            WriterCommand::CommitRename(commit_rename::CommitRename { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
+            WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1)) }),
+        ];
+        for command in rejected {
+            let mut job = writer_command_job(command, current.clone());
+            let command_owner = job.command.clone();
+            let snapshot_owner = job.snapshot.clone();
+            let config_owner = job.config.clone();
+            assert!(!job.admit_text());
+            assert_eq!(job.command, command_owner);
+            assert!(Arc::ptr_eq(job.snapshot.as_ref().expect("snapshot owner"), snapshot_owner.as_ref().expect("saved snapshot owner")));
+            assert!(Arc::ptr_eq(job.config.as_ref().expect("config owner"), config_owner.as_ref().expect("saved config owner")));
         }
     }
 
@@ -1413,7 +1862,6 @@ mod tests {
             ("engagement-input", WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "x".into() })),
             ("engagement-submit", WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("x".into()) })),
             ("locale", WriterCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() })),
-            ("record-tutorial", WriterCommand::RecordTutorial(record_tutorial::RecordTutorial {})),
         ];
         for (expected_keyword, command) in expectations {
             let printed = protocol::OpText::print_op(&command);
@@ -1449,7 +1897,6 @@ mod tests {
             WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "format".into() }),
             WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }),
             WriterCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
-            WriterCommand::RecordTutorial(record_tutorial::RecordTutorial {}),
         ]
     }
 

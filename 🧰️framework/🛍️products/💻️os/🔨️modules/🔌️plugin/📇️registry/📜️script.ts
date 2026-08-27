@@ -12,10 +12,10 @@
  * @see .🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/REGISTRY-SCRIPT-REFACTOR-TO-VOCABULARY-DISCOVERY-LIBRARY
  */
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
-import type { AreaState, DiscoveredPackage, PackageRole } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { BundleScript, canonicalFilenamesForKind, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadTaxonomy, runBundleScriptMain, runVitest, ScriptRouter } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import type { AreaState, DiscoveredPackage, PackageRole, RegistryCatalogInputView } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, canonicalPrimaryFilenameForKind, discoverCatalogPackages, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadCatalogTaxonomy, parseRegistryCatalogProjection, registryCatalogInputView, registryCatalogProjectedInputView, registryExampleCatalog, runBundleScriptMain, runVitest, ScriptRouter, validateGeneratorContractsAgainstWorkspace } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { generateLaunchJson, LAUNCH_OUTPUT_REL_PATH } from "./🖥️launch.ts";
 
 //#region 🔖️PluginRegistryEntry
@@ -72,13 +72,11 @@ export type PluginRegistryEntry = {
  * now comes from here, so registry discovery can never drift from the root policy script's or the SDK
  * testkit's view of the same contract — see mechanism ticket
  * `26/08/06/MECHANISM-VOCABULARY-AND-DISCOVERY-LIBRARY`. */
-const TAXONOMY = loadTaxonomy();
+const TAXONOMY = loadCatalogTaxonomy();
 
 /** 📄️ Resolves the taxonomy-ordered primary filename for consumers that require one component leaf. */
 function primaryFilenameForKind(kindId: string): string {
-  const filenames = canonicalFilenamesForKind(kindId, TAXONOMY);
-  if (filenames.length === 0) throw new Error(`📇️registry: file kind "${kindId}" has no canonical filename`);
-  return filenames[0];
+  return canonicalPrimaryFilenameForKind(kindId, TAXONOMY);
 }
 
 /** @emoji 🗺️ Every area root that may hold a plugin crate, cross-checked against `taxonomy.areas` at
@@ -133,8 +131,8 @@ const COMPONENT_ROLES: ReadonlySet<PackageRole> = new Set<PackageRole>(["plugin"
 /** @emoji 📦️ Every rust package in the repo that declares a component-bearing role, via the shared
  * `discoverPackages()` walk (two-level `📦️packages/🦀️rust/` and three-level `🎯️targets/<t>/` shapes
  * alike). Replaces the two hand-written "new contract" path regexes this script used to carry. */
-function discoverComponentPackages(repoRoot: string): DiscoveredPackage[] {
-  return discoverPackages(repoRoot, TAXONOMY).filter((pkg) => pkg.lang === RUST_LANG && COMPONENT_ROLES.has(pkg.role));
+function discoverComponentPackages(repoRoot: string, packages: readonly DiscoveredPackage[] = discoverCatalogPackages(repoRoot, TAXONOMY)): DiscoveredPackage[] {
+  return packages.filter((pkg) => pkg.lang === RUST_LANG && COMPONENT_ROLES.has(pkg.role));
 }
 
 //#endregion 🏛️DiscoveryContract
@@ -142,8 +140,8 @@ function discoverComponentPackages(repoRoot: string): DiscoveredPackage[] {
 /** @emoji 🧭️ Every manifest that may contribute a row to the plugin catalog, via the shared package
  * discovery contract. The pre-Shape-V2 legacy sandwich shape this used to also admit was removed once
  * every declared plugin area reached `clean` — see `PLUGIN_AREAS_STATE`. */
-function findPluginCargoFiles(root: string): string[] {
-  return discoverComponentPackages(root)
+function findPluginCargoFiles(root: string, packages?: readonly DiscoveredPackage[]): string[] {
+  return discoverComponentPackages(root, packages)
     .map((pkg) => join(root, pkg.manifestPath))
     .sort();
 }
@@ -164,7 +162,7 @@ function findPluginCargoFiles(root: string): string[] {
  * passed against it. The gate and the test were reading different files and both looked green.
  * `descriptor_is_fresh()` (`🔌️plugin/🦀️component.rs`), the dev `📜️script.ts` build step, and every
  * plugin crate's own `📜️script.ts describe` command all use the owner root; this is the last leg. */
-const DESCRIPTOR_JSON_REL_PATH = ["..", "..", "🔣️descriptor.json"];
+const DESCRIPTOR_JSON_REL_PATH = TAXONOMY.generatorContracts["plugin-registry"].inputDiscovery!.descriptorRelativePath.split("/");
 
 /** 🎬️ `kernel::ActivationEvent`'s default (externally tagged) serde JSON shape, decoded into
  * `📓️design-abi.md` §2's canonical dash-separated string form. Unit variant `OnStartupFinished`
@@ -200,11 +198,14 @@ function formatActivationEvent(raw: unknown): string | undefined {
  * the crate has none yet (every crate today: E1-describe lands ahead of the W3 plugin migrations
  * that produce one per crate; see `parsePluginCargo`'s doc for the fallback this enables). Loosely
  * typed (no schema validation) on purpose — `check`'s own gate is what enforces shape, not the parser. */
-function readDescriptorJson(repoRoot: string, cratePath: string): Record<string, unknown> | undefined {
+function readDescriptorJson(repoRoot: string, cratePath: string, view: RegistryCatalogInputView = registryCatalogInputView(repoRoot, TAXONOMY)): Record<string, unknown> | undefined {
   const path = join(repoRoot, cratePath, ...DESCRIPTOR_JSON_REL_PATH);
-  if (!existsSync(path)) return undefined;
+  const inputPath = relative(repoRoot, path).replaceAll("\\", "/");
+  const kind = view.kind(inputPath);
+  if (kind === "symlink") throw new Error(`Registry descriptor is a symlink: ${inputPath}`);
+  if (kind === null) return undefined;
   try {
-    return JSON.parse(readFileSync(path, "utf8"));
+    return JSON.parse(view.readText(inputPath));
   } catch {
     return undefined;
   }
@@ -224,8 +225,8 @@ function readDescriptorJson(repoRoot: string, cratePath: string): Record<string,
  * has `topic_contributions`, i.e. what a package PUBLISHES) — a real gap, not silently papered over,
  * see `📓️terra-E1-describe-report.md`.
  */
-function parsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistryEntry {
-  const text = readFileSync(manifestPath, "utf8");
+function parsePluginCargo(manifestPath: string, repoRoot: string, view?: RegistryCatalogInputView): PluginRegistryEntry {
+  const text = view ? view.readText(relative(repoRoot, manifestPath).replaceAll("\\", "/")) : readFileSync(manifestPath, "utf8");
   const packageName = text.match(/^name = "([^"]+)"/m)?.[1];
   if (!packageName) throw new Error(`missing package name in ${manifestPath}`);
   const componentPackage = text.match(/\[package\.metadata\.component\][\s\S]*?^package = "semio:([^"]+)"/m)?.[1];
@@ -246,7 +247,7 @@ function parsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistr
   // 🔗️ contract freeze §4 rule 1: for an extension, `extends` is always dependsOn[0].
   const dependsOn = extendsHost ? [extendsHost, ...cargoDependsOnIds.filter((id) => id !== extendsHost)] : cargoDependsOnIds;
 
-  const descriptor = readDescriptorJson(repoRoot, cratePath);
+  const descriptor = readDescriptorJson(repoRoot, cratePath, view);
   let capabilities: string[];
   let contributes: string[];
   let activationEvents: string[] = [];
@@ -400,9 +401,10 @@ function parsePlaygroundBlock(block: string, pluginId: string, cratePath: string
 }
 
 /** @emoji 🗂️ Parses every `[[package.metadata.semio.assets]]` row for one crate manifest. */
-function parseAssetsForCrate(manifestPath: string): AssetSpecRow[] {
-  if (!existsSync(manifestPath)) return [];
-  const text = readFileSync(manifestPath, "utf8");
+function parseAssetsForCrate(manifestPath: string, repoRoot: string, view?: RegistryCatalogInputView): AssetSpecRow[] {
+  const path = relative(repoRoot, manifestPath).replaceAll("\\", "/");
+  if (view ? view.kind(path) === null : !existsSync(manifestPath)) return [];
+  const text = view ? view.readText(path) : readFileSync(manifestPath, "utf8");
   const blocks = tomlBlocksAfterHeader(text.split("\n"), (line) => line === "[[package.metadata.semio.assets]]");
   const rows: AssetSpecRow[] = [];
   for (const blockLines of blocks) {
@@ -439,42 +441,13 @@ function parseAssetsForCrate(manifestPath: string): AssetSpecRow[] {
  * every `👁️viewer`/`✏️editor` surface's `📚️examples/` that carry a definition leaf. Falls back to the
  * variant-suffix surface (matched by its subset name) when artifact/surface scans are empty.
  */
-function discoverExamplesForPlayground(repoRoot: string, cratePath: string, pluginId: string, variant: string): string[] {
-  const segments = cratePath.split("/");
-  const matchedArea = PLUGIN_AREAS.find((area) => {
-    const areaSegments = area.split("/");
-    return areaSegments.every((segment, index) => segments[index] === segment);
-  });
-  const techRoot = matchedArea ? segments.slice(0, matchedArea.split("/").length + 1).join("/") : segments[0];
-  const slugIds = (examplesRoot: string): string[] => {
-    if (!existsSync(examplesRoot)) return [];
-    return listDirs(examplesRoot)
-      .filter((name) => isExampleSlugName(name) && existsSync(join(examplesRoot, name, EXAMPLE_RUST_LEAF)))
-      .sort();
-  };
-  const ids: string[] = [];
-  const artifactsDir = join(repoRoot, techRoot, TAXONOMY.artifactsDirName);
-  if (existsSync(artifactsDir)) {
-    for (const artifact of listDirs(artifactsDir)) {
-      ids.push(...slugIds(join(artifactsDir, artifact, EXAMPLES_DIRNAME)));
-    }
-  }
-  const surfaceDirs = surfaceDirsForPlugin(join(repoRoot, techRoot));
-  for (const { abs: surfaceAbs } of surfaceDirs) {
-    ids.push(...slugIds(join(surfaceAbs, EXAMPLES_DIRNAME)));
-  }
-  if (ids.length > 0) return [...new Set(ids)].sort();
-  if (variant.startsWith(pluginId) && variant.length > pluginId.length) {
-    const strippedSuffix = surfaceStripEmoji(variant.slice(pluginId.length));
-    const match = surfaceDirs.find((s) => surfaceStripEmoji(s.label.split("/")[0] ?? "") === strippedSuffix);
-    if (match) return slugIds(join(match.abs, EXAMPLES_DIRNAME));
-  }
-  return [];
+function discoverExamplesForPlayground(repoRoot: string, cratePath: string, _pluginId: string, _variant: string, view?: RegistryCatalogInputView): string[] {
+  return registryExampleCatalog(repoRoot, cratePath, TAXONOMY, view);
 }
 
 
-function parsePlaygroundsForCrate(manifestPath: string, pluginId: string, cratePath: string): PlaygroundEntry[] {
-  const text = readFileSync(manifestPath, "utf8");
+function parsePlaygroundsForCrate(manifestPath: string, pluginId: string, cratePath: string, repoRoot: string, view?: RegistryCatalogInputView): PlaygroundEntry[] {
+  const text = view ? view.readText(relative(repoRoot, manifestPath).replaceAll("\\", "/")) : readFileSync(manifestPath, "utf8");
   const blocks = tomlBlocksAfterHeader(text.split("\n"), (line) => line === "[[package.metadata.semio.playground]]");
   const entries: PlaygroundEntry[] = [];
   for (const block of blocks) {
@@ -490,10 +463,10 @@ export function generatePlaygroundRegistry(repoRoot = getWorkspaceRoot(), option
   const playgrounds: PlaygroundEntry[] = [];
   for (const entry of entries) {
     const manifestPath = join(repoRoot, entry.cratePath, "Cargo.toml");
-    const crateAssets = parseAssetsForCrate(manifestPath);
-    for (const playground of parsePlaygroundsForCrate(manifestPath, entry.pluginId, entry.cratePath)) {
+    const crateAssets = parseAssetsForCrate(manifestPath, repoRoot, options.view);
+    for (const playground of parsePlaygroundsForCrate(manifestPath, entry.pluginId, entry.cratePath, repoRoot, options.view)) {
       const assets = crateAssets.filter((asset) => asset.app === undefined || asset.app === playground.app);
-      playgrounds.push({ ...playground, examples: discoverExamplesForPlayground(repoRoot, entry.cratePath, entry.pluginId, playground.variant), assets });
+      playgrounds.push({ ...playground, examples: discoverExamplesForPlayground(repoRoot, entry.cratePath, entry.pluginId, playground.variant, options.view), assets });
     }
   }
   for (let i = 0; i < playgrounds.length; i++) {
@@ -509,6 +482,8 @@ export function generatePlaygroundRegistry(repoRoot = getWorkspaceRoot(), option
 
 export type GeneratePluginRegistryOptions = {
   readonly filterPlaygroundPlugin?: string;
+  readonly packages?: readonly DiscoveredPackage[];
+  readonly view?: RegistryCatalogInputView;
 };
 
 /** @emoji 🎯️ Resolves a playground variant/alias or bare plugin id to its wasm registry plugin id. */
@@ -592,9 +567,9 @@ function findPluginCargoPathsForIds(repoRoot: string, pluginIds: readonly string
   });
 }
 
-function tryParsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistryEntry | undefined {
+function tryParsePluginCargo(manifestPath: string, repoRoot: string, view?: RegistryCatalogInputView): PluginRegistryEntry | undefined {
   try {
-    return parsePluginCargo(manifestPath, repoRoot);
+    return parsePluginCargo(manifestPath, repoRoot, view);
   } catch {
     return undefined;
   }
@@ -603,10 +578,10 @@ function tryParsePluginCargo(manifestPath: string, repoRoot: string): PluginRegi
 export function generatePluginRegistry(repoRoot = getWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): PluginRegistryEntry[] {
   const filterPlaygroundPlugin = options.filterPlaygroundPlugin;
   const filterIds = filterPlaygroundPlugin && !isHostPluginFilter(filterPlaygroundPlugin) ? resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin) : undefined;
-  const manifestPaths = filterIds ? findPluginCargoPathsForIds(repoRoot, filterIds) : findPluginCargoFiles(repoRoot);
+  const manifestPaths = filterIds ? findPluginCargoPathsForIds(repoRoot, filterIds) : findPluginCargoFiles(repoRoot, options.packages ?? (options.view ? discoverCatalogPackages(repoRoot, TAXONOMY, options.view) : undefined));
   const entries: PluginRegistryEntry[] = [];
   for (const path of manifestPaths) {
-    const entry = tryParsePluginCargo(path, repoRoot);
+    const entry = tryParsePluginCargo(path, repoRoot, options.view);
     if (entry) entries.push(entry);
   }
   entries.sort((a, b) => a.pluginId.localeCompare(b.pluginId));
@@ -619,12 +594,18 @@ export function generatePluginRegistry(repoRoot = getWorkspaceRoot(), options: G
  * for that crate and returns its own `[[package.metadata.semio.playground]]` variant id, throwing a
  * clear error if zero or more than one plugin crate declares the host table. */
 export function resolveDefaultHostVariant(repoRoot = getWorkspaceRoot()): string {
-  const hostEntries = generatePluginRegistry(repoRoot).filter((entry) => entry.host !== undefined);
+  const packages = discoverCatalogPackages(repoRoot, TAXONOMY);
+  return defaultHostVariant(generatePluginRegistry(repoRoot, { packages }), generatePlaygroundRegistry(repoRoot, { packages }));
+}
+
+/** 🏠️ One host identity resolved from the same already-rendered catalog rows. */
+function defaultHostVariant(entries: readonly PluginRegistryEntry[], playgrounds: readonly PlaygroundEntry[]): string {
+  const hostEntries = entries.filter((entry) => entry.host !== undefined);
   if (hostEntries.length !== 1) {
     throw new Error(`📇️registry: expected exactly one plugin crate to declare [package.metadata.semio].host, found ${hostEntries.length}${hostEntries.length > 0 ? ` (${hostEntries.map((entry) => entry.pluginId).join(", ")})` : ""}`);
   }
   const hostPluginId = hostEntries[0].pluginId;
-  const hostPlayground = generatePlaygroundRegistry(repoRoot).find((entry) => entry.pluginId === hostPluginId);
+  const hostPlayground = playgrounds.find((entry) => entry.pluginId === hostPluginId);
   if (!hostPlayground) throw new Error(`📇️registry: host plugin "${hostPluginId}" declares no [[package.metadata.semio.playground]] variant`);
   return hostPlayground.variant;
 }
@@ -778,8 +759,8 @@ export type FrameworkPackageEntry = {
 /** @emoji 🏛️ Framework-role half of the shared `discoverPackages()` walk (three-level `🎯️targets`
  * aware), flattened into a stable catalog. Plugin and framework catalogs therefore come from one
  * traversal and one vocabulary, and can never drift apart. */
-export function generateFrameworkPackageRegistry(repoRoot = getWorkspaceRoot()): FrameworkPackageEntry[] {
-  return discoverPackages(repoRoot, TAXONOMY)
+export function generateFrameworkPackageRegistry(repoRoot = getWorkspaceRoot(), packages: readonly DiscoveredPackage[] = discoverCatalogPackages(repoRoot, TAXONOMY)): FrameworkPackageEntry[] {
+  return packages
     .filter((pkg) => pkg.role === "framework")
     .map((pkg) => ({
       id: pkg.id,
@@ -1044,16 +1025,9 @@ function validatePlaygroundRegistry(playgrounds: PlaygroundEntry[], repoRoot: st
  * `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`; this used to be an independently
  * hand-maintained copy, which is exactly the drift `🔣️taxonomy.json` exists to prevent). */
 const TAXONOMY_ARTIFACT_COMPONENTS = TAXONOMY.artifactComponentDirs;
-const TAXONOMY_MUTATION_CHILD_DIRS = TAXONOMY.mutationChildDirs ?? [];
-/** @emoji 🧩️ Children of a COMPOSITE mutation dir — payload plus plan. A composite folds its diff and
- * inverse from that plan, so requiring the leaf triad of it would demand two competing sources of the
- * same semantics; `mutationDirChildDirs` below picks the right set per dir. */
-const TAXONOMY_COMPOSITE_MUTATION_CHILD_DIRS = TAXONOMY.compositeMutationChildDirs ?? [];
-const TAXONOMY_MUTATION_PLAN_DIR = "🧩️plan";
-/** @emoji 🧬️ The child dirs one mutation dir must own, selected by whether it declares itself composite. */
-function mutationDirChildDirs(mutationDir: string): readonly string[] {
-  return existsSync(join(mutationDir, TAXONOMY_MUTATION_PLAN_DIR)) ? TAXONOMY_COMPOSITE_MUTATION_CHILD_DIRS : TAXONOMY_MUTATION_CHILD_DIRS;
-}
+const TAXONOMY_MUTATION_COMPONENT_FILENAME = primaryFilenameForKind(TAXONOMY.mutationComponentFileKindId);
+const TAXONOMY_MUTATION_DESCRIPTOR_FILENAME = primaryFilenameForKind(TAXONOMY.mutationDescriptorFileKindId);
+const TAXONOMY_MUTATION_OPTIONAL_FACET_DIRS = TAXONOMY.mutationOptionalFacetDirs;
 const TAXONOMY_SCHEMA_CHILD_DIRS = TAXONOMY.schemaChildDirs ?? [];
 const TAXONOMY_REPRESENTATION_DIRS = TAXONOMY.representationDirs ?? [];
 const TAXONOMY_CONFIG_CHILD_DIRS = TAXONOMY.configChildDirs ?? [];
@@ -1186,12 +1160,17 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
           for (const rep of listDirs(childDir)) {
             if (TAXONOMY_REPRESENTATION_DIRS.includes(rep)) continue;
             if (child === MUTATIONS_FACET_DIR) {
-              // mutation slug — require the leaf triad, or the composite pair when a 🧩️plan is present
-              for (const kind of mutationDirChildDirs(join(childDir, rep))) {
-                const kindDir = join(childDir, rep, kind);
-                if (!existsSync(kindDir)) continue;
-                if (!existsSync(join(kindDir, TAXONOMY_LEAF_FILENAME))) {
-                  findings.push(`${pluginId}: artifact "${artifact}" mutation "${rep}" is missing ${SCHEMA_FACET_DIR}/${MUTATIONS_FACET_DIR}/${rep}/${kind}/${TAXONOMY_LEAF_FILENAME}`);
+              const mutationDir = join(childDir, rep);
+              if (!existsSync(join(mutationDir, TAXONOMY_MUTATION_COMPONENT_FILENAME))) {
+                findings.push(`${pluginId}: artifact "${artifact}" mutation "${rep}" is missing ${SCHEMA_FACET_DIR}/${MUTATIONS_FACET_DIR}/${rep}/${TAXONOMY_MUTATION_COMPONENT_FILENAME}`);
+              }
+              if (!existsSync(join(mutationDir, TAXONOMY_MUTATION_DESCRIPTOR_FILENAME))) {
+                findings.push(`${pluginId}: artifact "${artifact}" mutation "${rep}" is missing ${SCHEMA_FACET_DIR}/${MUTATIONS_FACET_DIR}/${rep}/${TAXONOMY_MUTATION_DESCRIPTOR_FILENAME}`);
+              }
+              for (const facet of TAXONOMY_MUTATION_OPTIONAL_FACET_DIRS) {
+                const facetDir = join(mutationDir, facet);
+                if (existsSync(facetDir) && !existsSync(join(facetDir, TAXONOMY_LEAF_FILENAME))) {
+                  findings.push(`${pluginId}: artifact "${artifact}" mutation "${rep}" optional facet "${facet}" is missing ${SCHEMA_FACET_DIR}/${MUTATIONS_FACET_DIR}/${rep}/${facet}/${TAXONOMY_LEAF_FILENAME}`);
                 }
               }
               continue;
@@ -1231,21 +1210,23 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
       }
     }
     //#endregion NestedFacetWalk
-    //#region MutationTriad
-    // 🧬️ Walk 🧬️schema/🧬️mutations/<mutation>/<kind> (fallback: legacy root 🧬️mutations during migration).
-    const mutationsRoot = existsSync(join(artifactsDir, artifact, SCHEMA_FACET_DIR, MUTATIONS_FACET_DIR))
-      ? join(artifactsDir, artifact, SCHEMA_FACET_DIR, MUTATIONS_FACET_DIR)
-      : join(artifactsDir, artifact, MUTATIONS_FACET_DIR);
+    //#region DirectMutations
+    // 🧬️ Walk 🧬️schema/🧬️mutations/<semantic-mutation>/ with one mandatory direct component.
+    const mutationsRoot = join(artifactsDir, artifact, SCHEMA_FACET_DIR, MUTATIONS_FACET_DIR);
     if (existsSync(mutationsRoot)) {
       for (const mutation of listDirs(mutationsRoot)) {
         if (mutation === TAXONOMY.packagesDirName) continue;
-        for (const kind of mutationDirChildDirs(join(mutationsRoot, mutation))) {
-          const kindDir = join(mutationsRoot, mutation, kind);
-          if (!existsSync(join(kindDir, TAXONOMY_LEAF_FILENAME))) {
-            findings.push(`${pluginId}: artifact "${artifact}" mutation "${mutation}" is missing ${MUTATIONS_FACET_DIR}/${mutation}/${kind}/${TAXONOMY_LEAF_FILENAME}`);
-          }
-          if (!existsSync(join(kindDir, TAXONOMY_TS_LEAF_FILENAME))) {
-            findings.push(`${pluginId}: artifact "${artifact}" mutation "${mutation}" is missing ${MUTATIONS_FACET_DIR}/${mutation}/${kind}/${TAXONOMY_TS_LEAF_FILENAME}`);
+        const mutationDir = join(mutationsRoot, mutation);
+        if (!existsSync(join(mutationDir, TAXONOMY_MUTATION_COMPONENT_FILENAME))) {
+          findings.push(`${pluginId}: artifact "${artifact}" mutation "${mutation}" is missing ${MUTATIONS_FACET_DIR}/${mutation}/${TAXONOMY_MUTATION_COMPONENT_FILENAME}`);
+        }
+        if (!existsSync(join(mutationDir, TAXONOMY_MUTATION_DESCRIPTOR_FILENAME))) {
+          findings.push(`${pluginId}: artifact "${artifact}" mutation "${mutation}" is missing ${MUTATIONS_FACET_DIR}/${mutation}/${TAXONOMY_MUTATION_DESCRIPTOR_FILENAME}`);
+        }
+        for (const facet of TAXONOMY_MUTATION_OPTIONAL_FACET_DIRS) {
+          const facetDir = join(mutationDir, facet);
+          if (existsSync(facetDir) && !existsSync(join(facetDir, TAXONOMY_LEAF_FILENAME))) {
+            findings.push(`${pluginId}: artifact "${artifact}" mutation "${mutation}" optional facet "${facet}" is missing ${MUTATIONS_FACET_DIR}/${mutation}/${facet}/${TAXONOMY_LEAF_FILENAME}`);
           }
         }
       }
@@ -1254,7 +1235,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
     if (!existsSync(join(artifactsDir, artifact, ENGINE_FACET_DIR))) {
       findings.push(`${pluginId}: artifact "${artifact}" is missing ${ENGINE_FACET_DIR}/`);
     }
-    //#endregion MutationTriad
+    //#endregion DirectMutations
     const examplesRoot = join(artifactsDir, artifact, EXAMPLES_DIRNAME);
     if (!existsSync(examplesRoot)) {
       findings.push(`${pluginId}: artifact "${artifact}" is missing ${EXAMPLES_DIRNAME}/`);
@@ -1360,8 +1341,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   const taxonomyLeafParents = new Set<string>([
     ...TAXONOMY_ARTIFACT_COMPONENTS,
     ...TAXONOMY_WINDOW_CHILDREN,
-    ...TAXONOMY_MUTATION_CHILD_DIRS,
-    ...TAXONOMY_COMPOSITE_MUTATION_CHILD_DIRS,
+    ...TAXONOMY_MUTATION_OPTIONAL_FACET_DIRS,
     ...TAXONOMY_SCHEMA_CHILD_DIRS,
     ...TAXONOMY_REPRESENTATION_DIRS,
     ...taxonomyIoChildDirs,
@@ -1657,7 +1637,7 @@ function scaffoldTsLeaf(label: string): string {
 }
 
 function scaffoldEmptyFacetMarkdown(facetLabel: string): string {
-  return `# Empty ${surfaceStripEmoji(facetLabel)} Facet\n\nThis facet currently declares no specific items. Generated by \`bun ./📜️script.ts new surface\`.\n`;
+  return `# Empty ${surfaceStripEmoji(facetLabel)} Facet\n\nThis facet currently declares no specific items. Authored by \`bun ./📜️script.ts new surface\`.\n`;
 }
 
 function scaffoldLeafFilename(lang: string): string {
@@ -1672,18 +1652,25 @@ function scaffoldLeafContentForLang(lang: string, label: string): string {
 
 type SurfaceScaffoldResult = { created: string[]; skipped: string[] };
 
-/** @emoji 📝️ Writes `relPath` only when absent; an existing leaf is reported as skipped, never
- * overwritten, so a hand-authored W2 packet can never be clobbered by a re-run of `--all`. */
+/** 📝️ Authors an absent leaf exclusively; an existing or concurrently created leaf is preserved. */
 function scaffoldWriteIfAbsent(repoRoot: string, relPath: string, content: string, result: SurfaceScaffoldResult, dryRun: boolean): void {
   const abs = join(repoRoot, relPath);
   if (existsSync(abs)) {
     result.skipped.push(relPath);
     return;
   }
-  result.created.push(relPath);
-  if (dryRun) return;
+  if (dryRun) {
+    result.created.push(relPath);
+    return;
+  }
   mkdirSync(dirname(abs), { recursive: true });
-  writeFileSync(abs, content);
+  try {
+    writeFileSync(abs, content, { flag: "wx" });
+    result.created.push(relPath);
+  } catch (error) {
+    if ((error as { code?: string }).code !== "EEXIST") throw error;
+    result.skipped.push(relPath);
+  }
 }
 
 /**
@@ -1691,7 +1678,7 @@ function scaffoldWriteIfAbsent(repoRoot: string, relPath: string, content: strin
  * the frozen tree (ticket Deliverable A): 2 surface leaves + 4 surface facets + 1 mode leaf + 4 mode
  * facets + 2 window leaves + 6 window facets = 19 files. Idempotent — never overwrites.
  */
-function scaffoldSurfaceTree(repoRoot: string, subsetRel: string, role: string, dryRun: boolean): SurfaceScaffoldResult {
+export function scaffoldSurfaceTree(repoRoot: string, subsetRel: string, role: string, dryRun: boolean): SurfaceScaffoldResult {
   const result: SurfaceScaffoldResult = { created: [], skipped: [] };
   const surfaceRel = `${subsetRel}/${TAXONOMY.surfaceDirNames[role]}`;
   const label = `${role} surface`;
@@ -1836,11 +1823,12 @@ function validatePlaygroundSessions(repoRoot: string): string[] {
 /** @emoji 🗂️ The full generated catalog, rendered in memory once and consumed by both `generate`
  * (writes) and `check` (byte-compares) so the two can never disagree about what belongs in
  * `🤖️generated/`. */
-function renderCatalogFiles(repoRoot: string): { files: Record<string, string>; entries: PluginRegistryEntry[]; playgrounds: PlaygroundEntry[]; frameworkPackages: FrameworkPackageEntry[] } {
-  const entries = generatePluginRegistry(repoRoot);
-  const playgrounds = generatePlaygroundRegistry(repoRoot);
-  const frameworkPackages = generateFrameworkPackageRegistry(repoRoot);
-  const defaultHostVariant = resolveDefaultHostVariant(repoRoot);
+function renderCatalogFiles(repoRoot: string, view?: RegistryCatalogInputView): { files: Record<string, string>; entries: PluginRegistryEntry[]; playgrounds: PlaygroundEntry[]; frameworkPackages: FrameworkPackageEntry[] } {
+  const packages = discoverCatalogPackages(repoRoot, TAXONOMY, view);
+  const entries = generatePluginRegistry(repoRoot, { packages, view });
+  const playgrounds = generatePlaygroundRegistry(repoRoot, { packages, view });
+  const frameworkPackages = generateFrameworkPackageRegistry(repoRoot, packages);
+  const hostVariant = defaultHostVariant(entries, playgrounds);
   return {
     entries,
     playgrounds,
@@ -1849,7 +1837,7 @@ function renderCatalogFiles(repoRoot: string): { files: Record<string, string>; 
       "🔣️plugins.json": `${JSON.stringify(entries, null, 2)}\n`,
       "🟦️plugins.ts": emitTypeScript(entries),
       "🔣️playgrounds.json": `${JSON.stringify(playgrounds, null, 2)}\n`,
-      "🟦️playgrounds.ts": emitPlaygroundsTypeScript(playgrounds, defaultHostVariant),
+      "🟦️playgrounds.ts": emitPlaygroundsTypeScript(playgrounds, hostVariant),
       "🔣️framework.json": `${JSON.stringify(frameworkPackages, null, 2)}\n`,
       "🟦️framework.ts": emitFrameworkPackagesTypeScript(frameworkPackages),
       "🦀️hosts.rs": emitRustHosts(entries, playgrounds),
@@ -1881,14 +1869,47 @@ class GenerateScript extends BundleScript {
 class PreviewGeneratedScript extends BundleScript {
   run(_segments: string[]): void {
     const repoRoot = getWorkspaceRoot();
-    const { files, playgrounds } = renderCatalogFiles(repoRoot);
+    const protocol = process.env.SEMIO_GENERATOR_PREVIEW_PROTOCOL;
+    const authority = TAXONOMY.generatorContracts["plugin-registry"].inputDiscovery!.previewInput;
+    if (protocol && protocol !== authority.protocol) throw new Error("Unknown registry preview protocol");
+    const native = registryCatalogInputView(repoRoot, TAXONOMY);
+    const cancelFile = process.env.SEMIO_GENERATOR_PREVIEW_CANCEL_FILE;
+    const cancelPath = cancelFile ? relative(repoRoot, cancelFile).replaceAll("\\", "/") : undefined;
+    if (cancelPath) native.kind(cancelPath);
+    const checkCancellation = (): void => {
+      if (!cancelFile) return;
+      try { lstatSync(cancelFile); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return; throw error; }
+      throw new Error("Registry preview cancelled");
+    };
+    const base: RegistryCatalogInputView = {
+      entries(path) { checkCancellation(); return native.entries(path); },
+      kind(path) { checkCancellation(); return native.kind(path); },
+      readText(path) { checkCancellation(); return native.readText(path); },
+    };
+    let payload = "";
+    if (protocol) {
+      const chunks: Buffer[] = [];
+      let size = 0;
+      while (true) {
+        checkCancellation();
+        const chunk = Buffer.alloc(Math.min(65536, authority.maxBytes - size + 1));
+        const length = readSync(0, chunk, 0, chunk.length, null);
+        if (!length) break;
+        size += length;
+        if (size > authority.maxBytes) throw new Error("Registry preview input exceeds its declared byte limit");
+        chunks.push(chunk.subarray(0, length));
+      }
+      payload = Buffer.concat(chunks).toString("utf8");
+    }
+    const view = protocol ? registryCatalogProjectedInputView(repoRoot, TAXONOMY, parseRegistryCatalogProjection(payload, TAXONOMY), base) : base;
+    const { files, playgrounds } = renderCatalogFiles(repoRoot, view);
     const outDir = join(this.root, "🤖️generated");
     const rootPath = relative(repoRoot, outDir).replaceAll("\\", "/").normalize("NFC");
     const launchPath = join(repoRoot, LAUNCH_OUTPUT_REL_PATH);
     const nodes = [
       { bytesBase64: "", mode: 0o755, nodeKind: "directory" as const, path: rootPath },
       ...Object.entries(files).map(([name, content]) => ({ bytesBase64: Buffer.from(content).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: `${rootPath}/${name.normalize("NFC")}` })),
-      { bytesBase64: Buffer.from(generateLaunchJson(repoRoot, playgrounds)).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: relative(repoRoot, launchPath).replaceAll("\\", "/").normalize("NFC") },
+      { bytesBase64: Buffer.from(generateLaunchJson(repoRoot, playgrounds, (path) => view.readText(path))).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: relative(repoRoot, launchPath).replaceAll("\\", "/").normalize("NFC") },
     ].sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
     const expected = new Set(Object.keys(files));
     const staleRemovals = (existsSync(outDir) ? readdirSync(outDir) : []).filter((name) => !expected.has(name)).map((name) => `${rootPath}/${name.normalize("NFC")}`).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
@@ -1993,9 +2014,26 @@ function validateDescriptors(entries: readonly PluginRegistryEntry[], repoRoot: 
 }
 //#endregion 🔖️DescriptorGate
 
+/** 🔎️ Checks only bytes produced by generate, without taxonomy, asset or built-WASM diagnostics. */
+class CheckGeneratedScript extends BundleScript {
+  run(_segments: string[]): void {
+    const repoRoot = getWorkspaceRoot();
+    const { files, playgrounds } = renderCatalogFiles(repoRoot);
+    const outDir = join(this.root, "🤖️generated");
+    const stale = Object.entries(files).filter(([name, content]) => !existsSync(join(outDir, name)) || readFileSync(join(outDir, name), "utf8") !== content).map(([name]) => name);
+    if (existsSync(outDir)) stale.push(...readdirSync(outDir).filter((name) => !(name in files)));
+    const launchPath = join(repoRoot, LAUNCH_OUTPUT_REL_PATH);
+    if (!existsSync(launchPath) || readFileSync(launchPath, "utf8") !== generateLaunchJson(repoRoot, playgrounds)) stale.push(LAUNCH_OUTPUT_REL_PATH);
+    if (stale.length) throw new Error(`Generated registry output is stale: ${stale.join(", ")}`);
+    console.log("plugin registry generated catalog and launch bytes are fresh.");
+  }
+}
+
 class CheckScript extends BundleScript {
   run(_segments: string[]): void {
     const repoRoot = getWorkspaceRoot();
+    const authorityProblems = validateGeneratorContractsAgainstWorkspace(repoRoot, TAXONOMY);
+    if (authorityProblems.length) throw new Error(authorityProblems.join("\n"));
     const { files, entries, playgrounds, frameworkPackages } = renderCatalogFiles(repoRoot);
     const outDir = join(this.root, "🤖️generated");
     const stale = Object.entries(files)
@@ -2071,7 +2109,7 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("test", TestScript).register("new", NewScript);
+const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check-generated", CheckGeneratedScript).register("check", CheckScript).register("test", TestScript).register("new", NewScript);
 
 if (import.meta.main) {
   await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" });

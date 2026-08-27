@@ -1,11 +1,12 @@
-import type { LineEnding, TxtSnapshot } from '../📸️snapshot/🟦️component.ts';
-
-/** 🧬️ TxtMutation union. */
+/** 🧬 Transparent TxtMutation TypeScript aggregate. */
+import type { SetTrailingNewlinePayload } from './✏️set-trailing-newline/🟦️component.ts';
+import type { SetLineEndingPayload } from './✏️set-line-ending/🟦️component.ts';
+import type { InsertLinePayload } from './📥️insert-line/🟦️component.ts';
+import type { RemoveLinePayload } from './🗑️remove-line/🟦️component.ts';
+import type { SetLinePayload } from './✏️set-line/🟦️component.ts';
 export type TxtMutation =
-  | { mutation: 'noMutation' }
-  | { mutation: 'setSnapshot'; snapshot: TxtSnapshot }
-  | { mutation: 'setTrailingNewline'; value: boolean }
-  | { mutation: 'setLineEnding'; value: LineEnding }
-  | { mutation: 'insertLine'; index: number; text: string }
-  | { mutation: 'removeLine'; index: number }
-  | { mutation: 'setLine'; index: number; text: string };
+  | { readonly mutation: 'set-trailing-newline'; readonly payload: SetTrailingNewlinePayload }
+  | { readonly mutation: 'set-line-ending'; readonly payload: SetLineEndingPayload }
+  | { readonly mutation: 'insert-line'; readonly payload: InsertLinePayload }
+  | { readonly mutation: 'remove-line'; readonly payload: RemoveLinePayload }
+  | { readonly mutation: 'set-line'; readonly payload: SetLinePayload };

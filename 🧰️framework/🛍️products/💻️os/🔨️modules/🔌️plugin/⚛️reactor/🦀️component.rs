@@ -1639,7 +1639,10 @@ mod wit_bridge {
                     Ok(tree) => {
                         let _ = grant.commit_source(tree.root);
                     }
-                    Err(_) => grant.cancel(),
+                    Err(fault) => {
+                        grant.cancel();
+                        effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: dsl::encode_fault_bytes(&fault) });
+                    }
                 },
                 Err(surface) => PATCHES.with(|patches| {
                     let _ = patches.defer(surface);
@@ -1688,6 +1691,12 @@ mod wit_bridge {
             }
             more || patches.has_work() || PENDING_PATCHES.with(|pending| pending.borrow().has_unpublished())
         });
+        if let Some((instance, message)) = PATCHES.with(patches::PatchTracker::take_render_fault) {
+            effects.push(Effect::SendMessage {
+                target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) },
+                payload: dsl::encode_fault_bytes(&semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-render"), message)),
+            });
+        }
 
         // 🚫️async: E5 executor bridge (× 2) — `LocalExecutor::{run_until_idle,has_ready}` stay
         // genuinely `async fn` (its own doc: "run_until_idle handles Pending without ever yielding
@@ -2406,9 +2415,6 @@ mod wit_bridge {
             Effect::OpenDialog { req, dialog_id, args } => wit::Effect::OpenDialog(wit_effects::OpenDialogEffect { req: req.0, params: wit_effects::OpenDialogParams { dialog_id, args: args.map(|value| pack(&value)) } }),
             Effect::DispatchAction { req, action, args, delay_ms } => wit::Effect::DispatchAction(wit_effects::DispatchActionEffect { req: req.0, params: wit_effects::DispatchActionParams { action, args: args.map(|value| pack(&value)), delay_ms } }),
             Effect::ReplayShellCommand { action_id, args } => wit::Effect::ReplayShellCommand(wit_effects::ReplayShellCommandEffect { action_id, args: args.map(|value| pack(&value)) }),
-            Effect::PatchWorld3dChrome { selection_json, vortices_json, document_selected_ids, document_highlighted_ids } => {
-                wit::Effect::PatchWorld3dChrome(wit_effects::PatchWorld3dChromeEffect { selection_json, vortices_json, document_selected_ids, document_highlighted_ids })
-            }
             Effect::InvokeExtension { req, extension_id, capability, request_json } => {
                 wit::Effect::InvokeExtension(wit_effects::InvokeExtensionEffect { req: req.0, params: wit_effects::InvokeExtensionParams { extension_id, capability, payload: request_json.into_bytes() } })
             }

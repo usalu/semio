@@ -1,0 +1,61 @@
+{
+  "controller": "s.shooting.shooting@1/*#editor",
+  "documentSchema": "shooting.shooting",
+  "factory": "ShootingCommandJobFactory",
+  "limits": {
+    "bounded": { "maxRawBytes": 65536, "maxDecodedItems": 64, "maxWorkUnitsPerStep": 1, "maxOutputBytes": 262144, "maxStepMicros": 7500 },
+    "resumable": { "maxRawBytes": 2228224, "maxDecodedItems": 1024, "maxWorkUnitsPerStep": 1, "maxOutputBytes": 33554432, "maxStepMicros": 7500, "maxCheckpointBytes": 512, "maxInFlightPages": 1 }
+  },
+  "publicationContracts": [
+    { "toolId": "loadRequest", "lanes": ["hostOnly"] },
+    { "toolId": "importAssetRequest", "lanes": ["hostOnly"] }
+  ],
+  "routes": [
+    { "id": "importSnapshotJson", "execution": "resumable", "admission": "failClosed", "feature": "decode and replace a complete document through a retained byte cursor" },
+    { "id": "setActiveExample", "execution": "resumable", "admission": "failClosed", "feature": "encode and replace a complete fixture document through a retained cursor" },
+    { "id": "setActiveShot", "execution": "resumable", "admission": "failClosed", "feature": "publish a document mutation after an artifact preparation factory is installed" },
+    { "id": "setActiveAsset", "execution": "resumable", "admission": "failClosed", "feature": "publish a config mutation after a config preparation factory is installed" },
+    { "id": "setShotCamera", "execution": "resumable", "admission": "failClosed", "feature": "locate a shot and publish its camera mutation through a retained cursor" },
+    { "id": "saveCamera", "execution": "resumable", "admission": "failClosed", "feature": "append a saved camera through an artifact preparation factory" },
+    { "id": "setSunAzimuth", "execution": "resumable", "admission": "failClosed", "feature": "publish a lighting document mutation after an artifact preparation factory is installed" },
+    { "id": "setSunElevation", "execution": "resumable", "admission": "failClosed", "feature": "publish a lighting document mutation after an artifact preparation factory is installed" },
+    { "id": "setSunIntensity", "execution": "resumable", "admission": "failClosed", "feature": "publish a lighting document mutation after an artifact preparation factory is installed" },
+    { "id": "setAmbientIntensity", "execution": "resumable", "admission": "failClosed", "feature": "publish a lighting document mutation after an artifact preparation factory is installed" },
+    { "id": "setMaterialRoughness", "execution": "resumable", "admission": "failClosed", "feature": "publish a material document mutation after an artifact preparation factory is installed" },
+    { "id": "setShadowEnabled", "execution": "resumable", "admission": "failClosed", "feature": "publish a lighting document mutation after an artifact preparation factory is installed" },
+    { "id": "toggleSun", "execution": "resumable", "admission": "failClosed", "feature": "publish a lighting document mutation after an artifact preparation factory is installed" },
+    { "id": "setActiveShotLabel", "execution": "resumable", "admission": "failClosed", "feature": "locate a shot and publish its label mutation through a retained cursor" },
+    { "id": "setActiveShotFormat", "execution": "resumable", "admission": "failClosed", "feature": "locate a shot and publish its format mutation through a retained cursor" },
+    { "id": "setActiveShotShape", "execution": "resumable", "admission": "failClosed", "feature": "locate a shot and publish its shape mutation through a retained cursor" },
+    { "id": "patchShots", "execution": "resumable", "admission": "failClosed", "feature": "advance a persistent shot patch microcursor over caller-selected ids" },
+    { "id": "patchAssets", "execution": "resumable", "admission": "failClosed", "feature": "advance a persistent asset patch microcursor over caller-selected ids" },
+    { "id": "addShot", "execution": "resumable", "admission": "failClosed", "feature": "append a shot through an artifact preparation factory" },
+    { "id": "addAsset", "execution": "resumable", "admission": "failClosed", "feature": "append an asset through an artifact preparation factory" },
+    { "id": "importAsset", "execution": "resumable", "admission": "failClosed", "feature": "decode and publish an unbounded asset payload through retained byte pages" },
+    { "id": "resetFixture", "execution": "resumable", "admission": "failClosed", "feature": "encode and replace a complete fixture document through a retained cursor" },
+    { "id": "translateSelection", "execution": "resumable", "admission": "failClosed", "feature": "advance a persistent selection translation microcursor" },
+    { "id": "rotateSelection", "execution": "resumable", "admission": "failClosed", "feature": "advance a persistent selection rotation microcursor" },
+    { "id": "scaleSelection", "execution": "resumable", "admission": "failClosed", "feature": "advance a persistent selection scale microcursor" },
+    { "id": "setCamera", "execution": "resumable", "admission": "failClosed", "feature": "publish fixed camera configuration after a config preparation factory is installed" },
+    { "id": "loadSavedCamera", "execution": "resumable", "admission": "failClosed", "feature": "locate a saved camera through a retained document cursor before publishing config" },
+    { "id": "setCameraDraftLabel", "execution": "resumable", "admission": "failClosed", "feature": "publish fixed camera label configuration after a config preparation factory is installed" },
+    { "id": "setCenterModel", "execution": "resumable", "admission": "failClosed", "feature": "publish fixed center-model configuration after a config preparation factory is installed" },
+    { "id": "setActiveUtility", "execution": "resumable", "admission": "failClosed", "feature": "publish fixed active-utility configuration after a config preparation factory is installed" },
+    { "id": "setLocale", "execution": "resumable", "admission": "failClosed", "feature": "publish fixed locale configuration after a config preparation factory is installed" },
+    { "id": "setShotSelection", "execution": "resumable", "admission": "failClosed", "feature": "publish variable shot selection configuration after a config preparation factory is installed" },
+    { "id": "worldPointerDown", "execution": "resumable", "admission": "failClosed", "feature": "replace the no-op placeholder with a retained interaction-owned operation" },
+    { "id": "worldPointerMove", "execution": "resumable", "admission": "failClosed", "feature": "replace the no-op placeholder with a retained interaction-owned operation" },
+    { "id": "saveDownload", "execution": "resumable", "admission": "failClosed", "feature": "encode the complete document into retained output pages" },
+    { "id": "loadRequest", "execution": "bounded", "admission": "migrated", "feature": "emit exactly one fixed host file-open request" },
+    { "id": "importAssetRequest", "execution": "bounded", "admission": "migrated", "feature": "emit exactly one fixed host asset file-open request" },
+    { "id": "exportActiveShot", "execution": "resumable", "admission": "failClosed", "feature": "render and encode the active shot through retained output pages" },
+    { "id": "exportAllShots", "execution": "resumable", "admission": "failClosed", "feature": "advance a persistent shot render and export cursor" }
+  ],
+  "oracle": {
+    "library": "serde_json",
+    "scope": "test-only-existing-dependency",
+    "ownedInterface": "ShootingRetainedCatalogOracle",
+    "runtimeDependency": false,
+    "expected": { "routes": 39, "bounded": 2, "resumable": 37, "migrated": 2, "failClosed": 37, "unique": true }
+  }
+}

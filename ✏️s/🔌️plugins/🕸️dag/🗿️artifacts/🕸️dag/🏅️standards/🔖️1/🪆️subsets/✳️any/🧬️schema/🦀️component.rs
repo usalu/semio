@@ -311,7 +311,7 @@ mod document_helpers_tests {
         let mut nodes = document.nodes();
         nodes.push(DagNodeSpec { id: "n99".into(), ..default_node_for_kind("note", "n99", 0.0, 0.0) });
         let edges = document.edges();
-        let content = crate::artifacts::dag::dag_content_child_handle_and_cache(nodes, edges);
+        let content = crate::artifacts::dag::dag_content_child_with_owner(nodes, edges);
         let document = DagSnapshot { schema: document.schema.clone(), content };
         assert_eq!(next_node_id(&document), "n100");
     }

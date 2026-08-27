@@ -1,0 +1,58 @@
+{
+  "productionPath": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs",
+  "regionSha256": "e300419a243eda7579e19f417e6939545f0ef6271627abfeffe0c904107c4116",
+  "sourceUnchanged": true,
+  "mismatches": 0,
+  "results": [
+    {
+      "name": "direct",
+      "expected": true,
+      "accepted": true,
+      "owner": "domain/🧬️mutations/➕️insert-page",
+      "workspace": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-authority-independent/🧫️run-1KYmyR/direct/outer/workspace"
+    },
+    {
+      "name": "relative-parent",
+      "expected": true,
+      "accepted": true,
+      "owner": "domain/🧬️mutations/➕️insert-page",
+      "workspace": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-authority-independent/🧫️run-1KYmyR/relative-parent/outer/workspace"
+    },
+    {
+      "name": "symlink-parent-erasure",
+      "expected": false,
+      "accepted": false,
+      "error": "raw source symlink component rejected before normalization"
+    },
+    {
+      "name": "file-parent-erasure",
+      "expected": false,
+      "accepted": false,
+      "error": "raw source intermediate component is not a directory"
+    },
+    {
+      "name": "workspace-ancestor-symlink",
+      "expected": false,
+      "accepted": false,
+      "error": "raw source symlink component rejected before normalization"
+    },
+    {
+      "name": "nested-missing-project",
+      "expected": false,
+      "accepted": false,
+      "error": "workspace nx.json marker lacks paired 📋️project.json"
+    },
+    {
+      "name": "nested-symlink-project",
+      "expected": false,
+      "accepted": false,
+      "error": "workspace 📋️project.json marker is a symlink"
+    },
+    {
+      "name": "nested-symlink-nx",
+      "expected": false,
+      "accepted": false,
+      "error": "workspace nx.json marker is a symlink"
+    }
+  ]
+}

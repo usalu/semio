@@ -1,0 +1,9 @@
+[
+  { "kind": "inputSlider", "key": "procedural-play-catalogue.inputSlider" },
+  { "kind": "neuron", "neuronKind": "math.add", "key": "procedural-play-catalogue.neuron.math.add" },
+  { "kind": "outputAction", "action": "log", "key": "procedural-play-catalogue.outputAction.log" },
+  { "kind": "outputExport", "format": "svg", "key": "procedural-play-catalogue.outputExport.svg" },
+  { "kind": "outputExport", "format": "png", "key": "procedural-play-catalogue.outputExport.png" },
+  { "kind": "outputExport", "format": "obj", "key": "procedural-play-catalogue.outputExport.obj" },
+  { "kind": "outputExport", "format": "glb", "key": "procedural-play-catalogue.outputExport.glb" }
+]

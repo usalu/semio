@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/vcs/vcs/mutation/add-tag.json",
+  "title": "AddTagMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "tag"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "addTag"
+    },
+    "tag": {
+      "$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/add-tag/payload.json#/properties/tag"
+    }
+  }
+}

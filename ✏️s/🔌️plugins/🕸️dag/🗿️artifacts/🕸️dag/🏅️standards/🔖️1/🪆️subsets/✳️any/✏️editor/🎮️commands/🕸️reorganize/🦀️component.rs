@@ -23,7 +23,7 @@ pub async fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, DagSnapshot>, 
                 // 🎯️ Reorganize only ever moves EXISTING nodes (same ids/edges) — the generic
                 // differ correctly narrows that down to a `move-node` per node whose position
                 // actually changed, never a whole-collection replace.
-                let content = crate::artifacts::dag::dag_content_child_handle_and_cache(fixture.nodes, document.edges());
+                let content = crate::artifacts::dag::dag_content_child_with_owner(fixture.nodes, document.edges());
                 let recomputed = DagSnapshot { schema: document.schema.clone(), content };
                 return Ok(Emit::mutations(dag_snapshot_mutations(document, &recomputed)));
             }

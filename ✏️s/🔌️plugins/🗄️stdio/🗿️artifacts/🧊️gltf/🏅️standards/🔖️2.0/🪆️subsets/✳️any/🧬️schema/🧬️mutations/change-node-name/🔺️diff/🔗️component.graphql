@@ -1,1 +1,0 @@
-input GltfChangeNodeNameDiffV1 { node: Int!, before: String, after: String, touchedPaths: [String!]! }

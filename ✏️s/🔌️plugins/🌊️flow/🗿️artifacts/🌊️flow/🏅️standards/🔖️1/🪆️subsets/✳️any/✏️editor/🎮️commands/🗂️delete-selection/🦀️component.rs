@@ -15,7 +15,7 @@ pub struct DeleteSelection {}
 /// still requires a `handle` of this signature to exist even though it is reachable only through that
 /// macro-generated path (`FlowPlayApp::handle` always routes this command through `apply` below
 /// instead) — degrades to treating the selection as empty, mirroring `space::delete_selection::handle`.
-pub async fn handle(_payload: &DeleteSelection, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub fn handle(_payload: &DeleteSelection, _doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     Ok(Emit::default())
 }
 
@@ -25,7 +25,7 @@ pub async fn handle(_payload: &DeleteSelection, _doc: &ArtifactView<'_, FlowSnap
 /// `interaction_topology`. `app_commands!`'s generated `dispatch(doc, cfg, session)` is framework-fixed
 /// at that 3-arg shape (no `interaction` slot), so `FlowPlayApp::handle` routes this command through
 /// `apply` directly instead (mirrors `space`'s `delete_selection::apply`).
-pub async fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession, interaction: &InteractionView<'_>) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession, interaction: &InteractionView<'_>) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     let (nodes, edges) = flow_graph_selection_domains(&interaction.selection(FLOW_INTERACTION_GRAPH).ids);
     let operations = host_operations(doc.snapshot, cfg.snapshot, session, |host| {
         sync_host_selection_domains(host, &nodes, &edges, &[]);

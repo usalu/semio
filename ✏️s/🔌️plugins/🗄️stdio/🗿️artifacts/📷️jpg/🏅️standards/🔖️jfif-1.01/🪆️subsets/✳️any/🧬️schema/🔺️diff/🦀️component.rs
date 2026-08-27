@@ -143,7 +143,7 @@ mod opt_quant_values {
 }
 impl JpgQuantTableDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn is_empty(&self) -> bool {
+    pub(in super::super) fn is_empty(&self) -> bool {
         self == &Self::default()
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -151,7 +151,7 @@ impl JpgQuantTableDiff {
         JpgQuantTable { id: base.id, precision: self.precision.unwrap_or(base.precision), values: self.values.unwrap_or(base.values) }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn between(a: &JpgQuantTable, b: &JpgQuantTable) -> Self {
+    pub(in super::super) fn between(a: &JpgQuantTable, b: &JpgQuantTable) -> Self {
         Self { precision: (a.precision != b.precision).then_some(b.precision), values: (a.values != b.values).then_some(b.values) }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -191,7 +191,7 @@ pub struct JpgQuantTablesDiff {
 }
 impl JpgQuantTablesDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn is_empty(&self) -> bool {
+    pub(in super::super) fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 }
@@ -216,7 +216,7 @@ pub struct JpgHuffmanTableDiff {
 }
 impl JpgHuffmanTableDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn is_empty(&self) -> bool {
+    pub(in super::super) fn is_empty(&self) -> bool {
         self == &Self::default()
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -224,7 +224,7 @@ impl JpgHuffmanTableDiff {
         JpgHuffmanTable { id: base.id, class: base.class, bits: self.bits.unwrap_or(base.bits), values: self.values.clone().unwrap_or_else(|| base.values.clone()) }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn between(a: &JpgHuffmanTable, b: &JpgHuffmanTable) -> Self {
+    pub(in super::super) fn between(a: &JpgHuffmanTable, b: &JpgHuffmanTable) -> Self {
         Self { bits: (a.bits != b.bits).then_some(b.bits), values: (a.values != b.values).then(|| b.values.clone()) }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -264,12 +264,12 @@ pub struct JpgHuffmanTablesDiff {
 }
 impl JpgHuffmanTablesDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn is_empty(&self) -> bool {
+    pub(in super::super) fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn huffman_key(t: &JpgHuffmanTable) -> JpgHuffmanTableKey {
+pub(crate) fn huffman_key(t: &JpgHuffmanTable) -> JpgHuffmanTableKey {
     JpgHuffmanTableKey { class: t.class, id: t.id }
 }
 //#endregion 🔖️HuffmanTablesDiff
@@ -1226,95 +1226,34 @@ pub fn diff_set_snapshot(base: &JpgSnapshot, next: &JpgSnapshot) -> JpgDiff {
 
 //#region 🔖️MutationDiffBuilders
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_jfif_header(base: &JpgSnapshot, version: (u8, u8), density_units: JfifDensityUnits, x_density: u16, y_density: u16, thumbnail: Option<JfifThumbnail>) -> JpgDiff {
-    JpgDiff {
-        jfif_version: (base.jfif_version != version).then_some(version),
-        jfif_density_units: (base.jfif_density_units != density_units).then_some(density_units),
-        jfif_x_density: (base.jfif_x_density != x_density).then_some(x_density),
-        jfif_y_density: (base.jfif_y_density != y_density).then_some(y_density),
-        jfif_thumbnail: (base.jfif_thumbnail != thumbnail).then_some(thumbnail),
-        ..Default::default()
-    }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_quant_table(base: &JpgSnapshot, table: JpgQuantTable) -> JpgDiff {
-    let d = match base.quant_tables.iter().position(|t| t.id == table.id) {
-        Some(_) => {
-            let existing = base.quant_tables.iter().find(|t| t.id == table.id).unwrap();
-            let fd = JpgQuantTableDiff::between(existing, &table);
-            if fd.is_empty() {
-                JpgQuantTablesDiff::default()
-            } else {
-                JpgQuantTablesDiff { removed: vec![], modified: vec![JpgQuantTableModified { id: table.id, diff: fd }], added: vec![] }
-            }
-        }
-        None => JpgQuantTablesDiff { removed: vec![], modified: vec![], added: vec![JpgQuantTableAdded { index: base.quant_tables.len(), item: table }] },
-    };
-    JpgDiff { quant_tables: (!d.is_empty()).then_some(d), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_remove_quant_table(base: &JpgSnapshot, id: u8) -> JpgDiff {
-    if !base.quant_tables.iter().any(|t| t.id == id) {
-        return JpgDiff::default();
-    }
-    JpgDiff { quant_tables: Some(JpgQuantTablesDiff { removed: vec![id], modified: vec![], added: vec![] }), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_huffman_table(base: &JpgSnapshot, table: JpgHuffmanTable) -> JpgDiff {
-    let key = huffman_key(&table);
-    let d = match base.huffman_tables.iter().find(|t| huffman_key(t) == key) {
-        Some(existing) => {
-            let fd = JpgHuffmanTableDiff::between(existing, &table);
-            if fd.is_empty() {
-                JpgHuffmanTablesDiff::default()
-            } else {
-                JpgHuffmanTablesDiff { removed: vec![], modified: vec![JpgHuffmanTableModified { key, diff: fd }], added: vec![] }
-            }
-        }
-        None => JpgHuffmanTablesDiff { removed: vec![], modified: vec![], added: vec![JpgHuffmanTableAdded { index: base.huffman_tables.len(), item: table }] },
-    };
-    JpgDiff { huffman_tables: (!d.is_empty()).then_some(d), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_remove_huffman_table(base: &JpgSnapshot, key: JpgHuffmanTableKey) -> JpgDiff {
-    if !base.huffman_tables.iter().any(|t| huffman_key(t) == key) {
-        return JpgDiff::default();
-    }
-    JpgDiff { huffman_tables: Some(JpgHuffmanTablesDiff { removed: vec![key], modified: vec![], added: vec![] }), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_restart_interval(base: &JpgSnapshot, restart_interval: Option<u16>) -> JpgDiff {
-    JpgDiff { restart_interval: (base.restart_interval != restart_interval).then_some(restart_interval), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_insert_other_segment(base: &JpgSnapshot, index: usize, segment: JpgSegment) -> JpgDiff {
-    let at = index.min(base.other_segments.len());
-    JpgDiff { other_segments: Some(JpgOtherSegmentsDiff { removed: vec![], modified: vec![], added: vec![JpgSegmentAdded { index: at, item: segment }] }), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_remove_other_segment(base: &JpgSnapshot, index: usize) -> JpgDiff {
-    if index >= base.other_segments.len() {
-        return JpgDiff::default();
-    }
-    JpgDiff { other_segments: Some(JpgOtherSegmentsDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_pixels(base: &JpgSnapshot, pixels: Vec<u8>) -> JpgDiff {
-    JpgDiff { pixels: (base.pixels != pixels).then_some(pixels), ..Default::default() }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_re_encode_quality(base: &JpgSnapshot, quality: Option<u8>) -> JpgDiff {
-    JpgDiff { re_encode_quality: (base.re_encode_quality != quality).then_some(quality), ..Default::default() }
-}
+
 //#endregion 🔖️MutationDiffBuilders
 
 //#region 🔖️HandcraftedDiffCodec

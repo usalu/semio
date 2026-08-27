@@ -1,0 +1,4 @@
+# 🚦 Direct change-status payload.
+input ChangeStatusInput {
+  newStatus: String!
+}

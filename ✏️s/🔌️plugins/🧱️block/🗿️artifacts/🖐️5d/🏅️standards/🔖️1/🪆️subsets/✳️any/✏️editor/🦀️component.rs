@@ -19,10 +19,11 @@ use crate::editor::block5d::modes::edit as edit_mode;
 use crate::editor::block5d::modes::edit::windows::{board, world};
 use crate::editor::block5d::panels::{document as document_panel, inspection as inspection_panel};
 use crate::editor::block5d::terminology::block5d_labels;
-use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
+use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError, TopologyNode};
 use semio_framework_plugin::app::{Dialect, InteractionView};
+use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionDescriptor, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, UiNode,
+    ActionDescriptor, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, UiNode,
 };
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -143,6 +144,218 @@ semio_framework_plugin::app_commands! {
 }
 //#endregion 🔖️Commands
 
+//#region 🧵️RetainedCommands
+const BLOCK5D_RETAINED_TOOL_IDS: &[&str] = &["patchPartKind", "addGripKind", "removeGripKind", "addGrip", "removeGrip", "setActiveExample", "edit"];
+const BLOCK5D_RETAINED_PAYLOAD_SCHEMA: &str = "block.5d.tool-command.v1";
+const BLOCK5D_RETAINED_RAW_BYTES: usize = 65_536;
+const BLOCK5D_RETAINED_WORK_ITEMS: usize = 4_096;
+const BLOCK5D_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "patchPartKind", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addGripKind", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "removeGripKind", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addGrip", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "removeGrip", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "edit", lanes: &[ArtifactToolPublicationLane::Artifact] },
+];
+
+fn block5d_retained_extent(command: &Block5dCommand, snapshot: &Block5dSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    if !BLOCK5D_RETAINED_TOOL_IDS.contains(&command.command_id()) {
+        return None;
+    }
+    let collections = [snapshot.representations.len(), snapshot.grip_kinds.len(), snapshot.grips.len(), snapshot.compatibility.len(), snapshot.attributes.len(), snapshot.authors.len()];
+    let items = collections.into_iter().try_fold(1usize, |total, count| total.checked_add(count))?;
+    (items <= BLOCK5D_RETAINED_WORK_ITEMS).then_some(1)
+}
+
+fn block5d_retained_reduce(
+    command: &Block5dCommand,
+    snapshot: &Block5dSnapshot,
+    config: &Block5dConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> Result<Emit<Block5dMutation, Block5dConfigMutation, NoDraftMutation>, Fault> {
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+}
+
+struct Block5dRetainedCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl Block5dRetainedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: BLOCK5D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for Block5dRetainedCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<Block5dPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<Block5dPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
+    fn payload_schema_id(&self) -> &str { BLOCK5D_RETAINED_PAYLOAD_SCHEMA }
+    fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
+    fn execution_contract(&self) -> ToolExecutionContract { ToolExecutionContract::bounded_first_step(BLOCK5D_RETAINED_RAW_BYTES, 4_096, 1, 262_144, 7_500) }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> { Ok(ArtifactRetainedCommandJob::new(payload)) }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > BLOCK5D_RETAINED_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Block5d retained command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for Block5dRetainedCommandJobFactory {
+    type Owner = EditorApp<Block5dPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = BLOCK5D_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = BLOCK_5D_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = BLOCK5D_PUBLICATION_CONTRACTS;
+}
+//#endregion 🧵️RetainedCommands
+
+//#region 📬️StorePreparation
+struct Block5dStorePreparationFactory;
+
+struct Block5dStorePreparation {
+    base: Option<store::SnapshotRead<Block5dSnapshot>>,
+    mutation: Option<Block5dMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<Block5dSnapshot, Block5dMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<Block5dSnapshot, Block5dMutation> for Block5dStorePreparationFactory {
+    fn preflight(&self, _mutation: &Block5dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Block5d Store preparation rejected its lane or description envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<Block5dSnapshot, Block5dMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Block5dSnapshot, Block5dMutation>>, store::ArtifactStoreOneItemPreparationRequest<Block5dSnapshot, Block5dMutation>> {
+        let item_count = request
+            .base
+            .get()
+            .representations
+            .len()
+            .saturating_add(request.base.get().grip_kinds.len())
+            .saturating_add(request.base.get().grips.len())
+            .saturating_add(request.base.get().compatibility.len())
+            .saturating_add(request.base.get().attributes.len())
+            .saturating_add(request.base.get().authors.len());
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || item_count > BLOCK5D_RETAINED_WORK_ITEMS
+        {
+            return Err(request);
+        }
+        Ok(Box::new(Block5dStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<Block5dSnapshot, Block5dMutation> for Block5dStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        use protocol::{Mutation as _, MutationDiff as _};
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "Block5d preparation lost its exact base root".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "Block5d preparation lost its mutation owner".to_string())?;
+        let inverse = mutation.inverse(base.get());
+        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Block5d preparation lost its Store authority".to_string())?;
+        let id = format!("block5d-retained-{}", authority.next_sequence_number());
+        let edit = protocol::Edit {
+            id: id.clone(),
+            actor: Some(authority.actor().to_string()),
+            forwards: vec![mutation],
+            inverse,
+            mutation_meta: vec![protocol::MutationMeta {
+                mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+                dependencies: Vec::new(),
+                base_version: authority.base_applied_edit_count() as u64,
+                author_id: Some(protocol::ActorId(authority.actor().to_string())),
+                timestamp: authority.next_clock(),
+                undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+                payload_hash: None,
+                semantic_kind: None,
+                label: None,
+                group_id: None,
+                origin: Default::default(),
+            }],
+            description: self.description.take(),
+            coalesce_key: None,
+            sequence_number: authority.next_sequence_number(),
+            started_at: String::new(),
+            finished_at: None,
+        };
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Block5dSnapshot, Block5dMutation>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Block5dSnapshot, Block5dMutation>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() { return Err("Block5d preparation could not return its exact base root".into()); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️StorePreparation
+
 //#region 🔖️Block5dPlayApp
 /// 🧪️ B1: unit struct — the former `selected_ids` `RefCell` field now lives in
 /// `crate::editor::block5d::config::Block5dConfig`, written through `Block5dConfigMutation`s.
@@ -165,6 +378,59 @@ impl ArtifactEditor for Block5dPlayApp {
 
     const DIALECT: Dialect = crate::artifacts::block5d::BLOCK5D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_5D_SCHEMA;
+
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(Block5dStorePreparationFactory))
+    }
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<Block5dPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.block.block5d@1/*#editor",
+        document_schema: "block.5d",
+        factory: "Block5dRetainedCommandJobFactory",
+        factory_type: Block5dRetainedCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
+        tools: ["patchPartKind", "addGripKind", "removeGripKind", "addGrip", "removeGrip", "setActiveExample", "edit"]
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller_id = registry.controller_id().to_string();
+        registry.register(Block5dRetainedCommandJobFactory::new(&controller_id))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !BLOCK5D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id || block5d_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
+            return Err(Fault::from("block5d-retained-command-tool-mismatch"));
+        }
+        let tool_id = request.command.command_id();
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, block5d_retained_reduce, block5d_retained_extent));
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            operation_context,
+            request.completion,
+            Block5dCommand::command_id,
+            BLOCK5D_RETAINED_RAW_BYTES,
+            BLOCK5D_RETAINED_WORK_ITEMS,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
 
     async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::block5d::config::schema::app_schema_descriptor())
@@ -328,6 +594,13 @@ pub fn create_block5d_app() -> semio_framework_plugin::AppDefinition {
             .mutation("removeGrip", LocalizedLabel::native("Remove Grip", "Griff entfernen"))
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
+            .action_interactive_job("patchPartKind", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addGripKind", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeGripKind", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addGrip", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeGrip", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+            .action_interactive_job("edit", InteractiveJobClassification::Migrated)
             .default_layout(edit_mode::layout())
             .io(block5d_io())
             .build_definition()

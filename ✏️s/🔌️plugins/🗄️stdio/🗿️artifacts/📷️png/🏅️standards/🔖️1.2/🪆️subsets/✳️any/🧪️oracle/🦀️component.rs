@@ -16,7 +16,7 @@
 //! chunks the crate models (gAMA, cHRM, sRGB, pHYs, bKGD), the tEXt chunks it models, plus tIME and
 //! any private/unregistered chunk, which it does not. A raster-only model was the real defect here:
 //! fifteen of this subset's seventeen kinds touch nothing but those chunks, so a decode that threw
-//! them away made every one of them re-encode to the same bytes as `no-mutation` and pass for that
+//! them away made every one of them re-encode to the same bytes as an unchanged round trip and pass for that
 //! reason alone.
 //!
 //! `png::Info` is the reference reader for everything the crate models. tIME and unknown chunks
@@ -27,13 +27,13 @@
 //!
 //! # The two kinds that genuinely cannot be observed, and why they are not stubs
 //!
-//! * `set-header` — this subset's own `encode_png` emits IHDR `[8, 6, 0, 0, 0]` unconditionally
+//! * `change-header` — this subset's own `encode_png` emits IHDR `[8, 6, 0, 0, 0]` unconditionally
 //!   (its `🚫️EncodeScopeNote`), because `PngSnapshot::pixels` is a canonical 8-bit RGBA buffer and
 //!   IHDR must describe the IDAT that follows it. `bit_depth`, `color_type` and `interlace` are
 //!   therefore fields the model carries and the serialization cannot; `width`/`height` cannot move
 //!   either, because `SetHeader` does not resize `pixels` and `encode_png` rejects a snapshot whose
 //!   buffer no longer matches its dimensions. The oracle mirrors that exactly.
-//! * `set-transparency` — §11.3.3 forbids tRNS alongside colour types 4 and 6, and colour type 6 is
+//! * `change-transparency` — §11.3.3 forbids tRNS alongside colour types 4 and 6, and colour type 6 is
 //!   what both encoders always produce. Setting `Some(_)` would emit a file the reference decoder
 //!   rejects outright (`png` 0.18 `decoder/stream.rs` `ColorWithBadTrns`); the fixture carries no
 //!   tRNS, so removing is a no-op on a chunk that was never there. Both are stated in the feature
@@ -41,7 +41,7 @@
 //!   pass silently.
 //!
 //! Every other kind — including the three the earlier revision of this module returned unchanged
-//! (`remove-text-chunk`, `set-text-chunk`, `remove-unknown-chunk`) — moves the projection. Those
+//! (`remove-text-chunk`, `replace-text-chunk`, `remove-unknown-chunk`) — moves the projection. Those
 //! three needed a target to remove, which the real fixture does not carry; [`oracle_arrange`] puts
 //! one there first, through this same independent implementation, following the OOXML conformance
 //! cases' own `conformance_arrange` precedent rather than inventing a second convention.
@@ -122,7 +122,7 @@ mod oracles {
     /// holds is, by definition, a chunk this model does not understand — exactly the set
     /// `PngSnapshot::unknown_chunks` retains, so the two definitions agree. A type missing from
     /// this list would be captured TWICE (once typed, once verbatim) and re-emitted twice, which is
-    /// how `inverse-set-background` first failed: clearing the typed `bkgd` left the verbatim copy
+    /// how `inverse-change-background` first failed: clearing the typed `bkgd` left the verbatim copy
     /// behind and the undo restored nothing.
     const MODELLED: [&[u8; 4]; 14] = [b"IHDR", b"PLTE", b"IDAT", b"IEND", b"tRNS", b"gAMA", b"cHRM", b"sRGB", b"pHYs", b"tIME", b"bKGD", b"tEXt", b"zTXt", b"iTXt"];
     //#endregion 🔖️Doc
@@ -131,7 +131,7 @@ mod oracles {
     /// 🔍️ Walks §5.3's `length | type | data | crc` chain and returns the tIME payload plus every
     /// chunk this reference reader does not model. `png::Info` has no `tIME` field and no accessor
     /// for unrecognised types, so this is the only way to see either — and seeing them is what makes
-    /// `set-timestamp`, `insert-unknown-chunk` and `remove-unknown-chunk` observable at all.
+    /// `change-timestamp`, `insert-unknown-chunk` and `remove-unknown-chunk` observable at all.
     fn scan_extra_chunks(data: &[u8]) -> Result<(Option<[u8; 7]>, Vec<([u8; 4], Vec<u8>)>), String> {
         if data.len() < 8 || data[0..8] != [0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A] {
             return Err("not a PNG byte stream".to_string());
@@ -170,7 +170,7 @@ mod oracles {
     /// `decoder/stream.rs`'s `parse_gama`/`parse_chrm` write only `gama_chunk`/`chrm_chunk`. A
     /// caller that follows the crate's own advice therefore reads `None` for every file that
     /// carries a gAMA or cHRM chunk; this module reads the chunk members instead. Found by the
-    /// observability law, which failed `mutate-set-gamma` and `mutate-set-chromaticities` because
+    /// observability law, which failed `mutate-change-gamma` and `mutate-change-chromaticities` because
     /// the values written on the way out were invisible on the way back in.
     pub fn decode(input: &[u8]) -> Result<OracleDoc, String> {
         let decoder = png::Decoder::new(std::io::Cursor::new(input));
@@ -314,13 +314,7 @@ mod oracles {
         (kind, as_str(params, "data").unwrap_or("").as_bytes().to_vec())
     }
 
-    /// 📄️ Replaces the WHOLE document — independent of the real input, matching `SetSnapshot`'s own
-    /// wholesale-replace semantics.
-    fn set_snapshot(params: &Json) -> OracleDoc {
-        let width = num(params, "width").unwrap_or(1.0).max(1.0) as u32;
-        let height = num(params, "height").unwrap_or(1.0).max(1.0) as u32;
-        OracleDoc { width, height, rgba: solid_rgba(width, height, fill_quad(params)), palette: None, gama: None, chrm: None, srgb: None, phys: None, time: None, bkgd: None, text_chunks: Vec::new(), unknown_chunks: Vec::new() }
-    }
+
 
     /// 🦠️ Applies one declared kind to the document model in place. Out-of-range text/unknown-chunk
     /// indices degrade to a no-op rather than erroring — the same documented behaviour as
@@ -328,23 +322,21 @@ mod oracles {
     /// implementation deliberately mirrors rather than diverging from without reason.
     fn apply_kind(doc: &mut OracleDoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "no-mutation" => {}
-            "set-snapshot" => *doc = set_snapshot(params),
-            "set-header" => {}
-            "set-palette" => {
+            "change-header" => {}
+            "replace-palette" => {
                 let entries = as_arr(params.get("plte").unwrap_or(&Json::Null));
                 doc.palette = match params.get("plte") {
                     Some(Json::Null) | None => None,
                     _ => Some(entries.iter().flat_map(|entry| { let channels = as_arr(entry); [num_at(channels, 0).unwrap_or(0.0) as u8, num_at(channels, 1).unwrap_or(0.0) as u8, num_at(channels, 2).unwrap_or(0.0) as u8] }).collect()),
                 };
             }
-            "set-transparency" => {}
-            "set-gamma" => doc.gama = num(params, "gama").map(|value| value as u32),
-            "set-chromaticities" => {
+            "change-transparency" => {}
+            "change-gamma" => doc.gama = num(params, "gama").map(|value| value as u32),
+            "change-chromaticities" => {
                 let read = |key: &str| num(params, key).unwrap_or(0.0) as u32;
                 doc.chrm = Some([read("whiteX"), read("whiteY"), read("redX"), read("redY"), read("greenX"), read("greenY"), read("blueX"), read("blueY")]);
             }
-            "set-srgb-intent" => {
+            "change-srgb-intent" => {
                 doc.srgb = Some(match as_str(params, "srgb") {
                     Some("relative-colorimetric") => 1,
                     Some("saturation") => 2,
@@ -352,8 +344,8 @@ mod oracles {
                     _ => 0,
                 })
             }
-            "set-physical-dims" => doc.phys = Some((num(params, "ppuX").unwrap_or(0.0) as u32, num(params, "ppuY").unwrap_or(0.0) as u32, as_bool(params, "unitIsMeter").unwrap_or(false))),
-            "set-timestamp" => {
+            "change-physical-dims" => doc.phys = Some((num(params, "ppuX").unwrap_or(0.0) as u32, num(params, "ppuY").unwrap_or(0.0) as u32, as_bool(params, "unitIsMeter").unwrap_or(false))),
+            "change-timestamp" => {
                 let mut bytes = [0u8; 7];
                 bytes[0..2].copy_from_slice(&(num(params, "year").unwrap_or(2024.0) as u16).to_be_bytes());
                 bytes[2] = num(params, "month").unwrap_or(1.0) as u8;
@@ -363,7 +355,7 @@ mod oracles {
                 bytes[6] = num(params, "second").unwrap_or(0.0) as u8;
                 doc.time = Some(bytes);
             }
-            "set-background" => doc.bkgd = Some([num(params, "r").unwrap_or(0.0) as u16, num(params, "g").unwrap_or(0.0) as u16, num(params, "b").unwrap_or(0.0) as u16]),
+            "change-background" => doc.bkgd = Some([num(params, "r").unwrap_or(0.0) as u16, num(params, "g").unwrap_or(0.0) as u16, num(params, "b").unwrap_or(0.0) as u16]),
             "insert-text-chunk" => {
                 let at = index_of(params).min(doc.text_chunks.len());
                 doc.text_chunks.insert(at, text_chunk_from(params));
@@ -374,13 +366,13 @@ mod oracles {
                     doc.text_chunks.remove(at);
                 }
             }
-            "set-text-chunk" => {
+            "replace-text-chunk" => {
                 let at = index_of(params);
                 if at < doc.text_chunks.len() {
                     doc.text_chunks[at] = text_chunk_from(params);
                 }
             }
-            "set-pixels" => doc.rgba = solid_rgba(doc.width, doc.height, fill_quad(params)),
+            "replace-pixels" => doc.rgba = solid_rgba(doc.width, doc.height, fill_quad(params)),
             "insert-unknown-chunk" => {
                 let at = index_of(params).min(doc.unknown_chunks.len());
                 doc.unknown_chunks.insert(at, unknown_chunk_from(params));
@@ -410,12 +402,12 @@ mod oracles {
             encode(&doc)
         };
         // 🎯️ The seeded target's content is deliberately NOT the row's own params: seeding with the
-        // same keyword and value the row then sets would make `set-text-chunk` replace a chunk with
+        // same keyword and value the row then sets would make `replace-text-chunk` replace a chunk with
         // its own twin, which is a mutation nothing can observe.
         let text = || vec![("index", Json::Number(0.0)), ("keyword", Json::String("Source".to_string())), ("value", Json::String("arranged target, present only so a removal has something to remove".to_string()))];
         let unknown = || vec![("index", Json::Number(0.0)), ("kind", Json::String("seEd".to_string())), ("data", Json::String("arranged target".to_string()))];
         match forward.str("kind").as_str() {
-            "remove-text-chunk" | "set-text-chunk" => seeded("insert-text-chunk", text()),
+            "remove-text-chunk" | "replace-text-chunk" => seeded("insert-text-chunk", text()),
             "remove-unknown-chunk" => seeded("insert-unknown-chunk", unknown()),
             _ => Ok(input.to_vec()),
         }
@@ -449,23 +441,22 @@ mod oracles {
         let original = decode(original_input)?;
         let mut doc = decode(mutated)?;
         match kind.as_str() {
-            "no-mutation" | "set-header" | "set-transparency" => {}
-            "set-snapshot" => doc = original,
-            "set-palette" => doc.palette = original.palette,
-            "set-gamma" => doc.gama = original.gama,
-            "set-chromaticities" => doc.chrm = original.chrm,
-            "set-srgb-intent" => doc.srgb = original.srgb,
-            "set-physical-dims" => doc.phys = original.phys,
-            "set-timestamp" => doc.time = original.time,
-            "set-background" => doc.bkgd = original.bkgd,
-            "set-pixels" => doc.rgba = original.rgba,
+            "change-header" | "change-transparency" => {}
+            "replace-palette" => doc.palette = original.palette,
+            "change-gamma" => doc.gama = original.gama,
+            "change-chromaticities" => doc.chrm = original.chrm,
+            "change-srgb-intent" => doc.srgb = original.srgb,
+            "change-physical-dims" => doc.phys = original.phys,
+            "change-timestamp" => doc.time = original.time,
+            "change-background" => doc.bkgd = original.bkgd,
+            "replace-pixels" => doc.rgba = original.rgba,
             "insert-text-chunk" => {
                 let at = index_of(&params).min(original.text_chunks.len());
                 if at < doc.text_chunks.len() {
                     doc.text_chunks.remove(at);
                 }
             }
-            "remove-text-chunk" | "set-text-chunk" => doc.text_chunks = original.text_chunks,
+            "remove-text-chunk" | "replace-text-chunk" => doc.text_chunks = original.text_chunks,
             "insert-unknown-chunk" => {
                 let at = index_of(&params).min(original.unknown_chunks.len());
                 if at < doc.unknown_chunks.len() {
@@ -585,3 +576,10 @@ pub fn project_png_mutation(_bytes: &[u8]) -> Result<Json, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 //#endregion 🔖️Dispatch
+
+//#region RoundTrip
+#[cfg(feature = "oracles")]
+pub fn oracle_identity_round_trip(input: &[u8]) -> Result<Vec<u8>, String> { oracles::encode(&oracles::decode(input)?) }
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_identity_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> { Err("the oracles feature is disabled".into()) }
+//#endregion RoundTrip

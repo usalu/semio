@@ -11,6 +11,9 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🖥️host/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*.json",
       "{projectRoot}/**/*"
     ]
   },

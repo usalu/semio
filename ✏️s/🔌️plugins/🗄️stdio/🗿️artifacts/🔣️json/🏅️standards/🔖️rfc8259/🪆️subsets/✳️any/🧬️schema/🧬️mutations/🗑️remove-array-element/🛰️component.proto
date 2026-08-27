@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.json.mutation;
+// remove-array-element/RemoveArrayElement
+message RemoveArrayElementPayload { bytes path = 1; uint64 index = 2; }

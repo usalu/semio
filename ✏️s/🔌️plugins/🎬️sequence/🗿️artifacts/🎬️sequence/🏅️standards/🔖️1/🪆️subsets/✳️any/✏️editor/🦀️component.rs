@@ -12,7 +12,7 @@
 
 use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::op::sequence_snapshot_mutations;
-use crate::artifacts::sequence::{default_snapshot, SequenceCamera, SequenceEdge, SequenceFixture, SequenceSnapshot, SequenceStep, SlotRef, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
+use crate::artifacts::sequence::{default_snapshot, SequenceCamera, SequenceEdge, SequenceFixture, SequenceSnapshot, SequenceStep, SequenceWorkingScene, SlotRef, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
 use crate::editor::sequence::commands::connection::{connect_steps, disconnect_steps};
 use crate::editor::sequence::commands::layout::{reorganize, set_orientation};
 use crate::editor::sequence::commands::locale::set_locale;
@@ -38,7 +38,8 @@ use semio_framework_plugin::{
     Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
 };
 use serde_json::{json, Value};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::io::Write;
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -845,12 +846,1352 @@ semio_framework_plugin::app_commands! {
 }
 //#endregion 🔖️Commands
 
+//#region 📬️ArtifactStorePreparation
+const SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS: usize = 256;
+const SEQUENCE_STORE_MAXIMUM_BYTES: usize = 65_536;
+
+struct SequenceArtifactStorePreparationFactory;
+
+struct SequenceArtifactStorePreparation {
+    base: Option<store::SnapshotRead<SequenceSnapshot>>,
+    mutation: Option<SequenceMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<SequenceSnapshot, SequenceMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+struct SequenceBoundedByteCounter {
+    written: usize,
+    maximum_bytes: usize,
+}
+
+impl Write for SequenceBoundedByteCounter {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        let next = self.written.checked_add(bytes.len()).ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidData, "Sequence retained byte count overflow"))?;
+        if next > self.maximum_bytes {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Sequence retained value exceeds its byte cap"));
+        }
+        self.written = next;
+        Ok(bytes.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
+fn sequence_bounded_serialized_bytes<T: serde::Serialize>(value: &T, maximum_bytes: usize) -> Result<usize, String> {
+    let mut counter = SequenceBoundedByteCounter { written: 0, maximum_bytes };
+    serde_json::to_writer(&mut counter, value).map_err(|error| error.to_string())?;
+    Ok(counter.written)
+}
+
+fn admit_sequence_artifact_mutation(mutation: &SequenceMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    if matches!(mutation, SequenceMutation::DuplicateStep(_)) {
+        return Err("Sequence retained Store authority does not admit the unregistered duplicate-step mutation".into());
+    }
+    let retained_bytes = sequence_bounded_serialized_bytes(mutation, SEQUENCE_RETAINED_RAW_BYTES)?;
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+}
+
+fn sequence_delete_inverse(scene: &SequenceWorkingScene) -> Vec<SequenceMutation> {
+    let mut inverse = Vec::with_capacity(scene.steps.len().saturating_mul(2).saturating_add(scene.edges.len()));
+    for step in &scene.steps {
+        inverse.push(SequenceMutation::DeleteStep(crate::artifacts::sequence::mutations::DeleteStep { id: step.id.clone() }));
+    }
+    for step in &scene.steps {
+        inverse.push(SequenceMutation::CreateStep(crate::artifacts::sequence::mutations::CreateStep { step: step.clone() }));
+    }
+    for edge in &scene.edges {
+        inverse.push(SequenceMutation::ConnectSteps(crate::artifacts::sequence::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() }));
+    }
+    inverse.reverse();
+    inverse
+}
+
+fn prepare_sequence_artifact(base: &SequenceSnapshot, mutation: SequenceMutation) -> Result<(SequenceSnapshot, Vec<SequenceMutation>, SequenceMutation), String> {
+    admit_sequence_artifact_mutation(&mutation)?;
+    let owner = base.content.local_owner::<SequenceWorkingScene>().ok_or_else(|| "Sequence artifact base has no exact child-owned scene".to_string())?;
+    if owner.steps.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS || owner.edges.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
+        return Err("Sequence artifact base exceeds its fixed scene-item cap".into());
+    }
+    sequence_bounded_serialized_bytes(&(&owner.steps, &owner.edges), SEQUENCE_STORE_MAXIMUM_BYTES)?;
+    let mut scene = owner.as_ref().clone();
+    let inverse = match &mutation {
+        SequenceMutation::CreateStep(payload) => {
+            if scene.steps.len() == SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS || scene.steps.iter().any(|step| step.id == payload.step.id) {
+                return Err("Sequence create-step rejected duplicate or capped identity".into());
+            }
+            scene.steps.push(payload.step.clone());
+            vec![SequenceMutation::DeleteStep(crate::artifacts::sequence::mutations::DeleteStep { id: payload.step.id.clone() })]
+        }
+        SequenceMutation::DeleteStep(payload) => {
+            if !scene.steps.iter().any(|step| step.id == payload.id) {
+                return Err(format!("Sequence delete-step target {:?} is missing", payload.id));
+            }
+            let inverse = sequence_delete_inverse(&scene);
+            scene.steps.retain(|step| step.id != payload.id);
+            scene.edges.retain(|edge| edge.from != payload.id && edge.to != payload.id);
+            inverse
+        }
+        SequenceMutation::MoveStep(payload) => {
+            if !payload.x.is_finite() || !payload.y.is_finite() {
+                return Err("Sequence move-step position must be finite".into());
+            }
+            let step = scene.steps.iter_mut().find(|step| step.id == payload.id).ok_or_else(|| format!("Sequence move-step target {:?} is missing", payload.id))?;
+            if step.x == payload.x && step.y == payload.y {
+                return Err("Sequence move-step is a no-op".into());
+            }
+            let inverse = SequenceMutation::MoveStep(crate::artifacts::sequence::mutations::MoveStep { id: payload.id.clone(), x: step.x, y: step.y });
+            step.x = payload.x;
+            step.y = payload.y;
+            vec![inverse]
+        }
+        SequenceMutation::EditStepParams(payload) => {
+            let step = scene.steps.iter_mut().find(|step| step.id == payload.id).ok_or_else(|| format!("Sequence edit-step-params target {:?} is missing", payload.id))?;
+            if step.params == payload.params {
+                return Err("Sequence edit-step-params is a no-op".into());
+            }
+            let inverse = SequenceMutation::EditStepParams(crate::artifacts::sequence::mutations::EditStepParams { id: payload.id.clone(), params: step.params.clone() });
+            step.params = payload.params.clone();
+            vec![inverse]
+        }
+        SequenceMutation::ChangeStepCollapsed(payload) => {
+            let step = scene.steps.iter_mut().find(|step| step.id == payload.id).ok_or_else(|| format!("Sequence change-step-collapsed target {:?} is missing", payload.id))?;
+            if step.collapsed == payload.collapsed {
+                return Err("Sequence change-step-collapsed is a no-op".into());
+            }
+            let inverse = SequenceMutation::ChangeStepCollapsed(crate::artifacts::sequence::mutations::ChangeStepCollapsed { id: payload.id.clone(), collapsed: step.collapsed });
+            step.collapsed = payload.collapsed;
+            vec![inverse]
+        }
+        SequenceMutation::ConnectSteps(payload) => {
+            if payload.from == payload.to
+                || !scene.steps.iter().any(|step| step.id == payload.from)
+                || !scene.steps.iter().any(|step| step.id == payload.to)
+                || scene.edges.len() == SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS
+                || scene.edges.iter().any(|edge| edge.id == payload.id || edge.from == payload.from && edge.to == payload.to)
+            {
+                return Err("Sequence connect-steps rejected invalid endpoints, duplicate, or capped edge".into());
+            }
+            scene.edges.push(SequenceEdge { id: payload.id.clone(), from: payload.from.clone(), to: payload.to.clone() });
+            vec![SequenceMutation::DisconnectSteps(crate::artifacts::sequence::mutations::DisconnectSteps { id: payload.id.clone() })]
+        }
+        SequenceMutation::DisconnectSteps(payload) => {
+            let edge = scene.edges.iter().find(|edge| edge.id == payload.id).cloned().ok_or_else(|| format!("Sequence disconnect-steps target {:?} is missing", payload.id))?;
+            scene.edges.retain(|entry| entry.id != payload.id);
+            vec![SequenceMutation::ConnectSteps(crate::artifacts::sequence::mutations::ConnectSteps { id: edge.id, from: edge.from, to: edge.to })]
+        }
+        SequenceMutation::DuplicateStep(_) => return Err("Sequence duplicate-step has no retained route authority".into()),
+    };
+    sequence_bounded_serialized_bytes(&inverse, SEQUENCE_STORE_MAXIMUM_BYTES)?;
+    sequence_bounded_serialized_bytes(&(&scene.steps, &scene.edges), SEQUENCE_STORE_MAXIMUM_BYTES)?;
+    let content = crate::artifacts::sequence::sequence_content_child_with_owner(scene.steps, scene.edges);
+    let post = SequenceSnapshot { schema: base.schema.clone(), content };
+    Ok((post, inverse, mutation))
+}
+
+fn sequence_artifact_store_edit(forward: SequenceMutation, inverse: Vec<SequenceMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<SequenceMutation> {
+    let id = format!("sequence-artifact-retained-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![forward], inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+        }],
+        description, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<SequenceSnapshot, SequenceMutation> for SequenceArtifactStorePreparationFactory {
+    fn preflight(&self, mutation: &SequenceMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Sequence artifact preparation rejected its lane or description envelope".into());
+        }
+        admit_sequence_artifact_mutation(mutation)
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<SequenceSnapshot, SequenceMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<SequenceSnapshot, SequenceMutation>>, store::ArtifactStoreOneItemPreparationRequest<SequenceSnapshot, SequenceMutation>> {
+        if request.lane != store::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+            return Err(request);
+        }
+        Ok(Box::new(SequenceArtifactStorePreparation {
+            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<SequenceSnapshot, SequenceMutation> for SequenceArtifactStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        let base = self.base.as_ref().ok_or_else(|| "Sequence artifact preparation lost its exact base root".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "Sequence artifact preparation lost its mutation owner".to_string())?;
+        let (post, inverse, forward) = prepare_sequence_artifact(base.get(), mutation)?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Sequence artifact preparation lost its Store authority".to_string())?;
+        let prepared = authority.prepare_one_item(sequence_artifact_store_edit(forward, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<SequenceSnapshot, SequenceMutation>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<SequenceSnapshot, SequenceMutation>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }); }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() { return Err("Sequence artifact preparation could not return its exact base root".into()); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none() }
+}
+//#endregion 📬️ArtifactStorePreparation
+
+//#region 📬️ConfigStorePreparation
+const SEQUENCE_CONFIG_STORE_MAXIMUM_BYTES: usize = 65_536;
+
+struct SequenceConfigStorePreparationFactory;
+
+struct SequenceConfigStorePreparation {
+    base: Option<store::SnapshotRead<SequenceConfig>>,
+    mutation: Option<SequenceConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<SequenceConfig, SequenceConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn sequence_config_retained_bytes(config: &SequenceConfig) -> usize {
+    config.last_run_json.len() + config.orientation.len() + config.locale.len()
+}
+
+fn sequence_config_mutation_retained_bytes(mutation: &SequenceConfigMutation) -> usize {
+    match mutation {
+        SequenceConfigMutation::Snapshot { config } => sequence_config_retained_bytes(config),
+        SequenceConfigMutation::SetLastRun { json } => json.len(),
+        SequenceConfigMutation::SetOrientation { value } | SequenceConfigMutation::SetLocale { value } => value.len(),
+        SequenceConfigMutation::SetCamera { .. } => 0,
+    }
+}
+
+fn admit_sequence_config_mutation(mutation: &SequenceConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let retained_bytes = sequence_config_mutation_retained_bytes(mutation);
+    if retained_bytes > SEQUENCE_CONFIG_STORE_MAXIMUM_BYTES {
+        return Err("Sequence config mutation exceeds its fixed retained preparation envelope".into());
+    }
+    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+}
+
+fn prepare_sequence_config(base: &SequenceConfig, mutation: SequenceConfigMutation) -> Result<(SequenceConfig, Vec<SequenceConfigMutation>, SequenceConfigMutation), String> {
+    admit_sequence_config_mutation(&mutation)?;
+    if sequence_config_retained_bytes(base) > SEQUENCE_CONFIG_STORE_MAXIMUM_BYTES {
+        return Err("Sequence config base exceeds its fixed retained preparation envelope".into());
+    }
+    let mut post = base.clone();
+    match &mutation {
+        SequenceConfigMutation::Snapshot { config } => post = config.clone(),
+        SequenceConfigMutation::SetLastRun { json } => post.last_run_json = json.clone(),
+        SequenceConfigMutation::SetOrientation { value } => post.orientation = value.clone(),
+        SequenceConfigMutation::SetCamera { camera } => post.camera = camera.clone(),
+        SequenceConfigMutation::SetLocale { value } => post.locale = value.clone(),
+    }
+    Ok((post, vec![SequenceConfigMutation::Snapshot { config: base.clone() }], mutation))
+}
+
+fn sequence_config_store_edit(forward: SequenceConfigMutation, inverse: Vec<SequenceConfigMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<SequenceConfigMutation> {
+    let id = format!("sequence-config-retained-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(),
+        actor: Some(authority.actor().to_string()),
+        forwards: vec![forward],
+        inverse,
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            dependencies: Vec::new(),
+            base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())),
+            timestamp: authority.next_clock(),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+            semantic_kind: None,
+            label: None,
+            group_id: None,
+            origin: Default::default(),
+        }],
+        description,
+        coalesce_key: None,
+        sequence_number: authority.next_sequence_number(),
+        started_at: String::new(),
+        finished_at: None,
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<SequenceConfig, SequenceConfigMutation> for SequenceConfigStorePreparationFactory {
+    fn preflight(&self, mutation: &SequenceConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Sequence config preparation rejected its lane or description envelope".into());
+        }
+        admit_sequence_config_mutation(mutation)
+    }
+
+    fn begin(
+        &self,
+        request: store::ArtifactStoreOneItemPreparationRequest<SequenceConfig, SequenceConfigMutation>,
+    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<SequenceConfig, SequenceConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<SequenceConfig, SequenceConfigMutation>> {
+        if request.lane != store::HistoryLane::Document
+            || request.operation != request.authority.operation()
+            || request.generation != request.authority.generation()
+            || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+        {
+            return Err(request);
+        }
+        Ok(Box::new(SequenceConfigStorePreparation {
+            base: Some(request.base),
+            mutation: Some(request.mutation),
+            description: request.description,
+            authority: Some(request.authority),
+            prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<SequenceConfig, SequenceConfigMutation> for SequenceConfigStorePreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        }
+        let base = self.base.as_ref().ok_or_else(|| "Sequence config preparation lost its exact base root".to_string())?;
+        let mutation = self.mutation.take().ok_or_else(|| "Sequence config preparation lost its mutation owner".to_string())?;
+        let (post, inverse, forward) = prepare_sequence_config(base.get(), mutation)?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Sequence config preparation lost its Store authority".to_string())?;
+        let edit = sequence_config_store_edit(forward, inverse, self.description.take(), authority);
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<SequenceConfig, SequenceConfigMutation>> {
+        self.prepared.as_ref()
+    }
+
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<SequenceConfig, SequenceConfigMutation>> {
+        self.prepared.take()
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() {
+                return Err("Sequence config preparation could not return its exact base root".into());
+            }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            if grant.maximum_bytes < authority.actor().len() {
+                return Ok(store::SnapshotRetirementStep::Blocked);
+            }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+//#endregion 📬️ConfigStorePreparation
+
+//#region 🧵️RetainedArtifactRoutes
+const SEQUENCE_RETAINED_ARTIFACT_PAYLOAD_SCHEMA: &str = "sequence.play/retained-artifact-command.v1";
+const SEQUENCE_RETAINED_ARTIFACT_TOOL_IDS: &[&str] = &[
+    "addStep", "addStepToSlot", "addStepDropped", "removeStep", "deleteSelection", "moveStep", "connectSteps", "disconnectSteps", "setStepParams", "setStepCollapsed",
+];
+const SEQUENCE_RETAINED_ARTIFACT_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addStepToSlot", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addStepDropped", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "moveStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "connectSteps", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "disconnectSteps", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setStepParams", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setStepCollapsed", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+];
+
+fn sequence_retained_id_admitted(value: &str) -> bool {
+    !value.is_empty() && value.len() <= 128
+}
+
+fn sequence_retained_artifact_command_admitted(command: &SequenceCommand) -> bool {
+    match command {
+        SequenceCommand::AddStep(payload) => sequence_retained_id_admitted(&payload.kind) && payload.x.is_finite() && payload.y.is_finite(),
+        SequenceCommand::AddStepToSlot(payload) => sequence_retained_id_admitted(&payload.kind) && sequence_retained_id_admitted(&payload.owner) && sequence_retained_id_admitted(&payload.slot_name) && payload.x.is_finite() && payload.y.is_finite(),
+        SequenceCommand::AddStepDropped(payload) => sequence_retained_id_admitted(&payload.kind) && payload.picked_step_id.as_deref().is_none_or(sequence_retained_id_admitted) && payload.x.is_finite() && payload.y.is_finite(),
+        SequenceCommand::RemoveStep(payload) => sequence_retained_id_admitted(&payload.id),
+        SequenceCommand::DeleteSelection(_) => true,
+        SequenceCommand::MoveStep(payload) => sequence_retained_id_admitted(&payload.node_id) && payload.x.is_finite() && payload.y.is_finite(),
+        SequenceCommand::ConnectSteps(payload) => sequence_retained_id_admitted(&payload.source_node_id) && sequence_retained_id_admitted(&payload.target_node_id),
+        SequenceCommand::DisconnectSteps(payload) => sequence_retained_id_admitted(&payload.from_id) && sequence_retained_id_admitted(&payload.to_id),
+        SequenceCommand::SetStepParams(payload) => sequence_retained_id_admitted(&payload.id) && payload.params_json.len() <= SEQUENCE_RETAINED_RAW_BYTES,
+        SequenceCommand::SetStepCollapsed(payload) => sequence_retained_id_admitted(&payload.id),
+        _ => false,
+    }
+}
+
+fn sequence_retained_serial(prefix: &str, id: &str) -> Option<u64> {
+    id.strip_prefix(prefix)?.parse().ok()
+}
+
+fn sequence_retained_next_id(scene: &SequenceWorkingScene, prefix: &str) -> String {
+    let step_max = scene.steps.iter().filter_map(|step| sequence_retained_serial("step-", &step.id)).max().unwrap_or(0);
+    let edge_max = scene.edges.iter().filter_map(|edge| sequence_retained_serial("edge-", &edge.id)).max().unwrap_or(0);
+    format!("{prefix}-{}", step_max.max(edge_max).max(100).saturating_add(1))
+}
+
+fn sequence_retained_is_control(kind: &str) -> bool {
+    matches!(kind, "control.if" | "control.while" | "control.repeat")
+}
+
+fn sequence_retained_default_slot(kind: &str) -> &'static str {
+    if kind == "control.if" { "then" } else { "body" }
+}
+
+fn sequence_retained_create_step(scene: &SequenceWorkingScene, kind: String, x: f64, y: f64, slot: Option<SlotRef>) -> SequenceMutation {
+    SequenceMutation::CreateStep(crate::artifacts::sequence::mutations::CreateStep {
+        step: SequenceStep { id: sequence_retained_next_id(scene, "step"), kind, params: StepParams::new(), x, y, slot, collapsed: false },
+    })
+}
+
+fn sequence_retained_delete_ids(scene: &SequenceWorkingScene, roots: impl IntoIterator<Item = String>) -> Vec<String> {
+    let mut selected = Vec::new();
+    for root in roots {
+        if !selected.iter().any(|id| id == &root) && scene.steps.iter().any(|step| step.id == root) {
+            selected.push(root.clone());
+        }
+        if scene.steps.iter().any(|step| step.id == root && sequence_retained_is_control(&step.kind)) {
+            for step in &scene.steps {
+                if step.slot.as_ref().is_some_and(|slot| slot.owner == root) && !selected.iter().any(|id| id == &step.id) {
+                    selected.push(step.id.clone());
+                }
+            }
+        }
+    }
+    scene.steps.iter().filter(|step| selected.iter().any(|id| id == &step.id)).map(|step| step.id.clone()).collect()
+}
+
+fn sequence_retained_artifact_emit(command: &SequenceCommand, snapshot: &SequenceSnapshot, interaction: &protocol::InteractionState) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
+    let owner = snapshot.content.local_owner::<SequenceWorkingScene>().ok_or_else(|| Fault::from("sequence-retained-scene-owner-missing"))?;
+    if owner.steps.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS || owner.edges.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
+        return Err(Fault::from("sequence-retained-scene-capacity"));
+    }
+    let scene = owner.as_ref();
+    let mutations = match command {
+        SequenceCommand::AddStep(payload) => vec![sequence_retained_create_step(scene, payload.kind.clone(), payload.x, payload.y, None)],
+        SequenceCommand::AddStepToSlot(payload) => vec![sequence_retained_create_step(scene, payload.kind.clone(), payload.x, payload.y, Some(SlotRef { owner: payload.owner.clone(), name: payload.slot_name.clone() }))],
+        SequenceCommand::AddStepDropped(payload) => {
+            let slot = payload.picked_step_id.as_ref().and_then(|owner_id| {
+                scene.steps.iter().find(|step| step.id == *owner_id && sequence_retained_is_control(&step.kind) && !step.collapsed).map(|owner| SlotRef { owner: owner_id.clone(), name: sequence_retained_default_slot(&owner.kind).into() })
+            });
+            vec![sequence_retained_create_step(scene, payload.kind.clone(), payload.x, payload.y, slot)]
+        }
+        SequenceCommand::RemoveStep(payload) => sequence_retained_delete_ids(scene, [payload.id.clone()]).into_iter().map(|id| SequenceMutation::DeleteStep(crate::artifacts::sequence::mutations::DeleteStep { id })).collect(),
+        SequenceCommand::DeleteSelection(_) => {
+            let selected = interaction.selection(SEQUENCE_INTERACTION_STEPS).ids.clone();
+            if selected.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS { return Err(Fault::from("sequence-retained-selection-capacity")); }
+            sequence_retained_delete_ids(scene, selected).into_iter().map(|id| SequenceMutation::DeleteStep(crate::artifacts::sequence::mutations::DeleteStep { id })).collect()
+        }
+        SequenceCommand::MoveStep(payload) => scene.steps.iter().find(|step| step.id == payload.node_id).filter(|step| step.x != payload.x || step.y != payload.y).map(|_| vec![SequenceMutation::MoveStep(crate::artifacts::sequence::mutations::MoveStep { id: payload.node_id.clone(), x: payload.x, y: payload.y })]).unwrap_or_default(),
+        SequenceCommand::SetStepParams(payload) => {
+            let params = serde_json::from_str::<StepParams>(&payload.params_json).ok();
+            match (scene.steps.iter().find(|step| step.id == payload.id), params) {
+                (Some(step), Some(params)) if step.params != params => vec![SequenceMutation::EditStepParams(crate::artifacts::sequence::mutations::EditStepParams { id: payload.id.clone(), params })],
+                _ => Vec::new(),
+            }
+        }
+        SequenceCommand::SetStepCollapsed(payload) => scene.steps.iter().find(|step| step.id == payload.id && sequence_retained_is_control(&step.kind)).map(|step| vec![SequenceMutation::ChangeStepCollapsed(crate::artifacts::sequence::mutations::ChangeStepCollapsed { id: payload.id.clone(), collapsed: !step.collapsed })]).unwrap_or_default(),
+        SequenceCommand::DisconnectSteps(payload) => scene.edges.iter().filter(|edge| edge.from == payload.from_id && edge.to == payload.to_id).map(|edge| SequenceMutation::DisconnectSteps(crate::artifacts::sequence::mutations::DisconnectSteps { id: edge.id.clone() })).collect(),
+        SequenceCommand::ConnectSteps(payload) => {
+            let from = scene.steps.iter().find(|step| step.id == payload.source_node_id);
+            let to = scene.steps.iter().find(|step| step.id == payload.target_node_id);
+            let same_slot = from.zip(to).is_some_and(|(from, to)| from.slot.as_ref().map(|slot| (&slot.owner, &slot.name)) == to.slot.as_ref().map(|slot| (&slot.owner, &slot.name)));
+            let existing: Vec<(String, String)> = scene.edges.iter().map(|edge| (edge.from.clone(), edge.to.clone())).collect();
+            if payload.source_node_id == payload.target_node_id || !same_slot || would_create_cycle(&existing, &payload.source_node_id, &payload.target_node_id) || scene.edges.iter().any(|edge| edge.from == payload.source_node_id) {
+                Vec::new()
+            } else {
+                let mut result: Vec<SequenceMutation> = scene.edges.iter().filter(|edge| edge.to == payload.target_node_id).map(|edge| SequenceMutation::DisconnectSteps(crate::artifacts::sequence::mutations::DisconnectSteps { id: edge.id.clone() })).collect();
+                result.push(SequenceMutation::ConnectSteps(crate::artifacts::sequence::mutations::ConnectSteps { id: sequence_retained_next_id(scene, "edge"), from: payload.source_node_id.clone(), to: payload.target_node_id.clone() }));
+                result
+            }
+        }
+        _ => return Err(Fault::from("sequence-retained-artifact-route-mismatch")),
+    };
+    if mutations.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS { return Err(Fault::from("sequence-retained-artifact-output-capacity")); }
+    Ok(Emit::mutations(mutations))
+}
+
+struct SequenceRetainedArtifactWork {
+    tool_id: &'static str,
+    workspace_identity: u64,
+    cursor: usize,
+    replay_target: Option<usize>,
+    completed: bool,
+    closing: bool,
+}
+
+impl SequenceRetainedArtifactWork {
+    fn new(tool_id: &'static str, operation: &semio_framework_plugin::AppOperationContext) -> Self {
+        let scope = format!("{}:{}:{}:{}", operation.app_instance_id, operation.parent_document_id, operation.operation_id, operation.generation);
+        let workspace_identity = scope.as_bytes().iter().fold(0xcbf2_9ce4_8422_2325_u64, |state, byte| (state ^ u64::from(*byte)).wrapping_mul(0x100_0000_01b3));
+        Self { tool_id, workspace_identity, cursor: 0, replay_target: None, completed: false, closing: false }
+    }
+}
+
+impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>> for SequenceRetainedArtifactWork {
+    fn tool_id(&self) -> &'static str { self.tool_id }
+    fn workspace_identity(&self) -> u64 { self.workspace_identity }
+    fn extent(&self, _command: &SequenceCommand, snapshot: &SequenceSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>) -> Option<usize> {
+        let scene = snapshot.content.local_owner::<SequenceWorkingScene>()?;
+        (scene.steps.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && scene.edges.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && interaction.selection(SEQUENCE_INTERACTION_STEPS).ids.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS).then_some(SEQUENCE_RETAINED_MAXIMUM_UNITS)
+    }
+
+    fn step(&mut self, command: &SequenceCommand, snapshot: &SequenceSnapshot, _config: &SequenceConfig, _history: &semio_framework_plugin::HistoryView, interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>, _operation: &semio_framework_plugin::AppOperationContext) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
+        use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+        if self.completed || self.cursor >= SEQUENCE_RETAINED_MAXIMUM_UNITS || !sequence_retained_artifact_command_admitted(command) { return Err(Fault::from("sequence-retained-artifact-envelope")); }
+        self.cursor += 1;
+        if let Some(target) = self.replay_target {
+            if self.cursor <= target {
+                if self.cursor == target { self.replay_target = None; }
+                return Ok(ArtifactCommandWorkStep::Replay { stage: "sequence-artifact-replay", preview: b"{\"en\":\"Restoring Sequence edit\",\"de\":\"Sequenzbearbeitung wird wiederhergestellt\"}" });
+            }
+        }
+        if self.cursor == 1 { return Ok(ArtifactCommandWorkStep::Progress { stage: "sequence-artifact-prepare", preview: b"{\"en\":\"Preparing Sequence edit\",\"de\":\"Sequenzbearbeitung wird vorbereitet\"}" }); }
+        let emit = sequence_retained_artifact_emit(command, snapshot, interaction)?;
+        if !emit.config_mutations.is_empty() || !emit.draft_mutations.is_empty() || !emit.child_emits.is_empty() || emit.artifact_mutations.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS { return Err(Fault::from("sequence-retained-artifact-publication-lane")); }
+        sequence_bounded_serialized_bytes(&emit.artifact_mutations, SEQUENCE_STORE_MAXIMUM_BYTES).map_err(|_| Fault::from("sequence-retained-artifact-output-bytes"))?;
+        self.completed = true;
+        Ok(ArtifactCommandWorkStep::Complete(emit))
+    }
+
+    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
+        if target.len() < 24 { return Err(Fault::from("sequence-retained-artifact-checkpoint-capacity")); }
+        target[..24].fill(0); target[..4].copy_from_slice(b"SRA1"); target[4] = u8::from(self.completed); target[8..16].copy_from_slice(&(self.cursor as u64).to_le_bytes()); target[16..24].copy_from_slice(&self.workspace_identity.to_le_bytes()); Ok(24)
+    }
+
+    fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
+        if checkpoint.len() != 24 || &checkpoint[..4] != b"SRA1" || checkpoint[4] > 1 || checkpoint[5..8] != [0, 0, 0] { return Err(Fault::from("sequence-retained-artifact-checkpoint-invalid")); }
+        let cursor = usize::try_from(u64::from_le_bytes(checkpoint[8..16].try_into().map_err(|_| Fault::from("sequence-retained-artifact-checkpoint-cursor"))?)).map_err(|_| Fault::from("sequence-retained-artifact-checkpoint-cursor"))?;
+        let identity = u64::from_le_bytes(checkpoint[16..24].try_into().map_err(|_| Fault::from("sequence-retained-artifact-checkpoint-identity"))?);
+        if identity != self.workspace_identity || cursor > SEQUENCE_RETAINED_MAXIMUM_UNITS { return Err(Fault::from("sequence-retained-artifact-checkpoint-owner-mismatch")); }
+        self.cursor = 0; self.replay_target = (cursor != 0).then_some(cursor); self.completed = false; Ok(())
+    }
+
+    fn begin_close(&mut self) { self.closing = true; }
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if !self.closing { return semio_framework_job::InteractiveJobCloseStep::Blocked; }
+        if maximum_items == 0 { return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }; }
+        self.replay_target = None; semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+    fn terminal_is_empty(&self) -> bool { self.closing && self.replay_target.is_none() }
+}
+
+struct SequenceRetainedArtifactJobFactory { keys: Vec<semio_framework::ToolFactoryKey> }
+impl SequenceRetainedArtifactJobFactory { fn new(controller_id: &str) -> Self { Self { keys: SEQUENCE_RETAINED_ARTIFACT_TOOL_IDS.iter().map(|tool_id| semio_framework::ToolFactoryKey::new(controller_id, *tool_id)).collect() } } }
+impl semio_framework::ToolJobFactory for SequenceRetainedArtifactJobFactory {
+    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<SequencePlayApp>>;
+    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<SequencePlayApp>>;
+    fn keys(&self) -> &[semio_framework::ToolFactoryKey] { &self.keys }
+    fn payload_schema_id(&self) -> &str { SEQUENCE_RETAINED_ARTIFACT_PAYLOAD_SCHEMA }
+    fn classification(&self) -> semio_framework::InteractiveJobClassification { semio_framework::InteractiveJobClassification::Migrated }
+    fn execution_contract(&self) -> semio_framework::ToolExecutionContract { semio_framework::ToolExecutionContract::resumable(SEQUENCE_RETAINED_RAW_BYTES, SEQUENCE_RETAINED_MAXIMUM_UNITS, 1, SEQUENCE_STORE_MAXIMUM_BYTES, 2_000, 1, 1) }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> { Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::new(payload)) }
+    fn create_job_from_wire_pages_with_payload(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload, input: semio_framework::action_bus::RetainedToolWireInput, checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > SEQUENCE_RETAINED_RAW_BYTES || checkpoint.as_ref().is_some_and(|value| value.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) { return Err((semio_framework::ToolJobFactoryError::new("Sequence retained artifact command rejects oversized wire or checkpoint owner"), input, checkpoint)); }
+        Ok(match checkpoint { Some(checkpoint) => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint), None => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input) })
+    }
+}
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SequenceRetainedArtifactJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<SequencePlayApp>;
+    const TOOL_IDS: &'static [&'static str] = SEQUENCE_RETAINED_ARTIFACT_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = SEQUENCE_RETAINED_ARTIFACT_PUBLICATION_CONTRACTS;
+}
+//#endregion 🧵️RetainedArtifactRoutes
+
+//#region 🧵️PersistentRemainingRoutes
+const SEQUENCE_PERSISTENT_MAXIMUM_UNITS: usize = 66_049;
+const SEQUENCE_PERSISTENT_TOOL_IDS: &[&str] = &["reorganize", "nodeGraphEdit", "run"];
+const SEQUENCE_PERSISTENT_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "reorganize", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "run", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+];
+
+enum SequencePersistentAdvance {
+    Progress(&'static str, &'static [u8]),
+    Complete(Emit<SequenceMutation, SequenceConfigMutation>),
+}
+
+#[derive(Default)]
+struct SequenceReorganizeState {
+    initialized: usize,
+    pass: usize,
+    edge: usize,
+    emit: usize,
+    depths: Vec<usize>,
+    mutations: Vec<SequenceMutation>,
+}
+
+impl SequenceReorganizeState {
+    fn advance(&mut self, snapshot: &SequenceSnapshot, config: &SequenceConfig) -> Result<SequencePersistentAdvance, Fault> {
+        let scene = snapshot.content.local_owner::<SequenceWorkingScene>().ok_or_else(|| Fault::from("sequence-reorganize-scene-owner"))?;
+        let node_count = scene.steps.len();
+        let edge_count = scene.edges.len();
+        if node_count > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS || edge_count > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS { return Err(Fault::from("sequence-reorganize-capacity")); }
+        if self.initialized < node_count {
+            self.depths.push(0);
+            self.initialized += 1;
+            return Ok(SequencePersistentAdvance::Progress("sequence-reorganize-nodes", b"{\"en\":\"Indexing layout node\",\"de\":\"Layoutknoten wird indiziert\"}"));
+        }
+        if self.pass < node_count && edge_count != 0 {
+            let edge = &scene.edges[self.edge];
+            let from = scene.steps.iter().position(|step| step.id == edge.from);
+            let to = scene.steps.iter().position(|step| step.id == edge.to);
+            if let (Some(from), Some(to)) = (from, to) { self.depths[to] = self.depths[to].max(self.depths[from].saturating_add(1).min(node_count)); }
+            self.edge += 1;
+            if self.edge == edge_count { self.edge = 0; self.pass += 1; }
+            return Ok(SequencePersistentAdvance::Progress("sequence-reorganize-edges", b"{\"en\":\"Relaxing layout edge\",\"de\":\"Layoutkante wird verarbeitet\"}"));
+        }
+        if self.emit < node_count {
+            let index = self.emit;
+            let step = &scene.steps[index];
+            let primary = self.depths[index] as f64 * 280.0;
+            let secondary = self.depths[..index].iter().filter(|depth| **depth == self.depths[index]).count() as f64 * 160.0;
+            let (x, y) = if config.orientation == "topBottom" { (secondary, primary) } else { (primary, secondary) };
+            if step.x != x || step.y != y { self.mutations.push(SequenceMutation::MoveStep(crate::artifacts::sequence::mutations::MoveStep { id: step.id.clone(), x, y })); }
+            self.emit += 1;
+            return Ok(SequencePersistentAdvance::Progress("sequence-reorganize-publish-plan", b"{\"en\":\"Planning node position\",\"de\":\"Knotenposition wird geplant\"}"));
+        }
+        let mutations = std::mem::take(&mut self.mutations);
+        Ok(SequencePersistentAdvance::Complete(Emit::mutations(mutations)))
+    }
+
+    fn release_one(&mut self) -> bool {
+        self.depths.pop().is_some() || self.mutations.pop().is_some()
+    }
+
+    fn empty(&self) -> bool { self.depths.is_empty() && self.mutations.is_empty() }
+}
+
+#[derive(Clone, Copy, Default)]
+enum SequenceNodeGraphStage { #[default] Parse, Apply, FixtureSteps, FixtureEdges, DeleteSelectionDiscover, DeleteSelectionApply, DeleteSteps, UpsertSteps, DeleteEdges, UpsertEdges, Complete }
+
+#[derive(Default)]
+struct SequenceNodeGraphState {
+    stage: SequenceNodeGraphStage,
+    operations: Vec<Value>,
+    operation: usize,
+    base: Option<SequenceWorkingScene>,
+    target: Option<SequenceWorkingScene>,
+    fixture_steps: VecDeque<SequenceStep>,
+    fixture_edges: VecDeque<SequenceEdge>,
+    delete_frontier: VecDeque<String>,
+    delete_current: Option<String>,
+    delete_scan: usize,
+    selection_deleted: Vec<String>,
+    cursor: usize,
+    deleted: Vec<String>,
+    recreated: Vec<String>,
+    mutations: Vec<SequenceMutation>,
+}
+
+impl SequenceNodeGraphState {
+    fn advance(&mut self, command: &SequenceCommand, snapshot: &SequenceSnapshot, interaction: &protocol::InteractionState) -> Result<SequencePersistentAdvance, Fault> {
+        match self.stage {
+            SequenceNodeGraphStage::Parse => {
+                let SequenceCommand::NodeGraphEdit(payload) = command else { return Err(Fault::from("sequence-node-graph-route")); };
+                if payload.operations_json.len() > SEQUENCE_RETAINED_RAW_BYTES { return Err(Fault::from("sequence-node-graph-bytes")); }
+                self.operations = serde_json::from_str(&payload.operations_json).map_err(|_| Fault::from("sequence-node-graph-json"))?;
+                if self.operations.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS { return Err(Fault::from("sequence-node-graph-items")); }
+                let scene = snapshot.content.local_owner::<SequenceWorkingScene>().ok_or_else(|| Fault::from("sequence-node-graph-scene-owner"))?;
+                self.base = Some(scene.as_ref().clone()); self.target = Some(scene.as_ref().clone()); self.stage = SequenceNodeGraphStage::Apply;
+                Ok(SequencePersistentAdvance::Progress("sequence-node-graph-parse", b"{\"en\":\"Decoded graph edit\",\"de\":\"Graphbearbeitung wurde dekodiert\"}"))
+            }
+            SequenceNodeGraphStage::Apply if self.operation < self.operations.len() => {
+                let operation = &self.operations[self.operation];
+                let target = self.target.as_mut().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
+                match operation.get("operation").and_then(Value::as_str).unwrap_or("") {
+                    "setFixture" => if let Some(fixture) = operation.get("fixtureJson").and_then(Value::as_str).and_then(|json| serde_json::from_str::<SequenceFixture>(json).ok()) {
+                        if fixture.schema == SEQUENCE_DOCUMENT_SCHEMA && fixture.steps.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && fixture.edges.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
+                            target.steps.clear(); target.edges.clear(); self.fixture_steps = fixture.steps.into(); self.fixture_edges = fixture.edges.into(); self.stage = SequenceNodeGraphStage::FixtureSteps;
+                            return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-fixture", b"{\"en\":\"Preparing bounded fixture replacement\",\"de\":\"Begrenzter Dokumentersatz wird vorbereitet\"}"));
+                        }
+                    },
+                    "deleteSelection" => {
+                        let selected = &interaction.selection(SEQUENCE_INTERACTION_STEPS).ids;
+                        if selected.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS { return Err(Fault::from("sequence-node-graph-selection-capacity")); }
+                        self.delete_frontier = selected.iter().cloned().collect(); self.stage = SequenceNodeGraphStage::DeleteSelectionDiscover;
+                        return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection", b"{\"en\":\"Preparing bounded graph selection\",\"de\":\"Begrenzte Graphauswahl wird vorbereitet\"}"));
+                    }
+                    "connect" => if let (Some(from), Some(to)) = (operation.get("sourceNodeId").and_then(Value::as_str), operation.get("targetNodeId").and_then(Value::as_str)) {
+                        let existing: Vec<(String, String)> = target.edges.iter().map(|edge| (edge.from.clone(), edge.to.clone())).collect();
+                        if from != to && target.steps.iter().any(|step| step.id == from) && target.steps.iter().any(|step| step.id == to) && !would_create_cycle(&existing, from, to) && !target.edges.iter().any(|edge| edge.from == from) {
+                            target.edges.retain(|edge| edge.to != to);
+                            target.edges.push(SequenceEdge { id: sequence_retained_next_id(target, "edge"), from: from.into(), to: to.into() });
+                        }
+                    },
+                    _ => {}
+                }
+                self.operation += 1;
+                Ok(SequencePersistentAdvance::Progress("sequence-node-graph-operation", b"{\"en\":\"Applying graph operation\",\"de\":\"Graphoperation wird angewendet\"}"))
+            }
+            SequenceNodeGraphStage::FixtureSteps => {
+                if let Some(step) = self.fixture_steps.pop_front() { self.target.as_mut().ok_or_else(|| Fault::from("sequence-node-graph-target"))?.steps.push(step); return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-fixture-step", b"{\"en\":\"Replacing one graph step\",\"de\":\"Ein Graphschritt wird ersetzt\"}")); }
+                self.stage = SequenceNodeGraphStage::FixtureEdges;
+                Ok(SequencePersistentAdvance::Progress("sequence-node-graph-fixture-edges", b"{\"en\":\"Preparing fixture edges\",\"de\":\"Dokumentkanten werden vorbereitet\"}"))
+            }
+            SequenceNodeGraphStage::FixtureEdges => {
+                if let Some(edge) = self.fixture_edges.pop_front() { self.target.as_mut().ok_or_else(|| Fault::from("sequence-node-graph-target"))?.edges.push(edge); return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-fixture-edge", b"{\"en\":\"Replacing one graph edge\",\"de\":\"Eine Graphkante wird ersetzt\"}")); }
+                self.operation += 1; self.stage = SequenceNodeGraphStage::Apply;
+                Ok(SequencePersistentAdvance::Progress("sequence-node-graph-fixture-complete", b"{\"en\":\"Completed bounded fixture replacement\",\"de\":\"Begrenzter Dokumentersatz wurde abgeschlossen\"}"))
+            }
+            SequenceNodeGraphStage::DeleteSelectionDiscover => {
+                if self.delete_current.is_none() {
+                    if let Some(id) = self.delete_frontier.pop_front() {
+                        if !self.selection_deleted.contains(&id) { self.selection_deleted.push(id.clone()); self.delete_current = Some(id); self.delete_scan = 0; }
+                        return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-root", b"{\"en\":\"Traversing one selected graph root\",\"de\":\"Eine ausgewählte Graphwurzel wird durchlaufen\"}"));
+                    }
+                    self.stage = SequenceNodeGraphStage::DeleteSelectionApply; self.delete_scan = 0;
+                    return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-apply", b"{\"en\":\"Preparing selected graph removal\",\"de\":\"Ausgewählte Graphentfernung wird vorbereitet\"}"));
+                }
+                let target = self.target.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
+                if self.delete_scan < target.steps.len() {
+                    let step = &target.steps[self.delete_scan];
+                    if step.slot.as_ref().is_some_and(|slot| self.delete_current.as_ref().is_some_and(|id| slot.owner == *id)) && !self.selection_deleted.contains(&step.id) && !self.delete_frontier.contains(&step.id) { self.delete_frontier.push_back(step.id.clone()); }
+                    self.delete_scan += 1;
+                    return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-child", b"{\"en\":\"Traversing one nested graph step\",\"de\":\"Ein verschachtelter Graphschritt wird durchlaufen\"}"));
+                }
+                self.delete_current = None; self.delete_scan = 0;
+                Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-next", b"{\"en\":\"Advancing selected graph traversal\",\"de\":\"Ausgewählter Graphdurchlauf wird fortgesetzt\"}"))
+            }
+            SequenceNodeGraphStage::DeleteSelectionApply => {
+                if let Some(id) = self.selection_deleted.pop() {
+                    let target = self.target.as_mut().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
+                    target.steps.retain(|step| step.id != id); target.edges.retain(|edge| edge.from != id && edge.to != id);
+                    return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-delete", b"{\"en\":\"Removing one selected graph step\",\"de\":\"Ein ausgewählter Graphschritt wird entfernt\"}"));
+                }
+                self.operation += 1; self.stage = SequenceNodeGraphStage::Apply;
+                Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-complete", b"{\"en\":\"Completed selected graph removal\",\"de\":\"Ausgewählte Graphentfernung wurde abgeschlossen\"}"))
+            }
+            SequenceNodeGraphStage::Apply => { self.stage = SequenceNodeGraphStage::DeleteSteps; self.cursor = 0; self.advance(command, snapshot, interaction) }
+            SequenceNodeGraphStage::DeleteSteps => {
+                let base = self.base.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-base"))?; let target = self.target.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
+                if self.cursor < base.steps.len() { let step = &base.steps[self.cursor]; if !target.steps.iter().any(|entry| entry.id == step.id) { self.deleted.push(step.id.clone()); self.mutations.push(SequenceMutation::DeleteStep(crate::artifacts::sequence::mutations::DeleteStep { id: step.id.clone() })); } self.cursor += 1; return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-delete-step", b"{\"en\":\"Diffing removed step\",\"de\":\"Entfernter Schritt wird verglichen\"}")); }
+                self.stage = SequenceNodeGraphStage::UpsertSteps; self.cursor = 0; self.advance(command, snapshot, interaction)
+            }
+            SequenceNodeGraphStage::UpsertSteps => {
+                let base = self.base.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-base"))?; let target = self.target.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
+                if self.cursor < target.steps.len() { let step = &target.steps[self.cursor]; match base.steps.iter().find(|entry| entry.id == step.id) { None => self.mutations.push(SequenceMutation::CreateStep(crate::artifacts::sequence::mutations::CreateStep { step: step.clone() })), Some(old) if old.kind != step.kind || old.slot != step.slot => { self.recreated.push(step.id.clone()); self.mutations.push(SequenceMutation::DeleteStep(crate::artifacts::sequence::mutations::DeleteStep { id: step.id.clone() })); self.mutations.push(SequenceMutation::CreateStep(crate::artifacts::sequence::mutations::CreateStep { step: step.clone() })); }, Some(old) => { if old.x != step.x || old.y != step.y { self.mutations.push(SequenceMutation::MoveStep(crate::artifacts::sequence::mutations::MoveStep { id: step.id.clone(), x: step.x, y: step.y })); } if old.params != step.params { self.mutations.push(SequenceMutation::EditStepParams(crate::artifacts::sequence::mutations::EditStepParams { id: step.id.clone(), params: step.params.clone() })); } if old.collapsed != step.collapsed { self.mutations.push(SequenceMutation::ChangeStepCollapsed(crate::artifacts::sequence::mutations::ChangeStepCollapsed { id: step.id.clone(), collapsed: step.collapsed })); } } } self.cursor += 1; return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-upsert-step", b"{\"en\":\"Diffing changed step\",\"de\":\"Geänderter Schritt wird verglichen\"}")); }
+                self.stage = SequenceNodeGraphStage::DeleteEdges; self.cursor = 0; self.advance(command, snapshot, interaction)
+            }
+            SequenceNodeGraphStage::DeleteEdges => {
+                let base = self.base.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-base"))?; let target = self.target.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
+                if self.cursor < base.edges.len() { let edge = &base.edges[self.cursor]; if !self.deleted.iter().any(|id| id == &edge.from || id == &edge.to) && !self.recreated.iter().any(|id| id == &edge.from || id == &edge.to) && !target.edges.iter().any(|entry| entry.id == edge.id) { self.mutations.push(SequenceMutation::DisconnectSteps(crate::artifacts::sequence::mutations::DisconnectSteps { id: edge.id.clone() })); } self.cursor += 1; return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-delete-edge", b"{\"en\":\"Diffing removed edge\",\"de\":\"Entfernte Kante wird verglichen\"}")); }
+                self.stage = SequenceNodeGraphStage::UpsertEdges; self.cursor = 0; self.advance(command, snapshot, interaction)
+            }
+            SequenceNodeGraphStage::UpsertEdges => {
+                let base = self.base.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-base"))?; let target = self.target.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
+                if self.cursor < target.edges.len() { let edge = &target.edges[self.cursor]; let endpoint_recreated = self.recreated.iter().any(|id| id == &edge.from || id == &edge.to); match base.edges.iter().find(|entry| entry.id == edge.id) { None => self.mutations.push(SequenceMutation::ConnectSteps(crate::artifacts::sequence::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() })), Some(_) if endpoint_recreated => self.mutations.push(SequenceMutation::ConnectSteps(crate::artifacts::sequence::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() })), Some(old) if old.from != edge.from || old.to != edge.to => { self.mutations.push(SequenceMutation::DisconnectSteps(crate::artifacts::sequence::mutations::DisconnectSteps { id: old.id.clone() })); self.mutations.push(SequenceMutation::ConnectSteps(crate::artifacts::sequence::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() })); }, Some(_) => {} } self.cursor += 1; return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-upsert-edge", b"{\"en\":\"Diffing changed edge\",\"de\":\"Geänderte Kante wird verglichen\"}")); }
+                self.stage = SequenceNodeGraphStage::Complete; self.advance(command, snapshot, interaction)
+            }
+            SequenceNodeGraphStage::Complete => {
+                if self.mutations.len() > SEQUENCE_PERSISTENT_MAXIMUM_UNITS { return Err(Fault::from("sequence-node-graph-output-items")); }
+                sequence_bounded_serialized_bytes(&self.mutations, SEQUENCE_STORE_MAXIMUM_BYTES).map_err(|_| Fault::from("sequence-node-graph-output-bytes"))?;
+                Ok(SequencePersistentAdvance::Complete(Emit::mutations(std::mem::take(&mut self.mutations))))
+            }
+        }
+    }
+
+    fn release_one(&mut self) -> bool {
+        if self.operations.pop().is_some() || self.fixture_steps.pop_front().is_some() || self.fixture_edges.pop_front().is_some() || self.delete_frontier.pop_front().is_some() || self.delete_current.take().is_some() || self.selection_deleted.pop().is_some() || self.deleted.pop().is_some() || self.recreated.pop().is_some() || self.mutations.pop().is_some() { return true; }
+        if let Some(base) = self.base.as_mut() { if base.steps.pop().is_some() || base.edges.pop().is_some() { return true; } }
+        if self.base.take().is_some() { return true; }
+        if let Some(target) = self.target.as_mut() { if target.steps.pop().is_some() || target.edges.pop().is_some() { return true; } }
+        self.target.take().is_some()
+    }
+    fn empty(&self) -> bool { self.operations.is_empty() && self.fixture_steps.is_empty() && self.fixture_edges.is_empty() && self.delete_frontier.is_empty() && self.delete_current.is_none() && self.selection_deleted.is_empty() && self.deleted.is_empty() && self.recreated.is_empty() && self.mutations.is_empty() && self.base.is_none() && self.target.is_none() }
+}
+
+#[derive(Clone, Copy, Default)]
+enum SequenceRunOrderStage { #[default] Steps, Edges, Heads, Choose, Walk, Remainder, Complete }
+
+#[derive(Default)]
+struct SequenceRunOrder {
+    owner: Option<String>,
+    name: Option<String>,
+    stage: SequenceRunOrderStage,
+    cursor: usize,
+    scoped: Vec<usize>,
+    incoming: Vec<(String, String)>,
+    outgoing: Vec<(String, String)>,
+    heads: Vec<usize>,
+    ordered: Vec<usize>,
+    current: Option<String>,
+}
+
+impl SequenceRunOrder {
+    fn new(slot: Option<(&str, &str)>) -> Self { Self { owner: slot.map(|value| value.0.into()), name: slot.map(|value| value.1.into()), ..Self::default() } }
+
+    fn matches(&self, step: &SequenceStep) -> bool {
+        match ((self.owner.as_deref(), self.name.as_deref()), step.slot.as_ref()) {
+            ((None, None), None) => true,
+            ((Some(owner), Some(name)), Some(slot)) => slot.owner == owner && slot.name == name,
+            _ => false,
+        }
+    }
+
+    fn advance(&mut self, scene: &SequenceWorkingScene) -> &'static str {
+        match self.stage {
+            SequenceRunOrderStage::Steps if self.cursor < scene.steps.len() => {
+                if self.matches(&scene.steps[self.cursor]) { self.scoped.push(self.cursor); }
+                self.cursor += 1;
+                "sequence-run-order-step"
+            }
+            SequenceRunOrderStage::Steps => { self.stage = SequenceRunOrderStage::Edges; self.cursor = 0; "sequence-run-order-edges" }
+            SequenceRunOrderStage::Edges if self.cursor < scene.edges.len() => {
+                let edge = &scene.edges[self.cursor];
+                if let Some(entry) = self.incoming.iter_mut().find(|entry| entry.0 == edge.to) { entry.1 = edge.from.clone(); } else { self.incoming.push((edge.to.clone(), edge.from.clone())); }
+                if let Some(entry) = self.outgoing.iter_mut().find(|entry| entry.0 == edge.from) { entry.1 = edge.to.clone(); } else { self.outgoing.push((edge.from.clone(), edge.to.clone())); }
+                self.cursor += 1;
+                "sequence-run-order-edge"
+            }
+            SequenceRunOrderStage::Edges => { self.stage = SequenceRunOrderStage::Heads; self.cursor = 0; "sequence-run-order-heads" }
+            SequenceRunOrderStage::Heads if self.cursor < self.scoped.len() => {
+                let index = self.scoped[self.cursor];
+                if !self.incoming.iter().any(|entry| entry.0 == scene.steps[index].id) { self.heads.push(index); }
+                self.cursor += 1;
+                "sequence-run-order-head"
+            }
+            SequenceRunOrderStage::Heads => { self.stage = SequenceRunOrderStage::Choose; "sequence-run-order-choose" }
+            SequenceRunOrderStage::Choose => {
+                self.current = if self.heads.len() == 1 { Some(scene.steps[self.heads[0]].id.clone()) } else if self.scoped.len() == 1 { Some(scene.steps[self.scoped[0]].id.clone()) } else { None };
+                self.stage = if self.current.is_some() { SequenceRunOrderStage::Walk } else { SequenceRunOrderStage::Remainder };
+                "sequence-run-order-start"
+            }
+            SequenceRunOrderStage::Walk => {
+                let Some(id) = self.current.take() else { self.stage = SequenceRunOrderStage::Remainder; return "sequence-run-order-remainder"; };
+                if let Some(index) = self.scoped.iter().copied().find(|index| scene.steps[*index].id == id && !self.ordered.contains(index)) { self.ordered.push(index); }
+                self.current = self.outgoing.iter().find(|entry| entry.0 == id).map(|entry| entry.1.clone());
+                if self.current.as_ref().is_some_and(|next| self.ordered.iter().any(|index| scene.steps[*index].id == *next)) { self.current = None; }
+                "sequence-run-order-walk"
+            }
+            SequenceRunOrderStage::Remainder => {
+                let next = self.scoped.iter().copied().filter(|index| !self.ordered.contains(index)).min_by(|left, right| scene.steps[*left].id.cmp(&scene.steps[*right].id));
+                if let Some(index) = next { self.ordered.push(index); } else { self.stage = SequenceRunOrderStage::Complete; }
+                "sequence-run-order-remainder"
+            }
+            SequenceRunOrderStage::Complete => "sequence-run-order-complete",
+        }
+    }
+
+    fn complete(&self) -> bool { matches!(self.stage, SequenceRunOrderStage::Complete) }
+    fn release_one(&mut self) -> bool { self.scoped.pop().is_some() || self.incoming.pop().is_some() || self.outgoing.pop().is_some() || self.heads.pop().is_some() || self.ordered.pop().is_some() || self.current.take().is_some() || self.owner.take().is_some() || self.name.take().is_some() }
+    fn empty(&self) -> bool { self.scoped.is_empty() && self.incoming.is_empty() && self.outgoing.is_empty() && self.heads.is_empty() && self.ordered.is_empty() && self.current.is_none() && self.owner.is_none() && self.name.is_none() }
+}
+
+struct SequenceRunFrame { order: SequenceRunOrder, cursor: usize, repeat_remaining: usize, repeat_total: usize, while_key: Option<String>, while_iterations: usize }
+
+#[derive(Default)]
+struct SequenceRunState {
+    initialized: bool,
+    registry: Option<Registry>,
+    scope: Dictionary,
+    effects: Vec<imperative_engine::EffectLogEntry>,
+    frames: Vec<SequenceRunFrame>,
+}
+
+fn sequence_run_string(params: &Dictionary, key: &str) -> String {
+    params.get(key).and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or_default().to_string()
+}
+
+fn sequence_run_number(params: &Dictionary, key: &str) -> usize {
+    params.get(key).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()).unwrap_or(0.0).max(0.0) as usize
+}
+
+fn sequence_run_scope_bool(scope: &Dictionary, key: &str) -> bool {
+    scope.get(key).and_then(|value| value.as_atom()).and_then(|atom| atom.as_bool()).unwrap_or(false)
+}
+
+impl SequenceRunState {
+    fn advance(&mut self, snapshot: &SequenceSnapshot) -> Result<SequencePersistentAdvance, Fault> {
+        let scene = snapshot.content.local_owner::<SequenceWorkingScene>().ok_or_else(|| Fault::from("sequence-run-scene-owner"))?;
+        if scene.steps.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS || scene.edges.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS { return Err(Fault::from("sequence-run-scene-capacity")); }
+        if !self.initialized {
+            self.registry = Some(imperative_module_registry());
+            self.scope = Dictionary::new();
+            self.frames.push(SequenceRunFrame { order: SequenceRunOrder::new(None), cursor: 0, repeat_remaining: 1, repeat_total: 1, while_key: None, while_iterations: 0 });
+            self.initialized = true;
+            return Ok(SequencePersistentAdvance::Progress("sequence-run-initialize", b"{\"en\":\"Preparing execution\",\"de\":\"Ausführung wird vorbereitet\"}"));
+        }
+        let Some(frame) = self.frames.last_mut() else {
+            let result = RunResult { scope: self.scope.clone(), effects: std::mem::take(&mut self.effects) };
+            let json = serde_json::to_string(&result).map_err(|_| Fault::from("sequence-run-result-json"))?;
+            if json.len() > SEQUENCE_STORE_MAXIMUM_BYTES { return Err(Fault::from("sequence-run-result-capacity")); }
+            return Ok(SequencePersistentAdvance::Complete(Emit::config(vec![SequenceConfigMutation::SetLastRun { json }])));
+        };
+        if !frame.order.complete() {
+            let stage = frame.order.advance(scene.as_ref());
+            return Ok(SequencePersistentAdvance::Progress(stage, b"{\"en\":\"Ordering Sequence graph\",\"de\":\"Sequenzgraph wird geordnet\"}"));
+        }
+        if frame.cursor >= frame.order.ordered.len() {
+            if let Some(key) = frame.while_key.as_ref() {
+                if sequence_run_scope_bool(&self.scope, key) {
+                    if frame.while_iterations == SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS { return Err(Fault::from("sequence-run-while-capacity")); }
+                    frame.cursor = 0;
+                    frame.while_iterations += 1;
+                    return Ok(SequencePersistentAdvance::Progress("sequence-run-while-cursor", b"{\"en\":\"Continuing bounded while body\",\"de\":\"Begrenzter Solange-Block wird fortgesetzt\"}"));
+                }
+            } else if frame.repeat_remaining > 1 {
+                frame.repeat_remaining -= 1;
+                frame.cursor = 0;
+                let index = frame.repeat_total - frame.repeat_remaining;
+                self.scope = self.scope.clone().insert("index", NeuralValue::Atom(neural_engine::Atom::Integer(index as i64)));
+                return Ok(SequencePersistentAdvance::Progress("sequence-run-repeat-cursor", b"{\"en\":\"Continuing bounded repeat body\",\"de\":\"Begrenzter Wiederholungsblock wird fortgesetzt\"}"));
+            }
+            self.frames.pop();
+            return Ok(SequencePersistentAdvance::Progress("sequence-run-retire-frame", b"{\"en\":\"Completed nested execution frame\",\"de\":\"Verschachtelter Ausführungsrahmen wurde abgeschlossen\"}"));
+        }
+        let index = frame.order.ordered[frame.cursor];
+        frame.cursor += 1;
+        let step = scene.steps.get(index).ok_or_else(|| Fault::from("sequence-run-step-index"))?;
+        let input = self.scope.merge(&step.params.0);
+        match step.kind.as_str() {
+            "control.if" => {
+                let key = sequence_run_string(&step.params.0, "key");
+                let slot = if sequence_run_scope_bool(&self.scope, &key) { "then" } else { "else" };
+                let depth_fault = self.frames.len() >= 65;
+                let required_effects = if depth_fault { 2 } else { 1 };
+                if self.effects.len().saturating_add(required_effects) > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS { return Err(Fault::from("sequence-run-effect-capacity")); }
+                self.effects.push(imperative_engine::EffectLogEntry { step_id: step.id.clone(), kind: step.kind.clone(), input, output: Some(Dictionary::new().insert("branch", NeuralValue::Atom(neural_engine::Atom::String(slot.into())))), error: None });
+                if depth_fault {
+                    self.effects.push(imperative_engine::EffectLogEntry { step_id: String::new(), kind: "control.depth".into(), input: Dictionary::new(), output: None, error: Some("nesting depth exceeded 64".into()) });
+                } else {
+                    self.frames.push(SequenceRunFrame { order: SequenceRunOrder::new(Some((&step.id, slot))), cursor: 0, repeat_remaining: 1, repeat_total: 1, while_key: None, while_iterations: 0 });
+                }
+            }
+            "control.repeat" => {
+                let count = sequence_run_number(&step.params.0, "count");
+                if count > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS { return Err(Fault::from("sequence-run-repeat-capacity")); }
+                if self.frames.len() >= 65 {
+                    if self.effects.len() == SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS { return Err(Fault::from("sequence-run-effect-capacity")); }
+                    self.effects.push(imperative_engine::EffectLogEntry { step_id: String::new(), kind: "control.depth".into(), input: Dictionary::new(), output: None, error: Some("nesting depth exceeded 64".into()) });
+                } else if count != 0 {
+                    self.scope = self.scope.clone().insert("index", NeuralValue::Atom(neural_engine::Atom::Integer(0)));
+                    self.frames.push(SequenceRunFrame { order: SequenceRunOrder::new(Some((&step.id, "body"))), cursor: 0, repeat_remaining: count, repeat_total: count, while_key: None, while_iterations: 0 });
+                }
+            }
+            "control.while" => {
+                let key = sequence_run_string(&step.params.0, "key");
+                if sequence_run_scope_bool(&self.scope, &key) {
+                    if self.frames.len() >= 65 {
+                        if self.effects.len() == SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS { return Err(Fault::from("sequence-run-effect-capacity")); }
+                        self.effects.push(imperative_engine::EffectLogEntry { step_id: String::new(), kind: "control.depth".into(), input: Dictionary::new(), output: None, error: Some("nesting depth exceeded 64".into()) });
+                    } else {
+                        self.frames.push(SequenceRunFrame { order: SequenceRunOrder::new(Some((&step.id, "body"))), cursor: 0, repeat_remaining: 1, repeat_total: 1, while_key: Some(key), while_iterations: 1 });
+                    }
+                }
+            }
+            _ => {
+                let registry = self.registry.as_ref().ok_or_else(|| Fault::from("sequence-run-registry"))?;
+                let result = Executor::new(registry).run(&Path { steps: vec![Step { id: step.id.clone(), kind: step.kind.clone(), params: step.params.0.clone(), bodies: BTreeMap::new() }] }, &self.scope);
+                if self.effects.len().saturating_add(result.effects.len()) > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS { return Err(Fault::from("sequence-run-effect-capacity")); }
+                let halt_frame = result.effects.iter().any(|effect| effect.error.is_some());
+                self.scope = result.scope;
+                self.effects.extend(result.effects);
+                if halt_frame { if let Some(frame) = self.frames.last_mut() { frame.cursor = frame.order.ordered.len(); } }
+            }
+        }
+        Ok(SequencePersistentAdvance::Progress("sequence-run-step", b"{\"en\":\"Executed Sequence step\",\"de\":\"Sequenzschritt wurde ausgeführt\"}"))
+    }
+
+    fn release_one(&mut self) -> bool {
+        if self.effects.pop().is_some() { return true; }
+        if let Some(frame) = self.frames.last_mut() { if frame.order.release_one() { return true; } }
+        self.frames.pop().is_some() || self.registry.take().is_some() || if self.initialized { self.scope = Dictionary::new(); self.initialized = false; true } else { false }
+    }
+    fn empty(&self) -> bool { !self.initialized && self.registry.is_none() && self.effects.is_empty() && self.frames.is_empty() }
+}
+
+enum SequencePersistentWorkspace { Reorganize(SequenceReorganizeState), NodeGraph(SequenceNodeGraphState), Run(SequenceRunState) }
+impl SequencePersistentWorkspace {
+    fn new(tool_id: &str) -> Self { match tool_id { "reorganize" => Self::Reorganize(SequenceReorganizeState::default()), "nodeGraphEdit" => Self::NodeGraph(SequenceNodeGraphState::default()), _ => Self::Run(SequenceRunState::default()) } }
+    fn advance(&mut self, command: &SequenceCommand, snapshot: &SequenceSnapshot, config: &SequenceConfig, interaction: &protocol::InteractionState) -> Result<SequencePersistentAdvance, Fault> { match self { Self::Reorganize(state) => state.advance(snapshot, config), Self::NodeGraph(state) => state.advance(command, snapshot, interaction), Self::Run(state) => state.advance(snapshot) } }
+    fn release_one(&mut self) -> bool { match self { Self::Reorganize(state) => state.release_one(), Self::NodeGraph(state) => state.release_one(), Self::Run(state) => state.release_one() } }
+    fn empty(&self) -> bool { match self { Self::Reorganize(state) => state.empty(), Self::NodeGraph(state) => state.empty(), Self::Run(state) => state.empty() } }
+}
+
+struct SequencePersistentWork { tool_id: &'static str, workspace_identity: u64, progress: usize, replay_target: Option<usize>, workspace: SequencePersistentWorkspace, completed: bool, closing: bool }
+impl SequencePersistentWork {
+    fn new(tool_id: &'static str, operation: &semio_framework_plugin::AppOperationContext) -> Self { let scope = format!("{}:{}:{}:{}", operation.app_instance_id, operation.parent_document_id, operation.operation_id, operation.generation); let identity = scope.as_bytes().iter().fold(0xcbf2_9ce4_8422_2325_u64, |state, byte| (state ^ u64::from(*byte)).wrapping_mul(0x100_0000_01b3)); Self { tool_id, workspace_identity: identity, progress: 0, replay_target: None, workspace: SequencePersistentWorkspace::new(tool_id), completed: false, closing: false } }
+}
+
+impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>> for SequencePersistentWork {
+    fn tool_id(&self) -> &'static str { self.tool_id }
+    fn workspace_identity(&self) -> u64 { self.workspace_identity }
+    fn extent(&self, _command: &SequenceCommand, snapshot: &SequenceSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>) -> Option<usize> { let scene = snapshot.content.local_owner::<SequenceWorkingScene>()?; (scene.steps.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && scene.edges.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS).then_some(SEQUENCE_PERSISTENT_MAXIMUM_UNITS) }
+    fn step(&mut self, command: &SequenceCommand, snapshot: &SequenceSnapshot, config: &SequenceConfig, _history: &semio_framework_plugin::HistoryView, interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>, _operation: &semio_framework_plugin::AppOperationContext) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
+        use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+        if self.completed || self.progress >= SEQUENCE_PERSISTENT_MAXIMUM_UNITS || command.command_id() != self.tool_id { return Err(Fault::from("sequence-persistent-progress-capacity")); }
+        match self.workspace.advance(command, snapshot, config, interaction)? {
+            SequencePersistentAdvance::Progress(stage, preview) => { self.progress += 1; if let Some(target) = self.replay_target { if self.progress == target { self.replay_target = None; } Ok(ArtifactCommandWorkStep::Replay { stage, preview }) } else { Ok(ArtifactCommandWorkStep::Progress { stage, preview }) } }
+            SequencePersistentAdvance::Complete(emit) => {
+                if self.replay_target.is_some() { return Err(Fault::from("sequence-persistent-replay-overrun")); }
+                let exact_lane = if self.tool_id == "run" {
+                    emit.artifact_mutations.is_empty() && emit.config_mutations.len() == 1 && emit.draft_mutations.is_empty() && emit.child_emits.is_empty()
+                } else {
+                    emit.config_mutations.is_empty() && emit.draft_mutations.is_empty() && emit.child_emits.is_empty()
+                };
+                if !exact_lane { return Err(Fault::from("sequence-persistent-publication-lane")); }
+                sequence_bounded_serialized_bytes(&(&emit.artifact_mutations, &emit.config_mutations), SEQUENCE_STORE_MAXIMUM_BYTES).map_err(|_| Fault::from("sequence-persistent-output-bytes"))?;
+                self.completed = true;
+                Ok(ArtifactCommandWorkStep::Complete(emit))
+            }
+        }
+    }
+    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> { if target.len() < 24 { return Err(Fault::from("sequence-persistent-checkpoint-capacity")); } target[..24].fill(0); target[..4].copy_from_slice(b"SRP1"); target[8..16].copy_from_slice(&(self.progress as u64).to_le_bytes()); target[16..24].copy_from_slice(&self.workspace_identity.to_le_bytes()); Ok(24) }
+    fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> { if checkpoint.len() != 24 || &checkpoint[..4] != b"SRP1" || checkpoint[4..8] != [0,0,0,0] { return Err(Fault::from("sequence-persistent-checkpoint-invalid")); } let progress = usize::try_from(u64::from_le_bytes(checkpoint[8..16].try_into().map_err(|_| Fault::from("sequence-persistent-checkpoint-cursor"))?)).map_err(|_| Fault::from("sequence-persistent-checkpoint-cursor"))?; let identity = u64::from_le_bytes(checkpoint[16..24].try_into().map_err(|_| Fault::from("sequence-persistent-checkpoint-identity"))?); if identity != self.workspace_identity || progress > SEQUENCE_PERSISTENT_MAXIMUM_UNITS { return Err(Fault::from("sequence-persistent-checkpoint-owner")); } self.progress = 0; self.replay_target = (progress != 0).then_some(progress); self.workspace = SequencePersistentWorkspace::new(self.tool_id); self.completed = false; Ok(()) }
+    fn begin_close(&mut self) { self.closing = true; }
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep { if !self.closing { return semio_framework_job::InteractiveJobCloseStep::Blocked; } if maximum_items == 0 || maximum_bytes == 0 { return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }; } self.replay_target = None; if self.workspace.release_one() { semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 1 } } else { semio_framework_job::InteractiveJobCloseStep::Complete } }
+    fn terminal_is_empty(&self) -> bool { self.closing && self.replay_target.is_none() && self.workspace.empty() }
+}
+
+struct SequencePersistentJobFactory { keys: Vec<semio_framework::ToolFactoryKey> }
+impl SequencePersistentJobFactory { fn new(controller: &str) -> Self { Self { keys: SEQUENCE_PERSISTENT_TOOL_IDS.iter().map(|id| semio_framework::ToolFactoryKey::new(controller, *id)).collect() } } }
+impl semio_framework::ToolJobFactory for SequencePersistentJobFactory {
+    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<SequencePlayApp>>; type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<SequencePlayApp>>;
+    fn keys(&self) -> &[semio_framework::ToolFactoryKey] { &self.keys } fn payload_schema_id(&self) -> &str { "sequence.play/persistent-command.v1" } fn classification(&self) -> semio_framework::InteractiveJobClassification { semio_framework::InteractiveJobClassification::Migrated }
+    fn execution_contract(&self) -> semio_framework::ToolExecutionContract { semio_framework::ToolExecutionContract::resumable(SEQUENCE_RETAINED_RAW_BYTES, SEQUENCE_PERSISTENT_MAXIMUM_UNITS, 1, SEQUENCE_STORE_MAXIMUM_BYTES, 7_500, 1, 1) }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> { Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::new(payload)) }
+    fn create_job_from_wire_pages_with_payload(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload, input: semio_framework::action_bus::RetainedToolWireInput, checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> { if input.declared_bytes() > SEQUENCE_RETAINED_RAW_BYTES || checkpoint.as_ref().is_some_and(|value| value.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) { return Err((semio_framework::ToolJobFactoryError::new("Sequence persistent command wire or checkpoint exceeds cap"), input, checkpoint)); } Ok(match checkpoint { Some(checkpoint) => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint), None => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input) }) }
+}
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SequencePersistentJobFactory { type Owner = semio_framework_plugin::EditorApp<SequencePlayApp>; const TOOL_IDS: &'static [&'static str] = SEQUENCE_PERSISTENT_TOOL_IDS; const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA; const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = SEQUENCE_PERSISTENT_PUBLICATION_CONTRACTS; }
+//#endregion 🧵️PersistentRemainingRoutes
+
+//#region 🧵️RetainedConfigRoutes
+const SEQUENCE_RETAINED_PAYLOAD_SCHEMA: &str = "sequence.play/retained-config-command.v1";
+const SEQUENCE_RETAINED_RAW_BYTES: usize = 4_096;
+const SEQUENCE_RETAINED_MAXIMUM_UNITS: usize = 2;
+const SEQUENCE_RETAINED_CONFIG_TOOL_IDS: &[&str] = &["setViewport", "setOrientation", "stop", "setLocale"];
+const SEQUENCE_RETAINED_CONFIG_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setViewport", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setOrientation", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "stop", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+];
+
+fn sequence_retained_config_command_admitted(command: &SequenceCommand) -> bool {
+    match command {
+        SequenceCommand::SetViewport(_) | SequenceCommand::Stop(_) => true,
+        SequenceCommand::SetOrientation(payload) => payload.value.len() <= 32,
+        SequenceCommand::SetLocale(payload) => payload.value.len() <= 64,
+        _ => false,
+    }
+}
+
+struct SequenceRetainedConfigWork {
+    tool_id: &'static str,
+    workspace_identity: u64,
+    cursor: usize,
+    replay_target: Option<usize>,
+    completed: bool,
+    closing: bool,
+}
+
+impl SequenceRetainedConfigWork {
+    fn new(tool_id: &'static str, operation: &semio_framework_plugin::AppOperationContext) -> Self {
+        let scope = format!("{}:{}:{}:{}", operation.app_instance_id, operation.parent_document_id, operation.operation_id, operation.generation);
+        let workspace_identity = scope.as_bytes().iter().fold(0xcbf2_9ce4_8422_2325_u64, |state, byte| (state ^ u64::from(*byte)).wrapping_mul(0x100_0000_01b3));
+        Self { tool_id, workspace_identity, cursor: 0, replay_target: None, completed: false, closing: false }
+    }
+}
+
+impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>> for SequenceRetainedConfigWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn workspace_identity(&self) -> u64 {
+        self.workspace_identity
+    }
+
+    fn extent(
+        &self,
+        _command: &SequenceCommand,
+        _snapshot: &SequenceSnapshot,
+        _interaction: &protocol::InteractionState,
+        _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>,
+    ) -> Option<usize> {
+        Some(SEQUENCE_RETAINED_MAXIMUM_UNITS)
+    }
+
+    fn step(
+        &mut self,
+        command: &SequenceCommand,
+        snapshot: &SequenceSnapshot,
+        config: &SequenceConfig,
+        history: &semio_framework_plugin::HistoryView,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+        _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>,
+        operation: &semio_framework_plugin::AppOperationContext,
+    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
+        use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+        if self.completed || self.cursor >= SEQUENCE_RETAINED_MAXIMUM_UNITS || !sequence_retained_config_command_admitted(command) {
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("sequence.retained.config-command"), "Sequence retained config command exceeded its exact route or payload envelope"));
+        }
+        self.cursor += 1;
+        if let Some(target) = self.replay_target {
+            if self.cursor <= target {
+                if self.cursor == target {
+                    self.replay_target = None;
+                }
+                return Ok(ArtifactCommandWorkStep::Replay { stage: "sequence-config-replay", preview: b"{\"en\":\"Restoring Sequence setting\",\"de\":\"Sequenzeinstellung wird wiederhergestellt\"}" });
+            }
+        }
+        if self.cursor == 1 {
+            return Ok(ArtifactCommandWorkStep::Progress { stage: "sequence-config-prepare", preview: b"{\"en\":\"Preparing Sequence setting\",\"de\":\"Sequenzeinstellung wird vorbereitet\"}" });
+        }
+        let emit = command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })?;
+        if !emit.artifact_mutations.is_empty() || emit.config_mutations.len() != 1 || !emit.draft_mutations.is_empty() || !emit.child_emits.is_empty() {
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("sequence.retained.publication-lane"), "Sequence retained config route crossed its exact Config publication lane"));
+        }
+        self.completed = true;
+        Ok(ArtifactCommandWorkStep::Complete(emit))
+    }
+
+    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
+        if target.len() < 24 {
+            return Err(Fault::from("sequence-retained-checkpoint-capacity"));
+        }
+        target[..24].fill(0);
+        target[..4].copy_from_slice(b"SRC1");
+        target[4] = u8::from(self.completed);
+        target[8..16].copy_from_slice(&(self.cursor as u64).to_le_bytes());
+        target[16..24].copy_from_slice(&self.workspace_identity.to_le_bytes());
+        Ok(24)
+    }
+
+    fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
+        if checkpoint.len() != 24 || &checkpoint[..4] != b"SRC1" || checkpoint[4] > 1 || checkpoint[5..8] != [0, 0, 0] {
+            return Err(Fault::from("sequence-retained-checkpoint-invalid"));
+        }
+        let cursor = usize::try_from(u64::from_le_bytes(checkpoint[8..16].try_into().map_err(|_| Fault::from("sequence-retained-checkpoint-cursor"))?)).map_err(|_| Fault::from("sequence-retained-checkpoint-cursor"))?;
+        let identity = u64::from_le_bytes(checkpoint[16..24].try_into().map_err(|_| Fault::from("sequence-retained-checkpoint-identity"))?);
+        if identity != self.workspace_identity || cursor > SEQUENCE_RETAINED_MAXIMUM_UNITS {
+            return Err(Fault::from("sequence-retained-checkpoint-owner-mismatch"));
+        }
+        self.cursor = 0;
+        self.replay_target = (cursor != 0).then_some(cursor);
+        self.completed = false;
+        Ok(())
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if !self.closing {
+            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        }
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        self.replay_target = None;
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.replay_target.is_none()
+    }
+}
+
+struct SequenceRetainedConfigJobFactory {
+    keys: Vec<semio_framework::ToolFactoryKey>,
+}
+
+impl SequenceRetainedConfigJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: SEQUENCE_RETAINED_CONFIG_TOOL_IDS.iter().map(|tool_id| semio_framework::ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for SequenceRetainedConfigJobFactory {
+    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<SequencePlayApp>>;
+    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<SequencePlayApp>>;
+
+    fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        SEQUENCE_RETAINED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
+        semio_framework::ToolExecutionContract::resumable(SEQUENCE_RETAINED_RAW_BYTES, SEQUENCE_RETAINED_MAXIMUM_UNITS, 1, 4_096, 2_000, 1, 1)
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
+        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > SEQUENCE_RETAINED_RAW_BYTES
+            || checkpoint
+                .as_ref()
+                .is_some_and(|value| value.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES)
+        {
+            return Err((semio_framework::ToolJobFactoryError::new("Sequence retained config command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(match checkpoint {
+            Some(checkpoint) => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
+            None => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input),
+        })
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SequenceRetainedConfigJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<SequencePlayApp>;
+    const TOOL_IDS: &'static [&'static str] = SEQUENCE_RETAINED_CONFIG_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = SEQUENCE_RETAINED_CONFIG_PUBLICATION_CONTRACTS;
+}
+//#endregion 🧵️RetainedConfigRoutes
+
 //#region 🔖️SequencePlayApp
 /// 🧪️ B1: unit struct — every former `SequencePlayRuntime` field now lives in
 /// `crate::editor::sequence::config::SequenceConfig` (see `ArtifactApp::Config`), written through
 /// `SequenceConfigMutation`s.
 #[derive(Default)]
 pub struct SequencePlayApp;
+
+//#region 🧾️ProofCatalogs
+struct SequenceArtifactProofs;
+impl SequenceArtifactProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<SequencePlayApp>,
+        owner_file: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.sequence.sequence@1/*#editor",
+        document_schema: "sequence.sequence",
+        factory: "SequenceRetainedArtifactJobFactory",
+        factory_type: SequenceRetainedArtifactJobFactory,
+        tools: {
+            "addStep" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 65_536, 2_000, 1, 1),
+            "addStepToSlot" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 65_536, 2_000, 1, 1),
+            "addStepDropped" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 65_536, 2_000, 1, 1),
+            "removeStep" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 65_536, 2_000, 1, 1),
+            "deleteSelection" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 65_536, 2_000, 1, 1),
+            "moveStep" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 65_536, 2_000, 1, 1),
+            "connectSteps" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 65_536, 2_000, 1, 1),
+            "disconnectSteps" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 65_536, 2_000, 1, 1),
+            "setStepParams" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 65_536, 2_000, 1, 1),
+            "setStepCollapsed" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 65_536, 2_000, 1, 1),
+        }
+    }
+}
+
+struct SequencePersistentProofs;
+impl SequencePersistentProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<SequencePlayApp>,
+        owner_file: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.sequence.sequence@1/*#editor",
+        document_schema: "sequence.sequence",
+        factory: "SequencePersistentJobFactory",
+        factory_type: SequencePersistentJobFactory,
+        tools: {
+            "reorganize" => semio_framework::ToolExecutionContract::resumable(4_096, 66_049, 1, 65_536, 7_500, 1, 1),
+            "nodeGraphEdit" => semio_framework::ToolExecutionContract::resumable(4_096, 66_049, 1, 65_536, 7_500, 1, 1),
+            "run" => semio_framework::ToolExecutionContract::resumable(4_096, 66_049, 1, 65_536, 7_500, 1, 1),
+        }
+    }
+}
+
+struct SequenceConfigProofs;
+impl SequenceConfigProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<SequencePlayApp>,
+        owner_file: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.sequence.sequence@1/*#editor",
+        document_schema: "sequence.sequence",
+        factory: "SequenceRetainedConfigJobFactory",
+        factory_type: SequenceRetainedConfigJobFactory,
+        tools: {
+            "setViewport" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 4_096, 2_000, 1, 1),
+            "setOrientation" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 4_096, 2_000, 1, 1),
+            "stop" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 4_096, 2_000, 1, 1),
+            "setLocale" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 4_096, 2_000, 1, 1),
+        }
+    }
+}
+//#endregion 🧾️ProofCatalogs
 
 impl ArtifactEditor for SequencePlayApp {
     type Snapshot = SequenceSnapshot;
@@ -868,6 +2209,69 @@ impl ArtifactEditor for SequencePlayApp {
 
     const DIALECT: Dialect = crate::artifacts::sequence::SEQUENCE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;
+
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(std::sync::Arc::new(SequenceArtifactStorePreparationFactory))
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(SequenceConfigStorePreparationFactory))
+    }
+
+    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        SequenceArtifactProofs::bounded_first_step_tool_proofs().into_iter().chain(SequencePersistentProofs::bounded_first_step_tool_proofs()).chain(SequenceConfigProofs::bounded_first_step_tool_proofs()).collect()
+    }
+
+    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(SequenceRetainedArtifactJobFactory::new(&controller))?;
+        registry.register(SequencePersistentJobFactory::new(&controller))?;
+        registry.register(SequenceRetainedConfigJobFactory::new(&controller))
+    }
+
+    fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        let artifact_route = SEQUENCE_RETAINED_ARTIFACT_TOOL_IDS.contains(&request.tool_id.as_str());
+        let config_route = SEQUENCE_RETAINED_CONFIG_TOOL_IDS.contains(&request.tool_id.as_str());
+        let persistent_route = SEQUENCE_PERSISTENT_TOOL_IDS.contains(&request.tool_id.as_str());
+        if !artifact_route && !config_route && !persistent_route {
+            return Ok(None);
+        }
+        let persistent_admitted = match request.command.as_ref() { SequenceCommand::NodeGraphEdit(payload) => payload.operations_json.len() <= SEQUENCE_RETAINED_RAW_BYTES, SequenceCommand::Reorganize(_) | SequenceCommand::Run(_) => true, _ => false };
+        if request.command.command_id() != request.tool_id || (artifact_route && !sequence_retained_artifact_command_admitted(&request.command)) || (config_route && !sequence_retained_config_command_admitted(&request.command)) || (persistent_route && !persistent_admitted) {
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("sequence.retained.tool-mismatch"), "Sequence command does not match its exact retained route or payload envelope"));
+        }
+        let tool_id = request.command.command_id();
+        let operation_context = semio_framework_plugin::AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id,
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> = if persistent_route {
+            Box::new(SequencePersistentWork::new(tool_id, &operation_context))
+        } else if artifact_route {
+            Box::new(SequenceRetainedArtifactWork::new(tool_id, &operation_context))
+        } else {
+            Box::new(SequenceRetainedConfigWork::new(tool_id, &operation_context))
+        };
+        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new_with_context(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            request.context,
+            operation_context,
+            request.completion,
+            SequenceCommand::command_id,
+            SEQUENCE_RETAINED_RAW_BYTES,
+            if persistent_route { SEQUENCE_PERSISTENT_MAXIMUM_UNITS } else if artifact_route { SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS } else { 1 },
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
 
     async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::sequence::config::schema::app_schema_descriptor())
@@ -1071,6 +2475,23 @@ pub async fn create_sequence_app() -> AppDefinition {
                     ActionArgOption::new("topBottom", LocalizedLabel::native("Top to Bottom", "Oben nach unten")),
                 ]).required(),
             ])
+            .action_interactive_job("addStep", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addStepToSlot", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addStepDropped", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeStep", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("moveStep", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("connectSteps", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("disconnectSteps", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setStepParams", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setStepCollapsed", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("reorganize", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nodeGraphEdit", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setOrientation", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("run", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("stop", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setViewport", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLocale", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             // 🕹️ First-class hover/selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):

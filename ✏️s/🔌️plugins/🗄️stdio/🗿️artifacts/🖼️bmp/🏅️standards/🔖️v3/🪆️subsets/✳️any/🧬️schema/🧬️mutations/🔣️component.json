@@ -1,78 +1,85 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.bmp/mutation.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "BmpMutation",
   "oneOf": [
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutation"],
-      "properties": { "mutation": { "const": "noMutation" } }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["mutation", "snapshot"],
+      "required": [
+        "mutation",
+        "payload"
+      ],
       "properties": {
-        "mutation": { "const": "setSnapshot" },
-        "snapshot": { "$ref": "https://semio.tech/schema/s.stdio.bmp/snapshot.json" }
+        "mutation": {
+          "const": "change-header-fields"
+        },
+        "payload": {
+          "$ref": "📐️change-header-fields/🔣️payload.schema.json"
+        }
       }
     },
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutation"],
+      "required": [
+        "mutation",
+        "payload"
+      ],
       "properties": {
-        "mutation": { "const": "setHeaderFields" },
-        "headerSize": { "type": "integer", "minimum": 0 },
-        "width": { "type": "integer", "minimum": 0 },
-        "height": { "type": "integer", "minimum": 0 },
-        "rowOrder": { "$ref": "https://semio.tech/schema/s.stdio.bmp/snapshot.json#/$defs/BmpRowOrder" },
-        "planes": { "type": "integer", "minimum": 0 },
-        "bitsPerPixel": { "type": "integer", "minimum": 0 },
-        "compression": { "type": "integer", "minimum": 0 },
-        "imageSize": { "type": "integer", "minimum": 0 },
-        "xPixelsPerMeter": { "type": "integer" },
-        "yPixelsPerMeter": { "type": "integer" },
-        "colorsUsed": { "type": "integer", "minimum": 0 },
-        "colorsImportant": { "type": "integer", "minimum": 0 }
+        "mutation": {
+          "const": "insert-palette-entry"
+        },
+        "payload": {
+          "$ref": "📥️insert-palette-entry/🔣️payload.schema.json"
+        }
       }
     },
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutation", "index", "entry"],
+      "required": [
+        "mutation",
+        "payload"
+      ],
       "properties": {
-        "mutation": { "const": "insertPaletteEntry" },
-        "index": { "type": "integer", "minimum": 0 },
-        "entry": { "$ref": "https://semio.tech/schema/s.stdio.bmp/snapshot.json#/$defs/BmpPaletteEntry" }
+        "mutation": {
+          "const": "remove-palette-entry"
+        },
+        "payload": {
+          "$ref": "📤️remove-palette-entry/🔣️payload.schema.json"
+        }
       }
     },
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutation", "index"],
+      "required": [
+        "mutation",
+        "payload"
+      ],
       "properties": {
-        "mutation": { "const": "removePaletteEntry" },
-        "index": { "type": "integer", "minimum": 0 }
+        "mutation": {
+          "const": "replace-palette-entry"
+        },
+        "payload": {
+          "$ref": "🎨️replace-palette-entry/🔣️payload.schema.json"
+        }
       }
     },
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutation", "index", "entry"],
+      "required": [
+        "mutation",
+        "payload"
+      ],
       "properties": {
-        "mutation": { "const": "setPaletteEntry" },
-        "index": { "type": "integer", "minimum": 0 },
-        "entry": { "$ref": "https://semio.tech/schema/s.stdio.bmp/snapshot.json#/$defs/BmpPaletteEntry" }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["mutation", "pixels"],
-      "properties": {
-        "mutation": { "const": "setPixelData" },
-        "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+        "mutation": {
+          "const": "replace-pixel-data"
+        },
+        "payload": {
+          "$ref": "🟪️replace-pixel-data/🔣️payload.schema.json"
+        }
       }
     }
   ]

@@ -1,0 +1,9 @@
+{
+  "surface": "1:catalogue",
+  "sections": ["installed", "wood", "metal", "concrete"],
+  "rowsPerSection": 12,
+  "expectedNodes": 53,
+  "expectedRows": 48,
+  "failure": { "instance": 2, "surface": "2:catalogue", "key": "duplicate", "reason": "DuplicateSiblingKey" },
+  "capacityFailure": { "instance": 3, "surface": "3:catalogue", "sections": 4, "rowsPerSection": 32, "nodeLimit": 128, "reason": "Credits" }
+}

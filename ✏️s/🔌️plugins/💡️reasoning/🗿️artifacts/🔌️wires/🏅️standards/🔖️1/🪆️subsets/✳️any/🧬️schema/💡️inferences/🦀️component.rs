@@ -135,7 +135,7 @@ mod tests {
         let mut snapshot = empty_wires_snapshot();
         let nodes = vec![DslValue::object([("id".into(), DslValue::String("a".into()))]), DslValue::object([("id".into(), DslValue::String("b".into()))])];
         let edges = vec![DslValue::object([("id".into(), DslValue::String("e1".into())), ("source".into(), DslValue::String("a".into())), ("target".into(), DslValue::String("b".into()))])];
-        snapshot.content = crate::artifacts::wires::wires_content_child_handle_and_cache(nodes, edges);
+        snapshot.content = crate::artifacts::wires::wires_content_child_with_owner(nodes, edges);
         snapshot
     }
 

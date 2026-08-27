@@ -1,0 +1,25 @@
+{
+  "surface": "1:document",
+  "nodes": 19,
+  "interactiveRows": 14,
+  "limits": { "pageBytes": 32768, "surfaceBytes": 8388608, "aggregateBytes": 33554432, "nodeBindings": 32 },
+  "sections": [
+    {
+      "id": "objects",
+      "rows": [
+        {
+          "id": "seed-left-001",
+          "rowActions": ["hide", "lock"],
+          "children": [
+            { "id": "v0" }, { "id": "v1" }, { "id": "v2" }, { "id": "v3" },
+            { "id": "v4" }, { "id": "v5" }, { "id": "v6" }, { "id": "v7" },
+            { "id": "v8" }, { "id": "v9" }, { "id": "v10" }
+          ]
+        }
+      ]
+    },
+    { "id": "references", "rows": [{ "id": "ref-masterarbeit", "rowActions": ["hide", "lock"] }, { "id": "ref-rathaus-ahlen", "rowActions": ["hide", "lock"] }] },
+    { "id": "target-volumes", "rows": [] },
+    { "id": "attractions", "rows": [] }
+  ]
+}

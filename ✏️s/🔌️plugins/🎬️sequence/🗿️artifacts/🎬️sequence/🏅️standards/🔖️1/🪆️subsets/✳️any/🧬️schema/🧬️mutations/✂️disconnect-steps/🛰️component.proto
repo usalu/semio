@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.sequence.sequence.mutation;
+
+message DisconnectSteps {
+  string id = 1;
+}

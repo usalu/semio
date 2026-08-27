@@ -3,7 +3,8 @@
   "owner": "puzzle3d",
   "documentSchema": "puzzle.3d.fixture",
   "payloadSchema": "puzzle.3d.fixture.tool-command.v1",
-  "toolIds": [
+  "toolIds": ["openAddObjectDialog", "worldPointerDown", "setLocale", "setTerminology"],
+  "evidenceToolIds": [
     "acceptSuggestion", "addBrushObject", "addObjectKind", "addTargetVolume", "closeVortexSuggestions", "createAttraction",
     "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput",
     "engagementRepeatLast", "engagementSubmit", "fillBuildTick", "focusSelection", "hoverSuggestion", "openAddObjectDialog",

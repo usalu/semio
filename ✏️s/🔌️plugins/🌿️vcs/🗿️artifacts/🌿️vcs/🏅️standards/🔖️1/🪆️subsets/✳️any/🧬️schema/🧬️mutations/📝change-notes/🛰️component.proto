@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.vcs.vcs.mutation;
+
+// 📝 Direct change-notes payload.
+message ChangeNotes {
+  string new_notes = 1;
+}

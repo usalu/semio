@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️set-trailer-entry",
+  "semanticKind": "set-trailer-entry",
+  "displayName": "Set Trailer Entry",
+  "emoji": "🧳️",
+  "aggregateVariant": "SetTrailerEntry",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "set-trailer-entry",
+  "binaryTag": 11,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -287,10 +287,10 @@ mod subject {
         move |ctx: &Context| {
             let row = ctx.doc_json()?;
             let (before, vector, after, outcome) = super::fixture_text(kind);
-            let base = snapshot_of(before, "before", kind)?;
+            let mut base = snapshot_of(before, "before", kind)?;
             let expected = snapshot_of(after, "after", kind)?;
             let vector = mutation_of(vector, "committed vector", kind)?;
-            seed_dag_working_scene_with(&base, &vector);
+            seed_dag_working_scene_with(&mut base, &vector);
             let mut refused = base.clone();
             let raised = apply_dag_mutation_reporting(&mut refused, &vector);
             vector_is_refused(kind, &row.str("code"), &parse_json(outcome)?, &raised, &base, &refused, &expected)?;

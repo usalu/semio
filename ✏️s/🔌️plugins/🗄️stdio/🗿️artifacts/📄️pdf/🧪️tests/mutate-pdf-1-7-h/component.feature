@@ -72,8 +72,6 @@ Feature: Apply every typed the PDF Healthcare Best Practices Guide (PDF/H) confo
     Then the oracle and the subject agree on the conformance-class projection
     Examples:
       | id                       | params                                                            |
-      | no-mutation              | {}                                                                |
-      | set-snapshot             | {"conformance": "stamped"}                                        |
       | set-info-title           | {"title": "Reuse of load-bearing timber components"}              |
       | set-info-author          | {"author": "the thesis author, named at last"}                    |
       | insert-javascript-action | {"script": "app.alert('this document phones home');"}             |
@@ -98,8 +96,6 @@ Feature: Apply every typed the PDF Healthcare Best Practices Guide (PDF/H) confo
     Then the conformance-class projection is the one the document started from
     Examples:
       | id                       | params                                                            |
-      | no-mutation              | {}                                                                |
-      | set-snapshot             | {"conformance": "stamped"}                                        |
       | set-info-title           | {"title": "Reuse of load-bearing timber components"}              |
       | set-info-author          | {"author": "the thesis author, named at last"}                    |
       | insert-javascript-action | {"script": "app.alert('this document phones home');"}             |

@@ -6,7 +6,7 @@ use protocol::Identified;
 
 use super::mutation::ReplaceWidget;
 
-pub async fn diff(payload: &ReplaceWidget, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
+pub fn diff(payload: &ReplaceWidget, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
     let mut scene = flow_working_scene(base);
     let Some(widget) = scene.widgets.iter_mut().find(|widget| widget.id() == &payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Widget \"{}\" does not exist.", payload.id), [payload.id.clone()]);

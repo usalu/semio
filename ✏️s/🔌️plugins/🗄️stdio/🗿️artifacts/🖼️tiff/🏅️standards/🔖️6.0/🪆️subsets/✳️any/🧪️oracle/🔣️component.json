@@ -6,8 +6,12 @@
       "ecosystem": "rust",
       "package": "image",
       "version": "0.25",
-      "capabilities": ["tiff-6-0-mutate"],
-      "comparisonProfiles": ["semantic-raster-v1"],
+      "capabilities": [
+        "tiff-6-0-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-raster-v1"
+      ],
       "license": "MIT OR Apache-2.0",
       "testOnly": true,
       "homepage": "https://github.com/image-rs/image",
@@ -32,18 +36,80 @@
       "subsetDirectoryName": "✳️any",
       "vectors": [
         {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📄set-snapshot",
-          "mutationDirectoryName": "📄set-snapshot",
+          "mutationId": "change-byte-order",
+          "sourceMutationDirectoryName": "🧭️change-byte-order",
+          "mutationDirectoryName": "🧭️change-byte-order",
           "scenarios": [
             {
-              "id": "stamps-a-software-tag-and-adds-an-image-description",
-              "directoryName": "🧪️stamps-a-software-tag-and-adds-an-image-description"
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-ifd",
+          "sourceMutationDirectoryName": "📥️insert-ifd",
+          "mutationDirectoryName": "📥️insert-ifd",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-ifd",
+          "sourceMutationDirectoryName": "📤️remove-ifd",
+          "mutationDirectoryName": "📤️remove-ifd",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-tag",
+          "sourceMutationDirectoryName": "🏷️replace-tag",
+          "mutationDirectoryName": "🏷️replace-tag",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-tag",
+          "sourceMutationDirectoryName": "🗑️remove-tag",
+          "mutationDirectoryName": "🗑️remove-tag",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-pixels",
+          "sourceMutationDirectoryName": "🟪️replace-pixels",
+          "mutationDirectoryName": "🟪️replace-pixels",
+          "scenarios": [
+            {
+              "id": "direct-behavior",
+              "directoryName": "🧪️tests"
             }
           ]
         }
       ],
-      "kinds": ["no-mutation", "set-snapshot", "set-byte-order", "insert-ifd", "remove-ifd", "set-tag", "remove-tag", "set-pixels"]
+      "kinds": [
+        "change-byte-order",
+        "insert-ifd",
+        "remove-ifd",
+        "replace-tag",
+        "remove-tag",
+        "replace-pixels"
+      ]
     }
   ]
 }

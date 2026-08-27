@@ -11,7 +11,7 @@ fn base_property_value(base: &JackSnapshot, entity: &EntityRef, key: &str) -> Op
     }
 }
 
-pub fn inverse(payload: &super::mutation::ChangeDataProperty, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
+pub fn inverse(payload: &super::ChangeDataProperty, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
     match base_property_value(base, &payload.entity, &payload.key) {
         Some(old) => vec![change_data_property(payload.entity.clone(), payload.key.clone(), old)],
         None => vec![remove_data_property(payload.entity.clone(), payload.key.clone())],

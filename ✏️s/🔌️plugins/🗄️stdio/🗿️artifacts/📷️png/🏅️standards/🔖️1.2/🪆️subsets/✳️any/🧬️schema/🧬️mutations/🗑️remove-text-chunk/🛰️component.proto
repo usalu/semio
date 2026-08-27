@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.png.mutation;
+// 🧬️ remove-text-chunk/RemoveTextChunk; complex fields follow the direct payload schema.
+message RemoveTextChunkMutation { uint64 index = 1; }

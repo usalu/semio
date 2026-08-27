@@ -68,7 +68,7 @@ pub async fn empty_camera() -> DslValue {
 
 /// 📭️ Fresh wires snapshot with empty fixtures.
 pub async fn empty_wires_snapshot() -> WiresSnapshot {
-    WiresSnapshot { wires_fixture: empty_wires_fixture(), content: wires_content_child_handle_and_cache(Vec::new(), Vec::new()), camera: empty_camera(), meta: DslValue::Null }
+    WiresSnapshot { wires_fixture: empty_wires_fixture(), content: wires_content_child_with_owner(Vec::new(), Vec::new()), camera: empty_camera(), meta: DslValue::Null }
 }
 //#endregion 🔖️EmptyFixtures
 
@@ -185,42 +185,23 @@ pub async fn wires_content_child_handle(nodes: &[DslValue], edges: &[DslValue]) 
 //#endregion 🔖️ContentBridge
 
 //#region 🔖️WorkingScene
-/// 🌱 Ephemeral, session-side working representation of the composed content child's live
-/// nodes/edges — NEVER persisted, NEVER a durable field on `WiresSnapshot` itself (matches the
-/// `EngineRep` contract: wholly derived, droppable at any instant, rebuilt from base). Exists because
-/// no `LinkResolver`/child-dispatch seam is wired into `ArtifactApp::handle` yet (checked directly
-/// against `🔌️plugin/🦀️component.rs` — same standing gap cad/lowpoly/writer/flow/dag's reports all
-/// document); until one exists, the only way a persisted content-addressed HANDLE can round-trip to
-/// real nodes/edges within one process is this cache, keyed by `WiresContentChild::child_id` —
-/// mirrors `DagWorkingScene`/`FlowWorkingScene`/`WriterWorkingScene`.
-///
-/// ⚠️ Same documented gap as dag/flow/lowpoly/writer: store-level undo/redo bypasses
-/// `ArtifactApp::handle` entirely, and a bare `parse_dsl`/`decode_pack` of persisted bytes recovers
-/// only the opaque handle unless the codec ALSO carries the real node/edge data and re-mints+caches on
-/// every decode (which this plugin's hand-rolled codec does — see `📸️snapshot/🦀️component.rs`).
-/// [`wires_working_scene`] fails soft (an empty scene) rather than panicking. A real fix needs
-/// child-document resolution, which no WASM-guest plugin in this repo has yet.
+/// 🌱 Ephemeral representation of one composed child's live nodes and edges. The value is attached
+/// to the exact `ArtifactChild`; it is never persisted, never global, and is retired with that owner.
 #[derive(Clone, Debug, Default)]
 pub struct WiresWorkingScene {
     pub nodes: Vec<DslValue>,
     pub edges: Vec<DslValue>,
 }
 
-thread_local! {
-    static WIRES_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, WiresWorkingScene>> = std::cell::RefCell::new(std::collections::HashMap::new());
+/// 📝 Transfers a decoded or test-provided scene into one exact child owner.
+pub fn materialize_wires_content(handle: &mut WiresContentChild, nodes: Vec<DslValue>, edges: Vec<DslValue>) {
+    handle.set_local_owner(std::sync::Arc::new(WiresWorkingScene { nodes, edges }));
 }
 
-/// 📝 Seeds the scratch cache for a handle — call whenever new nodes/edges content is about to become
-/// a document's `content` field (every mutation-diff/fixture/codec builder in this plugin does, via
-/// [`wires_content_child_handle_and_cache`]).
-pub async fn cache_wires_content(child_id: &str, nodes: Vec<DslValue>, edges: Vec<DslValue>) {
-    WIRES_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), WiresWorkingScene { nodes, edges }));
-}
-
-/// 🔎 Reads the cached live scene for a content child handle — an empty scene (never a panic) when
-/// nothing has cached it yet.
+/// 🔎 Retains this exact child's typed working owner. A wire-only handle fails soft until the host
+/// materializes its child document.
 pub async fn wires_working_scene_for_handle(handle: &WiresContentChild) -> WiresWorkingScene {
-    WIRES_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned()).unwrap_or_default()
+    handle.local_owner::<WiresWorkingScene>().map(|scene| scene.as_ref().clone()).unwrap_or_default()
 }
 
 /// 🔎 Reads the current document's live nodes/edges off its `content` child handle.
@@ -228,13 +209,11 @@ pub async fn wires_working_scene(snapshot: &WiresSnapshot) -> WiresWorkingScene 
     wires_working_scene_for_handle(&snapshot.content)
 }
 
-/// 🏗️ Mints a new content-addressed handle AND seeds the scratch cache with its scene in one call —
-/// the standard way every mutation-diff/fixture/codec builder in this plugin creates a `content` field
-/// value; never construct a handle without also caching, or [`wires_working_scene`] will read back empty.
-pub async fn wires_content_child_handle_and_cache(nodes: Vec<DslValue>, edges: Vec<DslValue>) -> WiresContentChild {
+/// 🏗️ Mints one content-addressed child and transfers its immutable working scene into that exact
+/// local owner. No matching identity in another snapshot can observe the payload.
+pub async fn wires_content_child_with_owner(nodes: Vec<DslValue>, edges: Vec<DslValue>) -> WiresContentChild {
     let handle = wires_content_child_handle(&nodes, &edges);
-    cache_wires_content(&handle.child_id, nodes, edges);
-    handle
+    handle.with_local_owner(std::sync::Arc::new(WiresWorkingScene { nodes, edges }))
 }
 
 /// 🔎 Reconstructs the FULL legacy board-shaped `DslValue`
@@ -280,6 +259,18 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 mod tests {
     use super::*;
 
+    trait WiresChildOwnerOracle {
+        fn expected() -> serde_json::Value;
+    }
+
+    struct SerdeJsonWiresChildOwnerOracle;
+
+    impl WiresChildOwnerOracle for SerdeJsonWiresChildOwnerOracle {
+        fn expected() -> serde_json::Value {
+            serde_json::from_str(include_str!("🧪️fixtures/🎯️child-owner-isolation.json")).expect("language-neutral Wires child-owner fixture")
+        }
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn artifact_kind_uses_the_wires_fixture_schema() {
         assert_eq!(artifact_kind().schema, MINDMAP_WIRES_SCHEMA);
@@ -322,6 +313,20 @@ mod tests {
         assert_eq!(handle_a.child_id, handle_b.child_id, "same content must mint the same handle");
         let handle_c = wires_content_child_handle(&[], &[]);
         assert_ne!(handle_a.child_id, handle_c.child_id, "different content must mint a different handle");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn wires_working_scene_is_owned_by_the_exact_snapshot_child() {
+        let owned = wires_content_child_with_owner(Vec::new(), Vec::new());
+        let wire = serde_json::to_vec(&owned).expect("Wires child wire identity");
+        let reconstructed: WiresContentChild = serde_json::from_slice(&wire).expect("Wires child wire roundtrip");
+        let observed = serde_json::json!({
+            "ownedHasScene": owned.local_owner::<WiresWorkingScene>().is_some(),
+            "wireIdentityMatches": owned == reconstructed,
+            "wireHasScene": reconstructed.local_owner::<WiresWorkingScene>().is_some(),
+        });
+
+        assert_eq!(observed, SerdeJsonWiresChildOwnerOracle::expected());
     }
 }
 //#endregion 🧪️Tests

@@ -22,7 +22,7 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
   on the way out and reports an Err rather than narrowing when a pixel's colour no longer has an
   entry. All 233 real colours are referenced — index 0 alone covers 5,659,668 of the image's
   5,975,040 pixels — so an edit to any of them is unencodable; seven spare entries no pixel resolves
-  to are what give set-palette-entry and remove-palette-entry a legal target. A full 256-entry table
+  to are what give replace-palette-entry and remove-palette-entry a legal target. A full 256-entry table
   (what most real 8-bpp BMP writers emit) would give that slack and then make insert-palette-entry
   unrepresentable, because 257 entries exceed what an 8-bit index can address. 240 leaves room for
   both. The rows below address entry 239 and append at 240, inside that spare range.
@@ -38,7 +38,7 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
   RGBA and losing the half three kinds operate on. `image` neither reads nor writes the row order or
   the two pixels-per-metre fields (its encoder hard-codes both to 0 and always stores bottom-up), so
   the oracle patches those onto its output at their fixed BMP v3 offsets, which is also why
-  set-header-fields is a real mutation here and not an accepted no-op.
+  change-header-fields is a real mutation here and not an accepted no-op.
 
   The subject fully parses the artifact into the typed `BmpSnapshot` and re-serializes from it. Both
   results are read back by the INDEPENDENT `image` decoder before the `semantic-raster-v1` profile
@@ -58,7 +58,7 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
   subject side the ONLY channel from input to output is decode_bmp → the DSL text codec → parse_dsl
   → encode_bmp, so a byte that survives did so by being modelled.
 
-  ⚠️ KNOWN OPEN DIVERGENCE — `mutate-set-pixel-data` (this case's parity ratio is recorded in the
+  ⚠️ KNOWN OPEN DIVERGENCE — `mutate-replace-pixel-data` (this case's parity ratio is recorded in the
   ticket, not here). The row fills the
   whole raster with rgb(200,40,40), a colour the committed 240-entry table has no entry for. The
   oracle answers by switching the document to 24-bit direct colour (`storage: direct`,
@@ -68,9 +68,9 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
   because the same snapshot shape is also what a palette edit that orphans a real pixel produces —
   and there a silent 24-bit fallback WOULD hide the edit. The declared kind ("Replaces the whole
   decoded canonical-RGBA `pixels` buffer") says nothing about storage, so both sides are
-  extrapolating from an under-specified verb. Resolving it means saying what `set-pixel-data` means
+  extrapolating from an under-specified verb. Resolving it means saying what `replace-pixel-data` means
   for an indexed BMP — most likely that it moves the document to direct colour, which then also
-  makes its inverse a full `set-snapshot` rather than a second `set-pixel-data` — and making both
+  makes its inverse a full `set-snapshot` rather than a second `replace-pixel-data` — and making both
   sides implement that. Do not weaken the profile, the row's parameters or the fixture to close it.
 
   @id-mutate
@@ -85,13 +85,11 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                    | params                                                            |
-      | no-mutation            | {}                                                                                 |
-      | set-snapshot           | {"width":3,"height":2,"fill":[64,128,192,255]}                                    |
-      | set-header-fields      | {"rowOrder":"top-down","xPixelsPerMeter":2835,"yPixelsPerMeter":2835}              |
+      | change-header-fields      | {"rowOrder":"top-down","xPixelsPerMeter":2835,"yPixelsPerMeter":2835}              |
       | insert-palette-entry   | {"index":240,"entry":{"b":10,"g":20,"r":30,"reserved":0}}                         |
       | remove-palette-entry   | {"index":239}                                                                     |
-      | set-palette-entry      | {"index":239,"entry":{"b":1,"g":2,"r":3,"reserved":0}}                            |
-      | set-pixel-data         | {"fill":[200,40,40,255]}                                                          |
+      | replace-palette-entry      | {"index":239,"entry":{"b":1,"g":2,"r":3,"reserved":0}}                            |
+      | replace-pixel-data         | {"fill":[200,40,40,255]}                                                          |
 
   @id-inverse
   @level-exhaustive
@@ -107,13 +105,11 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
     And that projection matches the untouched original document
     Examples:
       | id                    | params                                                            |
-      | no-mutation            | {}                                                                                 |
-      | set-snapshot           | {"width":3,"height":2,"fill":[64,128,192,255]}                                    |
-      | set-header-fields      | {"rowOrder":"top-down","xPixelsPerMeter":2835,"yPixelsPerMeter":2835}              |
+      | change-header-fields      | {"rowOrder":"top-down","xPixelsPerMeter":2835,"yPixelsPerMeter":2835}              |
       | insert-palette-entry   | {"index":240,"entry":{"b":10,"g":20,"r":30,"reserved":0}}                         |
       | remove-palette-entry   | {"index":239}                                                                     |
-      | set-palette-entry      | {"index":239,"entry":{"b":1,"g":2,"r":3,"reserved":0}}                            |
-      | set-pixel-data         | {"fill":[200,40,40,255]}                                                          |
+      | replace-palette-entry      | {"index":239,"entry":{"b":1,"g":2,"r":3,"reserved":0}}                            |
+      | replace-pixel-data         | {"fill":[200,40,40,255]}                                                          |
 
   @id-identity-round-trip
   @level-long

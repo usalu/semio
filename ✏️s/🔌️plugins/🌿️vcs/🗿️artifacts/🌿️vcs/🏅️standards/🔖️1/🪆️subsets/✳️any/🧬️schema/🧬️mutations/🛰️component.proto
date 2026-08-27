@@ -1,19 +1,20 @@
 syntax = "proto3";
 package semio.s.vcs.vcs.mutation;
 
-// 🧬️ VCS mutation schema — artifact-lane fields only.
+import "✏️rename-vcs/🛰️component.proto";
+import "🔢change-counter/🛰️component.proto";
+import "📝change-notes/🛰️component.proto";
+import "🚦change-status/🛰️component.proto";
+import "🏷️add-tag/🛰️component.proto";
+import "🗑️remove-tag/🛰️component.proto";
 
 message VcsMutation {
-  // @state artifact
-  string schema = 1;
-  // @state artifact
-  string title = 2;
-  // @state artifact
-  int64 counter = 3;
-  // @state artifact
-  string notes = 4;
-  // @state artifact
-  string status = 5;
-  // @state artifact
-  repeated string tags = 6;
+  oneof mutation {
+    RenameVcs rename_vcs = 1;
+    ChangeCounter change_counter = 2;
+    ChangeNotes change_notes = 3;
+    ChangeStatus change_status = 4;
+    AddTag add_tag = 5;
+    RemoveTag remove_tag = 6;
+  }
 }

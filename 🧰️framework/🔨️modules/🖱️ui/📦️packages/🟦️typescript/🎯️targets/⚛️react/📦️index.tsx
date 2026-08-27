@@ -5955,7 +5955,7 @@ export function composeTutorialUi(def: TutorialDefinition, atMs: number): Tutori
 export type TutorialSlice = {
   readonly forward: boolean;
   readonly events: readonly TutorialEvent[];
-  readonly artifact: readonly TutorialArtifactEvent[];
+  readonly document: readonly TutorialArtifactEvent[];
   readonly uiChanges: readonly TutorialUiChange[];
 };
 
@@ -5969,7 +5969,7 @@ export function tutorialSlice(def: TutorialDefinition, fromMs: number, toMs: num
   const hi = Math.max(fromMs, toMs);
   const inRange = (at: number) => at > lo && at <= hi;
   let events = def.tracks.events.filter((event) => inRange(event.at));
-  let artifact = def.tracks.artifact.filter((event) => inRange(event.at));
+  let document = def.tracks.document.filter((event) => inRange(event.at));
   let uiChanges: TutorialUiChange[] = [];
   for (const keyframe of def.tracks.ui) {
     if (!inRange(keyframe.at)) continue;
@@ -5977,10 +5977,10 @@ export function tutorialSlice(def: TutorialDefinition, fromMs: number, toMs: num
   }
   if (!forward) {
     events = [...events].reverse();
-    artifact = [...artifact].reverse();
+    document = [...document].reverse();
     uiChanges = [...uiChanges].reverse();
   }
-  return { forward, events, artifact, uiChanges };
+  return { forward, events, document, uiChanges };
 }
 
 /** @emoji ✅️ TS port of Rust `validate_tutorial` — light structural sanity check shared by the recorder before download; does not validate referenced action/command/element ids (no `AppDefinition` in scope here). Returns the first error found, or `null`. */
@@ -6001,7 +6001,7 @@ export function validateTutorial(def: TutorialDefinition): string | null {
     () => sortedByAt("video", def.tracks.video, (c) => c.at),
     () => sortedByAt("events", def.tracks.events, (e) => e.at),
     () => sortedByAt("ui", def.tracks.ui, (k) => k.at),
-    () => sortedByAt("artifact", def.tracks.artifact, (e) => e.at),
+    () => sortedByAt("document", def.tracks.document, (e) => e.at),
     () => sortedByAt("camera", def.tracks.camera, (k) => k.at),
     () => sortedByAt("gestures", def.tracks.gestures, (c) => c.at),
   ];
@@ -21807,7 +21807,7 @@ if (treeVitest) {
       durationMs: 10_000,
       chapters: [{ id: "start", at: 0, title: "Start" }],
       base: { exampleId: "concrete-forest", ui: { activeUtilityByWindowId: {}, activePanelTabByGroup: {}, interactionSelection: {}, expandedTreeIds: [], commandPanelOpen: false }, cameras: [] },
-      tracks: { narration: [], video: [], events: [], ui: [], artifact: [], camera: [], gestures: [] },
+      tracks: { narration: [], video: [], events: [], ui: [], document: [], camera: [], gestures: [] },
     });
 
     it("formatTutorialTime formats mm:ss and floors sub-second/negative offsets", () => {
@@ -21901,7 +21901,7 @@ if (treeVitest) {
         ...base,
         tracks: {
           ...base.tracks,
-          artifact: [
+          document: [
             { at: 100, kind: { kind: "edit", forwards: [{ op: "add", id: "a" }], backwards: [{ op: "remove", id: "a" }] } },
             { at: 200, kind: { kind: "edit", forwards: [{ op: "add", id: "b" }], backwards: [{ op: "remove", id: "b" }] } },
           ],
@@ -21909,15 +21909,15 @@ if (treeVitest) {
       };
       const forward = tutorialSlice(def, 0, 250);
       expect(forward.forward).toBe(true);
-      expect(forward.artifact).toHaveLength(2);
-      expect((forward.artifact[0].kind as { forwards: readonly { id: string }[] }).forwards[0].id).toBe("a");
+      expect(forward.document).toHaveLength(2);
+      expect((forward.document[0].kind as { forwards: readonly { id: string }[] }).forwards[0].id).toBe("a");
 
       const backward = tutorialSlice(def, 250, 0);
       expect(backward.forward).toBe(false);
-      expect(backward.artifact).toHaveLength(2);
-      expect((backward.artifact[0].kind as { backwards: readonly { id: string }[] }).backwards[0].id).toBe("b");
+      expect(backward.document).toHaveLength(2);
+      expect((backward.document[0].kind as { backwards: readonly { id: string }[] }).backwards[0].id).toBe("b");
 
-      expect(tutorialSlice(def, 250, 250).artifact).toHaveLength(0);
+      expect(tutorialSlice(def, 250, 250).document).toHaveLength(0);
     });
 
     it("validateTutorial rejects unsorted/out-of-range tracks and passes a minimal valid tutorial", () => {

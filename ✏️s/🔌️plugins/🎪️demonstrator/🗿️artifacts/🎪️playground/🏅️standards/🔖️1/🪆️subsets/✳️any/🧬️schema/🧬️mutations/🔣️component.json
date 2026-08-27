@@ -1,15 +1,15 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/demonstrator/playground/mutation.json",
   "title": "PlaygroundMutation",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema"
+    "ChangeSchema"
   ],
   "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    "ChangeSchema": {
+      "$ref": "https://semio.tech/schema/s/demonstrator/playground/mutation/change-schema.json"
     }
   }
 }

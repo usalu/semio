@@ -1,5 +1,5 @@
 //! 🔺️ Diff fragment yielded by `ChangeUri`.
-use super::mutation::ChangeUri;
+use super::ChangeUri;
 use crate::artifacts::writer::WriterDiff;
 use crate::artifacts::writer::WriterSnapshot;
 

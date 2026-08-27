@@ -22,6 +22,9 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
+#[path = "🪪️identity/🦀️component.rs"]
+mod identity;
+
 pub fn render(labels: &Procedural3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let sections = flow::flow_palette_catalogue_sections();
     let mut items = semio_framework_plugin::UiFixedList::default();
@@ -30,7 +33,7 @@ pub fn render(labels: &Procedural3dLabels) -> semio_framework_plugin::UiAssembly
             let action_kind = if item.kind == "neuron" { format!("neuron|{}", item.neuron_kind.as_deref().unwrap_or("math.add")) } else { item.kind.clone() };
             let icon = if item.icon.starts_with("emoji:") { "box" } else { item.icon.as_str() };
             let args = crate::ui_value_map([("kind", crate::ui_value_text(&action_kind)?)])?;
-            let mut node = tree_item_with_action(format!("procedural-play-catalogue.{}", item.neuron_kind.as_deref().unwrap_or(&item.kind)), item.name.clone(), None, ActionFactory::new(PROCEDURAL_3D_PLAY_APP_ID).action("addWidget", Some(args))?)?;
+            let mut node = tree_item_with_action(identity::item_key(&item.kind, item.neuron_kind.as_deref(), item.format.as_deref(), item.action.as_deref()), item.name.clone(), None, ActionFactory::new(PROCEDURAL_3D_PLAY_APP_ID).action("addWidget", Some(args))?)?;
             if let Component::TreeItem(props) = &mut node.component {
                 props.icon = Some(crate::ui_text(icon)?);
             }

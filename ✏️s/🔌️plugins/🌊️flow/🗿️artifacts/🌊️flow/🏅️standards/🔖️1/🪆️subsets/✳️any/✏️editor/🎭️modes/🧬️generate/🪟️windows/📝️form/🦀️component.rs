@@ -14,7 +14,7 @@ pub const FLOW_PLAY_BODY_GENERATE_FORM: &str = "flow.play.generate-form";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: FLOW_PLAY_WINDOW_GENERATE_FORM.into(),
         label: LocalizedLabel::native("Form", "Formular"),
@@ -35,7 +35,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(fixture: &FlowSnapshot, config: &FlowConfig) -> UiNode {
+pub fn render(fixture: &FlowSnapshot, config: &FlowConfig) -> UiNode {
     let spec = flow_fixture_to_form_spec(&fixture.to_fixture());
     let generation = config.generation();
     let Some(active) = selected_generation(&generation) else {

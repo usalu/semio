@@ -1,22 +1,13 @@
-# 🧬️ JpgMutation union — mirrors 🦀️component.rs's #[serde(tag = "mutation")] enum. Modeled as
-# one type with a discriminant + every variant's optional payload fields (GraphQL has no native
-# tagged union for input types).
-
-type JpgMutation {
-  mutation: String!
-  snapshot: JpgSnapshot
-  version: [Int!]
-  densityUnits: JfifDensityUnits
-  xDensity: Int
-  yDensity: Int
-  thumbnail: JfifThumbnail
-  table: JpgQuantTable
-  id: Int
-  huffmanTable: JpgHuffmanTable
-  key: JpgHuffmanTableKey
-  restartInterval: Int
-  index: Int
-  segment: JpgSegment
-  pixels: [Int!]
-  quality: Int
-}
+# 🧬️ Transparent JpgMutation descriptor assembly.
+# change-jfif-header/ChangeJfifHeader: 📐️change-jfif-header/🔗️component.graphql
+# replace-quant-table/ReplaceQuantTable: 📊️replace-quant-table/🔗️component.graphql
+# remove-quant-table/RemoveQuantTable: 📤️remove-quant-table/🔗️component.graphql
+# replace-huffman-table/ReplaceHuffmanTable: 🌳️replace-huffman-table/🔗️component.graphql
+# remove-huffman-table/RemoveHuffmanTable: 🪓️remove-huffman-table/🔗️component.graphql
+# change-restart-interval/ChangeRestartInterval: 🔁️change-restart-interval/🔗️component.graphql
+# insert-other-segment/InsertOtherSegment: 📥️insert-other-segment/🔗️component.graphql
+# remove-other-segment/RemoveOtherSegment: 🗑️remove-other-segment/🔗️component.graphql
+# replace-pixels/ReplacePixels: 🟪️replace-pixels/🔗️component.graphql
+# change-re-encode-quality/ChangeReEncodeQuality: 🎚️change-re-encode-quality/🔗️component.graphql
+enum JpgMutationKind { CHANGE_JFIF_HEADER REPLACE_QUANT_TABLE REMOVE_QUANT_TABLE REPLACE_HUFFMAN_TABLE REMOVE_HUFFMAN_TABLE CHANGE_RESTART_INTERVAL INSERT_OTHER_SEGMENT REMOVE_OTHER_SEGMENT REPLACE_PIXELS CHANGE_RE_ENCODE_QUALITY }
+input JpgMutation { change_jfif_header: ChangeJfifHeaderMutation replace_quant_table: ReplaceQuantTableMutation remove_quant_table: RemoveQuantTableMutation replace_huffman_table: ReplaceHuffmanTableMutation remove_huffman_table: RemoveHuffmanTableMutation change_restart_interval: ChangeRestartIntervalMutation insert_other_segment: InsertOtherSegmentMutation remove_other_segment: RemoveOtherSegmentMutation replace_pixels: ReplacePixelsMutation change_re_encode_quality: ChangeReEncodeQualityMutation }

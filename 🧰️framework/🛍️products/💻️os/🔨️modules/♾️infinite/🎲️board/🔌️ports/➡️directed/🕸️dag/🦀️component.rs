@@ -5338,6 +5338,7 @@ impl DagHost {
             let (x0, y0, x1, y1) = slider_track_bounds(&node);
             sliders.push(serde_json::json!({
                 "widgetId": fixture_node.id,
+                "label": node.name,
                 "value": value,
                 "min": min,
                 "max": max,
@@ -6885,6 +6886,28 @@ mod tests {
     }
 
     #[test]
+    fn dag_host_slider_overlay_preserves_language_neutral_field_labels() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️slider-overlay.json")).unwrap();
+        for case in fixture["cases"].as_array().unwrap() {
+            let row = &case["row"];
+            let host = DagHost::from_fixture_without_layout(DagFixture {
+                schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
+                nodes: vec![DagNodeSpec {
+                    id: row["widgetId"].as_str().unwrap().into(), name: row["label"].as_str().unwrap().into(),
+                    abbreviation: "short".into(), width: 120.0, height: 32.0,
+                    kind: DagNodeKind::Slider {
+                        min: row["min"].as_f64().unwrap(), max: row["max"].as_f64().unwrap(), step: row["step"].as_f64().unwrap(), value: row["value"].as_f64().unwrap(),
+                        output: IoPortSpec { id: "out".into(), label: "internal-output".into(), ..Default::default() },
+                    },
+                    ..Default::default()
+                }], edges: vec![],
+            });
+            let actual: serde_json::Value = serde_json::from_str(&host.slider_overlay_state_json().unwrap()).unwrap();
+            for key in ["widgetId", "label", "value", "min", "max", "step"] { assert_eq!(actual["sliders"][0][key], row[key], "{key}"); }
+        }
+    }
+
+    #[test]
     fn dag_host_slider_overlay_state_json_includes_slider_track() {
         let mut host = DagHost::from_fixture_without_layout(DagFixture {
             schema: "dag.fixture".into(),
@@ -6908,6 +6931,7 @@ mod tests {
         let sliders = raw["sliders"].as_array().expect("sliders");
         assert_eq!(sliders.len(), 1);
         assert_eq!(sliders[0]["widgetId"], "slider");
+        assert_eq!(sliders[0]["label"], "Radius");
         assert_eq!(sliders[0]["value"], 3.0);
         assert_eq!(sliders[0]["min"], 0.0);
         assert_eq!(sliders[0]["max"], 10.0);

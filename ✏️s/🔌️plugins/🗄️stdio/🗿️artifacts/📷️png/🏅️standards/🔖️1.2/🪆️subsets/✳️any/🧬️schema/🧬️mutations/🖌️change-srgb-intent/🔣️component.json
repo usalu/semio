@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️change-srgb-intent",
+  "semanticKind": "change-srgb-intent",
+  "displayName": "Change Srgb Intent",
+  "emoji": "🖌️",
+  "aggregateVariant": "ChangeSrgbIntent",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "change-srgb-intent",
+  "binaryTag": 7,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

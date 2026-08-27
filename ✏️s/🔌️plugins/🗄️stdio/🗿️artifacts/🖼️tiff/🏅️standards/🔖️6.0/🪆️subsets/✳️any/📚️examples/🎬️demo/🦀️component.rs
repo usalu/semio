@@ -93,7 +93,7 @@ mod tests {
                     _ => None,
                 })
                 .unwrap_or(1);
-            vec![crate::artifacts::tiff::TiffMutation::SetTag { ifd_index: 0, tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![width + 1]) }]
+            vec![crate::artifacts::tiff::TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![width + 1]) })]
         }
 
         async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {

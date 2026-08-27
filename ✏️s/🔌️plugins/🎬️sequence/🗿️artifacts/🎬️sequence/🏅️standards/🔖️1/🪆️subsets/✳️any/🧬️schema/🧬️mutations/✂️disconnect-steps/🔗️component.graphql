@@ -1,0 +1,4 @@
+# ✂️ disconnect-steps direct payload.
+input DisconnectStepsInput {
+  id: String!
+}

@@ -1,11 +1,12 @@
 //! ✏️ Txt editor — the FIRST authored `ArtifactEditor` surface for `s.stdio.txt@utf-8/*` (ticket
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET). One real window, `🪟️main`
-//! (`TextWindowKit`), directly replacing the whole document buffer through `TxtMutation::SetSnapshot`
+//! (`TextWindowKit`), replacing the document through the direct line, line-ending, and trailing-newline mutations
 //! — a `replace-text` command is inherently whole-buffer, so per-line `InsertLine`/`SetLine` are not
 //! reachable through this window (documented, not silently dropped: a future line-addressable editor
 //! could target those directly).
 
-use crate::artifacts::txt::{TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+use crate::artifacts::txt::schema::mutations::{InsertLineMutation, RemoveLineMutation, SetTrailingNewlineMutation};
+use crate::artifacts::txt::{STDIO_TXT_DOCUMENT_SCHEMA, TxtMutation, TxtSnapshot};
 use crate::editor::txt::modes::edit;
 use crate::editor::txt::modes::edit::windows::main;
 use semio_framework_plugin::{
@@ -116,8 +117,16 @@ impl ArtifactEditor for TxtEditor {
     ) -> Result<Emit<Self::Mutation>, Fault> {
         let TxtEditorCommand::ReplaceText { text } = command;
         let (lines, trailing_newline) = split_text(text);
-        let snapshot = TxtSnapshot { schema: doc.snapshot.schema.clone(), lines, trailing_newline, line_ending: doc.snapshot.line_ending };
-        Ok(Emit { artifact_mutations: vec![TxtMutation::SetSnapshot { snapshot }], description: Some("Replace text".into()), ..Default::default() })
+        let mut mutations = Vec::new();
+        if doc.snapshot.trailing_newline {
+            mutations.push(TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: false }));
+        }
+        mutations.extend((0..doc.snapshot.lines.len()).rev().map(|index| TxtMutation::RemoveLine(RemoveLineMutation { index })));
+        mutations.extend(lines.into_iter().enumerate().map(|(index, text)| TxtMutation::InsertLine(InsertLineMutation { index, text })));
+        if trailing_newline {
+            mutations.push(TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: true }));
+        }
+        Ok(Emit { artifact_mutations: mutations, description: Some("Replace text".into()), ..Default::default() })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

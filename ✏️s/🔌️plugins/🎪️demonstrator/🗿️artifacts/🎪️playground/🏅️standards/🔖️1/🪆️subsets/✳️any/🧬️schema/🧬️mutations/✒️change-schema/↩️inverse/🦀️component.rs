@@ -1,6 +1,6 @@
 //! ↩️ `change-schema` — undo reconstructed from BASE state.
 
-use super::mutation::ChangeSchema;
+use super::ChangeSchema;
 use crate::artifacts::playground::standards::v1::subsets::any::schema::{mutations::PlaygroundMutation, snapshot::PlaygroundSnapshot};
 
 //#region 🔖️Inverse

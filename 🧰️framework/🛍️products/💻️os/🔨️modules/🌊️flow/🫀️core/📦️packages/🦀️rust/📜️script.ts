@@ -2,15 +2,39 @@
 /** 🦀️ `@semio-tech/flow-core` router: `bun ./📜️script.ts <wasm|test>` — wasm-bindgen package for the flow engine session. */
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runCargo, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
 const FAMILY_RS_DIR = join(import.meta.dir, "../../../📦️packages/🦀️rust");
 const CORE_PKG_DIR = join(import.meta.dir, "../../pkg");
 const BROWSER_BRIDGE_DIR = join(import.meta.dir, "../../../🌉️wasm/📦️packages/🟨️javascript");
 
+//#region 📝️BrowserDeclarations
+async function publishBrowserDeclarations(): Promise<void> {
+  const { writeFlowBrowserDeclaration } = await import("../../../🌉️wasm/📦️packages/🟨️javascript/📜️script.ts");
+  const source = writeFlowBrowserDeclaration();
+  mkdirSync(CORE_PKG_DIR, { recursive: true });
+  copyFileSync(source, join(CORE_PKG_DIR, "🟨️flow-browser.d.ts"));
+  const manifestPath = join(CORE_PKG_DIR, "package.json");
+  if (existsSync(manifestPath)) {
+    const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+    manifest.files = [...new Set([...(manifest.files ?? []), "🟨️flow-browser.d.ts"])];
+    manifest.exports = { ...(manifest.exports ?? {}), "./🟨️flow-browser.js": { types: "./🟨️flow-browser.d.ts", import: "./🟨️flow-browser.js" } };
+    writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+  }
+}
+
+class BrowserDeclarationsScript extends BundleScript {
+  async run(): Promise<void> {
+    await publishBrowserDeclarations();
+    const { testFlowBrowserDeclaration } = await import("../../../🌉️wasm/📦️packages/🟨️javascript/📜️script.ts");
+    await testFlowBrowserDeclaration();
+  }
+}
+//#endregion 📝️BrowserDeclarations
+
 class WasmScript extends BundleScript {
-  run(): void {
-    runWasmPackWebBuild({
+  async run(): Promise<void> {
+    await runWasmPackWebBuild({
       rsDir: FAMILY_RS_DIR,
       skipEnvVar: "FLOW_CORE_SKIP_WASM_BUILD",
       logPrefix: "os/flow/core",
@@ -41,6 +65,7 @@ class WasmScript extends BundleScript {
     manifest.files = [...new Set([...manifest.files, "🟨️flow-browser.js", "🟨️flow-host.js"])];
     manifest.exports = { ...(manifest.exports ?? {}), ".": { types: "./flow_core.d.ts", import: "./flow_core.js" }, "./🟨️flow-browser.js": "./🟨️flow-browser.js", "./🟨️flow-host.js": "./🟨️flow-host.js" };
     writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+    await publishBrowserDeclarations();
     const snippets = join(familyPkg, "snippets");
     if (existsSync(snippets)) {
       const destSnippets = join(CORE_PKG_DIR, "snippets");
@@ -50,12 +75,23 @@ class WasmScript extends BundleScript {
   }
 }
 
-class TestScript extends BundleScript {
-  run(segments: string[]): void {
-    runCargoTestBudgeted(["semio-framework-os-flow"], this.repoRoot, segments);
+class CheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    await runCargo(["check", "--manifest-path", join(FAMILY_RS_DIR, "Cargo.toml"), ...segments], this.repoRoot);
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("test", TestScript);
+class TestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    await runCargoTestBudgeted(["semio-framework-os-flow"], this.repoRoot, rest);
+  }
+}
+
+class SourceTestScript extends BundleScript {
+  async run(): Promise<void> { await import("../../../🖥️host/🧹️retirement/📜️script.ts"); }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("check", CheckScript).register("test", TestScript).register("test-source", SourceTestScript).register("declarations", BrowserDeclarationsScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "wasm" });

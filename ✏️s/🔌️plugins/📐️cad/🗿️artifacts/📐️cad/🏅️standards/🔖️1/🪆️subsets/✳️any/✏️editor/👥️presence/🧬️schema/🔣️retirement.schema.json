@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CAD Presence Retirement Laws",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["grant", "cases", "storeCases"],
+  "properties": {
+    "grant": { "type": "object", "additionalProperties": false, "required": ["maximumItems", "maximumBytes"], "properties": { "maximumItems": { "const": 1 }, "maximumBytes": { "const": 4096 } } },
+    "cases": { "type": "array", "minItems": 3, "items": { "type": "object", "additionalProperties": false, "required": ["name", "activeUtility", "engagementStep", "engagementPane", "expectedBytes"], "properties": { "name": { "type": "string" }, "activeUtility": { "$ref": "#/definitions/text" }, "engagementStep": { "$ref": "#/definitions/text" }, "engagementPane": { "anyOf": [{ "type": "null" }, { "$ref": "#/definitions/text" }] }, "expectedBytes": { "type": "integer", "minimum": 0 } } } },
+    "storeCases": { "type": "array", "minItems": 2, "items": { "type": "object", "additionalProperties": false, "required": ["name", "local", "peers", "sharedRoot", "expectedBytes"], "properties": { "name": { "type": "string" }, "local": { "type": "string" }, "peers": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["actor", "presence"], "properties": { "actor": { "type": "string", "minLength": 1 }, "presence": { "type": "string" } } } }, "sharedRoot": { "type": "boolean" }, "expectedBytes": { "type": "integer", "minimum": 0 } } } }
+  },
+  "definitions": { "text": { "type": "object", "additionalProperties": false, "required": ["unit", "repeat"], "properties": { "unit": { "type": "string" }, "repeat": { "type": "integer", "minimum": 0 } } } }
+}

@@ -1,0 +1,4 @@
+# 🗂️ Direct set-dpart-root GraphQL payload.
+input SetDpartRootMutationInput {
+  job: String!
+}

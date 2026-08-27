@@ -11,6 +11,12 @@ use std::collections::HashMap;
 
 pub const PLAYBOOK_DOCUMENT_SCHEMA: &str = "playbook.program";
 
+//#region 🧬️SharedGenerationRoot
+#[path = "🧬️generation/🦀️component.rs"]
+pub mod generation;
+pub use generation::{GenerationPlayRoot, GenerationRootRetirement};
+//#endregion 🧬️SharedGenerationRoot
+
 pub use builder_kit::{build_palette, build_playbook_list_scene, playbook_builder_action, render_playbook_builder, PlaybookBuilderConfig, PlaybookBuilderLabels, PLAYBOOK_BUILDER_LABELS_EN};
 /// 🧬️ Flattens `generation_forms`/`builder_kit` onto the crate root so callers keep the flat
 /// `playbook::*` import surface (mirrors how `semio-framework-plugin` flattened these before the move).
@@ -830,7 +836,7 @@ pub mod generation_forms {
                         description: None,
                         required: None,
                         placeholder: None,
-                        default: Some(json!(1.0)),
+                        default: Some(DslValue::Number(1.0)),
                         min: Some(0.0),
                         max: Some(10.0),
                         step: Some(0.5),
@@ -1071,7 +1077,7 @@ mod tests {
                     description: None,
                     required: None,
                     placeholder: None,
-                    default: Some(serde_json::json!(false)),
+                    default: Some(DslValue::Bool(false)),
                     min: None,
                     max: None,
                     step: None,
@@ -1093,7 +1099,7 @@ mod tests {
                     description: None,
                     required: None,
                     placeholder: None,
-                    default: Some(serde_json::json!(5)),
+                    default: Some(DslValue::Number(5.0)),
                     min: Some(1.0),
                     max: Some(50.0),
                     step: Some(1.0),
@@ -1153,11 +1159,7 @@ mod tests {
             description: Some("How many people?".into()),
             required: Some(true),
             placeholder: Some("Enter a number".into()),
-            // 🔢️ `default`/`params` bind through the engine's schema-less `Shape::Value` (arbitrary
-            // `serde_json::Value`), whose `DslValue::Number` is `f64`-only — a bare JSON integer
-            // literal round-trips back as a float (`5` → `5.0`), so DSL-round-tripped fixtures use
-            // float literals throughout to stay byte-for-byte equal after `parse_dsl(print_dsl(_))`.
-            default: Some(serde_json::json!(5.0)),
+            default: Some(DslValue::Number(5.0)),
             min: Some(1.0),
             max: Some(50.0),
             step: Some(1.0),
@@ -1169,11 +1171,11 @@ mod tests {
             src: Some("https://example.com/img.png".into()),
             accept: Some("image/*".into()),
             fixture_slug: Some("hexagonal-mushroom-column".into()),
-            params: Some(serde_json::json!({ "height": 6.0, "nested": { "a": [1.0, 2.0, "three\"quoted"] } })),
+            params: Some(DslValue::Object(vec![("height".into(), DslValue::Number(6.0)), ("nested".into(), DslValue::Object(vec![("a".into(), DslValue::Array(vec![DslValue::Number(1.0), DslValue::Number(2.0), DslValue::String("three\"quoted".into())]))]))])),
             condition: Some(PlaybookExpr::And {
                 items: vec![
                     PlaybookExpr::Truthy { expr: Box::new(PlaybookExpr::Var { name: "show-team-size".into() }) },
-                    PlaybookExpr::Eq { left: Box::new(PlaybookExpr::Var { name: "mode".into() }), right: Box::new(PlaybookExpr::Const { value: serde_json::json!("advanced") }) },
+                    PlaybookExpr::Eq { left: Box::new(PlaybookExpr::Var { name: "mode".into() }), right: Box::new(PlaybookExpr::Const { value: DslValue::String("advanced".into()) }) },
                     PlaybookExpr::Or { items: vec![PlaybookExpr::Var { name: "a".into() }, PlaybookExpr::Var { name: "b".into() }] },
                 ],
             }),

@@ -1,47 +1,8 @@
 syntax = "proto3";
-package semio.s_stdio_bmp.mutation;
-
-import "s_stdio_bmp/snapshot.proto";
-
-message SetSnapshot { semio.s_stdio_bmp.snapshot.BmpSnapshot snapshot = 1; }
-
-message SetHeaderFields {
-  optional uint32 header_size = 1;
-  optional uint32 width = 2;
-  optional uint32 height = 3;
-  optional semio.s_stdio_bmp.snapshot.BmpRowOrder row_order = 4;
-  optional uint32 planes = 5;
-  optional uint32 bits_per_pixel = 6;
-  optional uint32 compression = 7;
-  optional uint32 image_size = 8;
-  optional int32 x_pixels_per_meter = 9;
-  optional int32 y_pixels_per_meter = 10;
-  optional uint32 colors_used = 11;
-  optional uint32 colors_important = 12;
-}
-
-message InsertPaletteEntry {
-  uint64 index = 1;
-  semio.s_stdio_bmp.snapshot.BmpPaletteEntry entry = 2;
-}
-
-message RemovePaletteEntry { uint64 index = 1; }
-
-message SetPaletteEntry {
-  uint64 index = 1;
-  semio.s_stdio_bmp.snapshot.BmpPaletteEntry entry = 2;
-}
-
-message SetPixelData { bytes pixels = 1; }
-
-message BmpMutation {
-  oneof mutation {
-    bool no_mutation = 1;
-    SetSnapshot set_snapshot = 2;
-    SetHeaderFields set_header_fields = 3;
-    InsertPaletteEntry insert_palette_entry = 4;
-    RemovePaletteEntry remove_palette_entry = 5;
-    SetPaletteEntry set_palette_entry = 6;
-    SetPixelData set_pixel_data = 7;
-  }
-}
+package stdio.bmp.mutation;
+import "📐️change-header-fields/🛰️component.proto";
+import "📥️insert-palette-entry/🛰️component.proto";
+import "📤️remove-palette-entry/🛰️component.proto";
+import "🎨️replace-palette-entry/🛰️component.proto";
+import "🟪️replace-pixel-data/🛰️component.proto";
+message BmpMutation { oneof mutation { ChangeHeaderFieldsMutation change_header_fields = 2; InsertPaletteEntryMutation insert_palette_entry = 3; RemovePaletteEntryMutation remove_palette_entry = 4; ReplacePaletteEntryMutation replace_palette_entry = 5; ReplacePixelDataMutation replace_pixel_data = 6; } }

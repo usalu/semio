@@ -95,7 +95,7 @@ mod tests {
         let a = DagNodeSpec { id: "a".into(), ..Default::default() };
         let b = DagNodeSpec { id: "b".into(), ..Default::default() };
         let edges = vec![DagFixtureEdge { id: "e1".into(), source: "a".into(), target: "b".into(), ..Default::default() }];
-        let content = crate::artifacts::dag::dag_content_child_handle_and_cache(vec![a, b], edges);
+        let content = crate::artifacts::dag::dag_content_child_with_owner(vec![a, b], edges);
         DagSnapshot { schema: "dag.dag".into(), content }
     }
 

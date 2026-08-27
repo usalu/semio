@@ -1,0 +1,19 @@
+# 🌱 create-step direct payload.
+input CreateStepInput {
+  step: SequenceStepInput!
+}
+
+input SequenceStepInput {
+  id: String!
+  kind: String!
+  params: JSON
+  x: Float
+  y: Float
+  slot: SlotRefInput
+  collapsed: Boolean
+}
+
+input SlotRefInput {
+  owner: String!
+  name: String!
+}

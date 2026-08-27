@@ -1,5 +1,5 @@
-; abnf stdio.jpg mutations (binary representation)
-document = json-payload
-; json-payload = UTF-8 JSON encoding of JpgMutation -- `OpBinary::encode_op`/`decode_op` go
-; through `serde_json::to_vec`/`from_slice` directly (see the sibling JSON Schema facet).
-json-payload = *OCTET
+; Direct binary frame: version, descriptor tag, leaf-owned payload.
+; change-jfif-header=2, replace-quant-table=3, remove-quant-table=4, replace-huffman-table=5, remove-huffman-table=6, change-restart-interval=7, insert-other-segment=8, remove-other-segment=9, replace-pixels=10, change-re-encode-quality=11
+mutation = %x01 tag *OCTET
+tag = %x02 / %x03 / %x04 / %x05 / %x06 / %x07 / %x08 / %x09 / %x0A / %x0B
+OCTET = %x00-FF

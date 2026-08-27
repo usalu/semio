@@ -1,26 +1,11 @@
-# 🧬️ Curate mutation schema — the closed semantic vocabulary derived from `CurateSnapshot.curated`
-# (the id-keyed curation selection). `stock` is not represented: it is a bulk-populated reference
-# catalogue, never hand-authored item-by-item (see the mutation dispatch enum's own doc comment).
+# 🗂️ Sourcing curate direct mutation aggregate.
+input CuratedItemInput { objectId: String!, count: Int! }
+input CreateCuratedItemInput { item: CuratedItemInput! }
+input DeleteCuratedItemInput { objectId: String! }
+input ChangeCuratedItemCountInput { objectId: String!, newCount: Int! }
 
-type CuratedItem {
-  objectId: String!
-  count: Int!
+input SourcingMutationInput {
+  createCuratedItem: CreateCuratedItemInput
+  deleteCuratedItem: DeleteCuratedItemInput
+  changeCuratedItemCount: ChangeCuratedItemCountInput
 }
-
-type CreateCuratedItem {
-  mutation: String!
-  item: CuratedItem!
-}
-
-type DeleteCuratedItem {
-  mutation: String!
-  objectId: String!
-}
-
-type ChangeCuratedItemCount {
-  mutation: String!
-  objectId: String!
-  newCount: Int!
-}
-
-union SourcingMutation = CreateCuratedItem | DeleteCuratedItem | ChangeCuratedItemCount

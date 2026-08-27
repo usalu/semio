@@ -37,7 +37,7 @@ No production test or mutating command was run. All commands in this packet were
 | standard directory / value | `🔖️1` / `1` |
 | subset directory / value | `✳️any` / `any` |
 | rendered profile | `🪆️1-any` |
-| source catalog root | `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions` |
+| historical source catalog root | [Frozen `/projections/0/sourceRoot` coordinate](../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️cad-draw-path-projection/🔣️.json#/projections/0/sourceRoot) |
 
 The current population gives no evidence that this catalog is profile-independent: it is physically owned by standard `1` and subset `any`, and no catalog manifest declares independence. The destination must therefore retain the compact profile.
 
@@ -226,10 +226,9 @@ The literal `pathBudgetReserve.bytes` above is the **suffix cost** (133), consis
 
 ### Exact owner and fixed manifest
 
-```text
-source command root:
-✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down
+Historical source command root: [frozen Draw `/projections/1/sourceRoot` coordinate](../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️cad-draw-path-projection/🔣️.json#/projections/1/sourceRoot).
 
+```text
 242-byte fixed Nx manifest:
 <source command root>/🔄️fsm/✨️macros/📦️packages/🦀️rust/📋️project.json
 ```

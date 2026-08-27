@@ -61,7 +61,7 @@ impl ArtifactEditor for PngEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            PngEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![PngMutation::SetPixels { pixels: pixels.clone() }])),
+            PngEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![PngMutation::ReplacePixels(crate::artifacts::png::schema::mutations::ReplacePixelsMutation { pixels: pixels.clone() })])),
         }
     }
 

@@ -23,8 +23,7 @@ pub use crate::artifacts::program::schema::snapshot::ProgramSnapshot;
 /// Every one of the four existing `create`/`replace`/`delete`/`rename` mutation triads for
 /// `benchmarks` keeps its exact public payload/wire shape (`CreateBenchmarkRecord`,
 /// `ReplaceBenchmarkRecord`, …) — only the internal `🔺️diff`/`↩️inverse` bodies are rewired to read
-/// the working-scene cache below and re-mint a fresh content-addressed child handle, mirroring
-/// `➗️mathematical`'s `MATH_SCRATCH`/`📕️norm`'s `EN1990_QK_SCRATCH` for the identical per-entry
+/// the exact child owner below and re-mint a fresh content-addressed child handle for the identical per-entry
 /// mutation-rich shape (`📓️migration-recipe.md` §3/§4 — no `LinkResolver`/child-dispatch seam
 /// exists in `ArtifactApp::handle` yet, checked directly against `🔌️plugin/🦀️component.rs`,
 /// W1-owned, read-only).
@@ -70,21 +69,11 @@ pub async fn benchmark_records_from_table(table: &semio_s_plugin_stdio::artifact
 //#endregion 🔖️Converters
 
 //#region 🔖️WorkingScene
-thread_local! {
-    /// 🌱 Ephemeral, session-side cache of the live `benchmarks` rows behind a composed-child handle —
-    /// NEVER persisted (matches the `EngineRep` contract: wholly derived, droppable at any instant,
-    /// rebuilt from base). No `LinkResolver`/child-dispatch seam exists in `ArtifactApp::handle` yet
-    /// (checked directly, W1-owned, read-only), so this is the only way a persisted content-addressed
-    /// handle round-trips to the real rows within one process — mirrors `➗️mathematical`'s
-    /// `MATH_SCRATCH`/`📕️norm`'s `EN1990_QK_SCRATCH`.
-    ///
-    /// ⚠️ Same documented staleness gap as every prior exemplar: a fresh process (a store-level
-    /// undo/redo past this session's history, or a genuinely reloaded persisted `.architect` document)
-    /// sees a `benchmarks` handle whose cache entry was never populated — `program_benchmarks` fails
-    /// soft to an EMPTY list rather than panicking. Every register-panel/report/mutation-diff call path
-    /// already routes through `program_benchmarks`, so the gap is visibly empty, not
-    /// silently-wrong-but-plausible. Not a fix for the missing resolver — a bridge until one lands.
-    static PROGRAM_BENCHMARKS_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, Vec<BenchmarkRecord>>> = std::cell::RefCell::new(std::collections::HashMap::new());
+/// 🌱 Ephemeral benchmark rows owned by one exact table child. Equal wire identities never
+/// share rows, and the value retires with its owner.
+#[derive(Clone)]
+pub struct ProgramBenchmarksWorkingTable {
+    pub records: Vec<BenchmarkRecord>,
 }
 
 async fn program_benchmarks_scene_id(records: &[BenchmarkRecord]) -> String {
@@ -99,23 +88,17 @@ async fn program_benchmarks_target() -> store::os_io::ArtifactRef {
     store::os_io::ArtifactRef { artifact_id: "architect-program-benchmarks".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
 }
 
-/// 🏗️ Mints the composed-child handle for a `benchmarks` row list AND seeds the scratch cache in
-/// one call — the standard way every mutation-diff/fixture builder in this artifact creates
-/// `benchmarks` field values; never construct this handle without also caching, or
-/// `program_benchmarks` will read back empty.
+/// 🏗️ Mints the composed-child handle and transfers rows into that exact owner.
 pub async fn benchmarks_child_from_records(records: &[BenchmarkRecord]) -> ProgramBenchmarksChild {
     let scene_id = program_benchmarks_scene_id(records);
-    PROGRAM_BENCHMARKS_SCRATCH.with(|cache| {
-        cache.borrow_mut().insert(scene_id.clone(), records.to_vec());
-    });
-    store::ArtifactChild::new(scene_id, program_benchmarks_target())
+    store::ArtifactChild::new(scene_id, program_benchmarks_target()).with_local_owner(std::sync::Arc::new(ProgramBenchmarksWorkingTable { records: records.to_vec() }))
 }
 
 /// 🔎 The live `benchmarks` rows behind a snapshot's composed child — the single read call site
 /// every mutation-diff/panel/report call path in this artifact now uses instead of a direct
-/// `.benchmarks` field. Empty (never a panic) on a cache miss, per this region's own doc comment.
+/// `.benchmarks` field. A wire-only child fails soft until host materialization.
 pub async fn program_benchmarks(snapshot: &ProgramSnapshot) -> Vec<BenchmarkRecord> {
-    PROGRAM_BENCHMARKS_SCRATCH.with(|cache| cache.borrow().get(&snapshot.benchmarks.child_id).cloned()).unwrap_or_default()
+    snapshot.benchmarks.local_owner::<ProgramBenchmarksWorkingTable>().map(|table| table.records.clone()).unwrap_or_default()
 }
 //#endregion 🔖️WorkingScene
 
@@ -157,8 +140,10 @@ pub async fn knowledge_records_from_table(table: &semio_s_plugin_stdio::artifact
 //#endregion 🔖️Converters
 
 //#region 🔖️WorkingScene
-thread_local! {
-    static PROGRAM_KNOWLEDGE_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, Vec<KnowledgeRecord>>> = std::cell::RefCell::new(std::collections::HashMap::new());
+/// 🌱 Ephemeral knowledge rows owned by one exact table child.
+#[derive(Clone)]
+pub struct ProgramKnowledgeWorkingTable {
+    pub records: Vec<KnowledgeRecord>,
 }
 
 async fn program_knowledge_scene_id(records: &[KnowledgeRecord]) -> String {
@@ -175,14 +160,11 @@ async fn program_knowledge_target() -> store::os_io::ArtifactRef {
 
 pub async fn knowledge_child_from_records(records: &[KnowledgeRecord]) -> ProgramKnowledgeChild {
     let scene_id = program_knowledge_scene_id(records);
-    PROGRAM_KNOWLEDGE_SCRATCH.with(|cache| {
-        cache.borrow_mut().insert(scene_id.clone(), records.to_vec());
-    });
-    store::ArtifactChild::new(scene_id, program_knowledge_target())
+    store::ArtifactChild::new(scene_id, program_knowledge_target()).with_local_owner(std::sync::Arc::new(ProgramKnowledgeWorkingTable { records: records.to_vec() }))
 }
 
 pub async fn program_knowledge(snapshot: &ProgramSnapshot) -> Vec<KnowledgeRecord> {
-    PROGRAM_KNOWLEDGE_SCRATCH.with(|cache| cache.borrow().get(&snapshot.knowledge.child_id).cloned()).unwrap_or_default()
+    snapshot.knowledge.local_owner::<ProgramKnowledgeWorkingTable>().map(|table| table.records.clone()).unwrap_or_default()
 }
 //#endregion 🔖️WorkingScene
 //#endregion 🔖️Knowledge
@@ -509,6 +491,18 @@ pub async fn sample_plugin() -> ProgramSnapshot {
 mod tests {
     use super::*;
 
+    trait ProgramChildOwnerOracle {
+        fn expected() -> serde_json::Value;
+    }
+
+    struct SerdeJsonProgramChildOwnerOracle;
+
+    impl ProgramChildOwnerOracle for SerdeJsonProgramChildOwnerOracle {
+        fn expected() -> serde_json::Value {
+            serde_json::from_str(include_str!("🧪️fixtures/🎯️child-owner-isolation.json")).expect("language-neutral Architect child-owner fixture")
+        }
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn empty_plugin_has_schema() {
         let program = empty_plugin();
@@ -523,6 +517,26 @@ mod tests {
         let decoded: ProgramSnapshot = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(decoded.elements.len(), 2);
         assert_eq!(decoded.adjacencies.len(), 1);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn composed_register_rows_belong_to_each_exact_child() {
+        let benchmarks = benchmarks_child_from_records(&[]);
+        let knowledge = knowledge_child_from_records(&[]);
+        let benchmark_wire = serde_json::to_vec(&benchmarks).expect("Architect benchmark child wire identity");
+        let knowledge_wire = serde_json::to_vec(&knowledge).expect("Architect knowledge child wire identity");
+        let reconstructed_benchmarks: ProgramBenchmarksChild = serde_json::from_slice(&benchmark_wire).expect("Architect benchmark child wire roundtrip");
+        let reconstructed_knowledge: ProgramKnowledgeChild = serde_json::from_slice(&knowledge_wire).expect("Architect knowledge child wire roundtrip");
+        let observed = serde_json::json!({
+            "benchmarksOwned": benchmarks.local_owner::<ProgramBenchmarksWorkingTable>().is_some(),
+            "knowledgeOwned": knowledge.local_owner::<ProgramKnowledgeWorkingTable>().is_some(),
+            "benchmarksWireIdentityMatches": benchmarks == reconstructed_benchmarks,
+            "knowledgeWireIdentityMatches": knowledge == reconstructed_knowledge,
+            "benchmarksWireOwned": reconstructed_benchmarks.local_owner::<ProgramBenchmarksWorkingTable>().is_some(),
+            "knowledgeWireOwned": reconstructed_knowledge.local_owner::<ProgramKnowledgeWorkingTable>().is_some(),
+        });
+
+        assert_eq!(observed, SerdeJsonProgramChildOwnerOracle::expected());
     }
 
     // #region 🔖️DslArtifact

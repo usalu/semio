@@ -3,7 +3,8 @@
 use crate::infinite::board::ports::directed_dag as dag;
 use neural_engine as neural;
 
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::HashMap;
+use crate::{OrderedMap, OrderedSet};
 
 use dag::{
     computation_node_height, computation_node_width, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size, slider_widget_height, slider_widget_width, DagNodeKind, DagNodeSpec,
@@ -77,7 +78,7 @@ pub struct FlowArtifact {
 #[serde(rename_all = "camelCase")]
 pub struct FlowUi {
     pub camera: CameraJson,
-    pub nodes: BTreeMap<String, FlowNodeGui>,
+    pub nodes: OrderedMap<FlowNodeGui>,
     #[serde(default)]
     pub previews: Vec<FlowPreviewGui>,
 }
@@ -102,6 +103,7 @@ pub enum NodeChrome {
         preview: bool,
     },
     Slider {
+        label: String,
         min: f64,
         max: f64,
         step: f64,
@@ -132,7 +134,7 @@ pub struct FlowPreviewGui {
     #[serde(default)]
     pub preview: Dictionary,
     #[serde(default)]
-    pub expanded: BTreeSet<String>,
+    pub expanded: OrderedSet,
     #[serde(default)]
     pub layout: Option<WidgetLayout>,
 }
@@ -191,6 +193,7 @@ pub enum Widget {
     },
     InputSlider {
         id: String,
+        label: String,
         #[serde(default = "default_slider_value")]
         value: f64,
         #[serde(default = "default_slider_min")]
@@ -222,7 +225,7 @@ pub enum Widget {
         #[serde(default)]
         preview: Dictionary,
         #[serde(default)]
-        expanded: BTreeSet<String>,
+        expanded: OrderedSet,
     },
     OutputAction {
         id: String,
@@ -253,7 +256,7 @@ pub struct FlowFixture {
     pub widgets: Vec<Widget>,
     pub synapses: Vec<SynapseSpec>,
     #[serde(default)]
-    pub layout: BTreeMap<String, WidgetLayout>,
+    pub layout: OrderedMap<WidgetLayout>,
 }
 
 impl Default for FlowFixture {
@@ -262,22 +265,22 @@ impl Default for FlowFixture {
             schema: "flow.fixture".into(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             widgets: vec![
-                Widget::InputSlider { id: "slider".into(), value: 3.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
+                Widget::InputSlider { id: "slider".into(), label: "Number".into(), value: 3.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
                 Widget::Neuron { id: "add".into(), neuron_kind: "math.add".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: true },
-                Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new(), expanded: BTreeSet::new() },
+                Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new(), expanded: OrderedSet::new() },
             ],
             synapses: vec![
                 SynapseSpec { id: "s1".into(), from: "slider".into(), to: "add".into(), from_port: "number".into(), to_port: "a".into() },
                 SynapseSpec { id: "s2".into(), from: "add".into(), to: "preview".into(), from_port: "sum".into(), to_port: String::new() },
             ],
-            layout: BTreeMap::new(),
+            layout: OrderedMap::new(),
         }
     }
 }
 
 impl FlowFixture {
     pub fn to_artifact(&self) -> FlowArtifact {
-        let mut nodes = BTreeMap::new();
+        let mut nodes = OrderedMap::new();
         let mut previews = Vec::new();
         for widget in &self.widgets {
             let id = widget_id_for(widget).to_string();
@@ -293,7 +296,7 @@ impl FlowFixture {
 
 fn widget_chrome(widget: &Widget) -> NodeChrome {
     match widget {
-        Widget::InputSlider { value, min, max, step, .. } => NodeChrome::Slider { min: *min, max: *max, step: *step, value: *value },
+        Widget::InputSlider { label, value, min, max, step, .. } => NodeChrome::Slider { label: label.clone(), min: *min, max: *max, step: *step, value: *value },
         Widget::InputNote { text, .. } => NodeChrome::Note { text: text.clone() },
         Widget::InputImage { src, .. } => NodeChrome::Image { src: src.clone() },
         Widget::Variable { name, schema, .. } => NodeChrome::Variable { name: name.clone(), schema: schema.clone() },
@@ -317,7 +320,7 @@ pub(crate) fn tree_from_fixture(fixture: &FlowFixture, kind_infos: &HashMap<Stri
                 }
                 Some(Neuron { id: id.clone(), kind: neuron_kind.clone(), params, tree: None })
             }
-            Widget::InputSlider { id, value, .. } => Some(Neuron { id: id.clone(), kind: "core.number".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(*value))), tree: None }),
+            Widget::InputSlider { id, label, value, .. } => Some(Neuron { id: id.clone(), kind: "core.number".into(), params: Dictionary::new().insert("label", NeuralValue::Atom(Atom::String(label.clone()))).insert("value", NeuralValue::Atom(Atom::Decimal(*value))), tree: None }),
             Widget::InputNote { id, text } => Some(Neuron { id: id.clone(), kind: "core.text".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::String(text.clone()))), tree: None }),
             Widget::InputImage { id, src } => Some(Neuron { id: id.clone(), kind: "core.image".into(), params: Dictionary::new().insert("dataUrl", NeuralValue::Atom(Atom::String(src.clone()))), tree: None }),
             Widget::Variable { id, name, schema } => {
@@ -348,8 +351,8 @@ impl Default for FlowArtifact {
             },
             ui: FlowUi {
                 camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
-                nodes: BTreeMap::from([
-                    ("slider".into(), FlowNodeGui { layout: WidgetLayout { x: 0.0, y: 0.0 }, chrome: NodeChrome::Slider { min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP, value: 3.0 } }),
+                nodes: OrderedMap::from([
+                    ("slider".into(), FlowNodeGui { layout: WidgetLayout { x: 0.0, y: 0.0 }, chrome: NodeChrome::Slider { label: "Number".into(), min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP, value: 3.0 } }),
                     ("add".into(), FlowNodeGui { layout: WidgetLayout { x: 200.0, y: 0.0 }, chrome: NodeChrome::Plain { preview: true } }),
                     ("out_sum".into(), FlowNodeGui { layout: WidgetLayout { x: 400.0, y: 0.0 }, chrome: NodeChrome::Plain { preview: false } }),
                 ]),
@@ -358,7 +361,7 @@ impl Default for FlowArtifact {
                     source: Some(FlowChannelRef { neuron: "add".into(), channel: "sum".into() }),
                     mode: "text".into(),
                     preview: Dictionary::new(),
-                    expanded: BTreeSet::new(),
+                    expanded: OrderedSet::new(),
                     layout: Some(WidgetLayout { x: 400.0, y: 0.0 }),
                 }],
             },
@@ -369,7 +372,7 @@ impl Default for FlowArtifact {
 fn widget_label(widget: &Widget) -> String {
     match widget {
         Widget::Neuron { neuron_kind, .. } => neuron_kind.clone(),
-        Widget::InputSlider { .. } => "Slider".into(),
+        Widget::InputSlider { label, .. } => label.clone(),
         Widget::InputNote { .. } => "Note".into(),
         Widget::InputImage { .. } => "Image".into(),
         Widget::Variable { name, .. } => name.clone(),
@@ -392,7 +395,7 @@ fn widget_display_meta(widget: &Widget, kind_infos: &HashMap<String, OperatorInf
             let (name, abbreviation) = normalize_node_display(neuron_kind, neuron_kind);
             (name, abbreviation, String::new())
         }),
-        Widget::InputSlider { .. } => ("Slider".into(), "Slider".into(), "emoji:🎚️".into()),
+        Widget::InputSlider { label, .. } => (label.clone(), label.clone(), "emoji:🎚️".into()),
         Widget::InputNote { .. } => ("Note".into(), "Note".into(), "emoji:📝️".into()),
         Widget::InputImage { .. } => ("Image".into(), "Image".into(), "emoji:🖼️".into()),
         Widget::Variable { name, .. } => (name.clone(), name.chars().take(3).collect::<String>(), "emoji:🔣️".into()),
@@ -609,7 +612,7 @@ fn widget_node_size(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &Hash
             let (normalized_name, _) = normalize_node_display(&display_name, &abbreviation);
             (computation_node_width(&normalized_name, &inputs, &outputs), computation_node_height(1, 1, false, false))
         }
-        Widget::OutputPreview { preview, expanded, .. } => preview_widget_size(&dag_preview_content_from_dict(preview), expanded),
+        Widget::OutputPreview { preview, expanded, .. } => preview_widget_size(&dag_preview_content_from_dict(preview), &expanded.iter().cloned().collect()),
         Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, .. } => {
             let (inputs, outputs, variadic_inputs, variadic_outputs) = neuron_io_layout(id, neuron_kind, input_ports, output_ports, params, synapses, kind_infos);
             let (display_name, abbreviation, _) = widget_display_meta(widget, kind_infos);
@@ -685,7 +688,7 @@ fn widget_properties(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>
     }
 }
 
-pub(crate) fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, WidgetLayout>, synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> DagNodeSpec {
+pub(crate) fn widget_to_dag_node(widget: &Widget, index: usize, layout: &OrderedMap<WidgetLayout>, synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> DagNodeSpec {
     let id = match widget {
         Widget::Neuron { id, .. }
         | Widget::InputSlider { id, .. }
@@ -735,7 +738,7 @@ pub(crate) fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMa
             height,
             operator_kind: None,
             properties: PropertyBag::new(),
-            kind: DagNodeKind::Preview { content: dag_preview_content_from_dict(preview), expanded: expanded.clone(), input: IoPortSpec::named("", "", "", "PreviewInput") },
+            kind: DagNodeKind::Preview { content: dag_preview_content_from_dict(preview), expanded: expanded.iter().cloned().collect(), input: IoPortSpec::named("", "", "", "PreviewInput") },
         },
         Widget::OutputAction { action, .. } => {
             DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Action { label: action.clone(), input: IoPortSpec::named("", "", "", "ActionInput") } }
@@ -832,6 +835,22 @@ pub(crate) fn sensible_slider_range(value: f64) -> (f64, f64, f64) {
     }
     (0.0, sensible_slider_max(value), step)
 }
+
+//#region 🎚️ParameterValue
+/// 🎚️ Updates only a selected slider's fixed numeric fields, preserving its exact identity and label.
+pub fn set_widget_slider_value(widget: &mut Widget, value: f64) -> bool {
+    let Widget::InputSlider { value: current, min, max, step, .. } = widget else { return false };
+    if !value.is_finite() || !min.is_finite() || !max.is_finite() || *min > *max { return false; }
+    let (next_min, next_max, next_step) = if value < *min || value > *max { sensible_slider_range(value) } else { (*min, *max, *step) };
+    if !next_min.is_finite() || !next_max.is_finite() || !next_step.is_finite() { return false; }
+    *min = next_min; *max = next_max; *step = next_step; *current = value.clamp(next_min, next_max);
+    true
+}
+
+#[cfg(test)]
+#[path = "../🎚️parameter/🧪️component.rs"]
+mod parameter_tests;
+//#endregion 🎚️ParameterValue
 
 fn resolve_input_slider_fields(value: Option<f64>, min: Option<f64>, max: Option<f64>, step: Option<f64>) -> (f64, f64, f64, f64) {
     if let (Some(value), Some(min), Some(max), Some(step)) = (value, min, max, step) {
@@ -941,6 +960,7 @@ pub(crate) enum WidgetDescriptor {
         id: Option<String>,
     },
     InputSlider {
+        label: String,
         #[serde(default)]
         id: Option<String>,
         #[serde(default)]
@@ -1017,13 +1037,13 @@ pub(crate) fn widget_from_descriptor(descriptor: &WidgetDescriptor, id: String, 
             output_ports: default_neuron_output_ports(neuron_kind, &[], kind_infos),
             preview: true,
         },
-        WidgetDescriptor::InputSlider { value, min, max, step, .. } => {
+        WidgetDescriptor::InputSlider { label, value, min, max, step, .. } => {
             let (value, min, max, step) = resolve_input_slider_fields(*value, *min, *max, *step);
-            Widget::InputSlider { id, value, min, max, step }
+            Widget::InputSlider { id, label: label.clone(), value, min, max, step }
         }
         WidgetDescriptor::InputNote { text, .. } => Widget::InputNote { id, text: text.clone().unwrap_or_default() },
         WidgetDescriptor::InputImage { .. } => Widget::InputImage { id, src: String::new() },
-        WidgetDescriptor::OutputPreview { .. } => Widget::OutputPreview { id, preview: Dictionary::new(), expanded: BTreeSet::new() },
+        WidgetDescriptor::OutputPreview { .. } => Widget::OutputPreview { id, preview: Dictionary::new(), expanded: OrderedSet::new() },
         WidgetDescriptor::OutputAction { action, .. } => Widget::OutputAction { id, action: if action.is_empty() { "log".into() } else { action.clone() } },
         WidgetDescriptor::OutputExport { format, .. } => Widget::OutputExport { id, format: if format.is_empty() { default_export_format() } else { format.clone() } },
         WidgetDescriptor::Variable { name, schema, .. } => {
@@ -1032,3 +1052,29 @@ pub(crate) fn widget_from_descriptor(descriptor: &WidgetDescriptor, id: String, 
     }
 }
 // #endregion 🔖️Document
+
+//#region 🧪️AuthoredSliderLabels
+#[cfg(test)]
+mod slider_label_tests {
+    use super::*;
+
+    #[test]
+    fn authored_slider_labels_survive_json_dag_and_chrome() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🏷️slider-labels.json")).unwrap();
+        for row in fixture["cases"].as_array().unwrap() {
+            let widget: Widget = serde_json::from_value(row["widget"].clone()).unwrap();
+            let label = row["expectedDagName"].as_str().unwrap();
+            assert_eq!(widget_to_dag_node(&widget, 0, &OrderedMap::new(), &[], &HashMap::new()).name, label);
+            assert_eq!(widget_label(&widget), label);
+            assert_eq!(serde_json::to_value(&widget).unwrap()["label"], label);
+            assert_eq!(serde_json::to_value(widget_chrome(&widget)).unwrap()["label"], label);
+            let descriptor: WidgetDescriptor = serde_json::from_value(row["widget"].clone()).unwrap();
+            assert_eq!(widget_from_descriptor(&descriptor, row["widget"]["id"].as_str().unwrap().into(), &HashMap::new()), widget);
+            let mut missing = row["widget"].clone();
+            missing.as_object_mut().unwrap().remove("label");
+            assert!(serde_json::from_value::<Widget>(missing.clone()).is_err());
+            assert!(serde_json::from_value::<WidgetDescriptor>(missing).is_err());
+        }
+    }
+}
+//#endregion 🧪️AuthoredSliderLabels

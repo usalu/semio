@@ -13,6 +13,7 @@
 //! independently against the registered `image` reference crate. The subject side fully parses the
 //! real document into the typed `BmpSnapshot` and re-serializes from it — never splices bytes.
 
+use semio_s_plugin_stdio_test_oracle::artifacts::bmp::standards::v3::subsets::any::oracle_identity_round_trip;
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::bmp::standards::v_v3::subsets::any::{oracle_apply_mutation, oracle_undo_mutation, project_bmp_mutation};
 use semio_s_plugin_stdio_test_oracle::law;
@@ -23,7 +24,7 @@ use semio_s_plugin_stdio_test_oracle::law;
 /// `mutationCatalogs[0].kinds` — kept in the SAME declaration order in all three; a mismatch is
 /// caught loudly (either by the contract phase, or by the runner's own "no registration for
 /// scenario" error) rather than silently.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-header-fields", "insert-palette-entry", "remove-palette-entry", "set-palette-entry", "set-pixel-data"];
+const KINDS: &[&str] = &["change-header-fields", "insert-palette-entry", "remove-palette-entry", "replace-palette-entry", "replace-pixel-data"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
@@ -38,9 +39,7 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 
-fn no_mutation_spec() -> Json {
-    Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(Vec::new()))])
-}
+
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
@@ -88,7 +87,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// than "the bytes moved" would be. `law::reparsed_not_copied` would be exactly backwards here.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
-    let bytes = oracle_apply_mutation(&input, &no_mutation_spec())?;
+    let bytes = oracle_identity_round_trip(&input)?;
     let before = project_bmp_mutation(&input)?;
     let projection = project_bmp_mutation(&bytes)?;
     law::round_trip_preserves(&projection, &before)?;
@@ -157,38 +156,7 @@ mod subject {
     /// mutation pipeline; `apply_bmp_mutation` does the rest.
     fn mutation_from_spec(kind: &str, params: &Json, base: &BmpSnapshot) -> Result<BmpMutation, String> {
         match kind {
-            "no-mutation" => Ok(BmpMutation::NoMutation),
-            "set-snapshot" => {
-                let width = num(params, "width").unwrap_or(1.0).max(1.0) as u32;
-                let height = num(params, "height").unwrap_or(1.0).max(1.0) as u32;
-                let quad = fill_quad(params);
-                let snapshot = BmpSnapshot {
-                    schema: base.schema.clone(),
-                    header_size: 40,
-                    width,
-                    height,
-                    row_order: BmpRowOrder::BottomUp,
-                    planes: 1,
-                    bits_per_pixel: 24,
-                    compression: 0,
-                    image_size: 0,
-                    x_pixels_per_meter: base.x_pixels_per_meter,
-                    y_pixels_per_meter: base.y_pixels_per_meter,
-                    colors_used: 0,
-                    colors_important: 0,
-                    palette: Vec::new(),
-                    pixels: solid_pixels(width, height, &quad),
-                };
-                Ok(BmpMutation::SetSnapshot { snapshot })
-            }
-            // 🧾️ Of the eleven BITMAPINFOHEADER fields this kind can patch, `header_size`,
-            // `planes`, `bits_per_pixel`, `compression`, `image_size` and `colors_used` are FORCED
-            // by `encode_bmp` regardless of the snapshot (its own documented `EncodeScopeNote`, and
-            // the colour-table size it actually writes), and `width`/`height` cannot move without
-            // `pixels` moving with them. The three that survive to the bytes are `row_order` — the
-            // sign of the on-disk `biHeight` and the row-write direction — and the two
-            // pixels-per-metre fields, so those three are what this kind exercises.
-            "set-header-fields" => Ok(BmpMutation::SetHeaderFields {
+            "change-header-fields" => Ok(BmpMutation::ChangeHeaderFields(semio_s_plugin_stdio::artifacts::bmp::schema::mutations::ChangeHeaderFieldsMutation {
                 header_size: None,
                 width: None,
                 height: None,
@@ -201,11 +169,11 @@ mod subject {
                 y_pixels_per_meter: num(params, "yPixelsPerMeter").map(|value| value as i32),
                 colors_used: None,
                 colors_important: None,
-            }),
-            "insert-palette-entry" => Ok(BmpMutation::InsertPaletteEntry { index: num(params, "index").unwrap_or(0.0) as usize, entry: entry_from(params.get("entry").unwrap_or(&Json::Null)) }),
-            "remove-palette-entry" => Ok(BmpMutation::RemovePaletteEntry { index: num(params, "index").unwrap_or(0.0) as usize }),
-            "set-palette-entry" => Ok(BmpMutation::SetPaletteEntry { index: num(params, "index").unwrap_or(0.0) as usize, entry: entry_from(params.get("entry").unwrap_or(&Json::Null)) }),
-            "set-pixel-data" => Ok(BmpMutation::SetPixelData { pixels: solid_pixels(base.width, base.height, &fill_quad(params)) }),
+            })),
+            "insert-palette-entry" => Ok(BmpMutation::InsertPaletteEntry(semio_s_plugin_stdio::artifacts::bmp::schema::mutations::InsertPaletteEntryMutation { index: num(params, "index").unwrap_or(0.0) as usize, entry: entry_from(params.get("entry").unwrap_or(&Json::Null)) })),
+            "remove-palette-entry" => Ok(BmpMutation::RemovePaletteEntry(semio_s_plugin_stdio::artifacts::bmp::schema::mutations::RemovePaletteEntryMutation { index: num(params, "index").unwrap_or(0.0) as usize })),
+            "replace-palette-entry" => Ok(BmpMutation::ReplacePaletteEntry(semio_s_plugin_stdio::artifacts::bmp::schema::mutations::ReplacePaletteEntryMutation { index: num(params, "index").unwrap_or(0.0) as usize, entry: entry_from(params.get("entry").unwrap_or(&Json::Null)) })),
+            "replace-pixel-data" => Ok(BmpMutation::ReplacePixelData(semio_s_plugin_stdio::artifacts::bmp::schema::mutations::ReplacePixelDataMutation { pixels: solid_pixels(base.width, base.height, &fill_quad(params)) })),
             other => Err(format!("mutation kind {other:?} has no subject implementation")),
         }
     }

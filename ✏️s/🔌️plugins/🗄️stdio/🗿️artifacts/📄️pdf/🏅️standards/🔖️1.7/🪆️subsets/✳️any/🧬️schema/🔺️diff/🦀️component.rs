@@ -1280,12 +1280,6 @@ impl DiffAlgebra<PdfSnapshot> for PdfDiff {
     }
 }
 
-/// 🧩️ `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` -- no full-replace
-/// slot exists on `PdfDiff` to short-circuit into.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &PdfSnapshot, next: &PdfSnapshot) -> PdfDiff {
-    PdfDiff::between(base, next)
-}
 //#endregion 🔖️Diff
 
 //#region 🔖️MutationDiffBuilders
@@ -1321,8 +1315,8 @@ pub fn diff_append_page_content(base: &PdfSnapshot, index: usize, text: &str) ->
 pub fn diff_set_page_content(index: usize, text: &str) -> PdfDiff {
     PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index, diff: PdfPageDiff { text: Some(text.to_string()), ..Default::default() } }], ..Default::default() }), ..Default::default() }
 }
-/// 🔄️ Sets page `index`'s resolved `/Rotate` value (reuses `PdfPageDiff::rotate`, already carried
-/// for `SetSnapshot`'s own sparse `between()` diffing -- no new diff field needed).
+/// 🔄️ Sets page `index`'s resolved `/Rotate` value by reusing the sparse
+/// `PdfPageDiff::rotate` field; no new diff field is needed.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_page_rotation(index: usize, rotation: i32) -> PdfDiff {
     PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index, diff: PdfPageDiff { rotate: Some(rotation), ..Default::default() } }], ..Default::default() }), ..Default::default() }
@@ -1772,7 +1766,7 @@ pub(crate) fn dec_stream_filters_bin(reader: &mut store::ByteReader<'_>) -> Resu
 //#region 🔖️ObjectValueBinaryCodecs
 /// 🧪️ P2-FG3: real recursive binary twins of [`enc_objref`]/[`enc_box`]/[`enc_pdf_object`]/
 /// [`enc_pdf_page`]/[`enc_pdf_info`] above -- backs the upgraded `OpBinary`
-/// (`../🧬️mutations/🦀️component.rs`, `SetSnapshot`/`InsertObject`/... variants) and `DiffCodec`
+/// (`../🧬️mutations/🦀️component.rs`, direct mutation payloads) and `DiffCodec`
 /// frames below. `pub(crate)` so the sibling `../🧬️mutations/🦀️component.rs` (same artifact,
 /// different facet module) can reuse these rather than duplicating them a second time, matching
 /// this file's own existing text-codec reuse convention.

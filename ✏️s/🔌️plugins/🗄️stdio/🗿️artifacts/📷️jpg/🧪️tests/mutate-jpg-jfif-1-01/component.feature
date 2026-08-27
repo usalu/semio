@@ -27,7 +27,7 @@ Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
   The slack exists because JPEG is lossy. Measured on this fixture (2275x2560 = 5 824 000 pixels),
   one decode/re-encode at quality 90 moves at most 2018 pixels between luma buckets, a pass through
   quality 50 at most 10 014 and through quality 5 at most 55 570 — all far inside it — while the
-  set-pixels and set-snapshot rows displace ~5.6 million pixels, an order of magnitude past it.
+  replace-pixels and set-snapshot rows displace ~5.6 million pixels, an order of magnitude past it.
   Exact per-bucket equality is a law JPEG does not have and is deliberately not asserted.
 
   Walking the fixture's own marker chain gives APP0 (JFIF, version 1.1, density unit 1 = dots per
@@ -41,13 +41,13 @@ Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
   rather than preserving whatever tables a mutation set on the decoded snapshot, and it never emits a
   DRI/restart marker at all.
 
-  ⚠️ Consequence: set-quant-table, remove-quant-table, set-huffman-table, remove-huffman-table and
-  set-restart-interval mutate only the in-memory typed snapshot — none of the five is observable in
+  ⚠️ Consequence: replace-quant-table, remove-quant-table, replace-huffman-table, remove-huffman-table and
+  change-restart-interval mutate only the in-memory typed snapshot — none of the five is observable in
   the re-serialized bytes, by design, not by test gap. They are the ONLY five kinds named in the
   adapter's observability exemption list, and every other kind is required to move the compared
   projection or its scenario fails.
 
-  set-jfif-header, insert-other-segment and remove-other-segment ARE written to real bytes — a real
+  change-jfif-header, insert-other-segment and remove-other-segment ARE written to real bytes — a real
   JFIF APP0 built from the snapshot's own fields, and the retained segments echoed verbatim right
   after it — so they are compared as real mutations here rather than reduced to "the file still
   decodes". The oracle reaches the density unit and both density values through `image`'s own
@@ -70,7 +70,7 @@ Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
   quantTables is the DQT payload each side actually wrote. It is a shared, encoder-independent
   witness of the re-encode quality — `image`'s new_with_quality and this subset's own scale_quality
   implement the same IJG mapping over the same Annex K.1 base tables and emit them through the same
-  zigzag — and it is what makes set-re-encode-quality observable at all, since a quality change is
+  zigzag — and it is what makes change-re-encode-quality observable at all, since a quality change is
   otherwise entirely inside the histogram's slack. It is the one member the identity round trip
   excludes from its own comparison, because BOTH codecs regenerate the DQT rather than carrying the
   source's forward, so the committed scan's own tables are gone by construction.
@@ -87,18 +87,16 @@ Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                    | params                                                             |
-      | no-mutation           | {}                                                                  |
-      | set-snapshot          | {"width": 3, "height": 2, "fill": [64, 128, 192, 255]}             |
-      | set-jfif-header       | {"version": [1, 2], "densityUnits": "pixels-per-cm", "xDensity": 300, "yDensity": 300} |
-      | set-quant-table       | {"id": 0, "fill": 12}                                              |
+      | change-jfif-header       | {"version": [1, 2], "densityUnits": "pixels-per-cm", "xDensity": 300, "yDensity": 300} |
+      | replace-quant-table       | {"id": 0, "fill": 12}                                              |
       | remove-quant-table    | {"id": 1}                                                          |
-      | set-huffman-table     | {"class": "dc", "id": 0, "fill": 9}                                |
+      | replace-huffman-table     | {"class": "dc", "id": 0, "fill": 9}                                |
       | remove-huffman-table  | {"class": "ac", "id": 0}                                           |
-      | set-restart-interval  | {"restartInterval": 16}                                            |
+      | change-restart-interval  | {"restartInterval": 16}                                            |
       | insert-other-segment  | {"index": 0, "marker": 226, "data": "0708"}                        |
       | remove-other-segment  | {"index": 0}                                                       |
-      | set-pixels            | {"fill": [9, 9, 9, 255]}                                           |
-      | set-re-encode-quality | {"quality": 50}                                                    |
+      | replace-pixels            | {"fill": [9, 9, 9, 255]}                                           |
+      | change-re-encode-quality | {"quality": 50}                                                    |
 
   @id-inverse
   @level-exhaustive
@@ -112,18 +110,16 @@ Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                    | params                                                             |
-      | no-mutation           | {}                                                                  |
-      | set-snapshot          | {"width": 3, "height": 2, "fill": [64, 128, 192, 255]}             |
-      | set-jfif-header       | {"version": [1, 2], "densityUnits": "pixels-per-cm", "xDensity": 300, "yDensity": 300} |
-      | set-quant-table       | {"id": 0, "fill": 12}                                              |
+      | change-jfif-header       | {"version": [1, 2], "densityUnits": "pixels-per-cm", "xDensity": 300, "yDensity": 300} |
+      | replace-quant-table       | {"id": 0, "fill": 12}                                              |
       | remove-quant-table    | {"id": 1}                                                          |
-      | set-huffman-table     | {"class": "dc", "id": 0, "fill": 9}                                |
+      | replace-huffman-table     | {"class": "dc", "id": 0, "fill": 9}                                |
       | remove-huffman-table  | {"class": "ac", "id": 0}                                           |
-      | set-restart-interval  | {"restartInterval": 16}                                            |
+      | change-restart-interval  | {"restartInterval": 16}                                            |
       | insert-other-segment  | {"index": 0, "marker": 226, "data": "0708"}                        |
       | remove-other-segment  | {"index": 0}                                                       |
-      | set-pixels            | {"fill": [9, 9, 9, 255]}                                           |
-      | set-re-encode-quality | {"quality": 50}                                                    |
+      | replace-pixels            | {"fill": [9, 9, 9, 255]}                                           |
+      | change-re-encode-quality | {"quality": 50}                                                    |
 
   @id-identity-round-trip
   @level-long

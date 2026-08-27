@@ -27,19 +27,21 @@ use crate::engine::space::commands::{
 use crate::engine::space::commands::{export_media, import_media, import_media_payload};
 use crate::engine::space::commands::{export_studio_dsl, export_studio_pack, import_space_pack, import_space_pack_payload, open_space, set_active_example};
 use crate::engine::space::commands::{go_home, navigate_virtual_file_system_node, set_active_panel_tab, set_app_registrations};
-use crate::engine::space::config::SpaceConfig;
+use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
 use crate::engine::space::presence::{SpacePresence, SpacePresenceMutation};
 use crate::engine::space::terminology::SStudioLabels;
 use crate::parse_demo_space_document;
+use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_os::{create_os_id, empty_workflow_snapshot, MediaContract, WorkflowEdge, WorkflowMutation, WorkflowSnapshot, S_WORKFLOW_SCHEMA};
+use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    app::InteractionView, app_commands, create_default_layout, host, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactApp, ArtifactView, CommandDefinition, ConfigView, DomainTopology, DraftView, Effect,
-    Emit, Fault, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractionTopology, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod,
-    SelectionMode, SelectionSpec, TopologyNode, UiNode, WindowLayout, CLEAR_SELECTION_ACTION_ID, INTERACTION_SELECT_ACTION_ID, SELECT_ALL_ACTION_ID,
+    app::InteractionView, app_commands, create_default_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppOperationContext, ArtifactApp, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry,
+    ArtifactView, CommandDefinition, ConfigView, DomainTopology, DraftView, Effect, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget,
+    InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode, WindowLayout, CLEAR_SELECTION_ACTION_ID,
+    INTERACTION_SELECT_ACTION_ID, SELECT_ALL_ACTION_ID,
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex, OnceLock};
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -162,62 +164,14 @@ pub(crate) async fn apply_config_mutations(config: &SpaceConfig, operations: &[c
     operations.iter().fold(config.clone(), |acc, operation| operation.diff(&acc).diff().clone())
 }
 
-// 🫀️ The shared `presence:` backbone-URI hack was deleted from os-core — presence now flows through
-// the semio_hub's duplex `PresencePeer`/`Presence` frames via `framework/sync`'s `ArtifactEvent::Presence`
-// for migrated apps. `s` isn't wired onto `ArtifactHost` yet, so it keeps this tiny self-contained
-// in-memory heartbeat map until then — same upsert/prune/exclude-self semantics as before, just owned
-// locally instead of delegated to a shared cross-process mechanism.
-#[derive(Clone)]
-struct SPresencePeerLocal {
-    client_id: String,
-    name: String,
-    selection: Vec<String>,
-    updated_at_ms: f64,
-}
-
-const S_PRESENCE_STALE_MS: f64 = 15_000.0;
-
-async fn presence_refresh_needed(operations: &[crate::engine::space::config::SpaceConfigMutation]) -> bool {
-    use crate::engine::space::config::SpaceConfigMutation;
-    operations.iter().any(|operation| matches!(operation, SpaceConfigMutation::SetClient { .. } | SpaceConfigMutation::Snapshot { .. }))
-}
-
 pub(crate) async fn config_space_id(config: &SpaceConfig) -> String {
     config.space_id.clone().unwrap_or_else(|| "default".into())
 }
 
-async fn shared_presence_peers() -> Arc<Mutex<HashMap<String, HashMap<String, SPresencePeerLocal>>>> {
-    static REGISTRY: OnceLock<Arc<Mutex<HashMap<String, HashMap<String, SPresencePeerLocal>>>>> = OnceLock::new();
-    REGISTRY.get_or_init(|| Arc::new(Mutex::new(HashMap::new()))).clone()
-}
-
-pub(crate) async fn presence_peers_json(_app: &SpaceApp, config: &SpaceConfig) -> String {
-    let space_id = config_space_id(config);
-    let self_client_id = config.client_id.clone().unwrap_or_default();
-    let now_ms = host::now_ms() as f64;
-    let peers: Vec<Value> = shared_presence_peers()
-        .lock()
-        .ok()
-        .and_then(|registry| registry.get(&space_id).cloned())
-        .unwrap_or_default()
-        .into_values()
-        .filter(|peer| peer.client_id != self_client_id && now_ms - peer.updated_at_ms <= S_PRESENCE_STALE_MS)
-        .map(|peer| json!({ "clientId": peer.client_id, "name": peer.name, "selectionCount": peer.selection.len() }))
-        .collect();
-    serde_json::to_string(&peers).unwrap_or_else(|_| "[]".into())
-}
-
-pub(crate) async fn publish_presence(_app: &SpaceApp, config: &SpaceConfig, selected_node_ids: &[String]) {
-    let (Some(client_id), Some(client_name)) = (&config.client_id, &config.client_name) else {
-        return;
-    };
-    let space_id = config_space_id(config);
-    let now_ms = host::now_ms() as f64;
-    if let Ok(mut registry) = shared_presence_peers().lock() {
-        let peers = registry.entry(space_id).or_default();
-        peers.retain(|_, entry| now_ms - entry.updated_at_ms <= S_PRESENCE_STALE_MS);
-        peers.insert(client_id.clone(), SPresencePeerLocal { client_id: client_id.clone(), name: client_name.clone(), selection: selected_node_ids.to_vec(), updated_at_ms: now_ms });
-    }
+/// 🫀️ Remote presence is host-owned. Until `ArtifactHost` threads the typed `PresenceView` into render,
+/// Space shows no remote peers instead of retaining cross-instance state in a process-global registry.
+pub(crate) async fn presence_peers_json(_app: &SpaceApp, _config: &SpaceConfig) -> String {
+    "[]".into()
 }
 
 /// 🖱️ On-demand space workflow context menu from hit-test and selection snapshot.
@@ -322,10 +276,300 @@ app_commands! {
 //#endregion 🔖️SpaceCommand
 
 //#region 🔖️SpaceApp
-/// 🧪️ App instance — config lives in `SpaceConfig` via `SpaceConfigMutation`s; ephemeral presence
-/// heartbeats stay on the app instance until ArtifactHost presence wiring lands.
+/// 🧪️ Unit app instance — config lives in `SpaceConfig`; remote presence stays unavailable until
+/// `ArtifactHost` supplies its typed instance-owned presence view.
 #[derive(Default, Clone, Copy)]
 pub struct SpaceApp;
+
+//#region 🧵️RetainedCommands
+const SPACE_BOUNDED_TOOL_IDS: &[&str] = &[
+    "setActivePanelTab",
+    "nodeGraphViewport",
+    "presenceHeartbeat",
+    "workflowEngagementInput",
+    "compiledDagEngagementInput",
+    "closeFocusedInstance",
+    "setActiveExample",
+    "importSpacePack",
+    "goHome",
+    "navigateVirtualFileSystemNode",
+];
+const SPACE_BATCH_ONLY_TOOL_IDS: &[&str] = &[
+    "patchParameter", "addParameter", "removeParameter", "spawnApp", "moveMediaNode", "connectMediaPorts", "disconnectMediaEdge",
+    "removeAppInstance", "deleteSelection", "copyAppInstance", "duplicateAppInstance", "pasteAppInstance", "renameAppInstance",
+    "patchMediaNodes", "patchAppInstances", "bindParameterField", "unbindParameterField", "reorganizeWorkflow", "workflowEngagementSubmit",
+    "compiledDagEngagementSubmit", "nodeGraphEdit", "exportMedia", "importMedia", "importMediaPayload", "exportStudioPack", "exportStudioDsl",
+    "importSpacePackPayload", "openSpace", "openInstance", "setAppRegistrations",
+];
+const SPACE_RETAINED_PAYLOAD_SCHEMA: &str = "os.workflow.space.tool-command.v1";
+const SPACE_BOUNDED_RAW_BYTES: usize = 65_536;
+const SPACE_BOUNDED_WORK_ITEMS: usize = 1;
+
+fn space_bounded_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(SPACE_BOUNDED_RAW_BYTES, 64, SPACE_BOUNDED_WORK_ITEMS, 262_144, 7_500)
+}
+
+fn space_bounded_extent(command: &SpaceCommand, _snapshot: &WorkflowSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    SPACE_BOUNDED_TOOL_IDS.contains(&command.command_id()).then_some(SPACE_BOUNDED_WORK_ITEMS)
+}
+
+fn space_bounded_reduce(
+    command: &SpaceCommand,
+    snapshot: &WorkflowSnapshot,
+    config: &SpaceConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> Result<Emit<WorkflowMutation, crate::engine::space::config::SpaceConfigMutation, NoDraftMutation>, Fault> {
+    if !SPACE_BOUNDED_TOOL_IDS.contains(&command.command_id()) {
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.retained.route"), "the bounded Space reducer rejects document, registry, payload, and graph routes"));
+    }
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
+}
+
+struct SpaceCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl SpaceCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: SPACE_BOUNDED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for SpaceCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<SpaceApp>;
+    type Job = ArtifactRetainedCommandJob<SpaceApp>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        SPACE_RETAINED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        space_bounded_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > SPACE_BOUNDED_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("bounded Space command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SpaceCommandJobFactory {
+    type Owner = SpaceApp;
+    const TOOL_IDS: &'static [&'static str] = SPACE_BOUNDED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = S_WORKFLOW_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActivePanelTab", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "presenceHeartbeat", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "workflowEngagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "compiledDagEngagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "closeFocusedInstance", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importSpacePack", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "goHome", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "navigateVirtualFileSystemNode", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    ];
+}
+//#endregion 🧵️RetainedCommands
+
+//#region 📬️ConfigStorePreparation
+const SPACE_CONFIG_MAXIMUM_BYTES: usize = 768;
+const SPACE_CONFIG_MAXIMUM_ITEMS: usize = 64;
+const SPACE_CONFIG_TEXT_BYTES: usize = 96;
+const SPACE_CONFIG_METADATA_BYTES: usize = 64;
+
+struct SpaceConfigPreparationFactory;
+
+struct SpaceConfigPreparation {
+    base: Option<store::SnapshotRead<SpaceConfig>>,
+    mutation: Option<SpaceConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    candidate: Option<(SpaceConfig, SpaceConfigMutation, SpaceConfigMutation)>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<SpaceConfig, SpaceConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    retained_bytes: usize,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn space_config_bytes(config: &SpaceConfig) -> Result<usize, String> {
+    let items = config.camera.len().saturating_add(config.collapsed_node_ids.len()).saturating_add(config.preview_off_node_ids.len()).saturating_add(config.clipboard_node_ids.len());
+    if items > SPACE_CONFIG_MAXIMUM_ITEMS { return Err("Space Config exceeds its retained item envelope".into()); }
+    let mut bytes = 0usize;
+    for value in config.camera.keys().chain(config.collapsed_node_ids.iter()).chain(config.preview_off_node_ids.iter()).chain(config.clipboard_node_ids.iter()) {
+        bytes = bytes.saturating_add(value.len());
+    }
+    for value in [&config.active_node_id, &config.focused_node_id, &config.pending_import_node_id, &config.pending_import_format, &config.space_id, &config.client_id, &config.client_name] {
+        bytes = bytes.saturating_add(value.as_ref().map_or(0, String::len));
+    }
+    for value in [&config.workflow_engagement_input, &config.compiled_dag_engagement_input, &config.active_panel_tab, &config.locale] {
+        bytes = bytes.saturating_add(value.len());
+    }
+    if bytes > SPACE_CONFIG_TEXT_BYTES { return Err("Space Config exceeds its encoded text envelope".into()); }
+    let bytes = bytes.saturating_add(std::mem::size_of::<SpaceConfig>()).saturating_add(items.saturating_mul(128));
+    if bytes > SPACE_CONFIG_MAXIMUM_BYTES { return Err("Space Config exceeds its retained byte envelope".into()); }
+    Ok(bytes)
+}
+
+fn space_config_mutation_bytes(mutation: &SpaceConfigMutation) -> Result<usize, String> {
+    let bytes = match mutation {
+        SpaceConfigMutation::SetActivePanelTab { tab_id } => tab_id.len(),
+        SpaceConfigMutation::SetCamera { window_id, .. } => window_id.len(),
+        SpaceConfigMutation::SetClient { client_id, client_name } => client_id.as_ref().map_or(0, String::len).saturating_add(client_name.as_ref().map_or(0, String::len)),
+        SpaceConfigMutation::SetWorkflowEngagementInput { value } | SpaceConfigMutation::SetCompiledDagEngagementInput { value } => value.len(),
+        SpaceConfigMutation::SetFocusedNode { node_id: None } => 0,
+        _ => return Err("Space Config preparation rejects a non-retained mutation".into()),
+    };
+    if bytes > SPACE_CONFIG_TEXT_BYTES { return Err("Space Config mutation exceeds its encoded text envelope".into()); }
+    let bytes = bytes.saturating_add(std::mem::size_of::<SpaceConfigMutation>());
+    if bytes > SPACE_CONFIG_MAXIMUM_BYTES { return Err("Space Config mutation exceeds its retained byte envelope".into()); }
+    Ok(bytes)
+}
+
+fn prepare_space_config(base: &SpaceConfig, mutation: SpaceConfigMutation) -> Result<(SpaceConfig, SpaceConfigMutation, SpaceConfigMutation), String> {
+    space_config_bytes(base)?;
+    space_config_mutation_bytes(&mutation)?;
+    let mut post = base.clone();
+    let inverse = match &mutation {
+        SpaceConfigMutation::SetActivePanelTab { tab_id } => { post.active_panel_tab = tab_id.clone(); SpaceConfigMutation::SetActivePanelTab { tab_id: base.active_panel_tab.clone() } }
+        SpaceConfigMutation::SetCamera { window_id, camera } => {
+            post.camera.insert(window_id.clone(), *camera);
+            base.camera.get(window_id).map_or_else(|| SpaceConfigMutation::Snapshot { config: base.clone() }, |camera| SpaceConfigMutation::SetCamera { window_id: window_id.clone(), camera: *camera })
+        }
+        SpaceConfigMutation::SetClient { client_id, client_name } => {
+            post.client_id = client_id.clone(); post.client_name = client_name.clone();
+            SpaceConfigMutation::SetClient { client_id: base.client_id.clone(), client_name: base.client_name.clone() }
+        }
+        SpaceConfigMutation::SetWorkflowEngagementInput { value } => { post.workflow_engagement_input = value.clone(); SpaceConfigMutation::SetWorkflowEngagementInput { value: base.workflow_engagement_input.clone() } }
+        SpaceConfigMutation::SetCompiledDagEngagementInput { value } => { post.compiled_dag_engagement_input = value.clone(); SpaceConfigMutation::SetCompiledDagEngagementInput { value: base.compiled_dag_engagement_input.clone() } }
+        SpaceConfigMutation::SetFocusedNode { node_id: None } => { post.focused_node_id = None; SpaceConfigMutation::SetFocusedNode { node_id: base.focused_node_id.clone() } }
+        _ => return Err("Space Config preparation rejects a non-retained mutation".into()),
+    };
+    space_config_bytes(&post)?;
+    Ok((post, inverse, mutation))
+}
+
+fn space_config_edit(forward: SpaceConfigMutation, inverse: SpaceConfigMutation, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<SpaceConfigMutation> {
+    let id = format!("space-config-retained-{}", authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![forward], inverse: vec![inverse],
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+        }],
+        description, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<SpaceConfig, SpaceConfigMutation> for SpaceConfigPreparationFactory {
+    fn preflight(&self, mutation: &SpaceConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > SPACE_CONFIG_METADATA_BYTES) { return Err("Space Config preparation rejects its lane or description envelope".into()); }
+        space_config_mutation_bytes(mutation)?;
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: SPACE_CONFIG_MAXIMUM_BYTES * 4 + 1_024 })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<SpaceConfig, SpaceConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<SpaceConfig, SpaceConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<SpaceConfig, SpaceConfigMutation>> {
+        if self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err()
+            || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision()
+            || request.authority.actor().len() > SPACE_CONFIG_METADATA_BYTES { return Err(request); }
+        Ok(Box::new(SpaceConfigPreparation {
+            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), retained_bytes: 0, cancelled: false, closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<SpaceConfig, SpaceConfigMutation> for SpaceConfigPreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled || self.closing { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        if self.candidate.is_none() {
+            let base = self.base.as_ref().ok_or_else(|| "Space Config preparation lost its exact base".to_string())?.get();
+            let mutation = self.mutation.as_ref().ok_or_else(|| "Space Config preparation lost its mutation".to_string())?;
+            space_config_bytes(base)?;
+            space_config_mutation_bytes(mutation)?;
+            let bytes = SPACE_CONFIG_MAXIMUM_BYTES * 4 + 1_024;
+            if grant.maximum_bytes < bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+            self.candidate = Some(prepare_space_config(base, self.mutation.take().ok_or_else(|| "Space Config preparation lost its mutation".to_string())?)?);
+            self.retained_bytes = bytes;
+            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: bytes as u64, digest: [0; 32] };
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
+        }
+        if grant.maximum_bytes < self.retained_bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "Space Config preparation lost its candidate".to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Space Config preparation lost its Store authority".to_string())?;
+        let prepared = authority.prepare_one_item(space_config_edit(forward, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<SpaceConfig, SpaceConfigMutation>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<SpaceConfig, SpaceConfigMutation>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || !grant.permits_one() { return Ok(store::SnapshotRetirementStep::Blocked); }
+        if self.prepared.is_some() || self.candidate.is_some() {
+            if grant.maximum_bytes < self.retained_bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            if self.prepared.take().is_none() { self.candidate = None; }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
+        }
+        if let Some(mutation) = self.mutation.as_ref() {
+            let bytes = space_config_mutation_bytes(mutation)?;
+            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.mutation = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        if let Some(description) = self.description.as_ref() {
+            let bytes = description.len();
+            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.description = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() { return Err("Space Config preparation could not return its exact base root".into()); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            let bytes = authority.actor().len();
+            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none() }
+}
+//#endregion 📬️ConfigStorePreparation
 
 impl ArtifactApp for SpaceApp {
     type Snapshot = WorkflowSnapshot;
@@ -342,6 +586,81 @@ impl ArtifactApp for SpaceApp {
 
     const APP_ID: &'static str = S_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = S_WORKFLOW_SCHEMA;
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: SpaceApp,
+        owner_file: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️component.rs",
+        controller: "s-play",
+        document_schema: "os.workflow",
+        factory: "SpaceCommandJobFactory",
+        factory_type: SpaceCommandJobFactory,
+        tools: {
+            "setActivePanelTab" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "nodeGraphViewport" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "presenceHeartbeat" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "workflowEngagementInput" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "compiledDagEngagementInput" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "closeFocusedInstance" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "setActiveExample" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "importSpacePack" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "goHome" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "navigateVirtualFileSystemNode" => semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+        }
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, Self>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(SpaceCommandJobFactory::new(&controller))
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(SpaceConfigPreparationFactory))
+    }
+
+    fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    async fn build_tool_job(request: ArtifactOwnedToolJobRequest<Self>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !SPACE_BOUNDED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.retained.tool-mismatch"), "Space command does not match its exact registered tool"));
+        }
+        if space_bounded_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.retained.extent"), "Space bounded route exceeded its declared work extent"));
+        }
+        let tool_id = request.command.command_id();
+        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, space_bounded_reduce, space_bounded_extent));
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id,
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            request.context,
+            operation_context,
+            request.completion,
+            SpaceCommand::command_id,
+            SPACE_BOUNDED_RAW_BYTES,
+            SPACE_BOUNDED_WORK_ITEMS,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
 
     async fn initial_snapshot() -> WorkflowSnapshot {
         empty_workflow_snapshot()
@@ -460,7 +779,7 @@ impl ArtifactApp for SpaceApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<WorkflowMutation, crate::engine::space::config::SpaceConfigMutation, Self::DraftMutation>, Fault> {
-        let emit = match command {
+        match command {
             SpaceCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction),
             SpaceCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction),
             SpaceCommand::ReorganizeWorkflow(payload) => reorganize_workflow::apply(payload, doc, cfg, interaction),
@@ -470,12 +789,7 @@ impl ArtifactApp for SpaceApp {
             SpaceCommand::RenameAppInstance(payload) => rename_app_instance::apply(payload, doc, cfg, interaction),
             SpaceCommand::OpenInstance(payload) => open_instance::apply(payload, doc, cfg, interaction),
             _ => command.dispatch(doc, cfg),
-        }?;
-        if presence_refresh_needed(&emit.config_mutations) {
-            let next_config = apply_config_mutations(cfg.snapshot, &emit.config_mutations);
-            publish_presence(&SpaceApp::default(), &next_config, &interaction.selection(S_PLAY_INTERACTION_DOMAIN).ids);
         }
-        Ok(emit)
     }
 
     /// 🕹️ `graph`'s `HierarchyProvider::Topology` — every workflow node is registered at both the
@@ -606,6 +920,46 @@ pub async fn create_space_app() -> App {
         .shell_action("closeFocusedInstance", LocalizedLabel::native("Close Focused Instance", "Fokussierte Instanz schließen"))
         .shell_action("goHome", LocalizedLabel::native("Go Home", "Zur Startseite"))
         .shell_action("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigate File System Node", "Dateisystemknoten navigieren"))
+        .action_interactive_job("patchParameter", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("addParameter", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("removeParameter", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("spawnApp", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("moveMediaNode", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("connectMediaPorts", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("disconnectMediaEdge", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("removeAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("deleteSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("copyAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("duplicateAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("pasteAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("renameAppInstance", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("patchMediaNodes", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("patchAppInstances", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("bindParameterField", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("unbindParameterField", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("reorganizeWorkflow", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("workflowEngagementSubmit", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("compiledDagEngagementSubmit", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("setActivePanelTab", InteractiveJobClassification::Migrated)
+        .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
+        .action_interactive_job("presenceHeartbeat", InteractiveJobClassification::Migrated)
+        .action_interactive_job("workflowEngagementInput", InteractiveJobClassification::Migrated)
+        .action_interactive_job("compiledDagEngagementInput", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+        .action_interactive_job("exportMedia", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("importMedia", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("importMediaPayload", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("exportStudioPack", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("exportStudioDsl", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("importSpacePack", InteractiveJobClassification::Migrated)
+        .action_interactive_job("importSpacePackPayload", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("openSpace", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("openInstance", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("closeFocusedInstance", InteractiveJobClassification::Migrated)
+        .action_interactive_job("goHome", InteractiveJobClassification::Migrated)
+        .action_interactive_job("navigateVirtualFileSystemNode", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setAppRegistrations", InteractiveJobClassification::BatchOnlyPendingRewrite)
         // 📝️ Staged argument form for parameter creation (spawnApp/exportMedia stay context/registry-driven).
         .action_args("addParameter", vec![
             ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).default_value("Parameter"),
@@ -841,10 +1195,99 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    //#region 🧪️RetainedConfigOracle
+    #[test]
+    fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_one() {
+        let base = SpaceConfig::default();
+        let mut expected = serde_json::to_value(&base).expect("JSON oracle base");
+        expected["workflowEngagementInput"] = serde_json::json!("draft");
+        let (post, inverse, _) = prepare_space_config(&base, SpaceConfigMutation::SetWorkflowEngagementInput { value: "draft".into() }).expect("bounded config candidate");
+        assert_eq!(serde_json::to_value(post).expect("JSON oracle post"), expected);
+        assert!(matches!(inverse, SpaceConfigMutation::SetWorkflowEngagementInput { value } if value == base.workflow_engagement_input));
+        assert!(space_config_mutation_bytes(&SpaceConfigMutation::SetWorkflowEngagementInput { value: "x".repeat(SPACE_CONFIG_TEXT_BYTES) }).is_ok());
+        assert!(space_config_mutation_bytes(&SpaceConfigMutation::SetWorkflowEngagementInput { value: "x".repeat(SPACE_CONFIG_TEXT_BYTES + 1) }).is_err());
+        assert!(space_config_mutation_bytes(&SpaceConfigMutation::SetClipboard { node_ids: Vec::new() }).is_err());
+        assert_eq!(SPACE_CONFIG_MAXIMUM_BYTES * 4 + 1_024, 4_096);
+    }
+    //#endregion 🧪️RetainedConfigOracle
     use crate::demo_space_projection;
     use crate::engine::space::testkit::{empty_history, studio_emit};
     use semio_framework_plugin::testkit as plugin_testkit;
     use semio_framework_plugin::{PluginApp, VcsArtifactApp};
+
+    //#region 🧪️RetainedCatalogOracle
+    #[derive(Debug, PartialEq, Eq)]
+    struct SpaceRetainedCatalogSummary {
+        routes: usize,
+        bounded: usize,
+        batch: usize,
+        migrated: usize,
+        unique: bool,
+        bounded_ids: std::collections::BTreeSet<String>,
+        migrated_ids: std::collections::BTreeSet<String>,
+        host_only_ids: std::collections::BTreeSet<String>,
+    }
+
+    trait SpaceRetainedCatalogOracle {
+        fn summarize(&self, fixture: &str) -> SpaceRetainedCatalogSummary;
+    }
+
+    struct SerdeJsonSpaceRetainedCatalogOracle;
+
+    impl SpaceRetainedCatalogOracle for SerdeJsonSpaceRetainedCatalogOracle {
+        fn summarize(&self, fixture: &str) -> SpaceRetainedCatalogSummary {
+            let document: serde_json::Value = serde_json::from_str(fixture).expect("language-neutral retained catalog fixture");
+            let routes = document.get("routes").and_then(serde_json::Value::as_array).expect("routes array");
+            let bounded_ids = routes
+                .iter()
+                .filter(|route| route.get("execution").and_then(serde_json::Value::as_str) == Some("bounded"))
+                .filter_map(|route| route.get("id").and_then(serde_json::Value::as_str).map(str::to_string))
+                .collect::<std::collections::BTreeSet<_>>();
+            let batch = routes.iter().filter(|route| route.get("execution").and_then(serde_json::Value::as_str) == Some("batch")).count();
+            let migrated_ids = routes
+                .iter()
+                .filter(|route| route.get("status").and_then(serde_json::Value::as_str) == Some("migrated"))
+                .filter_map(|route| route.get("id").and_then(serde_json::Value::as_str).map(str::to_string))
+                .collect::<std::collections::BTreeSet<_>>();
+            let host_only_ids = document
+                .get("publicationContracts")
+                .and_then(serde_json::Value::as_array)
+                .expect("publication contracts array")
+                .iter()
+                .filter(|contract| contract.get("lanes").and_then(serde_json::Value::as_array).is_some_and(|lanes| lanes.as_slice() == [serde_json::Value::String("hostOnly".into())]))
+                .filter_map(|contract| contract.get("toolId").and_then(serde_json::Value::as_str).map(str::to_string))
+                .collect::<std::collections::BTreeSet<_>>();
+            let ids = routes.iter().filter_map(|route| route.get("id").and_then(serde_json::Value::as_str)).collect::<std::collections::BTreeSet<_>>();
+            SpaceRetainedCatalogSummary { routes: routes.len(), bounded: bounded_ids.len(), batch, migrated: migrated_ids.len(), unique: ids.len() == routes.len(), bounded_ids, migrated_ids, host_only_ids }
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_command_catalog_matches_the_serde_json_oracle() {
+        let oracle = SerdeJsonSpaceRetainedCatalogOracle.summarize(include_str!("🧪️fixtures/🎯️retained-command-limits.json"));
+        let bounded_ids = SPACE_BOUNDED_TOOL_IDS.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
+        let host_only_ids = <SpaceCommandJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
+            .iter()
+            .filter(|contract| contract.lanes == [semio_framework_plugin::ArtifactToolPublicationLane::HostOnly])
+            .map(|contract| contract.tool_id.to_string())
+            .collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(oracle, SpaceRetainedCatalogSummary { routes: 40, bounded: 10, batch: 30, migrated: 10, unique: true, bounded_ids: bounded_ids.clone(), migrated_ids: bounded_ids.clone(), host_only_ids: host_only_ids.clone() });
+        assert_eq!(bounded_ids.len(), SPACE_BOUNDED_TOOL_IDS.len());
+        assert_eq!(host_only_ids.len(), 4);
+        assert_eq!(SPACE_BATCH_ONLY_TOOL_IDS.len(), 30);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
+        let fixture = include_str!("🧪️fixtures/🎯️retained-command-limits.json");
+        let expected = ["setActiveExample", "importSpacePack", "goHome", "navigateVirtualFileSystemNode"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
+        let wrong_lane = fixture.replacen("\"hostOnly\"", "\"artifact\"", 1);
+        let wrong_tool = fixture.replacen("\"setActiveExample\"", "\"forgedTool\"", 1);
+        assert_ne!(SerdeJsonSpaceRetainedCatalogOracle.summarize(&wrong_lane).host_only_ids, expected);
+        assert_ne!(SerdeJsonSpaceRetainedCatalogOracle.summarize(&wrong_tool).host_only_ids, expected);
+    }
+    //#endregion 🧪️RetainedCatalogOracle
 
     #[semio_framework_async_macros::async_test]
     async fn initial_snapshot_is_empty_not_demo() {

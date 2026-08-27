@@ -1,2 +1,0 @@
-# bind-node-camera inverse typed facet.
-input GltfBindNodeCameraInverseV1 { operation: GltfBindNodeCameraPayloadV1!, before: Int, touchedPaths: [String!]! }

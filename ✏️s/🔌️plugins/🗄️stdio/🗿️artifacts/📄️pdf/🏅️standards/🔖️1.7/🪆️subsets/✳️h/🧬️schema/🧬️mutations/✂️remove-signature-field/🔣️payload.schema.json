@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s.stdio.pdf.1.7.h/mutation/remove-signature-field.json",
+  "title": "RemoveSignatureField",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "name"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeSignatureField"
+    },
+    "name": {
+      "type": "string"
+    }
+  }
+}

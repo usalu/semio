@@ -17,10 +17,13 @@ use crate::editor::imperative::modes::edit::windows::{main, script};
 use crate::editor::imperative::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::imperative::presence::{ImperativePresence, ImperativePresenceMutation};
 use crate::editor::imperative::terminology::imperative_labels;
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionKind, ArtifactEditor, ArtifactView, CommandDefinition, ComponentTree, ConfigView, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition,
-    InteractionTopology, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
+    ActionArgDef, ActionArgOption, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
+    CommandDefinition, ComponentTree, ConfigView, DomainTopology, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionTopology, Label, LocalizedLabel, Media, MediaClass,
+    MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
 };
 // 🚧️ Dialect/StandardId/SubsetId are not yet in the crate-root re-export list (w0-f gap 1 closed
 // ArtifactEditor/Editor/etc but left these three under `app::`, already reachable via
@@ -102,6 +105,190 @@ use crate::editor::imperative::commands::{run, set_locale};
 #[derive(Default)]
 pub struct ImperativePlayApp;
 
+//#region 🧵️RetainedCommands
+const IMPERATIVE_RETAINED_TOOL_IDS: &[&str] = &["setLocale"];
+const IMPERATIVE_RETAINED_PAYLOAD_SCHEMA: &str = "imperative.imperative.tool-command.v1";
+const IMPERATIVE_RETAINED_RAW_BYTES: usize = 8_192;
+const IMPERATIVE_RETAINED_WORK_ITEMS: usize = 1;
+const IMPERATIVE_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
+];
+
+fn imperative_retained_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(IMPERATIVE_RETAINED_RAW_BYTES, 16, IMPERATIVE_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
+}
+
+fn imperative_retained_extent(command: &ImperativeCommand, _snapshot: &ImperativeSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    match command {
+        ImperativeCommand::SetLocale(payload) if payload.value.len() <= IMPERATIVE_RETAINED_RAW_BYTES => Some(IMPERATIVE_RETAINED_WORK_ITEMS),
+        _ => None,
+    }
+}
+
+fn imperative_retained_reduce(
+    command: &ImperativeCommand,
+    _snapshot: &ImperativeSnapshot,
+    _config: &ImperativeConfig,
+    _history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _operation: &AppOperationContext,
+) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation, NoDraftMutation>, Fault> {
+    match command {
+        ImperativeCommand::SetLocale(payload) if payload.value.len() <= IMPERATIVE_RETAINED_RAW_BYTES => Ok(Emit::config(vec![ImperativeConfigMutation::SetLocale { value: payload.value.clone() }])),
+        _ => Err(Fault::from("imperative-retained-route-mismatch")),
+    }
+}
+
+struct ImperativeRetainedCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl ImperativeRetainedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: IMPERATIVE_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for ImperativeRetainedCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<ImperativePlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<ImperativePlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        IMPERATIVE_RETAINED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        imperative_retained_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > IMPERATIVE_RETAINED_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Imperative bounded command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for ImperativeRetainedCommandJobFactory {
+    type Owner = EditorApp<ImperativePlayApp>;
+    const TOOL_IDS: &'static [&'static str] = IMPERATIVE_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = IMPERATIVE_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = IMPERATIVE_RETAINED_PUBLICATION_CONTRACTS;
+}
+//#endregion 🧵️RetainedCommands
+
+//#region 📬️ConfigStorePreparation
+struct ImperativeConfigPreparationFactory;
+
+struct ImperativeConfigPreparation {
+    base: Option<store::SnapshotRead<ImperativeConfig>>,
+    mutation: Option<ImperativeConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    candidate: Option<(ImperativeConfig, ImperativeConfigMutation, ImperativeConfigMutation)>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<ImperativeConfig, ImperativeConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn imperative_config_edit(forward: ImperativeConfigMutation, inverse: ImperativeConfigMutation, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<ImperativeConfigMutation> {
+    let id = format!("imperative-retained-{}-{}", authority.operation().0, authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![forward], inverse: vec![inverse],
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+        }],
+        description, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<ImperativeConfig, ImperativeConfigMutation> for ImperativeConfigPreparationFactory {
+    fn preflight(&self, mutation: &ImperativeConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        let admitted = matches!(mutation, ImperativeConfigMutation::SetLocale { value } if value.len() <= IMPERATIVE_RETAINED_RAW_BYTES);
+        if lane != store::HistoryLane::Document || !admitted || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) { return Err("Imperative config preparation rejected its lane or route-specific envelope".into()); }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<ImperativeConfig, ImperativeConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<ImperativeConfig, ImperativeConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<ImperativeConfig, ImperativeConfigMutation>> {
+        let admitted = matches!(&request.mutation, ImperativeConfigMutation::SetLocale { value } if value.len() <= IMPERATIVE_RETAINED_RAW_BYTES);
+        if request.lane != store::HistoryLane::Document || !admitted || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES { return Err(request); }
+        Ok(Box::new(ImperativeConfigPreparation {
+            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<ImperativeConfig, ImperativeConfigMutation> for ImperativeConfigPreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        if self.candidate.is_none() {
+            let base = self.base.as_ref().ok_or_else(|| "Imperative config preparation lost its exact base root".to_string())?.get();
+            let retained = base.run_output_json.len().saturating_add(base.locale.len()).saturating_add(base.contributions_json.len());
+            if retained > store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES { return Err("Imperative config base exceeds retained byte capacity".into()); }
+            let mutation = self.mutation.take().ok_or_else(|| "Imperative config preparation lost its mutation owner".to_string())?;
+            let ImperativeConfigMutation::SetLocale { value } = &mutation else { return Err("Imperative config preparation received a non-locale mutation".into()); };
+            let mut post = base.clone();
+            post.locale = value.clone();
+            self.candidate = Some((post, ImperativeConfigMutation::SetLocale { value: base.locale.clone() }, mutation));
+            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 0, digest: [0; 32] };
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
+        }
+        let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "Imperative config preparation lost its candidate".to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Imperative config preparation lost its Store authority".to_string())?;
+        let prepared = authority.prepare_one_item(imperative_config_edit(forward, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<ImperativeConfig, ImperativeConfigMutation>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<ImperativeConfig, ImperativeConfigMutation>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || grant.maximum_items == 0 { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }); }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() { return Err("Imperative config preparation could not return its exact base root".into()); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            let bytes = authority.actor().len();
+            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none() }
+}
+//#endregion 📬️ConfigStorePreparation
+
 impl ArtifactEditor for ImperativePlayApp {
     type Snapshot = ImperativeSnapshot;
     type Mutation = ImperativeMutation;
@@ -118,6 +305,62 @@ impl ArtifactEditor for ImperativePlayApp {
 
     const DIALECT: semio_framework_plugin::app::Dialect = crate::artifacts::imperative::IMPERATIVE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = IMPERATIVE_DOCUMENT_SCHEMA;
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(std::sync::Arc::new(ImperativeConfigPreparationFactory))
+    }
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<ImperativePlayApp>,
+        owner_file: "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.imperative.imperative@1/*#editor",
+        document_schema: "imperative.document/v1",
+        factory: "ImperativeRetainedCommandJobFactory",
+        factory_type: ImperativeRetainedCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 16, 1, 16_384, 7_500),
+        tools: ["setLocale"]
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(ImperativeRetainedCommandJobFactory::new(&controller))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !IMPERATIVE_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id {
+            return Err(Fault::from("imperative-command-tool-mismatch"));
+        }
+        if imperative_retained_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
+            return Err(Fault::from("imperative-command-payload-too-large"));
+        }
+        let tool_id = request.command.command_id();
+        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, imperative_retained_reduce, imperative_retained_extent));
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            *request.command,
+            request.snapshot,
+            request.config,
+            request.history,
+            request.interaction_state,
+            request.interaction_hover,
+            operation_context,
+            request.completion,
+            ImperativeCommand::command_id,
+            IMPERATIVE_RETAINED_RAW_BYTES,
+            IMPERATIVE_RETAINED_WORK_ITEMS,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
 
     async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::imperative::config::schema::app_schema_descriptor())
@@ -229,6 +472,17 @@ pub fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
             // hover are no longer declared here: framework-owned, injected via `.interaction(...)` below.
             .view_action("run", LocalizedLabel::native("Run", "Ausführen"))
             .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
+            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setContributions", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addStepAt", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("removeStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("removeStepAt", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("moveStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("moveStepAt", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setStepParams", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setStepParamsAt", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("run", InteractiveJobClassification::BatchOnlyPendingRewrite)
             // 📝️ Staged argument form for the panel-visible create action (the step kind is a choice).
             .action_args("addStep", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
@@ -329,6 +583,36 @@ mod tests {
     use semio_framework_plugin::PluginApp;
     use std::collections::BTreeMap;
     use store::{Backbone, BackboneMessage, MemoryBackbone};
+
+    const RETAINED_ROUTES: &str = include_str!("🧪️fixtures/retained-command-routes.json");
+
+    #[test]
+    fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
+        use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+        let fixture: serde_json::Value = serde_json::from_str(RETAINED_ROUTES).expect("Imperative retained route fixture decodes through serde_json");
+        assert_eq!(fixture.get("maximumRawBytes").and_then(serde_json::Value::as_u64), Some(IMPERATIVE_RETAINED_RAW_BYTES as u64));
+        assert_eq!(fixture.get("maximumWorkItems").and_then(serde_json::Value::as_u64), Some(IMPERATIVE_RETAINED_WORK_ITEMS as u64));
+        let routes = fixture.get("routes").and_then(serde_json::Value::as_array).expect("routes");
+        let migrated = routes
+            .iter()
+            .filter(|route| route.get("disposition").and_then(serde_json::Value::as_str) == Some("migrated"))
+            .map(|route| route.get("id").and_then(serde_json::Value::as_str).expect("route id"))
+            .collect::<Vec<_>>();
+        assert_eq!(migrated, IMPERATIVE_RETAINED_TOOL_IDS);
+        assert_eq!(routes.len(), 11);
+        assert_eq!(<ImperativeRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, IMPERATIVE_RETAINED_PUBLICATION_CONTRACTS);
+        assert!(IMPERATIVE_RETAINED_PUBLICATION_CONTRACTS.iter().all(|row| row.lanes == [ArtifactToolPublicationLane::Config]));
+        assert!(routes.iter().filter(|route| route.get("disposition").and_then(serde_json::Value::as_str) == Some("batch-only-pending-rewrite")).all(|route| route.get("lanes").and_then(serde_json::Value::as_array).is_some_and(Vec::is_empty)));
+    }
+
+    #[test]
+    fn config_preparation_admits_locale_and_rejects_process_global_contributions() {
+        use store::ArtifactStoreOneItemPreparationFactory;
+        let factory = ImperativeConfigPreparationFactory;
+        assert!(factory.preflight(&ImperativeConfigMutation::SetLocale { value: "de-DE".into() }, None, store::HistoryLane::Document).is_ok());
+        assert!(factory.preflight(&ImperativeConfigMutation::SetContributions { json: "[]".into() }, None, store::HistoryLane::Document).is_err());
+        assert!(factory.preflight(&ImperativeConfigMutation::SetLocale { value: "de-DE".into() }, None, store::HistoryLane::Interaction).is_err());
+    }
 
     #[semio_framework_async_macros::async_test]
     async fn app_definition_builds_without_panicking() {

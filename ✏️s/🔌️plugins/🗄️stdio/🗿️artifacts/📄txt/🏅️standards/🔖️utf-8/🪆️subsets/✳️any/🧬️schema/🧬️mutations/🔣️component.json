@@ -1,16 +1,86 @@
 {
-  "$id": "https://semio.tech/schema/s.stdio.txt/mutation.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "TxtMutation",
-  "type": "object",
-  "properties": {
-    "mutation": {
-      "type": "string",
-      "enum": ["noMutation", "setSnapshot", "setTrailingNewline", "setLineEnding", "insertLine", "removeLine", "setLine"]
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "set-trailing-newline"
+        },
+        "payload": {
+          "$ref": "✏️set-trailing-newline/🔣️payload.schema.json"
+        }
+      }
     },
-    "snapshot": { "$ref": "../📸️snapshot/🔣️component.json" },
-    "value": {},
-    "index": { "type": "integer", "minimum": 0 },
-    "text": { "type": "string" }
-  },
-  "required": ["mutation"]
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "set-line-ending"
+        },
+        "payload": {
+          "$ref": "✏️set-line-ending/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "insert-line"
+        },
+        "payload": {
+          "$ref": "📥️insert-line/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "remove-line"
+        },
+        "payload": {
+          "$ref": "🗑️remove-line/🔣️payload.schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "set-line"
+        },
+        "payload": {
+          "$ref": "✏️set-line/🔣️payload.schema.json"
+        }
+      }
+    }
+  ]
 }

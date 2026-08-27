@@ -1,0 +1,9 @@
+{
+  "componentTemplate": "(component\n  (core module $storage (memory (export \"memory\") 1))\n  (core instance $storage (instantiate $storage))\n  (alias core export $storage \"memory\" (core memory $memory))\n  (type $result {{type}})\n  (core func $return (canon task.return (result $result) (memory $memory)))\n  (core module $guest\n    (import \"\" \"return\" (func (param {{params}})))\n    (func (export \"run\") (result i32) unreachable)\n    (func (export \"callback\") (param i32 i32 i32) (result i32) unreachable))\n  (core instance $imports (export \"return\" (func $return)))\n  (core instance $guest (instantiate $guest (with \"\" (instance $imports))))\n  (type $run (func async (result $result)))\n  (func (export \"run\") (type $run) (canon lift (core func $guest \"run\") (memory $memory) async (callback (func $guest \"callback\")))))",
+  "cases": [
+    { "id": "descriptor", "type": "(list u8)", "params": ["i32", "i32"], "direct": true },
+    { "id": "job-start", "type": "(result (error (list u8)))", "params": ["i32", "i32", "i32"], "direct": true },
+    { "id": "job-step", "type": "(tuple u32 u32 u32 u32 u32)", "params": ["i32", "i32", "i32", "i32", "i32"], "direct": true },
+    { "id": "turn", "type": "(tuple u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32 u32)", "params": ["i32"], "direct": false }
+  ]
+}

@@ -20,9 +20,10 @@ pub struct AddWidget {
 /// selection here — selection is framework-owned `InteractionState` now, only ever mutated by the
 /// framework's own injected `interactionSelect` handling, never by an app command's `Emit` (mirrors
 /// note's `add-block`).
-pub async fn handle(payload: &AddWidget, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
+pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     let descriptor = match payload.kind.as_str() {
         "neuron" => json!({ "kind": "neuron", "neuronKind": payload.neuron_kind.as_deref().unwrap_or("math.add") }).to_string(),
+        "inputSlider" => json!({ "kind": "inputSlider", "label": "" }).to_string(),
         other => json!({ "kind": other }).to_string(),
     };
     let x = payload.x.unwrap_or(120.0);

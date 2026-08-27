@@ -414,7 +414,7 @@ mod json_schema_tests {
 //#region 🔖️Value
 /// 🌱️ `DslValue` and its serde bridge are owned by `🧰️framework/🔨️modules/🌱️value` and reach the
 /// tree through the replication crate; the record/field/wire types below build on it.
-pub use protocol::value::{from_dsl_value, to_dsl_value, DslValue};
+pub use protocol::value::{from_dsl_value, ordered, to_dsl_value, DslValue};
 
 /// @emoji 🕸️ One endpoint (and optional edge) of a wire-literal.
 #[derive(Clone, Debug, PartialEq, Default)]

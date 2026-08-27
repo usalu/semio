@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff construction for `change-imported-features`.
-use super::mutation::ChangeImportedFeatures;
+use super::ChangeImportedFeatures;
 use crate::artifacts::gisterrain::diff::GisTerrainDiff;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 

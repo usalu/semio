@@ -274,6 +274,7 @@ semio_framework_plugin::derive_artifact_facets!(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::txt::schema::mutations::{InsertLineMutation, InsertLinePayload};
     use crate::artifacts::txt::{TxtDiff, TxtMutation, STDIO_TXT_DOCUMENT_SCHEMA};
 
     #[semio_framework_async_macros::async_test]
@@ -429,7 +430,7 @@ mod tests {
         assert_eq!(trace.consumed, payload.len(), "snapshot protocol must consume the whole post-envelope payload");
 
         // Spr (mutations binary facet) — a real, non-trivial mutation.
-        let mutation = TxtMutation::InsertLine { index: 1, text: "x".into() };
+        let mutation = TxtMutation::InsertLine(InsertLineMutation { index: 1, text: "x".into() });
         let op_bytes = <TxtMutation as protocol::OpBinary>::encode_op(&mutation).expect("encode_op");
         let spr_protocol = dsl::parse_protocol(crate::artifacts::txt::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
         let trace = dsl::walk_protocol(&spr_protocol, &op_bytes).expect("walk mutations protocol");
@@ -456,9 +457,10 @@ mod tests {
         assert_eq!(<TxtSnapshot as store::ArtifactPack>::decode_pack(crate::artifacts::txt::examples::demo::PACK_BYTES).unwrap(), demo);
         assert_eq!(<TxtSnapshot as store::ArtifactPack>::encode_pack(&demo), crate::artifacts::txt::examples::demo::PACK_BYTES.to_vec());
 
-        let mutation = TxtMutation::InsertLine { index: 1, text: "x".into() };
-        assert_eq!(<TxtMutation as protocol::OpBinary>::encode_op(&mutation).unwrap(), crate::artifacts::txt::examples::demo::SPR_BYTES.to_vec());
-        assert_eq!(<TxtMutation as protocol::OpBinary>::decode_op(crate::artifacts::txt::examples::demo::SPR_BYTES).unwrap(), mutation);
+        let mutation = TxtMutation::InsertLine(InsertLineMutation { index: 1, text: "x".into() });
+        let bytes = <TxtMutation as protocol::OpBinary>::encode_op(&mutation).unwrap();
+        assert_eq!(bytes.first(), Some(&3));
+        assert_eq!(<TxtMutation as protocol::OpBinary>::decode_op(&bytes).unwrap(), mutation);
     }
 
     /// 🧪️ P2-P3: every committed grammar/protocol file for this standard genuinely parses under

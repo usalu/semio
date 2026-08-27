@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.svg.mutation;
+// set-declaration/SetDeclaration
+message SetDeclarationPayload { bytes declaration = 1; }
