@@ -1,0 +1,8 @@
+{
+  "title": "Render Heating Intro And Concat",
+  "slug": "RENDER-HEATING-INTRO-CONCAT",
+  "status": "closed",
+  "goal": "tutorial/energy",
+  "due": "2026-08-17",
+  "summary": "Rendered Demo_Intro_Heizlast at 1080p60; ffmpeg-concat onto existing FullHeatingDemandVideo.mp4 (no module re-render)."
+}

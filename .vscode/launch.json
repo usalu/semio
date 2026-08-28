@@ -939,6 +939,28 @@
         "order": 207
       }
     },
+    {
+      "name": "🛠️dev🎬manim physical fundamentals",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run manim -pql tutorial/energy/demand/1_physical_fundamentals/scene_1.py Beat1_UnsichtbareDimension",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 208
+      }
+    },
+    {
+      "name": "🛠️dev🎬manim physical fundamentals full",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "\"${workspaceFolder}/.venv/bin/python\" tutorial/energy/demand/1_physical_fundamentals/full_physical_fundamentals_video.py -q l",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 209
+      }
+    },
     // #endregion
 
     // #region 📦 Build
@@ -1160,6 +1182,28 @@
       "presentation": {
         "group": "4_build",
         "order": 135
+      }
+    },
+    {
+      "name": "📦build📽️physicalfundamentals🔊audio",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/1_physical_fundamentals/generate_audio.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 136
+      }
+    },
+    {
+      "name": "📦build📽️physicalfundamentals🎬video",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/1_physical_fundamentals/build_full_video.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 137
       }
     },
     // #endregion

@@ -568,3 +568,17 @@ And the animation of the sun with the house is not synced
 ## 2026-08-09 22:52
 
 @tutorial/energy/demand/Cooling/5_systemauslegung/scene_5.py in beat 2, the particels they are crossing the room boundry whis we have to avoide, and also in right when q-v,R box is showing p i want the 4 boxes there being allign that means you have to make that rectangle a little bigger
+---
+
+physical foundations Tutorials
+
+The heating and cooling videos are already finished, so our current goal is to create the physical foundations video. Please carefully read the heating and cooling demand tutorials and follow the instructions for making animations based on our agent in the same folder directory.
+You must maintain the same visual style as the completed videos. If we used a thermometer or other objects (such as the sun, buildings, humans, or radiation) in the heating or cooling animations, you must use those exact same graphics for this new video. I will send you a scene description shortly. While the underlying context remains the same as the previous videos, you are free to change the animation itself:
+
+
+---
+Review and revise the current scenes. The video's storyline needs improvement, specifically the animations used to explain the definitions. I want you to creatively enhance these animations, ensuring that the objects and text do not collide. Additionally, please increase the video's duration and add more detailed information to make it more comprehensive. Finally, use the heating and cooling videos as a reference and try to match their overall style.
+---
+In the meantime, I want to create a diagram or artifact that outlines the formulas, definitions, and concepts we explain in the videos to make the topics we cover easier to understand
+
+make a document that explain each videos 
