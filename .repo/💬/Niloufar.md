@@ -582,3 +582,37 @@ Review and revise the current scenes. The video's storyline needs improvement, s
 In the meantime, I want to create a diagram or artifact that outlines the formulas, definitions, and concepts we explain in the videos to make the topics we cover easier to understand
 
 make a document that explain each videos 
+---
+In Beat 2, there is a circle where the ball is going to fall. I want to simplify the circle more or change the object to another shape because it's confusing.
+---
+ it gets worse: if that's a tree, make it look like a cute tree, and make the object more like an apple. Maybe the circle was better.
+ ---
+ In Beat 2, the height of the tree should be aligned with the ground where the apple is touching. The line coming out of the tree is meaningless, and the geometry of the tree is again stupid. I don't want any color in the tree at all. The 'gespeichert' energy text needs to be shifted up a little bit, and the animation around the 'm' at the end needs to be aligned so the 'm' is in the middle.
+ ---
+ The statement "Fläche = Arbeit" is meaningless; replacing it with a coordinate system showing distance and force makes the area meaningful. 
+and also sync it with the apple and the tree story 
+---
+You can increase the distance and the height of the tree so the coordinate system makes more sense. The apple needs to go up first, and as it falls, show that motion on the coordinate graph. Make the coordinate arrows smaller, but make the overall coordinate system bigger to match the scale of the tree, the apple, and the scene.
+---
+Shift the coordinate system more to the right, and show the 'S' while the apple is falling down, not going up. Also, the '1J' text is colliding with the formula inside the coordinate system.
+---
+again the position of 1J is bad shift it in front of the formula in yello Fläche in cordination
+---
+also in beat 2 yellow 'text geschpeichert Energy', shift it a little bit up
+---
+In Beat 3, there is a moment when a yellow ball is falling. I need to shift both the ball and the ground lower to prevent them from colliding with the 'gleiche Arbeit W' text
+---
+In Beat 4, can you improve the graphics of the Eimer object? It is really unclear what is going on in this scene, and I want the geometry to be clearer
+---
+In Beat 5, delete the blue rectangle and make the text inside it bigger and more visible. Also, don't show the human figure by the house, or Leibniz University at the end."
+---
+At the end of the scene in Beat 6, when the house appears, the animation is meaningless; revise and improve it. You can show winter and summer to explain the theme better through the animation.
+---
+Revise Scene 6, especially when it shows the house. All elements are colliding with each other; you have to apply some distance between them. Do not try to make the text smaller, but try shifting the elements to prevent the collision.
+---
+We changed the animated Eimer object in Scene 5 or 6; please use that same animation here in Scene 8
+---
+In Scene 8 at the end, the text where kW and kWh/m²a are being compared needs to be aligned in the middle of the houses, where the lines indicate
+---
+Also, I want you to add audio using Gemini TTS models. I think we have an agent for adding audio, but I want you to adjust it. Since we have subtitles in all of our videos, we only need the audio to read the subtitles and be synced with the video. Please implement this and, as a test, add audio to@tutorial/energy/demand/1_physical_fundamentals 
+---

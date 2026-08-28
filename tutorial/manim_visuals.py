@@ -722,19 +722,63 @@ def swap_caption(scene, old, text_de: str, *, run_time: float = 0.35, **kwargs):
 # section needs. No hand-typed "hold this many seconds" guesses, no separate
 # subtitle file that can drift out of sync with what's spoken.
 NARRATION_WPS: float = 2.5  # spoken words per second, English VO
+SUBTITLE_WPS: float = 2.2  # German subtitle VO (Gemini TTS)
 
 Clause = tuple[str, str, str]  # (section_key, narration_en, subtitle_de)
+_VO_LANGUAGE: str = "en"  # "en" | "de" — which clause field estimates timing when no manifest
+_VO_TIMING: dict[str, dict[str, float]] = {}
+
+
+def set_vo_language(lang: str) -> None:
+    """🗣️ Switch timing estimates to German subtitles (``de``) or English narration (``en``)."""
+    global _VO_LANGUAGE
+    if lang not in {"en", "de"}:
+        raise ValueError(f"unsupported vo language: {lang!r}")
+    _VO_LANGUAGE = lang
+
+
+def load_vo_timing(manifest_path) -> None:
+    """📋 Load measured per-clause durations from ``generate_audio.py`` (``vo_timing.json``)."""
+    global _VO_TIMING
+    from pathlib import Path
+    import json
+
+    path = Path(manifest_path)
+    if not path.is_file():
+        return
+    data = json.loads(path.read_text(encoding="utf-8"))
+    beats = data.get("beats") if isinstance(data, dict) else None
+    if isinstance(beats, dict):
+        _VO_TIMING = {
+            beat: {str(k): float(v) for k, v in timings.items()}
+            for beat, timings in beats.items()
+            if isinstance(timings, dict)
+        }
 
 
 def narration_seconds(narration: list[Clause], key: str | None = None) -> float:
     """⏱️ Estimated spoken seconds for one clause (``key``) or the whole narration."""
+    if _VO_LANGUAGE == "de":
+        words = sum(
+            len(text_de.split()) for section, _, text_de in narration
+            if text_de.strip() and (key is None or section == key)
+        )
+        return round(words / SUBTITLE_WPS, 2)
     words = sum(len(text_en.split()) for section, text_en, _ in narration if key is None or section == key)
     return round(words / NARRATION_WPS, 2)
 
 
 def narration_text(narration: list[Clause], key: str | None = None) -> str:
-    """📝 Join clauses' English text back into one string — what ``generate_audio.py`` sends to TTS."""
+    """📝 Join clauses' English text — legacy English VO string."""
     return " ".join(text_en for section, text_en, _ in narration if key is None or section == key)
+
+
+def subtitle_narration_text(narration: list[Clause], key: str | None = None) -> str:
+    """📝 Join clauses' German subtitles — default VO when subtitles are on screen."""
+    return " ".join(
+        text_de for section, _, text_de in narration
+        if text_de.strip() and (key is None or section == key)
+    )
 
 
 def subtitle_text(narration: list[Clause], key: str) -> str:
@@ -751,8 +795,100 @@ def hold_for(scene, narration: list[Clause], key: str, *, used: float = 0.0, min
     ``used`` is the sum of ``run_time`` already spent animating this clause's
     visuals (e.g. ``Create``ing the highlight ring) — only the remainder is
     idle wait, so the beat never runs shorter or longer than its own VO.
+    When ``vo_timing.json`` exists, the budget is the measured TTS length of
+    that clause instead of a words-per-second estimate.
+
+    A clause may be held more than once when its visuals arrive in stages. The
+    budget is spent across those calls rather than granted again each time —
+    holding it twice used to leave the voiceover finished and the animation
+    still running, which is exactly the drift this timing is meant to prevent.
     """
-    remaining = max(min_wait, narration_seconds(narration, key) - used)
+    beat_id = vo_beat_id(scene)
+    measured = _VO_TIMING.get(beat_id, {}).get(key)
+    budget = measured if measured is not None else narration_seconds(narration, key)
+    spent = getattr(scene, "_vo_spent", {})
+    remaining = max(min_wait, budget - spent.get(key, 0.0) - used)
+    spent[key] = spent.get(key, 0.0) + used + remaining
+    scene._vo_spent = spent
+    _trace_clause(scene, key, used=used, remaining=remaining)
     scene.wait(remaining)
     return remaining
+#endregion
+
+
+#region VO trace
+# The voiceover can only line up with the subtitles if we know when each
+# subtitle actually appears in the rendered clip. ``used`` is by construction
+# the seconds spent since this clause's caption faded in, so the clause starts
+# at ``renderer.time - used``. Rendering with VO_TRACE=1 writes those marks to
+# vo_trace.json next to the scene file; generate_audio.py --align then places
+# each clause's speech at exactly that timestamp.
+_VO_TRACE_ENABLED: bool = bool(__import__("os").environ.get("VO_TRACE"))
+_VO_TRACE: dict[str, dict[str, dict[str, float]]] = {}
+_VO_TRACE_PATHS: dict[str, str] = {}
+
+
+def vo_beat_id(scene) -> str:
+    """🏷️ Which beat's narration this scene is currently playing.
+
+    The full-video runner replays every beat through one host ``Scene``, so the
+    class name alone would merge all beats into a single timing bucket.
+    """
+    return getattr(scene, "vo_beat_id", None) or scene.__class__.__name__
+
+
+def begin_vo_beat(scene, beat_id: str) -> None:
+    """🎬 Point the host scene at ``beat_id``'s timings and clear the previous beat's spend."""
+    scene.vo_beat_id = beat_id
+    scene._vo_spent = {}
+
+
+def _scene_time(scene) -> float:
+    renderer = getattr(scene, "renderer", None)
+    return float(getattr(renderer, "time", 0.0) or 0.0)
+
+
+def _trace_clause(scene, key: str, *, used: float, remaining: float) -> None:
+    if not _VO_TRACE_ENABLED:
+        return
+    import sys as _sys
+
+    beat_id = vo_beat_id(scene)
+    now = _scene_time(scene)
+    marks = _VO_TRACE.setdefault(beat_id, {})
+    mark = marks.get(key)
+    if mark is None:
+        marks[key] = {"start": round(max(0.0, now - used), 3), "window": round(used + remaining, 3)}
+    else:
+        mark["window"] = round(now + remaining - mark["start"], 3)
+    module = _sys.modules.get(scene.__class__.__module__)
+    scene_file = getattr(module, "__file__", None)
+    if scene_file:
+        _VO_TRACE_PATHS[beat_id] = scene_file
+
+
+def _dump_vo_trace() -> None:
+    if not _VO_TRACE:
+        return
+    import json
+    from pathlib import Path
+
+    for beat_id, marks in _VO_TRACE.items():
+        scene_file = _VO_TRACE_PATHS.get(beat_id)
+        if not scene_file:
+            continue
+        path = Path(scene_file).resolve().parent / "vo_trace.json"
+        payload = {"beats": {}}
+        if path.is_file():
+            try:
+                existing = json.loads(path.read_text(encoding="utf-8"))
+                if isinstance(existing.get("beats"), dict):
+                    payload["beats"] = existing["beats"]
+            except Exception:  # noqa: BLE001
+                pass
+        payload["beats"][beat_id] = marks
+        path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+__import__("atexit").register(_dump_vo_trace)
 #endregion

@@ -287,6 +287,14 @@ class Demo_Intro_Heizlast(NGSIntro):
     series_de = "Gebäudeenergie · Heizlast"
 
 
+class Demo_Intro_PhysikalischeGrundlagen(NGSIntro):
+    """⚛️ Series intro for Physical Fundamentals — force, power, energy."""
+
+    topic_de = "Physikalische Grundlagen"
+    topic_explain_de = "Kraft, Leistung und Energie — die Sprache der Gebäudeenergie."
+    series_de = "Gebäudeenergie · Grundlagen"
+
+
 class Intro_HeatingVsCooling(NGSIntro):
     """⚖️ Intro for Cooling part 1 — Heizlast vs. Kühllast."""
 

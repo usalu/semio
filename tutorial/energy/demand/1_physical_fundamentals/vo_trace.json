@@ -1,0 +1,288 @@
+{
+  "beats": {
+    "Beat1_UnsichtbareDimension": {
+      "intro": {
+        "start": 0.0,
+        "window": 8.52
+      },
+      "seasons": {
+        "start": 8.87,
+        "window": 8.16
+      },
+      "language": {
+        "start": 17.03,
+        "window": 8.616
+      },
+      "quantities": {
+        "start": 25.646,
+        "window": 7.8
+      },
+      "confusion": {
+        "start": 33.446,
+        "window": 9.72
+      },
+      "plan": {
+        "start": 43.166,
+        "window": 9.912
+      }
+    },
+    "Beat2_KraftUndArbeit": {
+      "start": {
+        "start": 0.0,
+        "window": 7.92
+      },
+      "newton": {
+        "start": 7.92,
+        "window": 8.712
+      },
+      "gravity": {
+        "start": 16.632,
+        "window": 13.248
+      },
+      "work": {
+        "start": 29.963,
+        "window": 7.848
+      },
+      "area": {
+        "start": 37.847,
+        "window": 6.912
+      },
+      "joule": {
+        "start": 44.78,
+        "window": 6.72
+      },
+      "feel": {
+        "start": 51.547,
+        "window": 7.56
+      },
+      "stored": {
+        "start": 59.18,
+        "window": 8.16
+      }
+    },
+    "Beat3_ArbeitZuLeistung": {
+      "intro": {
+        "start": 0.0,
+        "window": 7.92
+      },
+      "compare": {
+        "start": 7.92,
+        "window": 7.368
+      },
+      "fast": {
+        "start": 15.321,
+        "window": 7.056
+      },
+      "slow": {
+        "start": 22.377,
+        "window": 7.056
+      },
+      "formula": {
+        "start": 29.433,
+        "window": 9.552
+      },
+      "watt": {
+        "start": 38.985,
+        "window": 6.816
+      },
+      "rate": {
+        "start": 46.568,
+        "window": 8.304
+      },
+      "meter": {
+        "start": 54.872,
+        "window": 8.76
+      }
+    },
+    "Beat4_Kilowattstunde": {
+      "question": {
+        "start": 0.0,
+        "window": 7.656
+      },
+      "small": {
+        "start": 7.656,
+        "window": 8.208
+      },
+      "formula": {
+        "start": 15.864,
+        "window": 8.808
+      },
+      "convert": {
+        "start": 24.672,
+        "window": 8.952
+      },
+      "pack": {
+        "start": 33.624,
+        "window": 8.016
+      },
+      "analogy": {
+        "start": 41.64,
+        "window": 12.72
+      },
+      "fill": {
+        "start": 54.44,
+        "window": 16.464
+      },
+      "bill": {
+        "start": 70.94,
+        "window": 10.056
+      },
+      "ladder": {
+        "start": 80.996,
+        "window": 10.752
+      }
+    },
+    "Beat5_Groessenordnungen": {
+      "intro": {
+        "start": 0.0,
+        "window": 8.16
+      },
+      "candle": {
+        "start": 9.76,
+        "window": 6.168
+      },
+      "person": {
+        "start": 15.928,
+        "window": 7.968
+      },
+      "fridge": {
+        "start": 23.896,
+        "window": 6.912
+      },
+      "workstation": {
+        "start": 30.808,
+        "window": 8.52
+      },
+      "kettle": {
+        "start": 39.328,
+        "window": 7.512
+      },
+      "heating": {
+        "start": 46.84,
+        "window": 9.768
+      },
+      "hall": {
+        "start": 56.608,
+        "window": 8.76
+      },
+      "city": {
+        "start": 65.368,
+        "window": 8.616
+      },
+      "close": {
+        "start": 73.984,
+        "window": 8.664
+      }
+    },
+    "Beat6_Energieerhaltung": {
+      "law": {
+        "start": 0.0,
+        "window": 11.404
+      },
+      "input": {
+        "start": 11.371,
+        "window": 8.904
+      },
+      "split": {
+        "start": 20.275,
+        "window": 9.912
+      },
+      "sankey": {
+        "start": 30.187,
+        "window": 9.168
+      },
+      "walls": {
+        "start": 39.355,
+        "window": 8.16
+      },
+      "merge": {
+        "start": 47.515,
+        "window": 8.256
+      },
+      "building": {
+        "start": 55.771,
+        "window": 10.704
+      },
+      "seasons": {
+        "start": 66.475,
+        "window": 8.664
+      }
+    },
+    "Beat7_Waermepumpe": {
+      "shift": {
+        "start": 0.0,
+        "window": 10.752
+      },
+      "conserve": {
+        "start": 10.752,
+        "window": 9.768
+      },
+      "inputs": {
+        "start": 20.52,
+        "window": 8.568
+      },
+      "output": {
+        "start": 29.088,
+        "window": 8.352
+      },
+      "ledger": {
+        "start": 37.44,
+        "window": 8.856
+      },
+      "cop": {
+        "start": 46.296,
+        "window": 7.8
+      },
+      "value": {
+        "start": 54.096,
+        "window": 9.6
+      },
+      "subs": {
+        "start": 63.696,
+        "window": 9.168
+      },
+      "contrast": {
+        "start": 72.864,
+        "window": 12.0
+      },
+      "jaz": {
+        "start": 84.864,
+        "window": 11.664
+      },
+      "primary": {
+        "start": 96.528,
+        "window": 8.568
+      }
+    },
+    "Beat8_Ausblick": {
+      "recap": {
+        "start": 0.0,
+        "window": 14.204
+      },
+      "cheat": {
+        "start": 14.221,
+        "window": 10.056
+      },
+      "left": {
+        "start": 24.287,
+        "window": 10.152
+      },
+      "right": {
+        "start": 34.439,
+        "window": 12.552
+      },
+      "perarea": {
+        "start": 46.991,
+        "window": 8.856
+      },
+      "both": {
+        "start": 55.847,
+        "window": 9.768
+      },
+      "cta": {
+        "start": 65.615,
+        "window": 7.608
+      }
+    }
+  }
+}

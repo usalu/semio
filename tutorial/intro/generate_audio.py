@@ -16,6 +16,12 @@ NARRATIONS = {
         "at Leibniz University Hannover. "
         "In this video, we explain the topic shown on screen."
     ),
+    "intro_physical_fundamentals": (
+        "Welcome to this tutorial from Sustainable Building Systems "
+        "at Leibniz University Hannover. "
+        "This video is the physical foundation: force, work, power and energy — "
+        "the language of heating and cooling demand."
+    ),
 }
 
 

@@ -1,0 +1,88 @@
+{
+  "source": "subtitle",
+  "beats": {
+    "Beat1_UnsichtbareDimension": {
+      "intro": 8.52,
+      "seasons": 8.16,
+      "language": 8.616,
+      "quantities": 7.8,
+      "confusion": 9.72,
+      "plan": 9.912
+    },
+    "Beat2_KraftUndArbeit": {
+      "start": 7.92,
+      "newton": 8.712,
+      "gravity": 13.248,
+      "work": 7.848,
+      "area": 6.912,
+      "joule": 6.72,
+      "feel": 7.56,
+      "stored": 8.16
+    },
+    "Beat3_ArbeitZuLeistung": {
+      "intro": 7.92,
+      "compare": 7.368,
+      "fast": 7.056,
+      "slow": 7.056,
+      "formula": 9.552,
+      "watt": 6.816,
+      "rate": 8.304,
+      "meter": 8.76
+    },
+    "Beat4_Kilowattstunde": {
+      "question": 7.656,
+      "small": 8.208,
+      "formula": 8.808,
+      "convert": 8.952,
+      "pack": 8.016,
+      "analogy": 12.72,
+      "fill": 16.464,
+      "bill": 10.056,
+      "ladder": 10.752
+    },
+    "Beat5_Groessenordnungen": {
+      "intro": 8.16,
+      "candle": 6.168,
+      "person": 7.968,
+      "fridge": 6.912,
+      "workstation": 8.52,
+      "kettle": 7.512,
+      "heating": 9.768,
+      "hall": 8.76,
+      "city": 8.616,
+      "close": 8.664
+    },
+    "Beat6_Energieerhaltung": {
+      "law": 10.104,
+      "input": 8.904,
+      "split": 9.912,
+      "sankey": 9.168,
+      "walls": 8.16,
+      "merge": 8.256,
+      "building": 10.704,
+      "seasons": 8.664
+    },
+    "Beat7_Waermepumpe": {
+      "shift": 10.752,
+      "conserve": 9.768,
+      "inputs": 8.568,
+      "output": 8.352,
+      "ledger": 8.856,
+      "cop": 7.8,
+      "value": 9.6,
+      "subs": 9.168,
+      "contrast": 12.0,
+      "jaz": 11.664,
+      "primary": 8.568
+    },
+    "Beat8_Ausblick": {
+      "recap": 10.104,
+      "cheat": 10.056,
+      "left": 10.152,
+      "right": 12.552,
+      "perarea": 8.856,
+      "both": 9.768,
+      "cta": 7.608
+    }
+  }
+}

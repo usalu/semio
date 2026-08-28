@@ -1196,6 +1196,39 @@
       }
     },
     {
+      "name": "📦build📽️physicalfundamentals📍trace",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/1_physical_fundamentals/generate_audio.py --trace",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 137
+      }
+    },
+    {
+      "name": "📦build📽️physicalfundamentals🧩align",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/1_physical_fundamentals/generate_audio.py --align",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 138
+      }
+    },
+    {
+      "name": "📦build📽️physicalfundamentals🔎syncreport",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/1_physical_fundamentals/generate_audio.py --report",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 139
+      }
+    },
+    {
       "name": "📦build📽️physicalfundamentals🎬video",
       "type": "node-terminal",
       "request": "launch",
@@ -1203,7 +1236,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
-        "order": 137
+        "order": 140
       }
     },
     // #endregion

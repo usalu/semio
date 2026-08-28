@@ -9,7 +9,7 @@ Jedes Kapitel fasst **Lernziel**, **Kernbegriffe**, **Formeln** und **Merksätze
 
 ```mermaid
 flowchart TB
-    PF["0 · Physikalische Grundlagen<br/>kW vs kWh · COP"]
+    PF["0 · Physikalische Grundlagen<br/>N · J · W · kWh · COP · JAZ"]
     H1["Heizung Modul 1<br/>Drei Wärmeübertragungswege · U-Wert"]
     H2["Heizung Modul 2<br/>Leitung · R · U"]
     H3["Heizung Modul 3<br/>Konvektion · Lüftung"]
@@ -39,52 +39,99 @@ flowchart TB
 ## 0 · Physikalische Grundlagen
 
 **Titel:** Physikalische Zusammenhänge: Kraft, Leistung & Energie  
-**Datei:** `1_physical_fundamentals/scene_1.py`
+**Datei:** `1_physical_fundamentals/scene_1.py` · **8 Beats**
 
 ### Lernziel
 
-Die Sprache der Gebäudeenergie verstehen, bevor Heiz- und Kühlbedarf berechnet werden: **Kraft**, **Arbeit/Energie**, **Leistung**, **kWh**, Größenordnungen, Energieerhaltung, Wärmepumpen-COP.
+Die Sprache der Gebäudeenergie verstehen, bevor Heiz- und Kühlbedarf berechnet werden: Architektur trifft Bauphysik, die **vier Grundeinheiten** (N, J, W, kWh), **Kraft → Arbeit → Leistung → Energie**, Größenordnungen, **1. Hauptsatz**, Wärmepumpen-**COP**/**JAZ** sowie der Unterschied **Endenergie / Primärenergie**.
+
+### Beat-Übersicht
+
+| Beat | Untertitel | Inhalt |
+|------|------------|--------|
+| 1 | Die unsichtbare Dimension der Architektur | Haus Winter/Sommer · vier Größen · typische Einheitenverwechslungen |
+| 2 | Von der Kraft zur Arbeit | Newton-Referenz · g · W = F·s · Flächenbild · gespeicherte Energie |
+| 3 | Von der Arbeit zur Leistung | Gleiche Arbeit, andere Zeit · P = W/t · Watt als Momentanwert |
+| 4 | Warum Kilowattstunden? | E = P·t · Rohr/Eimer-Analogie · Wh→GWh-Leiter |
+| 5 | Ein Gefühl für Größenordnungen | Leiter von Kerze bis Kraftwerk (Hannover-Beispiele) |
+| 6 | Erster Hauptsatz | 100-W-Lampe · Licht→Wärme · interne Last saisonal |
+| 7 | Der Wärmepumpen-Trick (COP) | 1+3=4 · kW_el/kW_th · Heizstab COP=1 · JAZ |
+| 8 | Ausblick | Rohr vs. Eimer · Heizlast vs. Heizwärmebedarf · kWh/m²a |
 
 ### Kernbegriffe
 
 | Begriff | Definition | Alltagsanker |
 |---------|------------|--------------|
-| **Newton (N)** | Einheit der Kraft | ≈ Gewicht von 100 g (Tafel Schokolade) |
-| **Joule (J)** | Einheit der Energie / Arbeit | 1 N über 1 m Weg |
-| **Watt (W)** | Einheit der Leistung (Energiefluss pro Zeit) | 1 J in 1 s |
-| **Kilowatt (kW)** | 1 000 W | Momentaufnahme — „Dicke des Rohres“ |
-| **Kilowattstunde (kWh)** | Energie = Leistung × Zeit | „Eimer unter dem Rohr“ |
-| **Heizlast** | Maximaler Wärmebedarf bei Norm-Außentemperatur | Dimensionierung des Erzeugers (kW) |
-| **Heizwärmebedarf** | Jahresenergie zum Heizen | Jahresbilanz (kWh/m²a) |
-| **COP** | Leistungszahl einer Wärmepumpe | Nutzwärme ÷ Stromaufwand |
+| **Bauphysik** | Physik des geschlossenen Raums — läuft parallel zur Architektur | Winterverlust & Sommerüberhitzung am selben Haus |
+| **Newton (N)** | Einheit der Kraft | ≈ Gewicht von 100 g (Riegel Schokolade) |
+| **g** | Erdbeschleunigung ≈ 9,81 m/s² | Masse × g = Gewichtskraft |
+| **Joule (J)** | Einheit der Energie / Arbeit | 1 N × 1 m; winzig (Schokoriegel 1 m hoch ≈ 1 J) |
+| **Watt (W)** | Leistung = Energiefluss pro Zeit | 1 J/s — „Tacho“ der Energie (Momentanwert) |
+| **Kilowatt (kW)** | 1 000 W | Rohr — wie schnell gerade Energie fließt |
+| **Kilowattstunde (kWh)** | Energie = Leistung × Zeit | Eimer — gesammelte Menge (1 kW · 1 h = 1 kWh) |
+| **Heizlast** | Max. Wärmeleistung in der kältesten Stunde | Dimensionierung des Erzeugers (kW), DIN EN 12831 |
+| **Heizwärmebedarf** | Jahresenergie über die Heizperiode | Jahresbilanz (kWh/m²a), DIN V 18599 |
+| **COP** | Leistungszahl einer Wärmepumpe | Q_ab ÷ W_zu (z. B. 4 kWh aus 1 kWh Strom + 3 kWh Umweltwärme) |
+| **JAZ** | Jahresarbeitszahl — COP über die Heizsaison | Luft-WP Hannover eher ≈ 3 (Kälte, Abtauen) |
+| **kW_el / kW_th** | Elektrische Antriebs- vs. thermische Heizleistung | Datenblatt z. B. 2,5 kW_el → 10 kW_th |
+| **Endenergie** | Energie am Verbraucher (Steckdose) | — |
+| **Primärenergie** | Aufwand im Kraftwerk für diese Endenergie | Thema des nächsten Videos |
 
 ### Formeln
 
 | Formel | Bedeutung |
 |--------|-----------|
-| **W = F · s** | Arbeit = Kraft × Weg |
-| **P = W / t** | Leistung = Arbeit ÷ Zeit |
+| **F_G = m · g** | Gewichtskraft (100 g → ≈ 1 N) |
+| **W = F · s** | Arbeit = Kraft × Weg [J] |
+| *(Fläche unter F–s-Diagramm)* | Arbeit = Rechteckfläche (Kraft × Hubhöhe) |
+| **1 J = 1 N · 1 m** | Definition Joule |
+| **P = W / t** | Leistung = Arbeit ÷ Zeit; halbe Zeit → doppelte Leistung |
 | **1 W = 1 J/s** | Definition Watt |
+| **1 kW = 1 000 J/s** | Kilowatt als kontinuierlicher Energiefluss |
 | **E = P · t** | Energie = Leistung × Zeit |
+| **1 kW · 1 h = 1 kWh** | Rohr eine Stunde offen → ein Eimer voll |
 | **1 kWh = 3 600 000 J = 3,6 MJ** | Umrechnung (1 h = 3 600 s) |
 | **ΣE = konstant** | 1. Hauptsatz der Thermodynamik |
-| **COP = Q_ab / W_zu** | z. B. 4 kWh Heizung aus 1 kWh Strom + 3 kWh Umweltwärme → COP = 4 |
+| **100 W Strom → ≈ 5 W Licht + ≈ 95 W Wärme** | Glühbirne; Licht wird an Oberflächen absorbiert → 100 % Wärme |
+| **COP = Q_ab / W_zu** | z. B. 1 kWh Strom + 3 kWh Umweltwärme → 4 kWh Heizwärme, COP = 4 |
+| **COP = 1** | Heizstab: 1 kWh Strom → 1 kWh Wärme |
 
 ### Größenordnungen (Hannover-Kontext)
 
 | Leistung | Beispiel |
 |----------|----------|
 | 25 W | Kerze |
-| 100 W | Glühbirne ≈ ruhender Erwachsener |
-| 10 kW | 100 Studierende im Hörsaal **oder** typische EFH-Heizlast |
-| 30 MW | Wärmepumpe Klärwerk Herrenhausen (~3 000 EFH) |
+| 100 W | Glühbirne ≈ ruhender Erwachsener („100-W-Heizkörper“) |
+| 100 W | Kühlschrank (Mittelwert über Ein/Aus-Taktung) |
+| 150 W | Arbeitsplatz mit zwei Monitoren |
+| 2 kW | Wasserkocher (≈ Steckdosen-Obergrenze) |
+| 9 kW | Heizlast gut gedämmtes EFH bei ≈ −12 °C |
+| 8 kW | Hörsaal · 100 Studierende (sommerliche Kühllast) |
+| 30 MW | Enercity Großwärmepumpe Herrenhausen (~3 000 EFH) |
+
+Von Kerze bis Kraftwerk: Faktor **> 1 000 000**.
+
+### Energie-Leiter (kWh-Skalen)
+
+| Einheit | Größenordnung |
+|---------|---------------|
+| Wh | Handy laden |
+| kWh | Haushalt · Stunden |
+| MWh | Straßenzug |
+| GWh | Stadtquartier |
 
 ### Merksätze
 
-- **kW = Rohr** (momentaner Fluss), **kWh = Eimer** (gesammelte Menge).
-- Fast jede elektrische Leistung im Gebäude wird zu **100 % thermische Last** (Winter hilfreich, Sommer problematisch).
-- Glühbirne: ~5 % Licht, ~95 % Wärme — Licht wird an Wänden ebenfalls zu Wärme.
-- Nächste Schritte: **Heizlast** nach DIN EN 12831 (kW), **Heizwärmebedarf** nach DIN V 18599 (kWh/m²a).
+- Geschlossener Raum → **Bauphysik** übernimmt: Winter Wärmeverlust, Sommer Überhitzung — **dieselben Watt, umgekehrtes Vorzeichen**.
+- Vier Wörter lernen: **Kraft (N) · Arbeit/Energie (J) · Leistung (W) · Alltag (kWh)**.
+- Typische Verwechslung: Kessel **24 kWh** statt **24 kW**; Jahresverbrauch **12 000 kW/a** statt **12 000 kWh/a**.
+- **kW = Rohr** (Rate jetzt), **kWh = Eimer** (Menge über Zeit); Anschluss **15 kW** ≠ Verbrauch **18 000 kWh/a**.
+- Leistung = **Tacho**, Energie = **zurückgelegte Strecke** (aufgesummelte Joule).
+- Fast jedes Watt Strom im Gebäude endet als **thermische Last** — im Januar Gewinn, im Juli Last.
+- Wärmepumpe **erzeugt** keine Wärme, sie **transportiert** Umweltwärme; Bilanz: 1 + 3 = 4.
+- Heizstab: COP = 1; Luft-WP übers Jahr: **JAZ ≈ 3** (Hannover).
+- **kW_el** = bezahlt am Zähler, **kW_th** = Wärme im Haus.
+- Nächste Schritte: **Heizlast** (kW, DIN EN 12831) → **Heizwärmebedarf** (kWh/m²a, DIN V 18599); Normierung auf m² zum Vergleich beliebiger Gebäude.
 
 ---
 
@@ -469,8 +516,9 @@ Strategie: Last senken → natürliche Lüftung nutzen → mechanisch nur den Re
 
 | Physik | Analogie |
 |--------|----------|
-| Leistung (kW) | Wassermenge pro Sekunde im Rohr |
-| Energie (kWh) | Wasser im Eimer unter dem Rohr |
+| Leistung (kW) | Hahnstellung — wie schnell Wasser **gerade jetzt** fließt |
+| Energie (kWh) | Wassermenge im Eimer nach einer Stunde Laufzeit |
+| 1 kW · 1 h = 1 kWh | Ein Stunde lang gleichbleibender Fluss füllt genau einen Eimer |
 | U-Wert (niedrig) | Dünnes Rohr / wenig Durchfluss |
 | Wärmepumpe (COP) | Pumpe, die Wärme „hochhebt“ statt sie zu erzeugen |
 

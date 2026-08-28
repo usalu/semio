@@ -19,6 +19,8 @@ _PF_ROOT = Path(__file__).resolve().parent
 _SEMIO_ROOT = next(
     p for p in _PF_ROOT.parents if (p / ".venv").is_dir() or (p / "package.json").is_file()
 )
+_INTRO_SCENE = _SEMIO_ROOT / "tutorial" / "intro" / "intro_scene.py"
+INTRO_CLASS_NAME = "Demo_Intro_PhysikalischeGrundlagen"
 
 
 def _load_module(module_name: str, path: Path) -> ModuleType:
@@ -56,6 +58,7 @@ def _bind_scene_attrs(host: Scene, scene_cls: type[Scene]) -> None:
     for name in _BIND_ATTRS:
         if hasattr(scene_cls, name):
             setattr(host, name, getattr(scene_cls, name))
+    _m1.begin_vo_beat(host, scene_cls.__name__)
 
 
 class PhysicalFundamentals_FullSection(Scene):
@@ -129,6 +132,23 @@ def compose_full_physical_fundamentals_video(
 ) -> Path:
     media_dir = media_dir or (_PF_ROOT / "media")
     manim = _manim_bin()
+    clips: list[Path] = []
+
+    print(f"\n=== Rendering {INTRO_CLASS_NAME} ===")
+    subprocess.run(
+        [
+            str(manim),
+            quality_flag,
+            "--media_dir",
+            str(media_dir),
+            str(_INTRO_SCENE),
+            INTRO_CLASS_NAME,
+        ],
+        check=True,
+        cwd=str(_SEMIO_ROOT),
+    )
+    clips.append(_find_section_mp4(media_dir, INTRO_CLASS_NAME, quality_flag))
+
     scene_cls = PhysicalFundamentals_FullSection
     name = scene_cls.__name__
     print(f"\n=== Rendering {name} ===")
@@ -137,11 +157,12 @@ def compose_full_physical_fundamentals_video(
         check=True,
         cwd=str(_SEMIO_ROOT),
     )
-    clip = _find_section_mp4(media_dir, name, quality_flag)
+    clips.append(_find_section_mp4(media_dir, name, quality_flag))
     folder = _quality_folder(quality_flag)
     output = media_dir / "videos" / "full_physical_fundamentals_video" / folder / "FullPhysicalFundamentalsVideo.mp4"
     output.parent.mkdir(parents=True, exist_ok=True)
-    _ffmpeg_concat([clip], output, media_dir / "videos" / "full_physical_fundamentals_video" / folder / "concat_list.txt")
+    print(f"\n=== Concatenating intro + body → {output} ===")
+    _ffmpeg_concat(clips, output, media_dir / "videos" / "full_physical_fundamentals_video" / folder / "concat_list.txt")
     print(f"\n✅ Ready: {output}")
     if play:
         opener = {"darwin": "open", "win32": "start"}.get(sys.platform, "xdg-open")

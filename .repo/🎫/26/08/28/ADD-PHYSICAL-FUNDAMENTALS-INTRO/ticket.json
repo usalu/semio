@@ -1,0 +1,14 @@
+{
+  "title": "Add Physical Fundamentals Intro",
+  "slug": "ADD-PHYSICAL-FUNDAMENTALS-INTRO",
+  "emoji": "🏛️",
+  "status": "open",
+  "description": "Add an NGS intro card for the Physical Fundamentals video, matching the Heating and Cooling series intros, and prepend it in the compose pipeline.",
+  "goal": "🎯r2602🎯updateddocs🎯updateduserdocs🎯updatedtutorials",
+  "dates": {
+    "due": "2026-08-28",
+    "started": "2026-08-28"
+  },
+  "client": "cursor-chat",
+  "llm": "grok-4-6"
+}

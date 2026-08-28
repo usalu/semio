@@ -23,7 +23,14 @@ from manim_visuals import (
     smooth_path, flow_guides, animate_flow, animate_haze,
     equation_row, formula_panel, highlight_param, chip, cross_mark, dim_arrow,
     caption_bar, swap_caption, hold_for, subtitle_text,
+    set_vo_language, load_vo_timing, begin_vo_beat,
 )
+
+# 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
+set_vo_language("de")
+_VO_TIMING = _Path(__file__).resolve().parent / "vo_timing.json"
+if _VO_TIMING.is_file():
+    load_vo_timing(_VO_TIMING)
 
 # 🏔️ Persistent module title — animated once on Beat1, self.add()'ed on every later beat.
 TITLE_DE = "Physikalische Zusammenhänge: Kraft, Leistung & Energie"
@@ -31,7 +38,6 @@ TITLE_DE = "Physikalische Zusammenhänge: Kraft, Leistung & Energie"
 # Mid-screen anchor for diagram content — clear of the title block above and of the
 # fixed formula_panel + caption_bar zones below.
 CONTENT_CENTER = UP * 0.25
-_WELFEN_PNG = _TUTORIAL_ROOT / "intro" / "assets" / "welfenschloss (1) (1).png"
 
 
 #region Shared visual motifs
@@ -96,25 +102,27 @@ def _person(pos, color=P_ORANGE, scale=1.0):
     return VGroup(head, body).scale(scale).move_to(pos)
 
 
-def _welfenschloss(width=11.0, opacity=0.55):
-    """🏰 LUH Welfenschloss silhouette for the opening flyover."""
-    img = ImageMobject(str(_WELFEN_PNG))
-    img.width = width
-    img.set_opacity(opacity)
-    return img
-
-
 def _tree_and_apple(ground_y=-1.15):
-    """🍎 Tree, apple and a ground line for the Newton / work beat."""
-    trunk = Line(DOWN * 0.55, UP * 0.15, color=P_ORANGE, stroke_width=5)
-    crown = Circle(radius=0.75, color=P_GREEN, stroke_width=2.5, fill_color=P_GREEN, fill_opacity=0.25)
-    crown.move_to(UP * 0.55)
-    branch = Line(UP * 0.35 + RIGHT * 0.05, UP * 0.55 + RIGHT * 0.55, color=P_ORANGE, stroke_width=3)
-    apple = Circle(radius=0.12, color=P_RED, fill_color=P_RED, fill_opacity=0.9, stroke_width=2)
-    apple.move_to(branch.get_end() + DOWN * 0.05)
-    tree = VGroup(trunk, crown, branch)
-    ground = Line(LEFT * 1.4, RIGHT * 1.4, color=P_TEAL, stroke_width=3)
-    ground.move_to(np.array([trunk.get_center()[0], ground_y, 0.0]))
+    """🌳 Line-art tree with a falling apple for the Newton beat.
+
+    Trunk base sits on ``ground_y``; crown and trunk are stroke-only (no fill).
+    """
+    ground = Line(LEFT * 1.75, RIGHT * 1.75, color=P_TEAL, stroke_width=3)
+    trunk_base = np.array([0.0, ground_y, 0.0])
+    trunk_top = trunk_base + UP * 1.42
+    trunk = Line(trunk_base, trunk_top, color=P_WHITE, stroke_width=5)
+    crown = Circle(radius=0.52, color=P_WHITE, stroke_width=3, fill_opacity=0.0)
+    crown.move_to(trunk_top + UP * 0.30)
+    tree = VGroup(trunk, crown)
+    ground.move_to(trunk_base)
+
+    stem = Line(ORIGIN, DOWN * 0.07, color=P_WHITE, stroke_width=2.2)
+    apple_body = Circle(
+        radius=0.13, color=P_RED, fill_color=P_RED,
+        fill_opacity=0.92, stroke_width=2,
+    )
+    apple_body.next_to(stem, DOWN, buff=0)
+    apple = VGroup(stem, apple_body)
     return tree, apple, ground
 
 
@@ -142,18 +150,134 @@ def _meter_dial():
     return {"body": body, "dial": dial, "needle": needle, "label": label, "group": VGroup(body, dial, needle, label)}
 
 
+def _water_bucket(*, width=1.12, height=0.96, fill_frac=0.36):
+    """🪣 Open-top bucket with tapered walls and a visible water fill."""
+    hw_top = width / 2
+    hw_bot = width * 0.36
+    hh = height / 2
+    rim_l = np.array([-hw_top, hh, 0.0])
+    rim_r = np.array([hw_top, hh, 0.0])
+    bot_l = np.array([-hw_bot, -hh, 0.0])
+    bot_r = np.array([hw_bot, -hh, 0.0])
+    shell = VGroup(
+        Line(rim_l, bot_l, color=P_WHITE, stroke_width=3),
+        Line(rim_r, bot_r, color=P_WHITE, stroke_width=3),
+        Line(bot_l, bot_r, color=P_WHITE, stroke_width=3),
+        Line(rim_l, rim_r, color=P_TEAL, stroke_width=3.5),
+    )
+    fill_h = max(0.10, height * fill_frac)
+    t = fill_h / height
+    surf_l = bot_l * (1 - t) + rim_l * t
+    surf_r = bot_r * (1 - t) + rim_r * t
+    inset = 0.05
+    water = Polygon(
+        bot_l + UP * inset + RIGHT * inset,
+        bot_r + UP * inset + LEFT * inset,
+        surf_r + DOWN * inset,
+        surf_l + DOWN * inset,
+        stroke_width=0, fill_color=P_CYAN, fill_opacity=0.44,
+    )
+    surface = Line(surf_l, surf_r, color=P_CYAN, stroke_width=2.4)
+    handle = Arc(radius=0.26, start_angle=PI * 0.12, angle=PI * 0.76, color=P_WHITE, stroke_width=2.5)
+    handle.move_to(rim_r + RIGHT * 0.14 + UP * 0.04)
+    return VGroup(water, surface, shell, handle)
+
+
 def _pipe_and_bucket():
-    """🚰 Water picture: a pipe (rate) feeding a bucket (amount)."""
-    pipe = Rectangle(width=3.2, height=0.28, color=P_CYAN, fill_color=P_CYAN, fill_opacity=0.35, stroke_width=2)
-    bucket = RoundedRectangle(width=1.0, height=0.85, corner_radius=0.08, color=P_TEAL, stroke_width=2.5)
-    bucket.next_to(pipe, DOWN, buff=0.35)
-    bucket.shift(RIGHT * 0.8)
+    """🚰 Pipe (rate) with spout feeding an open bucket (amount)."""
+    pipe_body = Rectangle(
+        width=3.0, height=0.26, color=P_WHITE, stroke_width=2.5,
+        fill_color=P_CYAN, fill_opacity=0.30,
+    )
+    spout = Line(ORIGIN, DOWN * 0.44, color=P_WHITE, stroke_width=3.2)
+    spout.move_to(pipe_body.get_bottom() + LEFT * 0.42)
+    nozzle = Dot(spout.get_end(), radius=0.055, color=P_CYAN)
+    pipe = VGroup(pipe_body, spout, nozzle)
+    bucket = _water_bucket()
+    bucket.next_to(spout, DOWN, buff=0.10).shift(RIGHT * 0.06)
     stream = smooth_path([
-        pipe.get_bottom() + LEFT * 1.0,
-        pipe.get_bottom() + LEFT * 0.2 + DOWN * 0.55,
-        bucket.get_top() + LEFT * 0.15,
+        spout.get_end(),
+        spout.get_end() + DOWN * 0.20 + RIGHT * 0.04,
+        bucket.get_top() + LEFT * 0.04,
     ])
     return pipe, bucket, stream
+
+
+def _pour_rig(origin=np.array([1.2, 0.15, 0.0])):
+    """🚰 Legible pipe → bucket rig: a bent pipe, an open bucket that starts **empty**,
+    and ``frac`` (0..1) driving an ``always_redraw`` rising water body, water surface
+    and live kWh readout — so "kWh = the amount that collects over time" is watchable."""
+    ox, oy = float(origin[0]), float(origin[1])
+    pipe_y = oy + 1.70
+    x_in = ox - 3.0
+    spout_x = ox + 0.15
+
+    rail_hi = VMobject(color=P_CYAN, stroke_width=3)
+    rail_hi.set_points_as_corners([
+        np.array([x_in, pipe_y + 0.15, 0.0]),
+        np.array([spout_x + 0.15, pipe_y + 0.15, 0.0]),
+        np.array([spout_x + 0.15, pipe_y - 0.55, 0.0]),
+    ])
+    rail_lo = VMobject(color=P_CYAN, stroke_width=3)
+    rail_lo.set_points_as_corners([
+        np.array([x_in, pipe_y - 0.15, 0.0]),
+        np.array([spout_x - 0.15, pipe_y - 0.15, 0.0]),
+        np.array([spout_x - 0.15, pipe_y - 0.55, 0.0]),
+    ])
+    nozzle = Line(np.array([spout_x - 0.15, pipe_y - 0.55, 0.0]),
+                  np.array([spout_x + 0.15, pipe_y - 0.55, 0.0]),
+                  color=P_CYAN, stroke_width=3)
+    pipe = VGroup(rail_hi, rail_lo, nozzle)
+
+    bw_top, bw_bot, bh = 1.95, 1.6, 1.6
+    floor_y = oy - 1.05
+    rim_l = np.array([spout_x - bw_top / 2, floor_y + bh, 0.0])
+    rim_r = np.array([spout_x + bw_top / 2, floor_y + bh, 0.0])
+    bot_l = np.array([spout_x - bw_bot / 2, floor_y, 0.0])
+    bot_r = np.array([spout_x + bw_bot / 2, floor_y, 0.0])
+    bucket = VGroup(
+        Line(rim_l, bot_l, color=P_TEAL, stroke_width=4),
+        Line(bot_l, bot_r, color=P_TEAL, stroke_width=4),
+        Line(bot_r, rim_r, color=P_TEAL, stroke_width=4),
+    )
+
+    frac = ValueTracker(0.0)
+
+    def _lerp(t):
+        t = float(np.clip(t, 0.0, 1.0))
+        return bot_l * (1 - t) + rim_l * t, bot_r * (1 - t) + rim_r * t
+
+    def _vis():
+        # 5 % baseline puddle → 88 % full at frac 1, so the rim keeps some freeboard.
+        return 0.05 + 0.83 * float(np.clip(frac.get_value(), 0.0, 1.0))
+
+    def _water():
+        sl, sr = _lerp(_vis())
+        return Polygon(
+            bot_l + np.array([0.05, 0.04, 0.0]), bot_r + np.array([-0.05, 0.04, 0.0]),
+            sr + np.array([-0.05, 0.0, 0.0]), sl + np.array([0.05, 0.0, 0.0]),
+            stroke_width=0, fill_color=P_CYAN, fill_opacity=0.5,
+        )
+
+    def _surface():
+        sl, sr = _lerp(_vis())
+        return Line(sl, sr, color=P_CYAN, stroke_width=2.6)
+
+    def _readout():
+        v = float(np.clip(frac.get_value(), 0.0, 1.0))
+        return Text(
+            f"{v:.1f}".replace(".", ",") + " kWh",
+            font_size=BODY_FONT_SIZE, color=P_TEAL,
+        ).move_to(np.array([rim_r[0] + 1.2, floor_y + 0.42, 0.0]))
+
+    return {
+        "pipe": pipe, "bucket": bucket,
+        "water": always_redraw(_water), "surface": always_redraw(_surface),
+        "readout": always_redraw(_readout), "frac": frac,
+        "spout": np.array([spout_x, pipe_y - 0.58, 0.0]),
+        "rim_l": rim_l, "rim_r": rim_r, "floor_y": floor_y, "bh": bh,
+        "pipe_y": pipe_y, "spout_x": spout_x,
+    }
 
 
 def _heat_pump_box():
@@ -294,24 +418,12 @@ class Beat1_UnsichtbareDimension(Scene):
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        castle = _welfenschloss(width=12.5, opacity=0.7)
-        castle.move_to(DOWN * 0.35)
         house = _build_cross_section_house(center=CONTENT_CENTER + DOWN * 0.2)
 
         hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "seasons"))
-        self.play(FadeIn(castle), run_time=0.8)
-        self.play(
-            castle.animate.scale(1.12).shift(UP * 0.35 + LEFT * 0.25),
-            run_time=2.4,
-            rate_func=smooth,
-        )
-        self.play(
-            FadeOut(castle, scale=1.05),
-            FadeIn(house["group"], shift=UP * 0.2),
-            run_time=1.6,
-        )
+        self.play(FadeIn(house["group"], shift=UP * 0.2), run_time=1.2)
         haze_warm = dict(
             x0=house["center"][0] - 2.0, x1=house["center"][0] + 2.2,
             y0=house["center"][1] - 1.0, y1=house["center"][1] + 1.4,
@@ -324,7 +436,7 @@ class Beat1_UnsichtbareDimension(Scene):
         )
         animate_haze(self, run_time=2.0, cycles=1.5, **haze_warm)
         animate_haze(self, run_time=1.8, cycles=1.3, **haze_cool)
-        hold_for(self, self.NARRATION, "seasons", used=0.8 + 2.4 + 1.6 + 2.0 + 1.8)
+        hold_for(self, self.NARRATION, "seasons", used=1.2 + 2.0 + 1.8)
 
         # Four unit chips in a row, high in the free band (subtitle sits far above at y≈2.9).
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "language"))
@@ -376,7 +488,7 @@ class Beat1_UnsichtbareDimension(Scene):
         city_tag.next_to(topic_card, DOWN, buff=0.18)
         self.play(
             FadeOut(boiler_card), FadeOut(bill_card), FadeOut(boiler_fix), FadeOut(bill_fix),
-            house["group"].animate.set_stroke(opacity=0.5).scale(1.0),
+            house["group"].animate.set_stroke(opacity=0.45).move_to(CONTENT_CENTER + DOWN * 0.95),
             FadeIn(topic_card, shift=DOWN * 0.2), FadeIn(city_tag),
             run_time=1.3,
         )
@@ -427,32 +539,75 @@ class Beat2_KraftUndArbeit(Scene):
         caption = caption_bar(subtitle_text(self.NARRATION, "start"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        tree, apple, ground = _tree_and_apple(ground_y=-1.25)
-        tree_grp = VGroup(tree, ground)
-        tree_grp.move_to(LEFT * 3.9 + UP * 0.05)
-        apple.move_to(tree[2].get_end() + DOWN * 0.05)
-        rest_y = ground.get_center()[1] + 0.12
-
-        # Work-as-area rectangle: width = F (fixed), height = lift so far (tracked).
-        F_W = 1.35
-        base = np.array([-0.55, rest_y, 0.0])
-        s_val = ValueTracker(0.0)
-        area = always_redraw(lambda: Rectangle(
-            width=F_W, height=max(0.02, s_val.get_value()),
-            color=P_YELLOW, fill_color=P_YELLOW, fill_opacity=0.22, stroke_width=2,
-        ).move_to(base + RIGHT * (F_W / 2) + UP * (s_val.get_value() / 2)))
-
-        f_arrow = Arrow(apple.get_center() + DOWN * 0.05, apple.get_center() + DOWN * 0.95,
-                        color=P_RED, buff=0.05, stroke_width=4)
-        f_lbl = Text("F_g ≈ 1 N", font_size=LABEL_FONT_SIZE, color=P_RED)
-        f_lbl.next_to(f_arrow, DOWN, buff=0.12)
+        # —— Left: the newton reference — an apple's weight against gravity ——
+        tree, apple, ground = _tree_and_apple(ground_y=-1.62)
+        tree_anchor = LEFT * 4.72 + DOWN * 0.18
+        tree_grp = VGroup(tree, ground).move_to(tree_anchor)
+        apple.move_to(ground.get_center() + RIGHT * 0.52 + UP * (apple[1].height / 2))
+        apple_x = apple.get_center()[0]
+        rest_y = apple.get_center()[1]
+        ground_y_world = ground.get_center()[1]
+        mass_tag = Text("100 g", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
+        fg_arrow = Arrow(ORIGIN, DOWN * 0.82, color=P_RED, buff=0, stroke_width=4,
+                         max_tip_length_to_length_ratio=0.18)
+        fg_lbl = Text("Gewicht ≈ 1 N", font_size=LABEL_FONT_SIZE, color=P_RED)
         g_lbl = Text("g ≈ 9,81 m/s²", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
-        g_lbl.move_to(LEFT * 3.9 + DOWN * 2.05)
+        g_lbl.move_to(LEFT * 4.72 + DOWN * 2.35)
 
-        j_lbl = Text("1 J", font_size=FORMULA_FONT_SIZE, color=P_YELLOW)
-        s_brace = dim_arrow(base + LEFT * 0.28, base + LEFT * 0.28 + UP * 1.35, color=P_CYAN)
-        s_lbl = Text("s = 1 m", font_size=LABEL_FONT_SIZE, color=P_CYAN)
-        s_lbl.next_to(s_brace, LEFT, buff=0.12)
+        # —— Center: F–s diagram — area under constant F is work W = F·s ——
+        s_max, f_const, lift_scene = 1.0, 1.0, 1.34
+        axes = Axes(
+            x_range=[0, 1.3, 0.5], y_range=[0, 1.3, 0.5],
+            x_length=3.65, y_length=2.12,
+            axis_config={
+                "color": P_WHITE, "stroke_width": 2.2,
+                "include_tip": True, "tip_length": 0.08, "tip_width": 0.08,
+            },
+            tips=True,
+        )
+        plot_origin = np.array([apple_x + 2.35, ground_y_world, 0.0])
+        axes.shift(plot_origin - axes.c2p(0, 0))
+        s_lbl = Text("s", font_size=BODY_FONT_SIZE, color=P_CYAN)
+        s_lbl.next_to(axes.x_axis, RIGHT, buff=0.10)
+        s_unit = Text("[m]", font_size=LABEL_FONT_SIZE, color=P_CYAN)
+        s_unit.next_to(s_lbl, RIGHT, buff=0.08)
+        f_lbl = Text("F", font_size=BODY_FONT_SIZE, color=P_RED)
+        f_lbl.next_to(axes.y_axis, UP, buff=0.10)
+        f_unit = Text("[N]", font_size=LABEL_FONT_SIZE, color=P_RED)
+        f_unit.next_to(f_lbl, UP, buff=0.08)
+        f_tick = Text("1 N", font_size=LABEL_FONT_SIZE, color=P_RED)
+        f_tick.next_to(axes.c2p(0, f_const), LEFT, buff=0.12)
+        f_line = axes.plot(lambda _x: f_const, x_range=[0, 1.25], color=P_RED, stroke_width=2.6)
+        axis_grp = VGroup(axes, s_lbl, s_unit, f_lbl, f_unit, f_tick, f_line)
+
+        s_val = ValueTracker(0.0)
+        work_area = always_redraw(lambda: Polygon(
+            axes.c2p(0, 0), axes.c2p(max(0.03, s_val.get_value()), 0),
+            axes.c2p(max(0.03, s_val.get_value()), f_const), axes.c2p(0, f_const),
+            stroke_width=0, fill_color=P_YELLOW, fill_opacity=0.28,
+        ))
+        s_marker = always_redraw(lambda: DashedLine(
+            axes.c2p(max(0.02, s_val.get_value()), 0),
+            axes.c2p(max(0.02, s_val.get_value()), f_const),
+            color=P_CYAN, stroke_width=2, dash_length=0.08,
+        ))
+        s_dot = always_redraw(lambda: Dot(
+            axes.c2p(s_val.get_value(), f_const),
+            radius=0.055, color=P_CYAN,
+        ))
+        sync_line = always_redraw(lambda: DashedLine(
+            np.array([
+                apple_x + 0.42,
+                rest_y + (s_val.get_value() / s_max) * lift_scene,
+                0.0,
+            ]),
+            axes.c2p(max(0.02, s_val.get_value()), 0),
+            color=P_WHITE, stroke_width=1.6, stroke_opacity=0.35, dash_length=0.07,
+        ))
+        w_note = Text("W = F · s", font_size=LABEL_FONT_SIZE, color=P_YELLOW)
+        j_lbl = Text("1 J", font_size=LABEL_FONT_SIZE, color=P_YELLOW)
+        area_lbls = VGroup(w_note, j_lbl).arrange(RIGHT, buff=0.34, aligned_edge=DOWN)
+        area_lbls.move_to(axes.c2p(0.52, f_const * 0.52))
 
         eq_w, items_w = equation_row([
             ("w", "W", P_YELLOW), (None, "=", P_WHITE),
@@ -464,62 +619,71 @@ class Beat2_KraftUndArbeit(Scene):
         hold_for(self, self.NARRATION, "start", used=BEAT_SUBTITLE_FADE + 0.3)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "newton"))
-        self.play(FadeIn(tree_grp), run_time=0.8)
-        self.play(apple.animate.move_to(np.array([tree[0].get_center()[0], rest_y, 0.0])),
-                  run_time=1.1, rate_func=rush_into)
-        self.play(GrowArrow(f_arrow), FadeIn(f_lbl), run_time=0.7)
-        hold_for(self, self.NARRATION, "newton", used=0.8 + 1.1 + 0.7 + 0.35)
+        mass_tag.next_to(apple, RIGHT, buff=0.16)
+        self.play(FadeIn(tree_grp), FadeIn(apple), FadeIn(mass_tag), run_time=0.9)
+        fg_arrow.next_to(apple, UP, buff=0.04)
+        fg_lbl.next_to(fg_arrow, RIGHT, buff=0.12)
+        self.play(GrowArrow(fg_arrow), FadeIn(fg_lbl), run_time=0.7)
+        hold_for(self, self.NARRATION, "newton", used=0.9 + 0.7 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gravity"))
         self.play(FadeIn(g_lbl, shift=UP * 0.1), run_time=0.7)
-        self.play(Indicate(f_lbl, color=P_RED, scale_factor=1.15), run_time=0.9)
+        self.play(Indicate(fg_lbl, color=P_RED, scale_factor=1.15), run_time=0.9)
         hold_for(self, self.NARRATION, "gravity", used=0.7 + 0.9 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "work"))
-        self.play(FadeIn(eq_w), Create(box_w), run_time=1.0)
-        self.add(area)
+        self.play(FadeIn(axis_grp), FadeIn(eq_w), Create(box_w), run_time=1.0)
+        self.add(work_area, s_marker, s_dot, sync_line)
+        lifted_y = rest_y + lift_scene
         self.play(
-            s_val.animate.set_value(1.35),
-            apple.animate.move_to(base + RIGHT * (F_W / 2) + UP * 1.4),
-            f_arrow.animate.shift(UP * 1.4), f_lbl.animate.shift(UP * 1.4),
-            run_time=1.6, rate_func=smooth,
+            s_val.animate.set_value(s_max),
+            apple.animate.move_to(np.array([apple_x, lifted_y, 0.0])),
+            mass_tag.animate.move_to(np.array([apple_x + 0.55, lifted_y, 0.0])),
+            fg_arrow.animate.shift(UP * lift_scene),
+            fg_lbl.animate.shift(UP * lift_scene),
+            run_time=2.0, rate_func=smooth,
         )
         ring_f = highlight_param(items_w, "f", color=P_RED)
-        self.play(Create(ring_f), Indicate(f_lbl, color=P_RED), run_time=0.7)
-        self.play(FadeOut(ring_f), run_time=0.25)
-        hold_for(self, self.NARRATION, "work", used=1.0 + 1.6 + 0.7 + 0.25 + 0.35)
+        ring_s = highlight_param(items_w, "s", color=P_CYAN)
+        self.play(Create(ring_f), Indicate(f_line, color=P_RED), run_time=0.7)
+        self.play(FadeOut(ring_f), Create(ring_s), Indicate(s_marker, color=P_CYAN), run_time=0.7)
+        self.play(FadeOut(ring_s), run_time=0.25)
+        hold_for(self, self.NARRATION, "work", used=1.0 + 2.0 + 0.7 + 0.7 + 0.25 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "area"))
-        self.play(FadeIn(s_brace), FadeIn(s_lbl), run_time=0.8)
-        ring_s = highlight_param(items_w, "s", color=P_CYAN)
-        self.play(Create(ring_s), Indicate(area, color=P_YELLOW, scale_factor=1.06), run_time=0.9)
-        self.play(FadeOut(ring_s), run_time=0.25)
-        hold_for(self, self.NARRATION, "area", used=0.8 + 0.9 + 0.25 + 0.35)
+        self.play(FadeIn(w_note), Indicate(work_area, color=P_YELLOW, scale_factor=1.03), run_time=0.9)
+        hold_for(self, self.NARRATION, "area", used=0.9 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "joule"))
-        j_lbl.next_to(area, RIGHT, buff=0.3)
-        self.play(FadeIn(j_lbl, shift=LEFT * 0.15), run_time=0.7)
+        self.bring_to_front(j_lbl)
+        self.play(FadeIn(j_lbl, scale=0.6), run_time=0.7)
         self.play(Indicate(j_lbl, color=P_YELLOW, scale_factor=1.2), run_time=0.8)
         hold_for(self, self.NARRATION, "joule", used=0.7 + 0.8 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "feel"))
-        heart = Text("1 Herzschlag ≈ 1 J", font_size=LABEL_FONT_SIZE, color=P_WHITE)
-        heart.move_to(RIGHT * 3.3 + UP * 1.5)
-        self.play(FadeIn(heart, shift=DOWN * 0.1), run_time=0.7)
-        hold_for(self, self.NARRATION, "feel", used=0.7 + 0.35)
+        feel = VGroup(
+            Text("Schokoriegel 1 m hoch ≈ 1 J", font_size=LABEL_FONT_SIZE, color=P_WHITE),
+            Text("ein Herzschlag ≈ 1 J", font_size=LABEL_FONT_SIZE, color=P_WHITE),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.2).move_to(RIGHT * 4.15 + UP * 1.25)
+        self.play(LaggedStart(*[FadeIn(t, shift=DOWN * 0.1) for t in feel], lag_ratio=0.4), run_time=1.2)
+        hold_for(self, self.NARRATION, "feel", used=1.2 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "stored"))
         store_tag = Text("gespeicherte Energie", font_size=LABEL_FONT_SIZE, color=P_YELLOW)
-        store_tag.next_to(apple, UP, buff=0.2)
-        self.play(FadeIn(store_tag), Indicate(apple, color=P_YELLOW, scale_factor=1.3), run_time=0.9)
+        store_tag.next_to(apple, UP, buff=0.92)
+        self.play(FadeIn(store_tag), Indicate(apple, color=P_YELLOW, scale_factor=1.18), run_time=0.9)
         self.play(
-            apple.animate.move_to(base + RIGHT * (F_W / 2) + UP * 0.1),
-            s_val.animate.set_value(0.05),
-            FadeOut(f_arrow), FadeOut(f_lbl), FadeOut(store_tag),
-            run_time=1.1, rate_func=rush_into,
+            s_val.animate.set_value(0.0),
+            apple.animate.move_to(np.array([apple_x, rest_y, 0.0])),
+            mass_tag.animate.move_to(np.array([apple_x + 0.55, rest_y, 0.0])),
+            fg_arrow.animate.shift(DOWN * lift_scene),
+            fg_lbl.animate.shift(DOWN * lift_scene),
+            FadeOut(store_tag), FadeOut(j_lbl), FadeOut(w_note),
+            run_time=1.2, rate_func=rush_into,
         )
-        self.play(Flash(base + RIGHT * (F_W / 2), color=P_YELLOW, flash_radius=0.5), run_time=0.6)
-        hold_for(self, self.NARRATION, "stored", used=0.9 + 1.1 + 0.6 + 0.35)
+        self.remove(work_area, s_marker, s_dot, sync_line)
+        self.play(Flash(apple, color=P_YELLOW, flash_radius=0.42), run_time=0.6)
+        hold_for(self, self.NARRATION, "stored", used=0.9 + 1.2 + 0.6 + 0.35)
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -640,11 +804,12 @@ class Beat3_ArbeitZuLeistung(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "watt"))
         kw_note = Text("1 W = 1 J/s     1 kW = 1 000 J/s", font_size=LABEL_FONT_SIZE, color=P_TEAL)
         kw_note.move_to(UP * 1.95)
-        drop = Dot(radius=0.08, color=P_YELLOW).move_to(np.array([0.0, 0.7, 0.0]))
-        tray = Line(LEFT * 0.4, RIGHT * 0.4, color=P_WHITE, stroke_width=3).move_to(np.array([0.0, -0.2, 0.0]))
+        drop_y, tray_y = -0.08, -0.62
+        drop = Dot(radius=0.08, color=P_YELLOW).move_to(np.array([0.0, drop_y, 0.0]))
+        tray = Line(LEFT * 0.4, RIGHT * 0.4, color=P_WHITE, stroke_width=3).move_to(np.array([0.0, tray_y, 0.0]))
         self.play(FadeIn(kw_note), FadeIn(tray), run_time=0.7)
         for _ in range(3):
-            d = drop.copy().move_to(np.array([0.0, 0.7, 0.0]))
+            d = drop.copy().move_to(np.array([0.0, drop_y, 0.0]))
             self.play(d.animate.move_to(tray.get_center() + UP * 0.1), run_time=0.35, rate_func=rush_into)
             self.play(FadeOut(d), run_time=0.12)
         hold_for(self, self.NARRATION, "watt", used=0.7 + 3 * 0.47 + 0.35)
@@ -697,8 +862,11 @@ class Beat4_Kilowattstunde(Scene):
          "We bundle those three point six million joules into one clean package and call it one kilowatt-hour — three point six megajoules, written as a single small number.",
          "Diese 3,6 Millionen Joule bündeln wir zu einer Kilowattstunde — 3,6 Megajoule, eine handliche Zahl."),
         ("analogy",
-         "Picture a pipe filling a bucket. The kilowatt is the pipe — how fast energy flows right now. The kilowatt-hour is the water in the bucket — how much has collected over time.",
-         "Rohr füllt Eimer: Das Kilowatt ist das Rohr — die Rate. Die Kilowattstunde ist das Wasser im Eimer — die Menge."),
+         "Here is the picture that makes it stick. Water runs out of a pipe into an empty bucket. How far the tap is opened — how fast the water flows right now — that, and only that, is the kilowatt. It is a rate.",
+         "Das Bild dazu: Wasser läuft aus einem Rohr in einen leeren Eimer. Wie weit der Hahn offen ist — wie schnell es gerade fließt — genau das ist das Kilowatt. Eine Rate."),
+        ("fill",
+         "Now let it run, and watch the clock. After one full hour the bucket holds a certain amount of water. That collected amount — not the speed, the total in the bucket — is the kilowatt-hour. One kilowatt flowing for one hour leaves exactly one kilowatt-hour behind.",
+         "Jetzt laufen lassen und auf die Uhr schauen: Nach einer Stunde steht eine Menge Wasser im Eimer. Diese gesammelte Menge — nicht das Tempo — ist die Kilowattstunde. 1 kW · 1 h = 1 kWh."),
         ("bill",
          "This is exactly the confusion from the start. A connection rated fifteen kilowatts is the pipe. An annual consumption of eighteen thousand kilowatt-hours is the bucket. Different questions, different units.",
          "Genau die Verwechslung vom Anfang: 15 kW Anschlussleistung ist das Rohr, 18 000 kWh Jahresverbrauch der Eimer."),
@@ -732,18 +900,32 @@ class Beat4_Kilowattstunde(Scene):
         ])
         eq, box = formula_panel(eq)
 
-        pipe, bucket, _ = _pipe_and_bucket()
-        pipe.move_to(RIGHT * 2.0 + UP * 0.55)
-        bucket.next_to(pipe, DOWN, buff=0.35).align_to(pipe, RIGHT).shift(LEFT * 0.4)
-        stream = smooth_path([
-            pipe.get_bottom() + LEFT * 1.2,
-            pipe.get_bottom() + LEFT * 0.3 + DOWN * 0.5,
-            bucket.get_top() + LEFT * 0.1,
+        rig = _pour_rig(origin=np.array([1.35, 0.15, 0.0]))
+        pipe_lbl = Text("kW = wie schnell es fließt", font_size=LABEL_FONT_SIZE, color=P_CYAN)
+        pipe_lbl.next_to(rig["pipe"], UP, buff=0.16)
+        amount_lbl = Text("kWh = Menge im Eimer", font_size=LABEL_FONT_SIZE, color=P_TEAL)
+        amount_lbl.move_to(np.array([rig["rim_r"][0] + 1.7, rig["floor_y"] + 1.15, 0.0]))
+        hour_note = Text("1 kW · 1 h = 1 kWh", font_size=LABEL_FONT_SIZE, color=P_YELLOW)
+        hour_note.move_to(np.array([rig["spout_x"], rig["floor_y"] - 0.4, 0.0]))
+
+        clock_c = np.array([rig["rim_l"][0] - 1.4, rig["floor_y"] + 0.80, 0.0])
+        clock_face = Circle(radius=0.44, color=P_WHITE, stroke_width=2.5).move_to(clock_c)
+        clock_ticks = VGroup(*[
+            Line(clock_c + 0.34 * np.array([np.cos(a), np.sin(a), 0.0]),
+                 clock_c + 0.42 * np.array([np.cos(a), np.sin(a), 0.0]),
+                 color=P_WHITE, stroke_width=1.6)
+            for a in np.linspace(0, TAU, 12, endpoint=False)
         ])
-        pipe_lbl = Text("kW — Rohr (Rate)", font_size=LABEL_FONT_SIZE, color=P_CYAN)
-        pipe_lbl.next_to(pipe, UP, buff=0.12)
-        bucket_lbl = Text("kWh — Eimer (Menge)", font_size=LABEL_FONT_SIZE, color=P_TEAL)
-        bucket_lbl.next_to(bucket, DOWN, buff=0.12)
+        clock_hand = Line(clock_c, clock_c + UP * 0.30, color=P_CYAN, stroke_width=3)
+        clock = VGroup(clock_face, clock_ticks, clock_hand)
+        clock_lbl = Text("1 Stunde", font_size=LABEL_FONT_SIZE, color=P_WHITE)
+        clock_lbl.next_to(clock_face, DOWN, buff=0.16)
+
+        drop_path = smooth_path([
+            rig["spout"],
+            rig["spout"] + DOWN * 0.5,
+            np.array([rig["spout_x"], rig["floor_y"] + 0.4, 0.0]),
+        ])
 
         hold_for(self, self.NARRATION, "question", used=BEAT_SUBTITLE_FADE + 0.3)
 
@@ -776,14 +958,37 @@ class Beat4_Kilowattstunde(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "analogy"))
         self.play(
             FadeOut(meter["group"]), FadeOut(kwh),
-            FadeIn(pipe), FadeIn(bucket), FadeIn(pipe_lbl), FadeIn(bucket_lbl),
-            Create(flow_guides(VGroup(stream), P_CYAN, opacity=0.4, width=2.5)),
-            run_time=1.2,
+            FadeIn(rig["pipe"]), FadeIn(rig["bucket"]), FadeIn(pipe_lbl),
+            run_time=1.1,
         )
-        animate_flow(self, VGroup(stream), P_CYAN, run_time=2.6, waves=5, cycles=2.6)
-        hold_for(self, self.NARRATION, "analogy", used=1.2 + 2.6 + 0.35)
+        self.add(rig["water"], rig["surface"], rig["readout"])
+        # A short "tap just opened" trickle — so "kW is a rate" lands before the hour runs.
+        animate_flow(self, VGroup(drop_path), P_CYAN, run_time=1.6, waves=4, cycles=1.8, streak=False)
+        hold_for(self, self.NARRATION, "analogy", used=1.1 + 1.6 + 0.35)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "fill"))
+        self.play(FadeIn(clock), FadeIn(clock_lbl), run_time=0.7)
+        # One hour of steady pour: droplets fall, the water level climbs, the hand
+        # sweeps once and the kWh readout counts up together.
+        animate_flow(
+            self, VGroup(drop_path), P_CYAN,
+            run_time=5.0, waves=8, cycles=5.0, radius=0.05, streak=False,
+            extra=[
+                rig["frac"].animate.set_value(1.0),
+                Rotate(clock_hand, angle=-TAU, about_point=clock_c),
+            ],
+        )
+        self.play(FadeIn(amount_lbl), FadeIn(hour_note), run_time=0.8)
+        self.play(Indicate(hour_note, color=P_YELLOW, scale_factor=1.12), run_time=0.8)
+        hold_for(self, self.NARRATION, "fill", used=0.7 + 5.0 + 0.8 + 0.8 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "bill"))
+        self.remove(rig["water"], rig["surface"], rig["readout"])
+        self.play(
+            FadeOut(rig["pipe"]), FadeOut(rig["bucket"]), FadeOut(pipe_lbl),
+            FadeOut(amount_lbl), FadeOut(hour_note), FadeOut(clock), FadeOut(clock_lbl),
+            run_time=0.6,
+        )
         bill = VGroup(
             Text("Anschlussleistung  15 kW   → Rohr", font_size=LABEL_FONT_SIZE, color=P_CYAN),
             Text("Jahresverbrauch  18 000 kWh  → Eimer", font_size=LABEL_FONT_SIZE, color=P_TEAL),
@@ -791,7 +996,7 @@ class Beat4_Kilowattstunde(Scene):
         bill_frame = SurroundingRectangle(bill, color=P_WHITE, corner_radius=0.1, buff=0.2, stroke_width=1.6)
         bill_card = VGroup(bill_frame, bill).move_to(LEFT * 3.15 + CONTENT_CENTER)
         self.play(FadeIn(bill_card, shift=RIGHT * 0.15), run_time=1.0)
-        hold_for(self, self.NARRATION, "bill", used=1.0 + 0.35)
+        hold_for(self, self.NARRATION, "bill", used=0.6 + 1.0 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "ladder"))
         rungs = VGroup()
@@ -889,44 +1094,30 @@ class Beat5_Groessenordnungen(Scene):
         for (key, val, _n, _w, _c), y in zip(rungs, ys):
             tick = Line(np.array([scale_x, y, 0.0]), np.array([scale_x + 0.22, y, 0.0]),
                         color=P_WHITE, stroke_width=2)
-            tag = Text(val, font_size=LABEL_FONT_SIZE, color=P_WHITE)
+            tag = Text(val, font_size=BODY_FONT_SIZE, color=P_WHITE)
             tag.next_to(tick, RIGHT, buff=0.14)
             ticks.add(VGroup(tick, tag))
 
-        stage = Rectangle(
-            width=7.0, height=4.0, color=P_TEAL, stroke_width=1.5,
-            fill_color=P_DEEP_DARK, fill_opacity=0.4,
-        ).move_to(RIGHT * 1.7 + UP * 0.15)
+        anchor_pos = RIGHT * 1.7 + UP * 0.15
         marker = Dot(np.array([scale_x, ys[0], 0.0]), radius=0.09, color=P_YELLOW)
 
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
         self.play(
             Create(scale_line),
             LaggedStart(*[FadeIn(t) for t in ticks], lag_ratio=0.12),
-            FadeIn(stage), FadeIn(marker),
+            FadeIn(marker),
             run_time=1.6,
         )
 
         prev = None
         for (key, val, name, watts, comp), y in zip(rungs, ys):
-            anchor = watt_anchor(watts, compare=comp, title=name).scale(0.56)
-            anchor.move_to(stage.get_center())
+            badge = watt_anchor(watts, compare=comp, title=name).scale(1.12)
+            anchor = badge[1]
+            anchor.move_to(anchor_pos)
             extras = []
-            if key == "person":
-                extras = [_person(stage.get_center() + LEFT * 1.9 + UP * 0.2, scale=0.9)]
-            elif key == "heating":
-                house = _build_cross_section_house(center=stage.get_center() + LEFT * 1.9)
-                extras = [house["group"].scale(0.42).move_to(stage.get_center() + LEFT * 1.9)]
-            elif key == "hall":
-                extras = [VGroup(*[
-                    _person(stage.get_center() + LEFT * 2.3 + RIGHT * (i % 3) * 0.34
-                            + UP * (0.35 - (i // 3) * 0.42), scale=0.5)
-                    for i in range(6)
-                ])]
-            elif key == "city":
-                castle = _welfenschloss(width=2.2, opacity=0.4)
-                castle.move_to(stage.get_center() + LEFT * 1.9)
-                extras = [castle]
+            if key == "heating":
+                house = _build_cross_section_house(center=anchor_pos + LEFT * 2.55)
+                extras = [house["group"].scale(0.42).move_to(anchor_pos + LEFT * 2.55)]
 
             caption = swap_caption(self, caption, subtitle_text(self.NARRATION, key))
             anims = [
@@ -938,10 +1129,7 @@ class Beat5_Groessenordnungen(Scene):
                 anims.insert(0, FadeOut(prev))
             self.play(*anims, run_time=1.1)
             hold_for(self, self.NARRATION, key, used=1.1 + 0.35)
-            if extras and isinstance(extras[0], ImageMobject):
-                prev = Group(anchor, *extras)
-            else:
-                prev = VGroup(anchor, *extras) if extras else anchor
+            prev = VGroup(anchor, *extras) if extras else anchor
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "close"))
         span = dim_arrow(np.array([scale_x - 0.35, y_lo, 0.0]), np.array([scale_x - 0.35, y_hi, 0.0]), color=P_YELLOW)
@@ -1007,15 +1195,15 @@ class Beat6_Energieerhaltung(Scene):
         self.play(FadeIn(eq), Create(box), FadeIn(law_note), run_time=1.0)
         hold_for(self, self.NARRATION, "law", used=1.0)
 
-        split = _energy_split(-3.7, 0.55, total_w=3.0, height=1.0)
+        split = _energy_split(-3.9, 0.35, total_w=3.0, height=1.0)
         in_lbl = Text("100 % Strom", font_size=LABEL_FONT_SIZE, color=P_CYAN)
-        in_lbl.next_to(split["src"], UP, buff=0.16)
+        in_lbl.next_to(split["src"], DOWN, buff=0.16)
         light_lbl = Text("≈ 5 % Licht", font_size=LABEL_FONT_SIZE, color=P_YELLOW)
-        light_lbl.next_to(split["light"], UP, buff=0.10)
+        light_lbl.next_to(split["light"], UP, buff=0.12)
         heat_lbl = Text("≈ 95 % Wärme", font_size=LABEL_FONT_SIZE, color=P_RED)
-        heat_lbl.next_to(split["heat"], DOWN, buff=0.10)
-        out_lbl = Text("100 % Wärme im Raum", font_size=LABEL_FONT_SIZE, color=P_RED)
-        out_lbl.next_to(split["sink"], UP, buff=0.16)
+        heat_lbl.next_to(split["heat"], DOWN, buff=0.12)
+        out_lbl = Text("100 % Wärme", font_size=LABEL_FONT_SIZE, color=P_RED)
+        out_lbl.next_to(split["sink"], UP, buff=0.24)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "input"))
         self.play(FadeIn(split["src"]), FadeIn(in_lbl), run_time=0.9)
@@ -1035,11 +1223,12 @@ class Beat6_Energieerhaltung(Scene):
         hold_for(self, self.NARRATION, "sankey", used=0.9 + 0.9 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "walls"))
-        wall = Line(split["sink"].get_right() + RIGHT * 0.7 + UP * 0.6,
-                    split["sink"].get_right() + RIGHT * 0.7 + DOWN * 0.6,
+        wall = Line(split["sink"].get_right() + RIGHT * 1.15 + UP * 0.45,
+                    split["sink"].get_right() + RIGHT * 1.15 + DOWN * 0.75,
                     color=P_WHITE, stroke_width=4)
-        ray = radiation_waves(split["light"].get_right() + RIGHT * 0.1, n=2, color=P_YELLOW, height=1.0)
-        ray.rotate(-PI / 2, about_point=split["light"].get_right() + RIGHT * 0.1)
+        ray_origin = split["sink"].get_right() + RIGHT * 0.12 + DOWN * 0.15
+        ray = radiation_waves(ray_origin, n=2, color=P_YELLOW, height=0.85)
+        ray.rotate(-PI / 2, about_point=ray_origin)
         self.play(Create(wall), LaggedStart(*[Create(r) for r in ray], lag_ratio=0.2), run_time=1.0)
         self.play(Indicate(wall, color=P_ORANGE, scale_factor=1.05), ray.animate.set_color(P_RED), run_time=1.0)
         hold_for(self, self.NARRATION, "walls", used=1.0 + 1.0 + 0.35)
@@ -1055,31 +1244,86 @@ class Beat6_Energieerhaltung(Scene):
         hold_for(self, self.NARRATION, "merge", used=1.2 + 0.8 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "building"))
-        house = _build_cross_section_house(center=RIGHT * 3.4 + DOWN * 0.55)
-        house["group"].scale(0.6)
-        people = VGroup(*[
-            _person(house["group"].get_center() + LEFT * 0.6 + RIGHT * i * 0.5 + DOWN * 0.2, scale=0.6)
-            for i in range(3)
+        # House sits low and centred so the header clears the subtitle above and the
+        # side labels sit in open margin left and right — nothing stacked on anything.
+        house = _build_cross_section_house(center=ORIGIN)
+        house["group"].scale(0.60).move_to(DOWN * 0.85)
+        hc = house["group"].get_center()
+        h_top = house["group"].get_top()
+        h_left_x = house["group"].get_left()[0]
+        h_right_x = house["group"].get_right()[0]
+
+        internal_chip = chip("interne Wärme", P_ORANGE, font_size=LABEL_FONT_SIZE)
+        internal_note = Text("Licht · Geräte · Menschen", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
+        internal_hdr = VGroup(internal_chip, internal_note).arrange(DOWN, buff=0.16)
+        internal_hdr.next_to(h_top, UP, buff=0.55).set_x(0)
+        internal_marks = VGroup(*[
+            Dot(hc + np.array([ox, oy, 0.0]), radius=0.055, color=P_ORANGE)
+            for ox, oy in ((-0.34, 0.06), (0.10, -0.16), (0.42, 0.14))
         ])
         self.play(
             FadeOut(split["group"]), FadeOut(in_lbl), FadeOut(heat_lbl), FadeOut(out_lbl), FadeOut(wall),
-            FadeIn(house["group"]), FadeIn(people),
+            FadeOut(eq), FadeOut(box), FadeOut(law_note),
+            FadeIn(house["group"]), FadeIn(internal_hdr), FadeIn(internal_marks),
             run_time=1.2,
         )
         hold_for(self, self.NARRATION, "building", used=1.2 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "seasons"))
-        gift = Text("Januar: Gewinn", font_size=LABEL_FONT_SIZE, color=P_GREEN)
-        load = Text("Juli: Last", font_size=LABEL_FONT_SIZE, color=P_RED)
-        VGroup(gift, load).arrange(DOWN, buff=0.24).next_to(house["group"], LEFT, buff=0.6)
-        animate_haze(
-            self, run_time=2.0, cycles=1.4,
-            x0=house["group"].get_center()[0] - 1.3, x1=house["group"].get_center()[0] + 1.3,
-            y0=house["group"].get_center()[1] - 0.6, y1=house["group"].get_center()[1] + 1.0,
-            color=P_RED, color_end="#C9786E", n=26,
-            extra=[FadeIn(gift), FadeIn(load)],
+        # —— Winter: the internal heat is a welcome gift (left margin) ——
+        season_chip_pos = np.array([h_left_x - 2.5, 1.4, 0.0])
+        winter_chip = chip("Januar · −12 °C", P_BLUE, font_size=LABEL_FONT_SIZE)
+        winter_chip.move_to(season_chip_pos)
+        loss_arrows = VGroup(*[
+            Arrow(
+                np.array([h_left_x - 0.10, hc[1] + dy, 0.0]),
+                np.array([h_left_x - 1.55, hc[1] + dy, 0.0]),
+                color=P_BLUE, buff=0.0, stroke_width=3,
+                max_tip_length_to_length_ratio=0.16,
+            )
+            for dy in (-0.5, 0.0, 0.5)
+        ])
+        gift_lbl = Text("Gewinn — spart Heizung", font_size=LABEL_FONT_SIZE, color=P_GREEN)
+        gift_lbl.move_to(np.array([h_left_x - 2.3, hc[1] - 1.0, 0.0]))
+        self.play(
+            FadeIn(winter_chip),
+            LaggedStart(*[GrowArrow(a) for a in loss_arrows], lag_ratio=0.2),
+            run_time=1.0,
         )
-        hold_for(self, self.NARRATION, "seasons", used=2.0 + 0.35)
+        animate_haze(
+            self, run_time=1.6, cycles=1.2,
+            x0=h_left_x - 0.15, x1=h_left_x - 1.9,
+            y0=hc[1] - 0.75, y1=hc[1] + 0.75,
+            color=P_BLUE, color_end="#6A9FD4", n=22, seed=3,
+        )
+        self.play(FadeIn(gift_lbl), Indicate(internal_marks, color=P_GREEN, scale_factor=1.2), run_time=0.9)
+
+        # —— Summer: the same internal heat is now an extra load (right margin) ——
+        summer_chip = chip("Juli · Sonne", P_YELLOW, font_size=LABEL_FONT_SIZE)
+        summer_chip.move_to(season_chip_pos)
+        sun = _build_sun(ORIGIN, color=P_YELLOW).scale(0.5)
+        sun.move_to(np.array([h_right_x + 2.35, 1.45, 0.0]))
+        load_lbl = Text("Last — mehr Kühlung", font_size=LABEL_FONT_SIZE, color=P_RED)
+        load_lbl.move_to(np.array([h_right_x + 2.3, hc[1] - 0.1, 0.0]))
+        self.play(
+            ReplacementTransform(winter_chip, summer_chip),
+            FadeOut(gift_lbl), FadeOut(loss_arrows),
+            FadeIn(sun),
+            run_time=1.0,
+        )
+        animate_haze(
+            self, run_time=1.8, cycles=1.3,
+            x0=hc[0] - 0.7, x1=hc[0] + 0.7,
+            y0=hc[1] - 0.45, y1=hc[1] + 0.9,
+            color=P_RED, color_end="#C9786E", n=24, seed=11,
+        )
+        self.play(
+            FadeIn(load_lbl),
+            Indicate(internal_marks, color=P_RED, scale_factor=1.2),
+            Indicate(house["group"], color=P_RED, scale_factor=1.04),
+            run_time=0.9,
+        )
+        hold_for(self, self.NARRATION, "seasons", used=1.0 + 1.6 + 0.9 + 1.0 + 1.8 + 0.9 + 0.35)
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -1110,12 +1354,18 @@ class Beat7_Waermepumpe(Scene):
         ("value",
          "Four kilowatt-hours out for one kilowatt-hour of electricity in is a COP of four. Every unit of electricity is multiplied fourfold — the best translation of power into heat we have.",
          "4 kWh Nutzen je 1 kWh Strom ist ein COP von 4 — jede Einheit Strom vervierfacht sich."),
+        ("subs",
+         "This is why heat-pump data sheets are full of little subscripts. kW with a small e-l is the electrical drive power you pay for at the meter. kW with a small t-h is the thermal heating power that actually warms the house. A data sheet might list two point five kilowatts electrical and ten kilowatts thermal — the same factor of four.",
+         "kW_el = elektrische Antriebsleistung (bezahlt), kW_th = thermische Heizleistung fürs Haus."),
         ("contrast",
          "Compare a plain resistance heater: one kilowatt-hour of electricity gives exactly one kilowatt-hour of heat. Its COP is one. The heat pump does the same job with a quarter of the electricity.",
          "Zum Vergleich der Heizstab: 1 kWh Strom ergibt genau 1 kWh Wärme — COP gleich 1. Die Wärmepumpe braucht ein Viertel."),
         ("jaz",
          "Averaged over a whole Hannover heating season, with cold spells and defrost cycles, a real air-source unit lands nearer a COP of three — reported as the seasonal performance factor, the JAZ.",
          "Übers Jahr gemittelt — mit Kälteperioden und Abtauen — liegt eine Luft-Wärmepumpe eher bei COP 3: die Jahresarbeitszahl JAZ."),
+        ("primary",
+         "One last distinction to keep in your pocket. The kilowatt-hour you pull from the socket is called final energy. How much coal, gas or wind the power station had to spend to deliver it is the primary energy — but that belongs in the next video.",
+         "Strom aus der Steckdose = Endenergie. Der Aufwand im Kraftwerk = Primärenergie — mehr im nächsten Video."),
     ]
 
     def construct(self):
@@ -1145,8 +1395,8 @@ class Beat7_Waermepumpe(Scene):
 
         eq, items = equation_row([
             (None, "COP", P_TEAL), (None, "=", P_WHITE),
-            ("q", "Q_Nutz", P_RED), (None, "/", P_WHITE),
-            ("w", "W_el", P_CYAN),
+            ("q", "Q_ab", P_RED), (None, "/", P_WHITE),
+            ("w", "W_zu", P_CYAN),
             (None, "  = 4,0", P_YELLOW),
         ])
         eq, eq_box = formula_panel(eq, color=P_TEAL)
@@ -1191,18 +1441,39 @@ class Beat7_Waermepumpe(Scene):
                   Indicate(heat_out, color=P_RED), run_time=1.0)
         hold_for(self, self.NARRATION, "value", used=1.0 + 0.35)
 
+        # —— el vs. th: what the data sheet's subscripts mean ——
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "subs"))
+        el_tag = Text("kW_el", font_size=LABEL_FONT_SIZE, color=P_CYAN).next_to(plug, DOWN, buff=0.14)
+        th_tag = Text("kW_th", font_size=LABEL_FONT_SIZE, color=P_RED).next_to(heat_out, DOWN, buff=0.14)
+        datasheet = Text("Datenblatt: 2,5 kW_el → 10 kW_th", font_size=LABEL_FONT_SIZE, color=P_WHITE)
+        datasheet.move_to(CONTENT_CENTER + DOWN * 1.15)
+        subs_extra = VGroup(el_tag, th_tag, datasheet)
+        self.play(FadeIn(el_tag), Indicate(in_e, color=P_CYAN, scale_factor=1.12), run_time=0.7)
+        self.play(FadeIn(th_tag), Indicate(out_h, color=P_RED, scale_factor=1.12), run_time=0.7)
+        self.play(FadeIn(datasheet, shift=UP * 0.1), run_time=0.7)
+        hold_for(self, self.NARRATION, "subs", used=0.7 + 0.7 + 0.7 + 0.35)
+
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "contrast"))
         self.play(
-            FadeOut(ledger_card),
-            VGroup(pump, plug, ambient, heat_out, in_e, in_a, out_h).animate.scale(0.7).shift(LEFT * 2.4),
+            FadeOut(ledger_card), FadeOut(subs_extra),
+            FadeOut(plug), FadeOut(ambient), FadeOut(heat_out),
+            FadeOut(in_e), FadeOut(in_a), FadeOut(out_h),
+            pump.animate.scale(0.72).move_to(LEFT * 3.25 + CONTENT_CENTER + UP * 0.1),
             run_time=1.0,
         )
+        wp_in = Text("1 kWh", font_size=LABEL_FONT_SIZE, color=P_CYAN).next_to(pump, LEFT, buff=0.3)
+        wp_out = Text("4 kWh", font_size=LABEL_FONT_SIZE, color=P_RED).next_to(pump, RIGHT, buff=0.3)
+        wp_cop = Text("COP = 4", font_size=LABEL_FONT_SIZE, color=P_YELLOW).next_to(pump, DOWN, buff=0.3)
         heater, hbox = _resistance_heater()
-        heater.scale(0.9).move_to(RIGHT * 3.1 + CONTENT_CENTER + UP * 0.1)
-        h_in = Text("1 kWh Strom", font_size=LABEL_FONT_SIZE, color=P_CYAN).next_to(hbox, LEFT, buff=0.4)
-        h_out = Text("1 kWh Wärme", font_size=LABEL_FONT_SIZE, color=P_RED).next_to(hbox, RIGHT, buff=0.4)
-        h_cop = Text("COP = 1", font_size=LABEL_FONT_SIZE, color=P_YELLOW).next_to(heater, DOWN, buff=0.25)
-        self.play(FadeIn(heater), FadeIn(h_in), FadeIn(h_out), FadeIn(h_cop), run_time=1.1)
+        heater.scale(0.85).move_to(RIGHT * 3.25 + CONTENT_CENTER + UP * 0.1)
+        h_in = Text("1 kWh", font_size=LABEL_FONT_SIZE, color=P_CYAN).next_to(hbox, LEFT, buff=0.3)
+        h_out = Text("1 kWh", font_size=LABEL_FONT_SIZE, color=P_RED).next_to(hbox, RIGHT, buff=0.3)
+        h_cop = Text("COP = 1", font_size=LABEL_FONT_SIZE, color=P_YELLOW).next_to(heater, DOWN, buff=0.3)
+        self.play(
+            FadeIn(wp_in), FadeIn(wp_out), FadeIn(wp_cop),
+            FadeIn(heater), FadeIn(h_in), FadeIn(h_out), FadeIn(h_cop),
+            run_time=1.1,
+        )
         hold_for(self, self.NARRATION, "contrast", used=1.0 + 1.1 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "jaz"))
@@ -1210,6 +1481,34 @@ class Beat7_Waermepumpe(Scene):
         jaz.move_to(UP * 1.95)
         self.play(FadeIn(jaz, shift=DOWN * 0.12), run_time=0.9)
         hold_for(self, self.NARRATION, "jaz", used=0.9 + 0.35)
+
+        # —— Closing teaser: Endenergie vs. Primärenergie (a seed for the DIN V 18599 video) ——
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "primary"))
+        self.play(
+            FadeOut(pump), FadeOut(wp_in), FadeOut(wp_out), FadeOut(wp_cop),
+            FadeOut(heater), FadeOut(h_in), FadeOut(h_out), FadeOut(h_cop),
+            FadeOut(eq), FadeOut(eq_box), FadeOut(jaz),
+            run_time=0.7,
+        )
+        plant = chip("Kraftwerk", P_ORANGE, font_size=LABEL_FONT_SIZE)
+        socket = chip("Steckdose", P_CYAN, font_size=LABEL_FONT_SIZE)
+        consumer = chip("Gebäude", P_RED, font_size=LABEL_FONT_SIZE)
+        chain = VGroup(plant, socket, consumer).arrange(RIGHT, buff=1.15).move_to(CONTENT_CENTER)
+        a1 = Arrow(plant.get_right(), socket.get_left(), buff=0.12, color=P_ORANGE, stroke_width=3)
+        a2 = Arrow(socket.get_right(), consumer.get_left(), buff=0.12, color=P_CYAN, stroke_width=3)
+        prim_lbl = Text("Primärenergie", font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(a1, UP, buff=0.16)
+        end_lbl = Text("Endenergie", font_size=LABEL_FONT_SIZE, color=P_CYAN).next_to(a2, UP, buff=0.16)
+        next_lbl = Text("→ nächstes Video", font_size=LABEL_FONT_SIZE, color=P_YELLOW).next_to(chain, DOWN, buff=0.65)
+        self.play(
+            LaggedStart(
+                FadeIn(plant), GrowArrow(a1), FadeIn(socket), GrowArrow(a2), FadeIn(consumer),
+                lag_ratio=0.3,
+            ),
+            run_time=1.6,
+        )
+        self.play(FadeIn(prim_lbl), FadeIn(end_lbl), run_time=0.6)
+        self.play(FadeIn(next_lbl), run_time=0.5)
+        hold_for(self, self.NARRATION, "primary", used=0.7 + 1.6 + 0.6 + 0.5 + 0.35)
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -1231,6 +1530,9 @@ class Beat8_Ausblick(Scene):
         ("right",
          "Then they size the bucket. The annual heating demand, in kilowatt-hours per square metre and year, is the total energy the building consumes across a whole heating season — after DIN V 18599.",
          "Dann den Eimer: den Jahres-Heizwärmebedarf in kWh/m²a über die ganze Heizperiode — nach DIN V 18599."),
+        ("perarea",
+         "And why divide the whole thing by the square metres of floor area at the end? So that any two buildings can be compared. Only per square metre can we tell whether a small villa or a large apartment block is the more efficient one.",
+         "Warum am Ende durch die Quadratmeter? So lassen sich Gebäude vergleichen — kleine Villa oder großer Wohnblock."),
         ("both",
          "Pipe and bucket, rate and amount, power and energy — you will need both numbers for every project, and now you know exactly what each one means.",
          "Rohr und Eimer, Rate und Menge, Leistung und Energie — beide Zahlen braucht jedes Projekt, und ihr wisst jetzt, was sie bedeuten."),
@@ -1250,67 +1552,108 @@ class Beat8_Ausblick(Scene):
         caption = caption_bar(subtitle_text(self.NARRATION, "recap"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        divider = Line(UP * 1.5, DOWN * 1.15, color=P_TEAL, stroke_width=2).move_to(ORIGIN)
+        divider = Line(UP * 1.35, DOWN * 1.7, color=P_TEAL, stroke_width=2)
 
-        pipe, bucket, stream = _pipe_and_bucket()
-        pipe.scale(0.62).move_to(LEFT * 3.1 + UP * 0.95)
-        bucket.scale(0.62).next_to(pipe, DOWN, buff=0.28)
-        pipe_icon = Text("kW", font_size=BODY_FONT_SIZE, color=P_CYAN).next_to(pipe, UP, buff=0.1)
-        bucket_icon = Text("kWh", font_size=BODY_FONT_SIZE, color=P_TEAL).next_to(bucket, DOWN, buff=0.1)
-
-        house_winter = _build_cross_section_house(center=LEFT * 3.1 + DOWN * 0.55)
-        snow = VGroup(*[
-            Dot(house_winter["roof_peak"] + RIGHT * rx + UP * ry, radius=0.035, color=P_WHITE)
-            for rx in np.linspace(-1.0, 1.0, 6) for ry in np.linspace(-0.3, 0.4, 3)
+        rig = _pour_rig(origin=np.array([0.0, 0.30, 0.0]))
+        pipe_icon = Text("kW — Rate", font_size=LABEL_FONT_SIZE, color=P_CYAN)
+        pipe_icon.next_to(rig["pipe"], UP, buff=0.16)
+        bucket_icon = Text("kWh — Menge", font_size=LABEL_FONT_SIZE, color=P_TEAL)
+        bucket_icon.next_to(
+            np.array([rig["rim_r"][0] + 1.15, rig["floor_y"] + rig["bh"] * 0.45, 0.0]),
+            RIGHT, buff=0.18,
+        )
+        pb_group = VGroup(rig["pipe"], rig["bucket"])
+        pb_all = VGroup(pb_group, pipe_icon, bucket_icon)
+        drop_path = smooth_path([
+            rig["spout"],
+            rig["spout"] + DOWN * 0.48,
+            np.array([rig["spout_x"], rig["floor_y"] + 0.38, 0.0]),
         ])
-        winter_group = VGroup(house_winter["group"].scale(0.6), snow)
-        winter_group.move_to(LEFT * 3.1 + DOWN * 0.45)
-        left_lbl = Text("Heizlast (kW)\nDIN EN 12831", font_size=LABEL_FONT_SIZE, color=P_RED, line_spacing=0.9)
-        left_lbl.move_to(LEFT * 3.1 + DOWN * 1.95)
 
-        house_year = _build_cross_section_house(center=RIGHT * 3.1 + DOWN * 0.35)
-        sun = _build_sun(house_year["roof_peak"] + UP * 0.5 + RIGHT * 0.8).scale(0.4)
+        winter = _build_cross_section_house(center=ORIGIN)
+        winter["group"].scale(0.58).move_to(LEFT * 3.4 + DOWN * 0.05)
+        w_ctr = winter["group"].get_center()
+        winter_tag = Text("kälteste Stunde · −12 °C", font_size=LABEL_FONT_SIZE, color=P_BLUE)
+        winter_tag.next_to(winter["group"], UP, buff=0.22).set_x(w_ctr[0])
+        left_lbl = Text("Heizlast (kW)\nDIN EN 12831", font_size=LABEL_FONT_SIZE,
+                        color=P_RED, line_spacing=0.9)
+        left_lbl.next_to(winter["group"], DOWN, buff=0.3).set_x(w_ctr[0])
+        winter_all = VGroup(winter["group"], winter_tag, left_lbl)
+
+        year = _build_cross_section_house(center=ORIGIN)
+        year["group"].scale(0.58).move_to(RIGHT * 3.4 + DOWN * 0.05)
+        y_ctr = year["group"].get_center()
         seasons = VGroup(
             chip("Frühling", P_GREEN, font_size=LABEL_FONT_SIZE),
             chip("Sommer", P_YELLOW, font_size=LABEL_FONT_SIZE),
             chip("Herbst", P_ORANGE, font_size=LABEL_FONT_SIZE),
             chip("Winter", P_BLUE, font_size=LABEL_FONT_SIZE),
-        ).arrange(RIGHT, buff=0.12).scale(0.8)
-        seasons.next_to(house_year["group"], UP, buff=0.2)
-        year_group = VGroup(house_year["group"].scale(0.6), sun, seasons)
-        year_group.move_to(RIGHT * 3.1 + DOWN * 0.15)
-        right_lbl = Text("Heizwärmebedarf (kWh/m²a)\nDIN V 18599", font_size=LABEL_FONT_SIZE, color=P_CYAN, line_spacing=0.9)
-        right_lbl.move_to(RIGHT * 3.1 + DOWN * 1.95)
+        ).arrange(RIGHT, buff=0.1).scale(0.7)
+        seasons.next_to(year["group"], UP, buff=0.22).set_x(y_ctr[0])
+        right_lbl = Text("Heizwärmebedarf (kWh/m²a)\nDIN V 18599", font_size=LABEL_FONT_SIZE,
+                         color=P_CYAN, line_spacing=0.9)
+        right_lbl.next_to(year["group"], DOWN, buff=0.3).set_x(y_ctr[0])
+        year_all = VGroup(year["group"], seasons, right_lbl)
 
         hold_for(self, self.NARRATION, "recap", used=BEAT_SUBTITLE_FADE + 0.3)
-        self.play(
-            FadeIn(pipe), FadeIn(bucket), FadeIn(pipe_icon), FadeIn(bucket_icon),
-            Create(flow_guides(VGroup(stream), P_CYAN, opacity=0.35, width=2.0)),
-            run_time=1.0,
+        self.play(FadeIn(pb_group), FadeIn(pipe_icon), FadeIn(bucket_icon), run_time=1.0)
+        self.add(rig["water"], rig["surface"], rig["readout"])
+        animate_flow(
+            self, VGroup(drop_path), P_CYAN,
+            run_time=2.8, waves=6, cycles=2.8, radius=0.05, streak=False,
+            extra=[rig["frac"].animate.set_value(0.82)],
         )
-        hold_for(self, self.NARRATION, "recap", used=1.0)
+        hold_for(self, self.NARRATION, "recap", used=1.0 + 2.8 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "cheat"))
         cheat = _unit_cheatsheet()
-        if cheat.width > 6.2:
-            cheat.scale(6.2 / cheat.width)
-        cheat.move_to(RIGHT * 3.2 + UP * 0.55)
+        cheat.next_to(pb_group, DOWN, buff=0.55).set_x(0)
         self.play(FadeIn(cheat, shift=DOWN * 0.12), run_time=1.2)
         hold_for(self, self.NARRATION, "cheat", used=1.2 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "left"))
-        self.play(FadeOut(cheat), Create(divider), run_time=0.6)
-        self.play(FadeIn(winter_group), FadeIn(left_lbl), run_time=1.3)
-        hold_for(self, self.NARRATION, "left", used=0.6 + 1.3 + 0.35)
+        self.remove(rig["water"], rig["surface"], rig["readout"])
+        self.play(
+            FadeOut(cheat), FadeOut(pb_all),
+            FadeOut(rig["pipe"]), FadeOut(rig["bucket"]),
+            Create(divider), run_time=0.7,
+        )
+        self.play(FadeIn(winter_all), run_time=1.3)
+        hold_for(self, self.NARRATION, "left", used=0.7 + 1.3 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "right"))
-        self.play(FadeIn(year_group), FadeIn(right_lbl), run_time=1.3)
+        self.play(FadeIn(year_all), run_time=1.3)
         hold_for(self, self.NARRATION, "right", used=1.3 + 0.35)
+
+        # —— Why per m²: normalise a small and a large building to the same yardstick ——
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "perarea"))
+        area_chip = chip("÷ Fläche → Gebäude vergleichbar", P_CYAN, font_size=LABEL_FONT_SIZE)
+        area_chip.move_to(RIGHT * 3.4 + UP * 2.05)
+        col_x = 6.05
+        villa = Square(side_length=0.42, color=P_GREEN, stroke_width=2.5).move_to(np.array([col_x, 0.62, 0.0]))
+        villa_lbl = Text("Villa", font_size=LABEL_FONT_SIZE, color=P_GREEN).next_to(villa, UP, buff=0.12)
+        block = Square(side_length=0.9, color=P_ORANGE, stroke_width=2.5).move_to(np.array([col_x, -0.78, 0.0]))
+        block_lbl = Text("Block", font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(block, DOWN, buff=0.12)
+        eqmark = Text("=", font_size=BODY_FONT_SIZE, color=P_CYAN).move_to(np.array([col_x, -0.08, 0.0]))
+        per_extra = VGroup(area_chip, villa, villa_lbl, block, block_lbl, eqmark)
+        self.play(
+            FadeIn(area_chip),
+            FadeIn(villa), FadeIn(villa_lbl), FadeIn(block), FadeIn(block_lbl),
+            run_time=1.0,
+        )
+        self.play(
+            block.animate.scale(0.42 / 0.9),
+            Indicate(right_lbl, color=P_CYAN, scale_factor=1.06),
+            run_time=0.9,
+        )
+        self.play(FadeIn(eqmark), run_time=0.4)
+        hold_for(self, self.NARRATION, "perarea", used=1.0 + 0.9 + 0.4 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "both"))
         self.play(
-            Indicate(VGroup(pipe, pipe_icon), color=P_CYAN, scale_factor=1.1),
-            Indicate(VGroup(bucket, bucket_icon), color=P_TEAL, scale_factor=1.1),
+            FadeOut(per_extra),
+            Indicate(winter_all, color=P_CYAN, scale_factor=1.06),
+            Indicate(year_all, color=P_TEAL, scale_factor=1.06),
             run_time=1.4,
         )
         hold_for(self, self.NARRATION, "both", used=1.4 + 0.35)
